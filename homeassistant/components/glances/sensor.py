@@ -338,8 +338,6 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor_name_prefix = sensor_name_prefix
-        self._state: StateType = None
-
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
         self._attr_device_info = DeviceInfo(
@@ -354,7 +352,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         """Return the state of the resources."""
         if (value := self.coordinator.data) is None:
             return None
-
+        state: StateType = None
         if self.entity_description.type == "fs":
             for var in value["fs"]:
                 if var["mnt_point"] == self._sensor_name_prefix:
@@ -362,102 +360,102 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
                     break
             if self.entity_description.key == "disk_free":
                 try:
-                    self._attr_native_value = round(disk["free"] / 1024**3, 1)
+                    state = round(disk["free"] / 1024**3, 1)
                 except KeyError:
-                    self._attr_native_value = round(
+                    state = round(
                         (disk["size"] - disk["used"]) / 1024**3,
                         1,
                     )
             elif self.entity_description.key == "disk_use":
-                self._attr_native_value = round(disk["used"] / 1024**3, 1)
+                state = round(disk["used"] / 1024**3, 1)
             elif self.entity_description.key == "disk_use_percent":
-                self._attr_native_value = disk["percent"]
+                state = disk["percent"]
         elif self.entity_description.key == "battery":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "battery"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "fan_speed":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "fan_speed"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "temperature_core":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_core"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "temperature_hdd":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_hdd"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "memory_use_percent":
-            self._attr_native_value = value["mem"]["percent"]
+            state = value["mem"]["percent"]
         elif self.entity_description.key == "memory_use":
-            self._attr_native_value = round(value["mem"]["used"] / 1024**2, 1)
+            state = round(value["mem"]["used"] / 1024**2, 1)
         elif self.entity_description.key == "memory_free":
-            self._attr_native_value = round(value["mem"]["free"] / 1024**2, 1)
+            state = round(value["mem"]["free"] / 1024**2, 1)
         elif self.entity_description.key == "swap_use_percent":
-            self._attr_native_value = value["memswap"]["percent"]
+            state = value["memswap"]["percent"]
         elif self.entity_description.key == "swap_use":
-            self._attr_native_value = round(value["memswap"]["used"] / 1024**3, 1)
+            state = round(value["memswap"]["used"] / 1024**3, 1)
         elif self.entity_description.key == "swap_free":
-            self._attr_native_value = round(value["memswap"]["free"] / 1024**3, 1)
+            state = round(value["memswap"]["free"] / 1024**3, 1)
         elif self.entity_description.key == "processor_load":
             # Windows systems don't provide load details
             try:
-                self._attr_native_value = value["load"]["min15"]
+                state = value["load"]["min15"]
             except KeyError:
-                self._attr_native_value = value["cpu"]["total"]
+                state = value["cpu"]["total"]
         elif self.entity_description.key == "process_running":
-            self._attr_native_value = value["processcount"]["running"]
+            state = value["processcount"]["running"]
         elif self.entity_description.key == "process_total":
-            self._attr_native_value = value["processcount"]["total"]
+            state = value["processcount"]["total"]
         elif self.entity_description.key == "process_thread":
-            self._attr_native_value = value["processcount"]["thread"]
+            state = value["processcount"]["thread"]
         elif self.entity_description.key == "process_sleeping":
-            self._attr_native_value = value["processcount"]["sleeping"]
+            state = value["processcount"]["sleeping"]
         elif self.entity_description.key == "cpu_use_percent":
-            self._attr_native_value = value["quicklook"]["cpu"]
+            state = value["quicklook"]["cpu"]
         elif self.entity_description.key == "docker_active":
             count = 0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         count += 1
-                self._attr_native_value = count
+                state = count
             except KeyError:
-                self._attr_native_value = count
+                state = count
         elif self.entity_description.key == "docker_cpu_use":
             cpu_use = 0.0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         cpu_use += container["cpu"]["total"]
-                    self._attr_native_value = round(cpu_use, 1)
+                    state = round(cpu_use, 1)
             except KeyError:
-                self._attr_native_value = STATE_UNAVAILABLE
+                state = STATE_UNAVAILABLE
         elif self.entity_description.key == "docker_memory_use":
             mem_use = 0.0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         mem_use += container["memory"]["usage"]
-                    self._attr_native_value = round(mem_use / 1024**2, 1)
+                    state = round(mem_use / 1024**2, 1)
             except KeyError:
-                self._attr_native_value = STATE_UNAVAILABLE
+                state = STATE_UNAVAILABLE
         elif self.entity_description.type == "raid":
             for raid_device, raid in value["raid"].items():
                 if raid_device == self._sensor_name_prefix:
-                    self._state = raid[self.entity_description.key]
+                    state = raid[self.entity_description.key]
 
-        return self._state
+        return state
