@@ -137,7 +137,7 @@ class MqttLock(MqttEntity, LockEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the lock."""
-        self._state: bool | None = False
+        self._attr_is_locked = False
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -150,9 +150,13 @@ class MqttLock(MqttEntity, LockEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
 
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE),
+            config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
+
+        self._attr_supported_features = (
+            LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in config else 0
+        )
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -163,9 +167,9 @@ class MqttLock(MqttEntity, LockEntity):
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
             if payload == self._config[CONF_STATE_LOCKED]:
-                self._state = True
+                self._attr_is_locked = True
             elif payload == self._config[CONF_STATE_UNLOCKED]:
-                self._state = False
+                self._attr_is_locked = False
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -191,19 +195,9 @@ class MqttLock(MqttEntity, LockEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def is_locked(self) -> bool | None:
-        """Return true if lock is locked."""
-        return self._state
-
-    @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.
@@ -219,7 +213,7 @@ class MqttLock(MqttEntity, LockEntity):
         )
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
-            self._state = True
+            self._attr_is_locked = True
             self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -236,7 +230,7 @@ class MqttLock(MqttEntity, LockEntity):
         )
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
-            self._state = False
+            self._attr_is_locked = False
             self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -253,5 +247,5 @@ class MqttLock(MqttEntity, LockEntity):
         )
         if self._optimistic:
             # Optimistically assume that the lock unlocks when opened.
-            self._state = False
+            self._attr_is_locked = False
             self.async_write_ha_state()

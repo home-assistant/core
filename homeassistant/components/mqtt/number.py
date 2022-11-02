@@ -166,9 +166,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
     _entity_id_format = number.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
-    _templates: dict[str, Callable[..., Any]]
 
-    _config: ConfigType
     _optimistic: bool
     _templates: dict[str, Callable[..., Any]]
 
