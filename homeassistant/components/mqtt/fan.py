@@ -513,6 +513,12 @@ class MqttFan(MqttEntity, FanEntity):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        # The default for FanEntity is to compute it based on percentage
+        return self._attr_is_on
+
     # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
