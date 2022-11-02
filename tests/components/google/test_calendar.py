@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 import urllib
 
+from aiohttp import ClientWebSocketResponse
 from aiohttp.client_exceptions import ClientError
+from gcal_sync.auth import API_BASE_URL
 import pytest
 
 from homeassistant.components.google.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
@@ -23,9 +27,12 @@ from .conftest import (
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
     TEST_YAML_ENTITY_NAME,
+    ApiResult,
+    ComponentSetup,
 )
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_ENTITY = TEST_API_ENTITY
 TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
@@ -99,6 +106,53 @@ def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     return get_events_url(entity, start, end)
 
 
+class Client:
+    """Test client with helper methods for calendar websocket."""
+
+    def __init__(self, client):
+        """Initialize Client."""
+        self.client = client
+        self.id = 0
+
+    async def cmd(self, cmd: str, payload: dict[str, Any] = None) -> dict[str, Any]:
+        """Send a command and receive the json result."""
+        self.id += 1
+        await self.client.send_json(
+            {
+                "id": self.id,
+                "type": f"calendar/event/{cmd}",
+                **(payload if payload is not None else {}),
+            }
+        )
+        resp = await self.client.receive_json()
+        assert resp.get("id") == self.id
+        return resp
+
+    async def cmd_result(self, cmd: str, payload: dict[str, Any] = None) -> Any:
+        """Send a command and parse the result."""
+        resp = await self.cmd(cmd, payload)
+        assert resp.get("success")
+        assert resp.get("type") == "result"
+        return resp.get("result")
+
+
+ClientFixture = Callable[[], Awaitable[Client]]
+
+
+@pytest.fixture
+async def ws_client(
+    hass: HomeAssistant,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> ClientFixture:
+    """Fixture for creating the test websocket client."""
+
+    async def create_client() -> Client:
+        ws_client = await hass_ws_client(hass)
+        return Client(ws_client)
+
+    return create_client
+
+
 async def test_all_day_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
     week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
@@ -124,6 +178,7 @@ async def test_all_day_event(hass, mock_events_list_items, component_setup):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -152,6 +207,7 @@ async def test_future_event(hass, mock_events_list_items, component_setup):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -180,6 +236,7 @@ async def test_in_progress_event(hass, mock_events_list_items, component_setup):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -210,6 +267,7 @@ async def test_offset_in_progress_event(hass, mock_events_list_items, component_
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -242,6 +300,7 @@ async def test_all_day_offset_in_progress_event(
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -274,6 +333,7 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -303,6 +363,7 @@ async def test_missing_summary(hass, mock_events_list_items, component_setup):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
@@ -779,3 +840,213 @@ async def test_all_day_iter_order(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert [event["summary"] for event in events] == event_order
+
+
+async def test_websocket_create(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test service call that sets a date range."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": "Bastille Day Party",
+        "description": None,
+        "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+        "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+    }
+
+
+async def test_websocket_delete(
+    ws_client: ClientFixture,
+    hass_client,
+    component_setup,
+    mock_events_list: ApiResult,
+    mock_events_list_items: ApiResult,
+    aioclient_mock,
+):
+    """Test websocket delete command."""
+    mock_events_list_items(
+        [
+            {
+                **TEST_EVENT,
+                "id": "event-id-1",
+                "iCalUID": "event-id-1@google.com",
+                "summary": "All Day Event",
+                "start": {"date": "2022-10-08"},
+                "end": {"date": "2022-10-09"},
+            },
+        ]
+    )
+    assert await component_setup()
+    assert len(aioclient_mock.mock_calls) == 2
+
+    aioclient_mock.clear_requests()
+
+    # Expect a delete request as well as a follow up to sync state from server
+    aioclient_mock.delete(f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1")
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "event-id-1@google.com",
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "delete"
+
+
+async def test_websocket_delete_recurring_event_instance(
+    ws_client: ClientFixture,
+    hass_client,
+    component_setup,
+    mock_events_list: ApiResult,
+    mock_events_list_items: ApiResult,
+    aioclient_mock,
+):
+    """Test websocket delete command."""
+    mock_events_list_items(
+        [
+            {
+                **TEST_EVENT,
+                "id": "event-id-1",
+                "iCalUID": "event-id-1@google.com",
+                "summary": "All Day Event",
+                "start": {"date": "2022-10-08"},
+                "end": {"date": "2022-10-09"},
+                "recurrence": ["FREQ=WEEKLY"],
+            },
+        ]
+    )
+    assert await component_setup()
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Get a time range for the first event and the second instance of the
+    # recurring event.
+    web_client = await hass_client()
+    response = await web_client.get(
+        get_events_url(TEST_ENTITY, "2022-10-06T00:00:00Z", "2022-10-20T00:00:00Z")
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 2
+
+    # Delete the second instance
+    event = events[1]
+    assert event["uid"] == "event-id-1@google.com"
+    assert event["recurrence_id"] == "event-id-1_20221015"
+
+    # Expect a delete request as well as a follow up to sync state from server
+    aioclient_mock.clear_requests()
+    aioclient_mock.patch(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1_20221015"
+    )
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": event["uid"],
+            "recurrence_id": event["recurrence_id"],
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "patch"
+    # Request to cancel the second instance of the recurring event
+    assert aioclient_mock.mock_calls[0][2] == {
+        "id": "event-id-1_20221015",
+        "status": "cancelled",
+    }
+
+    # Attempt delete again, but this time for all future instances
+    aioclient_mock.clear_requests()
+    aioclient_mock.patch(f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1")
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": event["uid"],
+            "recurrence_id": event["recurrence_id"],
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "patch"
+    # Request to cancel all events after the second instance
+    assert aioclient_mock.mock_calls[0][2] == {
+        "id": "event-id-1",
+        "recurrence": ["FREQ=WEEKLY;UNTIL=2022-10-15;INTERVAL=1"],
+    }
+
+
+@pytest.mark.parametrize(
+    "calendar_access_role",
+    ["reader"],
+)
+async def test_readonly_websocket_create(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test service call that sets a date range."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert result.get("error")
+    assert result["error"].get("code") == "not_supported"
