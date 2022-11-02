@@ -27,7 +27,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -398,12 +397,12 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging_power",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+                ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
             },
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
@@ -617,12 +616,12 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
                 ATTR_STATE: "27.0",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging_power",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+                ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
             },
             {
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_remaining_time",
