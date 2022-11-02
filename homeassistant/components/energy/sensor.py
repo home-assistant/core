@@ -17,12 +17,11 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_GIGA_JOULE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+    UnitOfEnergy,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -46,12 +45,18 @@ SUPPORTED_STATE_CLASSES = [
     SensorStateClass.TOTAL_INCREASING,
 ]
 VALID_ENERGY_UNITS = [
-    ENERGY_WATT_HOUR,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_GIGA_JOULE,
+    UnitOfEnergy.WATT_HOUR,
+    UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_WATT_HOUR,
+    UnitOfEnergy.GIGA_JOULE,
 ]
 VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
+VALID_VOLUME_UNITS_WATER = [
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -70,7 +75,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas"]
+    source_type: Literal["grid", "gas", "water"]
     flow_type: Literal["flow_from", "flow_to", None]
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -97,6 +102,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "gas",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "water",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -286,17 +299,17 @@ class EnergyCostSensor(SensorEntity):
                 return
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_WATT_HOUR}"
+                f"/{UnitOfEnergy.WATT_HOUR}"
             ):
                 energy_price *= 1000.0
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_MEGA_WATT_HOUR}"
+                f"/{UnitOfEnergy.MEGA_WATT_HOUR}"
             ):
                 energy_price /= 1000.0
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_GIGA_JOULE}"
+                f"/{UnitOfEnergy.GIGA_JOULE}"
             ):
                 energy_price /= 1000 / 3.6
 
@@ -319,11 +332,15 @@ class EnergyCostSensor(SensorEntity):
             if energy_unit not in VALID_ENERGY_UNITS_GAS:
                 energy_unit = None
 
-        if energy_unit == ENERGY_WATT_HOUR:
+        elif self._adapter.source_type == "water":
+            if energy_unit not in VALID_VOLUME_UNITS_WATER:
+                energy_unit = None
+
+        if energy_unit == UnitOfEnergy.WATT_HOUR:
             energy_price /= 1000
-        elif energy_unit == ENERGY_MEGA_WATT_HOUR:
+        elif energy_unit == UnitOfEnergy.MEGA_WATT_HOUR:
             energy_price *= 1000
-        elif energy_unit == ENERGY_GIGA_JOULE:
+        elif energy_unit == UnitOfEnergy.GIGA_JOULE:
             energy_price *= 1000 / 3.6
 
         if energy_unit is None:

@@ -31,6 +31,7 @@
             "title": "La configurazione YAML di Pushover sar\u00e0 rimossa"
         },
         "removed_yaml": {
+            "description": "La configurazione di Pushover tramite YAML \u00e8 stata rimossa.\n\nLa configurazione YAML esistente non sar\u00e0 utilizzata da Home Assistant.\n\nRimuovere la configurazione YAML di Pushover dal file configuration.yaml e riavviare Home Assistant per risolvere il problema.",
             "title": "La configurazione Pushover YAML \u00e8 stata rimossa"
         }
     }

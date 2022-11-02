@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "System is currently unhealthy \u7531\u65bc '{reason}' \u7de3\u6545\u3001\u7cfb\u7d71\u76ee\u524d\u88ab\u8a8d\u70ba\u4e0d\u5065\u5eb7\u3002\u8acb\u53c3\u8003\u9023\u7d50\u4ee5\u4e86\u89e3\u54ea\u88e1\u51fa\u4e86\u554f\u984c\u3001\u53ca\u5982\u4f55\u9032\u884c\u4fee\u6b63\u3002",
+            "title": "\u4e0d\u5065\u5eb7\u7cfb\u7d71 - {reason}"
+        },
+        "unsupported": {
+            "description": "System is unsupported \u7531\u65bc '{reason}' \u7de3\u6545\u3001\u7cfb\u7d71\u4e0d\u652f\u63f4\u3002\u8acb\u53c3\u8003\u9023\u7d50\u4ee5\u4e86\u89e3\u76f8\u95dc\u8aaa\u660e\u3001\u53ca\u5982\u4f55\u56de\u5fa9\u81f3\u652f\u63f4\u7cfb\u7d71\u3002",
+            "title": "\u4e0d\u652f\u63f4\u7cfb\u7d71 - {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Agent \u7248\u672c",

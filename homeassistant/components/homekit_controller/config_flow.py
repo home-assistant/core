@@ -15,7 +15,7 @@ from aiohomekit.controller.abstract import (
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model.categories import Categories
 from aiohomekit.model.status_flags import StatusFlags
-from aiohomekit.utils import domain_supported, domain_to_name
+from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -577,6 +577,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pairing.id,
             accessories_state.config_num,
             accessories_state.accessories.serialize(),
+            serialize_broadcast_key(accessories_state.broadcast_key),
         )
 
         return self.async_create_entry(title=name, data=pairing_data)

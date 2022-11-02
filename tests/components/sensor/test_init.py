@@ -567,11 +567,11 @@ async def test_custom_unit(
             SensorDeviceClass.VOLUME,
         ),
         (
+            VOLUME_LITERS,
             VOLUME_FLUID_OUNCE,
-            VOLUME_LITERS,
-            VOLUME_LITERS,
-            78,
+            VOLUME_FLUID_OUNCE,
             2.3,
+            77.8,
             SensorDeviceClass.VOLUME,
         ),
         (
@@ -871,5 +871,59 @@ async def test_unit_conversion_priority_suggested_unit_change(
 
     # Registered entity -> Follow suggested unit the first time the entity was seen
     state = hass.states.get(entity1.entity_id)
+    assert float(state.state) == approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+@pytest.mark.parametrize(
+    "unit_system, native_unit, original_unit, native_value, original_value, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+            1000,
+            621,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_legacy_conversion_removed(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    original_unit,
+    native_value,
+    original_value,
+    device_class,
+):
+    """Test priority of unit conversion."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=original_unit
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit

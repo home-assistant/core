@@ -29,7 +29,7 @@ async def test_camera(hass):
 
     entry = entity_registry.async_get("camera.octoprint_camera")
     assert entry is not None
-    assert entry.unique_id == "camera-uuid"
+    assert entry.unique_id == "uuid"
 
 
 async def test_camera_disabled(hass):

@@ -13,7 +13,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bluetooth LE Tracker from a config entry."""
     coordinator = hass.data[DOMAIN] = IBeaconCoordinator(hass, entry, async_get(hass))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    coordinator.async_start()
+    await coordinator.async_start()
     return True
 
 

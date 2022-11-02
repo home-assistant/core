@@ -272,6 +272,11 @@ def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
     return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
 
 
+def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
+    """Return the device wakeup period in seconds or 0 for non sleeping devices."""
+    return cast(int, status["sys"].get("wakeup_period", 0))
+
+
 def get_info_auth(info: dict[str, Any]) -> bool:
     """Return true if device has authorization enabled."""
     return cast(bool, info.get("auth") or info.get("auth_en"))

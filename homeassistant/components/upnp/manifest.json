@@ -15,5 +15,6 @@
     }
   ],
   "iot_class": "local_polling",
-  "loggers": ["async_upnp_client"]
+  "loggers": ["async_upnp_client"],
+  "integration_type": "device"
 }
