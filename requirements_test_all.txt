@@ -10,7 +10,7 @@ AEMET-OpenData==0.2.1
 AIOAladdinConnect==0.1.46
 
 # homeassistant.components.adax
-Adax-local==0.1.4
+Adax-local==0.1.5
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
