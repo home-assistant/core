@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "Das System ist derzeit aufgrund von \u201e{reason}\u201c fehlerhaft. Verwende den Link, um mehr dar\u00fcber zu erfahren, was falsch ist und wie du es beheben kannst.",
+            "title": "Fehlerhaftes System - {reason}"
+        },
+        "unsupported": {
+            "description": "Das System wird aufgrund von \u201e{reason}\u201c nicht unterst\u00fctzt. Verwende den Link, um mehr dar\u00fcber zu erfahren, was dies bedeutet und wie du zu einem unterst\u00fctzten System zur\u00fcckkehren kannst.",
+            "title": "Nicht unterst\u00fctztes System \u2013 {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Agent-Version",
