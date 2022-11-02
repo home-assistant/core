@@ -219,10 +219,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ZAMG sensor platform."""
     # trigger import flow
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
 
