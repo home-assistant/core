@@ -515,7 +515,7 @@ fivem-api==0.1.2
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.2
+flipr-api==1.4.4
 
 # homeassistant.components.flux_led
 flux_led==0.28.32
