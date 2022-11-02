@@ -171,17 +171,13 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
-    _attr_should_poll: bool = False
+    _attr_should_poll = False
 
-    _attr_is_on: bool | None
-    _attr_extra_state_attributes: dict[str, Any]
-    _attr_name: str
     _command_templates: dict[str, Callable[..., PublishPayloadType] | None]
+    _value_template: Callable[..., ReceivePayloadType]
     _state_on: str
     _state_off: str
-    _supported_features: int
     _optimistic: bool
-    _value_template: Callable[..., ReceivePayloadType]
 
     def __init__(
         self,
@@ -209,20 +205,21 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self._attr_extra_state_attributes = {}
 
-        self._supported_features: int = SUPPORTED_BASE
+        _supported_features: int = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
-            self._supported_features |= SirenEntityFeature.DURATION
+            _supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
-            self._supported_features |= SirenEntityFeature.TONES
+            _supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
             self._attr_extra_state_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
-            self._supported_features |= SirenEntityFeature.VOLUME_SET
+            _supported_features |= SirenEntityFeature.VOLUME_SET
             self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
+        self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
         self._attr_is_on = False if self._optimistic else None
 
@@ -340,11 +337,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         attributes.update(self._attr_extra_state_attributes)
         return attributes
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
-
     async def _async_publish(
         self,
         topic: str,
@@ -409,5 +401,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         update: dict[str, Any] = dict(data)
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
-            if self._supported_features & support and attribute in update:
+            assert self._attr_supported_features is not None
+            if self._attr_supported_features & support and attribute in update:
                 self._attr_extra_state_attributes[attribute] = update[attribute]
