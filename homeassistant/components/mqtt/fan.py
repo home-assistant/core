@@ -265,11 +265,8 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = None
-        self._percentage = None
-        self._preset_mode = None
-        self._oscillation = None
-        self._supported_features = 0
+        self._attr_percentage = None
+        self._attr_preset_mode = None
 
         self._topic = None
         self._payload = None
@@ -330,11 +327,11 @@ class MqttFan(MqttEntity, FanEntity):
         self._feature_percentage = CONF_PERCENTAGE_COMMAND_TOPIC in config
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
-            self._preset_modes = config[CONF_PRESET_MODES_LIST]
+            self._attr_preset_modes = config[CONF_PRESET_MODES_LIST]
         else:
-            self._preset_modes = []
+            self._attr_preset_modes = []
 
-        self._speed_count = (
+        self._attr_speed_count = (
             min(int_states_in_range(self._speed_range), 100)
             if self._feature_percentage
             else 100
@@ -352,15 +349,15 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._supported_features = 0
-        self._supported_features |= (
+        self._attr_supported_features = 0
+        self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE
         )
         if self._feature_percentage:
-            self._supported_features |= FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
         if self._feature_preset_mode:
-            self._supported_features |= FanEntityFeature.PRESET_MODE
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
@@ -386,11 +383,11 @@ class MqttFan(MqttEntity, FanEntity):
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
                 return
             if payload == self._payload["STATE_ON"]:
-                self._state = True
+                self._attr_is_on = True
             elif payload == self._payload["STATE_OFF"]:
-                self._state = False
+                self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
-                self._state = None
+                self._attr_is_on = None
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -412,7 +409,7 @@ class MqttFan(MqttEntity, FanEntity):
                 _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
-                self._percentage = None
+                self._attr_percentage = None
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
@@ -435,7 +432,7 @@ class MqttFan(MqttEntity, FanEntity):
                     rendered_percentage_payload,
                 )
                 return
-            self._percentage = percentage
+            self._attr_percentage = percentage
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
@@ -445,7 +442,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-            self._percentage = None
+            self._attr_percentage = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -453,7 +450,7 @@ class MqttFan(MqttEntity, FanEntity):
             """Handle new received MQTT message for preset mode."""
             preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
             if preset_mode == self._payload["PRESET_MODE_RESET"]:
-                self._preset_mode = None
+                self._attr_preset_mode = None
                 self.async_write_ha_state()
                 return
             if not preset_mode:
@@ -468,7 +465,7 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
 
-            self._preset_mode = preset_mode
+            self._attr_preset_mode = preset_mode
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
@@ -478,7 +475,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-            self._preset_mode = None
+            self._attr_preset_mode = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -489,9 +486,9 @@ class MqttFan(MqttEntity, FanEntity):
                 _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
                 return
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
-                self._oscillation = True
+                self._attr_oscillating = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
-                self._oscillation = False
+                self._attr_oscillating = False
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
@@ -501,7 +498,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-            self._oscillation = False
+            self._attr_oscillating = False
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -519,37 +516,8 @@ class MqttFan(MqttEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._state
-
-    @property
-    def percentage(self) -> int | None:
-        """Return the current percentage."""
-        return self._percentage
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset _mode."""
-        return self._preset_mode
-
-    @property
-    def preset_modes(self) -> list[str]:
-        """Get the list of available preset modes."""
-        return self._preset_modes
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return self._speed_count
-
-    @property
-    def oscillating(self) -> bool | None:
-        """Return the oscillation state."""
-        return self._oscillation
+        # The default for FanEntity is to compute it based on percentage
+        return self._attr_is_on
 
     # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
@@ -575,7 +543,7 @@ class MqttFan(MqttEntity, FanEntity):
         if preset_mode:
             await self.async_set_preset_mode(preset_mode)
         if self._optimistic:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -592,7 +560,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._config[CONF_ENCODING],
         )
         if self._optimistic:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -613,7 +581,7 @@ class MqttFan(MqttEntity, FanEntity):
         )
 
         if self._optimistic_percentage:
-            self._percentage = percentage
+            self._attr_percentage = percentage
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -634,7 +602,7 @@ class MqttFan(MqttEntity, FanEntity):
         )
 
         if self._optimistic_preset_mode:
-            self._preset_mode = preset_mode
+            self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -660,5 +628,5 @@ class MqttFan(MqttEntity, FanEntity):
         )
 
         if self._optimistic_oscillation:
-            self._oscillation = oscillating
+            self._attr_oscillating = oscillating
             self.async_write_ha_state()

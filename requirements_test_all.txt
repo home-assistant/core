@@ -10,7 +10,7 @@ AEMET-OpenData==0.2.1
 AIOAladdinConnect==0.1.46
 
 # homeassistant.components.adax
-Adax-local==0.1.4
+Adax-local==0.1.5
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -547,7 +547,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==2.2.2
+gcal-sync==2.2.3
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -654,7 +654,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221102.0
+home-assistant-frontend==20221102.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1598,7 +1598,7 @@ speedtest-cli==2.1.3
 spiderpy==1.6.1
 
 # homeassistant.components.spotify
-spotipy==2.20.0
+spotipy==2.21.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
@@ -1835,4 +1835,4 @@ zigpy==0.51.5
 zwave-js-server-python==0.43.0
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.6
+zwave_me_ws==0.3.0

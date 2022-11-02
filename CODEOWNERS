@@ -882,6 +882,8 @@ build.json @home-assistant/supervisor
 /tests/components/pure_energie/ @klaasnicolaas
 /homeassistant/components/push/ @dgomes
 /tests/components/push/ @dgomes
+/homeassistant/components/pushbullet/ @engrbm87
+/tests/components/pushbullet/ @engrbm87
 /homeassistant/components/pushover/ @engrbm87
 /tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
