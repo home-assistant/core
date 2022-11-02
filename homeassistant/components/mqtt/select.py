@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -122,8 +121,9 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
     _entity_id_format = select.ENTITY_ID_FORMAT
-
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
+    _templates: dict[str, Callable[..., Any]]
+    _optimistic: bool = False
 
     def __init__(
         self,
@@ -133,10 +133,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT select."""
-        self._templates: dict[str, Callable[..., Any]]
-        self._optimistic: bool = False
-        self._attr_current_option: str | None = None
-
         SelectEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -147,6 +143,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_current_option = None
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
@@ -167,13 +164,14 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload: ReceivePayloadType | None = self._templates[CONF_VALUE_TEMPLATE](
-                msg.payload
-            )
-            if payload and payload.lower() == "none":
-                payload = None
+            payload: str
+            payload = str(self._templates[CONF_VALUE_TEMPLATE](msg.payload))
+            if payload.lower() == "none":
+                self._attr_current_option = None
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
 
-            if isinstance(payload, bytes) or payload and payload not in self.options:
+            if payload not in self.options:
                 _LOGGER.error(
                     "Invalid option for %s: '%s' (valid options: %s)",
                     self.entity_id,

@@ -172,6 +172,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expired: bool | None
+    _template: Callable[..., ReceivePayloadType]
+    _last_reset_template: Callable[..., ReceivePayloadType]
 
     def __init__(
         self,
@@ -182,15 +184,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     ) -> None:
         """Initialize the sensor."""
         self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._template: Callable[..., ReceivePayloadType]
-        self._last_reset_template: Callable[..., ReceivePayloadType]
-
-        expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
-        if expire_after is not None and expire_after > 0:
-            self._expired = True
-        else:
-            self._expired = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
@@ -249,6 +242,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+
+        expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+        if expire_after is not None and expire_after > 0:
+            self._expired = True
+        else:
+            self._expired = None
 
         self._template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self

@@ -111,7 +111,6 @@ class MqttScene(
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT scene."""
-        self._config: ConfigType
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
