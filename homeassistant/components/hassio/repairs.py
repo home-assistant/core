@@ -36,6 +36,39 @@ ISSUE_ID_UNSUPPORTED = "unsupported_system"
 INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
 INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
 
+UNSUPPORTED_REASONS = {
+    "apparmor",
+    "connectivity_check",
+    "content_trust",
+    "dbus",
+    "dns_server",
+    "docker_configuration",
+    "docker_version",
+    "cgroup_version",
+    "job_conditions",
+    "lxc",
+    "network_manager",
+    "os",
+    "os_agent",
+    "restart_policy",
+    "software",
+    "source_mods",
+    "supervisor_version",
+    "systemd",
+    "systemd_journal",
+    "systemd_resolved",
+}
+# Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
+# provides no additional information beyond the unhealthy one then skip that repair.
+UNSUPPORTED_SKIP_REPAIR = {"privileged"}
+UNHEALTHY_REASONS = {
+    "docker",
+    "supervisor",
+    "setup",
+    "privileged",
+    "untrusted",
+}
+
 
 class SupervisorRepairs:
     """Create repairs from supervisor events."""
@@ -56,6 +89,13 @@ class SupervisorRepairs:
     def unhealthy_reasons(self, reasons: set[str]) -> None:
         """Set unhealthy reasons. Create or delete repairs as necessary."""
         for unhealthy in reasons - self.unhealthy_reasons:
+            if unhealthy in UNHEALTHY_REASONS:
+                translation_key = f"unhealthy_{unhealthy}"
+                translation_placeholders = None
+            else:
+                translation_key = "unhealthy"
+                translation_placeholders = {"reason": unhealthy}
+
             async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -63,8 +103,8 @@ class SupervisorRepairs:
                 is_fixable=False,
                 learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
                 severity=IssueSeverity.CRITICAL,
-                translation_key="unhealthy",
-                translation_placeholders={"reason": unhealthy},
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
             )
 
         for fixed in self.unhealthy_reasons - reasons:
@@ -80,7 +120,14 @@ class SupervisorRepairs:
     @unsupported_reasons.setter
     def unsupported_reasons(self, reasons: set[str]) -> None:
         """Set unsupported reasons. Create or delete repairs as necessary."""
-        for unsupported in reasons - self.unsupported_reasons:
+        for unsupported in reasons - UNSUPPORTED_SKIP_REPAIR - self.unsupported_reasons:
+            if unsupported in UNSUPPORTED_REASONS:
+                translation_key = f"unsupported_{unsupported}"
+                translation_placeholders = None
+            else:
+                translation_key = "unsupported"
+                translation_placeholders = {"reason": unsupported}
+
             async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -88,11 +135,11 @@ class SupervisorRepairs:
                 is_fixable=False,
                 learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
                 severity=IssueSeverity.WARNING,
-                translation_key="unsupported",
-                translation_placeholders={"reason": unsupported},
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
             )
 
-        for fixed in self.unsupported_reasons - reasons:
+        for fixed in self.unsupported_reasons - (reasons - UNSUPPORTED_SKIP_REPAIR):
             async_delete_issue(self._hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
 
         self._unsupported_reasons = reasons
