@@ -2,15 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "description": "Email or Mobile phone number used to login the Combined Energy Dashboard",
+        "description": "Define the API parameters for this installation",
         "data": {
+          "name": "The name of this installation",
           "username": "Email or Mobile Number",
           "password": "[%key:common::config_flow::data::password%]",
-          "installation_id": "Installation ID"
+          "installation_id": "Combined Energy Installation-ID"
         }
       }
     },
     "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

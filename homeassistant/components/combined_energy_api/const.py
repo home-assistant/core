@@ -3,10 +3,11 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-LOGGER = logging.getLogger(__package__)
-
 DOMAIN: Final[str] = "combined_energy_api"
 
-SCAN_INTERVAL: Final[timedelta] = timedelta(seconds=30)
+LOGGER = logging.getLogger(__package__)
 
 CONF_INSTALLATION_ID: Final[str] = "installation_id"
+DEFAULT_NAME: Final[str] = "Combined Energy API"
+
+SCAN_INTERVAL: Final[timedelta] = timedelta(seconds=30)
