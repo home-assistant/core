@@ -197,7 +197,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         data_key="chargingInstantaneousPower",
         device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        name="Charging power",
+        name="Admissible charging power",
         native_unit_of_measurement=POWER_KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),

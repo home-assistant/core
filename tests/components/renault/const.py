@@ -398,7 +398,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
-                ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
+                ATTR_ENTITY_ID: "sensor.reg_number_admissible_charging_power",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging_power",
@@ -617,7 +617,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
-                ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
+                ATTR_ENTITY_ID: "sensor.reg_number_admissible_charging_power",
                 ATTR_STATE: "27.0",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging_power",
