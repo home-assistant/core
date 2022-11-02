@@ -306,6 +306,7 @@ FLOWS = {
         "prusalink",
         "ps4",
         "pure_energie",
+        "pushbullet",
         "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",
