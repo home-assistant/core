@@ -20,6 +20,8 @@ from telegram import (
     ReplyKeyboardRemove,
     Update,
     User,
+    InputMediaVideo,
+    InputMediaPhoto,
 )
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
@@ -87,6 +89,7 @@ ATTR_ANSWERS = "answers"
 ATTR_OPEN_PERIOD = "open_period"
 ATTR_IS_ANONYMOUS = "is_anonymous"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
+ATTR_MEDIA_TYPE = "media_type"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -110,6 +113,7 @@ SERVICE_EDIT_REPLYMARKUP = "edit_replymarkup"
 SERVICE_ANSWER_CALLBACK_QUERY = "answer_callback_query"
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
+SERVICE_EDIT_MEDIA = "edit_media"
 
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
@@ -214,6 +218,18 @@ SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
     }
 )
 
+SERVICE_SCHEMA_EDIT_MEDIA = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGEID): vol.Any(
+            cv.positive_int, vol.All(cv.string, "last")
+        ),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_MEDIA_TYPE): cv.string,
+        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
         vol.Required(ATTR_MESSAGEID): vol.Any(
@@ -274,6 +290,7 @@ SERVICE_MAP = {
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
     SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
+    SERVICE_EDIT_MEDIA: SERVICE_SCHEMA_EDIT_MEDIA,
 }
 
 
@@ -702,6 +719,49 @@ class TelegramNotificationService:
                 timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
             )
+        if type_edit == SERVICE_EDIT_MEDIA:
+            media_type = kwargs.get(ATTR_MEDIA_TYPE)
+            file_content = load_data(
+                self.hass,
+                url=kwargs.get(ATTR_URL),
+                filepath=kwargs.get(ATTR_FILE),
+                username=kwargs.get(ATTR_USERNAME),
+                password=kwargs.get(ATTR_PASSWORD),
+                authentication=kwargs.get(ATTR_AUTHENTICATION),
+                verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
+            )
+
+            if file_content:
+                if media_type == 'photo':
+                    return self._send_msg(
+                        self.bot.edit_message_media,
+                        "Error editing media to photo",
+                        params[ATTR_MESSAGE_TAG],
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        inline_message_id=inline_message_id,
+                        media=InputMediaPhoto(media=file_content,
+                                              caption=kwargs.get(ATTR_CAPTION),
+                                              parse_mode=params[ATTR_PARSER]),
+                        reply_markup=params[ATTR_REPLYMARKUP],
+                    )
+
+                elif media_type == 'video':
+                    return self._send_msg(
+                        self.bot.edit_message_media,
+                        "Error editing media to video",
+                        params[ATTR_MESSAGE_TAG],
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        inline_message_id=inline_message_id,
+                        media=InputMediaVideo(media=file_content,
+                                              caption=kwargs.get(ATTR_CAPTION),
+                                              parse_mode=params[ATTR_PARSER]),
+                        reply_markup=params[ATTR_REPLYMARKUP],
+                    )
+            else:
+                _LOGGER.error("Can't send file with kwargs: %s", kwargs)
+                return False
 
         return self._send_msg(
             self.bot.edit_message_reply_markup,
@@ -713,7 +773,7 @@ class TelegramNotificationService:
             reply_markup=params[ATTR_REPLYMARKUP],
             timeout=params[ATTR_TIMEOUT],
         )
-
+    
     def answer_callback_query(
         self, message, callback_query_id, show_alert=False, **kwargs
     ):
@@ -734,6 +794,7 @@ class TelegramNotificationService:
             show_alert=show_alert,
             timeout=params[ATTR_TIMEOUT],
         )
+
 
     def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
         """Send a photo, sticker, video, or document."""
