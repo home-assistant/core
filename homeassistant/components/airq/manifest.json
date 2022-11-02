@@ -6,5 +6,6 @@
   "requirements": ["aioairq==0.2.4"],
   "codeowners": ["@Sibgatulin", "@dl2080"],
   "iot_class": "local_polling",
-  "loggers": ["aioairq"]
+  "loggers": ["aioairq"],
+  "integration_type": "hub"
 }
