@@ -74,7 +74,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}_{station_id}"
+        self._attr_unique_id = station_id
         self._attr_name = f"ZAMG {name}"
         self.station_id = f"{station_id}"
         self._attr_device_info = DeviceInfo(
