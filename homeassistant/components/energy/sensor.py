@@ -38,7 +38,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import unit_conversion
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
@@ -273,7 +273,7 @@ class EnergyCostSensor(SensorEntity):
 
         elif self._adapter.source_type == "water":
             valid_units = VALID_VOLUME_UNITS_WATER
-            if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            if self.hass.config.units is METRIC_SYSTEM:
                 default_price_unit = UnitOfVolume.CUBIC_METERS
             else:
                 default_price_unit = UnitOfVolume.GALLONS
