@@ -17,7 +17,7 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 from .const import DOMAIN
 
@@ -60,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _needs_poll(
         service_info: BluetoothServiceInfoBleak, last_poll: float | None
     ) -> bool:
+        if hass.state != CoreState.running:
+            return False
         return data.poll_needed(service_info, last_poll)
 
     async def _async_poll(service_info: BluetoothServiceInfoBleak):
