@@ -339,7 +339,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         super().__init__(coordinator)
         self._sensor_name_prefix = sensor_name_prefix
         self.entity_description = description
-        self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
+        self._attr_name = f"{sensor_name_prefix} {description.name_suffix}".strip()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Glances",
