@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
@@ -39,19 +40,22 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._login(user_input)
         except livisi_errors.WrongCredentialException:
             errors["base"] = "wrong_password"
-        except livisi_errors.ShcUnreachableException:
+        except livisi_errors.ShcUnreachableException as exception:
             errors["base"] = "cannot_connect"
+            raise ConfigEntryNotReady from exception
         except livisi_errors.IncorrectIpAddressException:
             errors["base"] = "wrong_ip_address"
         else:
             controller_info: dict[str, Any] = {}
             try:
                 controller_info = await self.get_controller()
-            except ClientConnectorError:
+            except ClientConnectorError as exception:
                 errors["base"] = "cannot_connect"
+                raise ConfigEntryNotReady from exception
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
             errors["base"] = "cannot_connect"
+            raise ConfigEntryNotReady
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors
