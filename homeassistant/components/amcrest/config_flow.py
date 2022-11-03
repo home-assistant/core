@@ -83,7 +83,7 @@ class AmcrestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input:
             try:
                 camera = AmcrestChecker(
                     self.hass,
