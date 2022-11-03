@@ -10,6 +10,7 @@ from homeassistant.components.risco.config_flow import (
     UnauthorizedError,
 )
 from homeassistant.components.risco.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -140,6 +141,75 @@ async def test_form_cloud_already_exists(hass):
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
+
+
+async def test_form_reauth(hass, cloud_config_entry):
+    """Test reauthenticate."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data=cloud_config_entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
+    ), patch(
+        "homeassistant.components.risco.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**TEST_CLOUD_DATA, CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+    assert cloud_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_reauth_with_new_username(hass, cloud_config_entry):
+    """Test reauthenticate with new username."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data=cloud_config_entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
+    ), patch(
+        "homeassistant.components.risco.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**TEST_CLOUD_DATA, CONF_USERNAME: "new_user"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+    assert cloud_config_entry.data[CONF_USERNAME] == "new_user"
+    assert cloud_config_entry.unique_id == "new_user"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_local_form(hass):

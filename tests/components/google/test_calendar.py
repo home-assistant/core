@@ -62,15 +62,11 @@ TEST_EVENT = {
 
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    hass,
     test_api_calendar,
     mock_calendars_list,
-    config_entry,
 ):
-    """Fixture that pulls in the default fixtures for tests in this file."""
+    """Fixture that sets up the default API responses during integration setup."""
     mock_calendars_list({"items": [test_api_calendar]})
-    config_entry.add_to_hass(hass)
-    return
 
 
 def get_events_url(entity: str, start: str, end: str) -> str:

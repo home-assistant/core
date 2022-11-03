@@ -191,6 +191,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nextdns.*
 homeassistant.components.nfandroidtv.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
@@ -283,6 +284,7 @@ homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
+homeassistant.components.wake_on_lan.*
 homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*

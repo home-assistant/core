@@ -5,15 +5,33 @@
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "bad_birth": "Topik birth tidak valid",
+            "bad_certificate": "Sertifikat CA tidak valid",
+            "bad_client_cert": "Sertifikat klien tidak valid, pastikan file dengan format PEM diberikan",
+            "bad_client_cert_key": "Sertifikat klien dan pribadi bukan pasangan yang valid",
+            "bad_client_key": "Kunci pribadi tidak valid, pastikan file dengan format PEM diberikan tanpa kata sandi",
+            "bad_discovery_prefix": "Prefiks topik penemuan tidak valid",
+            "bad_will": "Topik will tidak valid",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_inclusion": "Sertifikat klien dan kunci pribadi harus dikonfigurasi bersama"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opsi tingkat lanjut",
                     "broker": "Broker",
+                    "certificate": "Jalur ke file sertifikat CA khusus",
+                    "client_cert": "Jalur ke file sertifikat klien",
+                    "client_id": "ID Klien (biarkan kosong agar dihasilkan secara acak)",
+                    "client_key": "Jalur ke file kunci pribadi",
                     "discovery": "Aktifkan penemuan",
+                    "keepalive": "Waktu antara mengirim pesan tetap hidup",
                     "password": "Kata Sandi",
                     "port": "Port",
+                    "protocol": "Protokol MQTT",
+                    "set_ca_cert": "Validasi sertifikat broker",
+                    "set_client_cert": "Gunakan sertifikat klien",
+                    "tls_insecure": "Abaikan validasi sertifikat broker",
                     "username": "Nama Pengguna"
                 },
                 "description": "Masukkan informasi koneksi broker MQTT Anda."
@@ -53,18 +71,30 @@
         "deprecated_yaml": {
             "description": "MQTT {platform} yang dikonfigurasi secara manual ditemukan di bawah kunci platform `{platform}`.\n\nPindahkan konfigurasi ke kunci integrasi `mqtt` dan mulai ulang Home Assistant untuk memperbaiki masalah ini. Lihat [dokumentasi]({more_info_url}), untuk informasi lebih lanjut.",
             "title": "Entitas MQTT {platform} yang dikonfigurasi secara manual membutuhkan perhatian"
+        },
+        "deprecated_yaml_broker_settings": {
+            "title": "Pengaturan MQTT yang usang ditemukan di `configuration.yaml`"
         }
     },
     "options": {
         "error": {
             "bad_birth": "Topik birth tidak valid",
+            "bad_certificate": "Sertifikat CA tidak valid",
+            "bad_client_cert": "Sertifikat klien tidak valid, pastikan file dengan format PEM diberikan",
+            "bad_client_cert_key": "Sertifikat klien dan pribadi bukan pasangan yang valid",
+            "bad_client_key": "Kunci pribadi tidak valid, pastikan file dengan format PEM diberikan tanpa kata sandi",
+            "bad_discovery_prefix": "Prefiks topik penemuan tidak valid",
             "bad_will": "Topik will tidak valid",
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "invalid_inclusion": "Sertifikat klien dan kunci pribadi harus dikonfigurasi bersama"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opsi tingkat lanjut",
                     "broker": "Broker",
+                    "certificate": "Unggah file sertifikat CA khusus",
+                    "client_cert": "Unggah file sertifikat klien",
                     "password": "Kata Sandi",
                     "port": "Port",
                     "username": "Nama Pengguna"

@@ -181,9 +181,9 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     msg.topic,
                 )
             except JSON_DECODE_EXCEPTIONS:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "No valid (JSON) payload detected after processing payload '%s' on topic %s",
-                    json_payload,
+                    payload,
                     msg.topic,
                 )
                 json_payload["installed_version"] = payload

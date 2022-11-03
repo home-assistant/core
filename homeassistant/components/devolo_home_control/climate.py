@@ -35,6 +35,7 @@ async def async_setup_entry(
                     "devolo.model.Thermostat:Valve",
                     "devolo.model.Room:Thermostat",
                     "devolo.model.Eurotronic:Spirit:Device",
+                    "unk.model.Danfoss:Thermostat",
                 ):
                     entities.append(
                         DevoloClimateDeviceEntity(
