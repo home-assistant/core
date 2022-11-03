@@ -87,9 +87,10 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     @property
     def is_eco_mode_on(self) -> bool:
         """Return true if eco mode is on."""
-        current_mode = self.executor.select_state(OverkizState.IO_PASS_APCDWH_MODE)
-
-        return current_mode == OverkizCommandParam.ECO
+        return (
+            self.executor.select_state(OverkizState.IO_PASS_APCDWH_MODE)
+            == OverkizCommandParam.ECO
+        )
 
     @property
     def is_away_mode_on(self) -> bool:
