@@ -486,8 +486,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 config.get(key), entity=self
             ).async_render
 
-        self._command_templates = command_templates
-
         support: int = 0
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
