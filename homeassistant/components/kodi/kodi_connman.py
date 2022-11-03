@@ -1,4 +1,5 @@
 """Managing JSON-RPC API connection for all platforms of the Kodi component."""
+from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
@@ -281,11 +282,15 @@ class KodiConnectionClient(Entity):
     """Base class to be used by Kodi platforms."""
 
     _attr_has_entity_name = True
-    _websocket_callbacks: dict[str, Callable[[Any, Any], Awaitable[None]]] = {}
 
-    def __init__(self, connman: KodiConnectionManager) -> None:
+    def __init__(
+        self,
+        connman: KodiConnectionManager,
+        ws_callbacks: dict[str, Callable[[Any, Any], Awaitable[None]]] | None = None,
+    ) -> None:
         """Initialize Kodi base class for platforms."""
         self._connman = connman
+        self._websocket_callbacks = ws_callbacks if not None else {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._connman._uid)},
         )

@@ -62,8 +62,7 @@ class KodiBinaryEntity(KodiConnectionClient, BinarySensorEntity):
     ) -> None:
         """Initialize kodi binary sensor."""
         # Define used websocket methods including their callbacks
-        self._websocket_callbacks = {api_on: self.async_on, api_off: self.async_off}
-        super().__init__(connman)
+        super().__init__(connman, {api_on: self.async_on, api_off: self.async_off})
 
         self._attr_is_on = False
         self._attr_name = name
@@ -107,7 +106,6 @@ class KodiBinaryEntity(KodiConnectionClient, BinarySensorEntity):
                     self._attr_is_on,
                     display_status,
                 )
-                self.async_write_ha_state()
             else:
                 _LOGGER.debug(
                     "Query status for %s is None: %d", self.name, self._attr_is_on
