@@ -271,8 +271,8 @@ class MqttFan(MqttEntity, FanEntity):
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
-    _command_templates: dict[str, Callable[..., PublishPayloadType]]
-    _value_templates: dict[str, Callable[..., ReceivePayloadType]]
+    _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _feature_percentage: bool
     _feature_preset_mode: bool
     _topic: dict[str, Any]
@@ -282,7 +282,6 @@ class MqttFan(MqttEntity, FanEntity):
     _optimistic_preset_mode: bool
     _payload: dict[str, Any]
     _speed_range: tuple[int, int]
-    _supported_features: int
 
     def __init__(
         self,
@@ -398,7 +397,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
-            payload: ReceivePayloadType = self._value_templates[CONF_STATE](msg.payload)
+            payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
                 return
@@ -422,9 +421,9 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def percentage_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the percentage."""
-            rendered_percentage_payload: ReceivePayloadType = self._value_templates[
-                ATTR_PERCENTAGE
-            ](msg.payload)
+            rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
+                msg.payload
+            )
             if not rendered_percentage_payload:
                 _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
                 return
@@ -476,8 +475,7 @@ class MqttFan(MqttEntity, FanEntity):
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
                 return
-            assert self.preset_modes is not None
-            if preset_mode not in self.preset_modes:
+            if not self.preset_modes or preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
@@ -502,9 +500,7 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the oscillation."""
-            payload: ReceivePayloadType = self._value_templates[ATTR_OSCILLATING](
-                msg.payload
-            )
+            payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
                 return
