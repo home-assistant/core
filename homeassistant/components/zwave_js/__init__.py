@@ -854,24 +854,24 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
     addon_state = addon_info.state
 
+    addon_config = {
+        CONF_ADDON_DEVICE: usb_path,
+        CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
+        CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
+        CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
+    }
+
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady

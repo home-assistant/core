@@ -33,7 +33,8 @@ async def test_multiple_bleak_scanner_instances(hass):
 
     uninstall_multiple_bleak_catcher()
 
-    instance = bleak.BleakScanner()
+    with patch("bleak.get_platform_scanner_backend_type"):
+        instance = bleak.BleakScanner()
 
     assert not isinstance(instance, HaBleakScannerWrapper)
 

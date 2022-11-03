@@ -60,8 +60,7 @@ def setup_platform(
             if device.is_thermostat() or device.is_wallthermostat():
                 devices.append(MaxCubeClimate(handler, device))
 
-    if devices:
-        add_entities(devices)
+    add_entities(devices)
 
 
 class MaxCubeClimate(ClimateEntity):

@@ -1,7 +1,7 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import functools
 import logging
 
@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -46,7 +46,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +171,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the sensor."""
-        self._state = None
         self._expiration_trigger = None
 
         expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -201,7 +200,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
-            self._state = last_sensor_data.native_value
+            self._attr_native_value = last_sensor_data.native_value
 
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self._value_is_expired, expiration_at
@@ -227,9 +226,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = config[CONF_FORCE_UPDATE]
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
+
         self._template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -259,7 +262,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            payload = self._template(msg.payload, default=self._state)
+            payload = self._template(msg.payload, default=self.native_value)
 
             if payload is not None and self.device_class in (
                 SensorDeviceClass.DATE,
@@ -271,8 +274,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     )
                 elif self.device_class == SensorDeviceClass.DATE:
                     payload = payload.date()
-            if payload != "":
-                self._state = payload
+
+            self._attr_native_value = payload
 
         def _update_last_reset(msg):
             payload = self._last_reset_template(msg.payload)
@@ -300,7 +303,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
             ):
                 _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
@@ -314,7 +317,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def last_reset_message_received(msg):
             """Handle new last_reset messages."""
             _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if (
             CONF_LAST_RESET_TOPIC in self._config
@@ -341,26 +344,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._expiration_trigger = None
         self._expired = True
         self.async_write_ha_state()
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the entity."""
-        return self._state
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of the sensor."""
-        return self._config.get(CONF_STATE_CLASS)
 
     @property
     def available(self) -> bool:

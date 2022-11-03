@@ -16,7 +16,12 @@ from homeassistant.components.bluetooth.models import (
     HaBluetoothConnector,
 )
 
-from . import _get_manager, inject_advertisement, inject_advertisement_with_source
+from . import (
+    _get_manager,
+    generate_advertisement_data,
+    inject_advertisement,
+    inject_advertisement_with_source,
+)
 
 
 class MockBleakClient(BleakClient):
@@ -49,7 +54,7 @@ async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
     """Test wrapped bleak scanner dispatches calls as expected."""
     scanner = HaBleakScannerWrapper()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
@@ -84,7 +89,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
     switchbot_device = BLEDevice(
         "44:44:33:11:23:45", "wohand", {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"}
     )
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
@@ -116,7 +121,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
         },
         rssi=-30,
     )
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
@@ -153,6 +158,11 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             ),
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
+    )
+    switchbot_proxy_device_adv_no_connection_slot = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
         rssi=-30,
     )
     switchbot_proxy_device_has_connection_slot = BLEDevice(
@@ -166,14 +176,19 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         },
         rssi=-40,
     )
+    switchbot_proxy_device_adv_has_connection_slot = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-40,
+    )
     switchbot_device = BLEDevice(
         "44:44:33:11:23:45",
         "wohand",
         {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"},
-        rssi=-100,
     )
-    switchbot_adv = AdvertisementData(
-        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
     inject_advertisement_with_source(
@@ -182,21 +197,28 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     inject_advertisement_with_source(
         hass,
         switchbot_proxy_device_has_connection_slot,
-        switchbot_adv,
+        switchbot_proxy_device_adv_has_connection_slot,
         "esp32_has_connection_slot",
     )
     inject_advertisement_with_source(
         hass,
         switchbot_proxy_device_no_connection_slot,
-        switchbot_adv,
+        switchbot_proxy_device_adv_no_connection_slot,
         "esp32_no_connection_slot",
     )
 
     class FakeScanner(BaseHaScanner):
         @property
-        def discovered_devices(self) -> list[BLEDevice]:
+        def discovered_devices_and_advertisement_data(
+            self,
+        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
             """Return a list of discovered devices."""
-            return [switchbot_proxy_device_has_connection_slot]
+            return {
+                switchbot_proxy_device_has_connection_slot.address: (
+                    switchbot_proxy_device_has_connection_slot,
+                    switchbot_proxy_device_adv_has_connection_slot,
+                )
+            }
 
         async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
             """Return a list of discovered devices."""
@@ -204,7 +226,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
                 return switchbot_proxy_device_has_connection_slot
             return None
 
-    scanner = FakeScanner()
+    scanner = FakeScanner(hass, "esp32")
     cancel = manager.async_register_scanner(scanner, True)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
@@ -237,7 +259,12 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         rssi=-30,
     )
     switchbot_proxy_device_no_connection_slot.metadata["delegate"] = 0
-
+    switchbot_proxy_device_no_connection_slot_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-30,
+    )
     switchbot_proxy_device_has_connection_slot = BLEDevice(
         "44:44:33:11:23:45",
         "wohand_has_connection_slot",
@@ -247,9 +274,14 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             ),
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-40,
     )
     switchbot_proxy_device_has_connection_slot.metadata["delegate"] = 0
+    switchbot_proxy_device_has_connection_slot_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-40,
+    )
 
     switchbot_device = BLEDevice(
         "44:44:33:11:23:45",
@@ -258,31 +290,41 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         rssi=-100,
     )
     switchbot_device.metadata["delegate"] = 0
-    switchbot_adv = AdvertisementData(
-        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
     )
 
     inject_advertisement_with_source(
-        hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
+        hass, switchbot_device, switchbot_device_adv, "00:00:00:00:00:01"
     )
     inject_advertisement_with_source(
         hass,
         switchbot_proxy_device_has_connection_slot,
-        switchbot_adv,
+        switchbot_proxy_device_has_connection_slot_adv,
         "esp32_has_connection_slot",
     )
     inject_advertisement_with_source(
         hass,
         switchbot_proxy_device_no_connection_slot,
-        switchbot_adv,
+        switchbot_proxy_device_no_connection_slot_adv,
         "esp32_no_connection_slot",
     )
 
     class FakeScanner(BaseHaScanner):
         @property
-        def discovered_devices(self) -> list[BLEDevice]:
+        def discovered_devices_and_advertisement_data(
+            self,
+        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
             """Return a list of discovered devices."""
-            return [switchbot_proxy_device_has_connection_slot]
+            return {
+                switchbot_proxy_device_has_connection_slot.address: (
+                    switchbot_proxy_device_has_connection_slot,
+                    switchbot_proxy_device_has_connection_slot_adv,
+                )
+            }
 
         async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
             """Return a list of discovered devices."""
@@ -290,7 +332,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
                 return switchbot_proxy_device_has_connection_slot
             return None
 
-    scanner = FakeScanner()
+    scanner = FakeScanner(hass, "esp32")
     cancel = manager.async_register_scanner(scanner, True)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot

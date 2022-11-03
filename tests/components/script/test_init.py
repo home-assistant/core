@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
+from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -44,6 +44,12 @@ from tests.common import async_fire_time_changed, async_mock_service, mock_resto
 from tests.components.logbook.common import MockRow, mock_humanify
 
 ENTITY_ID = "script.test"
+
+
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "script")
 
 
 async def test_passing_variables(hass):
@@ -217,6 +223,129 @@ async def test_reload_service(hass, running):
     else:
         assert hass.states.get(ENTITY_ID) is not None
         assert hass.services.has_service(script.DOMAIN, "test")
+
+
+async def test_reload_unchanged_does_not_stop(hass, calls):
+    """Test that reloading stops any running actions as appropriate."""
+    test_entity = "test.entity"
+
+    config = {
+        script.DOMAIN: {
+            "test": {
+                "sequence": [
+                    {"event": "running"},
+                    {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                    {"service": "test.script"},
+                ],
+            }
+        }
+    }
+    assert await async_setup_component(hass, script.DOMAIN, config)
+
+    assert hass.states.get(ENTITY_ID) is not None
+    assert hass.services.has_service(script.DOMAIN, "test")
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    # Start the script and wait for it to start
+    _, object_id = split_entity_id(ENTITY_ID)
+    await hass.services.async_call(DOMAIN, object_id)
+    await running.wait()
+    assert len(calls) == 0
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "script_config",
+    (
+        {
+            "test": {
+                "sequence": [{"service": "test.script"}],
+            }
+        },
+        # A script using templates
+        {
+            "test": {
+                "sequence": [{"service": "{{ 'test.script' }}"}],
+            }
+        },
+        # A script using blueprint
+        {
+            "test": {
+                "use_blueprint": {
+                    "path": "test_service.yaml",
+                    "input": {
+                        "service_to_call": "test.script",
+                    },
+                }
+            }
+        },
+        # A script using blueprint with templated input
+        {
+            "test": {
+                "use_blueprint": {
+                    "path": "test_service.yaml",
+                    "input": {
+                        "service_to_call": "{{ 'test.script' }}",
+                    },
+                }
+            }
+        },
+    ),
+)
+async def test_reload_unchanged_script(hass, calls, script_config):
+    """Test an unmodified script is not reloaded."""
+    with patch(
+        "homeassistant.components.script.ScriptEntity", wraps=ScriptEntity
+    ) as script_entity_init:
+        config = {script.DOMAIN: [script_config]}
+        assert await async_setup_component(hass, script.DOMAIN, config)
+        assert hass.states.get(ENTITY_ID) is not None
+        assert hass.services.has_service(script.DOMAIN, "test")
+
+        assert script_entity_init.call_count == 1
+        script_entity_init.reset_mock()
+
+        # Start the script and wait for it to finish
+        _, object_id = split_entity_id(ENTITY_ID)
+        await hass.services.async_call(DOMAIN, object_id)
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+
+        # Reload the scripts without any change
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+        assert script_entity_init.call_count == 0
+        script_entity_init.reset_mock()
+
+        # Start the script and wait for it to start
+        _, object_id = split_entity_id(ENTITY_ID)
+        await hass.services.async_call(DOMAIN, object_id)
+        await hass.async_block_till_done()
+        assert len(calls) == 2
 
 
 async def test_service_descriptions(hass):

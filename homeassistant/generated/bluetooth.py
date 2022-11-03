@@ -10,6 +10,18 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 820,
     },
     {
+        "domain": "aranet",
+        "manufacturer_id": 1794,
+        "service_uuid": "f0cd1400-95da-4f4b-9ac8-aa55d312af0c",
+        "connectable": False,
+    },
+    {
+        "domain": "aranet",
+        "manufacturer_id": 1794,
+        "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb",
+        "connectable": False,
+    },
+    {
         "domain": "bluemaestro",
         "manufacturer_id": 307,
         "connectable": False,
@@ -177,11 +189,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "keymitt_ble",
-        "service_uuid": "00001831-0000-1000-8000-00805f9b34fb",
-    },
-    {
-        "domain": "keymitt_ble",
-        "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000abcd-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "keymitt_ble",
@@ -232,6 +240,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "oralb",
+        "manufacturer_id": 220,
+    },
+    {
         "domain": "qingping",
         "local_name": "Qingping*",
         "connectable": False,
@@ -272,6 +284,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "sensorpush",
         "local_name": "SensorPush*",
         "connectable": False,
+    },
+    {
+        "domain": "snooz",
+        "local_name": "Snooz*",
+    },
+    {
+        "domain": "snooz",
+        "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0",
     },
     {
         "domain": "switchbot",

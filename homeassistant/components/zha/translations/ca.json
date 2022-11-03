@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Envia efecte a tots els LEDs",
+            "issue_individual_led_effect": "Envia efecte a un LED individual",
             "squawk": "Squawk",
             "warn": "Av\u00eds"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA s'aturar\u00e0. Vols continuar?",
                 "title": "Reconfiguraci\u00f3 de ZHA"
             },
+            "instruct_unplug": {
+                "description": "La r\u00e0dio antiga s'ha reiniciat. Si el maquinari ja no \u00e9s necessari, ara pots desconnectar-lo.",
+                "title": "Desconnecta la r\u00e0dio antiga"
+            },
+            "intent_migrate": {
+                "description": "La r\u00e0dio antiga es restablir\u00e0 de f\u00e0brica. Si utilitzes un adaptador de Z-Wave i Zigbee combinat com el HUSBZB-1, nom\u00e9s restablir\u00e0 la part del Zigbee. \n\nVols continuar?",
+                "title": "Migra a una nova r\u00e0dio"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Tipus de r\u00e0dio"
@@ -232,6 +242,14 @@
                 },
                 "description": "La teva c\u00f2pia de seguretat t\u00e9 una adre\u00e7a IEEE diferent de la teva r\u00e0dio. Perqu\u00e8 la xarxa funcioni correctament, tamb\u00e9 s'ha de canviar l'adre\u00e7a IEEE de la teva r\u00e0dio. \n\nAquesta \u00e9s una operaci\u00f3 permanent.",
                 "title": "Sobreescriu l'adre\u00e7a IEEE r\u00e0dio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Est\u00e0s migrant a una r\u00e0dio nova o tornant a configurar la r\u00e0dio actual?",
+                "menu_options": {
+                    "intent_migrate": "Migra a una nova r\u00e0dio",
+                    "intent_reconfigure": "Torna a configurar la r\u00e0dio actual"
+                },
+                "title": "Migraci\u00f3 o reconfiguraci\u00f3"
             },
             "upload_manual_backup": {
                 "data": {

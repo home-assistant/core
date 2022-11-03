@@ -1,16 +1,12 @@
 """The Shelly integration."""
 from __future__ import annotations
 
-import asyncio
-from http import HTTPStatus
-from typing import Any, Final, cast
+from typing import Any, Final
 
-from aiohttp import ClientResponseError
 import aioshelly
 from aioshelly.block_device import BlockDevice
-from aioshelly.exceptions import AuthRequired, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,26 +18,28 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
-    BLOCK,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
-    DEVICE,
     DOMAIN,
     LOGGER,
-    REST,
-    RPC,
-    RPC_POLL,
 )
 from .coordinator import (
-    BlockDeviceWrapper,
-    RpcDeviceWrapper,
-    RpcPollingWrapper,
-    ShellyDeviceRestWrapper,
+    ShellyBlockCoordinator,
+    ShellyEntryData,
+    ShellyRestCoordinator,
+    ShellyRpcCoordinator,
+    ShellyRpcPollingCoordinator,
+    get_entry_data,
 )
-from .utils import get_block_device_sleep_period, get_coap_context, get_device_entry_gen
+from .utils import (
+    get_block_device_sleep_period,
+    get_coap_context,
+    get_device_entry_gen,
+    get_rpc_device_sleep_period,
+    get_ws_context,
+)
 
 BLOCK_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -67,7 +65,10 @@ RPC_PLATFORMS: Final = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
+RPC_SLEEPING_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 COAP_SCHEMA: Final = vol.Schema(
     {
@@ -101,24 +102,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
+    get_entry_data(hass)[entry.entry_id] = ShellyEntryData()
 
     if get_device_entry_gen(entry) == 2:
-        return await async_setup_rpc_entry(hass, entry)
+        return await _async_setup_rpc_entry(hass, entry)
 
-    return await async_setup_block_entry(hass, entry)
+    return await _async_setup_block_entry(hass, entry)
 
 
-async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    temperature_unit = "C" if hass.config.units.is_metric else "F"
-
     options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
-        temperature_unit,
     )
 
     coap_context = await get_coap_context(hass)
@@ -142,15 +139,31 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
                 )
             },
         )
+    # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+
+    @callback
+    def _async_block_device_setup() -> None:
+        """Set up a block based device that is online."""
+        shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
+        shelly_entry_data.block.async_setup()
+
+        platforms = BLOCK_SLEEPING_PLATFORMS
+
+        if not entry.data.get(CONF_SLEEP_PERIOD):
+            shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
+            platforms = BLOCK_PLATFORMS
+
+        hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
     def _async_device_online(_: Any) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
+        shelly_entry_data.device = None
 
         if sleep_period is None:
             data = {**entry.data}
@@ -158,31 +171,22 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
-        async_block_device_setup(hass, entry, device)
+        _async_block_device_setup()
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await device.initialize()
-                await device.update_status()
-        except asyncio.TimeoutError as err:
-            raise ConfigEntryNotReady(
-                str(err) or "Timeout during device setup"
-            ) from err
-        except OSError as err:
-            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
-        except AuthRequired as err:
-            raise ConfigEntryAuthFailed from err
-        except ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from err
+            await device.initialize()
+        except DeviceConnectionError as err:
+            raise ConfigEntryNotReady(repr(err)) from err
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed(repr(err)) from err
 
-        async_block_device_setup(hass, entry, device)
+        _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = device
+        shelly_entry_data.device = device
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
@@ -190,33 +194,12 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        async_block_device_setup(hass, entry, device)
+        _async_block_device_setup()
 
     return True
 
 
-@callback
-def async_block_device_setup(
-    hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
-) -> None:
-    """Set up a block based device that is online."""
-    device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        BLOCK
-    ] = BlockDeviceWrapper(hass, entry, device)
-    device_wrapper.async_setup()
-
-    platforms = BLOCK_SLEEPING_PLATFORMS
-
-    if not entry.data.get(CONF_SLEEP_PERIOD):
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-            REST
-        ] = ShellyDeviceRestWrapper(hass, device, entry)
-        platforms = BLOCK_PLATFORMS
-
-    hass.config_entries.async_setup_platforms(entry, platforms)
-
-
-async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
     options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],
@@ -224,98 +207,124 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         entry.data.get(CONF_PASSWORD),
     )
 
-    LOGGER.debug("Setting up online RPC device %s", entry.title)
-    try:
-        async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-            device = await RpcDevice.create(
-                aiohttp_client.async_get_clientsession(hass), options
-            )
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
-    except OSError as err:
-        raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
-    except (AuthRequired, InvalidAuthError) as err:
-        raise ConfigEntryAuthFailed from err
+    ws_context = await get_ws_context(hass)
 
-    device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        RPC
-    ] = RpcDeviceWrapper(hass, entry, device)
-    device_wrapper.async_setup()
-
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC_POLL] = RpcPollingWrapper(
-        hass, entry, device
+    device = await RpcDevice.create(
+        aiohttp_client.async_get_clientsession(hass),
+        ws_context,
+        options,
+        False,
     )
 
-    hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
+    dev_reg = device_registry.async_get(hass)
+    device_entry = None
+    if entry.unique_id is not None:
+        device_entry = dev_reg.async_get_device(
+            identifiers=set(),
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(entry.unique_id),
+                )
+            },
+        )
+    # https://github.com/home-assistant/core/pull/48076
+    if device_entry and entry.entry_id not in device_entry.config_entries:
+        device_entry = None
+
+    sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+
+    @callback
+    def _async_rpc_device_setup() -> None:
+        """Set up a RPC based device that is online."""
+        shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
+        shelly_entry_data.rpc.async_setup()
+
+        platforms = RPC_SLEEPING_PLATFORMS
+
+        if not entry.data.get(CONF_SLEEP_PERIOD):
+            shelly_entry_data.rpc_poll = ShellyRpcPollingCoordinator(
+                hass, entry, device
+            )
+            platforms = RPC_PLATFORMS
+
+        hass.config_entries.async_setup_platforms(entry, platforms)
+
+    @callback
+    def _async_device_online(_: Any) -> None:
+        LOGGER.debug("Device %s is online, resuming setup", entry.title)
+        shelly_entry_data.device = None
+
+        if sleep_period is None:
+            data = {**entry.data}
+            data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(device.config)
+            hass.config_entries.async_update_entry(entry, data=data)
+
+        _async_rpc_device_setup()
+
+    if sleep_period == 0:
+        # Not a sleeping device, finish setup
+        LOGGER.debug("Setting up online RPC device %s", entry.title)
+        try:
+            await device.initialize()
+        except DeviceConnectionError as err:
+            raise ConfigEntryNotReady(repr(err)) from err
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed(repr(err)) from err
+
+        _async_rpc_device_setup()
+    elif sleep_period is None or device_entry is None:
+        # Need to get sleep info or first time sleeping device setup, wait for device
+        shelly_entry_data.device = device
+        LOGGER.debug(
+            "Setup for device %s will resume when device is online", entry.title
+        )
+        device.subscribe_updates(_async_device_online)
+    else:
+        # Restore sensors for sleeping device
+        LOGGER.debug("Setting up offline block device %s", entry.title)
+        _async_rpc_device_setup()
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if get_device_entry_gen(entry) == 2:
-        unload_ok = await hass.config_entries.async_unload_platforms(
-            entry, RPC_PLATFORMS
-        )
-        if unload_ok:
-            await hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC].shutdown()
-            hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-        return unload_ok
-
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id].get(DEVICE)
-    if device is not None:
-        # If device is present, device wrapper is not setup yet
+    # If device is present, block/rpc coordinator is not setup yet
+    device = shelly_entry_data.device
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+        return True
+    if isinstance(device, BlockDevice):
         device.shutdown()
         return True
+
+    platforms = RPC_SLEEPING_PLATFORMS
+    if not entry.data.get(CONF_SLEEP_PERIOD):
+        platforms = RPC_PLATFORMS
+
+    if get_device_entry_gen(entry) == 2:
+        if unload_ok := await hass.config_entries.async_unload_platforms(
+            entry, platforms
+        ):
+            if shelly_entry_data.rpc:
+                await shelly_entry_data.rpc.shutdown()
+            get_entry_data(hass).pop(entry.entry_id)
+
+        return unload_ok
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
     if not entry.data.get(CONF_SLEEP_PERIOD):
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
+        shelly_entry_data.rest = None
         platforms = BLOCK_PLATFORMS
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
-    if unload_ok:
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][BLOCK].shutdown()
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
+        if shelly_entry_data.block:
+            shelly_entry_data.block.shutdown()
+        get_entry_data(hass).pop(entry.entry_id)
 
     return unload_ok
-
-
-def get_block_device_wrapper(
-    hass: HomeAssistant, device_id: str
-) -> BlockDeviceWrapper | None:
-    """Get a Shelly block device wrapper for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
-    dev_reg = device_registry.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
-                continue
-
-            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(BLOCK):
-                return cast(BlockDeviceWrapper, wrapper)
-
-    return None
-
-
-def get_rpc_device_wrapper(
-    hass: HomeAssistant, device_id: str
-) -> RpcDeviceWrapper | None:
-    """Get a Shelly RPC device wrapper for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
-    dev_reg = device_registry.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
-                continue
-
-            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(RPC):
-                return cast(RpcDeviceWrapper, wrapper)
-
-    return None

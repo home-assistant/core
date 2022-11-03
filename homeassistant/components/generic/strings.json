@@ -8,8 +8,6 @@
       "invalid_still_image": "URL did not return a valid still image",
       "malformed_url": "Malformed URL",
       "relative_url": "Relative URLs are not allowed",
-      "stream_file_not_found": "File not found while trying to connect to stream (is ffmpeg installed?)",
-      "stream_http_not_found": "HTTP 404 Not found while trying to connect to stream",
       "template_error": "Error rendering template. Review log for more info.",
       "timeout": "Timeout while loading URL",
       "stream_no_route_to_host": "Could not find host while trying to connect to stream",
@@ -34,14 +32,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "content_type": {
-        "description": "Specify the content type for the stream.",
+      "user_confirm_still": {
+        "title": "Preview",
+        "description": "![Camera Still Image Preview]({preview_url})",
         "data": {
-          "content_type": "Content Type"
+          "confirmed_ok": "This image looks good."
         }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     }
   },
@@ -64,10 +60,11 @@
           "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
       },
-      "content_type": {
-        "description": "[%key:component::generic::config::step::content_type::description%]",
+      "confirm_still": {
+        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
+        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
         "data": {
-          "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
+          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
         }
       }
     },

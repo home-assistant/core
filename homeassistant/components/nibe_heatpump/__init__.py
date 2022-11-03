@@ -1,6 +1,7 @@
 """The Nibe Heat Pump integration."""
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import timedelta
@@ -103,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.connection.stop()
+        await coordinator.async_shutdown()
 
     return unload_ok
 
@@ -173,6 +174,7 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         self.seed: dict[int, Coil] = {}
         self.connection = connection
         self.heatpump = heatpump
+        self.task: asyncio.Task | None = None
 
         heatpump.subscribe(heatpump.COIL_UPDATE_EVENT, self._on_coil_update)
 
@@ -219,6 +221,13 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         self.async_update_context_listeners([coil.address])
 
     async def _async_update_data(self) -> dict[int, Coil]:
+        self.task = asyncio.current_task()
+        try:
+            return await self._async_update_data_internal()
+        finally:
+            self.task = None
+
+    async def _async_update_data_internal(self) -> dict[int, Coil]:
         @retry(
             retry=retry_if_exception_type(CoilReadException),
             stop=stop_after_attempt(COIL_READ_RETRIES),
@@ -248,6 +257,14 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
             self.seed.pop(coil.address, None)
 
         return result
+
+    async def async_shutdown(self):
+        """Make sure a coordinator is shut down as well as it's connection."""
+        if self.task:
+            self.task.cancel()
+            await asyncio.wait((self.task,))
+        self._unschedule_refresh()
+        await self.connection.stop()
 
 
 class CoilEntity(CoordinatorEntity[Coordinator]):
