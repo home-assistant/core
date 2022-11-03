@@ -486,7 +486,7 @@ elmax_api==0.0.2
 emulated_roku==0.2.1
 
 # homeassistant.components.huisbaasje
-energyflip-client==0.2.1
+energyflip-client==0.2.2
 
 # homeassistant.components.enocean
 enocean==0.50
