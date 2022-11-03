@@ -99,7 +99,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     @property
     def current_heating_profile(self) -> str:
-        """Return current heating profile from Overkiz."""
+        """Return current heating profile."""
         return cast(
             str,
             self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_PROFILE),
