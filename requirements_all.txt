@@ -735,7 +735,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==2.2.2
+gcal-sync==2.2.3
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -878,7 +878,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221102.0
+home-assistant-frontend==20221102.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1921,7 +1921,7 @@ pysml==0.0.8
 pysnmplib==5.0.15
 
 # homeassistant.components.snooz
-pysnooz==0.8.2
+pysnooz==0.8.3
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -2647,4 +2647,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.43.0
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.6
+zwave_me_ws==0.3.0
