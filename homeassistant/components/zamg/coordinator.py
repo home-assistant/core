@@ -38,6 +38,8 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         try:
             await self.zamg.zamg_stations()
             device = await self.zamg.update()
+            if device is None:
+                raise UpdateFailed("No response from API")
         except ValueError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
         self.data = device
