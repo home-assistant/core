@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ast
 from collections import deque
+import multiprocessing
 from pathlib import Path
 
 from homeassistant.const import Platform
@@ -227,29 +228,49 @@ def find_non_referenced_integrations(
     return referenced
 
 
-def _validate_dependency_imports(
-    integrations: dict[str, Integration],
+def _compute_integration_dependencies(
     integration: Integration,
-) -> None:
-    """Validate all dependencies."""
+) -> tuple[str, dict[Path, set[str]] | None]:
+    """Compute integration dependencies."""
     # Some integrations are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
-        return
+        return (integration.domain, None)
 
     # Find usage of hass.components
     collector = ImportCollector(integration)
     collector.collect()
+    return (integration.domain, collector.referenced)
 
-    for domain in sorted(
-        find_non_referenced_integrations(
-            integrations, integration, collector.referenced
+
+def _validate_dependency_imports(
+    integrations: dict[str, Integration],
+) -> None:
+    """Validate all dependencies."""
+
+    # Find integration dependencies with multiprocessing
+    # (because it takes some time to parse thousands of files)
+    with multiprocessing.Pool() as pool:
+        integration_imports = dict(
+            pool.imap_unordered(
+                _compute_integration_dependencies,
+                integrations.values(),
+                chunksize=10,
+            )
         )
-    ):
-        integration.add_error(
-            "dependencies",
-            f"Using component {domain} but it's not in 'dependencies' "
-            "or 'after_dependencies'",
-        )
+
+    for integration in integrations.values():
+        referenced = integration_imports[integration.domain]
+        if not referenced:  # Either ignored or has no references
+            continue
+
+        for domain in sorted(
+            find_non_referenced_integrations(integrations, integration, referenced)
+        ):
+            integration.add_error(
+                "dependencies",
+                f"Using component {domain} but it's not in 'dependencies' "
+                "or 'after_dependencies'",
+            )
 
 
 def _check_circular_deps(
@@ -329,9 +350,7 @@ def validate(
     config: Config,
 ) -> None:
     """Handle dependencies for integrations."""
-    for integration in integrations.values():
-        # check for non-existing dependencies
-        _validate_dependency_imports(integrations, integration)
+    _validate_dependency_imports(integrations)
 
     if not config.specific_integrations:
         _validate_dependencies_exist(integrations)
