@@ -62,6 +62,7 @@ def get_aircon_mock(said):
     """Get a mock of an air conditioner."""
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
+    mock_aircon.disconnect = AsyncMock()
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
@@ -117,6 +118,7 @@ def get_sensor_mock(said):
     """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
+    mock_sensor.disconnect = AsyncMock()
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
