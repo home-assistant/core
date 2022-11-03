@@ -33,7 +33,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -173,8 +173,10 @@ class MqttSiren(MqttEntity, SirenEntity):
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
     _attr_should_poll = False
 
-    _command_templates: dict[str, Callable[..., PublishPayloadType] | None]
-    _value_template: Callable[..., ReceivePayloadType]
+    _command_templates: dict[
+        str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
+    ]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _state_on: str
     _state_off: str
     _optimistic: bool
