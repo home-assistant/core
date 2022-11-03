@@ -78,7 +78,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     def is_boost_mode_on(self) -> bool:
-        """Return true if away mode is on."""
+        """Return true if boost mode is on."""
         return (
             self.executor.select_state(OverkizState.CORE_BOOST_ON_OFF)
             == OverkizCommandParam.ON
