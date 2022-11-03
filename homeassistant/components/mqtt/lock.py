@@ -127,7 +127,7 @@ class MqttLock(MqttEntity, LockEntity):
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
     _optimistic: bool
-    _value_template: Callable[..., ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
         self,

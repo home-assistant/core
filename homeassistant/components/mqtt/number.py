@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -52,6 +51,7 @@ from .mixins import (
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
+    PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
 )
@@ -168,7 +168,8 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
 
     _optimistic: bool
-    _templates: dict[str, Callable[..., Any]]
+    _command_template: Callable[[PublishPayloadType], PublishPayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
         self,
@@ -191,15 +192,14 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._config = config
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        self._templates = {
-            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                config.get(CONF_COMMAND_TEMPLATE), entity=self
-            ).async_render,
-            CONF_VALUE_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_VALUE_TEMPLATE),
-                entity=self,
-            ).async_render_with_possible_json_value,
-        }
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE), entity=self
+        ).async_render
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
+
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_mode = config[CONF_MODE]
         self._attr_native_max_value = config[CONF_MAX]
@@ -215,9 +215,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             num_value: int | float | None
-            payload: ReceivePayloadType = self._templates[CONF_VALUE_TEMPLATE](
-                msg.payload
-            )
+            payload = self._value_template(msg.payload)
             try:
                 if not isinstance(payload, str):
                     raise ValueError
@@ -278,7 +276,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         if value.is_integer():
             current_number = int(value)
-        payload = self._templates[CONF_COMMAND_TEMPLATE](current_number)
+        payload = self._command_template(current_number)
 
         if self._optimistic:
             self._attr_native_value = current_number

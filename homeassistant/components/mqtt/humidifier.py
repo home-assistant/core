@@ -217,13 +217,12 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _entity_id_format = humidifier.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
 
-    _command_templates: dict[str, Callable[..., PublishPayloadType]]
-    _value_templates: dict[str, Callable[..., ReceivePayloadType]]
+    _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _optimistic: bool
     _optimistic_target_humidity: bool
     _optimistic_mode: bool
     _payload: dict[str, str]
-    _supported_features: int
     _topic: dict[str, Any]
 
     def __init__(
@@ -392,8 +391,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             if not mode:
                 _LOGGER.debug("Ignoring empty mode from '%s'", msg.topic)
                 return
-            assert self.available_modes is not None
-            if mode not in self.available_modes:
+            if not self.available_modes or mode not in self.available_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid mode",
                     msg.payload,
