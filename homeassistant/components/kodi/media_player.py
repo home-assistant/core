@@ -36,12 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -284,9 +279,9 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         self._media_position = None
 
         self._conf_name = name
-        self._attr_name = "Kodi"
+        self._attr_name = None
 
-        self._media_callbacks = {
+        self._websocket_callbacks = {
             "Player.OnPause": self.async_on_speed_event,
             "Player.OnPlay": self.async_on_speed_event,
             "Player.OnAVStart": self.async_on_speed_event,
@@ -351,15 +346,6 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Kodi",
-            name=self._conf_name,
-        )
-
-    @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
@@ -374,41 +360,6 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
             return MediaPlayerState.PAUSED
 
         return MediaPlayerState.PLAYING
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks for needed api methods."""
-        await self._connman.add_callback_on_connect(self._on_ws_connected)
-        await self._connman.add_callback_on_disconnect(self._on_ws_disconnected)
-
-    async def _on_ws_connected(self):
-        """Call after websocket is connected."""
-        self._register_ws_callbacks()
-
-        version = (await self._kodi.get_application_properties(["version"]))["version"]
-        sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
-        dev_reg.async_update_device(device.id, sw_version=sw_version)
-
-        self.async_schedule_update_ha_state(True)
-
-    async def _on_ws_disconnected(self):
-        """Call after websocket is disconnected."""
-        self._reset_state()
-        self.async_write_ha_state()
-        self._unregister_ws_callbacks()
-
-    @callback
-    def _register_ws_callbacks(self):
-        _LOGGER.debug("Registering kodi media_player websocket callbacks")
-        for api_method, api_callback in self._media_callbacks.items():
-            self._connman.register_websocket_callback(api_method, api_callback)
-
-    @callback
-    def _unregister_ws_callbacks(self):
-        _LOGGER.debug("Unregistering kodi media_player websocket callbacks")
-        for api_method in self._media_callbacks:
-            self._connman.unregister_websocket_callback(api_method)
 
     @cmd
     async def async_update(self) -> None:

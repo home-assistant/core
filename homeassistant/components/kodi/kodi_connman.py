@@ -1,9 +1,9 @@
 """Managing JSON-RPC API connection for all platforms of the Kodi component."""
 
-from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
+from typing import Any
 
 from jsonrpc_base.jsonrpc import TransportError
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
@@ -11,17 +11,20 @@ from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connecti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_WS_PORT
+from .const import CONF_WS_PORT, DOMAIN
 
 WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
@@ -38,7 +41,7 @@ class KodiConnectionManager:
     # Will be set when watchdog is created
     _remove_watchdog = None
 
-    def __init__(self, hass, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize KodiConnectionManager and its connection."""
         self._connection = get_kodi_connection(
             entry.data[CONF_HOST],
@@ -49,6 +52,18 @@ class KodiConnectionManager:
             entry.data[CONF_SSL],
             session=async_get_clientsession(hass),
         )
+
+        if (uid := entry.unique_id) is None:
+            uid = entry.entry_id
+        self._uid = uid
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, self._uid)},
+            manufacturer="Kodi",
+            name=entry.data[CONF_NAME],
+        )
+
         self._connect_error = False
         # To be able to remove callbacks reliably only once after close
         self._ws_connection_clear = False
@@ -159,8 +174,13 @@ class KodiConnectionManager:
     async def _on_ws_connected(self):
         """Call after websocket is connected."""
         _LOGGER.debug("Websocket connected")
-
         self._ws_connection_clear = False
+
+        version = (await self.kodi.get_application_properties(["version"]))["version"]
+        sw_version = f"{version['major']}.{version['minor']}"
+        dev_reg = dr.async_get(self._hass)
+        device = dev_reg.async_get_device({(DOMAIN, self._uid)})
+        dev_reg.async_update_device(device.id, sw_version=sw_version)
 
         # Calling websocket connected callbacks
         for call_back in self._cb_on_ws_connect:
@@ -257,26 +277,49 @@ class KodiConnectionManager:
         self._cb_on_ws_disconnect.append(func)
 
 
-class KodiConnectionClient(ABC):
-    """Base class to be used by Kodi platforms.
-
-    Mind the MRO (multiple-resolution order) and inherit
-    this class before any home assistant helper classes.
-    Otherwise HA related properties like 'should_poll'
-    are not overwritten.
-    """
+class KodiConnectionClient(Entity):
+    """Base class to be used by Kodi platforms."""
 
     _attr_has_entity_name = True
+    _websocket_callbacks: dict[str, Callable[[Any, Any], Awaitable[None]]] = {}
 
     def __init__(self, connman: KodiConnectionManager) -> None:
         """Initialize Kodi base class for platforms."""
         self._connman = connman
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._connman._uid)},
+        )
 
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state."""
         return not self._connman.can_subscribe
 
-    @abstractmethod
-    async def async_update(self) -> None:
-        """Force implementation of home assistant poll mechanism."""
+    def _reset_state(self) -> None:
+        """Run on webocket disconnect to reset the entity state.
+
+        To be extended by integrations.
+        """
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks for needed api endpoints."""
+        await self._connman.add_callback_on_connect(self._on_ws_connected)
+        await self._connman.add_callback_on_disconnect(self._on_ws_disconnected)
+
+    @callback
+    async def _on_ws_connected(self):
+        """Call after websocket is connected."""
+        _LOGGER.debug("Kodi connection %s websocket connected", self.name)
+
+        # Run entity update method on connect
+        self.async_schedule_update_ha_state(True)
+        for api_method, api_callback in self._websocket_callbacks.items():
+            self._connman.register_websocket_callback(api_method, api_callback)
+
+    @callback
+    async def _on_ws_disconnected(self):
+        """Call after websocket is connected."""
+        for api_method in self._websocket_callbacks:
+            self._connman.unregister_websocket_callback(api_method)
+        self._reset_state()
+        self.async_write_ha_state()
