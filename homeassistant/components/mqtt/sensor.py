@@ -173,7 +173,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expired: bool | None
     _template: Callable[..., ReceivePayloadType]
-    _last_reset_template: Callable[..., ReceivePayloadType]
+    _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
         self,
@@ -202,9 +202,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             # MqttEntity.async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
         ):
-            expiration_at: datetime = last_state.last_changed + timedelta(
-                seconds=expire_after
-            )
+            expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
             if expiration_at < (time_now := dt_util.utcnow()):
                 # Skip reactivating the sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
@@ -272,9 +270,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self._expiration_trigger()
 
                 # Set new trigger
-                expiration_at: datetime = dt_util.utcnow() + timedelta(
-                    seconds=expire_after
-                )
+                expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
 
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self._value_is_expired, expiration_at
@@ -301,14 +297,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._attr_native_value = payload_datetime
 
         def _update_last_reset(msg: ReceiveMessage) -> None:
-            payload: ReceivePayloadType = self._last_reset_template(msg.payload)
+            payload = self._last_reset_template(msg.payload)
 
             if not payload:
                 _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
                 return
             try:
-                assert isinstance(payload, str)
-                last_reset = dt_util.parse_datetime(payload)
+                last_reset = dt_util.parse_datetime(str(payload))
                 if last_reset is None:
                     raise ValueError
                 self._attr_last_reset = last_reset

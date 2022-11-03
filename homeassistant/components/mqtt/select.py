@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -41,6 +40,7 @@ from .models import (
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
+    ReceivePayloadType,
 )
 from .util import get_mqtt_data
 
@@ -122,7 +122,8 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     _entity_id_format = select.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
-    _templates: dict[str, Callable[..., Any]]
+    _command_template: Callable[[PublishPayloadType], PublishPayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _optimistic: bool = False
 
     def __init__(
@@ -147,15 +148,13 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
-        self._templates = {
-            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                config.get(CONF_COMMAND_TEMPLATE), entity=self
-            ).async_render,
-            CONF_VALUE_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_VALUE_TEMPLATE),
-                entity=self,
-            ).async_render_with_possible_json_value,
-        }
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE),
+            entity=self,
+        ).async_render
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -164,8 +163,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload: str
-            payload = str(self._templates[CONF_VALUE_TEMPLATE](msg.payload))
+            payload = str(self._value_template(msg.payload))
             if payload.lower() == "none":
                 self._attr_current_option = None
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
@@ -208,7 +206,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
-        payload: PublishPayloadType = self._templates[CONF_COMMAND_TEMPLATE](option)
+        payload = self._command_template(option)
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
