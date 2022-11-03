@@ -107,11 +107,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        self._config: ConfigType = config
-        self._config_entry: ConfigEntry = config_entry
-        self.device_id: str | None = device_id
-        self.discovery_data: DiscoveryInfoType = discovery_data
-        self.hass: HomeAssistant = hass
+        self._config = config
+        self._config_entry = config_entry
+        self.device_id = device_id
+        self.discovery_data = discovery_data
+        self.hass = hass
         self._sub_state: dict[str, EntitySubscription] | None = None
         self._value_template: Callable[..., ReceivePayloadType] = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
