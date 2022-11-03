@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 import math
@@ -27,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -54,7 +56,13 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
@@ -110,18 +118,18 @@ MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
 _LOGGER = logging.getLogger(__name__)
 
 
-def valid_speed_range_configuration(config):
+def valid_speed_range_configuration(config: ConfigType) -> ConfigType:
     """Validate that the fan speed_range configuration is valid, throws if it isn't."""
-    if config.get(CONF_SPEED_RANGE_MIN) == 0:
+    if config[CONF_SPEED_RANGE_MIN] == 0:
         raise ValueError("speed_range_min must be > 0")
-    if config.get(CONF_SPEED_RANGE_MIN) >= config.get(CONF_SPEED_RANGE_MAX):
+    if config[CONF_SPEED_RANGE_MIN] >= config[CONF_SPEED_RANGE_MAX]:
         raise ValueError("speed_range_max must be > speed_range_min")
     return config
 
 
-def valid_preset_mode_configuration(config):
+def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
-    if config.get(CONF_PAYLOAD_RESET_PRESET_MODE) in config.get(CONF_PRESET_MODES_LIST):
+    if config[CONF_PAYLOAD_RESET_PRESET_MODE] in config[CONF_PRESET_MODES_LIST]:
         raise ValueError("preset_modes must not contain payload_reset_preset_mode")
     return config
 
@@ -250,8 +258,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT fan."""
     async_add_entities([MqttFan(hass, config, config_entry, discovery_data)])
@@ -263,32 +271,41 @@ class MqttFan(MqttEntity, FanEntity):
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
+    _feature_percentage: bool
+    _feature_preset_mode: bool
+    _topic: dict[str, Any]
+    _optimistic: bool
+    _optimistic_oscillation: bool
+    _optimistic_percentage: bool
+    _optimistic_preset_mode: bool
+    _payload: dict[str, Any]
+    _speed_range: tuple[int, int]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the MQTT fan."""
         self._attr_percentage = None
         self._attr_preset_mode = None
 
-        self._topic = None
-        self._payload = None
-        self._value_templates = None
-        self._command_templates = None
-        self._optimistic = None
-        self._optimistic_oscillation = None
-        self._optimistic_percentage = None
-        self._optimistic_preset_mode = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._speed_range = (
-            config.get(CONF_SPEED_RANGE_MIN),
-            config.get(CONF_SPEED_RANGE_MAX),
+            config[CONF_SPEED_RANGE_MIN],
+            config[CONF_SPEED_RANGE_MAX],
         )
         self._topic = {
             key: config.get(key)
@@ -302,18 +319,6 @@ class MqttFan(MqttEntity, FanEntity):
                 CONF_OSCILLATION_STATE_TOPIC,
                 CONF_OSCILLATION_COMMAND_TOPIC,
             )
-        }
-        self._value_templates = {
-            CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
-        }
-        self._command_templates = {
-            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
         }
         self._payload = {
             "STATE_ON": config[CONF_PAYLOAD_ON],
@@ -359,24 +364,38 @@ class MqttFan(MqttEntity, FanEntity):
         if self._feature_preset_mode:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
-        for key, tpl in self._command_templates.items():
+        command_templates: dict[str, Template | None] = {
+            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
+            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
+            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
+            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
+        }
+        self._command_templates = {}
+        for key, tpl in command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
                 tpl, entity=self
             ).async_render
 
-        for key, tpl in self._value_templates.items():
+        self._value_templates = {}
+        value_templates: dict[str, Template | None] = {
+            CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
+            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
+            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
+            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
+        }
+        for key, tpl in value_templates.items():
             self._value_templates[key] = MqttValueTemplate(
                 tpl,
                 entity=self,
             ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
+        topics: dict[str, Any] = {}
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg):
+        def state_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
@@ -400,7 +419,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def percentage_received(msg):
+        def percentage_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the percentage."""
             rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
                 msg.payload
@@ -446,9 +465,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def preset_mode_received(msg):
+        def preset_mode_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for preset mode."""
-            preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
+            preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
             if preset_mode == self._payload["PRESET_MODE_RESET"]:
                 self._attr_preset_mode = None
                 self.async_write_ha_state()
@@ -456,7 +475,7 @@ class MqttFan(MqttEntity, FanEntity):
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
                 return
-            if preset_mode not in self.preset_modes:
+            if not self.preset_modes or preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
@@ -479,7 +498,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def oscillation_received(msg):
+        def oscillation_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the oscillation."""
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
             if not payload:
@@ -504,7 +523,7 @@ class MqttFan(MqttEntity, FanEntity):
             self.hass, self._sub_state, topics
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
