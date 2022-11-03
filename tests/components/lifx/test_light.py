@@ -26,6 +26,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -1394,6 +1395,53 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     call_dict.pop("callb")
     assert call_dict == {"duration": 5000}
     bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
+
+
+async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
+    """Test set_state works with old and new kelvin parameter names."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [32000, None, 32000, 6000]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 125
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert bulb.set_power.calls[0][0][0] is False
+    bulb.set_power.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, ATTR_KELVIN: 3500},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 2700},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, 0, 25700, 2700]
     bulb.set_color.reset_mock()
 
 
