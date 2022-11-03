@@ -149,7 +149,7 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         )
 
     @callback
-    def update_states(self, state) -> None:
+    def update_states(self, state: bool) -> None:
         """Update the states of the switch device."""
         self._attr_is_on = state
         self.async_write_ha_state()

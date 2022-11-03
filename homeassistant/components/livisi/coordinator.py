@@ -121,7 +121,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             is_reachable: bool = False
             async_dispatcher_send(
                 self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}{device_id}",
+                f"{LIVISI_REACHABILITY_CHANGE}_{device_id}",
                 is_reachable,
             )
 
