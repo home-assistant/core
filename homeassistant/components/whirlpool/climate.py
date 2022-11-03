@@ -128,6 +128,10 @@ class AirConEntity(ClimateEntity):
         """Connect aircon to the cloud."""
         await self._aircon.connect()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Whrilpool Appliance sockets before removing."""
+        await self._aircon.disconnect()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
