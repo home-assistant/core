@@ -227,10 +227,9 @@ def find_non_referenced_integrations(
     return referenced
 
 
-def validate_dependencies(
+def _validate_dependency_imports(
     integrations: dict[str, Integration],
     integration: Integration,
-    check_dependencies: bool,
 ) -> None:
     """Validate all dependencies."""
     # Some integrations are allowed to have violations.
@@ -252,11 +251,6 @@ def validate_dependencies(
             "or 'after_dependencies'",
         )
 
-    if check_dependencies:
-        _check_circular_deps(
-            integrations, integration.domain, integration, set(), deque()
-        )
-
 
 def _check_circular_deps(
     integrations: dict[str, Integration],
@@ -266,6 +260,7 @@ def _check_circular_deps(
     checking: deque[str],
 ) -> None:
     """Check for circular dependencies pointing at starting_domain."""
+
     if integration.domain in checked or integration.domain in checking:
         return
 
@@ -297,17 +292,21 @@ def _check_circular_deps(
     checking.remove(integration.domain)
 
 
-def validate(integrations: dict[str, Integration], config: Config) -> None:
-    """Handle dependencies for integrations."""
-    # check for non-existing dependencies
+def _validate_circular_dependencies(integrations: dict[str, Integration]) -> None:
     for integration in integrations.values():
-        validate_dependencies(
-            integrations,
-            integration,
-            check_dependencies=not config.specific_integrations,
+        if integration.domain in IGNORE_VIOLATIONS:
+            continue
+
+        _check_circular_deps(
+            integrations, integration.domain, integration, set(), deque()
         )
 
-        if config.specific_integrations:
+
+def _validate_dependencies_exist(
+    integrations: dict[str, Integration],
+) -> None:
+    for integration in integrations.values():
+        if not integration.manifest:
             continue
 
         # check that all referenced dependencies exist
@@ -323,3 +322,17 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
                 )
+
+
+def validate(
+    integrations: dict[str, Integration],
+    config: Config,
+) -> None:
+    """Handle dependencies for integrations."""
+    for integration in integrations.values():
+        # check for non-existing dependencies
+        _validate_dependency_imports(integrations, integration)
+
+    if not config.specific_integrations:
+        _validate_dependencies_exist(integrations)
+        _validate_circular_dependencies(integrations)
