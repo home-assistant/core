@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.46
+AIOAladdinConnect==0.1.47
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.13
+aiohomekit==2.2.14
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -623,7 +623,7 @@ elmax_api==0.0.2
 emulated_roku==0.2.1
 
 # homeassistant.components.huisbaasje
-energyflip-client==0.2.1
+energyflip-client==0.2.2
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -1911,7 +1911,7 @@ pysml==0.0.8
 pysnmplib==5.0.15
 
 # homeassistant.components.snooz
-pysnooz==0.8.2
+pysnooz==0.8.3
 
 # homeassistant.components.soma
 pysoma==0.0.10
