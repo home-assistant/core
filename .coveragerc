@@ -456,7 +456,7 @@ omit =
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
-    homeassistant/components/glances/__init__.py
+    homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
