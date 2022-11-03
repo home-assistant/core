@@ -83,7 +83,7 @@ class NexiaThermostatEntity(NexiaEntity):
     @property
     def available(self) -> bool:
         """Return True if thermostat is available and data is available."""
-        return super().available and self._thermostat.is_online()
+        return super().available and self._thermostat.is_online
 
 
 class NexiaThermostatZoneEntity(NexiaThermostatEntity):
