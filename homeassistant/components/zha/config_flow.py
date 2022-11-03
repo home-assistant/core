@@ -723,6 +723,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self._radio_type = radio_type
         self._device_path = device_settings[CONF_DEVICE_PATH]
         self._device_settings = device_settings
+        self.context["title_placeholders"] = {CONF_NAME: name}
 
         return await self.async_step_confirm()
 
