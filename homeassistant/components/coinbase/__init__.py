@@ -78,7 +78,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
     # Remove orphaned entities
     for entity in entities:
-        currency = entity.unique_id.split("-")[-1]
+        currency = entity.unique_id.rpartition("-")[-1]
         if "xe" in entity.unique_id and currency not in config_entry.options.get(
             CONF_EXCHANGE_RATES, []
         ):

@@ -486,7 +486,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         if "endpoint" not in kwargs:
             return "{}"
 
-        endpoint = kwargs["endpoint"].split("/")[-1]
+        endpoint = kwargs["endpoint"].rpartition("/")[-1]
 
         if "snapshot_720.jpg" in endpoint:
             raise pyatmo.ApiError()

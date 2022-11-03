@@ -178,7 +178,7 @@ async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> 
 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
-        message = message.split(":")[-1]
+        message = message.rpartition(":")[-1]
         await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
     elif message == TYPE_EMPTY_VALUE:
         await obj.set_lcd_text(None)

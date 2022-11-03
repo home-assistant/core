@@ -430,7 +430,7 @@ def _system_callback_handler(hass, config, src, *args):
 
         addresses = []
         for dev in dev_descriptions:
-            address = dev["ADDRESS"].partition(":")[0]
+            address = dev["ADDRESS"].split(":")[0]
             if address not in hass.data[DATA_STORE]:
                 hass.data[DATA_STORE].add(address)
                 addresses.append(address)
@@ -578,8 +578,8 @@ def _create_ha_id(name, channel, param, count):
 def _hm_event_handler(hass, interface, device, caller, attribute, value):
     """Handle all pyhomematic device events."""
     try:
-        address, _, channel_str = device.partition(":")
-        channel = int(channel_str)
+        channel = int(device.split(":")[1])
+        address = device.split(":")[0]
         hmdevice = hass.data[DATA_HOMEMATIC].devices[interface].get(address)
     except (TypeError, ValueError):
         _LOGGER.error("Event handling channel convert error!")

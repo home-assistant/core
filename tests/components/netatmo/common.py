@@ -33,7 +33,7 @@ async def fake_post_request(*args, **kwargs):
     if "endpoint" not in kwargs:
         return "{}"
 
-    endpoint = kwargs["endpoint"].split("/")[-1]
+    endpoint = kwargs["endpoint"].rpartition("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
@@ -67,7 +67,7 @@ async def fake_get_image(*args, **kwargs):
     if "endpoint" not in kwargs:
         return "{}"
 
-    endpoint = kwargs["endpoint"].split("/")[-1]
+    endpoint = kwargs["endpoint"].rpartition("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"

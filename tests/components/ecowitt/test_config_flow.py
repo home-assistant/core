@@ -31,6 +31,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Ecowitt"
     assert result2["data"] == {
-        "webhook_id": result2["description_placeholders"]["path"].split("/")[-1],
+        "webhook_id": result2["description_placeholders"]["path"].rpartition("/")[-1],
     }
     assert len(mock_setup_entry.mock_calls) == 1

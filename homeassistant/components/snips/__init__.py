@@ -127,10 +127,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Intent has invalid schema: %s. %s", err, request)
             return
 
-        if request["intent"]["intentName"].startswith("user_"):
-            intent_type = request["intent"]["intentName"].split("__")[-1]
+        intent_name = request["intent"]["intentName"]
+        if intent_name.startswith("user_"):
+            intent_type = intent_name.rpartition("__")[-1]
         else:
-            intent_type = request["intent"]["intentName"].split(":")[-1]
+            intent_type = intent_name.rpartition(":")[-1]
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
@@ -153,9 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, "hermes/dialogueManager/endSession", json.dumps(notification)
             )
         except intent.UnknownIntent:
-            _LOGGER.warning(
-                "Received unknown intent %s", request["intent"]["intentName"]
-            )
+            _LOGGER.warning("Received unknown intent %s", intent_name)
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s", intent_type)
 

@@ -145,7 +145,7 @@ async def async_get_component_strings(
     hass: HomeAssistant, language: str, components: set[str]
 ) -> dict[str, Any]:
     """Load translations."""
-    domains = list({loaded.split(".")[-1] for loaded in components})
+    domains = list({loaded.rpartition(".")[-1] for loaded in components})
 
     integrations: dict[str, Integration] = {}
     ints_or_excs = await async_get_integrations(hass, domains)

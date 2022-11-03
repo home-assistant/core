@@ -199,7 +199,7 @@ def browse_media(  # noqa: C901
                 payload["children"].append(station_payload(item))
             else:
                 extra_params = None
-                hub_context = hub.context.split(".")[-1]
+                hub_context = hub.context.rpartition(".")[-1]
                 if hub_context in ("continue", "inprogress", "ondeck"):
                     extra_params = {"resume": 1}
                 payload["children"].append(

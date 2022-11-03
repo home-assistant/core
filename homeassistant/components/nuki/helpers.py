@@ -4,7 +4,7 @@ from homeassistant import exceptions
 
 def parse_id(hardware_id):
     """Parse Nuki ID."""
-    return hex(hardware_id).split("x")[-1].upper()
+    return hex(hardware_id).rpartition("x")[-1].upper()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

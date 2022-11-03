@@ -375,7 +375,7 @@ class IBeaconCoordinator:
             unique_id,
             ibeacon_advertisement,
         ) in self._last_ibeacon_advertisement_by_unique_id.items():
-            address = unique_id.split("_")[-1]
+            address = unique_id.rpartition("_")[-1]
             service_info = bluetooth.async_last_service_info(
                 self.hass, address, connectable=False
             )

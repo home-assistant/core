@@ -260,7 +260,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         normalized = normalize_package_name(requirement_arg)
 
         if normalized and "==" in requirement_arg:
-            ver = requirement_arg.split("==")[-1]
+            ver = requirement_arg.rpartition("==")[-1]
             item = PIPDEPTREE_CACHE.get(normalized)
             is_installed = item and item["installed_version"] == ver
 

@@ -81,13 +81,13 @@ async def test_option_updates(hass: HomeAssistant):
         )
         assert len(entities) == 4
         currencies = [
-            entity.unique_id.split("-")[-1]
+            entity.unique_id.rpartition("-")[-1]
             for entity in entities
             if "wallet" in entity.unique_id
         ]
 
         rates = [
-            entity.unique_id.split("-")[-1]
+            entity.unique_id.rpartition("-")[-1]
             for entity in entities
             if "xe" in entity.unique_id
         ]
@@ -112,13 +112,13 @@ async def test_option_updates(hass: HomeAssistant):
         )
         assert len(entities) == 2
         currencies = [
-            entity.unique_id.split("-")[-1]
+            entity.unique_id.rpartition("-")[-1]
             for entity in entities
             if "wallet" in entity.unique_id
         ]
 
         rates = [
-            entity.unique_id.split("-")[-1]
+            entity.unique_id.rpartition("-")[-1]
             for entity in entities
             if "xe" in entity.unique_id
         ]

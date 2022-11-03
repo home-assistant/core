@@ -61,10 +61,11 @@ async def async_discovery(hass) -> list[dict[str, Any]]:
         }
         for scope in service.getScopes():
             scope_str = scope.getValue()
+            value_suffix = scope_str.rpartition("/")[-1]
             if scope_str.lower().startswith("onvif://www.onvif.org/name"):
-                device[CONF_NAME] = scope_str.split("/")[-1]
+                device[CONF_NAME] = value_suffix
             if scope_str.lower().startswith("onvif://www.onvif.org/mac"):
-                device[CONF_DEVICE_ID] = scope_str.split("/")[-1]
+                device[CONF_DEVICE_ID] = value_suffix
         devices.append(device)
 
     return devices
