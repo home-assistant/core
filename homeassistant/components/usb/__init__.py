@@ -6,6 +6,7 @@ import dataclasses
 import fnmatch
 import logging
 import os
+import re
 import sys
 from typing import TYPE_CHECKING, Any
 
@@ -125,11 +126,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _fnmatch_lower(name: str | None, pattern: str) -> bool:
-    """Match a lowercase version of the name."""
+def _fnmatch_case_insensitive(name: str | None, pattern: str) -> bool:
+    """Match a name case-insensitively."""
     if name is None:
         return False
-    return fnmatch.fnmatch(name.lower(), pattern)
+    return re.match(fnmatch.translate(pattern), name, re.IGNORECASE) is not None
 
 
 def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) -> bool:
@@ -138,15 +139,15 @@ def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) ->
         return False
     if "pid" in matcher and device.pid != matcher["pid"]:
         return False
-    if "serial_number" in matcher and not _fnmatch_lower(
+    if "serial_number" in matcher and not _fnmatch_case_insensitive(
         device.serial_number, matcher["serial_number"]
     ):
         return False
-    if "manufacturer" in matcher and not _fnmatch_lower(
+    if "manufacturer" in matcher and not _fnmatch_case_insensitive(
         device.manufacturer, matcher["manufacturer"]
     ):
         return False
-    if "description" in matcher and not _fnmatch_lower(
+    if "description" in matcher and not _fnmatch_case_insensitive(
         device.description, matcher["description"]
     ):
         return False
