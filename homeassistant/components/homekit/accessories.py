@@ -200,6 +200,10 @@ def get_accessory(  # noqa: C901
             or SensorDeviceClass.PM25 in state.entity_id
         ):
             a_type = "PM25Sensor"
+        elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
+            a_type = "NitrogenDioxideSensor"
+        elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+            a_type = "VolatileOrganicCompoundsSensor"
         elif (
             device_class == SensorDeviceClass.GAS
             or SensorDeviceClass.GAS in state.entity_id
