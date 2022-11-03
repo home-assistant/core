@@ -7,5 +7,5 @@
   "codeowners": ["@ludeeus", "@tkdrob"],
   "iot_class": "local_polling",
   "loggers": ["pytautulli"],
-  "integration_type": "service"
+  "integration_type": "hub"
 }
