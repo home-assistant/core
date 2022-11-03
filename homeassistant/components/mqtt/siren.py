@@ -348,8 +348,6 @@ class MqttSiren(MqttEntity, SirenEntity):
     ) -> None:
         """Publish MQTT payload with optional command template."""
         template_variables: dict[str, Any] = {STATE: value}
-        payload: PublishPayloadType
-        command_template: Callable[..., PublishPayloadType] | None
         if variables is not None:
             template_variables.update(variables)
         if (command_template := self._command_templates[template]) is not None:
