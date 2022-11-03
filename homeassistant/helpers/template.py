@@ -573,8 +573,7 @@ class Template:
         if self.is_static:
             return self.template
 
-        if self._compiled is None:
-            self._compiled = self._ensure_compiled()
+        compiled = self._compiled or self._ensure_compiled()
 
         variables = dict(variables or {})
         variables["value"] = value
@@ -583,9 +582,7 @@ class Template:
             variables["value_json"] = json_loads(value)
 
         try:
-            return _render_with_context(
-                self.template, self._compiled, **variables
-            ).strip()
+            return _render_with_context(self.template, compiled, **variables).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
