@@ -90,17 +90,17 @@ async def async_setup_entry(
                         device,
                     )
                 )
-            if device.indoorTemperature:
+            if device.indoorHumidity:
                 entities.append(
                     LyricSensor(
                         coordinator,
                         LyricSensorEntityDescription(
-                            key=f"{device.macID}_indoor_temperature",
-                            name="Indoor Temperature",
-                            device_class=SensorDeviceClass.TEMPERATURE,
+                            key=f"{device.macID}_indoor_humidity",
+                            name="Indoor Humidity",
+                            device_class=SensorDeviceClass.HUMIDITY,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=hass.config.units.temperature_unit,
-                            value=lambda device: device.indoorTemperature,
+                            native_unit_of_measurement=PERCENTAGE,
+                            value=lambda device: device.indoorHumidity,
                         ),
                         location,
                         device,
