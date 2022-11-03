@@ -434,7 +434,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             pid,
         )
         self.context["title_placeholders"] = {
-            CONF_NAME: self._title.split(" - ")[0].strip()
+            CONF_NAME: self._title.partition(" - ")[0].strip()
         }
         return await self.async_step_usb_confirm()
 

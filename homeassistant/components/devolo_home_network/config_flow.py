@@ -40,7 +40,7 @@ async def validate_input(
 
     return {
         SERIAL_NUMBER: str(device.serial_number),
-        TITLE: device.hostname.split(".")[0],
+        TITLE: device.hostname.partition(".")[0],
     }
 
 
@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context[CONF_HOST] = discovery_info.host
         self.context["title_placeholders"] = {
             PRODUCT: discovery_info.properties["Product"],
-            CONF_NAME: discovery_info.hostname.split(".")[0],
+            CONF_NAME: discovery_info.hostname.partition(".")[0],
         }
 
         return await self.async_step_zeroconf_confirm()

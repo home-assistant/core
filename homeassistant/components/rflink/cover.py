@@ -71,7 +71,7 @@ def entity_type_for_device_id(device_id):
         # KlikAanKlikUit cover have the controls inverted
         "newkaku": TYPE_INVERTED
     }
-    protocol = device_id.split("_")[0]
+    protocol = device_id.partition("_")[0]
     return entity_type_mapping.get(protocol, TYPE_STANDARD)
 
 

@@ -1264,7 +1264,7 @@ async def async_fetch_image(
         if response.status == HTTPStatus.OK:
             content = await response.read()
             if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+                content_type = content_type.partition(";")[0]
 
     if content is None:
         url_parts = URL(url)

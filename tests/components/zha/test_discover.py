@@ -200,7 +200,8 @@ async def test_devices(
     zha_entity_ids = {
         ent
         for ent in entity_ids
-        if not contains_ignored_suffix(ent) and ent.split(".")[0] in zha_const.PLATFORMS
+        if not contains_ignored_suffix(ent)
+        and ent.partition(".")[0] in zha_const.PLATFORMS
     }
     assert zha_entity_ids == {
         e[DEV_SIG_ENT_MAP_ID] for e in device[DEV_SIG_ENT_MAP].values()

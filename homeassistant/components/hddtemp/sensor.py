@@ -64,7 +64,7 @@ def setup_platform(
     hddtemp.update()
 
     if not disks:
-        disks = [next(iter(hddtemp.data)).split("|")[0]]
+        disks = [next(iter(hddtemp.data)).partition("|")[0]]
 
     dev = []
     for disk in disks:
@@ -126,7 +126,9 @@ class HddTempData:
                 .rstrip("|")
                 .split("||")
             )
-            self.data = {data[i].split("|")[0]: data[i] for i in range(0, len(data), 1)}
+            self.data = {
+                data[i].partition("|")[0]: data[i] for i in range(0, len(data), 1)
+            }
         except ConnectionRefusedError:
             _LOGGER.error("HDDTemp is not available at %s:%s", self.host, self.port)
             self.data = None

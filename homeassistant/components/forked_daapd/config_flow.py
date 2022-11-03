@@ -166,7 +166,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if zeroconf_properties.get("Machine Name"):
             with suppress(ValueError):
                 version_num = int(
-                    zeroconf_properties.get("mtd-version", "0").split(".")[0]
+                    zeroconf_properties.get("mtd-version", "0").partition(".")[0]
                 )
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")

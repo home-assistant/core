@@ -734,7 +734,7 @@ async def merge_packages_config(
                 continue
             # If component name is given with a trailing description, remove it
             # when looking for component
-            domain = comp_name.split(" ")[0]
+            domain = comp_name.partition(" ")[0]
 
             try:
                 integration = await async_get_integration_with_requirements(

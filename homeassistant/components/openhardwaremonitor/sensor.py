@@ -102,16 +102,15 @@ class OpenHardwareMonitorDevice(SensorEntity):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:
-                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
+                value_str = values[OHM_VALUE].partition(" ")[0]
+                min_str = values[OHM_MIN].partition(" ")[0]
+                max_str = values[OHM_MAX].partition(" ")[0]
+                self.value = self.parse_number(value_str)
                 _attributes.update(
                     {
                         "name": values[OHM_NAME],
-                        STATE_MIN_VALUE: self.parse_number(
-                            values[OHM_MIN].split(" ")[0]
-                        ),
-                        STATE_MAX_VALUE: self.parse_number(
-                            values[OHM_MAX].split(" ")[0]
-                        ),
+                        STATE_MIN_VALUE: self.parse_number(min_str),
+                        STATE_MAX_VALUE: self.parse_number(max_str),
                     }
                 )
 

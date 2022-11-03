@@ -125,7 +125,7 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
-    return unique_id.split("_")[0]
+    return unique_id.partition("_")[0]
 
 
 async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> None:

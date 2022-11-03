@@ -598,7 +598,7 @@ def _udn_from_usn(usn: str | None) -> str | None:
     if usn is None:
         return None
     if usn.startswith("uuid:"):
-        return usn.split("::")[0]
+        return usn.partition("::")[0]
     return None
 
 

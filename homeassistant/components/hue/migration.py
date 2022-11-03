@@ -87,7 +87,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
         for domain, mac in hass_dev.identifiers:
             if domain != DOMAIN:
                 continue
-            normalized_mac = mac.split("-")[0]
+            normalized_mac = mac.partition("-")[0]
             dev_ids[normalized_mac] = hass_dev.id
 
     # initialize bridge connection just for the migration

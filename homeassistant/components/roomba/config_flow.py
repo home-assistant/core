@@ -311,7 +311,7 @@ def _async_get_roomba_discovery():
 @callback
 def _async_blid_from_hostname(hostname):
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0].upper()
+    return hostname.split("-")[1].partition(".")[0].upper()
 
 
 async def _async_discover_roombas(hass, host):

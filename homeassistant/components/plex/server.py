@@ -187,7 +187,7 @@ class PlexServer:
                 while error and not isinstance(error, ssl.SSLCertVerificationError):
                     error = error.__context__
                 if isinstance(error, ssl.SSLCertVerificationError):
-                    domain = urlparse(self._url).netloc.split(":")[0]
+                    domain = urlparse(self._url).netloc.partition(":")[0]
                     if domain.endswith("plex.direct") and error.args[0].startswith(
                         f"hostname '{domain}' doesn't match"
                     ):

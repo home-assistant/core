@@ -88,7 +88,7 @@ def entity_type_for_device_id(device_id):
         # protocol
         "newkaku": TYPE_HYBRID
     }
-    protocol = device_id.split("_")[0]
+    protocol = device_id.partition("_")[0]
     return entity_type_mapping.get(protocol)
 
 

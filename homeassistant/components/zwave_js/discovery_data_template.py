@@ -301,7 +301,7 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
         if dependent_value and dependent_value.value is not None:
             lookup_key = dependent_value.metadata.states[
                 str(dependent_value.value)
-            ].split("-")[0]
+            ].partition("-")[0]
             return lookup_table.get(lookup_key)
 
         return None

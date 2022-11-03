@@ -264,7 +264,7 @@ def _add_columns(
         "Adding columns %s to table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
-        ", ".join(column.split(" ")[0] for column in columns_def),
+        ", ".join(column.partition(" ")[0] for column in columns_def),
         table_name,
     )
 
@@ -318,7 +318,7 @@ def _modify_columns(
             "Skipping to modify columns %s in table %s; "
             "Modifying column length in SQLite is unnecessary, "
             "it does not impose any length restrictions",
-            ", ".join(column.split(" ")[0] for column in columns_def),
+            ", ".join(column.partition(" ")[0] for column in columns_def),
             table_name,
         )
         return
@@ -327,7 +327,7 @@ def _modify_columns(
         "Modifying columns %s in table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
-        ", ".join(column.split(" ")[0] for column in columns_def),
+        ", ".join(column.partition(" ")[0] for column in columns_def),
         table_name,
     )
 

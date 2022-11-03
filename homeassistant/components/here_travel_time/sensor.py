@@ -160,9 +160,10 @@ class OriginSensor(HERETravelTimeSensor):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
         if self.coordinator.data is not None:
+            lat, _, lon = self.coordinator.data[ATTR_ORIGIN].partition(",")
             return {
-                ATTR_LATITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[0],
-                ATTR_LONGITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[1],
+                ATTR_LATITUDE: lat,
+                ATTR_LONGITUDE: lon,
             }
         return None
 

@@ -666,7 +666,7 @@ def _resource_is_streaming(resource: didl_lite.Resource) -> bool:
     # Err on the side of "True" if the protocol info is not available
     if not resource.protocol_info:
         return True
-    protocol = resource.protocol_info.split(":")[0].lower()
+    protocol = resource.protocol_info.partition(":")[0].lower()
     return protocol.lower() in STREAMABLE_PROTOCOLS
 
 

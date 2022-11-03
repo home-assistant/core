@@ -30,7 +30,7 @@ UNIQUE_ID = "guardian_{0}"
 @callback
 def async_get_pin_from_discovery_hostname(hostname: str) -> str:
     """Get the device's 4-digit PIN from its zeroconf-discovered hostname."""
-    return hostname.split(".")[0].split("-")[1]
+    return hostname.partition(".")[0].split("-")[1]
 
 
 @callback

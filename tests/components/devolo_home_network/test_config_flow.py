@@ -178,13 +178,14 @@ async def test_form_reauth(hass: HomeAssistant):
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    conf_name = DISCOVERY_INFO.hostname.partition(".")[0]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": entry.entry_id,
             "title_placeholders": {
-                CONF_NAME: DISCOVERY_INFO.hostname.split(".")[0],
+                CONF_NAME: conf_name,
             },
         },
         data=entry.data,

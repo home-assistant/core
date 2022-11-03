@@ -340,7 +340,7 @@ def apply_data_references(to_migrate):
             for key, value in step_data.items():
 
                 if key in to_migrate and value != to_migrate[key]:
-                    if key.split("_")[0].lower() in value.lower():
+                    if key.partition("_")[0].lower() in value.lower():
                         step_data[key] = to_migrate[key]
                         changed = True
                     elif value.startswith("[%key"):

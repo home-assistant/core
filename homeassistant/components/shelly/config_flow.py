@@ -212,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {"name": discovery_info.name.split(".")[0]},
+                "title_placeholders": {"name": discovery_info.name.partition(".")[0]},
                 "configuration_url": f"http://{discovery_info.host}",
             }
         )

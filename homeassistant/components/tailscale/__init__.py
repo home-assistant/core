@@ -71,6 +71,6 @@ class TailscaleEntity(CoordinatorEntity):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Tailscale Inc.",
             model=device.os,
-            name=device.name.split(".")[0],
+            name=device.name.partition(".")[0],
             sw_version=device.client_version,
         )

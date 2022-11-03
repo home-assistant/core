@@ -152,7 +152,7 @@ class LocalSource(MediaSource):
 
         # Check that it's a media file
         if is_file and (
-            not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES
+            not mime_type or mime_type.partition("/")[0] not in MEDIA_MIME_TYPES
         ):
             return None
 
@@ -161,7 +161,7 @@ class LocalSource(MediaSource):
         media_class = MediaClass.DIRECTORY
         if mime_type:
             media_class = MEDIA_CLASS_MAP.get(
-                mime_type.split("/")[0], MediaClass.DIRECTORY
+                mime_type.partition("/")[0], MediaClass.DIRECTORY
             )
 
         media = BrowseMediaSource(
@@ -226,7 +226,7 @@ class LocalMediaView(http.HomeAssistantView):
 
         # Check that it's a media file
         mime_type, _ = mimetypes.guess_type(str(media_path))
-        if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
+        if not mime_type or mime_type.partition("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound()
 
         return web.FileResponse(media_path)

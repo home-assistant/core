@@ -75,7 +75,7 @@ async def test_setup_in_bridge_mode(hass, mock_get_source_ip):
         await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    bridge_name = (result3["title"].split(":"))[0]
+    bridge_name = result3["title"].partition(":")[0]
     assert bridge_name == SHORT_BRIDGE_NAME
     assert result3["data"] == {
         "filter": {
@@ -133,7 +133,7 @@ async def test_setup_in_bridge_mode_name_taken(hass, mock_get_source_ip):
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] != SHORT_BRIDGE_NAME
     assert result3["title"].startswith(SHORT_BRIDGE_NAME)
-    bridge_name = (result3["title"].split(":"))[0]
+    bridge_name = result3["title"].partition(":")[0]
     assert result3["data"] == {
         "filter": {
             "exclude_domains": [],
@@ -214,7 +214,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"][:11] == "HASS Bridge"
-    bridge_name = (result3["title"].split(":"))[0]
+    bridge_name = result3["title"].partition(":")[0]
     assert result3["data"] == {
         "filter": {
             "exclude_domains": [],
@@ -1267,7 +1267,7 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_sou
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"][:11] == "HASS Bridge"
-    bridge_name = (result3["title"].split(":"))[0]
+    bridge_name = result3["title"].partition(":")[0]
     assert result3["data"] == {
         "filter": {
             "exclude_domains": [],

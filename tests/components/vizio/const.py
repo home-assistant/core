@@ -193,15 +193,14 @@ MOCK_INCLUDE_NO_APPS = {
 
 VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
-ZEROCONF_HOST = HOST.split(":")[0]
-ZEROCONF_PORT = HOST.split(":")[1]
+ZEROCONF_HOST, _, ZEROCONF_PORT = HOST.partition(":")
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     host=ZEROCONF_HOST,
     addresses=[ZEROCONF_HOST],
     hostname="mock_hostname",
     name=ZEROCONF_NAME,
-    port=ZEROCONF_PORT,
+    port=int(ZEROCONF_PORT),
     properties={"name": "SB4031-D5"},
     type=VIZIO_ZEROCONF_SERVICE_TYPE,
 )

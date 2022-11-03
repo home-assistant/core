@@ -98,9 +98,9 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
 
 def _host_is_same(host1: str, host2: str) -> bool:
     """Check if host1 and host2 are the same."""
-    host1 = host1.split(":")[0]
+    host1 = host1.partition(":")[0]
     host1 = host1 if is_ip_address(host1) else socket.gethostbyname(host1)
-    host2 = host2.split(":")[0]
+    host2 = host2.partition(":")[0]
     host2 = host2 if is_ip_address(host2) else socket.gethostbyname(host2)
     return host1 == host2
 

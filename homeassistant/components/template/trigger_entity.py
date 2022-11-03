@@ -177,7 +177,8 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
 
             self._rendered = rendered
         except TemplateError as err:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
+            platform = self.entity_id.partition(".")[0]
+            logging.getLogger(f"{__package__}.{platform}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
             self._rendered = self._static_rendered
