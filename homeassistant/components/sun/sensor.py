@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,8 @@ from homeassistant.helpers.typing import StateType
 
 from . import Sun
 from .const import DOMAIN
+
+ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
 
 @dataclass
@@ -122,6 +125,7 @@ class SunSensor(SensorEntity):
     ) -> None:
         """Initiate Sun Sensor."""
         self.entity_description = entity_description
+        self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)
         self._attr_unique_id = f"sun-{entity_description.key}"
         self.sun = sun
 

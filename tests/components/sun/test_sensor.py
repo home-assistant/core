@@ -79,12 +79,12 @@ async def test_setting_rising(hass: ha.HomeAssistant) -> None:
             break
         mod += 1
 
-    state1 = hass.states.get("sensor.next_dawn")
-    state2 = hass.states.get("sensor.next_dusk")
-    state3 = hass.states.get("sensor.next_midnight")
-    state4 = hass.states.get("sensor.next_noon")
-    state5 = hass.states.get("sensor.next_rising")
-    state6 = hass.states.get("sensor.next_setting")
+    state1 = hass.states.get("sensor.sun_next_dawn")
+    state2 = hass.states.get("sensor.sun_next_dusk")
+    state3 = hass.states.get("sensor.sun_next_midnight")
+    state4 = hass.states.get("sensor.sun_next_noon")
+    state5 = hass.states.get("sensor.sun_next_rising")
+    state6 = hass.states.get("sensor.sun_next_setting")
     assert next_dawn.replace(microsecond=0) == dt_util.parse_datetime(state1.state)
     assert next_dusk.replace(microsecond=0) == dt_util.parse_datetime(state2.state)
     assert next_midnight.replace(microsecond=0) == dt_util.parse_datetime(state3.state)
