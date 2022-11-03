@@ -49,9 +49,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
 
         return cast(
             float,
-            self.executor.select_state(
-                OverkizState.CORE_COMFORT_TARGET_DWH_TEMPERATURE
-            ),
+            self.executor.select_state(OverkizState.CORE_TARGET_DWH_TEMPERATURE),
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
