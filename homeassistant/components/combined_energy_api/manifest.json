@@ -3,7 +3,7 @@
   "name": "Combined Energy API",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/combined_energy",
-  "requirements": ["combined-energy-api==0.3"],
+  "requirements": ["combined-energy-api==0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
