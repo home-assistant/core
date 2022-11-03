@@ -16,7 +16,7 @@ bluetooth-adapters==0.6.0
 bluetooth-auto-recovery==0.3.6
 certifi>=2021.5.30
 ciso8601==2.2.0
-cryptography==38.0.1
+cryptography==38.0.3
 dbus-fast==1.64.0
 fnvhash==0.1.0
 hass-nabucasa==0.56.0
