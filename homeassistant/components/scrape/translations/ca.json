@@ -36,6 +36,11 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "title": "La configuraci\u00f3 YAML de Scrape s'ha eliminat"
+        }
+    },
     "options": {
         "step": {
             "init": {
