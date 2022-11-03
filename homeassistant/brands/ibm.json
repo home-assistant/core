@@ -1,0 +1,5 @@
+{
+  "domain": "ibm",
+  "name": "IBM",
+  "integrations": ["watson_iot", "watson_tts"]
+}

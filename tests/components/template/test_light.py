@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntityFeature,
 )
@@ -342,7 +341,7 @@ async def test_on_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -357,7 +356,7 @@ async def test_on_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
 @pytest.mark.parametrize("count", [1])
@@ -498,7 +497,7 @@ async def test_off_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -512,7 +511,7 @@ async def test_off_action_with_transition(hass, setup_light, calls):
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == SUPPORT_TRANSITION
+    assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
 @pytest.mark.parametrize("count", [1])

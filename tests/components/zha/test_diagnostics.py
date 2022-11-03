@@ -7,7 +7,7 @@ import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform

@@ -28,6 +28,7 @@ from .const import (
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
 )
+from .coordinator import OpenUvCoordinator
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -122,9 +123,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
-        [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
+        [
+            OpenUvSensor(coordinators[DATA_UV], description)
+            for description in SENSOR_DESCRIPTIONS
+        ]
     )
 
 
@@ -132,13 +137,9 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
     @callback
-    def update_from_latest_data(self) -> None:
+    def _update_from_latest_data(self) -> None:
         """Update the state."""
-        if (data := self.openuv.data[DATA_UV]) is None:
-            self._attr_available = False
-            return
-
-        self._attr_available = True
+        data = self.coordinator.data
 
         if self.entity_description.key == TYPE_CURRENT_OZONE_LEVEL:
             self._attr_native_value = data["ozone"]

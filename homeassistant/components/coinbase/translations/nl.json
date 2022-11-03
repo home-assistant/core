@@ -21,6 +21,11 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Coinbase YAML-configuratie is verwijderd"
+        }
+    },
     "options": {
         "error": {
             "currency_unavailable": "Een of meer van de gevraagde valutabalansen wordt niet geleverd door uw Coinbase API.",

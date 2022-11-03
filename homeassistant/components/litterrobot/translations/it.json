@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Gli attributi dell'entit\u00e0 aspirapolvere sono ora disponibili come sensori diagnostici. \n\nModifica eventuali automazioni o script che potresti avere che utilizzano questi attributi.",
+            "title": "Gli attributi Litter-Robot sono ora sensori propri"
+        }
     }
 }

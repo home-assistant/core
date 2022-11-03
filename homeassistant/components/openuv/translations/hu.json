@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Friss\u00edtsen minden olyan automatizmust vagy szkriptet, amely ezt a szolg\u00e1ltat\u00e1st haszn\u00e1lja, hogy ehelyett az `{alternate_service}` szolg\u00e1ltat\u00e1st haszn\u00e1lja c\u00e9lpontk\u00e9nt az al\u00e1bbi entit\u00e1sazonos\u00edt\u00f3k egyik\u00e9vel: `{alternate_targets}`.",
+            "title": "A {deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Friss\u00edtsen minden olyan automatizmust vagy szkriptet, amely ezt a szolg\u00e1ltat\u00e1st haszn\u00e1lja, hogy helyette az `{alternate_service}` szolg\u00e1ltat\u00e1st haszn\u00e1lja, a `{alternate_targets}` c\u00e9lpontk\u00e9nt.",
+            "title": "{deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    },
     "options": {
         "step": {
             "init": {

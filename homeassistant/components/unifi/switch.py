@@ -4,21 +4,28 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 """
+from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
 
-from aiounifi.api import SOURCE_EVENT
-from aiounifi.events import (
-    WIRED_CLIENT_BLOCKED,
-    WIRED_CLIENT_UNBLOCKED,
-    WIRELESS_CLIENT_BLOCKED,
-    WIRELESS_CLIENT_UNBLOCKED,
+from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.clients import Clients
+from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
+from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.ports import Ports
+from aiounifi.models.client import ClientBlockRequest
+from aiounifi.models.device import (
+    DeviceSetOutletRelayRequest,
+    DeviceSetPoePortModeRequest,
 )
+from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
+from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -30,17 +37,33 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import (
+    ATTR_MANUFACTURER,
+    BLOCK_SWITCH,
+    DOMAIN as UNIFI_DOMAIN,
+    DPI_SWITCH,
+    OUTLET_SWITCH,
+    POE_SWITCH,
+)
+from .controller import UniFiController
 from .unifi_client import UniFiClient
-from .unifi_entity_base import UniFiBase
 
-BLOCK_SWITCH = "block"
-DPI_SWITCH = "dpi"
-POE_SWITCH = "poe"
-OUTLET_SWITCH = "outlet"
+CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
+CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
-CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
-CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
+T = TypeVar("T")
+
+
+@dataclass
+class UnifiEntityLoader(Generic[T]):
+    """Validate and load entities from different UniFi handlers."""
+
+    allowed_fn: Callable[[UniFiController, str], bool]
+    entity_cls: type[UnifiBlockClientSwitch] | type[UnifiDPIRestrictionSwitch] | type[
+        UnifiOutletSwitch
+    ] | type[UnifiPoePortSwitch] | type[UnifiDPIRestrictionSwitch]
+    handler_fn: Callable[[UniFiController], T]
+    supported_fn: Callable[[T, str], bool | None]
 
 
 async def async_setup_entry(
@@ -52,7 +75,7 @@ async def async_setup_entry(
 
     Switches are controlling network access and switch ports with POE.
     """
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
         BLOCK_SWITCH: set(),
         POE_SWITCH: set(),
@@ -88,19 +111,10 @@ async def async_setup_entry(
     def items_added(
         clients: set = controller.api.clients,
         devices: set = controller.api.devices,
-        dpi_groups: set = controller.api.dpi_groups,
     ) -> None:
         """Update the values of the controller."""
-        add_outlet_entities(controller, async_add_entities, devices)
-
-        if controller.option_block_clients:
-            add_block_entities(controller, async_add_entities, clients)
-
         if controller.option_poe_clients:
             add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
-
-        if controller.option_dpi_restrictions:
-            add_dpi_entities(controller, async_add_entities, dpi_groups)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         config_entry.async_on_unload(
@@ -110,21 +124,34 @@ async def async_setup_entry(
     items_added()
     known_poe_clients.clear()
 
+    @callback
+    def async_load_entities(loader: UnifiEntityLoader) -> None:
+        """Load and subscribe to UniFi devices."""
+        entities: list[SwitchEntity] = []
+        api_handler = loader.handler_fn(controller)
 
-@callback
-def add_block_entities(controller, async_add_entities, clients):
-    """Add new switch entities from the controller."""
-    switches = []
+        @callback
+        def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+            """Create UniFi entity."""
+            if not loader.allowed_fn(controller, obj_id) or not loader.supported_fn(
+                api_handler, obj_id
+            ):
+                return
 
-    for mac in controller.option_block_clients:
-        if mac in controller.entities[DOMAIN][BLOCK_SWITCH] or mac not in clients:
-            continue
+            entity = loader.entity_cls(obj_id, controller)
+            if event == ItemEvent.ADDED:
+                async_add_entities([entity])
+                return
+            entities.append(entity)
 
-        client = controller.api.clients[mac]
-        switches.append(UniFiBlockClientSwitch(client, controller))
+        for obj_id in api_handler:
+            async_create_entity(ItemEvent.CHANGED, obj_id)
+        async_add_entities(entities)
 
-    if switches:
-        async_add_entities(switches)
+        api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+    for unifi_loader in UNIFI_LOADERS:
+        async_load_entities(unifi_loader)
 
 
 @callback
@@ -174,46 +201,7 @@ def add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
 
         switches.append(UniFiPOEClientSwitch(client, controller))
 
-    if switches:
-        async_add_entities(switches)
-
-
-@callback
-def add_dpi_entities(controller, async_add_entities, dpi_groups):
-    """Add new switch entities from the controller."""
-    switches = []
-
-    for group in dpi_groups:
-        if (
-            group in controller.entities[DOMAIN][DPI_SWITCH]
-            or not dpi_groups[group].dpiapp_ids
-        ):
-            continue
-
-        switches.append(UniFiDPIRestrictionSwitch(dpi_groups[group], controller))
-
-    if switches:
-        async_add_entities(switches)
-
-
-@callback
-def add_outlet_entities(controller, async_add_entities, devices):
-    """Add new switch entities from the controller."""
-    switches = []
-
-    for mac in devices:
-        if (
-            mac in controller.entities[DOMAIN][OUTLET_SWITCH]
-            or not (device := controller.api.devices[mac]).outlet_table
-        ):
-            continue
-
-        for outlet in device.outlets.values():
-            if outlet.has_relay:
-                switches.append(UniFiOutletSwitch(device, controller, outlet.index))
-
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
@@ -272,11 +260,19 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable POE for client."""
-        await self.device.set_port_poe_mode(self.client.switch_port, self.poe_mode)
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(
+                self.device, self.client.switch_port, self.poe_mode
+            )
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable POE for client."""
-        await self.device.set_port_poe_mode(self.client.switch_port, "off")
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(
+                self.device, self.client.switch_port, "off"
+            )
+        )
 
     @property
     def extra_state_attributes(self):
@@ -305,231 +301,430 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
             await self.remove_item({self.client.mac})
 
 
-class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
+class UnifiBlockClientSwitch(SwitchEntity):
     """Representation of a blockable client."""
 
-    DOMAIN = DOMAIN
-    TYPE = BLOCK_SWITCH
-
+    _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:ethernet"
+    _attr_should_poll = False
 
-    def __init__(self, client, controller):
+    def __init__(self, obj_id: str, controller: UniFiController) -> None:
         """Set up block switch."""
-        super().__init__(client, controller)
+        controller.entities[DOMAIN][BLOCK_SWITCH].add(obj_id)
+        self._obj_id = obj_id
+        self.controller = controller
 
-        self._is_blocked = client.blocked
+        self._removed = False
+
+        client = controller.api.clients[obj_id]
+        self._attr_available = controller.available
+        self._attr_is_on = not client.blocked
+        self._attr_unique_id = f"{BLOCK_SWITCH}-{obj_id}"
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, obj_id)},
+            default_manufacturer=client.oui,
+            default_name=client.name or client.hostname,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.clients.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            self.controller.api.events.subscribe(
+                self.async_event_callback, CLIENT_BLOCKED + CLIENT_UNBLOCKED
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_remove, self.remove_item
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_options_update, self.options_updated
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        self.controller.entities[DOMAIN][BLOCK_SWITCH].remove(self._obj_id)
 
     @callback
-    def async_update_callback(self) -> None:
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
         """Update the clients state."""
-        if (
-            self.client.last_updated == SOURCE_EVENT
-            and self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED
-        ):
-            self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+        if event == ItemEvent.DELETED:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
+            return
 
-        super().async_update_callback()
+        client = self.controller.api.clients[self._obj_id]
+        self._attr_is_on = not client.blocked
+        self._attr_available = self.controller.available
+        self.async_write_ha_state()
 
-    @property
-    def is_on(self):
-        """Return true if client is allowed to connect."""
-        return not self._is_blocked
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Event subscription callback."""
+        if event.mac != self._obj_id:
+            return
+        if event.key in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
+            self._attr_is_on = event.key in CLIENT_UNBLOCKED
+        self._attr_available = self.controller.available
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on connectivity for client."""
-        await self.controller.api.clients.unblock(self.client.mac)
+        await self.controller.api.request(
+            ClientBlockRequest.create(self._obj_id, False)
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off connectivity for client."""
-        await self.controller.api.clients.block(self.client.mac)
+        await self.controller.api.request(ClientBlockRequest.create(self._obj_id, True))
 
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if self._is_blocked:
+        if not self.is_on:
             return "mdi:network-off"
         return "mdi:network"
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
-        if self.client.mac not in self.controller.option_block_clients:
-            await self.remove_item({self.client.mac})
+        if self._obj_id not in self.controller.option_block_clients:
+            await self.remove_item({self._obj_id})
+
+    async def remove_item(self, keys: set) -> None:
+        """Remove entity if key is part of set."""
+        if self._obj_id not in keys or self._removed:
+            return
+        self._removed = True
+        if self.registry_entry:
+            er.async_get(self.hass).async_remove(self.entity_id)
+        else:
+            await self.async_remove(force_remove=True)
 
 
-class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
+class UnifiDPIRestrictionSwitch(SwitchEntity):
     """Representation of a DPI restriction group."""
-
-    DOMAIN = DOMAIN
-    TYPE = DPI_SWITCH
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, dpi_group, controller):
+    def __init__(self, obj_id: str, controller: UniFiController) -> None:
         """Set up dpi switch."""
-        super().__init__(dpi_group, controller)
+        controller.entities[DOMAIN][DPI_SWITCH].add(obj_id)
+        self._obj_id = obj_id
+        self.controller = controller
 
-        self._is_enabled = self.calculate_enabled()
+        dpi_group = controller.api.dpi_groups[obj_id]
         self._known_app_ids = dpi_group.dpiapp_ids
 
-    @property
-    def key(self) -> Any:
-        """Return item key."""
-        return self._item.id
+        self._attr_available = controller.available
+        self._attr_is_on = self.calculate_enabled()
+        self._attr_name = dpi_group.name
+        self._attr_unique_id = dpi_group.id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Network",
+            name="UniFi Network",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callback to known apps."""
-        await super().async_added_to_hass()
-
-        apps = self.controller.api.dpi_apps
-        for app_id in self._item.dpiapp_ids:
-            apps[app_id].register_callback(self.async_update_callback)
+        self.async_on_remove(
+            self.controller.api.dpi_groups.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            self.controller.api.dpi_apps.subscribe(
+                self.async_signalling_callback, ItemEvent.CHANGED
+            ),
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_remove, self.remove_item
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_options_update, self.options_updated
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Remove registered callbacks."""
-        apps = self.controller.api.dpi_apps
-        for app_id in self._item.dpiapp_ids:
-            apps[app_id].remove_callback(self.async_update_callback)
-
-        await super().async_will_remove_from_hass()
+        """Disconnect object when removed."""
+        self.controller.entities[DOMAIN][DPI_SWITCH].remove(self._obj_id)
 
     @callback
-    def async_update_callback(self) -> None:
-        """Update the DPI switch state.
-
-        Remove entity when no apps are paired with group.
-        Register callbacks to new apps.
-        Calculate and update entity state if it has changed.
-        """
-        if not self._item.dpiapp_ids:
-            self.hass.async_create_task(self.remove_item({self.key}))
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Object has new event."""
+        if event == ItemEvent.DELETED:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        if self._known_app_ids != self._item.dpiapp_ids:
-            self._known_app_ids = self._item.dpiapp_ids
+        dpi_group = self.controller.api.dpi_groups[self._obj_id]
+        if not dpi_group.dpiapp_ids:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
+            return
 
-            apps = self.controller.api.dpi_apps
-            for app_id in self._item.dpiapp_ids:
-                apps[app_id].register_callback(self.async_update_callback)
+        self._attr_available = self.controller.available
+        self._attr_is_on = self.calculate_enabled()
+        self.async_write_ha_state()
 
-        if (enabled := self.calculate_enabled()) != self._is_enabled:
-            self._is_enabled = enabled
-            super().async_update_callback()
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this switch."""
-        return self._item.id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the DPI group."""
-        return self._item.name
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self._is_enabled:
+        if self.is_on:
             return "mdi:network"
         return "mdi:network-off"
 
     def calculate_enabled(self) -> bool:
         """Calculate if all apps are enabled."""
+        dpi_group = self.controller.api.dpi_groups[self._obj_id]
         return all(
             self.controller.api.dpi_apps[app_id].enabled
-            for app_id in self._item.dpiapp_ids
+            for app_id in dpi_group.dpiapp_ids
             if app_id in self.controller.api.dpi_apps
         )
 
-    @property
-    def is_on(self):
-        """Return true if DPI group app restriction is enabled."""
-        return self._is_enabled
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Restrict access of apps related to DPI group."""
+        dpi_group = self.controller.api.dpi_groups[self._obj_id]
         return await asyncio.gather(
             *[
-                self.controller.api.dpi_apps.enable(app_id)
-                for app_id in self._item.dpiapp_ids
+                self.controller.api.request(
+                    DPIRestrictionAppEnableRequest.create(app_id, True)
+                )
+                for app_id in dpi_group.dpiapp_ids
             ]
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Remove restriction of apps related to DPI group."""
+        dpi_group = self.controller.api.dpi_groups[self._obj_id]
         return await asyncio.gather(
             *[
-                self.controller.api.dpi_apps.disable(app_id)
-                for app_id in self._item.dpiapp_ids
+                self.controller.api.request(
+                    DPIRestrictionAppEnableRequest.create(app_id, False)
+                )
+                for app_id in dpi_group.dpiapp_ids
             ]
         )
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_dpi_restrictions:
-            await self.remove_item({self.key})
+            await self.remove_item({self._attr_unique_id})
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a service description for device registry."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"unifi_controller_{self._item.site_id}")},
-            manufacturer=ATTR_MANUFACTURER,
-            model="UniFi Network",
-            name="UniFi Network",
-        )
+    async def remove_item(self, keys: set) -> None:
+        """Remove entity if key is part of set."""
+        if self._attr_unique_id not in keys:
+            return
+
+        if self.registry_entry:
+            er.async_get(self.hass).async_remove(self.entity_id)
+        else:
+            await self.async_remove(force_remove=True)
 
 
-class UniFiOutletSwitch(UniFiBase, SwitchEntity):
+class UnifiOutletSwitch(SwitchEntity):
     """Representation of a outlet relay."""
 
-    DOMAIN = DOMAIN
-    TYPE = OUTLET_SWITCH
-
     _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
-    def __init__(self, device, controller, index):
-        """Set up outlet switch."""
-        super().__init__(device, controller)
+    def __init__(self, obj_id: str, controller: UniFiController) -> None:
+        """Set up UniFi Network entity base."""
+        self._device_mac, index = obj_id.split("_", 1)
+        self._index = int(index)
+        self._obj_id = obj_id
+        self.controller = controller
 
-        self._outlet_index = index
+        outlet = self.controller.api.outlets[self._obj_id]
+        self._attr_name = outlet.name
+        self._attr_is_on = outlet.relay_state
+        self._attr_unique_id = f"{self._device_mac}-outlet-{index}"
 
-        self._attr_name = f"{device.name or device.model} {device.outlets[index].name}"
-        self._attr_unique_id = f"{device.mac}-outlet-{index}"
+        device = self.controller.api.devices[self._device_mac]
+        self._attr_available = controller.available and not device.disabled
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=device.model,
+            name=device.name or None,
+            sw_version=device.version,
+            hw_version=device.board_revision,
+        )
 
-    @property
-    def is_on(self):
-        """Return true if outlet is active."""
-        return self._item.outlets[self._outlet_index].relay_state
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.outlets.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
 
-    @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return not self._item.disabled and self.controller.available
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Object has new event."""
+        device = self.controller.api.devices[self._device_mac]
+        outlet = self.controller.api.outlets[self._obj_id]
+        self._attr_available = self.controller.available and not device.disabled
+        self._attr_is_on = outlet.relay_state
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable outlet relay."""
-        await self._item.set_outlet_relay_state(self._outlet_index, True)
+        device = self.controller.api.devices[self._device_mac]
+        await self.controller.api.request(
+            DeviceSetOutletRelayRequest.create(device, self._index, True)
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable outlet relay."""
-        await self._item.set_outlet_relay_state(self._outlet_index, False)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._item.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=self._item.model,
-            sw_version=self._item.version,
-            hw_version=self._item.board_revision,
+        device = self.controller.api.devices[self._device_mac]
+        await self.controller.api.request(
+            DeviceSetOutletRelayRequest.create(device, self._index, False)
         )
 
-        if self._item.name:
-            info[ATTR_NAME] = self._item.name
 
-        return info
+class UnifiPoePortSwitch(SwitchEntity):
+    """Representation of a Power-over-Ethernet source port on an UniFi device."""
 
-    async def options_updated(self) -> None:
-        """Config entry options are updated, no options to act on."""
+    _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:ethernet"
+    _attr_should_poll = False
+
+    def __init__(self, obj_id: str, controller: UniFiController) -> None:
+        """Set up UniFi Network entity base."""
+        self._device_mac, index = obj_id.split("_", 1)
+        self._index = int(index)
+        self._obj_id = obj_id
+        self.controller = controller
+
+        port = self.controller.api.ports[self._obj_id]
+        self._attr_name = f"{port.name} PoE"
+        self._attr_is_on = port.poe_mode != "off"
+        self._attr_unique_id = f"{self._device_mac}-poe-{index}"
+
+        device = self.controller.api.devices[self._device_mac]
+        self._attr_available = controller.available and not device.disabled
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=device.model,
+            name=device.name or None,
+            sw_version=device.version,
+            hw_version=device.board_revision,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.ports.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Object has new event."""
+        device = self.controller.api.devices[self._device_mac]
+        port = self.controller.api.ports[self._obj_id]
+        self._attr_available = self.controller.available and not device.disabled
+        self._attr_is_on = port.poe_mode != "off"
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable POE for client."""
+        device = self.controller.api.devices[self._device_mac]
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(device, self._index, "auto")
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable POE for client."""
+        device = self.controller.api.devices[self._device_mac]
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(device, self._index, "off")
+        )
+
+
+UNIFI_LOADERS: tuple[UnifiEntityLoader, ...] = (
+    UnifiEntityLoader[Clients](
+        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        entity_cls=UnifiBlockClientSwitch,
+        handler_fn=lambda contrlr: contrlr.api.clients,
+        supported_fn=lambda handler, obj_id: True,
+    ),
+    UnifiEntityLoader[DPIRestrictionGroups](
+        allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
+        entity_cls=UnifiDPIRestrictionSwitch,
+        handler_fn=lambda controller: controller.api.dpi_groups,
+        supported_fn=lambda handler, obj_id: bool(handler[obj_id].dpiapp_ids),
+    ),
+    UnifiEntityLoader[Outlets](
+        allowed_fn=lambda controller, obj_id: True,
+        entity_cls=UnifiOutletSwitch,
+        handler_fn=lambda controller: controller.api.outlets,
+        supported_fn=lambda handler, obj_id: handler[obj_id].has_relay,
+    ),
+    UnifiEntityLoader[Ports](
+        allowed_fn=lambda controller, obj_id: True,
+        entity_cls=UnifiPoePortSwitch,
+        handler_fn=lambda controller: controller.api.ports,
+        supported_fn=lambda handler, obj_id: handler[obj_id].port_poe,
+    ),
+)

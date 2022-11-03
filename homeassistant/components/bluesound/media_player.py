@@ -19,12 +19,11 @@ import xmltodict
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.const import (
@@ -35,14 +34,11 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -68,7 +64,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
 UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
@@ -216,7 +211,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_task = None  # The actual polling task.
         self._name = name
         self._id = None
-        self._icon = None
         self._capture_items = []
         self._services_items = []
         self._preset_items = []
@@ -264,8 +258,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
-        if not self._icon:
-            self._icon = self._sync_status.get("@icon", self.host)
 
         if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
@@ -455,6 +447,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
 
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return f"{format_mac(self._sync_status['@mac'])}-{self.port}"
+
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
@@ -554,20 +551,20 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._status is None:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self.is_grouped and not self.is_master:
-            return STATE_GROUPED
+            return MediaPlayerState.IDLE
 
         status = self._status.get("state")
         if status in ("pause", "stop"):
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if status in ("stream", "play"):
-            return STATE_PLAYING
-        return STATE_IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
     @property
     def media_title(self):
@@ -620,14 +617,14 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         mediastate = self.state
-        if self._last_status_update is None or mediastate == STATE_IDLE:
+        if self._last_status_update is None or mediastate == MediaPlayerState.IDLE:
             return None
 
         if (position := self._status.get("secs")) is None:
             return None
 
         position = float(position)
-        if mediastate == STATE_PLAYING:
+        if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()
 
         return position
@@ -683,11 +680,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     def bluesound_device_name(self):
         """Return the device name as returned by the device."""
         return self._bluesound_device_name
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
 
     @property
     def source_list(self):

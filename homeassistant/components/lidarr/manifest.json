@@ -1,0 +1,10 @@
+{
+  "domain": "lidarr",
+  "name": "Lidarr",
+  "documentation": "https://www.home-assistant.io/integrations/lidarr",
+  "requirements": ["aiopyarr==22.10.0"],
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "loggers": ["aiopyarr"]
+}

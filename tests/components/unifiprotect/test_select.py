@@ -21,7 +21,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.data.nvr import DoorbellMessage
 
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,

@@ -7,9 +7,9 @@ from ndms2_client import Device
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
     SourceType,
 )
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -64,8 +64,7 @@ async def async_setup_entry(
                     )
                 )
 
-    if restored:
-        async_add_entities(restored)
+    async_add_entities(restored)
 
     async_dispatcher_connect(hass, router.signal_update, update_from_router)
 
@@ -79,8 +78,7 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
             tracked.add(mac)
             new_tracked.append(KeeneticTracker(device, router))
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class KeeneticTracker(ScannerEntity):
@@ -97,10 +95,10 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
-            self._last_seen
+            self._last_seen is not None
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )

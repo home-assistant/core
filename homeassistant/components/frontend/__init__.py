@@ -548,11 +548,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return a dict with additional info useful for introspection."""
         return {"panels": list(self.hass.data[DATA_PANELS])}
 
-    def freeze(self) -> None:
-        """Freeze the resource."""
-
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
+        return False
 
     def get_template(self) -> jinja2.Template:
         """Get template."""
@@ -616,7 +614,7 @@ class ManifestJSONView(HomeAssistantView):
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
@@ -632,7 +630,7 @@ def websocket_get_panels(
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
     if hass.config.safe_mode:
@@ -675,7 +673,7 @@ def websocket_get_themes(
 )
 @websocket_api.async_response
 async def websocket_get_translations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command."""
     resources = await async_get_translations(
@@ -693,7 +691,7 @@ async def websocket_get_translations(
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
 async def websocket_get_version(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get version command."""
     integration = await async_get_integration(hass, "frontend")

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -121,7 +121,7 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     battery_level = None
     device_lock = "fake_locked_device"
     energy = 1234
-    voltage = 230
+    voltage = 230000
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True

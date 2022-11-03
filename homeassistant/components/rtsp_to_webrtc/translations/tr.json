@@ -23,5 +23,14 @@
                 "title": "RTSPtoWebRTC'yi yap\u0131land\u0131r\u0131n"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Stun sunucu adresi (ana bilgisayar:ba\u011flant\u0131 noktas\u0131)"
+                }
+            }
+        }
     }
 }

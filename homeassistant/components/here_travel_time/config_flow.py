@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_ENTITY_NAMESPACE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -25,21 +24,27 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
-    CONF_ARRIVAL,
     CONF_ARRIVAL_TIME,
-    CONF_DEPARTURE,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
+    CONF_DESTINATION_ENTITY_ID,
+    CONF_DESTINATION_LATITUDE,
+    CONF_DESTINATION_LONGITUDE,
     CONF_ORIGIN,
+    CONF_ORIGIN_ENTITY_ID,
+    CONF_ORIGIN_LATITUDE,
+    CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
+    IMPERIAL_UNITS,
+    METRIC_UNITS,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
-    TRAFFIC_MODE_DISABLED,
     TRAFFIC_MODE_ENABLED,
     TRAFFIC_MODES,
     TRAVEL_MODE_CAR,
@@ -47,55 +52,8 @@ from .const import (
     TRAVEL_MODES,
     UNITS,
 )
-from .sensor import (
-    CONF_DESTINATION_ENTITY_ID,
-    CONF_DESTINATION_LATITUDE,
-    CONF_DESTINATION_LONGITUDE,
-    CONF_ORIGIN_ENTITY_ID,
-    CONF_ORIGIN_LATITUDE,
-    CONF_ORIGIN_LONGITUDE,
-)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def is_dupe_import(
-    entry: config_entries.ConfigEntry,
-    user_input: dict[str, Any],
-    options: dict[str, Any],
-) -> bool:
-    """Return whether imported config already exists."""
-    # Check the main data keys
-    if any(
-        user_input[key] != entry.data[key]
-        for key in (CONF_API_KEY, CONF_MODE, CONF_NAME)
-    ):
-        return False
-
-    # Check origin/destination
-    for key in (
-        CONF_DESTINATION_LATITUDE,
-        CONF_DESTINATION_LONGITUDE,
-        CONF_ORIGIN_LATITUDE,
-        CONF_ORIGIN_LONGITUDE,
-        CONF_DESTINATION_ENTITY_ID,
-        CONF_ORIGIN_ENTITY_ID,
-    ):
-        if user_input.get(key) != entry.data.get(key):
-            return False
-
-    # We have to check for options that don't have defaults
-    for key in (
-        CONF_TRAFFIC_MODE,
-        CONF_UNIT_SYSTEM,
-        CONF_ROUTE_MODE,
-        CONF_ARRIVAL_TIME,
-        CONF_DEPARTURE_TIME,
-    ):
-        if options.get(key) != entry.options.get(key):
-            return False
-
-    return True
 
 
 def validate_api_key(api_key: str) -> None:
@@ -133,13 +91,16 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
 
 def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     """Get the default options."""
-    return {
+    default = {
         CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
-        CONF_UNIT_SYSTEM: hass.config.units.name,
+        CONF_UNIT_SYSTEM: METRIC_UNITS,
     }
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        default[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
+    return default
 
 
 class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -275,66 +236,6 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import from configuration.yaml."""
-        options: dict[str, Any] = {}
-        user_input, options = self._transform_import_input(user_input)
-        # We need to prevent duplicate imports
-        if any(
-            is_dupe_import(entry, user_input, options)
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.source == config_entries.SOURCE_IMPORT
-        ):
-            return self.async_abort(reason="already_configured")
-        return self.async_create_entry(
-            title=user_input[CONF_NAME], data=user_input, options=options
-        )
-
-    def _transform_import_input(
-        self, import_input: dict[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Transform platform schema input to new model."""
-        options: dict[str, Any] = {}
-        user_input: dict[str, Any] = {}
-
-        if import_input.get(CONF_ORIGIN_LATITUDE) is not None:
-            user_input[CONF_ORIGIN_LATITUDE] = import_input[CONF_ORIGIN_LATITUDE]
-            user_input[CONF_ORIGIN_LONGITUDE] = import_input[CONF_ORIGIN_LONGITUDE]
-        else:
-            user_input[CONF_ORIGIN_ENTITY_ID] = import_input[CONF_ORIGIN_ENTITY_ID]
-
-        if import_input.get(CONF_DESTINATION_LATITUDE) is not None:
-            user_input[CONF_DESTINATION_LATITUDE] = import_input[
-                CONF_DESTINATION_LATITUDE
-            ]
-            user_input[CONF_DESTINATION_LONGITUDE] = import_input[
-                CONF_DESTINATION_LONGITUDE
-            ]
-        else:
-            user_input[CONF_DESTINATION_ENTITY_ID] = import_input[
-                CONF_DESTINATION_ENTITY_ID
-            ]
-
-        user_input[CONF_API_KEY] = import_input[CONF_API_KEY]
-        user_input[CONF_MODE] = import_input[CONF_MODE]
-        user_input[CONF_NAME] = import_input[CONF_NAME]
-        if (namespace := import_input.get(CONF_ENTITY_NAMESPACE)) is not None:
-            user_input[CONF_NAME] = f"{namespace} {user_input[CONF_NAME]}"
-
-        options[CONF_TRAFFIC_MODE] = (
-            TRAFFIC_MODE_ENABLED
-            if import_input.get(CONF_TRAFFIC_MODE, False)
-            else TRAFFIC_MODE_DISABLED
-        )
-        options[CONF_ROUTE_MODE] = import_input.get(CONF_ROUTE_MODE)
-        options[CONF_UNIT_SYSTEM] = import_input.get(
-            CONF_UNIT_SYSTEM, self.hass.config.units.name
-        )
-        options[CONF_ARRIVAL_TIME] = import_input.get(CONF_ARRIVAL, None)
-        options[CONF_DEPARTURE_TIME] = import_input.get(CONF_DEPARTURE, None)
-
-        return user_input, options
-
 
 class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
     """Handle HERE Travel Time options."""
@@ -360,24 +261,25 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                 menu_options=["departure_time", "no_time"],
             )
 
+        defaults = default_options(self.hass)
         schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_TRAFFIC_MODE,
                     default=self.config_entry.options.get(
-                        CONF_TRAFFIC_MODE, TRAFFIC_MODE_ENABLED
+                        CONF_TRAFFIC_MODE, defaults[CONF_TRAFFIC_MODE]
                     ),
                 ): vol.In(TRAFFIC_MODES),
                 vol.Optional(
                     CONF_ROUTE_MODE,
                     default=self.config_entry.options.get(
-                        CONF_ROUTE_MODE, ROUTE_MODE_FASTEST
+                        CONF_ROUTE_MODE, defaults[CONF_ROUTE_MODE]
                     ),
                 ): vol.In(ROUTE_MODES),
                 vol.Optional(
                     CONF_UNIT_SYSTEM,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_SYSTEM, self.hass.config.units.name
+                        CONF_UNIT_SYSTEM, defaults[CONF_UNIT_SYSTEM]
                     ),
                 ): vol.In(UNITS),
             }

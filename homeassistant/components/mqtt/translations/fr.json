@@ -5,15 +5,19 @@
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
+            "bad_discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte non valide",
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Options avanc\u00e9es",
                     "broker": "Broker",
                     "discovery": "Activer la d\u00e9couverte",
                     "password": "Mot de passe",
                     "port": "Port",
+                    "protocol": "Protocole MQTT",
+                    "set_client_cert": "Utiliser un certificat client",
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
@@ -49,18 +53,27 @@
             "button_triple_press": "\u00ab\u00a0{subtype}\u00a0\u00bb triple-cliqu\u00e9"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Un\u00b7e ou plusieurs {plateform}\u00b7e\u00b7s MQTT configur\u00e9\u00b7e\u00b7s manuellement requi\u00e8rent votre attention"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Sujet de la naissance non valide.",
+            "bad_discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte non valide",
             "bad_will": "Sujet du testament non valide.",
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Options avanc\u00e9es",
                     "broker": "Broker",
                     "password": "Mot de passe",
                     "port": "Port",
+                    "protocol": "Protocole MQTT",
+                    "set_client_cert": "Utiliser un certificat client",
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
@@ -74,6 +87,7 @@
                     "birth_retain": "Retenir le message de naissance",
                     "birth_topic": "Topic du message de naissance",
                     "discovery": "Activer la d\u00e9couverte",
+                    "discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte",
                     "will_enable": "Activer le message de naissance",
                     "will_payload": "Contenu du message de testament",
                     "will_qos": "QoS du message de testament",

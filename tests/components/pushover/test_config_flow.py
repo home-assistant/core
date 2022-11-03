@@ -4,10 +4,11 @@ from unittest.mock import MagicMock, patch
 from pushover_complete import BadAPIRequestError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.pushover.const import CONF_USER_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
 
@@ -42,17 +43,16 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Pushover"
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_user_key_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate user key."""
+async def test_flow_user_key_api_key_exists(hass: HomeAssistant) -> None:
+    """Test user initialized flow with duplicate user key / api key pair."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        unique_id="MYUSERKEY",
     )
 
     entry.add_to_hass(hass)
@@ -65,7 +65,7 @@ async def test_flow_user_key_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -90,7 +90,7 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=new_config,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -105,7 +105,7 @@ async def test_flow_invalid_user_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_USER_KEY: "invalid_user_key"}
 
@@ -121,7 +121,7 @@ async def test_flow_invalid_api_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -135,22 +135,9 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test user initialized flow with unreachable server."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Pushover"
-    assert result["data"] == MOCK_CONFIG
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
@@ -170,7 +157,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -180,7 +167,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -212,7 +199,47 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         },
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {
         CONF_API_KEY: "invalid_api_key",
     }
+
+
+async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:
+    """Test reauth fails if the api key entered exists in another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    second_entry = MOCK_CONFIG.copy()
+    second_entry[CONF_API_KEY] = "MYAPIKEY2"
+
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data=second_entry,
+    )
+    entry2.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "MYAPIKEY2",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

@@ -57,7 +57,13 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
@@ -199,6 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()
+        await coordinator.sensor_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
         connection.async_stop()
         raise

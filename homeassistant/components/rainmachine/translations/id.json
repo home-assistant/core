@@ -18,6 +18,19 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Perbarui semua otomasi atau skrip yang menggunakan entitas ini untuk menggunakan `{replacement_entity_id}`.",
+                        "title": "Entitas {old_entity_id} akan dihapus"
+                    }
+                }
+            },
+            "title": "Entitas {old_entity_id} akan dihapus"
+        }
+    },
     "options": {
         "step": {
             "init": {

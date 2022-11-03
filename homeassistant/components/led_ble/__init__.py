@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
-        led_ble.set_ble_device(service_info.device)
+        led_ble.set_ble_device_and_advertisement_data(
+            service_info.device, service_info.advertisement
+        )
 
     entry.async_on_unload(
         bluetooth.async_register_callback(

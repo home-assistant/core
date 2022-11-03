@@ -1,6 +1,6 @@
 {
   "domain": "nest",
-  "name": "Nest",
+  "name": "Google Nest",
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "application_credentials"],
   "after_dependencies": ["media_source"],

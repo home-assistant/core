@@ -11,6 +11,7 @@ from pytraccar import (
     GeofenceModel,
     PositionModel,
     TraccarAuthenticationException,
+    TraccarConnectionException,
     TraccarException,
 )
 from stringcase import camelcase
@@ -21,8 +22,8 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -237,6 +238,9 @@ class TraccarScanner:
             await self._api.get_server()
         except TraccarAuthenticationException:
             _LOGGER.error("Authentication for Traccar failed")
+            return False
+        except TraccarConnectionException as exception:
+            _LOGGER.error("Connection with Traccar failed - %s", exception)
             return False
 
         await self._async_update()

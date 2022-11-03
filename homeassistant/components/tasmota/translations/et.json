@@ -16,5 +16,15 @@
                 "description": "Kas soovid seadistada Tasmota sidumist?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Mitmed Tasmota seadmed jagavad teemat {topic} . \n\n Selle probleemiga Tasmota seadmed: {offenders} .",
+            "title": "Mitu Tasmota seadet jagavad sama teemat"
+        },
+        "topic_no_prefix": {
+            "description": "Tasmota seade {name} koos IP-ga {ip} ei sisalda t\u00e4isteemas '%prefix%'.\n\nSelle seadme olemid on keelatud, kuni konfiguratsioon on parandatud.",
+            "title": "Tasmota seadmel {name} on sobimatu MQTT teema"
+        }
     }
 }

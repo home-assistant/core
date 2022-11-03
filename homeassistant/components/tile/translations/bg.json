@@ -16,7 +16,16 @@
             "user": {
                 "data": {
                     "password": "\u041f\u0430\u0440\u043e\u043b\u0430",
-                    "username": "Email"
+                    "username": "\u0418\u043c\u0435\u0439\u043b"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "\u041f\u043e\u043a\u0430\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0442\u0435 \u043f\u043b\u043e\u0447\u043a\u0438"
                 }
             }
         }

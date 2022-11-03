@@ -7,7 +7,10 @@
             "link_local_address": "Gli indirizzi locali di collegamento non sono supportati",
             "missing_configuration": "L'integrazione LaMetric non \u00e8 configurata. Segui la documentazione.",
             "no_devices": "L'utente autorizzato non dispone di dispositivi LaMetric",
-            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_device_not_found": "Il dispositivo che stai tentando di riautenticare non \u00e8 stato trovato in questo account LaMetric",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

@@ -190,6 +190,14 @@ class HassIO:
         """
         return self.send_command(f"/discovery/{uuid}", method="get")
 
+    @api_data
+    def get_resolution_info(self):
+        """Return data for Supervisor resolution center.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/resolution/info", method="get")
+
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""

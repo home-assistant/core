@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Any, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 from uuid import UUID
 
 import voluptuous as vol
@@ -609,7 +609,7 @@ class NumberSelectorConfig(TypedDict, total=False):
 
     min: float
     max: float
-    step: float
+    step: float | Literal["any"]
     unit_of_measurement: str
     mode: NumberSelectorMode
 
@@ -621,13 +621,16 @@ class NumberSelectorMode(StrEnum):
     SLIDER = "slider"
 
 
-def has_min_max_if_slider(data: Any) -> Any:
+def validate_slider(data: Any) -> Any:
     """Validate configuration."""
     if data["mode"] == "box":
         return data
 
     if "min" not in data or "max" not in data:
         raise vol.Invalid("min and max are required in slider mode")
+
+    if "step" in data and data["step"] == "any":
+        raise vol.Invalid("step 'any' is not allowed in slider mode")
 
     return data
 
@@ -645,8 +648,8 @@ class NumberSelector(Selector):
                 vol.Optional("max"): vol.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
                 # user input is not rounded
-                vol.Optional("step", default=1): vol.All(
-                    vol.Coerce(float), vol.Range(min=1e-3)
+                vol.Optional("step", default=1): vol.Any(
+                    "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
@@ -654,7 +657,7 @@ class NumberSelector(Selector):
                 ),
             }
         ),
-        has_min_max_if_slider,
+        validate_slider,
     )
 
     def __init__(self, config: NumberSelectorConfig | None = None) -> None:

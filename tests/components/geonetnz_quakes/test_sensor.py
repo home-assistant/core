@@ -23,8 +23,9 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from . import _generate_mock_feed_entry
+
 from tests.common import async_fire_time_changed
-from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 

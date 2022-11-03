@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import time
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
@@ -16,6 +17,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     BluetoothChange,
     BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -32,7 +34,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices, patch_connectable_history, patch_history
+from . import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+)
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 
@@ -50,6 +56,19 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="Generic",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-95,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+        2: b"\x02",
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={
         None: DeviceInfo(
@@ -79,7 +98,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start):
+async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -105,21 +124,11 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
 
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        unregister_processor = coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     entity_key = PassiveBluetoothEntityKey("temperature", None)
     entity_key_events = []
@@ -149,7 +158,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         mock_add_entities,
     )
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 
     # Each listener should receive the same data
     # since both match
@@ -159,7 +168,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     # There should be 4 calls to create entities
     assert len(mock_entity.mock_calls) == 2
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     # Each listener should receive the same data
     # since both match
@@ -174,7 +183,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     cancel_listener()
     cancel_async_add_entities_listener()
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 
     # Each listener should not trigger any more now
     # that they were cancelled
@@ -187,11 +196,13 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     cancel_coordinator()
 
 
-async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
+async def test_unavailable_after_no_data(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test that the coordinator is unavailable after no data for a while."""
     with patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -217,20 +228,11 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        unregister_processor = coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     mock_entity = MagicMock()
     mock_add_entities = MagicMock()
@@ -242,44 +244,57 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert coordinator.available is False
     assert processor.available is False
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    now = time.monotonic()
+    service_info_at_time = BluetoothServiceInfoBleak(
+        name="Generic",
+        address="aa:bb:cc:dd:ee:ff",
+        rssi=-95,
+        manufacturer_data={
+            1: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+        },
+        service_data={},
+        service_uuids=[],
+        source="local",
+        time=now,
+        device=MagicMock(),
+        advertisement=MagicMock(),
+        connectable=True,
+    )
+
+    inject_bluetooth_service_info_bleak(hass, service_info_at_time)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}), patch_connectable_history(
-        {"aa:bb:cc:dd:ee:ff": MagicMock()},
-    ):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
     assert processor.available is False
+    assert coordinator.last_seen == service_info_at_time.time
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info_bleak(hass, service_info_at_time)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}), patch_connectable_history(
-        {"aa:bb:cc:dd:ee:ff": MagicMock()},
-    ):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
     assert processor.available is False
+    assert coordinator.last_seen == service_info_at_time.time
 
     unregister_processor()
     cancel_coordinator()
 
 
-async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
+async def test_no_updates_once_stopping(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test updates are ignored once hass is stopping."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -304,21 +319,11 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
 
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        unregister_processor = coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     all_events = []
 
@@ -330,19 +335,21 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         _all_listener,
     )
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert len(all_events) == 1
 
     hass.state = CoreState.stopping
 
     # We should stop processing events once hass is stopping
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     assert len(all_events) == 1
     unregister_processor()
     cancel_coordinator()
 
 
-async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
+async def test_exception_from_update_method(
+    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -361,7 +368,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 2:
+        if run_count == 1:
             raise Exception("Test exception")
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -390,11 +397,11 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
 
     processor.async_add_listener(MagicMock())
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert processor.available is True
 
     # We should go unavailable once we get an exception
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO_2, BluetoothChange.ADVERTISEMENT)
     assert "Test exception" in caplog.text
     assert processor.available is False
 
@@ -405,7 +412,9 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     cancel_coordinator()
 
 
-async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
+async def test_bad_data_from_update_method(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test we handle bad data from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -424,7 +433,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 2:
+        if run_count == 1:
             return "bad_data"
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -453,12 +462,12 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
 
     processor.async_add_listener(MagicMock())
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert processor.available is True
 
     # We should go unavailable once we get bad data
     with pytest.raises(ValueError):
-        saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+        saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO_2, BluetoothChange.ADVERTISEMENT)
 
     assert processor.available is False
 
@@ -757,7 +766,9 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 )
 
 
-async def test_integration_with_entity(hass, mock_bleak_scanner_start):
+async def test_integration_with_entity(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -788,20 +799,11 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+
+    coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     processor.async_add_listener(MagicMock())
 
@@ -812,19 +814,19 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         mock_add_entities,
     )
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_entities.mock_calls) == 1
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Second call with just the remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 1
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Third call with primary and remote sensor entities adds the primary sensor entities
     assert len(mock_add_entities.mock_calls) == 2
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Forth call with both primary and remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 2
 
@@ -860,6 +862,19 @@ NO_DEVICES_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+NO_DEVICES_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="Generic",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-95,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+        2: b"\x02",
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={},
     entity_data={
@@ -883,7 +898,9 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner_start):
+async def test_integration_with_entity_without_a_device(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -908,20 +925,11 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+
+    coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     mock_add_entities = MagicMock()
 
@@ -930,11 +938,11 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         mock_add_entities,
     )
 
-    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_entities.mock_calls) == 1
 
-    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO_2)
     # Second call with just the remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 1
 
@@ -954,7 +962,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
 
 
 async def test_passive_bluetooth_entity_with_entity_platform(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test with a mock entity platform."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -982,20 +990,11 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+
+    coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     processor.async_add_entities_listener(
         PassiveBluetoothProcessorEntity,
@@ -1003,9 +1002,9 @@ async def test_passive_bluetooth_entity_with_entity_platform(
             entity_platform.async_add_entities(entities)
         ),
     )
-    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO)
     await hass.async_block_till_done()
-    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
     assert (
         hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_temperature")
@@ -1061,7 +1060,9 @@ BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_start):
+async def test_integration_multiple_entity_platforms(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1079,12 +1080,6 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     binary_sensor_processor = PassiveBluetoothDataProcessor(
         lambda service_info: BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
@@ -1093,13 +1088,9 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         lambda service_info: SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
     )
 
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        coordinator.async_register_processor(binary_sensor_processor)
-        coordinator.async_register_processor(sesnor_processor)
-        cancel_coordinator = coordinator.async_start()
+    coordinator.async_register_processor(binary_sensor_processor)
+    coordinator.async_register_processor(sesnor_processor)
+    cancel_coordinator = coordinator.async_start()
 
     binary_sensor_processor.async_add_listener(MagicMock())
     sesnor_processor.async_add_listener(MagicMock())
@@ -1116,7 +1107,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         mock_add_binary_sensor_entities,
     )
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_binary_sensor_entities.mock_calls) == 1
     assert len(mock_add_sensor_entities.mock_calls) == 1
@@ -1161,7 +1152,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
 
 
 async def test_exception_from_coordinator_update_method(
-    hass, caplog, mock_bleak_scanner_start
+    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -1193,33 +1184,24 @@ async def test_exception_from_coordinator_update_method(
         _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        unregister_processor = coordinator.async_register_processor(processor)
-        cancel_coordinator = coordinator.async_start()
+
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
 
     processor.async_add_listener(MagicMock())
 
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert processor.available is True
 
     # We should go unavailable once we get an exception
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     assert "Test exception" in caplog.text
     assert processor.available is False
 
     # We should go available again once we get data again
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert processor.available is True
     unregister_processor()
     cancel_coordinator()

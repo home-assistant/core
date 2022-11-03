@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
@@ -61,8 +61,6 @@ async def async_setup_entry(
 
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -80,7 +80,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
@@ -109,8 +109,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_BTU_PER_HOUR,
     POWER_WATT,
-    PRECIPITATION_INCHES_PER_HOUR,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_INHG,
     PRESSURE_MMHG,
     PRESSURE_PSI,
@@ -127,6 +125,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    UnitOfVolumetricFlux,
 )
 
 from .const import (
@@ -201,14 +200,14 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     VOLUME_GALLONS: UNIT_GALLONS,
     FREQUENCY_HERTZ: UNIT_HERTZ,
     PRESSURE_INHG: UNIT_INCHES_OF_MERCURY,
-    PRECIPITATION_INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
+    UnitOfVolumetricFlux.INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
     MASS_KILOGRAMS: UNIT_KILOGRAM,
     FREQUENCY_KILOHERTZ: UNIT_KILOHERTZ,
     VOLUME_LITERS: UNIT_LITER,
     LIGHT_LUX: UNIT_LUX,
     LENGTH_METERS: UNIT_METER,
     ELECTRIC_CURRENT_MILLIAMPERE: UNIT_MILLIAMPERE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
+    UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
     ELECTRIC_POTENTIAL_MILLIVOLT: UNIT_MILLIVOLT,
     SPEED_MILES_PER_HOUR: UNIT_MPH,
     SPEED_METERS_PER_SECOND: UNIT_M_S,
@@ -263,7 +262,7 @@ class BaseDiscoverySchemaDataTemplate:
         node: ZwaveNode, value_id_obj: ZwaveValueID
     ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             value_id_obj.command_class,
             value_id_obj.property_,

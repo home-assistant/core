@@ -31,11 +31,17 @@ UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 
 START_TIMEOUT = 15
 
-MAX_DBUS_SETUP_SECONDS = 5
-
-# Anything after 30s is considered stale, we have buffer
-# for start timeouts and execution time
-STALE_ADVERTISEMENT_SECONDS: Final = 30 + START_TIMEOUT + MAX_DBUS_SETUP_SECONDS
+# The maximum time between advertisements for a device to be considered
+# stale when the advertisement tracker cannot determine the interval.
+#
+# We have to set this quite high as we don't know
+# when devices fall out of the ESPHome device (and other non-local scanners)'s
+# stack like we do with BlueZ so its safer to assume its available
+# since if it does go out of range and it is in range
+# of another device the timeout is much shorter and it will
+# switch over to using that adapter anyways.
+#
+FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
 
 
 # We must recover before we hit the 180s mark
@@ -45,9 +51,9 @@ STALE_ADVERTISEMENT_SECONDS: Final = 30 + START_TIMEOUT + MAX_DBUS_SETUP_SECONDS
 # to be
 # 180s Time when device is removed from stack
 # - 30s check interval
-# - 20s scanner restart time * 2
+# - 30s scanner restart time * 2
 #
-SCANNER_WATCHDOG_TIMEOUT: Final = 110
+SCANNER_WATCHDOG_TIMEOUT: Final = 90
 # How often to check if the scanner has reached
 # the SCANNER_WATCHDOG_TIMEOUT without seeing anything
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
@@ -58,7 +64,7 @@ class AdapterDetails(TypedDict, total=False):
 
     address: str
     sw_version: str
-    hw_version: str
+    hw_version: str | None
     passive_scan: bool
 
 

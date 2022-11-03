@@ -21,21 +21,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_LIMITED_CURRENT_MEASUREMENTS
+
 from tests.common import MockConfigEntry
-from tests.components.huisbaasje.test_data import (
-    MOCK_CURRENT_MEASUREMENTS,
-    MOCK_LIMITED_CURRENT_MEASUREMENTS,
-)
 
 
 async def test_setup_entry(hass: HomeAssistant):
     """Test for successfully loading sensor states."""
     with patch(
-        "huisbaasje.Huisbaasje.authenticate", return_value=None
+        "energyflip.EnergyFlip.authenticate", return_value=None
     ) as mock_authenticate, patch(
-        "huisbaasje.Huisbaasje.is_authenticated", return_value=True
+        "energyflip.EnergyFlip.is_authenticated", return_value=True
     ) as mock_is_authenticated, patch(
-        "huisbaasje.Huisbaasje.current_measurements",
+        "energyflip.EnergyFlip.current_measurements",
         return_value=MOCK_CURRENT_MEASUREMENTS,
     ) as mock_current_measurements:
 
@@ -346,11 +344,11 @@ async def test_setup_entry(hass: HomeAssistant):
 async def test_setup_entry_absent_measurement(hass: HomeAssistant):
     """Test for successfully loading sensor states when response does not contain all measurements."""
     with patch(
-        "huisbaasje.Huisbaasje.authenticate", return_value=None
+        "energyflip.EnergyFlip.authenticate", return_value=None
     ) as mock_authenticate, patch(
-        "huisbaasje.Huisbaasje.is_authenticated", return_value=True
+        "energyflip.EnergyFlip.is_authenticated", return_value=True
     ) as mock_is_authenticated, patch(
-        "huisbaasje.Huisbaasje.current_measurements",
+        "energyflip.EnergyFlip.current_measurements",
         return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
     ) as mock_current_measurements:
 

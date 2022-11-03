@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Er zijn geen Melnor Bluetooth-apparaten in de buurt."
+        }
+    }
+}
