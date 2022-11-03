@@ -37,17 +37,15 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config.latitude,
                 self.hass.config.longitude,
             )
-            LOGGER.debug("config_flow: closest station = %s", str(closest_station_id))
+            LOGGER.debug("config_flow: closest station = %s", closest_station_id)
             stations = await self._client.zamg_stations()
             user_input = {}
 
             schema = vol.Schema(
                 {
-                    vol.Required(
-                        CONF_STATION_ID, default=int(closest_station_id)
-                    ): vol.In(
+                    vol.Required(CONF_STATION_ID, default=closest_station_id): vol.In(
                         {
-                            int(station): f"{stations[station][2]} ({station})"
+                            station: f"{stations[station][2]} ({station})"
                             for station in stations
                         }
                     )
@@ -55,7 +53,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_show_form(step_id="user", data_schema=schema)
 
-        station_id = str(user_input[CONF_STATION_ID])
+        station_id = user_input[CONF_STATION_ID]
 
         # Check if already configured
         await self.async_set_unique_id(station_id)
@@ -97,12 +95,23 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if station_id not in await self._client.zamg_stations():
             LOGGER.warning(
-                "Configured station_id %s could not be found at zamg, adding the nearest weather station instead",
+                "Configured station_id %s could not be found at zamg, trying to add nearest weather station instead",
                 station_id,
             )
             latitude = config.get(CONF_LATITUDE) or self.hass.config.latitude
             longitude = config.get(CONF_LONGITUDE) or self.hass.config.longitude
             station_id = await self._client.closest_station(latitude, longitude)
+
+        # abort if we can't get a valid station id
+        if station_id == "" or station_id is None:
+            LOGGER.error(
+                "Unable to import existing station; Could not resolve to valid station_id"
+            )
+            errors = {}
+            errors["base"] = "cannot_connect"
+            return self.async_abort(
+                reason="cannot_connect", description_placeholders=errors
+            )
 
         # Check if already configured
         await self.async_set_unique_id(station_id)

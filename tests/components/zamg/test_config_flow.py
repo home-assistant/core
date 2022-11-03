@@ -27,7 +27,7 @@ async def test_full_user_flow_implementation(
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
@@ -54,7 +54,7 @@ async def test_error_update(
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
@@ -91,7 +91,7 @@ async def test_user_flow_duplicate(
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
@@ -107,7 +107,7 @@ async def test_user_flow_duplicate(
     assert result.get("type") == FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
@@ -129,7 +129,7 @@ async def test_import_flow_duplicate(
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
@@ -162,7 +162,7 @@ async def test_import_flow_duplicate_after_position(
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+        user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
@@ -184,7 +184,7 @@ async def test_import_flow_no_name(
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
-    """Test the full import flow from start to finish."""
+    """Test import flow without any name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -192,3 +192,19 @@ async def test_import_flow_no_name(
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("data") == {CONF_STATION_ID: TEST_STATION_ID}
+
+
+async def test_import_flow_invalid_station(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test import flow with invalid station."""
+    mock_zamg.closest_station.return_value = ""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: ""},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
