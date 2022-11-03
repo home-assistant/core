@@ -480,9 +480,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
             for key, template in value_templates.items()
         }
 
-        command_templates: dict[str, Callable[..., PublishPayloadType]] = {}
+        self._command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = MqttCommandTemplate(
+            self._command_templates[key] = MqttCommandTemplate(
                 config.get(key), entity=self
             ).async_render
 
@@ -531,7 +531,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def add_subscription(
             topics: dict[str, dict[str, Any]],
             topic: str,
-            msg_callback: Callable[..., None],
+            msg_callback: Callable[[ReceiveMessage], None],
         ) -> None:
             if self._topic[topic] is not None:
                 topics[topic] = {
