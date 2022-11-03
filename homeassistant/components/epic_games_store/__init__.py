@@ -13,12 +13,24 @@ from .coordinator import EGSUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+def get_country_from_locale(locale: str) -> str:
+    """Get the country code from locale."""
+    excepts = {"ja": "JP", "ko": "KR", "zh-Hant": "CN"}
+    return (
+        excepts[locale]
+        if excepts.get(locale)
+        else (locale[3:] if ("-" in locale) else locale)
+    ).upper()
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Epic Games Store from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
 
-    api = EpicGamesStoreAPI(entry.data[CONF_LOCALE], "FR")
+    api = EpicGamesStoreAPI(
+        entry.data[CONF_LOCALE], get_country_from_locale(entry.data[CONF_LOCALE])
+    )
 
     coordinator = EGSUpdateCoordinator(hass, api, entry.data[CONF_LOCALE])
     await coordinator.async_config_entry_first_refresh()

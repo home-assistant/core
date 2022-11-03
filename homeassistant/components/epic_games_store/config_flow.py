@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from . import get_country_from_locale
 from .const import CONF_LOCALE, CONF_SUPPORTED_LOCALES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +28,9 @@ async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    api = EpicGamesStoreAPI(user_input[CONF_LOCALE], "FR")
+    api = EpicGamesStoreAPI(
+        user_input[CONF_LOCALE], get_country_from_locale(user_input[CONF_LOCALE])
+    )
     data = await hass.async_add_executor_job(api.get_free_games)
 
     if data.get("errors"):
