@@ -1349,7 +1349,7 @@ pysmartthings==0.7.6
 pysnmplib==5.0.15
 
 # homeassistant.components.snooz
-pysnooz==0.8.2
+pysnooz==0.8.3
 
 # homeassistant.components.soma
 pysoma==0.0.10
