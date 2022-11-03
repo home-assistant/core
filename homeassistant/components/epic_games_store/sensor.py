@@ -39,7 +39,6 @@ async def async_setup_entry(
 
     async_add_entities(
         [EGSSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS],
-        True,
     )
 
 
