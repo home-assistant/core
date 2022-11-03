@@ -5,10 +5,12 @@ import asyncio
 from typing import Final
 
 from aiolivisi import AioLivisi
+from aionanoleaf import ClientConnectorError
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import DOMAIN, SWITCH_PLATFORM
@@ -22,8 +24,11 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     web_session = aiohttp_client.async_get_clientsession(hass)
     aiolivisi = AioLivisi(web_session)
     coordinator = LivisiDataUpdateCoordinator(hass, entry, aiolivisi)
-    await coordinator.async_setup()
-    await coordinator.async_set_all_rooms()
+    try:
+        await coordinator.async_setup()
+        await coordinator.async_set_all_rooms()
+    except ClientConnectorError as exception:
+        raise ConfigEntryNotReady from exception
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     device_registry = dr.async_get(hass)
