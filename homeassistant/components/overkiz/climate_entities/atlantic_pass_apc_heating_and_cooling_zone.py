@@ -62,7 +62,7 @@ OVERKIZ_TEMPERATURE_STATE_BY_PROFILE: dict[str, str] = {
 
 
 class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
-    """Representation of Atlantic Pass APC Heating And Cooling Zone Zone Control."""
+    """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
