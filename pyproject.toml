@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.11.0"
+version     = "2022.11.1"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -42,7 +42,7 @@ dependencies    = [
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==38.0.1",
+    "cryptography==38.0.3",
     "orjson==3.8.1",
     "pip>=21.0,<22.4",
     "python-slugify==4.0.1",
