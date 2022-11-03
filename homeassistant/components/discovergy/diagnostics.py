@@ -39,10 +39,10 @@ async def async_get_config_entry_diagnostics(
     meters: list[Meter] = data.meters  # always returns a list
 
     for meter in meters:
-        # make dict of meter data and redact some data
+        # make a dict of meter data and redact some data
         flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
 
-        # get last reading for meter and make dict it
+        # get last reading for meter and make a dict of it
         coordinator: DataUpdateCoordinator = data.coordinators[meter.get_meter_id()]
         last_readings[meter.get_meter_id()] = coordinator.data.__dict__
 

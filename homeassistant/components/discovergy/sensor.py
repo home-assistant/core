@@ -19,9 +19,9 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -57,7 +57,7 @@ GAS_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="volume",
         name="Total consumption",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -68,14 +68,14 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="power",
         name="Total power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DiscovergySensorEntityDescription(
         key="power1",
         name="Phase 1 power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -84,7 +84,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="power2",
         name="Phase 2 power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -93,7 +93,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="power3",
         name="Phase 3 power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -128,7 +128,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="energy",
         name="Total consumption",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=10000000000,
@@ -136,7 +136,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="energyOut",
         name="Total production",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=10000000000,
