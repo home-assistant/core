@@ -54,8 +54,18 @@ class CombinedEnergyDataService(Generic[_T]):
         """Update interval."""
 
     @abstractmethod
-    async def async_update_data(self) -> _T:
+    async def update_data(self) -> _T:
         """Update data."""
+
+    async def async_update_data(self) -> _T:
+        """Update data with error handling."""
+        try:
+            self.data = await self.update_data()
+        except CombinedEnergyAuthError as ex:
+            raise ConfigEntryAuthFailed from ex
+        except CombinedEnergyError as ex:
+            raise UpdateFailed("Error updating Combined Energy API") from ex
+        return self.data
 
 
 class CombinedEnergyConnectivityDataService(
@@ -68,14 +78,9 @@ class CombinedEnergyConnectivityDataService(
         """Update interval."""
         return CONNECTIVITY_UPDATE_DELAY
 
-    async def async_update_data(self) -> None:
+    async def update_data(self) -> ConnectionStatus:
         """Update data."""
-        try:
-            self.data = await self.api.communication_status()
-        except CombinedEnergyAuthError as ex:
-            raise ConfigEntryAuthFailed from ex
-        except CombinedEnergyError as ex:
-            raise UpdateFailed("Error updating Combined Energy API") from ex
+        return await self.api.communication_status()
 
 
 class CombinedEnergyReadingsDataService(CombinedEnergyDataService[Readings]):
@@ -94,14 +99,9 @@ class CombinedEnergyReadingsDataService(CombinedEnergyDataService[Readings]):
         """Update interval."""
         return READINGS_UPDATE_DELAY
 
-    async def async_update_data(self) -> None:
+    async def update_data(self) -> Readings:
         """Update data."""
-        try:
-            self.data = await anext(self._iterator)
-        except CombinedEnergyAuthError as ex:
-            raise ConfigEntryAuthFailed from ex
-        except CombinedEnergyError as ex:
-            raise UpdateFailed("Error updating Combined Energy API") from ex
+        return await anext(self._iterator)
 
     def device_readings(self, device_id: int) -> DeviceReadings | None:
         """Find readings for a particular device."""
