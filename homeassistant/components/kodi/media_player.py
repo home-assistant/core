@@ -268,7 +268,20 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
 
     def __init__(self, connman: KodiConnectionManager, name: str, uid: str) -> None:
         """Initialize the Kodi entity."""
-        super().__init__(connman)
+        super().__init__(
+            connman,
+            {
+                "Player.OnPause": self.async_on_speed_event,
+                "Player.OnPlay": self.async_on_speed_event,
+                "Player.OnAVStart": self.async_on_speed_event,
+                "Player.OnAVChange": self.async_on_speed_event,
+                "Player.OnResume": self.async_on_speed_event,
+                "Player.OnSpeedChanged": self.async_on_speed_event,
+                "Player.OnSeek": self.async_on_speed_event,
+                "Player.OnStop": self.async_on_stop,
+                "Application.OnVolumeChanged": self.async_on_volume_changed,
+            },
+        )
         self._kodi = connman.kodi
         self._unique_id = uid
         self._players = None
@@ -280,18 +293,6 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
 
         self._conf_name = name
         self._attr_name = None
-
-        self._websocket_callbacks = {
-            "Player.OnPause": self.async_on_speed_event,
-            "Player.OnPlay": self.async_on_speed_event,
-            "Player.OnAVStart": self.async_on_speed_event,
-            "Player.OnAVChange": self.async_on_speed_event,
-            "Player.OnResume": self.async_on_speed_event,
-            "Player.OnSpeedChanged": self.async_on_speed_event,
-            "Player.OnSeek": self.async_on_speed_event,
-            "Player.OnStop": self.async_on_stop,
-            "Application.OnVolumeChanged": self.async_on_volume_changed,
-        }
 
     def _reset_state(self, players=None):
         self._players = players
