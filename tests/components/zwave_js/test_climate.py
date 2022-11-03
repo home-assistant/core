@@ -65,6 +65,8 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 30
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert state.attributes[ATTR_FAN_MODE] == "Auto low"
     assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
@@ -159,6 +161,8 @@ async def test_thermostat_v2(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
 
     # Test heat_cool mode update from value updated event
     event = Event(
@@ -182,6 +186,7 @@ async def test_thermostat_v2(
 
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
     assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 

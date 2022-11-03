@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "System jest obecnie \"niezdrowy\" z powodu \u201e{reason}\u201d. Skorzystaj z linku, aby dowiedzie\u0107 si\u0119 wi\u0119cej o tym, co jest nie tak i jak to naprawi\u0107.",
+            "title": "Niezdrowy system \u2013 {reason}"
+        },
+        "unsupported": {
+            "description": "System nie jest obs\u0142ugiwany z powodu \u201e{pow\u00f3d}\u201d. Skorzystaj z linku, aby dowiedzie\u0107 si\u0119 wi\u0119cej o tym, co to oznacza i jak wr\u00f3ci\u0107 do obs\u0142ugiwanego systemu.",
+            "title": "Nieobs\u0142ugiwany system \u2013 {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Wersja agenta",

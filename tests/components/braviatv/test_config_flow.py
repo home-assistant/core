@@ -12,12 +12,16 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import (
+    CONF_CLIENT_ID,
     CONF_IGNORED_SOURCES,
+    CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
+    NICKNAME_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.helpers import instance_id
 
 from tests.common import MockConfigEntry
 
@@ -93,6 +97,7 @@ async def test_show_form(hass):
 
 async def test_ssdp_discovery(hass):
     """Test that the device is discovered."""
+    uuid = await instance_id.async_get(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
@@ -129,6 +134,8 @@ async def test_ssdp_discovery(hass):
             CONF_PIN: "1234",
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_CLIENT_ID: uuid,
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 
@@ -270,6 +277,8 @@ async def test_duplicate_error(hass):
 
 async def test_create_entry(hass):
     """Test that the user step works."""
+    uuid = await instance_id.async_get(hass)
+
     with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
         "pybravia.BraviaTV.set_wol_mode"
     ), patch(
@@ -297,11 +306,15 @@ async def test_create_entry(hass):
             CONF_PIN: "1234",
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_CLIENT_ID: uuid,
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 
 async def test_create_entry_with_ipv6_address(hass):
     """Test that the user step works with device IPv6 address."""
+    uuid = await instance_id.async_get(hass)
+
     with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
         "pybravia.BraviaTV.set_wol_mode"
     ), patch(
@@ -331,6 +344,8 @@ async def test_create_entry_with_ipv6_address(hass):
             CONF_PIN: "1234",
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_CLIENT_ID: uuid,
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 

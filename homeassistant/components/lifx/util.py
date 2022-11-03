@@ -14,18 +14,17 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
+from .const import DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -81,8 +80,6 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)
-
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
     elif ATTR_RGB_COLOR in kwargs:
@@ -96,10 +93,8 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if ATTR_COLOR_TEMP in kwargs:
-        kelvin = int(
-            color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-        )
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        kelvin = kwargs.pop(ATTR_COLOR_TEMP_KELVIN)
         saturation = 0
 
     if ATTR_BRIGHTNESS in kwargs:
@@ -158,8 +153,6 @@ async def async_execute_lifx(method: Callable) -> Message:
             # The future will get canceled out from under
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
-
-    _LOGGER.debug("Sending LIFX command: %s", method)
 
     method(callb=_callback)
     result = None

@@ -7,6 +7,7 @@ import functools
 import logging
 import re
 import time
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -62,6 +63,7 @@ SUPPORTED_COMPONENTS = [
     "sensor",
     "switch",
     "tag",
+    "update",
     "vacuum",
 ]
 
@@ -72,8 +74,8 @@ MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 TOPIC_BASE = "~"
 
 
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
+class MQTTDiscoveryPayload(dict[str, Any]):
+    """Class to hold and MQTT discovery payload and discovery data."""
 
     discovery_data: DiscoveryInfoType
 
@@ -95,7 +97,7 @@ async def async_start(  # noqa: C901
     mqtt_data = get_mqtt_data(hass)
     mqtt_integrations = {}
 
-    async def async_discovery_message_received(msg):
+    async def async_discovery_message_received(msg) -> None:
         """Process the received message."""
         mqtt_data.last_discovery = time.time()
         payload = msg.payload
@@ -125,7 +127,7 @@ async def async_start(  # noqa: C901
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
 
-        payload = MQTTConfig(payload)
+        payload = MQTTDiscoveryPayload(payload)
 
         for key in list(payload):
             abbreviated_key = key
@@ -138,6 +140,14 @@ async def async_start(  # noqa: C901
                 abbreviated_key = key
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
+
+        if CONF_AVAILABILITY in payload:
+            for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                if isinstance(availability_conf, dict):
+                    for key in list(availability_conf):
+                        abbreviated_key = key
+                        key = ABBREVIATIONS.get(key, key)
+                        availability_conf[key] = availability_conf.pop(abbreviated_key)
 
         if TOPIC_BASE in payload:
             base = payload.pop(TOPIC_BASE)
@@ -186,7 +196,7 @@ async def async_start(  # noqa: C901
         await async_process_discovery_payload(component, discovery_id, payload)
 
     async def async_process_discovery_payload(
-        component: str, discovery_id: str, payload: ConfigType
+        component: str, discovery_id: str, payload: MQTTDiscoveryPayload
     ) -> None:
         """Process the payload of a new discovery."""
 

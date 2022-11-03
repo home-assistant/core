@@ -5,15 +5,33 @@
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "bad_birth": "Argomento di nascita non valido",
+            "bad_certificate": "Il certificato CA non \u00e8 valido",
+            "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
+            "bad_client_cert_key": "Il certificato del client e il privato non sono accoppiati in modo valido",
+            "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
+            "bad_discovery_prefix": "Prefisso di ricerca non valido",
+            "bad_will": "Argomento testamento non valido",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opzioni avanzate",
                     "broker": "Broker",
+                    "certificate": "Percorso del file del certificato CA personalizzato",
+                    "client_cert": "Percorso per un file di certificato cliente",
+                    "client_id": "ID cliente (lasciare vuoto per generarne uno in modo casuale)",
+                    "client_key": "Percorso per un file della chiave privata",
                     "discovery": "Attiva il rilevamento",
+                    "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento attivo",
                     "password": "Password",
                     "port": "Porta",
+                    "protocol": "Protocollo MQTT",
+                    "set_ca_cert": "Convalida del certificato del broker",
+                    "set_client_cert": "Utilizzare un certificato client",
+                    "tls_insecure": "Ignorare la convalida del certificato del broker",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci le informazioni di connessione del tuo broker MQTT."
@@ -53,20 +71,40 @@
         "deprecated_yaml": {
             "description": "{platform} MQTT configurata manualmente trovata sotto la voce della piattaforma `{platform}`. \n\nSposta la configurazione sulla voce di integrazione `mqtt` e riavvia Home Assistant per risolvere questo problema. Consulta la [documentazione]({more_info_url}), per ulteriori informazioni.",
             "title": "La/e tua/e {platform} MQTT configurata/e manualmente ha/hanno bisogno di attenzione"
+        },
+        "deprecated_yaml_broker_settings": {
+            "description": "Le seguenti impostazioni trovate in 'configuration.yaml' sono state migrate alla voce di configurazione MQTT e ora sovrascriveranno le impostazioni in 'configuration.yaml':\n`{deprecated_settings}`\n\nRimuovi queste impostazioni da 'configuration.yaml' e riavvia Home Assistant per risolvere il problema. Per ulteriori informazioni, vedere la [documentazione]({more_info_url}).",
+            "title": "Impostazioni MQTT obsolete trovate in `configuration.yaml`"
         }
     },
     "options": {
         "error": {
-            "bad_birth": "Argomento birth non valido.",
-            "bad_will": "Argomento will non valido.",
-            "cannot_connect": "Impossibile connettersi"
+            "bad_birth": "Argomento di nascita non valido",
+            "bad_certificate": "Certificato CA non valido",
+            "bad_client_cert": "Certificato cliente non valido, assicurarsi che venga fornito un file con codice PEM",
+            "bad_client_cert_key": "Il certificato del client e il certificato privato non sono accoppiati in modo valido",
+            "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
+            "bad_discovery_prefix": "Prefisso di ricerca non valido",
+            "bad_will": "Argomento di testamento non valido",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_inclusion": "Il certificato e la chiave privata del client devono essere configurati insieme"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opzioni avanzate",
                     "broker": "Broker",
+                    "certificate": "Carica il file del certificato CA personalizzato",
+                    "client_cert": "Carica il file del certificato cliente",
+                    "client_id": "ID cliente (lasciare vuoto per generarne uno in modo casuale)",
+                    "client_key": "Carica il file della chiave privata",
+                    "keepalive": "Il tempo che intercorre tra l'invio di messaggi di mantenimento comunicazioni",
                     "password": "Password",
                     "port": "Porta",
+                    "protocol": "Protocollo MQTT",
+                    "set_ca_cert": "Convalida del certificato del broker",
+                    "set_client_cert": "Utilizza un certificato client",
+                    "tls_insecure": "Ignora la convalida del certificato del broker",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci le informazioni di connessione del tuo broker MQTT.",
@@ -80,13 +118,14 @@
                     "birth_retain": "Persistenza del messaggio birth",
                     "birth_topic": "Argomento del messaggio birth",
                     "discovery": "Attiva il rilevamento",
+                    "discovery_prefix": "Scopri il prefisso",
                     "will_enable": "Abilita il messaggio testamento",
                     "will_payload": "Payload del messaggio testamento",
                     "will_qos": "QoS del messaggio testamento",
                     "will_retain": "Persistenza del messaggio will",
                     "will_topic": "Argomento del messaggio will"
                 },
-                "description": "Rilevamento: se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere eseguita manualmente.\nMessaggio di nascita: il messaggio di nascita verr\u00e0 inviato ogni volta che Home Assistant si (ri)collega al broker MQTT.\nMessaggio testamento: Il messaggio testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di buona (es. arresto di Home Assistant) sia in caso di cattiva (es. Home Assistant in crash o perdita della connessione di rete) disconnessione.",
+                "description": "Rilevamento - Se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere fatta manualmente.\nPrefisso di rilevamento - Il prefisso con cui deve iniziare un argomento di configurazione per il rilevamento automatico.\nMessaggio di nascita - Il messaggio di nascita viene inviato ogni volta che Home Assistant si (ri)connette al broker MQTT.\nMessaggio di testamento - Il messaggio di testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di disconnessione pulita (ad esempio, Home Assistant si spegne) sia in caso di disconnessione non pulita (ad esempio, Home Assistant si blocca o perde la connessione di rete).",
                 "title": "Opzioni MQTT"
             }
         }

@@ -1,5 +1,5 @@
 """Test the Switcher climate platform."""
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from aioswitcher.api import SwitcherBaseResponse
 from aioswitcher.device import (
@@ -59,7 +59,9 @@ async def test_climate_hvac_mode(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == HVACMode.HEAT
 
@@ -79,7 +81,7 @@ async def test_climate_hvac_mode(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, state=DeviceState.OFF)
         state = hass.states.get(ENTITY_ID)
         assert state.state == HVACMode.OFF
 
@@ -110,7 +112,7 @@ async def test_climate_temperature(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, target_temp=22)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["temperature"] == 22
 
@@ -160,7 +162,9 @@ async def test_climate_fan_level(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, fan_level=ThermostatFanLevel.HIGH
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["fan_mode"] == "high"
 
@@ -194,7 +198,7 @@ async def test_climate_swing(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.ON)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["swing_mode"] == "vertical"
 
@@ -214,7 +218,7 @@ async def test_climate_swing(hass, mock_bridge, mock_api, monkeypatch):
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.OFF)
         state = hass.states.get(ENTITY_ID)
         assert state.attributes["swing_mode"] == "off"
 
@@ -243,7 +247,9 @@ async def test_control_device_fail(hass, mock_bridge, mock_api, monkeypatch):
             )
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
 
@@ -268,7 +274,9 @@ async def test_control_device_fail(hass, mock_bridge, mock_api, monkeypatch):
             )
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(
+            ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
+        )
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
 

@@ -146,7 +146,7 @@ def _get_breakdown_percent(
     """Get a breakdown percent."""
     try:
         return round((attr["breakdown"][key] / denominator) * 100, 2)
-    except ZeroDivisionError:
+    except (ZeroDivisionError, KeyError):
         return 0
 
 

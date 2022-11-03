@@ -19,6 +19,8 @@ COORDINATOR_NAME = "subaru_data"
 
 # info fields
 VEHICLE_VIN = "vin"
+VEHICLE_MODEL_NAME = "model_name"
+VEHICLE_MODEL_YEAR = "model_year"
 VEHICLE_NAME = "display_name"
 VEHICLE_HAS_EV = "is_ev"
 VEHICLE_API_GEN = "api_gen"
