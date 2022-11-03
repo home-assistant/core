@@ -2,20 +2,19 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import AsyncIterator
 from datetime import timedelta
 from typing import Generic, TypeVar
 
 from combined_energy import CombinedEnergy
 from combined_energy.exceptions import CombinedEnergyAuthError, CombinedEnergyError
 from combined_energy.helpers import ReadingsIterator
-from combined_energy.models import ConnectionStatus, DeviceReadings, Readings
+from combined_energy.models import ConnectionStatus, DeviceReadings
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .backports import aiter, anext  # pylint: disable=redefined-builtin
+from .backports import anext  # pylint: disable=redefined-builtin
 from .const import (
     CONNECTIVITY_UPDATE_DELAY,
     LOGGER,
@@ -83,30 +82,31 @@ class CombinedEnergyConnectivityDataService(
         return await self.api.communication_status()
 
 
-class CombinedEnergyReadingsDataService(CombinedEnergyDataService[Readings]):
+class CombinedEnergyReadingsDataService(
+    CombinedEnergyDataService[dict[int, DeviceReadings]]
+):
     """Get and update the latest readings data."""
 
     def __init__(self, hass: HomeAssistant, api: CombinedEnergy) -> None:
         """Initialize the data service."""
         super().__init__(hass, api)
-        self._readings_iterable = ReadingsIterator(
+        self._readings_iterator = ReadingsIterator(
             self.api, increment=READINGS_INCREMENT
         )
-        self._iterator: AsyncIterator[Readings] = aiter(self._readings_iterable)
 
     @property
     def update_interval(self) -> timedelta:
         """Update interval."""
         return READINGS_UPDATE_DELAY
 
-    async def update_data(self) -> Readings:
+    async def update_data(self) -> dict[int, DeviceReadings]:
         """Update data."""
-        return await anext(self._iterator)
+        readings = await anext(self._readings_iterator)
+        if readings is None:
+            return {}
 
-    def device_readings(self, device_id: int) -> DeviceReadings | None:
-        """Find readings for a particular device."""
-        if self.data is not None:
-            for device in self.data.devices:
-                if device.device_id == device_id:
-                    return device
-        return None
+        return {
+            device.device_id: device
+            for device in readings.devices
+            if device.device_id is not None
+        }
