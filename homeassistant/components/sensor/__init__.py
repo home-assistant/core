@@ -1,6 +1,7 @@
 """Component to interface with various sensors that can be monitored."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -56,6 +57,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
@@ -147,7 +149,7 @@ class SensorDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -245,9 +247,9 @@ class SensorDeviceClass(StrEnum):
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
-    Unit of measurement:
-    - `in/d`, `in/h`
-    - `mm/d`, `mm/h`
+    Unit of measurement: UnitOfVolumetricFlux
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
     """
 
     PRESSURE = "pressure"
@@ -275,7 +277,7 @@ class SensorDeviceClass(StrEnum):
     SPEED = "speed"
     """Generic speed.
 
-    Unit of measurement: `SPEED_*` or `PRECIPITATION_INTENSITY_*` units
+    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
@@ -318,11 +320,19 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `fl. oz.`, `gal`, `ft³` (warning: volumes expressed in
+    - USCS / imperial: `fl. oz.`, `ft³`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
-    # weight/mass (g, kg, mg, µg, oz, lb)
+    WATER = "water"
+    """Water.
+
+    Unit of measurement:
+    - SI / metric: `m³`, `L`
+    - USCS / imperial: `ft³`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
     WEIGHT = "weight"
     """Generic weight, represents a measurement of an object's mass.
 
@@ -331,6 +341,15 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `MASS_*` units
     - SI / metric: `µg`, `mg`, `g`, `kg`
     - USCS / imperial: `oz`, `lb`
+    """
+
+    WIND_SPEED = "wind_speed"
+    """Wind speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `m/s`, `km/h`
+    - USCS / imperial: `ft/s`, `mph`
+    - Nautical: `kn`
     """
 
 
@@ -368,14 +387,18 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+# Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
+# `entity-registry-settings.ts`
+UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
-    SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
+    SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
+    SensorDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
 # mypy: disallow-any-generics
@@ -432,6 +455,47 @@ class SensorEntity(Entity):
     _last_reset_reported = False
     _sensor_option_unit_of_measurement: str | None = None
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+
+        if self.unique_id is None:
+            return
+        registry = er.async_get(self.hass)
+        if not (
+            entity_id := registry.async_get_entity_id(
+                platform.domain, platform.platform_name, self.unique_id
+            )
+        ):
+            return
+        registry_entry = registry.async_get(entity_id)
+        assert registry_entry
+
+        # Store unit override according to automatic unit conversion rules if:
+        # - no unit override is stored in the entity registry
+        # - units have changed
+        # - the unit stored in the registry matches automatic unit conversion rules
+        # This allows integrations to drop custom unit conversion and rely on automatic
+        # conversion.
+        registry_unit = registry_entry.unit_of_measurement
+        if (
+            DOMAIN not in registry_entry.options
+            and f"{DOMAIN}.private" not in registry_entry.options
+            and self.unit_of_measurement != registry_unit
+            and (suggested_unit := self._get_initial_suggested_unit()) == registry_unit
+        ):
+            registry.async_update_entity_options(
+                entity_id,
+                f"{DOMAIN}.private",
+                {"suggested_unit_of_measurement": suggested_unit},
+            )
+
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -474,12 +538,8 @@ class SensorEntity(Entity):
 
         return None
 
-    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
-        """Return initial entity options.
-
-        These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
-        """
+    def _get_initial_suggested_unit(self) -> str | None:
+        """Return initial suggested unit of measurement."""
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
@@ -489,6 +549,15 @@ class SensorEntity(Entity):
                 self.device_class, self.native_unit_of_measurement
             )
 
+        return suggested_unit_of_measurement
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+        """
+        suggested_unit_of_measurement = self._get_initial_suggested_unit()
         if suggested_unit_of_measurement is None:
             return None
 

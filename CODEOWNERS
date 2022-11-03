@@ -95,6 +95,8 @@ build.json @home-assistant/supervisor
 /tests/components/apprise/ @caronc
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
+/homeassistant/components/aranet/ @aschmitz
+/tests/components/aranet/ @aschmitz
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
@@ -286,7 +288,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
-/homeassistant/components/edl21/ @mtdcr
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
@@ -824,6 +825,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
+/homeassistant/components/oralb/ @bdraco
+/tests/components/oralb/ @bdraco
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne
@@ -878,6 +881,8 @@ build.json @home-assistant/supervisor
 /tests/components/pure_energie/ @klaasnicolaas
 /homeassistant/components/push/ @dgomes
 /tests/components/push/ @dgomes
+/homeassistant/components/pushbullet/ @engrbm87
+/tests/components/pushbullet/ @engrbm87
 /homeassistant/components/pushover/ @engrbm87
 /tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
@@ -1318,6 +1323,8 @@ build.json @home-assistant/supervisor
 /tests/components/yolink/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
+/homeassistant/components/zamg/ @killer0071234
+/tests/components/zamg/ @killer0071234
 /homeassistant/components/zengge/ @emontnemery
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco

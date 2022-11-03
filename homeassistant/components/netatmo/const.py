@@ -21,6 +21,7 @@ CONF_URL_SECURITY = "https://home.netatmo.com/security"
 CONF_URL_ENERGY = "https://my.netatmo.com/app/energy"
 CONF_URL_WEATHER = "https://my.netatmo.com/app/weather"
 CONF_URL_CONTROL = "https://home.netatmo.com/control"
+CONF_URL_PUBLIC_WEATHER = "https://weathermap.netatmo.com/"
 
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"

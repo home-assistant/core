@@ -75,6 +75,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Gambar ini terlihat bagus."
+                },
+                "description": "![Pratinjau Gambar Diam Kamera]({preview_url})",
+                "title": "Pratinjau"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Jenis Konten"

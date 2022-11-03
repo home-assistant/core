@@ -2,5 +2,5 @@
   "domain": "ultraloq",
   "name": "Ultraloq",
   "integration_type": "virtual",
-  "iot_standard": "zwave"
+  "iot_standards": ["zwave"]
 }

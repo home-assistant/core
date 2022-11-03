@@ -10,6 +10,18 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 820,
     },
     {
+        "domain": "aranet",
+        "manufacturer_id": 1794,
+        "service_uuid": "f0cd1400-95da-4f4b-9ac8-aa55d312af0c",
+        "connectable": False,
+    },
+    {
+        "domain": "aranet",
+        "manufacturer_id": 1794,
+        "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb",
+        "connectable": False,
+    },
+    {
         "domain": "bluemaestro",
         "manufacturer_id": 307,
         "connectable": False,
@@ -226,6 +238,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "moat",
         "local_name": "Moat_S*",
         "connectable": False,
+    },
+    {
+        "domain": "oralb",
+        "manufacturer_id": 220,
     },
     {
         "domain": "qingping",
