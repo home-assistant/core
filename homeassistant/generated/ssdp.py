@@ -144,7 +144,7 @@ SSDP = {
     "huawei_lte": [
         {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
-            "manufacturer": "Huawei",
+            "manufacturer": "Huawei Technologies Co., Ltd.",
         },
     ],
     "hue": [
