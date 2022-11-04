@@ -382,16 +382,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
-    _action: HVACAction | None
-    _aux: bool
-    _current_fan_mode: str | None
-    _current_operation: HVACMode | None
-    _current_swing_mode: str | None
     _feature_preset_mode: bool
     _optimistic_preset_mode: bool
-    _target_temp: float | None
-    _target_temp_high: float | None
-    _target_temp_low: float | None
     _topic: dict[str, Any]
 
     def __init__(
@@ -402,9 +394,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the climate device."""
-        self._current_temp: float | None = None
-        self._preset_mode: str | None = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
