@@ -91,7 +91,7 @@ class CombinedEnergyReadingsDataService(
         """Initialize the data service."""
         super().__init__(hass, api)
         self._readings_iterator = ReadingsIterator(
-            self.api, increment=READINGS_INCREMENT
+            self.api, increment=READINGS_INCREMENT, initial_delta=timedelta(minutes=5)
         )
 
     @property
