@@ -5177,6 +5177,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tami4": {
+      "name": "Tami4 Edge / Edge+",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tank_utility": {
       "name": "Tank Utility",
       "integration_type": "hub",
