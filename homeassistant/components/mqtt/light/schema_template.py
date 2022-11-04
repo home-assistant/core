@@ -121,18 +121,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
-        self._attr_is_on = None
-
         self._topics = None
         self._templates = None
         self._optimistic = False
 
         # features
-        self._attr_brightness = None
         self._fixed_color_mode = None
-        self._attr_color_temp = None
-        self._attr_hs_color = None
-        self._attr_effect = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -191,6 +185,15 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             features = features | LightEntityFeature.EFFECT
 
         self._attr_supported_features = features
+
+        if self._fixed_color_mode:
+            self._attr_color_mode = self._fixed_color_mode
+            return
+        # Support for ct + hs, prioritize hs
+        if self._attr_hs_color is not None:
+            self._attr_color_mode = ColorMode.HS
+            return
+        self._attr_color_mode = ColorMode.COLOR_TEMP
 
     def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -402,13 +405,3 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         if self._optimistic:
             self.async_write_ha_state()
-
-    @property
-    def color_mode(self):
-        """Return current color mode."""
-        if self._fixed_color_mode:
-            return self._fixed_color_mode
-        # Support for ct + hs, prioritize hs
-        if self._attr_hs_color is not None:
-            return ColorMode.HS
-        return ColorMode.COLOR_TEMP

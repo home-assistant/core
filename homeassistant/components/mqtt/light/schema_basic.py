@@ -256,18 +256,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT light."""
-        self._attr_brightness = None
-        self._attr_color_mode = None
-        self._attr_color_temp = None
-        self._attr_effect = None
-        self._attr_hs_color = None
-        self._attr_rgb_color = None
-        self._attr_rgbw_color = None
-        self._attr_rgbww_color = None
-        self._attr_is_on = None
-        self._attr_supported_color_modes = None
-        self._attr_xy_color = None
-
         self._topic = None
         self._payload = None
         self._command_templates = None
@@ -293,7 +281,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
-        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().min_mireds)
+        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
         if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
@@ -705,7 +693,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 else:
                     brightness = kwargs.get(
                         ATTR_BRIGHTNESS,
-                        self._attr_brightness if self._attr_brightness else 255,
+                        self.brightness or 255,
                     )
             return tuple(int(channel * brightness / 255) for channel in color)
 
@@ -746,9 +734,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and ATTR_BRIGHTNESS not in kwargs
             and ATTR_WHITE not in kwargs
         ):
-            kwargs[ATTR_BRIGHTNESS] = (
-                self._attr_brightness if self._attr_brightness else 255
-            )
+            kwargs[ATTR_BRIGHTNESS] = self.brightness or 255
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
@@ -806,9 +792,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and ATTR_RGB_COLOR not in kwargs
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
-            rgb_color = (
-                self._attr_rgb_color if self._attr_rgb_color is not None else (255,) * 3
-            )
+            rgb_color = self.rgb_color or (255,) * 3
             rgb = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
             rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
@@ -818,11 +802,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and ATTR_RGBW_COLOR not in kwargs
             and self._topic[CONF_RGBW_COMMAND_TOPIC] is not None
         ):
-            rgbw_color = (
-                self._attr_rgbw_color
-                if self._attr_rgbw_color is not None
-                else (255,) * 4
-            )
+            rgbw_color = self.rgbw_color or (255,) * 4
             rgbw = scale_rgbx(rgbw_color, kwargs[ATTR_BRIGHTNESS])
             rgbw_s = render_rgbx(rgbw, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
@@ -832,11 +812,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and ATTR_RGBWW_COLOR not in kwargs
             and self._topic[CONF_RGBWW_COMMAND_TOPIC] is not None
         ):
-            rgbww_color = (
-                self._attr_rgbww_color
-                if self._attr_rgbww_color is not None
-                else (255,) * 5
-            )
+            rgbww_color = self.rgbww_color or (255,) * 5
             rgbww = scale_rgbx(rgbww_color, kwargs[ATTR_BRIGHTNESS])
             rgbww_s = render_rgbx(rgbww, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
