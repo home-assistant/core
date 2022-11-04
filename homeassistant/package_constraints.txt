@@ -12,7 +12,7 @@ awesomeversion==22.9.0
 bcrypt==3.1.7
 bleak-retry-connector==2.8.2
 bleak==0.19.1
-bluetooth-adapters==0.6.0
+bluetooth-adapters==0.7.0
 bluetooth-auto-recovery==0.3.6
 bluetooth-data-tools==0.2.0
 certifi>=2021.5.30
