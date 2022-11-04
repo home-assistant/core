@@ -11,7 +11,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
@@ -55,6 +55,8 @@ CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UN
 T = TypeVar("T")
 V = TypeVar("V")
 
+Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
 
 @dataclass
 class UnifiEntityLoader(Generic[T, V]):
@@ -64,7 +66,6 @@ class UnifiEntityLoader(Generic[T, V]):
     available_fn: Callable[[UniFiController, str], bool]
     control_fn: Callable[[UniFiController, str, bool], Coroutine[Any, Any, None]]
     device_info: Callable[[UniFiController, str], DeviceInfo]
-    entity_cls: type[UnifiSwitchEntity] | type[UnifiDPIRestrictionSwitch]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
     handler_fn: Callable[[UniFiController], T]
@@ -78,6 +79,8 @@ class UnifiEntityLoader(Generic[T, V]):
 @dataclass
 class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[T, V]):
     """Class describing UniFi switch entity."""
+
+    custom_subscribe: Callable[[UniFiController], Subscription] | None = None
 
 
 def calculate_enabled_dpi_apps(
@@ -181,6 +184,84 @@ async def async_control_poe_port(
     )
 
 
+UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
+    UnifiEntityDescription[Clients, Client](
+        key="Block client",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        icon="mdi:ethernet",
+        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        available_fn=lambda controller, obj_id: controller.available,
+        control_fn=async_control_block_client,
+        device_info=client_registry_entry,
+        event_is_on=CLIENT_UNBLOCKED,
+        event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
+        is_on_fn=lambda controller, client: not client.blocked,
+        name_fn=lambda client: None,
+        object_fn=lambda handler, obj_id: handler[obj_id],
+        handler_fn=lambda contrlr: contrlr.api.clients,
+        supported_fn=lambda handler, obj_id: True,
+        unique_id_fn=lambda obj_id: f"block-{obj_id}",
+    ),
+    UnifiEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
+        key="DPI restriction",
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:network",
+        allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
+        available_fn=lambda controller, obj_id: controller.available,
+        control_fn=async_control_dpi_group,
+        custom_subscribe=lambda controller: controller.api.dpi_apps.subscribe,
+        device_info=dpi_group_registry_entry,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=calculate_enabled_dpi_apps,
+        name_fn=lambda group: group.name,
+        object_fn=lambda handler, obj_id: handler[obj_id],
+        handler_fn=lambda controller: controller.api.dpi_groups,
+        supported_fn=lambda handler, obj_id: bool(handler[obj_id].dpiapp_ids),
+        unique_id_fn=lambda obj_id: obj_id,
+    ),
+    UnifiEntityDescription[Outlets, Outlet](
+        key="Outlet control",
+        device_class=SwitchDeviceClass.OUTLET,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        available_fn=sub_device_disabled,
+        control_fn=async_control_outlet,
+        device_info=device_registry_entry,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, outlet: outlet.relay_state,
+        name_fn=lambda outlet: outlet.name,
+        object_fn=lambda handler, obj_id: handler[obj_id],
+        handler_fn=lambda controller: controller.api.outlets,
+        supported_fn=lambda handler, obj_id: handler[obj_id].has_relay,
+        unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
+    ),
+    UnifiEntityDescription[Ports, Port](
+        key="PoE port control",
+        device_class=SwitchDeviceClass.OUTLET,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        entity_registry_enabled_default=False,
+        icon="mdi:ethernet",
+        allowed_fn=lambda controller, obj_id: True,
+        available_fn=sub_device_disabled,
+        control_fn=async_control_poe_port,
+        device_info=device_registry_entry,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, port: port.poe_mode != "off",
+        name_fn=lambda port: f"{port.name} PoE",
+        object_fn=lambda handler, obj_id: handler[obj_id],
+        handler_fn=lambda controller: controller.api.ports,
+        supported_fn=lambda handler, obj_id: handler[obj_id].port_poe,
+        unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -245,7 +326,7 @@ async def async_setup_entry(
             ):
                 return
 
-            entity = loader.entity_cls(obj_id, controller, loader)
+            entity = UnifiSwitchEntity(obj_id, controller, loader)
             if event == ItemEvent.ADDED:
                 async_add_entities([entity])
                 return
@@ -479,11 +560,17 @@ class UnifiSwitchEntity(SwitchEntity):
                     self.entity_description.event_to_subscribe,
                 )
             )
+        if self.entity_description.custom_subscribe is not None:
+            self.async_on_remove(
+                self.entity_description.custom_subscribe(self.controller)(
+                    self.async_signalling_callback, ItemEvent.CHANGED
+                ),
+            )
 
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
         """Update the clients state."""
-        if event == ItemEvent.DELETED:
+        if event == ItemEvent.DELETED and obj_id == self._obj_id:
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
@@ -503,6 +590,9 @@ class UnifiSwitchEntity(SwitchEntity):
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
         if event.mac != self._obj_id:
+            return
+        if not self.entity_description.supported_fn(self.handler, self._obj_id):
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
         assert isinstance(self.entity_description.event_to_subscribe, tuple)
         assert isinstance(self.entity_description.event_is_on, tuple)
@@ -525,110 +615,3 @@ class UnifiSwitchEntity(SwitchEntity):
             er.async_get(self.hass).async_remove(self.entity_id)
         else:
             await self.async_remove(force_remove=True)
-
-
-class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
-    """Representation of a DPI restriction group."""
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback to known apps."""
-        self.async_on_remove(
-            self.controller.api.dpi_apps.subscribe(
-                self.async_signalling_callback, ItemEvent.CHANGED
-            ),
-        )
-        await super().async_added_to_hass()
-
-    @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Object has new event."""
-        if event == ItemEvent.DELETED:
-            self.hass.async_create_task(self.remove_item({self._obj_id}))
-            return
-
-        dpi_group = self.controller.api.dpi_groups[self._obj_id]
-        if not dpi_group.dpiapp_ids:
-            self.hass.async_create_task(self.remove_item({self._obj_id}))
-            return
-
-        super().async_signalling_callback(event, self._obj_id)
-
-
-UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
-    UnifiEntityDescription[Clients, Client](
-        key="Block client",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
-        icon="mdi:ethernet",
-        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
-        available_fn=lambda controller, obj_id: controller.available,
-        control_fn=async_control_block_client,
-        device_info=client_registry_entry,
-        entity_cls=UnifiSwitchEntity,
-        event_is_on=CLIENT_UNBLOCKED,
-        event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
-        is_on_fn=lambda controller, client: not client.blocked,
-        name_fn=lambda client: None,
-        object_fn=lambda handler, obj_id: handler[obj_id],
-        handler_fn=lambda contrlr: contrlr.api.clients,
-        supported_fn=lambda handler, obj_id: True,
-        unique_id_fn=lambda obj_id: f"block-{obj_id}",
-    ),
-    UnifiEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
-        key="DPI restriction",
-        entity_category=EntityCategory.CONFIG,
-        allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
-        available_fn=lambda controller, obj_id: controller.available,
-        control_fn=async_control_dpi_group,
-        device_info=dpi_group_registry_entry,
-        entity_cls=UnifiDPIRestrictionSwitch,
-        event_is_on=None,
-        event_to_subscribe=None,
-        is_on_fn=calculate_enabled_dpi_apps,
-        name_fn=lambda group: group.name,
-        object_fn=lambda handler, obj_id: handler[obj_id],
-        handler_fn=lambda controller: controller.api.dpi_groups,
-        supported_fn=lambda handler, obj_id: bool(handler[obj_id].dpiapp_ids),
-        unique_id_fn=lambda obj_id: obj_id,
-    ),
-    UnifiEntityDescription[Outlets, Outlet](
-        key="Outlet control",
-        device_class=SwitchDeviceClass.OUTLET,
-        has_entity_name=True,
-        allowed_fn=lambda controller, obj_id: True,
-        available_fn=sub_device_disabled,
-        control_fn=async_control_outlet,
-        device_info=device_registry_entry,
-        entity_cls=UnifiSwitchEntity,
-        event_is_on=None,
-        event_to_subscribe=None,
-        is_on_fn=lambda controller, outlet: outlet.relay_state,
-        name_fn=lambda outlet: outlet.name,
-        object_fn=lambda handler, obj_id: handler[obj_id],
-        handler_fn=lambda controller: controller.api.outlets,
-        supported_fn=lambda handler, obj_id: handler[obj_id].has_relay,
-        unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
-    ),
-    UnifiEntityDescription[Ports, Port](
-        key="PoE port control",
-        device_class=SwitchDeviceClass.OUTLET,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
-        entity_registry_enabled_default=False,
-        icon="mdi:ethernet",
-        allowed_fn=lambda controller, obj_id: True,
-        available_fn=sub_device_disabled,
-        control_fn=async_control_poe_port,
-        device_info=device_registry_entry,
-        entity_cls=UnifiSwitchEntity,
-        event_is_on=None,
-        event_to_subscribe=None,
-        is_on_fn=lambda controller, port: port.poe_mode != "off",
-        name_fn=lambda port: f"{port.name} PoE",
-        object_fn=lambda handler, obj_id: handler[obj_id],
-        handler_fn=lambda controller: controller.api.ports,
-        supported_fn=lambda handler, obj_id: handler[obj_id].port_poe,
-        unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
-    ),
-)
