@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -85,7 +86,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_elevation,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
     ),
     SunSensorEntityDescription(
         key="solar_azimuth",
@@ -94,7 +95,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_azimuth,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
     ),
 )
 
