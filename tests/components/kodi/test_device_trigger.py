@@ -29,7 +29,7 @@ def calls(hass):
 async def kodi_media_player(hass):
     """Get a kodi media player."""
     await init_integration(hass)
-    return f"{MP_DOMAIN}.name_kodi"
+    return f"{MP_DOMAIN}.name"
 
 
 async def test_get_triggers(
