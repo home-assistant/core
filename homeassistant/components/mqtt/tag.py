@@ -135,6 +135,8 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             if not tag_id:  # No output from template, ignore
                 return
 
+            # Importing tag via hass.components in case it is overridden
+            # in a custom_components (custom_components.tag)
             tag = self.hass.components.tag
             await tag.async_scan_tag(tag_id, self.device_id)
 
