@@ -47,12 +47,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    get_device_uptime,
-    is_rpc_device_externally_powered,
-    temperature_unit,
-)
+from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
 
 
 @dataclass
@@ -407,7 +402,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

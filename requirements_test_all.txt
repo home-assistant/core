@@ -99,6 +99,9 @@ aio_geojson_usgs_earthquakes==0.1
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
 
+# homeassistant.components.airq
+aioairq==0.2.4
+
 # homeassistant.components.airzone
 aioairzone==0.4.8
 
@@ -423,7 +426,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.64.0
+dbus-fast==1.71.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -886,7 +889,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.10.0
+oralb-ble==0.10.2
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
