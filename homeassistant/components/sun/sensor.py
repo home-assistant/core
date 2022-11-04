@@ -126,11 +126,6 @@ class SunSensor(SensorEntity):
         self.sun = sun
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Add native unit of measurement."""
-        return self.entity_description.native_unit_of_measurement
-
-    @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         state = self.entity_description.value_fn(self.sun)
