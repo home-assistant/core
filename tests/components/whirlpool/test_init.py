@@ -107,6 +107,7 @@ async def test_setup_fetch_appliances_failed(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_aircon_api_instances: MagicMock,
+    mock_sensor_api_instances: MagicMock,
 ):
     """Test successful unload of entry."""
     entry = await init_integration(hass)

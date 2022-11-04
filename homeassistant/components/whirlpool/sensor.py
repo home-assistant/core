@@ -5,8 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from whirlpool.auth import Auth
-from whirlpool.backendselector import BackendSelector
 from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
@@ -147,8 +145,6 @@ async def async_setup_entry(
             WasherDryerClass(
                 appliance["SAID"],
                 appliance["NAME"],
-                whirlpool_data.backend_selector,
-                whirlpool_data.auth,
                 description,
                 _wd,
             )
@@ -167,8 +163,6 @@ class WasherDryerClass(SensorEntity):
         self,
         said: str,
         name: str,
-        backend: BackendSelector,
-        auth: Auth,
         description: WhirlpoolSensorEntityDescription,
         washdry: WasherDryer,
     ) -> None:
