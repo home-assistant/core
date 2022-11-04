@@ -104,10 +104,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    sun = hass.data.pop(DOMAIN)
-    sun.remove_listeners()
-    hass.states.async_remove(sun.entity_id)
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
+    ):
+        sun: Sun = hass.data.pop(DOMAIN)
+        sun.remove_listeners()
+        hass.states.async_remove(sun.entity_id)
+    return unload_ok
 
 
 class Sun(Entity):
