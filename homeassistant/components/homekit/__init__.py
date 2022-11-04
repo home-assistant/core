@@ -587,7 +587,6 @@ class HomeKit:
         assert self.driver is not None
 
         acc = cast(HomeAccessory, self.driver.accessory)
-        await self._async_shutdown_accessory(acc)
         if acc.entity_id not in entity_ids:
             return
         if not (state := self.hass.states.get(acc.entity_id)):
@@ -595,6 +594,7 @@ class HomeKit:
                 "The underlying entity %s disappeared during reset", acc.entity_id
             )
             return
+        await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
             self.hass.async_add_job(new_acc.run)
