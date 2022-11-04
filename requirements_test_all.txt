@@ -51,9 +51,6 @@ PyXiaomiGateway==0.14.1
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
-# homeassistant.components.tami4
-Tami4EdgeAPI==1.0
-
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
