@@ -45,7 +45,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate
+from .models import MqttValueTemplate, PayloadSentinel
 from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -262,12 +262,14 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            payload = self._template(msg.payload, default=self.native_value)
+            payload = self._template(msg.payload, default=PayloadSentinel.DEFAULT)
+            if payload is PayloadSentinel.DEFAULT:
+                return
 
-            if payload is not None and self.device_class in (
+            if payload is not None and self.device_class in {
                 SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
-            ):
+            }:
                 if (payload := dt_util.parse_datetime(payload)) is None:
                     _LOGGER.warning(
                         "Invalid state message '%s' from '%s'", msg.payload, msg.topic
