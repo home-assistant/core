@@ -173,14 +173,14 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
-        self._cleaning = False
+        self._attr_is_on = False
+        self._attr_battery_level = 0
+        self._attr_fan_speed = "unknown"
+
         self._charging = False
         self._docked = False
         self._error = None
         self._status = "Unknown"
-        self._battery_level = 0
-        self._fan_speed = "unknown"
-        self._fan_speed_list = []
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -190,11 +190,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         return DISCOVERY_SCHEMA_LEGACY
 
     def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
-        self._supported_features = strings_to_services(
+        self._attr_supported_features = strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
-        self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._qos = config[CONF_QOS]
         self._retain = config[CONF_RETAIN]
         self._encoding = config[CONF_ENCODING] or None
@@ -258,7 +259,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if battery_level and battery_level is not PayloadSentinel.DEFAULT:
-                    self._battery_level = int(battery_level)
+                    self._attr_battery_level = max(0, min(100, int(battery_level)))
 
             if (
                 msg.topic == self._state_topics[CONF_CHARGING_TOPIC]
@@ -282,7 +283,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if cleaning and cleaning is not PayloadSentinel.DEFAULT:
-                    self._cleaning = cv.boolean(cleaning)
+                    self._attr_is_on = cv.boolean(cleaning)
 
             if (
                 msg.topic == self._state_topics[CONF_DOCKED_TOPIC]
@@ -313,7 +314,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     self._status = "Docked & Charging"
                 else:
                     self._status = "Docked"
-            elif self._cleaning:
+            elif self._attr_is_on:
                 self._status = "Cleaning"
             elif self._error:
                 self._status = f"Error: {self._error}"
@@ -330,7 +331,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
-                    self._fan_speed = fan_speed
+                    self._attr_fan_speed = fan_speed
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -356,27 +357,14 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     @property
     def is_on(self):
         """Return true if vacuum is on."""
-        return self._cleaning
+        # Super method dos not return self._attr_is_on
+        return self._attr_is_on
 
     @property
     def status(self):
         """Return a status string for the vacuum."""
+        # Super method returns None
         return self._status
-
-    @property
-    def fan_speed(self):
-        """Return the status of the vacuum."""
-        return self._fan_speed
-
-    @property
-    def fan_speed_list(self):
-        """Return the status of the vacuum."""
-        return self._fan_speed_list
-
-    @property
-    def battery_level(self):
-        """Return the status of the vacuum."""
-        return max(0, min(100, self._battery_level))
 
     @property
     def battery_icon(self):
@@ -391,7 +379,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        return self._attr_supported_features
 
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
@@ -502,7 +490,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         """Set fan speed."""
         if (
             self.supported_features & VacuumEntityFeature.FAN_SPEED == 0
-        ) or fan_speed not in self._fan_speed_list:
+        ) or fan_speed not in self._attr_fan_speed_list:
             return None
 
         await self.async_publish(
