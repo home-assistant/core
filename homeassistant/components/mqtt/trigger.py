@@ -1,7 +1,7 @@
 """Offer MQTT listening automation rules."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 from typing import Any
@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .. import mqtt
 from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
@@ -50,20 +50,22 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data: dict[str, Any] = dict(trigger_info["trigger_data"])
-    command_template: Callable[..., PublishPayloadType] = MqttCommandTemplate(
-        config.get(CONF_PAYLOAD), hass=hass
-    ).async_render
-    value_template: Callable[..., ReceivePayloadType] = MqttValueTemplate(
+    command_template: Callable[
+        [PublishPayloadType, TemplateVarsType], PublishPayloadType
+    ] = MqttCommandTemplate(config.get(CONF_PAYLOAD), hass=hass).async_render
+    value_template: Callable[
+        [ReceivePayloadType, str], ReceivePayloadType
+    ] = MqttValueTemplate(
         config.get(CONF_VALUE_TEMPLATE), hass=hass
     ).async_render_with_possible_json_value
     encoding: str | None = config[CONF_ENCODING] or None
     qos: int = config[CONF_QOS]
     job = HassJob(action)
-    variables: Mapping[str, Any] | None = None
+    variables: TemplateVarsType | None = None
     if trigger_info:
         variables = trigger_info.get("variables")
 
-    wanted_payload: PublishPayloadType = command_template(variables=variables)
+    wanted_payload = command_template(None, variables)
 
     topic_template: Template = config[CONF_TOPIC]
     topic_template.hass = hass
@@ -74,7 +76,7 @@ async def async_attach_trigger(
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
         """Listen for MQTT messages."""
-        payload: ReceivePayloadType = value_template(mqttmsg.payload, default=None)
+        payload = value_template(mqttmsg.payload, "") or None
 
         if wanted_payload is None or wanted_payload == payload:
             data: dict[str, Any] = {
