@@ -5,13 +5,13 @@ from astral import LocationInfo
 import astral.sun
 from freezegun import freeze_time
 
-import homeassistant.components.sun as sun
-import homeassistant.core as ha
+from homeassistant.components import sun
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 
-async def test_setting_rising(hass: ha.HomeAssistant) -> None:
+async def test_setting_rising(hass: HomeAssistant) -> None:
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(utc_now):
