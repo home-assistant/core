@@ -4,7 +4,8 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "wrong_version": "Version not supported (2 or 3 only)"
         },
         "step": {
             "user": {
@@ -19,6 +20,16 @@
                     "version": "Glances API Version (2 or 3)"
                 },
                 "title": "Setup Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequency"
+                },
+                "description": "Configure options for Glances"
             }
         }
     }
