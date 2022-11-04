@@ -161,6 +161,12 @@ class BasicChannel(ZigbeeChannel):
                 self.ZCL_INIT_ATTRS.copy()
             )
             self.ZCL_INIT_ATTRS["trigger_indicator"] = True
+        elif (
+            self.cluster.endpoint.manufacturer == "TexasInstruments"
+            and self.cluster.endpoint.model == "ti.router"
+        ):
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["transmit_power"] = True
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
