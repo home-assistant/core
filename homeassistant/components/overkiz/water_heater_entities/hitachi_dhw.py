@@ -57,9 +57,9 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE, cast(int, temperature)
+            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE, int(temperature)
         )
 
     @property
