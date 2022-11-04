@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from zigpy import types
+from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
@@ -183,18 +183,8 @@ class InovelliNotificationChannel(ClientChannel):
 class InovelliConfigEntityChannel(ZigbeeChannel):
     """Inovelli Configuration Entity channel."""
 
-    class LEDEffectType(types.enum8):
-        """Effect type for Inovelli Blue Series switch."""
-
-        Off = 0x00
-        Solid = 0x01
-        Fast_Blink = 0x02
-        Slow_Blink = 0x03
-        Pulse = 0x04
-        Chase = 0x05
-        Open_Close = 0x06
-        Small_To_Big = 0x07
-        Clear = 0xFF
+    LEDEffectType = AllLEDEffectType
+    IndividualLEDEffectType = SingleLEDEffectType
 
     REPORT_CONFIG = ()
     ZCL_INIT_ATTRS = {
@@ -236,7 +226,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
 
     async def issue_all_led_effect(
         self,
-        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
         color: int = 200,
         level: int = 100,
         duration: int = 3,
@@ -252,7 +242,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
     async def issue_individual_led_effect(
         self,
         led_number: int = 1,
-        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
         color: int = 200,
         level: int = 100,
         duration: int = 3,

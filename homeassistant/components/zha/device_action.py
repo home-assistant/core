@@ -53,6 +53,9 @@ INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): INOVELLI_INDIVIDUAL_LED_EFFECT,
         vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(1, 7)),
+        vol.Required(
+            "effect_type"
+        ): InovelliConfigEntityChannel.IndividualLEDEffectType.__getitem__,
     }
 )
 
@@ -95,7 +98,7 @@ DEVICE_ACTION_SCHEMAS = {
         {
             vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
             vol.Required("effect_type"): vol.In(
-                InovelliConfigEntityChannel.LEDEffectType.__members__.keys()
+                InovelliConfigEntityChannel.IndividualLEDEffectType.__members__.keys()
             ),
             vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
             vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
