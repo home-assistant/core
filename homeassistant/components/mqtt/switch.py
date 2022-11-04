@@ -167,7 +167,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
-            payload: ReceivePayloadType = self._value_template(msg.payload)
+            payload = self._value_template(msg.payload)
             if payload == self._state_on:
                 self._attr_is_on = True
             elif payload == self._state_off:

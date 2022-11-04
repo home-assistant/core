@@ -171,7 +171,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
-    _attr_should_poll = False
+    _attr_supported_features: int
 
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
@@ -226,9 +226,9 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._attr_is_on = False if self._optimistic else None
 
         command_template: Template | None = config.get(CONF_COMMAND_TEMPLATE)
-        command_off_template: Template | None = config.get(
-            CONF_COMMAND_OFF_TEMPLATE
-        ) or config.get(CONF_COMMAND_TEMPLATE)
+        command_off_template: Template | None = (
+            config.get(CONF_COMMAND_OFF_TEMPLATE) or command_template
+        )
         self._command_templates = {
             CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
                 command_template, entity=self
@@ -253,8 +253,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
-            params: SirenTurnOnServiceParameters
-            payload: ReceivePayloadType = self._value_template(msg.payload)
+            payload = self._value_template(msg.payload)
             if not payload or payload == PAYLOAD_EMPTY_JSON:
                 _LOGGER.debug(
                     "Ignoring empty payload '%s' after rendering for topic %s",
@@ -292,6 +291,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             if json_payload:
                 # process attributes
                 try:
+                    params: SirenTurnOnServiceParameters
                     params = vol.All(TURN_ON_SCHEMA)(json_payload)
                 except vol.MultipleInvalid as invalid_siren_parameters:
                     _LOGGER.warning(
@@ -350,11 +350,11 @@ class MqttSiren(MqttEntity, SirenEntity):
         template_variables: dict[str, Any] = {STATE: value}
         if variables is not None:
             template_variables.update(variables)
-        if (command_template := self._command_templates[template]) is not None:
+        if command_template := self._command_templates[template]:
             payload = command_template(value, template_variables)
         else:
             payload = json_dumps(template_variables)
-        if payload and str(payload) not in PAYLOAD_NONE:
+        if payload and str(payload) != PAYLOAD_NONE:
             await self.async_publish(
                 self._config[topic],
                 payload,
@@ -401,6 +401,5 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         update: dict[str, Any] = dict(data)
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
-            assert self._attr_supported_features is not None
             if self._attr_supported_features & support and attribute in update:
                 self._attr_extra_state_attributes[attribute] = update[attribute]
