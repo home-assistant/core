@@ -17,7 +17,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import slugify
 
 from .const import CONF_INSTALLATION_ID, DEFAULT_NAME, DOMAIN, LOGGER
 
@@ -77,7 +76,6 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self._installation_exists_in_configuration(
                 user_input[CONF_INSTALLATION_ID]
             ):
@@ -91,7 +89,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 if can_connect:
                     return self.async_create_entry(
-                        title=name,
+                        title=user_input.get(CONF_NAME, DEFAULT_NAME),
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
