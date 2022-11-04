@@ -84,6 +84,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -641,7 +642,7 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.id}
 

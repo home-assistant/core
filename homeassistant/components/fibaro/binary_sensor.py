@@ -1,6 +1,8 @@
 """Support for Fibaro binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+import json
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -28,6 +30,11 @@ SENSOR_TYPES = {
     "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
     "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
     "com.fibaro.heatDetector": ["Heat", "mdi:fire", BinarySensorDeviceClass.HEAT],
+    "com.fibaro.accelerometer": [
+        "Moving",
+        "mdi:axis-arrow",
+        BinarySensorDeviceClass.MOVING,
+    ],
 }
 
 
@@ -66,4 +73,38 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the state."""
-        self._attr_is_on = self.current_binary_state
+        if self.device_class == BinarySensorDeviceClass.MOVING:
+            self._attr_is_on = self._is_moving()
+        else:
+            self._attr_is_on = self.current_binary_state
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return the state attributes of the device."""
+        attrs = {}
+
+        # Accelerator sensors have values for the three axis x, y and z
+        if self.device_class == BinarySensorDeviceClass.MOVING:
+            moving_values = self._get_moving_values()
+            for axis_name in ("x", "y", "z"):
+                attrs[axis_name] = float(moving_values[axis_name])
+
+        return super().extra_state_attributes | attrs
+
+    def _is_moving(self) -> bool:
+        """Return that a moving is detected when one axis reports a value."""
+        moving_values = self._get_moving_values()
+
+        for axis_name in ("x", "y", "z"):
+            if float(moving_values[axis_name]) != 0:
+                return True
+        return False
+
+    def _get_moving_values(self) -> Mapping[str, Any]:
+        """Get the moving values in a dict."""
+        value = self.fibaro_device.properties.value
+        if isinstance(value, str):
+            # HC2 returns dict as str
+            return json.loads(value)
+        # HC3 returns a real dict
+        return value
