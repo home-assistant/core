@@ -403,7 +403,6 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
             "domain": "test1",
             "vid": "3039",
             "pid": "3039",
-            "description": "*ConBee*",
             "manufacturer": "dresden elektronik ingenieurtechnik*",
         }
     ]
