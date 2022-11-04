@@ -73,6 +73,7 @@
             "title": "Entitas MQTT {platform} yang dikonfigurasi secara manual membutuhkan perhatian"
         },
         "deprecated_yaml_broker_settings": {
+            "description": "Pengaturan berikut yang ditemukan di `configuration.yaml` dimigrasikan ke entri konfigurasi MQTT dan sekarang akan menimpa pengaturan di `configuration.yaml`:\n`{deprecated_settings}`\n\nHapus pengaturan ini dari `configuration.yaml` dan mulai ulang Home Assistant untuk memperbaiki masalah ini. Lihat [dokumentasi]({more_info_url}), untuk informasi lebih lanjut.",
             "title": "Pengaturan MQTT yang usang ditemukan di `configuration.yaml`"
         }
     },
@@ -95,8 +96,15 @@
                     "broker": "Broker",
                     "certificate": "Unggah file sertifikat CA khusus",
                     "client_cert": "Unggah file sertifikat klien",
+                    "client_id": "ID Klien (biarkan kosong agar dibuat secara acak)",
+                    "client_key": "Unggah file kunci pribadi",
+                    "keepalive": "Waktu antara mengirim pesan keep alive",
                     "password": "Kata Sandi",
                     "port": "Port",
+                    "protocol": "Protokol MQTT",
+                    "set_ca_cert": "Validasi sertifikat broker",
+                    "set_client_cert": "Gunakan sertifikat klien",
+                    "tls_insecure": "Abaikan validasi sertifikat broker",
                     "username": "Nama Pengguna"
                 },
                 "description": "Masukkan informasi koneksi broker MQTT Anda.",
@@ -110,6 +118,7 @@
                     "birth_retain": "Simpan pesan birth",
                     "birth_topic": "Topik pesan birth",
                     "discovery": "Aktifkan penemuan",
+                    "discovery_prefix": "Prefiks penemuan",
                     "will_enable": "Aktifkan pesan 'will'",
                     "will_payload": "Payload pesan will",
                     "will_qos": "QoS pesan will",
