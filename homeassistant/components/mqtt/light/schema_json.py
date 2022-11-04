@@ -391,7 +391,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         self.entity_id,
                     )
 
-            if self._attr_supported_features and LightEntityFeature.EFFECT:
+            if self.supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
                     self._attr_effect = values["effect"]
 
@@ -420,30 +420,24 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_is_on = last_state.state == STATE_ON
             last_attributes = last_state.attributes
             self._attr_brightness = last_attributes.get(
-                ATTR_BRIGHTNESS, self._attr_brightness
+                ATTR_BRIGHTNESS, self.brightness
             )
             self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self._attr_color_mode
+                ATTR_COLOR_MODE, self.color_mode
             )
             self._attr_color_temp = last_attributes.get(
-                ATTR_COLOR_TEMP, self._attr_color_temp
+                ATTR_COLOR_TEMP, self.color_temp
             )
-            self._attr_effect = last_attributes.get(ATTR_EFFECT, self._attr_effect)
-            self._attr_hs_color = last_attributes.get(
-                ATTR_HS_COLOR, self._attr_hs_color
-            )
-            self._attr_rgb_color = last_attributes.get(
-                ATTR_RGB_COLOR, self._attr_rgb_color
-            )
+            self._attr_effect = last_attributes.get(ATTR_EFFECT, self.effect)
+            self._attr_hs_color = last_attributes.get(ATTR_HS_COLOR, self.hs_color)
+            self._attr_rgb_color = last_attributes.get(ATTR_RGB_COLOR, self.rgb_color)
             self._attr_rgbw_color = last_attributes.get(
-                ATTR_RGBW_COLOR, self._attr_rgbw_color
+                ATTR_RGBW_COLOR, self.rgbw_color
             )
             self._attr_rgbww_color = last_attributes.get(
-                ATTR_RGBWW_COLOR, self._attr_rgbww_color
+                ATTR_RGBWW_COLOR, self.rgbww_color
             )
-            self._attr_xy_color = last_attributes.get(
-                ATTR_XY_COLOR, self._attr_xy_color
-            )
+            self._attr_xy_color = last_attributes.get(ATTR_XY_COLOR, self.xy_color)
 
     @property
     def assumed_state(self):
@@ -459,7 +453,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Legacy light with support for a single color mode
             return self._fixed_color_mode
         # Legacy light with support for ct + hs, prioritize hs
-        if self._attr_hs_color is not None:
+        if self.hs_color is not None:
             return ColorMode.HS
         return ColorMode.COLOR_TEMP
 

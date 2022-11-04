@@ -178,8 +178,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             color_modes.add(ColorMode.HS)
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         self._fixed_color_mode = None
-        if len(self._attr_supported_color_modes) == 1:
-            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+        if len(self.supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self.supported_color_modes))
 
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
         if config.get(CONF_EFFECT_LIST) is not None:

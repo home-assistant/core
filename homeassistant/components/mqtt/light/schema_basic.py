@@ -691,10 +691,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(
-                        ATTR_BRIGHTNESS,
-                        self.brightness or 255,
-                    )
+                    brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
             return tuple(int(channel * brightness / 255) for channel in color)
 
         def render_rgbx(color, template, color_mode):
