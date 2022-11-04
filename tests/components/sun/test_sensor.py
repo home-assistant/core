@@ -7,6 +7,7 @@ from freezegun import freeze_time
 
 from homeassistant.components import sun
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -91,3 +92,10 @@ async def test_setting_rising(hass: HomeAssistant) -> None:
     assert next_noon.replace(microsecond=0) == dt_util.parse_datetime(state4.state)
     assert next_rising.replace(microsecond=0) == dt_util.parse_datetime(state5.state)
     assert next_setting.replace(microsecond=0) == dt_util.parse_datetime(state6.state)
+
+    entry_ids = hass.config_entries.async_entries("sun")
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.sun_next_dawn")
+
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_dawn"
