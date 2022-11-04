@@ -215,10 +215,8 @@ class MqttNumber(MqttEntity, RestoreNumber):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             num_value: int | float | None
-            payload = self._value_template(msg.payload)
+            payload = str(self._value_template(msg.payload))
             try:
-                if not isinstance(payload, str):
-                    raise ValueError
                 if payload == self._config[CONF_PAYLOAD_RESET]:
                     num_value = None
                 elif payload.isnumeric():
