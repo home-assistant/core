@@ -364,13 +364,6 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 
-def is_rpc_device_externally_powered(
-    config: dict[str, Any], status: dict[str, Any], key: str
-) -> bool:
-    """Return true if device has external power instead of battery."""
-    return cast(bool, status[key]["external"]["present"])
-
-
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
