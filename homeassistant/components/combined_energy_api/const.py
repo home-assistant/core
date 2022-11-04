@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.const import UnitOfPower, UnitOfTemperature, UnitOfVolume
 
 DOMAIN: Final[str] = "combined_energy_api"
 
@@ -24,7 +24,7 @@ DATA_INSTALLATION: Final[str] = "installation"
 
 # Config for combined energy api requests.
 CONF_INSTALLATION_ID: Final[str] = "installation_id"
-DEFAULT_NAME: Final[str] = "Combined Energy API"
+DEFAULT_NAME: Final[str] = "Combined Energy"
 
 CONNECTIVITY_UPDATE_DELAY: Final[timedelta] = timedelta(seconds=30)
 READINGS_UPDATE_DELAY: Final[timedelta] = timedelta(seconds=30)
@@ -38,6 +38,31 @@ SENSOR_TYPE_CONNECTED = BinarySensorEntityDescription(
     icon="mdi:wifi-cog",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
+SENSOR_TYPE_GENERIC_CONSUMER = [
+    SensorEntityDescription(
+        key="energy_consumed",
+        name="Power Consumption",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        key="energy_consumed_solar",
+        name="Solar Consumption",
+        icon="mdi:solar-power",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        key="energy_consumed_battery",
+        name="Battery Consumption",
+        icon="mdi:home-battery",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+]
 SENSOR_TYPES = {
     "SOLAR_PV": [
         SensorEntityDescription(
@@ -49,58 +74,26 @@ SENSOR_TYPES = {
             device_class=SensorDeviceClass.POWER,
         )
     ],
-    "WATER_HEATER": [
-        SensorEntityDescription(
-            key="energy_consumed",
-            name="Energy Consumed",
-            # icon="mdi:solar-power",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="energy_consumed_solar",
-            name="Energy Consumed Solar",
-            icon="mdi:solar-power",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="energy_consumed_battery",
-            name="Energy Consumed Battery",
-            icon="mdi:home-battery",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
+    "WATER_HEATER": SENSOR_TYPE_GENERIC_CONSUMER
+    + [
         SensorEntityDescription(
             key="energy_consumed_grid",
-            name="Energy Consumed Grid",
+            name="Grid Consumption",
             icon="mdi:transmission-tower",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
             key="available_energy",
-            name="Available Energy",
-            icon="mdi:lightning-bolt",
+            name="Hot Water Available",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="max_energy",
-            name="Max Energy",
-            icon="mdi:lightning-bolt-circle",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            device_class=SensorDeviceClass.WATER,
         ),
         SensorEntityDescription(
             key="temp_sensor1",
-            name="Temp Level 1",
+            name="Water Temp 1",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -108,7 +101,7 @@ SENSOR_TYPES = {
         ),
         SensorEntityDescription(
             key="temp_sensor2",
-            name="Temp Level 2",
+            name="Water Temp 2",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -116,7 +109,7 @@ SENSOR_TYPES = {
         ),
         SensorEntityDescription(
             key="temp_sensor3",
-            name="Temp Level 3",
+            name="Water Temp 3",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -124,7 +117,7 @@ SENSOR_TYPES = {
         ),
         SensorEntityDescription(
             key="temp_sensor4",
-            name="Temp Level 4",
+            name="Water Temp 4",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -132,7 +125,7 @@ SENSOR_TYPES = {
         ),
         SensorEntityDescription(
             key="temp_sensor5",
-            name="Temp Level 5",
+            name="Water Temp 5",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -140,11 +133,110 @@ SENSOR_TYPES = {
         ),
         SensorEntityDescription(
             key="temp_sensor6",
-            name="Temp Level 6",
+            name="Water Temp 6",
             icon="mdi:thermometer-water",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+    ],
+    "GRID_METER": [
+        SensorEntityDescription(
+            key="energy_supplied",
+            name="Energy Supplied",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed",
+            name="Power Consumption",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed_solar",
+            name="Power Consumption Solar",
+            icon="mdi:solar-power",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed_battery",
+            name="Power Consumption Battery",
+            icon="mdi:home-battery",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed_grid",
+            name="Power Consumption Grid",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="power_factor_a",
+            name="Power Factor A",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER_FACTOR,
+        ),
+        SensorEntityDescription(
+            key="power_factor_b",
+            name="Power Factor B",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER_FACTOR,
+        ),
+        SensorEntityDescription(
+            key="power_factor_c",
+            name="Power Factor C",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.POWER_FACTOR,
+        ),
+        SensorEntityDescription(
+            key="voltage_a",
+            name="Voltage A",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+        ),
+        SensorEntityDescription(
+            key="voltage_b",
+            name="Voltage B",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+        ),
+        SensorEntityDescription(
+            key="voltage_c",
+            name="Voltage C",
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+        ),
+    ],
+    "GENERIC_CONSUMER": SENSOR_TYPE_GENERIC_CONSUMER
+    + [
+        SensorEntityDescription(
+            key="energy_consumed_grid",
+            name="Grid Consumption",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+    ],
+    "ENERGY_BALANCE": SENSOR_TYPE_GENERIC_CONSUMER
+    + [
+        SensorEntityDescription(
+            key="energy_consumed_grid",
+            name="Grid Consumption",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            device_class=SensorDeviceClass.POWER,
         ),
     ],
 }
