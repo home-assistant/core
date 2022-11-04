@@ -96,12 +96,6 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement="°",
     ),
-    SunSensorEntityDescription(
-        key="rising",
-        name="Rising",
-        icon="mdi:theme-light-dark",
-        value_fn=lambda data: data.rising,
-    ),
 )
 
 
