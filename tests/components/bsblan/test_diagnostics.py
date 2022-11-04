@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the Elgato integration."""
+"""Tests for the diagnostics data provided by the BSBLan integration."""
 from aiohttp import ClientSession
 
 from homeassistant.core import HomeAssistant
