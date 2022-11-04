@@ -35,7 +35,7 @@ def sensors(prefix, stype):
             key=f"{prefix}_daily",
             name=f"Today's {stype}",
             native_unit_of_measurement=ENERGY_WATT_HOUR,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
             device_class=DEVICE_CLASS_ENERGY,
         ),
         SensorEntityDescription(
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = data[COORDINATOR]
     config_name = data[NAME]
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = hass.helpers.entity_registry.async_get(hass)
     config_id = config_entry.unique_id
     entities = []
     for desc in sensors("consumption", "Energy Consumption"):
