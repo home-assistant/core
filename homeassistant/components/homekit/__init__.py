@@ -10,8 +10,10 @@ import os
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
+from pyhap.service import Service
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -532,6 +534,7 @@ class HomeKit:
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
+        self._reset_lock = asyncio.Lock()
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
@@ -561,10 +564,11 @@ class HomeKit:
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
-        if not self.bridge:
-            await self.async_reset_accessories_in_accessory_mode(entity_ids)
-            return
-        await self.async_reset_accessories_in_bridge_mode(entity_ids)
+        async with self._reset_lock:
+            if not self.bridge:
+                await self.async_reset_accessories_in_accessory_mode(entity_ids)
+                return
+            await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
     async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
@@ -572,10 +576,12 @@ class HomeKit:
         await accessory.stop()
         # Deallocate the IIDs for the accessory
         iid_manager = self.driver.iid_manager
-        for service in accessory.services:
-            iid_manager.remove_iid(iid_manager.remove_obj(service))
-            for char in service.characteristics:
-                iid_manager.remove_iid(iid_manager.remove_obj(char))
+        services: list[Service] = accessory.services
+        for service in services:
+            iid_manager.remove_obj(service)
+            characteristics: list[Characteristic] = service.characteristics
+            for char in characteristics:
+                iid_manager.remove_obj(char)
 
     async def async_reset_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
