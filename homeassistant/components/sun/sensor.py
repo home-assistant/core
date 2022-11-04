@@ -110,7 +110,9 @@ async def async_setup_entry(
 
     sun: Sun = hass.data[DOMAIN]
 
-    async_add_entities([SunSensor(sun, description) for description in SENSOR_TYPES])
+    async_add_entities(
+        [SunSensor(sun, description, entry.entry_id) for description in SENSOR_TYPES]
+    )
 
 
 class SunSensor(SensorEntity):
@@ -119,14 +121,12 @@ class SunSensor(SensorEntity):
     entity_description: SunSensorEntityDescription
 
     def __init__(
-        self,
-        sun: Sun,
-        entity_description: SunSensorEntityDescription,
+        self, sun: Sun, entity_description: SunSensorEntityDescription, entry_id: str
     ) -> None:
         """Initiate Sun Sensor."""
         self.entity_description = entity_description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)
-        self._attr_unique_id = f"sun-{entity_description.key}"
+        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
 
     @property
