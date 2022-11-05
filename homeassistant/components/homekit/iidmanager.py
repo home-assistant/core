@@ -48,16 +48,8 @@ class IIDStorage(Store):
             new_allocation: dict[str, dict[str, int]] = {}
             old_data[ALLOCATIONS_KEY] = new_allocation
             for allocation_key, iid in old_allocations.items():
-                (
-                    aid_str,
-                    service_type,
-                    service_unique_id,
-                    char_type,
-                    char_unique_id,
-                ) = allocation_key.split("_")
-                new_allocation_key = "_".join(
-                    (service_type, service_unique_id, char_type, char_unique_id)
-                )
+                aid_str, new_allocation_key = allocation_key.split("_", 1)
+                service_type, _, char_type, *_ = new_allocation_key.split("_")
                 accessory_allocation = new_allocation.setdefault(aid_str, {})
                 if service_type == ACCESSORY_INFORMATION_SERVICE and not char_type:
                     accessory_allocation[new_allocation_key] = 1

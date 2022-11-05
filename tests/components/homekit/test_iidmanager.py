@@ -120,6 +120,28 @@ async def test_iid_migration_to_v2(hass, iid_storage, hass_storage):
         assert allocations["3E___"] == 1
 
 
+async def test_iid_migration_to_v2_with_underscore(hass, iid_storage, hass_storage):
+    """Test iid storage migration with underscore."""
+    v1_iids = json_loads(load_fixture("iids_v1_with_underscore", DOMAIN))
+    v2_iids = json_loads(load_fixture("iids_v2_with_underscore", DOMAIN))
+    hass_storage["homekit.v1_with_underscore.iids"] = v1_iids
+    hass_storage["homekit.v2_with_underscore.iids"] = v2_iids
+
+    iid_storage_v2 = AccessoryIIDStorage(hass, "v1_with_underscore")
+    await iid_storage_v2.async_initialize()
+
+    iid_storage_v1 = AccessoryIIDStorage(hass, "v2_with_underscore")
+    await iid_storage_v1.async_initialize()
+
+    assert iid_storage_v1.allocations == iid_storage_v2.allocations
+    assert iid_storage_v1.allocated_iids == iid_storage_v2.allocated_iids
+
+    assert len(iid_storage_v2.allocations) == 2
+
+    for allocations in iid_storage_v2.allocations.values():
+        assert allocations["3E___"] == 1
+
+
 async def test_iid_generation_and_restore_v2(hass, iid_storage, hass_storage):
     """Test generating iids and restoring them from storage."""
     entry = MockConfigEntry(domain=DOMAIN)
