@@ -1,28 +1,25 @@
 """Test the Sungrow Solar Energy sensor."""
 from unittest.mock import patch
-
-from homeassistant.components.sungrow.config_flow import CannotConnect
-from homeassistant.components.sungrow.const import DAILY_POWER_YIELDS, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-from . import MockClient, address_variants, create_entry, inverter_data
-
-
-async def test_setup(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "host",
+    [
+        "1.1.1.1",
+        "http://1.1.1.1",
+        "https://1.1.1.1",        
+    ],
+)
+async def test_setup(hass: HomeAssistant, host) -> None:
     """Test creation and unload with different address variants."""
-    for host in address_variants:
-        entry = create_entry(hass, host, 502)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+    entry = create_entry(hass, host, 502)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
 
-        assert await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert entry.state is ConfigEntryState.NOT_LOADED
-        assert not hass.data.get(DOMAIN)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
 
 
 async def test_device_info(hass: HomeAssistant) -> None:
