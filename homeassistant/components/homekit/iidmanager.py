@@ -45,7 +45,7 @@ class IIDStorage(Store):
             # instead of per pairing since we need the ACCESSORY_INFORMATION_SERVICE
             # to always have iid 1 for each bridged accessory as well as the bridge
             old_allocations: dict[str, int] = old_data.pop(ALLOCATIONS_KEY, {})
-            new_allocation: dict[int, dict[str, int]] = {}
+            new_allocation: dict[str, dict[str, int]] = {}
             old_data[ALLOCATIONS_KEY_V2] = new_allocation
             for allocation_key, iid in old_allocations.items():
                 (
@@ -55,11 +55,10 @@ class IIDStorage(Store):
                     char_type,
                     char_unique_id,
                 ) = allocation_key.split("_")
-                aid = int(aid_str)
                 new_allocation_key = "_".join(
                     (service_type, service_unique_id, char_type, char_unique_id)
                 )
-                accessory_allocation = new_allocation.setdefault(aid, {})
+                accessory_allocation = new_allocation.setdefault(aid_str, {})
                 if service_type == ACCESSORY_INFORMATION_SERVICE and not char_type:
                     accessory_allocation[new_allocation_key] = 1
                 elif iid != 1:
@@ -81,8 +80,8 @@ class AccessoryIIDStorage:
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Create a new iid store."""
         self.hass = hass
-        self.allocations: dict[int, dict[str, int]] = {}
-        self.allocated_iids: dict[int, list[int]] = {}
+        self.allocations: dict[str, dict[str, int]] = {}
+        self.allocated_iids: dict[str, list[int]] = {}
         self.entry_id = entry_id
         self.store: IIDStorage | None = None
 
@@ -97,8 +96,8 @@ class AccessoryIIDStorage:
 
         assert isinstance(raw_storage, dict)
         self.allocations = raw_storage.get(ALLOCATIONS_KEY_V2, {})
-        for aid, allocations in self.allocations.items():
-            self.allocated_iids[aid] = sorted(allocations.values())
+        for aid_str, allocations in self.allocations.items():
+            self.allocated_iids[aid_str] = sorted(allocations.values())
 
     def get_or_allocate_iid(
         self,
@@ -116,8 +115,10 @@ class AccessoryIIDStorage:
             f'{service_hap_type}_{service_unique_id or ""}_'
             f'{char_hap_type or ""}_{char_unique_id or ""}'
         )
-        accessory_allocation = self.allocations.setdefault(aid, {})
-        accessory_allocated_iids = self.allocated_iids.setdefault(aid, [])
+        # AID must be a string since JSON keys cannot be int
+        aid_str = str(aid)
+        accessory_allocation = self.allocations.setdefault(aid_str, {})
+        accessory_allocated_iids = self.allocated_iids.setdefault(aid_str, [])
         if service_hap_type == ACCESSORY_INFORMATION_SERVICE and char_uuid is None:
             allocated_iid = 1
         elif allocation_key in accessory_allocation:
@@ -143,6 +144,6 @@ class AccessoryIIDStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[int, dict[str, int]]]:
+    def _data_to_save(self) -> dict[str, dict[str, dict[str, int]]]:
         """Return data of entity map to store in a file."""
         return {ALLOCATIONS_KEY_V2: self.allocations}
