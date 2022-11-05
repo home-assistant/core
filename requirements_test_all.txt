@@ -896,7 +896,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.10.2
+oralb-ble==0.11.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1034,7 +1034,7 @@ pyaehw4a1==0.3.9
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==2022.07.0
+pyairvisual==2022.11.1
 
 # homeassistant.components.almond
 pyalmond==0.0.2
