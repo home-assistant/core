@@ -1,14 +1,14 @@
 """Define tests for the AirVisual config flow."""
 from unittest.mock import patch
 
-from pyairvisual.errors import (
-    AirVisualError,
+from pyairvisual.cloud_api import (
     InvalidKeyError,
     KeyExpiredError,
-    NodeProError,
     NotFoundError,
     UnauthorizedError,
 )
+from pyairvisual.errors import AirVisualError
+from pyairvisual.node import NodeProError
 import pytest
 
 from homeassistant import data_entry_flow
