@@ -141,7 +141,7 @@ STATUS_WAIT = 3
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
-    5  # number of seconds to wait for homekit to see the c# change
+    10  # number of seconds to wait for homekit to see the c# change
 )
 
 
