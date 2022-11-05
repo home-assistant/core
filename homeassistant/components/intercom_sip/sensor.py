@@ -42,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required('name'): cv.string,
         vol.Required('message'): cv.string,
         vol.Required('notify'): cv.string,
+        vol.Required('title'): cv.string,
     }
 )
 
@@ -104,20 +105,23 @@ class IntercomSensor(SensorEntity):
                 self.hass.services.call(
                     'notify',
                     mob,
-                    {"message": self._config['message'],
+                    {"title": self._config['title'],
+                    "message": self._config['message'],
                     "data": {
                         "actions": [
                             {
-                                "action": "ANSWER",
-                                "title": "Answer Intercom",
-                                "icon": "sfsymbols:bell"
-                            },
+                                # "action": "ANSWERINTERCOM__"+self.entity_id,
+                                "action": "URI",
+                                "title": "Go to app",
+                                "icon": "sfsymbols:bell",
+                                "uri": "default"
+                },
                             {
-                                "action": "DECLINE",
-                                "title": "Decline Intercom",
-                                "icon": "sfsymbols:bell.slash"
+                                "action": "IGNORE",
+                                "title": "Ignore",
+                                "icon": "sfsymbols:bell.slash",
                             }
                         ]
                         }
-                    },
+                     },
                 )
