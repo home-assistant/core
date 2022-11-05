@@ -260,7 +260,7 @@ class MatrixBot:
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, event_data)
 
     async def _join_room(self, room_id_or_alias: str) -> None:
-        """Join a room or get it, if we are already in the room."""
+        """Join a room or do nothing if already joined."""
         join_response = await self._client.join(room_id_or_alias)
 
         if isinstance(join_response, JoinResponse):
