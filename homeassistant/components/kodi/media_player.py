@@ -163,7 +163,7 @@ def find_matching_config_entries_for_host(hass, host):
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    _async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Kodi platform."""
@@ -311,7 +311,9 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         return not self._players
 
     @callback
-    def async_on_speed_event(self, sender, data):  # pylint: disable=unused-argument
+    def async_on_speed_event(
+        self, sender: Any, data: Any
+    ):  # pylint: disable=unused-argument
         """Handle player changes between playing and paused."""
         self._properties["speed"] = data["player"]["speed"]
 
@@ -325,7 +327,7 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         self.async_schedule_update_ha_state(force_refresh)
 
     @callback
-    def async_on_stop(self, sender, data):  # pylint: disable=unused-argument
+    def async_on_stop(self, sender: Any, data: Any):  # pylint: disable=unused-argument
         """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
         if self._kodi_is_off:
@@ -335,7 +337,9 @@ class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_on_volume_changed(self, sender, data):  # pylint: disable=unused-argument
+    def async_on_volume_changed(
+        self, sender: Any, data: Any
+    ):  # pylint: disable=unused-argument
         """Handle the volume changes."""
         self._app_properties["volume"] = data["volume"]
         self._app_properties["muted"] = data["muted"]

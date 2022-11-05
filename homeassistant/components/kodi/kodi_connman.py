@@ -238,7 +238,7 @@ class KodiConnectionManager:
         else:
             self._connect_error = False
 
-    async def _ws_callback_dummy(self, sender: str, data: str) -> None:
+    async def _ws_callback_dummy(self, sender: Any, data: Any) -> None:
         """Use to 'unregister' websocket callbacks.
 
         Since jsonrpc_base doesn't offer an unregister method, an
@@ -246,7 +246,7 @@ class KodiConnectionManager:
         """
 
     def register_websocket_callback(
-        self, api_method: str, func: Callable[[str, str], Awaitable[None]]
+        self, api_method: str, func: Callable[[Any, Any], Awaitable[None]]
     ) -> None:
         """Register a callback for a websocket server request."""
         setattr(self._connection.server, api_method, func)
