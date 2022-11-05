@@ -574,6 +574,10 @@ class UnifiSwitchEntity(SwitchEntity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
+        if not self.entity_description.supported_fn(self.handler, self._obj_id):
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
+            return
+
         obj = self.entity_description.object_fn(self.handler, self._obj_id)
         self._attr_is_on = self.entity_description.is_on_fn(self.controller, obj)
         self._attr_available = self.entity_description.available_fn(
@@ -590,9 +594,6 @@ class UnifiSwitchEntity(SwitchEntity):
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
         if event.mac != self._obj_id:
-            return
-        if not self.entity_description.supported_fn(self.handler, self._obj_id):
-            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
         assert isinstance(self.entity_description.event_to_subscribe, tuple)
         assert isinstance(self.entity_description.event_is_on, tuple)
