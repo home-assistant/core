@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 from .api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
-from .core.channels.manufacturerspecific import InovelliConfigEntityChannel
+from .core.channels.manufacturerspecific import AllLEDEffectType, SingleLEDEffectType
 from .core.const import CHANNEL_IAS_WD, CHANNEL_INOVELLI
 from .core.helpers import async_get_zha_device
 
@@ -40,9 +40,7 @@ INOVELLI_ALL_LED_EFFECT_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): INOVELLI_ALL_LED_EFFECT,
         vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(
-            "effect_type"
-        ): InovelliConfigEntityChannel.LEDEffectType.__getitem__,
+        vol.Required("effect_type"): AllLEDEffectType.__getitem__,
         vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
         vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
         vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),
@@ -52,10 +50,8 @@ INOVELLI_ALL_LED_EFFECT_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): INOVELLI_INDIVIDUAL_LED_EFFECT,
-        vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(1, 7)),
-        vol.Required(
-            "effect_type"
-        ): InovelliConfigEntityChannel.IndividualLEDEffectType.__getitem__,
+        vol.Required("effect_type"): SingleLEDEffectType.__getitem__,
+        vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
     }
 )
 
@@ -86,9 +82,7 @@ DEVICE_ACTION_TYPES = {
 DEVICE_ACTION_SCHEMAS = {
     INOVELLI_ALL_LED_EFFECT: vol.Schema(
         {
-            vol.Required("effect_type"): vol.In(
-                InovelliConfigEntityChannel.LEDEffectType.__members__.keys()
-            ),
+            vol.Required("effect_type"): vol.In(AllLEDEffectType.__members__.keys()),
             vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
             vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
             vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),
@@ -97,9 +91,7 @@ DEVICE_ACTION_SCHEMAS = {
     INOVELLI_INDIVIDUAL_LED_EFFECT: vol.Schema(
         {
             vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
-            vol.Required("effect_type"): vol.In(
-                InovelliConfigEntityChannel.IndividualLEDEffectType.__members__.keys()
-            ),
+            vol.Required("effect_type"): vol.In(SingleLEDEffectType.__members__.keys()),
             vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
             vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
             vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),

@@ -183,9 +183,6 @@ class InovelliNotificationChannel(ClientChannel):
 class InovelliConfigEntityChannel(ZigbeeChannel):
     """Inovelli Configuration Entity channel."""
 
-    LEDEffectType = AllLEDEffectType
-    IndividualLEDEffectType = SingleLEDEffectType
-
     REPORT_CONFIG = ()
     ZCL_INIT_ATTRS = {
         "dimming_speed_up_remote": True,
