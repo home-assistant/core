@@ -552,12 +552,20 @@ def _first_non_link_local_address(
     """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 4:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 4
+        ):
             return str(ip_addr)
     # If we didn't find a good IPv4 address, check for IPv6 addresses.
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local and ip_addr.version == 6:
+        if (
+            not ip_addr.is_link_local
+            and not ip_addr.is_unspecified
+            and ip_addr.version == 6
+        ):
             return str(ip_addr)
     return None
 
