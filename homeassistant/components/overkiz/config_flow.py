@@ -132,7 +132,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step via config flow."""
         errors = {}
-        description_placeholders = {}
 
         if user_input:
             self._default_hub = user_input[CONF_HUB]
@@ -161,6 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the cloud authentication step via config flow."""
         errors = {}
+        description_placeholders = {}
 
         if user_input:
             self._default_user = user_input[CONF_USERNAME]
@@ -231,6 +231,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -299,7 +300,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
-            description_placeholders=description_placeholders,
             errors=errors,
         )
 
