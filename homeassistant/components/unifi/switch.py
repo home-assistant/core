@@ -139,14 +139,14 @@ def dpi_group_registry_entry(controller: UniFiController, obj_id: str) -> Device
     )
 
 
-async def async_control_block_client(
+async def async_block_client_control_fn(
     controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control network access of client."""
     await controller.api.request(ClientBlockRequest.create(obj_id, not target))
 
 
-async def async_control_dpi_group(
+async def async_dpi_group_control_fn(
     controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Enable or disable DPI group."""
@@ -161,7 +161,7 @@ async def async_control_dpi_group(
     )
 
 
-async def async_control_outlet(
+async def async_outlet_control_fn(
     controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
@@ -172,7 +172,7 @@ async def async_control_outlet(
     )
 
 
-async def async_control_poe_port(
+async def async_poe_port_control_fn(
     controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control poe state."""
@@ -193,7 +193,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
         available_fn=lambda controller, obj_id: controller.available,
-        control_fn=async_control_block_client,
+        control_fn=async_block_client_control_fn,
         device_info=client_registry_entry,
         event_is_on=CLIENT_UNBLOCKED,
         event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
@@ -210,7 +210,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         icon="mdi:network",
         allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
         available_fn=lambda controller, obj_id: controller.available,
-        control_fn=async_control_dpi_group,
+        control_fn=async_dpi_group_control_fn,
         custom_subscribe=lambda controller: controller.api.dpi_apps.subscribe,
         device_info=dpi_group_registry_entry,
         event_is_on=None,
@@ -228,7 +228,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         has_entity_name=True,
         allowed_fn=lambda controller, obj_id: True,
         available_fn=sub_device_disabled,
-        control_fn=async_control_outlet,
+        control_fn=async_outlet_control_fn,
         device_info=device_registry_entry,
         event_is_on=None,
         event_to_subscribe=None,
@@ -248,7 +248,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: True,
         available_fn=sub_device_disabled,
-        control_fn=async_control_poe_port,
+        control_fn=async_poe_port_control_fn,
         device_info=device_registry_entry,
         event_is_on=None,
         event_to_subscribe=None,
