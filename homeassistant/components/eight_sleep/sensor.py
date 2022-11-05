@@ -183,7 +183,8 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
         elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
             self._attr_native_unit_of_measurement = "Score"
 
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        if self._sensor != "sleep_stage":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -278,6 +279,7 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
 
     _attr_icon = "mdi:thermometer"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(
