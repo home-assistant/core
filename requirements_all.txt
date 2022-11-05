@@ -1328,7 +1328,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.3
+plugwise==0.25.7
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2503,7 +2503,7 @@ vehicle==0.4.0
 velbus-aio==2022.10.4
 
 # homeassistant.components.venstar
-venstarcolortouch==0.18
+venstarcolortouch==0.19
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
