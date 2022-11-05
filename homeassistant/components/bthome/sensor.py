@@ -21,14 +21,19 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
+    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TIME_SECONDS,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -174,6 +179,57 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.COUNT}",
         device_class=None,
         native_unit_of_measurement=None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for rotation sensor
+    (BTHomeSensorDeviceClass.ROTATION, Units.DEGREE): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.ROTATION}_{Units.DEGREE}",
+        device_class=None,
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for distance sensor in mm
+    (
+        BTHomeSensorDeviceClass.DISTANCE,
+        Units.LENGTH_MILLIMETERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.DISTANCE}_{Units.LENGTH_MILLIMETERS}",
+        device_class=None,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for distance sensor in m
+    (BTHomeSensorDeviceClass.DISTANCE, Units.LENGTH_METERS): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.DISTANCE}_{Units.LENGTH_METERS}",
+        device_class=None,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for time sensor
+    (BTHomeSensorDeviceClass.TIME, Units.TIME_SECONDS): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.TIME}_{Units.TIME_SECONDS}",
+        device_class=None,
+        native_unit_of_measurement=TIME_SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for current sensor
+    (
+        BTHomeSensorDeviceClass.CURRENT,
+        Units.ELECTRIC_CURRENT_AMPERE,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.CURRENT}_{Units.ELECTRIC_CURRENT_AMPERE}",
+        device_class=None,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for speed sensor
+    (
+        BTHomeSensorDeviceClass.SPEED,
+        Units.SPEED_METERS_PER_SECOND,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.SPEED}_{Units.SPEED_METERS_PER_SECOND}",
+        device_class=None,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

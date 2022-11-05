@@ -652,6 +652,108 @@ async def test_v1_sensors(
             ],
         ),
         (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x3F\x02\x0c",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_rotation",
+                    "friendly_name": "Test Device 18B2 Rotation",
+                    "unit_of_measurement": "°",
+                    "state_class": "measurement",
+                    "expected_state": "307.4",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x40\x0C\x00",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_distance",
+                    "friendly_name": "Test Device 18B2 Distance",
+                    "unit_of_measurement": "mm",
+                    "state_class": "measurement",
+                    "expected_state": "12",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x41\x4E\x00",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_distance",
+                    "friendly_name": "Test Device 18B2 Distance",
+                    "unit_of_measurement": "m",
+                    "state_class": "measurement",
+                    "expected_state": "7.8",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x42\x4E\x34\x00",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_time",
+                    "friendly_name": "Test Device 18B2 Time",
+                    "unit_of_measurement": "s",
+                    "state_class": "measurement",
+                    "expected_state": "13.39",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x43\x4E\x34",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_current",
+                    "friendly_name": "Test Device 18B2 Current",
+                    "unit_of_measurement": "A",
+                    "state_class": "measurement",
+                    "expected_state": "13.39",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x44\x4E\x34",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_speed",
+                    "friendly_name": "Test Device 18B2 Speed",
+                    "unit_of_measurement": "m/s",
+                    "state_class": "measurement",
+                    "expected_state": "133.9",
+                },
+            ],
+        ),
+        (
             "54:48:E6:8F:80:A5",
             make_bthome_v2_adv(
                 "54:48:E6:8F:80:A5",
