@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from jsonrpc_base.jsonrpc import TransportError
 
@@ -70,14 +71,14 @@ class KodiBinaryEntity(KodiConnectionClient, BinarySensorEntity):
         self._kodi_boolean = boolean_name
 
     @callback
-    def async_on(self, sender, data):  # pylint: disable=unused-argument
+    def async_on(self, sender: Any, data: Any):  # pylint: disable=unused-argument
         """Switch sensor on from api call."""
         self._attr_is_on = True
         self.async_write_ha_state()
         _LOGGER.debug("Kodi %s on", self.name)
 
     @callback
-    def async_off(self, sender, data):  # pylint: disable=unused-argument
+    def async_off(self, sender: Any, data: Any):  # pylint: disable=unused-argument
         """Switch sensor off from api call."""
         self._attr_is_on = False
         self.async_write_ha_state()
