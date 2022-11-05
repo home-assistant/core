@@ -819,6 +819,24 @@ async def test_info_from_service_with_link_local_address_first(hass):
     assert info.host == "192.168.66.12"
 
 
+async def test_info_from_service_with_unspecified_address_first(hass):
+    """Test that the unspecified address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["0.0.0.0", "192.168.66.12"]
+    info = zeroconf.info_from_service(service_info)
+    assert info.host == "192.168.66.12"
+
+
+async def test_info_from_service_with_unspecified_address_only(hass):
+    """Test that the unspecified address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["0.0.0.0"]
+    info = zeroconf.info_from_service(service_info)
+    assert info is None
+
+
 async def test_info_from_service_with_link_local_address_second(hass):
     """Test that the link local address is ignored."""
     service_type = "_test._tcp.local."
