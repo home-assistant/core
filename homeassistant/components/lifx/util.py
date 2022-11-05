@@ -14,6 +14,7 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_KELVIN,
@@ -80,6 +81,17 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     Hue, Saturation, Brightness, Kelvin
     """
     hue, saturation, brightness, kelvin = [None] * 4
+
+    if (color_name := kwargs.pop(ATTR_COLOR_NAME, None)) is not None:
+        try:
+            hue, saturation = color_util.color_RGB_to_hs(
+                *color_util.color_name_to_rgb(color_name)
+            )
+        except ValueError:
+            _LOGGER.warning(
+                "Got unknown color %s, falling back to neutral white", color_name
+            )
+            hue, saturation = (0, 0)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]

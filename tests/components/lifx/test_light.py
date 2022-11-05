@@ -22,6 +22,7 @@ from homeassistant.components.lifx.manager import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
@@ -1395,6 +1396,64 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     call_dict.pop("callb")
     assert call_dict == {"duration": 5000}
     bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
+
+
+async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
+    """Test lifx.set_state works with color names and RGB."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [32000, None, 65535, 2700]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    # color name should turn into hue, saturation
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "red"},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [0, 65535, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # unknown color name should reset back to neutral white, i.e. 3500K
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "deepblack"},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # RGB should convert to hue, saturation
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (0, 255, 0)},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [21845, 65535, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # XY should convert to hue, saturation
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.34, 0.339)},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [5461, 5139, 65535, 3500]
     bulb.set_color.reset_mock()
 
 
