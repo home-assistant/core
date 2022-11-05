@@ -184,7 +184,7 @@ async def async_control_poe_port(
     )
 
 
-UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
+ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
     UnifiEntityDescription[Clients, Client](
         key="Block client",
         device_class=SwitchDeviceClass.SWITCH,
@@ -313,20 +313,20 @@ async def async_setup_entry(
     known_poe_clients.clear()
 
     @callback
-    def async_load_entities(loader: UnifiEntityDescription) -> None:
+    def async_load_entities(description: UnifiEntityDescription) -> None:
         """Load and subscribe to UniFi devices."""
         entities: list[SwitchEntity] = []
-        api_handler = loader.handler_fn(controller)
+        api_handler = description.handler_fn(controller)
 
         @callback
         def async_create_entity(event: ItemEvent, obj_id: str) -> None:
             """Create UniFi entity."""
-            if not loader.allowed_fn(controller, obj_id) or not loader.supported_fn(
-                api_handler, obj_id
-            ):
+            if not description.allowed_fn(
+                controller, obj_id
+            ) or not description.supported_fn(api_handler, obj_id):
                 return
 
-            entity = UnifiSwitchEntity(obj_id, controller, loader)
+            entity = UnifiSwitchEntity(obj_id, controller, description)
             if event == ItemEvent.ADDED:
                 async_add_entities([entity])
                 return
@@ -338,8 +338,8 @@ async def async_setup_entry(
 
         api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
 
-    for unifi_loader in UNIFI_LOADERS:
-        async_load_entities(unifi_loader)
+    for description in ENTITY_DESCRIPTIONS:
+        async_load_entities(description)
 
 
 @callback
