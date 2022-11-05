@@ -5,26 +5,28 @@ import voluptuous as vol
 from datetime import timedelta
 from .sipphone import sip_device
 
+from http import HTTPStatus
+import aiohttp
+import async_timeout
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import asyncio
+
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.helpers.config_validation as cv
 
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_ACCESS_TOKEN,
-    CONF_NAME,
-    CONF_PATH,
-    CONF_URL,
+from .const import (
+    SERVICE_OPEN_DOOR
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required('message'): cv.string,
         vol.Required('notify'): cv.string,
         vol.Required('title'): cv.string,
+        vol.Optional('open_door_cmd'): cv.string,
+
     }
 )
 
@@ -58,6 +62,15 @@ def async_setup_platform(
     # async_add_entities([IntercomSensor(sip_device(server="192.168.2.9",port=5060,
     #     username= "User5", password="1234",bind_ip="192.168.2.147"))])
     # config["bind_ip"] = "127.0.0.1"
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_OPEN_DOOR,
+        {},
+        "open_door",
+        # [SUPPORT_OPEN_DOOR],
+    )
+
     async_add_entities([IntercomSensor(
         sip_device(server=config['server'],port=config['port'],
         username= config["username"], password=config["password"],bind_ip=config["bind_ip"])
@@ -89,6 +102,46 @@ class IntercomSensor(SensorEntity):
         """Return the name of the entity."""
         return self._config['name']
     
+    async def open_door(self):
+        """send a command to open the door"""
+        if 'open_door_cmd' not in self._config.keys():
+            return
+        curlcommand = self._config['open_door_cmd']
+        try:
+            async with async_timeout.timeout(10):
+                response = await async_get_clientsession(self._hass).post(
+                    curlcommand
+                )
+                result = await response.json()
+
+            if response.status in (
+                HTTPStatus.OK,
+                HTTPStatus.CREATED,
+                HTTPStatus.ACCEPTED,
+            ):
+                return
+
+            fallback_error = result.get("errorMessage", "Unknown error")
+            fallback_message = (
+                f"Internal server error, please try again later: {fallback_error}"
+            )
+            message = result.get("message", fallback_message)
+
+            if "message" in result:
+                if message[-1] not in [".", "?", "!"]:
+                    message += "."
+                message += " This message is generated externally to Home Assistant."
+
+            if response.status == HTTPStatus.TOO_MANY_REQUESTS:
+                _LOGGER.warning(message)
+
+            else:
+                _LOGGER.error(message)
+
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout sending door opencommand to %s", curlcommand)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error sending door command to %s: %r", curlcommand, err)
 
     def update(self) -> None:
         """Fetch new state data for the sensor.

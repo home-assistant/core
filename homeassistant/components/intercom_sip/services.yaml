@@ -1,0 +1,11 @@
+open_door:
+  description: send command to open the door
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target entity
+      required: true
+      example: "sensor.front_door"
+      selector:
+        entity:
+          integration: intercom_sip
