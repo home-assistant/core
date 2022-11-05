@@ -1177,7 +1177,7 @@ nsapi==3.0.5
 nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
-nuheat==0.3.0
+nuheat==1.0.0
 
 # homeassistant.components.numato
 numato-gpio==0.10.0
