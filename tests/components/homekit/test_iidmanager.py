@@ -136,7 +136,7 @@ async def test_iid_migration_to_v2_with_underscore(hass, iid_storage, hass_stora
     assert iid_storage_v1.allocations == iid_storage_v2.allocations
     assert iid_storage_v1.allocated_iids == iid_storage_v2.allocated_iids
 
-    assert len(iid_storage_v2.allocations) == 12
+    assert len(iid_storage_v2.allocations) == 2
 
     for allocations in iid_storage_v2.allocations.values():
         assert allocations["3E___"] == 1
