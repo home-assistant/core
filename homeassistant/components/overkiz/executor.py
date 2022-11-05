@@ -110,7 +110,7 @@ class OverkizExecutor:
         await self.coordinator.async_refresh()
 
 
-    # commands except an array of commands
+    # commands accept an array of commands
     # each command could be :
     # - a simple string to execute a command without parameter
     # - a list with command name as first index and parameters list  as second index
