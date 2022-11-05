@@ -32,7 +32,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -148,8 +148,10 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _optimistic: bool
     _supported_color_modes: set[ColorMode] | None
-    _command_templates: dict[str, Callable[..., PublishPayloadType]]
-    _value_templates: dict[str, Callable[..., ReceivePayloadType]]
+    _command_templates: dict[
+        str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
+    ]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _topics: dict[str, Any]
 
     def __init__(
@@ -395,7 +397,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
-            self._command_templates[CONF_COMMAND_ON_TEMPLATE](variables=values),
+            self._command_templates[CONF_COMMAND_ON_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -418,7 +420,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
-            self._command_templates[CONF_COMMAND_OFF_TEMPLATE](variables=values),
+            self._command_templates[CONF_COMMAND_OFF_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
