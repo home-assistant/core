@@ -1,6 +1,8 @@
 """Support for LG soundbars."""
 from __future__ import annotations
 
+import logging
+
 import temescal
 
 from homeassistant.components.media_player import (
@@ -12,6 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -136,47 +140,51 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_settings()
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         if self._volume_max != 0:
             return self._volume / self._volume_max
         return 0
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self._mute
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Return the current sound mode."""
         if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
             return None
         return temescal.equalisers[self._equaliser]
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str] | None:
         """Return the available sound modes."""
         modes = []
         for equaliser in self._equalisers:
             if equaliser < len(temescal.equalisers):
                 modes.append(temescal.equalisers[equaliser])
+        if temescal.equalisers[self._equaliser] not in modes:
+            modes.append(temescal.equalisers[self._equaliser])
         return sorted(modes)
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         if self._function == -1 or self._function >= len(temescal.functions):
             return None
         return temescal.functions[self._function]
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str] | None:
         """List of available input sources."""
         sources = []
         for function in self._functions:
             if function < len(temescal.functions):
                 sources.append(temescal.functions[function])
+        if temescal.functions[self._function] not in sources:
+            sources.append(temescal.functions[self._function])
         return sorted(sources)
 
     def set_volume_level(self, volume: float) -> None:
@@ -190,8 +198,19 @@ class LGDevice(MediaPlayerEntity):
 
     def select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.set_func(temescal.functions.index(source))
+        try:
+            self._device.set_func(temescal.functions.index(source))
+        except ValueError:
+            _LOGGER.debug(
+                "Attempted to set invalid source [%s]; not in source list", source
+            )
 
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
-        self._device.set_eq(temescal.equalisers.index(sound_mode))
+        try:
+            self._device.set_eq(temescal.equalisers.index(sound_mode))
+        except ValueError:
+            _LOGGER.debug(
+                "Attempted to set invalid sound mode [%s]; not in sound mode list",
+                sound_mode,
+            )

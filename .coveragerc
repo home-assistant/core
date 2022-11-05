@@ -673,7 +673,6 @@ omit =
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/__init__.py
-    homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/lidarr/__init__.py
     homeassistant/components/lidarr/coordinator.py
     homeassistant/components/lidarr/sensor.py

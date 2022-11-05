@@ -1,53 +1,26 @@
 """Test the lg_soundbar config flow."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import socket
-from typing import Any
-from unittest.mock import DEFAULT, patch
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
+from . import (
+    MOCK_ENTITY_ID,
+    TEMESCAL_ATTR_USERNAME,
+    TEMESCAL_ATTR_UUID,
+    TEMESCAL_MAC_INFO_DEV,
+    TEMESCAL_PRODUCT_INFO,
+    TEMESCAL_SPK_LIST_VIEW_INFO,
+    setup_mock_temescal,
+)
+
 from tests.common import MockConfigEntry
 
-
-def setup_mock_temescal(
-    hass, mock_temescal, mac_info_dev=None, product_info=None, info=None
-):
-    """Set up a mock of the temescal object to craft our expected responses."""
-    tmock = mock_temescal.temescal
-    instance = tmock.return_value
-
-    def create_temescal_response(msg: str, data: dict | None = None) -> dict[str, Any]:
-        response: dict[str, Any] = {"msg": msg}
-        if data is not None:
-            response["data"] = data
-        return response
-
-    def temescal_side_effect(
-        addr: str, port: int, callback: Callable[[dict[str, Any]], None]
-    ):
-        mac_info_response = create_temescal_response(
-            msg="MAC_INFO_DEV", data=mac_info_dev
-        )
-        product_info_response = create_temescal_response(
-            msg="PRODUCT_INFO", data=product_info
-        )
-        info_response = create_temescal_response(msg="SPK_LIST_VIEW_INFO", data=info)
-
-        instance.get_mac_info.side_effect = lambda: hass.add_job(
-            callback, mac_info_response
-        )
-        instance.get_product_info.side_effect = lambda: hass.add_job(
-            callback, product_info_response
-        )
-        instance.get_info.side_effect = lambda: hass.add_job(callback, info_response)
-
-        return DEFAULT
-
-    tmock.side_effect = temescal_side_effect
+MOCK_USERNAME = "name"
 
 
 async def test_form(hass):
@@ -67,8 +40,10 @@ async def test_form(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_MAC_INFO_DEV: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -79,8 +54,8 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
+    assert result2["title"] == MOCK_USERNAME
+    assert result2["result"].unique_id == MOCK_ENTITY_ID
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -105,8 +80,10 @@ async def test_form_mac_info_response_empty(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_MAC_INFO_DEV: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -117,8 +94,8 @@ async def test_form_mac_info_response_empty(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
+    assert result2["title"] == MOCK_USERNAME
+    assert result2["result"].unique_id == MOCK_ENTITY_ID
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -146,9 +123,11 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_MAC_INFO_DEV: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_PRODUCT_INFO: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -160,8 +139,8 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
+    assert result2["title"] == MOCK_USERNAME
+    assert result2["result"].unique_id == MOCK_ENTITY_ID
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -192,9 +171,11 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_MAC_INFO_DEV: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_PRODUCT_INFO: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -206,8 +187,8 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
+    assert result2["title"] == MOCK_USERNAME
+    assert result2["result"].unique_id == MOCK_ENTITY_ID
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -232,8 +213,10 @@ async def test_form_uuid_missing_from_mac_info(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            product_info={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_PRODUCT_INFO: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -245,8 +228,8 @@ async def test_form_uuid_missing_from_mac_info(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
-    assert result2["result"].unique_id == "uuid"
+    assert result2["title"] == MOCK_USERNAME
+    assert result2["result"].unique_id == MOCK_ENTITY_ID
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -274,8 +257,10 @@ async def test_form_uuid_not_provided_by_api(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            product_info={"i_model_no": "8", "i_model_type": 0},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_PRODUCT_INFO: {"i_model_no": "8", "i_model_type": 0},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -286,7 +271,7 @@ async def test_form_uuid_not_provided_by_api(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "name"
+    assert result2["title"] == MOCK_USERNAME
     assert result2["result"].unique_id is None
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -312,7 +297,7 @@ async def test_form_both_queues_empty(hass):
     ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        setup_mock_temescal(hass=hass, mock_temescal=mock_temescal)
+        setup_mock_temescal(hass=hass, mock_temescal=mock_temescal, msg_dicts={})
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -353,7 +338,11 @@ async def test_no_uuid_host_already_configured(hass):
         "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal:
         setup_mock_temescal(
-            hass=hass, mock_temescal=mock_temescal, info={"s_user_name": "name"}
+            hass=hass,
+            mock_temescal=mock_temescal,
+            msg_dicts={
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -416,7 +405,7 @@ async def test_form_already_configured(hass):
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 0000,
         },
-        unique_id="uuid",
+        unique_id=MOCK_ENTITY_ID,
     )
     mock_entry.add_to_hass(hass)
 
@@ -430,8 +419,10 @@ async def test_form_already_configured(hass):
         setup_mock_temescal(
             hass=hass,
             mock_temescal=mock_temescal,
-            mac_info_dev={"s_uuid": "uuid"},
-            info={"s_user_name": "name"},
+            msg_dicts={
+                TEMESCAL_MAC_INFO_DEV: {TEMESCAL_ATTR_UUID: MOCK_ENTITY_ID},
+                TEMESCAL_SPK_LIST_VIEW_INFO: {TEMESCAL_ATTR_USERNAME: MOCK_USERNAME},
+            },
         )
 
         result2 = await hass.config_entries.flow.async_configure(
