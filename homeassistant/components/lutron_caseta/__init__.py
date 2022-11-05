@@ -244,6 +244,7 @@ def _async_setup_keypads(
         bridge_keypad = bridge_devices[bridge_button["parent_device"]]
         keypad_device_id = bridge_keypad["device_id"]
         button_device_id = bridge_button["device_id"]
+        button_enabled_default = bool(bridge_button.get("device_name"))
 
         if not (keypad := keypads.get(keypad_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
@@ -265,6 +266,7 @@ def _async_setup_keypads(
             button_name=_get_button_name(keypad, bridge_button),
             led_device_id=bridge_button.get("button_led"),
             parent_keypad=keypad["lutron_device_id"],
+            enabled_default=button_enabled_default,
         )
 
         keypad["buttons"].append(button["lutron_device_id"])
@@ -476,19 +478,21 @@ class LutronCasetaDevice(Entity):
         """Set up the base class.
 
         [:param]device the device metadata
-        [:param]bridge the smartbridge object
-        [:param]bridge_device a dict with the details of the bridge
+        [:param]data the Data for the lutron_caseta integration.
         """
         self._device = device
         self._smartbridge = data.bridge
         self._bridge_device = data.bridge_device
         self._bridge_unique_id = serial_to_unique_id(data.bridge_device["serial"])
+
         if "serial" not in self._device:
+            # Entity is button or occupancy sensor, handle device setup in binary_sensor.py and button.py
             return
 
         if "parent_device" in device:
             # This is a child entity, handle the naming in button.py and switch.py
             return
+
         area = _area_name_from_id(self._smartbridge.areas, device["area"])
         name = device["name"].split("_")[-1]
         self._attr_name = full_name = f"{area} {name}"

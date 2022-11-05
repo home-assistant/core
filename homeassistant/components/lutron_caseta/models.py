@@ -53,3 +53,4 @@ class LutronButton(TypedDict):
     button_name: str
     led_device_id: int
     parent_keypad: int
+    enabled_default: bool
