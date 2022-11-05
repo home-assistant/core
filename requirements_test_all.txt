@@ -1721,7 +1721,7 @@ vehicle==0.4.0
 velbus-aio==2022.10.4
 
 # homeassistant.components.venstar
-venstarcolortouch==0.18
+venstarcolortouch==0.19
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
