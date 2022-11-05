@@ -52,14 +52,14 @@ from .unifi_client import UniFiClient
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
-T = TypeVar("T")
-V = TypeVar("V")
+Data = TypeVar("Data")
+Handler = TypeVar("Handler")
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
 @dataclass
-class UnifiEntityLoader(Generic[T, V]):
+class UnifiEntityLoader(Generic[Handler, Data]):
     """Validate and load entities from different UniFi handlers."""
 
     allowed_fn: Callable[[UniFiController, str], bool]
@@ -68,16 +68,16 @@ class UnifiEntityLoader(Generic[T, V]):
     device_info: Callable[[UniFiController, str], DeviceInfo]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    handler_fn: Callable[[UniFiController], T]
-    is_on_fn: Callable[[UniFiController, V], bool]
-    name_fn: Callable[[V], str | None]
-    object_fn: Callable[[T, str], V]
-    supported_fn: Callable[[T, str], bool | None]
+    handler_fn: Callable[[UniFiController], Handler]
+    is_on_fn: Callable[[UniFiController, Data], bool]
+    name_fn: Callable[[Data], str | None]
+    object_fn: Callable[[Handler, str], Data]
+    supported_fn: Callable[[Handler, str], bool | None]
     unique_id_fn: Callable[[str], str]
 
 
 @dataclass
-class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[T, V]):
+class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[Handler, Data]):
     """Class describing UniFi switch entity."""
 
     custom_subscribe: Callable[[UniFiController], Subscription] | None = None
