@@ -294,12 +294,7 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
-        # Reject creating new trackers if the name is not set
-        if new and (
-            service_info.device.name is None
-            or service_info.device.name.replace("-", ":") == service_info.device.address
-        ):
-            return
+
         previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
