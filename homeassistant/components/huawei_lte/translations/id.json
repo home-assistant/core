@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Bukan perangkat Huawei LTE"
+            "not_huawei_lte": "Bukan perangkat Huawei LTE",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "connection_timeout": "Tenggang waktu terhubung habis",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan kredensial akses perangkat.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "password": "Kata Sandi",
@@ -30,7 +39,7 @@
         "step": {
             "init": {
                 "data": {
-                    "name": "Nama layanan notifikasi (perubahan harus dimulai ulang)",
+                    "name": "Nama layanan notifikasi (perubahan membutuhkan proses mulai ulang)",
                     "recipient": "Penerima notifikasi SMS",
                     "track_wired_clients": "Lacak klien jaringan kabel",
                     "unauthenticated_mode": "Mode tidak diautentikasi (perubahan memerlukan pemuatan ulang)"

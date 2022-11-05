@@ -52,6 +52,7 @@ ABBREVIATIONS = {
     "e": "encoding",
     "en": "enabled_by_default",
     "ent_cat": "entity_category",
+    "ent_pic": "entity_picture",
     "err_t": "error_topic",
     "err_tpl": "error_template",
     "fanspd_t": "fan_speed_topic",
@@ -169,6 +170,8 @@ ABBREVIATIONS = {
     "pr_mode_val_tpl": "preset_mode_value_template",
     "pr_modes": "preset_modes",
     "r_tpl": "red_template",
+    "rel_s": "release_summary",
+    "rel_u": "release_url",
     "ret": "retain",
     "rgb_cmd_tpl": "rgb_command_template",
     "rgb_cmd_t": "rgb_command_topic",
@@ -242,6 +245,7 @@ ABBREVIATIONS = {
     "tilt_opt": "tilt_optimistic",
     "tilt_status_t": "tilt_status_topic",
     "tilt_status_tpl": "tilt_status_template",
+    "tit": "title",
     "t": "topic",
     "uniq_id": "unique_id",
     "unit_of_meas": "unit_of_measurement",
@@ -255,6 +259,9 @@ ABBREVIATIONS = {
     "xy_cmd_t": "xy_command_topic",
     "xy_stat_t": "xy_state_topic",
     "xy_val_tpl": "xy_value_template",
+    "l_ver_t": "latest_version_topic",
+    "l_ver_tpl": "latest_version_template",
+    "pl_inst": "payload_install",
 }
 
 DEVICE_ABBREVIATIONS = {

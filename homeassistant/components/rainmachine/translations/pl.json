@@ -18,10 +18,24 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Zaktualizuj wszystkie automatyzacje lub skrypty, kt\u00f3re u\u017cywaj\u0105 tej encji, aby zamiast tego u\u017cywa\u0142y `{replacement_entity_id}`.",
+                        "title": "Encja {old_entity_id} zostanie usuni\u0119ta"
+                    }
+                }
+            },
+            "title": "Encja {old_entity_id} zostanie usuni\u0119ta"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "U\u017cyj czas\u00f3w dla strefy z aplikacji RainMachine",
                     "zone_run_time": "Domy\u015blny czas dzia\u0142ania dla strefy (w sekundach)"
                 },
                 "title": "Konfiguracja RainMachine"

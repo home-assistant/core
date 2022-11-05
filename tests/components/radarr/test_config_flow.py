@@ -1,7 +1,7 @@
 """Test Radarr config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aiopyarr import ArrException
+from aiopyarr import exceptions
 
 from homeassistant import data_entry_flow
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
@@ -115,7 +115,7 @@ async def test_wrong_app(hass: HomeAssistant) -> None:
     """Test we show user form on wrong app."""
     with patch(
         "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
-        return_value="wrong_app",
+        side_effect=exceptions.ArrWrongAppException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -125,14 +125,31 @@ async def test_wrong_app(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "wrong_app"}
+    assert result["errors"]["base"] == "wrong_app"
+
+
+async def test_zero_conf_failure(hass: HomeAssistant) -> None:
+    """Test we show user form on api key retrieval failure."""
+    with patch(
+        "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+        side_effect=exceptions.ArrZeroConfException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data={CONF_URL: URL, CONF_VERIFY_SSL: False},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "zeroconf_failed"
 
 
 async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test we show user form on unknown error."""
     with patch(
         "homeassistant.components.radarr.config_flow.RadarrClient.async_get_system_status",
-        side_effect=ArrException,
+        side_effect=exceptions.ArrException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

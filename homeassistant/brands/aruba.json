@@ -1,0 +1,5 @@
+{
+  "domain": "aruba",
+  "name": "Aruba",
+  "integrations": ["aruba", "cppm_tracker"]
+}

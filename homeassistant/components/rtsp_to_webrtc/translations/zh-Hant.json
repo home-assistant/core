@@ -23,5 +23,14 @@
                 "title": "\u8a2d\u5b9a RTSPtoWebRTC"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Stun \u4f3a\u670d\u5668\u4f4d\u5740\uff08\u4e3b\u6a5f\uff1a\u901a\u8a0a\u57e0\uff09"
+                }
+            }
+        }
     }
 }

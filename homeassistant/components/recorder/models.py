@@ -64,7 +64,6 @@ class StatisticMetaData(TypedDict):
     has_sum: bool
     name: str | None
     source: str
-    state_unit_of_measurement: str | None
     statistic_id: str
     unit_of_measurement: str | None
 

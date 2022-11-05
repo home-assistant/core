@@ -137,9 +137,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    if sorted(session.token["scope"]) != sorted(NETATMO_SCOPES):
+    if entry.data["auth_implementation"] == cloud.DOMAIN:
+        required_scopes = {
+            scope
+            for scope in NETATMO_SCOPES
+            if scope not in ("access_doorbell", "read_doorbell")
+        }
+    else:
+        required_scopes = set(NETATMO_SCOPES)
+
+    if not (set(session.token["scope"]) & required_scopes):
         _LOGGER.debug(
-            "Scope is invalid: %s != %s", session.token["scope"], NETATMO_SCOPES
+            "Session is missing scopes: %s",
+            required_scopes - set(session.token["scope"]),
         )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
@@ -261,7 +271,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if CONF_WEBHOOK_ID in entry.data:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await data[entry.entry_id][AUTH].async_dropwebhook()
+        try:
+            await data[entry.entry_id][AUTH].async_dropwebhook()
+        except pyatmo.ApiError:
+            _LOGGER.debug("No webhook to be dropped")
         _LOGGER.info("Unregister Netatmo webhook")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

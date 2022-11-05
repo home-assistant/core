@@ -27,15 +27,12 @@ from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
-    DEFAULT_NAME,
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
     MODE_DAILY,
-    MODE_DAILY_LABEL,
 )
 from .data import MetOfficeData
 
@@ -83,6 +80,7 @@ class MetOfficeWeather(
     """Implementation of a Met Office weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_pressure_unit = PRESSURE_HPA
@@ -97,11 +95,10 @@ class MetOfficeWeather(
         """Initialise the platform with a data instance."""
         super().__init__(coordinator)
 
-        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
+        self._attr_name = "3-Hourly" if use_3hourly else "Daily"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"

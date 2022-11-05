@@ -42,8 +42,7 @@ async def async_setup_entry(
         switch_entity = FirmataSwitch(api, config_entry, name, pin)
         new_entities.append(switch_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataSwitch(FirmataPinEntity, SwitchEntity):

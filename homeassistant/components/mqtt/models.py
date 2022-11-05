@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ast import literal_eval
+import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
+    from .discovery import MQTTDiscoveryPayload
+    from .tag import MQTTTagScanner
 
 _SENTINEL = object()
 
@@ -78,6 +81,13 @@ class TriggerDebugInfo(TypedDict):
 
     device_id: str
     discovery_data: DiscoveryInfoType
+
+
+class PendingDiscovered(TypedDict):
+    """Pending discovered items."""
+
+    pending: deque[MQTTDiscoveryPayload]
+    unsub: CALLBACK_TYPE
 
 
 class MqttCommandTemplate:
@@ -226,6 +236,26 @@ class MqttValueTemplate:
         )
 
 
+class EntityTopicState:
+    """Manage entity state write requests for subscribed topics."""
+
+    def __init__(self) -> None:
+        """Register topic."""
+        self.subscribe_calls: dict[str, Entity] = {}
+
+    @callback
+    def process_write_state_requests(self) -> None:
+        """Process the write state requests."""
+        while self.subscribe_calls:
+            _, entity = self.subscribe_calls.popitem()
+            entity.async_write_ha_state()
+
+    @callback
+    def write_state_request(self, entity: Entity) -> None:
+        """Register write state request."""
+        self.subscribe_calls[entity.entity_id] = entity
+
+
 @dataclass
 class MqttData:
     """Keep the MQTT entry data."""
@@ -237,9 +267,16 @@ class MqttData:
         default_factory=dict
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
+    data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
+    discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
+        default_factory=dict
+    )
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
         default_factory=dict
     )
+    discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
+    integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
@@ -247,5 +284,7 @@ class MqttData:
         default_factory=dict
     )
     reload_needed: bool = False
+    state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
+    tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     updated_config: ConfigType = field(default_factory=dict)

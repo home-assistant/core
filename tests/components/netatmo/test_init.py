@@ -110,7 +110,7 @@ async def test_setup_component_with_config(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 10
         mock_impl.assert_called_once()
         mock_webhook.assert_called_once()
 
@@ -121,7 +121,7 @@ async def test_setup_component_with_config(hass, config_entry):
 async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     """Test setup and teardown of the netatmo component with webhook registration."""
     with selected_platforms(["camera", "climate", "light", "sensor"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 

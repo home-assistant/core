@@ -13,6 +13,7 @@ from .entry_data import RuntimeEntryData
 
 STORAGE_VERSION = 1
 DOMAIN = "esphome"
+
 _DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
 
@@ -23,6 +24,10 @@ class DomainData:
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
     _stores: dict[str, Store] = field(default_factory=dict)
     _entry_by_unique_id: dict[str, ConfigEntry] = field(default_factory=dict)
+
+    def get_by_unique_id(self, unique_id: str) -> ConfigEntry:
+        """Get the config entry by its unique ID."""
+        return self._entry_by_unique_id[unique_id]
 
     def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry.

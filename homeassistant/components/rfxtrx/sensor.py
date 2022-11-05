@@ -25,12 +25,12 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity, EntityCategory
@@ -172,7 +172,8 @@ SENSOR_TYPES = (
         key="Rain rate",
         name="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
@@ -206,12 +207,14 @@ SENSOR_TYPES = (
         name="Wind average speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
         name="Wind gust",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",

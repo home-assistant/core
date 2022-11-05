@@ -7,13 +7,7 @@ from TransportNSW import TransportNSW
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_MODE,
-    CONF_API_KEY,
-    CONF_NAME,
-    TIME_MINUTES,
-)
+from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, TIME_MINUTES
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,8 +19,6 @@ ATTR_DUE_IN = "due"
 ATTR_DELAY = "delay"
 ATTR_REAL_TIME = "real_time"
 ATTR_DESTINATION = "destination"
-
-ATTRIBUTION = "Data provided by Transport NSW"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
@@ -77,6 +69,8 @@ def setup_platform(
 class TransportNSWSensor(SensorEntity):
     """Implementation of an Transport NSW sensor."""
 
+    _attr_attribution = "Data provided by Transport NSW"
+
     def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
         self.data = data
@@ -107,7 +101,6 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
                 ATTR_MODE: self._times[ATTR_MODE],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
             }
 
     @property

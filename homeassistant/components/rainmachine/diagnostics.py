@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,6 +33,8 @@ TO_REDACT = {
     CONF_STATION_NAME,
     CONF_STATION_SOURCE,
     CONF_TIMEZONE,
+    # Config entry unique ID may contain sensitive data:
+    CONF_UNIQUE_ID,
 }
 
 
@@ -47,20 +50,16 @@ async def async_get_config_entry_diagnostics(
         LOGGER.warning("Unable to download controller-specific diagnostics")
         controller_diagnostics = None
 
-    return {
-        "entry": {
-            "title": entry.title,
-            "data": async_redact_data(entry.data, TO_REDACT),
-            "options": dict(entry.options),
-        },
-        "data": {
-            "coordinator": async_redact_data(
-                {
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "data": {
+                "coordinator": {
                     api_category: controller.data
                     for api_category, controller in data.coordinators.items()
                 },
-                TO_REDACT,
-            ),
-            "controller_diagnostics": controller_diagnostics,
+                "controller_diagnostics": controller_diagnostics,
+            },
         },
-    }
+        TO_REDACT,
+    )

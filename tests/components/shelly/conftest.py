@@ -1,30 +1,24 @@
 """Test configuration for Shelly."""
 from unittest.mock import AsyncMock, Mock, patch
 
+from aioshelly.block_device import BlockDevice
+from aioshelly.rpc_device import RpcDevice
 import pytest
 
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper
 from homeassistant.components.shelly.const import (
-    BLOCK,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
     EVENT_SHELLY_CLICK,
-    RPC,
+    REST_SENSORS_UPDATE_INTERVAL,
 )
-from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_mock_service,
-    mock_device_registry,
-)
+from . import MOCK_MAC
+
+from tests.common import async_capture_events, async_mock_service, mock_device_registry
 
 MOCK_SETTINGS = {
     "name": "Test name",
     "mode": "relay",
     "device": {
-        "mac": "test-mac",
+        "mac": MOCK_MAC,
         "hostname": "test-host",
         "type": "SHSW-25",
         "num_outputs": 2,
@@ -34,6 +28,36 @@ MOCK_SETTINGS = {
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
 }
+
+
+def mock_light_set_state(
+    turn="on",
+    mode="color",
+    red=45,
+    green=55,
+    blue=65,
+    white=70,
+    gain=19,
+    temp=4050,
+    brightness=50,
+    effect=0,
+    transition=0,
+):
+    """Mock light block set_state."""
+    return {
+        "ison": turn == "on",
+        "mode": mode,
+        "red": red,
+        "green": green,
+        "blue": blue,
+        "white": white,
+        "gain": gain,
+        "temp": temp,
+        "brightness": brightness,
+        "effect": effect,
+        "transition": transition,
+    }
+
 
 MOCK_BLOCKS = [
     Mock(
@@ -53,6 +77,15 @@ MOCK_BLOCKS = [
             }
         ),
     ),
+    Mock(
+        sensor_ids={},
+        channel="0",
+        output=mock_light_set_state()["ison"],
+        colorTemp=mock_light_set_state()["temp"],
+        **mock_light_set_state(),
+        type="light",
+        set_state=AsyncMock(side_effect=mock_light_set_state),
+    ),
 ]
 
 MOCK_CONFIG = {
@@ -65,11 +98,25 @@ MOCK_CONFIG = {
     },
 }
 
-MOCK_SHELLY = {
-    "mac": "test-mac",
+MOCK_SHELLY_COAP = {
+    "mac": MOCK_MAC,
     "auth": False,
     "fw": "20201124-092854/v1.9.0@57ac4ad8",
     "num_outputs": 2,
+}
+
+MOCK_SHELLY_RPC = {
+    "name": "Test Gen2",
+    "id": "shellyplus2pm-123456789abc",
+    "mac": MOCK_MAC,
+    "model": "SNSW-002P16EU",
+    "gen": 2,
+    "fw_id": "20220830-130540/0.11.0-gfa1bc37",
+    "ver": "0.11.0",
+    "app": "Plus2PM",
+    "auth_en": False,
+    "auth_domain": None,
+    "profile": "cover",
 }
 
 MOCK_STATUS_COAP = {
@@ -80,6 +127,7 @@ MOCK_STATUS_COAP = {
         "new_version": "some_new_version",
         "old_version": "some_old_version",
     },
+    "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
 }
 
 
@@ -98,7 +146,20 @@ MOCK_STATUS_RPC = {
 @pytest.fixture(autouse=True)
 def mock_coap():
     """Mock out coap."""
-    with patch("homeassistant.components.shelly.utils.get_coap_context"):
+    with patch(
+        "homeassistant.components.shelly.utils.COAP",
+        return_value=Mock(
+            initialize=AsyncMock(),
+            close=Mock(),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ws_server():
+    """Mock out ws_server."""
+    with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
 
 
@@ -121,72 +182,47 @@ def events(hass):
 
 
 @pytest.fixture
-async def coap_wrapper(hass):
-    """Setups a coap wrapper with mocked device."""
-    await async_setup_component(hass, "shelly", {})
+async def mock_block_device():
+    """Mock block (Gen1, CoAP) device."""
+    with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"sleep_period": 0, "model": "SHSW-25", "host": "1.2.3.4"},
-        unique_id="12345678",
-    )
-    config_entry.add_to_hass(hass)
+        def update():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0]({})
 
-    device = Mock(
-        blocks=MOCK_BLOCKS,
-        settings=MOCK_SETTINGS,
-        shelly=MOCK_SHELLY,
-        status=MOCK_STATUS_COAP,
-        firmware_version="some fw string",
-        update=AsyncMock(),
-        trigger_ota_update=AsyncMock(),
-        trigger_reboot=AsyncMock(),
-        initialized=True,
-    )
+        device = Mock(
+            spec=BlockDevice,
+            blocks=MOCK_BLOCKS,
+            settings=MOCK_SETTINGS,
+            shelly=MOCK_SHELLY_COAP,
+            status=MOCK_STATUS_COAP,
+            firmware_version="some fw string",
+            initialized=True,
+        )
+        block_device_mock.return_value = device
+        block_device_mock.return_value.mock_update = Mock(side_effect=update)
 
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
-        BLOCK
-    ] = BlockDeviceWrapper(hass, config_entry, device)
-
-    wrapper.async_setup()
-
-    return wrapper
+        yield block_device_mock.return_value
 
 
 @pytest.fixture
-async def rpc_wrapper(hass):
-    """Setups a coap wrapper with mocked device."""
-    await async_setup_component(hass, "shelly", {})
+async def mock_rpc_device():
+    """Mock rpc (Gen2, Websocket) device."""
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"sleep_period": 0, "model": "SNSW-001P16EU", "gen": 2, "host": "1.2.3.4"},
-        unique_id="12345678",
-    )
-    config_entry.add_to_hass(hass)
+        def update():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0]({})
 
-    device = Mock(
-        call_rpc=AsyncMock(),
-        config=MOCK_CONFIG,
-        event={},
-        shelly=MOCK_SHELLY,
-        status=MOCK_STATUS_RPC,
-        firmware_version="some fw string",
-        update=AsyncMock(),
-        trigger_ota_update=AsyncMock(),
-        trigger_reboot=AsyncMock(),
-        initialized=True,
-        shutdown=AsyncMock(),
-    )
+        device = Mock(
+            spec=RpcDevice,
+            config=MOCK_CONFIG,
+            event={},
+            shelly=MOCK_SHELLY_RPC,
+            status=MOCK_STATUS_RPC,
+            firmware_version="some fw string",
+            initialized=True,
+        )
 
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
-        RPC
-    ] = RpcDeviceWrapper(hass, config_entry, device)
+        rpc_device_mock.return_value = device
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
 
-    wrapper.async_setup()
-
-    return wrapper
+        yield rpc_device_mock.return_value

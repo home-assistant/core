@@ -22,8 +22,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
+from homeassistant.util.unit_conversion import DistanceConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -235,7 +235,10 @@ class Proximity(Entity):
             if not proximity:
                 continue
             distances_to_zone[device] = round(
-                convert(proximity, LENGTH_METERS, self.unit_of_measurement), 1
+                DistanceConverter.convert(
+                    proximity, LENGTH_METERS, self.unit_of_measurement
+                ),
+                1,
             )
 
         # Loop through each of the distances collected and work out the

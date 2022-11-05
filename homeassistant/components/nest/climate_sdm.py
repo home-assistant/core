@@ -117,6 +117,11 @@ class ThermostatEntity(ClimateEntity):
         """Return device specific attributes."""
         return self._device_info.device_info
 
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self._device_info.available
+
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self._attr_supported_features = self._get_supported_features()
@@ -315,6 +320,8 @@ class ThermostatEntity(ClimateEntity):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+        if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
+            return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         try:
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])

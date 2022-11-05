@@ -20,26 +20,23 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     CONF_NAME,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
-from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.speed import convert as speed_convert
+from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -104,20 +101,20 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
@@ -133,20 +130,24 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
+        imperial_conversion=lambda val: DistanceConverter.convert(
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
+        imperial_conversion=lambda val: DistanceConverter.convert(
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -158,10 +159,10 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
-        unit_imperial=SPEED_MILES_PER_HOUR,
-        unit_metric=SPEED_METERS_PER_SECOND,
-        imperial_conversion=lambda val: speed_convert(
-            val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
+        imperial_conversion=lambda val: SpeedConverter.convert(
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -326,13 +327,10 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
         if self.entity_description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = (
-                description.unit_metric
-                if hass.config.units.is_metric
-                else description.unit_imperial
-            )
+            self._attr_native_unit_of_measurement = description.unit_metric
+            if hass.config.units is US_CUSTOMARY_SYSTEM:
+                self._attr_native_unit_of_measurement = description.unit_imperial
 
     @property
     @abstractmethod
@@ -360,7 +358,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             desc.imperial_conversion
             and desc.unit_imperial is not None
             and desc.unit_imperial != desc.unit_metric
-            and not self.hass.config.units.is_metric
+            and self.hass.config.units is US_CUSTOMARY_SYSTEM
         ):
             return handle_conversion(state, desc.imperial_conversion)
 

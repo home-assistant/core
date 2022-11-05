@@ -236,8 +236,10 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
-            if entry_data.device_info.has_bluetooth_proxy:
-                await async_connect_scanner(hass, entry, cli)
+            if entry_data.device_info.bluetooth_proxy_version:
+                entry_data.disconnect_callbacks.append(
+                    await async_connect_scanner(hass, entry, cli, entry_data)
+                )
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
@@ -247,6 +249,8 @@ async def async_setup_entry(  # noqa: C901
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
+        name = entry_data.device_info.name if entry_data.device_info else host
+        _LOGGER.debug("%s: %s disconnected, running disconnected callbacks", name, host)
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
         entry_data.disconnect_callbacks = []
@@ -305,6 +309,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
@@ -466,6 +472,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []

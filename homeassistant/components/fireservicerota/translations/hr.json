@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Lozinka"
+                },
+                "description": "Tokeni za provjeru autenti\u010dnosti postali su neva\u017ee\u0107i, prijavite se da ih ponovno izradite."
+            }
+        }
+    }
+}

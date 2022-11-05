@@ -17,7 +17,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
+from homeassistant.helpers.entity_registry import async_get as async_get_entities
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import async_get
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -30,6 +32,8 @@ async def test_load_values_when_added_to_hass(hass):
         "binary_sensor": {
             "name": "Test_Binary",
             "platform": "bayesian",
+            "unique_id": "3b4c9563-5e84-4167-8fe7-8f507e796d72",
+            "device_class": "connectivity",
             "observations": [
                 {
                     "platform": "state",
@@ -50,7 +54,14 @@ async def test_load_values_when_added_to_hass(hass):
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
+    entity_registry = async_get_entities(hass)
+    assert (
+        entity_registry.entities["binary_sensor.test_binary"].unique_id
+        == "bayesian-3b4c9563-5e84-4167-8fe7-8f507e796d72"
+    )
+
     state = hass.states.get("binary_sensor.test_binary")
+    assert state.attributes.get("device_class") == "connectivity"
     assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
     assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
 
@@ -183,6 +194,8 @@ async def test_sensor_numeric_state(hass):
     state = hass.states.get("binary_sensor.test_binary")
 
     assert state.state == "off"
+
+    assert len(async_get(hass).issues) == 0
 
 
 async def test_sensor_state(hass):
@@ -341,6 +354,7 @@ async def test_threshold(hass):
     assert round(abs(1.0 - state.attributes.get("probability")), 7) == 0
 
     assert state.state == "on"
+    assert len(async_get(hass).issues) == 0
 
 
 async def test_multiple_observations(hass):
@@ -493,6 +507,138 @@ async def test_multiple_numeric_observations(hass):
     assert state.state == "on"
     assert state.attributes.get("observations")[0]["platform"] == "numeric_state"
     assert state.attributes.get("observations")[1]["platform"] == "numeric_state"
+
+
+async def test_mirrored_observations(hass):
+    """Test whether mirrored entries are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "Test_Binary",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "binary_sensor.test_monitored",
+                    "to_state": "on",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.4,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "binary_sensor.test_monitored",
+                    "to_state": "off",
+                    "prob_given_true": 0.2,
+                    "prob_given_false": 0.59,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored1",
+                    "above": 5,
+                    "prob_given_true": 0.7,
+                    "prob_given_false": 0.4,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored1",
+                    "below": 5,
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.6,
+                },
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
+                    "prob_given_true": 0.79,
+                    "prob_given_false": 0.4,
+                },
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored2') == 'on'}}",
+                    "prob_given_true": 0.2,
+                    "prob_given_false": 0.6,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "blue",
+                    "prob_given_true": 0.33,
+                    "prob_given_false": 0.8,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "green",
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "red",
+                    "prob_given_true": 0.4,
+                    "prob_given_false": 0.05,
+                },
+            ],
+            "prior": 0.1,
+        }
+    }
+    assert len(async_get(hass).issues) == 0
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored2", "on")
+    await hass.async_block_till_done()
+
+    assert len(async_get(hass).issues) == 3
+    assert (
+        async_get(hass).issues[
+            ("bayesian", "mirrored_entry/Test_Binary/sensor.test_monitored1")
+        ]
+        is not None
+    )
+
+
+async def test_missing_prob_given_false(hass):
+    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "missingpgf",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "binary_sensor.test_monitored",
+                    "to_state": "on",
+                    "prob_given_true": 0.8,
+                },
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
+                    "prob_given_true": 0.79,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored1",
+                    "above": 5,
+                    "prob_given_true": 0.7,
+                },
+            ],
+            "prior": 0.1,
+        }
+    }
+    assert len(async_get(hass).issues) == 0
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored2", "on")
+    await hass.async_block_till_done()
+
+    assert len(async_get(hass).issues) == 3
+    assert (
+        async_get(hass).issues[
+            ("bayesian", "no_prob_given_false/missingpgf/sensor.test_monitored1")
+        ]
+        is not None
+    )
 
 
 async def test_probability_updates(hass):

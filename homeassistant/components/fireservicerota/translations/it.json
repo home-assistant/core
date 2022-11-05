@@ -17,6 +17,12 @@
                 },
                 "description": "I token di autenticazione non sono validi, esegui l'accesso per ricrearli."
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "I token di autenticazione non sono pi\u00f9 validi, accedi per ricrearli."
+            },
             "user": {
                 "data": {
                     "password": "Password",

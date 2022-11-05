@@ -145,14 +145,14 @@ SENSOR_DESCRIPTIONS = {
     # Used for mass sensor with kg unit
     (BTHomeSensorDeviceClass.MASS, Units.MASS_KILOGRAMS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.MASS}_{Units.MASS_KILOGRAMS}",
-        device_class=None,
+        device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=MASS_KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for mass sensor with lb unit
     (BTHomeSensorDeviceClass.MASS, Units.MASS_POUNDS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.MASS}_{Units.MASS_POUNDS}",
-        device_class=None,
+        device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=MASS_POUNDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
