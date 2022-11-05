@@ -53,12 +53,12 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
         self.unique_id = entry.entry_id
         self.name = entry.title
 
-        # extract address from the string that might contain http
+        # Allow user to enter URLs with or without 'http://'
         url = urlparse(self.host, "http")
         # if only path is given we use this as address
         netloc = url.netloc or url.path
         path = url.path if url.netloc else ""
-        # reassamble url with http prefix
+        # reassamble url with http prefix for link in UI
         url = ParseResult("http", netloc, path, *url[3:])
         self.config_url = url.geturl()
 
