@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Advanced options",
                     "broker": "Broker",
-                    "certificate": "Path to custom CA certificate file",
-                    "client_cert": "Path to a client certificate file",
+                    "certificate": "Upload custom CA certificate file",
+                    "client_cert": "Upload client certificate file",
                     "client_id": "Client ID (leave empty to randomly generated one)",
-                    "client_key": "Path to a private key file",
+                    "client_key": "Upload private key file",
                     "discovery": "Enable discovery",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
