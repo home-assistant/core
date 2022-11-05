@@ -596,6 +596,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "brandt": {
+      "name": "Brandt Smart Control",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
+    },
     "brel_home": {
       "name": "Brel Home",
       "integration_type": "virtual",
@@ -2108,6 +2113,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "hexaom": {
+      "name": "Hexaom Hexaconnect",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "hi_kumo": {
       "name": "Hitachi Hi Kumo",
@@ -4681,6 +4691,11 @@
       "integration_type": "virtual",
       "supported_by": "upb"
     },
+    "simu": {
+      "name": "SIMU LiveIn2",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
+    },
     "simulated": {
       "name": "Simulated",
       "integration_type": "hub",
@@ -5588,6 +5603,11 @@
           "name": "UniFi Protect"
         }
       }
+    },
+    "ubiwizz": {
+      "name": "Ubiwizz",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "uk_transport": {
       "name": "UK Transport",
