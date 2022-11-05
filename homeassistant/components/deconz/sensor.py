@@ -89,6 +89,7 @@ T = TypeVar(
 class DeconzSensorDescriptionMixin(Generic[T]):
     """Required values when describing secondary sensor attributes."""
 
+    supported_fn: Callable[[T], bool]
     update_key: str
     value_fn: Callable[[T], datetime | StateType]
 
@@ -105,6 +106,7 @@ class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMi
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     DeconzSensorDescription[AirQuality](
         key="air_quality",
+        supported_fn=lambda device: device.air_quality is not None,
         update_key="airquality",
         value_fn=lambda device: device.air_quality,
         instance_check=AirQuality,
@@ -112,6 +114,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality_ppb",
+        supported_fn=lambda device: device.air_quality_ppb is not None,
         update_key="airqualityppb",
         value_fn=lambda device: device.air_quality_ppb,
         instance_check=AirQuality,
@@ -122,6 +125,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Consumption](
         key="consumption",
+        supported_fn=lambda device: device.consumption is not None,
         update_key="consumption",
         value_fn=lambda device: device.scaled_consumption,
         instance_check=Consumption,
@@ -131,6 +135,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Daylight](
         key="daylight_status",
+        supported_fn=lambda device: True,
         update_key="status",
         value_fn=lambda device: DAYLIGHT_STATUS[device.daylight_status],
         instance_check=Daylight,
@@ -139,12 +144,14 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[GenericStatus](
         key="status",
+        supported_fn=lambda device: device.status is not None,
         update_key="status",
         value_fn=lambda device: device.status,
         instance_check=GenericStatus,
     ),
     DeconzSensorDescription[Humidity](
         key="humidity",
+        supported_fn=lambda device: device.humidity is not None,
         update_key="humidity",
         value_fn=lambda device: device.scaled_humidity,
         instance_check=Humidity,
@@ -154,6 +161,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[LightLevel](
         key="light_level",
+        supported_fn=lambda device: device.light_level is not None,
         update_key="lightlevel",
         value_fn=lambda device: device.scaled_light_level,
         instance_check=LightLevel,
@@ -163,6 +171,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Power](
         key="power",
+        supported_fn=lambda device: device.power is not None,
         update_key="power",
         value_fn=lambda device: device.power,
         instance_check=Power,
@@ -172,6 +181,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Pressure](
         key="pressure",
+        supported_fn=lambda device: device.pressure is not None,
         update_key="pressure",
         value_fn=lambda device: device.pressure,
         instance_check=Pressure,
@@ -181,6 +191,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Temperature](
         key="temperature",
+        supported_fn=lambda device: device.temperature is not None,
         update_key="temperature",
         value_fn=lambda device: device.scaled_temperature,
         instance_check=Temperature,
@@ -190,6 +201,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[Time](
         key="last_set",
+        supported_fn=lambda device: device.last_set is not None,
         update_key="lastset",
         value_fn=lambda device: dt_util.parse_datetime(device.last_set),
         instance_check=Time,
@@ -197,6 +209,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[SensorResources](
         key="battery",
+        supported_fn=lambda device: device.battery is not None,
         update_key="battery",
         value_fn=lambda device: device.battery,
         name_suffix="Battery",
@@ -208,6 +221,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     ),
     DeconzSensorDescription[SensorResources](
         key="internal_temperature",
+        supported_fn=lambda device: device.internal_temperature is not None,
         update_key="temperature",
         value_fn=lambda device: device.internal_temperature,
         name_suffix="Temperature",
@@ -268,7 +282,7 @@ async def async_setup_entry(
                 continue
 
             no_sensor_data = False
-            if description.value_fn(sensor) is None:
+            if not description.supported_fn(sensor):
                 no_sensor_data = True
 
             if description.instance_check is None:
