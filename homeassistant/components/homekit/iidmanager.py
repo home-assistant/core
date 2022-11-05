@@ -21,6 +21,7 @@ IID_MANAGER_STORAGE_VERSION = 2
 IID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
+ALLOCATIONS_KEY_V2 = "allocations_v2"
 
 IID_MIN = 1
 IID_MAX = 18446744073709551615
@@ -45,7 +46,7 @@ class IIDStorage(Store):
             # to always have iid 1 for each bridged accessory as well as the bridge
             old_allocations: dict[str, int] = old_data.pop(ALLOCATIONS_KEY, {})
             new_allocation: dict[int, dict[str, int]] = {}
-            old_data[ALLOCATIONS_KEY] = new_allocation
+            old_data[ALLOCATIONS_KEY_V2] = new_allocation
             for allocation_key, iid in old_allocations.items():
                 (
                     aid_str,
@@ -95,7 +96,7 @@ class AccessoryIIDStorage:
             return
 
         assert isinstance(raw_storage, dict)
-        self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
+        self.allocations = raw_storage.get(ALLOCATIONS_KEY_V2, {})
         for aid, allocations in self.allocations.items():
             self.allocated_iids[aid] = sorted(allocations.values())
 
