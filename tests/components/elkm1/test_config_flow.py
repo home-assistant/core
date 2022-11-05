@@ -1392,7 +1392,7 @@ async def test_multiple_instances_with_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    with _patch_discovery(device=elk_discovery_1), _patch_elk(elk=mocked_elk), patch(
+    with _patch_discovery(device=elk_discovery_2), _patch_elk(elk=mocked_elk), patch(
         "homeassistant.components.elkm1.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
