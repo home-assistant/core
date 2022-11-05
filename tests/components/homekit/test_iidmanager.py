@@ -77,9 +77,6 @@ async def test_iid_generation_and_restore(hass, iid_storage, hass_storage):
         unique_service_unique_char_new_aid_iid1
         == unique_service_unique_char_new_aid_iid2
     )
-    assert unique_service_unique_char_new_aid_iid1 != iid1
-    assert unique_service_unique_char_new_aid_iid1 != unique_service_unique_char_iid1
-
     await iid_storage.async_save()
 
     iid_storage2 = AccessoryIIDStorage(hass, entry.entry_id)
