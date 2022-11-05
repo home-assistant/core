@@ -14,6 +14,7 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
@@ -82,7 +83,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    if (color_name := kwargs.pop(ATTR_COLOR_NAME, None)) is not None:
+    if (color_name := kwargs.get(ATTR_COLOR_NAME)) is not None:
         try:
             hue, saturation = color_util.color_RGB_to_hs(
                 *color_util.color_name_to_rgb(color_name)
@@ -119,6 +120,9 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
     if ATTR_BRIGHTNESS in kwargs:
         brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
+
+    if ATTR_BRIGHTNESS_PCT in kwargs:
+        brightness = convert_8_to_16(round(255 * kwargs[ATTR_BRIGHTNESS_PCT] / 100))
 
     hsbk = [hue, saturation, brightness, kelvin]
     return None if hsbk == [None] * 4 else hsbk

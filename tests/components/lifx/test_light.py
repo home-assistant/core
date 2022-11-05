@@ -21,6 +21,7 @@ from homeassistant.components.lifx.manager import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
@@ -1407,7 +1408,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
-    bulb.color = [32000, None, 65535, 2700]
+    bulb.color = [32000, None, 32000, 2700]
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
         device=bulb
     ), _patch_device(device=bulb):
@@ -1416,11 +1417,31 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
 
     entity_id = "light.my_bulb"
 
+    # brightness should convert from 8 to 16 bits
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, None, 65535, 2700]
+    bulb.set_color.reset_mock()
+
+    # brightness_pct should convert into 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 90},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, None, 59110, 2700]
+    bulb.set_color.reset_mock()
+
     # color name should turn into hue, saturation
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "red"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "red", ATTR_BRIGHTNESS_PCT: 100},
         blocking=True,
     )
     assert bulb.set_color.calls[0][0][0] == [0, 65535, 65535, 3500]
@@ -1433,7 +1454,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "deepblack"},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 32000, 3500]
     bulb.set_color.reset_mock()
 
     # RGB should convert to hue, saturation
@@ -1443,7 +1464,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (0, 255, 0)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [21845, 65535, 65535, 3500]
+    assert bulb.set_color.calls[0][0][0] == [21845, 65535, 32000, 3500]
     bulb.set_color.reset_mock()
 
     # XY should convert to hue, saturation
@@ -1453,7 +1474,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.34, 0.339)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [5461, 5139, 65535, 3500]
+    assert bulb.set_color.calls[0][0][0] == [5461, 5139, 32000, 3500]
     bulb.set_color.reset_mock()
 
 
