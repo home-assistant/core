@@ -268,7 +268,10 @@ async def async_setup_entry(
                 continue
 
             no_sensor_data = False
-            if description.value_fn(sensor) is None:
+            try:
+                if description.value_fn(sensor) is None:
+                    no_sensor_data = True
+            except TypeError:
                 no_sensor_data = True
 
             if description.instance_check is None:
