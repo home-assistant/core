@@ -8,7 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
 from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronButton, LutronCasetaData, LutronKeypad
+from .models import LutronButton, LutronCasetaData
 
 
 async def async_setup_entry(
@@ -19,12 +19,8 @@ async def async_setup_entry(
     """Set up Lutron pico and keypad buttons."""
     data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     buttons = data.keypad_data.buttons
-    keypads = data.keypad_data.keypads
 
-    async_add_entities(
-        LutronCasetaButton(button, keypads[button["parent_keypad"]], data)
-        for button in buttons.values()
-    )
+    async_add_entities(LutronCasetaButton(button, data) for button in buttons.values())
 
 
 class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
@@ -33,11 +29,12 @@ class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
     def __init__(
         self,
         button: LutronButton,
-        keypad: LutronKeypad,
         data: LutronCasetaData,
     ) -> None:
         """Init a button entity."""
         bridge_button = data.bridge.buttons[button["lutron_device_id"]]
+        keypad = data.keypad_data.keypads[button["parent_keypad"]]
+
         super().__init__(bridge_button, data)
 
         self._attr_entity_registry_enabled_default = button["enabled_default"]
