@@ -198,6 +198,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "led_device_id": None,
                     "lutron_device_id": "111",
                     "parent_keypad": "9",
+                    "enabled_default": False,
                 },
                 "1372": {
                     "button_name": "Kitchen " "Pendants",
@@ -205,6 +206,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "led_device_id": "1362",
                     "lutron_device_id": "1372",
                     "parent_keypad": "1355",
+                    "enabled_default": True,
                 },
             },
             "keypads": {
