@@ -25,8 +25,8 @@ ALLOCATIONS_KEY = "allocations"
 IID_MIN = 1
 IID_MAX = 18446744073709551615
 
+
 ACCESSORY_INFORMATION_SERVICE = "3E"
-ACCESSORY_INFORMATION_SERVICE_KEY = f"{ACCESSORY_INFORMATION_SERVICE}_"
 
 
 class IIDStorage(Store):
@@ -47,14 +47,24 @@ class IIDStorage(Store):
             new_allocation: dict[int, dict[str, int]] = {}
             old_data[ALLOCATIONS_KEY] = new_allocation
             for allocation_key, iid in old_allocations.items():
-                old_allocation_key = allocation_key.split("_")
-                aid = int(old_allocation_key.pop(0))
-                new_allocation_key = "_".join(old_allocation_key)
+                (
+                    aid_str,
+                    service_type,
+                    service_unique_id,
+                    char_type,
+                    char_unique_id,
+                ) = allocation_key.split("_")
+                aid = int(aid_str)
+                new_allocation_key = "_".join(
+                    (service_type, service_unique_id, char_type, char_unique_id)
+                )
                 accessory_allocation = new_allocation.setdefault(aid, {})
-                if new_allocation_key.startswith(ACCESSORY_INFORMATION_SERVICE_KEY):
+                if service_type == ACCESSORY_INFORMATION_SERVICE and not char_type:
                     accessory_allocation[new_allocation_key] = 1
-                else:
+                elif iid != 1:
                     accessory_allocation[new_allocation_key] = iid
+
+            return old_data
 
         raise NotImplementedError
 
@@ -107,11 +117,10 @@ class AccessoryIIDStorage:
         )
         accessory_allocation = self.allocations.setdefault(aid, {})
         accessory_allocated_iids = self.allocated_iids.setdefault(aid, [])
-
-        if allocation_key in accessory_allocation:
-            return accessory_allocation[allocation_key]
-        if service_hap_type == ACCESSORY_INFORMATION_SERVICE:
+        if service_hap_type == ACCESSORY_INFORMATION_SERVICE and char_uuid is None:
             allocated_iid = 1
+        elif allocation_key in accessory_allocation:
+            return accessory_allocation[allocation_key]
         elif accessory_allocated_iids:
             allocated_iid = accessory_allocated_iids[-1] + 1
         else:

@@ -10,8 +10,10 @@ import os
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
+from pyhap.service import Service
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -74,13 +76,7 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import (
-    HomeAccessory,
-    HomeBridge,
-    HomeDriver,
-    HomeIIDManager,
-    get_accessory,
-)
+from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -548,7 +544,7 @@ class HomeKit:
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
-            iid_manager=HomeIIDManager(self.iid_storage),
+            iid_storage=self.iid_storage,
         )
 
         # If we do not load the mac address will be wrong
@@ -568,11 +564,13 @@ class HomeKit:
         assert self.driver is not None
         await accessory.stop()
         # Deallocate the IIDs for the accessory
-        iid_manager = self.driver.iid_manager
-        for service in accessory.services:
-            iid_manager.remove_iid(iid_manager.remove_obj(service))
-            for char in service.characteristics:
-                iid_manager.remove_iid(iid_manager.remove_obj(char))
+        iid_manager = accessory.iid_manager
+        services: list[Service] = accessory.services
+        for service in services:
+            iid_manager.remove_obj(service)
+            characteristics: list[Characteristic] = service.characteristics
+            for char in characteristics:
+                iid_manager.remove_obj(char)
 
     async def async_reset_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
