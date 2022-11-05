@@ -572,7 +572,7 @@ class HomeKit:
         assert self.driver is not None
         await accessory.stop()
         # Deallocate the IIDs for the accessory
-        iid_manager = self.driver.iid_manager
+        iid_manager = accessory.iid_manager
         services: list[Service] = accessory.services
         for service in services:
             iid_manager.remove_obj(service)
