@@ -145,4 +145,4 @@ class AccessoryIIDStorage:
     @callback
     def _data_to_save(self) -> dict[str, dict[int, dict[str, int]]]:
         """Return data of entity map to store in a file."""
-        return {ALLOCATIONS_KEY: self.allocations}
+        return {ALLOCATIONS_KEY_V2: self.allocations}
