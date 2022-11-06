@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any, cast
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientConnectorError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
@@ -127,10 +127,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             await client.login(register_event_listener=False)
 
-        # Set first gateway id as unique id
+        # Set main gateway id as unique id
         if gateways := await client.get_gateways():
-            gateway_id = gateways[0].id
-            await self.async_set_unique_id(gateway_id)
+            if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
+                gateway_id = gateway.id
+                await self.async_set_unique_id(gateway_id)
 
         return user_input
 
@@ -260,7 +261,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "too_many_requests"
             except BadCredentialsException:
                 errors["base"] = "invalid_auth"
-            except (TimeoutError, ClientError):
+            except (TimeoutError, ClientError, ClientConnectorError):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
