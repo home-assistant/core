@@ -265,9 +265,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, default=PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if payload is None:
-                self._attr_native_value = None
-                return
             if self.device_class not in {
                 SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
