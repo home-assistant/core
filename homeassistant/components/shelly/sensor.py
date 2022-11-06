@@ -431,8 +431,9 @@ RPC_SENSORS: Final = {
 def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
     """Build description when restoring block attribute entities."""
     native_unit_of_measurement: str | None
-    # For the temperature entity native unit is Celsius but unit_of_measurement in entry
-    # will be Farenheit if user is using that unit.
+    # For the temperature entity, the native unit is Celsius,
+    # but the entry's unit_of_measurement will be Fahrenheit
+    # if the user is using that unit.
     if entry.original_device_class == SensorDeviceClass.TEMPERATURE:
         native_unit_of_measurement = TEMP_CELSIUS
     else:
