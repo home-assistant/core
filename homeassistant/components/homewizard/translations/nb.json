@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "unknown_error": "Uventet feil"
+        }
+    }
+}

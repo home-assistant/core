@@ -11,7 +11,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -19,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Powered by ViaggiaTreno Data"
 
 VIAGGIATRENO_ENDPOINT = (
     "http://www.viaggiatreno.it/infomobilita/"
@@ -96,6 +94,8 @@ async def async_http_request(hass, uri):
 class ViaggiaTrenoSensor(SensorEntity):
     """Implementation of a ViaggiaTreno sensor."""
 
+    _attr_attribution = "Powered by ViaggiaTreno Data"
+
     def __init__(self, train_id, station_id, name):
         """Initialize the sensor."""
         self._state = None
@@ -132,7 +132,6 @@ class ViaggiaTrenoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
 
     @staticmethod

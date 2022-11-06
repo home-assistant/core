@@ -12,5 +12,6 @@
       "macaddress": "30AEA4*"
     }
   ],
-  "loggers": ["simplipy"]
+  "loggers": ["simplipy"],
+  "integration_type": "hub"
 }

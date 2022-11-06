@@ -10,7 +10,10 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_last_service_info,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -29,6 +32,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     Platform,
 )
@@ -179,7 +183,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_EVE_ENERGY_KW_HOUR,
         name="Energy kWh",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     CharacteristicsTypes.VENDOR_EVE_ENERGY_VOLTAGE: HomeKitSensorEntityDescription(
@@ -305,6 +309,12 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         device_class="homekit_controller__thread_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
+    ),
+    CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
+        name="Noise",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SOUND_PRESSURE_DB,
     ),
 }
 
@@ -571,8 +581,8 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the current rssi value."""
         address = self._accessory.pairing_data["AccessoryAddress"]
-        ble_device = async_ble_device_from_address(self.hass, address)
-        return ble_device.rssi if ble_device else None
+        last_service_info = async_last_service_info(self.hass, address)
+        return last_service_info.rssi if last_service_info else None
 
 
 async def async_setup_entry(

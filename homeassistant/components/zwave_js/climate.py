@@ -34,12 +34,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -188,7 +183,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         )
         self._set_modes_and_presets()
         self._attr_supported_features = 0
-        if len(self._hvac_presets) > 1:
+        if self._current_mode and len(self._hvac_presets) > 1:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         # If any setpoint value exists, we can assume temperature
         # can be set
@@ -260,8 +255,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             and self._unit_value.metadata.unit
             and "f" in self._unit_value.metadata.unit.lower()
         ):
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -398,7 +393,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temp = DEFAULT_MIN_TEMP
-        base_unit = TEMP_CELSIUS
+        base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.min:
@@ -414,7 +409,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temp = DEFAULT_MAX_TEMP
-        base_unit = TEMP_CELSIUS
+        base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.max:
@@ -428,9 +423,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not self._fan_mode:
-            return
-
+        assert self._fan_mode is not None
         try:
             new_state = int(
                 next(
@@ -484,9 +477,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        if self._current_mode is None:
-            # Thermostat(valve) has no support for setting a mode, so we make it a no-op
-            return
+        assert self._current_mode is not None
         if preset_mode == PRESET_NONE:
             # try to restore to the (translated) main hvac mode
             await self.async_set_hvac_mode(self.hvac_mode)

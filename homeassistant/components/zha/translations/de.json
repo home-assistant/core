@@ -61,7 +61,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Dauerhaftes Ersetzen der IEEE-Funkadresse"
                 },
-                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t.  Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
+                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t. Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
                 "title": "Funk-IEEE-Adresse \u00fcberschreiben"
             },
             "pick_radio": {
@@ -240,7 +240,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Dauerhaftes Ersetzen der IEEE-Funkadresse"
                 },
-                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t.  Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
+                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t. Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
                 "title": "Funk-IEEE-Adresse \u00fcberschreiben"
             },
             "prompt_migrate_or_reconfigure": {

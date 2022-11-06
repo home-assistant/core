@@ -6,14 +6,14 @@ from collections.abc import Mapping
 from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.errors import (
-    AirVisualError,
+from pyairvisual.cloud_api import (
     InvalidKeyError,
     KeyExpiredError,
-    NodeProError,
     NotFoundError,
     UnauthorizedError,
 )
+from pyairvisual.errors import AirVisualError
+from pyairvisual.node import NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries

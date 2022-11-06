@@ -44,9 +44,7 @@ from .const import (
     CONF_TIME_ZONE,
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
-    TEMP_CELSIUS,
     __version__,
 )
 from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
@@ -61,7 +59,7 @@ from .helpers.typing import ConfigType
 from .loader import Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,6 +86,10 @@ INTEGRATION_LOAD_EXCEPTIONS = (
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
 
 # Text to speech
 tts:
@@ -204,8 +206,8 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
-            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            CONF_UNIT_SYSTEM: cv.unit_system,
+            vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+            CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
@@ -603,22 +605,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     hass.data[DATA_CUSTOMIZE] = EntityValues(cust_exact, cust_domain, cust_glob)
 
     if CONF_UNIT_SYSTEM in config:
-        if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
-            hac.units = IMPERIAL_SYSTEM
-        else:
-            hac.units = METRIC_SYSTEM
-    elif CONF_TEMPERATURE_UNIT in config:
-        unit = config[CONF_TEMPERATURE_UNIT]
-        hac.units = METRIC_SYSTEM if unit == TEMP_CELSIUS else IMPERIAL_SYSTEM
-        _LOGGER.warning(
-            "Found deprecated temperature unit in core "
-            "configuration expected unit system. Replace '%s: %s' "
-            "with '%s: %s'",
-            CONF_TEMPERATURE_UNIT,
-            unit,
-            CONF_UNIT_SYSTEM,
-            hac.units.name,
-        )
+        hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
 
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:

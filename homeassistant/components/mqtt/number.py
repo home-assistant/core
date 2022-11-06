@@ -12,7 +12,6 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASSES_SCHEMA,
-    NumberDeviceClass,
     NumberMode,
     RestoreNumber,
 )
@@ -167,8 +166,6 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._optimistic = False
         self._sub_state = None
 
-        self._current_number = None
-
         RestoreNumber.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -190,6 +187,12 @@ class MqttNumber(MqttEntity, RestoreNumber):
                 entity=self,
             ).async_render_with_possible_json_value,
         }
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_mode = config[CONF_MODE]
+        self._attr_native_max_value = config[CONF_MAX]
+        self._attr_native_min_value = config[CONF_MIN]
+        self._attr_native_step = config[CONF_STEP]
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -222,7 +225,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
                 )
                 return
 
-            self._current_number = num_value
+            self._attr_native_value = num_value
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
@@ -249,37 +252,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         if self._optimistic and (
             last_number_data := await self.async_get_last_number_data()
         ):
-            self._current_number = last_number_data.native_value
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return self._config[CONF_MIN]
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self._config[CONF_MAX]
-
-    @property
-    def native_step(self) -> float:
-        """Return the increment/decrement step."""
-        return self._config[CONF_STEP]
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current value."""
-        return self._current_number
-
-    @property
-    def mode(self) -> NumberMode:
-        """Return the mode of the entity."""
-        return self._config[CONF_MODE]
+            self._attr_native_value = last_number_data.native_value
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -290,7 +263,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         payload = self._templates[CONF_COMMAND_TEMPLATE](current_number)
 
         if self._optimistic:
-            self._current_number = current_number
+            self._attr_native_value = current_number
             self.async_write_ha_state()
 
         await self.async_publish(
@@ -305,8 +278,3 @@ class MqttNumber(MqttEntity, RestoreNumber):
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def device_class(self) -> NumberDeviceClass | None:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)

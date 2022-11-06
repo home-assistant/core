@@ -17,6 +17,12 @@
                 },
                 "description": "Authentication tokens became invalid, login to recreate them."
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Authentication tokens became invalid, login to recreate them."
+            },
             "user": {
                 "data": {
                     "password": "Password",

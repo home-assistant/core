@@ -75,6 +75,13 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Esta imagen se ve bien."
+                },
+                "description": "![Vista previa de imagen fija de c\u00e1mara]({preview_url})",
+                "title": "Vista previa"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipos de contenido"
