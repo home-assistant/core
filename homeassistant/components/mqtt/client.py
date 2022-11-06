@@ -15,7 +15,6 @@ import uuid
 
 import attr
 import certifi
-from paho.mqtt.client import MQTTMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,6 +73,7 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
+    from paho.mqtt.client import MQTTMessage
 
 
 _LOGGER = logging.getLogger(__name__)
