@@ -815,6 +815,9 @@ gstreamer-player==1.1.2
 # homeassistant.components.profiler
 guppy3==3.1.2
 
+# homeassistant.components.iaqualink
+h2==4.1.0
+
 # homeassistant.components.homekit
 ha-HAP-python==4.5.2
 
