@@ -271,6 +271,7 @@ async def test_climate_change_thermostat_temperature_range(hass, utcnow):
             CharacteristicsTypes.TEMPERATURE_TARGET: 22.5,
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 20,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 25,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: HVACMode.HEAT_COOL
         },
     )
 

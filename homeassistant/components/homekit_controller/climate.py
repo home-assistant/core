@@ -176,7 +176,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL:
+        if state in {TargetHeaterCoolerStateValues.COOL, TargetHeaterCoolerStateValues.AUTOMATIC}:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temp}
             )
@@ -200,7 +200,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 {CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE}
             )
             return
-        if hvac_mode not in {HVACMode.HEAT, HVACMode.COOL}:
+        if hvac_mode not in {HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL}:
             _LOGGER.warning(
                 "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
                 " Consider raising a ticket if you have this device and want to help us implement this feature",
@@ -209,6 +209,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             )
         await self.async_put_characteristics(
             {
+                CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
                 CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
                     hvac_mode
                 ],
