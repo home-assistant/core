@@ -59,7 +59,7 @@ Handler = TypeVar("Handler")
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
-def async_dpi_groups_is_on_fn(
+def async_dpi_group_is_on_fn(
     api: aiounifi.Controller, dpi_group: DPIRestrictionGroup
 ) -> bool:
     """Calculate if all apps are enabled."""
@@ -77,7 +77,7 @@ def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> b
     return controller.available and not device.disabled
 
 
-def async_registry_entry_client(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
     client = api.clients[obj_id]
     return DeviceInfo(
@@ -87,7 +87,7 @@ def async_registry_entry_client(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
-def async_registry_entry_device(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device
         obj_id = obj_id.split("_", 1)[0]
@@ -103,7 +103,7 @@ def async_registry_entry_device(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
-def async_registry_entry_group(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
@@ -158,12 +158,12 @@ class UnifiEntityLoader(Generic[Handler, Data]):
     """Validate and load entities from different UniFi handlers."""
 
     allowed_fn: Callable[[UniFiController, str], bool]
+    api_handler_fn: Callable[[aiounifi.Controller], Handler]
     available_fn: Callable[[UniFiController, str], bool]
     control_fn: Callable[[aiounifi.Controller, str, bool], Coroutine[Any, Any, None]]
-    device_info: Callable[[aiounifi.Controller, str], DeviceInfo]
+    device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    handler_fn: Callable[[aiounifi.Controller], Handler]
     is_on_fn: Callable[[aiounifi.Controller, Data], bool]
     name_fn: Callable[[Data], str | None]
     object_fn: Callable[[aiounifi.Controller, str], Data]
@@ -186,15 +186,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         has_entity_name=True,
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_block_client_control_fn,
-        device_info=async_registry_entry_client,
+        device_info_fn=async_client_device_info_fn,
         event_is_on=CLIENT_UNBLOCKED,
         event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
         is_on_fn=lambda api, client: not client.blocked,
         name_fn=lambda client: None,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        handler_fn=lambda api: api.clients,
         supported_fn=lambda api, obj_id: True,
         unique_id_fn=lambda obj_id: f"block-{obj_id}",
     ),
@@ -203,16 +203,16 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         icon="mdi:network",
         allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
+        api_handler_fn=lambda api: api.dpi_groups,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_dpi_group_control_fn,
         custom_subscribe=lambda api: api.dpi_apps.subscribe,
-        device_info=async_registry_entry_group,
+        device_info_fn=async_dpi_group_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        is_on_fn=async_dpi_groups_is_on_fn,
+        is_on_fn=async_dpi_group_is_on_fn,
         name_fn=lambda group: group.name,
         object_fn=lambda api, obj_id: api.dpi_groups[obj_id],
-        handler_fn=lambda api: api.dpi_groups,
         supported_fn=lambda api, obj_id: bool(api.dpi_groups[obj_id].dpiapp_ids),
         unique_id_fn=lambda obj_id: obj_id,
     ),
@@ -221,15 +221,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         device_class=SwitchDeviceClass.OUTLET,
         has_entity_name=True,
         allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.outlets,
         available_fn=async_sub_device_available_fn,
         control_fn=async_outlet_control_fn,
-        device_info=async_registry_entry_device,
+        device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
         is_on_fn=lambda api, outlet: outlet.relay_state,
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
-        handler_fn=lambda api: api.outlets,
         supported_fn=lambda api, obj_id: api.outlets[obj_id].has_relay,
         unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
     ),
@@ -241,15 +241,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.ports,
         available_fn=async_sub_device_available_fn,
         control_fn=async_poe_port_control_fn,
-        device_info=async_registry_entry_device,
+        device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
         is_on_fn=lambda api, port: port.poe_mode != "off",
         name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        handler_fn=lambda api: api.ports,
         supported_fn=lambda api, obj_id: api.ports[obj_id].port_poe,
         unique_id_fn=lambda obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
     ),
@@ -310,7 +310,7 @@ async def async_setup_entry(
     def async_load_entities(description: UnifiEntityDescription) -> None:
         """Load and subscribe to UniFi devices."""
         entities: list[SwitchEntity] = []
-        api_handler = description.handler_fn(controller.api)
+        api_handler = description.api_handler_fn(controller.api)
 
         @callback
         def async_create_entity(event: ItemEvent, obj_id: str) -> None:
@@ -503,7 +503,7 @@ class UnifiSwitchEntity(SwitchEntity):
         self._removed = False
 
         self._attr_available = description.available_fn(controller, obj_id)
-        self._attr_device_info = description.device_info(controller.api, obj_id)
+        self._attr_device_info = description.device_info_fn(controller.api, obj_id)
         self._attr_unique_id = description.unique_id_fn(obj_id)
 
         obj = description.object_fn(self.controller.api, obj_id)
@@ -524,7 +524,7 @@ class UnifiSwitchEntity(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callback to known apps."""
-        handler = self.entity_description.handler_fn(self.controller.api)
+        handler = self.entity_description.api_handler_fn(self.controller.api)
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
@@ -597,7 +597,9 @@ class UnifiSwitchEntity(SwitchEntity):
         assert isinstance(self.entity_description.event_is_on, tuple)
         if event.key in self.entity_description.event_to_subscribe:
             self._attr_is_on = event.key in self.entity_description.event_is_on
-        self._attr_available = self.controller.available
+        self._attr_available = self.entity_description.available_fn(
+            self.controller, self._obj_id
+        )
         self.async_write_ha_state()
 
     async def options_updated(self) -> None:
@@ -606,7 +608,7 @@ class UnifiSwitchEntity(SwitchEntity):
             await self.remove_item({self._obj_id})
 
     async def remove_item(self, keys: set) -> None:
-        """Remove entity if key is part of set."""
+        """Remove entity if object ID is part of set."""
         if self._obj_id not in keys or self._removed:
             return
         self._removed = True
