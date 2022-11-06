@@ -430,19 +430,11 @@ RPC_SENSORS: Final = {
 
 def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
     """Build description when restoring block attribute entities."""
-    native_unit_of_measurement: str | None
-    # For the temperature entity, the native unit is Celsius,
-    # but the entry's unit_of_measurement will be Fahrenheit
-    # if the user is using that unit.
-    if entry.original_device_class == SensorDeviceClass.TEMPERATURE:
-        native_unit_of_measurement = TEMP_CELSIUS
-    else:
-        native_unit_of_measurement = entry.unit_of_measurement
     return BlockSensorDescription(
         key="",
         name="",
         icon=entry.original_icon,
-        native_unit_of_measurement=native_unit_of_measurement,
+        native_unit_of_measurement=entry.unit_of_measurement,
         device_class=entry.original_device_class,
     )
 
@@ -553,8 +545,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry, sensors)
 
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
@@ -562,6 +552,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.block is not None:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit
 
 
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
@@ -576,3 +574,11 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.coordinator.device.initialized:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit
