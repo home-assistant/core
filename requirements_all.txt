@@ -290,6 +290,9 @@ aiowatttime==0.1.1
 # homeassistant.components.webostv
 aiowebostv==0.2.1
 
+# homeassistant.components.weenect
+aioweenect==1.1.1
+
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
 

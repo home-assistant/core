@@ -444,6 +444,7 @@ FLOWS = {
         "watttime",
         "waze_travel_time",
         "webostv",
+        "weenect",
         "wemo",
         "whirlpool",
         "whois",

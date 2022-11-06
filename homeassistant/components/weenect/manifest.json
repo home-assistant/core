@@ -1,0 +1,13 @@
+{
+  "domain": "weenect",
+  "name": "Weenect",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/weenect",
+  "requirements": ["aioweenect==1.1.1"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@eifinger"],
+  "iot_class": "cloud_polling"
+}
