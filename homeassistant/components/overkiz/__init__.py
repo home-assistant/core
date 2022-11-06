@@ -16,7 +16,7 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, OverkizServer, Setup, Scenario
+from pyoverkiz.models import Device, Setup, Scenario
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

@@ -129,9 +129,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Set main gateway id as unique id
         if gateways := await client.get_gateways():
-            if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
-                gateway_id = gateway.id
-                await self.async_set_unique_id(gateway_id)
+            for gateway in gateways:
+                if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
+                    gateway_id = gateway.id
+                    await self.async_set_unique_id(gateway_id)
 
         return user_input
 
