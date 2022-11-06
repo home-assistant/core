@@ -327,18 +327,25 @@ async def test_level_control_number(
 
 
 @pytest.mark.parametrize(
-    "attr, initial_value, new_value",
-    (("start_up_color_temperature", 500, 350),),
+    "attr, initial_native_value, initial_value, new_value, new_native_value",
+    (("start_up_color_temperature", 500, 2000, 4000, 250),),
 )
 async def test_color_number(
-    hass, light, zha_device_joined, attr, initial_value, new_value
+    hass,
+    light,
+    zha_device_joined,
+    attr,
+    initial_native_value,
+    initial_value,
+    new_value,
+    new_native_value,
 ):
     """Test zha color number entities - new join."""
 
     entity_registry = er.async_get(hass)
     color_cluster = light.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        attr: initial_value,
+        attr: initial_native_value,
     }
     zha_device = await zha_device_joined(light)
 
@@ -387,7 +394,7 @@ async def test_color_number(
 
     assert color_cluster.write_attributes.call_count == 1
     assert color_cluster.write_attributes.call_args[0][0] == {
-        attr: new_value,
+        attr: new_native_value,
     }
 
     state = hass.states.get(entity_id)
@@ -431,6 +438,6 @@ async def test_color_number(
 
     assert color_cluster.write_attributes.call_count == 1
     assert color_cluster.write_attributes.call_args[0][0] == {
-        attr: new_value,
+        attr: new_native_value,
     }
     assert hass.states.get(entity_id).state == str(initial_value)
