@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_PORT,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -116,6 +117,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             MAP_PRIV_PROTOCOLS
         ),
         vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -144,6 +146,7 @@ async def async_setup_platform(
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
     vartype = config.get(CONF_VARTYPE)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -165,6 +168,7 @@ async def async_setup_platform(
                 command_payload_on,
                 command_payload_off,
                 vartype,
+                unique_id,
             )
         ],
         True,
@@ -193,6 +197,7 @@ class SnmpSwitch(SwitchEntity):
         command_payload_on,
         command_payload_off,
         vartype,
+        unique_id,
     ):
         """Initialize the switch."""
 
