@@ -1,6 +1,7 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
+import re
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -16,7 +17,6 @@ from pyoverkiz.exceptions import (
 )
 from pyoverkiz.models import OverkizServer, obfuscate_id
 import voluptuous as vol
-import re
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
@@ -72,11 +72,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login(register_event_listener=False)
 
             gateways = await client.get_gateways()
-            valid_gateway = re.compile("\d{4}-\d{4}-\d{4}")
 
             for gateway in gateways:
-                # Generate tokens
-                if valid_gateway.match(gateway.id):
+                # Overkiz can return multiple gateways, but we only can generate a token
+                # for the main gateway.
+                if re.match(r"\d{4}-\d{4}-\d{4}", gateway_id):
                     gateway_id = gateway.id
 
             token = await client.generate_local_token(gateway_id)
