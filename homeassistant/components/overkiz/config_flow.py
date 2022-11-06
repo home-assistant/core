@@ -21,11 +21,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
+from .const import CONF_HUB, CONF_TOKEN_UUID, DEFAULT_HUB, DOMAIN, LOGGER
 
 
 # TODO move to PyOverkiz
@@ -114,8 +114,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 raise exception
 
-            user_input["token"] = token
-            user_input["token_uuid"] = uuid
+            user_input[CONF_TOKEN] = token
+            user_input[CONF_TOKEN_UUID] = uuid
 
         else:
             server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HUB, default=self._default_hub): vol.In(
                         {
                             key: hub.name
-                            for key, hub in {**SUPPORTED_SERVERS, **LOCAL_HUB}.items()
+                            for key, hub in {**LOCAL_HUB, **SUPPORTED_SERVERS}.items()
                         }
                     ),
                 }
