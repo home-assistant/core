@@ -4,12 +4,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-address_variants = [
-    "1.1.1.1",
-    "http://1.1.1.1",
-    "https://1.1.1.1",
-]
-
 
 def create_entry(hass: HomeAssistant, host, port=None) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
