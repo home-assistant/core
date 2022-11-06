@@ -47,7 +47,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
+from .utils import get_device_entry_gen, get_device_uptime
 
 
 @dataclass
@@ -79,7 +79,7 @@ SENSORS: Final = {
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
         name="Device Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -221,7 +221,7 @@ SENSORS: Final = {
     ("sensor", "temp"): BlockSensorDescription(
         key="sensor|temp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -230,7 +230,7 @@ SENSORS: Final = {
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -430,11 +430,18 @@ RPC_SENSORS: Final = {
 
 def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
     """Build description when restoring block attribute entities."""
+    native_unit_of_measurement: str | None
+    # For the temperature entity native unit is Celsius but unit_of_measurement in entry
+    # will be Farenheit if user is using that unit.
+    if entry.original_device_class == SensorDeviceClass.TEMPERATURE:
+        native_unit_of_measurement = TEMP_CELSIUS
+    else:
+        native_unit_of_measurement = entry.unit_of_measurement
     return BlockSensorDescription(
         key="",
         name="",
         icon=entry.original_icon,
-        native_unit_of_measurement=entry.unit_of_measurement,
+        native_unit_of_measurement=native_unit_of_measurement,
         device_class=entry.original_device_class,
     )
 
@@ -499,8 +506,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if unit_fn := description.unit_fn:
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
 
     @property
     def native_value(self) -> StateType:
@@ -548,8 +553,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description, entry, sensors)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if block and (unit_fn := description.unit_fn):
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
 
     @property
     def native_value(self) -> StateType:
