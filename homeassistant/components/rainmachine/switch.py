@@ -241,7 +241,7 @@ async def async_setup_entry(
 
     # Add switches to control restrictions:
     for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
-        coordinator = data.coordinators[DATA_RESTRICTIONS_UNIVERSAL]
+        coordinator = data.coordinators[description.api_category]
         if not key_exists(coordinator.data, description.data_key):
             continue
         entities.append(RainMachineRestrictionSwitch(entry, data, description))
