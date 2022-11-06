@@ -204,6 +204,7 @@ class SnmpSwitch(SwitchEntity):
         self._name = name
         self._baseoid = baseoid
         self._vartype = vartype
+        self._attr_unique_id = unique_id
 
         # Set the command OID to the base OID if command OID is unset
         self._commandoid = commandoid or baseoid
