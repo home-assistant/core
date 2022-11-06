@@ -209,7 +209,7 @@ class HaScanner(BaseHaScanner):
         service_info = BluetoothServiceInfoBleak(
             name=advertisement_data.local_name or device.name or device.address,
             address=device.address,
-            rssi=device.rssi,
+            rssi=advertisement_data.rssi,
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
