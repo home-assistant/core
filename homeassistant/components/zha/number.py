@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -535,6 +535,7 @@ class StartUpColorTemperatureConfigurationEntity(
 ):
     """Representation of a ZHA startup color temperature configuration entity."""
 
+    _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_min_value: float = 153
     _attr_native_max_value: float = 500
     _zcl_attribute: str = "start_up_color_temperature"
