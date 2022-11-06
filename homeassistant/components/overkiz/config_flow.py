@@ -105,6 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await local_client.login()
             except Exception as exception:  # pylint: disable=broad-except
                 await client.delete_local_token(gateway_id, uuid)
+
                 raise exception
 
             user_input["token"] = token
@@ -321,23 +322,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_host = hostname
 
         LOGGER.debug(
-            "ZeroConf discovery detected gateway %s on %s",
+            "ZeroConf discovery detected gateway %s on %s (%s)",
             obfuscate_id(gateway_id),
             hostname,
+            discovery_info.type,
         )
 
         # await self.async_set_unique_id(gateway_id)
         # self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
-        # Overkiz hub via cloud API
-        if discovery_info.type == "_kizbox._tcp.local.":
-            return await self.async_step_cloud()
-
         # Somfy TaHoma Developer Mode - Local API
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._default_host = f"gateway-{gateway_id}.local:8443"
             return await self.async_step_local()
+
+        # Overkiz hub via cloud API
+        if discovery_info.type == "_kizbox._tcp.local.":
+            return await self.async_step_cloud()
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:
         """Handle discovery of a gateway."""

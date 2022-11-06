@@ -6,7 +6,6 @@ from typing import Any
 from pyoverkiz.obfuscate import obfuscate_id
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -26,8 +25,9 @@ async def async_get_config_entry_diagnostics(
         "server": entry.data[CONF_HUB],
     }
 
+    # TODO use is_local attribute
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if not entry.data.get(CONF_HOST):
+    if "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
         data["execution_history"] = (
             [repr(execution) for execution in await client.get_execution_history()],
         )
@@ -55,8 +55,9 @@ async def async_get_device_diagnostics(
         "server": entry.data[CONF_HUB],
     }
 
+    # TODO use is_local attribute
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if not entry.data.get(CONF_HOST):
+    if "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
         data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()
