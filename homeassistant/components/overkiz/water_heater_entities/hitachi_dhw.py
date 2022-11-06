@@ -1,4 +1,5 @@
 """Support for Hitachi DHW."""
+from __future__ import annotations
 
 from typing import Any, cast
 
@@ -39,21 +40,22 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return cast(
-            float, self.executor.select_state(OverkizState.CORE_DHW_TEMPERATURE)
-        )
+        current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
+        if current_temperature:
+            return current_temperature.value_as_float
+        return None
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
-            ),
-        )
+        target_temperature = self.device.states[
+            OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
+        ]
+        if target_temperature:
+            return target_temperature.value_as_float
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
