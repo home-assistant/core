@@ -63,7 +63,9 @@ TESTDATA_YAML = {
 async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_stream):
     """Test the form with a normal set of settings."""
 
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/png", stream=fakeimgbytes_png
+    )
     with mock_create_stream as mock_setup, patch(
         "homeassistant.components.generic.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -147,10 +149,9 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
 @respx.mock
 async def test_form_reject_still_preview(
-    hass, fakeimgbytes_png, mock_create_stream, user_flow
+    hass, fakeimg_png, mock_create_stream, user_flow
 ):
     """Test we go back to the config screen if the user rejects the still preview."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -213,7 +214,9 @@ async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
 async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
     """Test we complete ok if svg starts with whitespace, issue #68889."""
     fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/svg+xml", stream=fakeimgbytes_wspace_svg
+    )
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
@@ -233,21 +236,23 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
 
 @respx.mock
 @pytest.mark.parametrize(
-    "image_file",
+    ("content_type", "image_file"),
     [
-        ("sample1_animate.png"),
-        ("sample2_jpeg_odd_header.jpg"),
-        ("sample3_jpeg_odd_header.jpg"),
-        ("sample4_K5-60mileAnim-320x240.gif"),
-        ("sample5_webp.webp"),
-        ("sample6_svg.svg"),
+        ("image/png", "sample1_animate.png"),
+        ("image/jpeg", "sample2_jpeg_odd_header.jpg"),
+        ("image/jpeg", "sample3_jpeg_odd_header.jpg"),
+        ("image/gif", "sample4_K5-60mileAnim-320x240.gif"),
+        ("image/webp", "sample5_webp.webp"),
+        ("image/svg+xml", "sample6_svg.svg"),
     ],
 )
-async def test_form_only_still_sample(hass, user_flow, image_file):
+async def test_form_only_still_sample(hass, user_flow, content_type, image_file):
     """Test various sample images #69037."""
     image_path = os.path.join(os.path.dirname(__file__), image_file)
     with open(image_path, "rb") as image:
-        respx.get("http://127.0.0.1/testurl/1").respond(stream=image.read())
+        respx.get("http://127.0.0.1/testurl/1").respond(
+            content_type=content_type, stream=image.read()
+        )
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
@@ -306,7 +311,7 @@ async def test_still_template(
     hass, user_flow, fakeimgbytes_png, template, url, expected_result, expected_errors
 ) -> None:
     """Test we can handle various templates."""
-    respx.get(url).respond(stream=fakeimgbytes_png)
+    respx.get(url).respond(content_type="image/png", stream=fakeimgbytes_png)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
@@ -433,7 +438,9 @@ async def test_form_image_timeout(hass, user_flow, mock_create_stream):
 @respx.mock
 async def test_form_stream_invalidimage(hass, user_flow, mock_create_stream):
     """Test we handle invalid image when a stream is specified."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/png", stream=b"invalid"
+    )
     with mock_create_stream:
         result2 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -463,7 +470,9 @@ async def test_form_stream_invalidimage2(hass, user_flow, mock_create_stream):
 @respx.mock
 async def test_form_stream_invalidimage3(hass, user_flow, mock_create_stream):
     """Test we handle invalid image when a stream is specified."""
-    respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/png", content=bytes([0xFF])
+    )
     with mock_create_stream:
         result2 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -510,9 +519,8 @@ async def test_form_stream_worker_error(hass, fakeimg_png, user_flow):
 
 
 @respx.mock
-async def test_form_stream_permission_error(hass, fakeimgbytes_png, user_flow):
+async def test_form_stream_permission_error(hass, fakeimg_png, user_flow):
     """Test we handle permission error."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch(
         "homeassistant.components.generic.config_flow.create_stream",
         side_effect=PermissionError(),
@@ -571,8 +579,12 @@ async def test_form_oserror(hass, fakeimg_png, user_flow):
 @respx.mock
 async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream):
     """Test the options flow with a template error."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/png", stream=fakeimgbytes_png
+    )
+    respx.get("http://127.0.0.1/testurl/2").respond(
+        content_type="image/png", stream=fakeimgbytes_png
+    )
 
     mock_entry = MockConfigEntry(
         title="Test Camera",

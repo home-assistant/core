@@ -7,7 +7,6 @@ from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-import re
 from typing import Any
 
 import PIL
@@ -67,7 +66,13 @@ DEFAULT_DATA = {
     CONF_VERIFY_SSL: True,
 }
 
-SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
+SUPPORTED_IMAGE_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/svg+xml",
+    "image/webp",
+}
 IMAGE_PREVIEWS_ACTIVE = "previews"
 SVG_REGEX = r"\s*(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b"
 
@@ -128,28 +133,12 @@ def build_schema(
     return vol.Schema(spec)
 
 
-def get_image_type(image: bytes) -> str | None:
-    """Get the format of downloaded bytes that could be an image."""
-    fmt = None
-    imagefile = io.BytesIO(image)
-    with contextlib.suppress(PIL.UnidentifiedImageError):
-        img = PIL.Image.open(imagefile)
-        fmt = img.format.lower()
-
-    if fmt is None:
-        # if PIL can't figure it out, could be svg.
-        with contextlib.suppress(UnicodeDecodeError):
-            svg_regex = re.compile(SVG_REGEX, re.DOTALL)
-            if svg_regex.match(image.decode("utf-8")) is not None:
-                return "svg+xml"
-    return fmt
-
-
 async def async_test_still(
     hass: HomeAssistant, info: Mapping[str, Any]
 ) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
-    fmt = None
+    fmt: str | None = None
+    content_type: str | None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
         return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
     try:
@@ -173,26 +162,43 @@ async def async_test_still(
             response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
             response.raise_for_status()
             image = response.content
+            content_type = response.headers["content-type"]
     except (
         TimeoutError,
         RequestError,
         HTTPStatusError,
         TimeoutException,
+        KeyError,
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
 
     if not image:
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
-    fmt = get_image_type(image)
-    _LOGGER.debug(
-        "Still image at '%s' detected format: %s",
-        info[CONF_STILL_IMAGE_URL],
-        fmt,
-    )
-    if fmt not in SUPPORTED_IMAGE_TYPES:
+    if not content_type.startswith("image/"):
         return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
-    return {}, f"image/{fmt}"
+
+    # We can check everything apart from svg files.
+    if content_type != "image/svg+xml":
+        imagefile = io.BytesIO(image)
+        with contextlib.suppress(PIL.UnidentifiedImageError):
+            img = PIL.Image.open(imagefile)
+            fmt = "image/" + str(img.format.lower())
+            if fmt != content_type:
+                _LOGGER.warning(
+                    "Detected image content-type '%s' does not match the server reported content-type '%s'",
+                    fmt,
+                    content_type,
+                )
+            _LOGGER.debug(
+                "Still image at '%s' detected format: %s",
+                info[CONF_STILL_IMAGE_URL],
+                content_type,
+            )
+        content_type = fmt
+    if content_type not in SUPPORTED_IMAGE_TYPES:
+        return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
+    return {}, content_type
 
 
 def slug(

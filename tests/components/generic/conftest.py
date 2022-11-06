@@ -49,13 +49,17 @@ def fakeimgbytes_gif():
 @pytest.fixture
 def fakeimg_png(fakeimgbytes_png):
     """Set up respx to respond to test url with fake image bytes."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/png", stream=fakeimgbytes_png
+    )
 
 
 @pytest.fixture
 def fakeimg_gif(fakeimgbytes_gif):
     """Set up respx to respond to test url with fake image bytes."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_gif)
+    respx.get("http://127.0.0.1/testurl/1").respond(
+        content_type="image/gif", stream=fakeimgbytes_gif
+    )
 
 
 @pytest.fixture(scope="package")
