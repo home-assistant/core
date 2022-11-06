@@ -36,6 +36,12 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "description": "La configurazione di Scrape tramite YAML \u00e8 stata spostata nella chiave di integrazione. \n\nLa tua configurazione YAML esistente funzioner\u00e0 per altre 2 versioni. \n\nMigra la tua configurazione YAML alla chiave di integrazione in base alla documentazione.",
+            "title": "La configurazione YAML di Scrape \u00e8 stata spostata"
+        }
+    },
     "options": {
         "step": {
             "init": {

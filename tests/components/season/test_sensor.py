@@ -4,7 +4,11 @@ from datetime import datetime
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.season.const import TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
+from homeassistant.components.season.const import (
+    DOMAIN,
+    TYPE_ASTRONOMICAL,
+    TYPE_METEOROLOGICAL,
+)
 from homeassistant.components.season.sensor import (
     STATE_AUTUMN,
     STATE_SPRING,
@@ -13,7 +17,7 @@ from homeassistant.components.season.sensor import (
 )
 from homeassistant.const import CONF_TYPE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -122,6 +126,14 @@ async def test_season_southern_hemisphere(
     entry = entity_registry.async_get("sensor.season")
     assert entry
     assert entry.unique_id == mock_config_entry.entry_id
+
+    device_registry = dr.async_get(hass)
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, mock_config_entry.entry_id)}
+    assert device_entry.name == "Season"
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
 
 
 async def test_season_equator(

@@ -40,6 +40,12 @@ async def test_sensors(hass, nzbget_api) -> None:
         "post_processing_paused": ("PostPaused", "False", None, None),
         "queue_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
+        "speed_limit": (
+            "DownloadLimit",
+            "0.95",
+            DATA_RATE_MEGABYTES_PER_SECOND,
+            None,
+        ),
     }
 
     for (sensor_id, data) in sensors.items():

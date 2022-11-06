@@ -5,11 +5,12 @@
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "incomplete_info": "Az eszk\u00f6z be\u00e1ll\u00edt\u00e1s\u00e1hoz sz\u00fcks\u00e9ges inform\u00e1ci\u00f3k hi\u00e1nyosak, nincs megadva \u00e1llom\u00e1s vagy token.",
             "not_xiaomi_miio": "Az eszk\u00f6zt (m\u00e9g) nem t\u00e1mogatja a Xiaomi Miio integr\u00e1ci\u00f3.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "cloud_credentials_incomplete": "A felh\u0151alap\u00fa hiteles\u00edt\u0151 adatok hi\u00e1nyosak, k\u00e9rj\u00fck, adja meg a felhaszn\u00e1l\u00f3nevet, a jelsz\u00f3t \u00e9s az orsz\u00e1got",
+            "cloud_credentials_incomplete": "A felh\u0151alap\u00fa hiteles\u00edt\u0151 adatok hi\u00e1nyosak, k\u00e9rem, adja meg a felhaszn\u00e1l\u00f3nevet, a jelsz\u00f3t \u00e9s az orsz\u00e1got",
             "cloud_login_error": "Nem siker\u00fclt bejelentkezni a Xioami Miio Cloud szolg\u00e1ltat\u00e1sba, ellen\u0151rizze a hiteles\u00edt\u0151 adatokat.",
             "cloud_no_devices": "Nincs eszk\u00f6z ebben a Xiaomi Miio felh\u0151fi\u00f3kban.",
             "unknown_device": "Az eszk\u00f6z modell nem ismert, nem tudja be\u00e1ll\u00edtani az eszk\u00f6zt a konfigur\u00e1ci\u00f3s folyamat seg\u00edts\u00e9g\u00e9vel.",
@@ -52,7 +53,7 @@
     },
     "options": {
         "error": {
-            "cloud_credentials_incomplete": "A felh\u0151alap\u00fa hiteles\u00edt\u0151 adatok hi\u00e1nyosak, k\u00e9rj\u00fck, adja meg a felhaszn\u00e1l\u00f3nevet, a jelsz\u00f3t \u00e9s az orsz\u00e1got"
+            "cloud_credentials_incomplete": "A felh\u0151alap\u00fa hiteles\u00edt\u0151 adatok hi\u00e1nyosak, k\u00e9rem, adja meg a felhaszn\u00e1l\u00f3nevet, a jelsz\u00f3t \u00e9s az orsz\u00e1got"
         },
         "step": {
             "init": {

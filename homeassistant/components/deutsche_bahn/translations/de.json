@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Die Deutsche Bahn-Integration wird derzeit aus Home Assistant entfernt und wird ab Home Assistant 2022.11 nicht mehr verf\u00fcgbar sein.\n\nDie Integration wird entfernt, weil sie auf Webscraping beruht, was nicht erlaubt ist.\n\nEntferne die YAML-Konfiguration der Deutschen Bahn aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Deutsche-Bahn-Integration wird entfernt"
+        }
+    }
+}

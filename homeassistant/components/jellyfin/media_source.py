@@ -1,21 +1,13 @@
 """The Media Source implementation for the Jellyfin integration."""
 from __future__ import annotations
 
-import logging
 import mimetypes
 from typing import Any
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_TRACK,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -27,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
-    DATA_CLIENT,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -48,19 +39,16 @@ from .const import (
     MEDIA_TYPE_VIDEO,
     SUPPORTED_COLLECTION_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .models import JellyfinData
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    client: JellyfinClient = data[DATA_CLIENT]
-
-    return JellyfinSource(hass, client)
+    return JellyfinSource(hass, jellyfin_data.jellyfin_client)
 
 
 class JellyfinSource(MediaSource):
@@ -113,12 +101,12 @@ class JellyfinSource(MediaSource):
         base = BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=MEDIA_TYPE_NONE,
             title=self.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
         )
 
         libraries = await self._get_libraries()
@@ -164,7 +152,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=library_id,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=MEDIA_TYPE_NONE,
             title=library_name,
             can_play=False,
@@ -172,11 +160,11 @@ class JellyfinSource(MediaSource):
         )
 
         if include_children:
-            result.children_media_class = MEDIA_CLASS_ARTIST
-            result.children = await self._build_artists(library_id)  # type: ignore[assignment]
+            result.children_media_class = MediaClass.ARTIST
+            result.children = await self._build_artists(library_id)
             if not result.children:
-                result.children_media_class = MEDIA_CLASS_ALBUM
-                result.children = await self._build_albums(library_id)  # type: ignore[assignment]
+                result.children_media_class = MediaClass.ALBUM
+                result.children = await self._build_albums(library_id)
 
         return result
 
@@ -197,7 +185,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=artist_id,
-            media_class=MEDIA_CLASS_ARTIST,
+            media_class=MediaClass.ARTIST,
             media_content_type=MEDIA_TYPE_NONE,
             title=artist_name,
             can_play=False,
@@ -206,8 +194,8 @@ class JellyfinSource(MediaSource):
         )
 
         if include_children:
-            result.children_media_class = MEDIA_CLASS_ALBUM
-            result.children = await self._build_albums(artist_id)  # type: ignore[assignment]
+            result.children_media_class = MediaClass.ALBUM
+            result.children = await self._build_albums(artist_id)
 
         return result
 
@@ -228,7 +216,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=album_id,
-            media_class=MEDIA_CLASS_ALBUM,
+            media_class=MediaClass.ALBUM,
             media_content_type=MEDIA_TYPE_NONE,
             title=album_title,
             can_play=False,
@@ -237,8 +225,8 @@ class JellyfinSource(MediaSource):
         )
 
         if include_children:
-            result.children_media_class = MEDIA_CLASS_TRACK
-            result.children = await self._build_tracks(album_id)  # type: ignore[assignment]
+            result.children_media_class = MediaClass.TRACK
+            result.children = await self._build_tracks(album_id)
 
         return result
 
@@ -264,7 +252,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=track_id,
-            media_class=MEDIA_CLASS_TRACK,
+            media_class=MediaClass.TRACK,
             media_content_type=mime_type,
             title=track_title,
             can_play=True,
@@ -284,7 +272,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=library_id,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=MEDIA_TYPE_NONE,
             title=library_name,
             can_play=False,
@@ -292,8 +280,8 @@ class JellyfinSource(MediaSource):
         )
 
         if include_children:
-            result.children_media_class = MEDIA_CLASS_MOVIE
-            result.children = await self._build_movies(library_id)  # type: ignore[assignment]
+            result.children_media_class = MediaClass.MOVIE
+            result.children = await self._build_movies(library_id)
 
         return result
 
@@ -313,7 +301,7 @@ class JellyfinSource(MediaSource):
         result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=movie_id,
-            media_class=MEDIA_CLASS_MOVIE,
+            media_class=MediaClass.MOVIE,
             media_content_type=mime_type,
             title=movie_title,
             can_play=True,
@@ -363,14 +351,18 @@ class JellyfinSource(MediaSource):
 
 def _media_mime_type(media_item: dict[str, Any]) -> str:
     """Return the mime type of a media item."""
-    if not media_item[ITEM_KEY_MEDIA_SOURCES]:
+    if not media_item.get(ITEM_KEY_MEDIA_SOURCES):
         raise BrowseError("Unable to determine mime type for item without media source")
 
     media_source = media_item[ITEM_KEY_MEDIA_SOURCES][0]
+
+    if MEDIA_SOURCE_KEY_PATH not in media_source:
+        raise BrowseError("Unable to determine mime type for media source without path")
+
     path = media_source[MEDIA_SOURCE_KEY_PATH]
     mime_type, _ = mimetypes.guess_type(path)
 
-    if mime_type is not None:
-        return mime_type
+    if mime_type is None:
+        raise BrowseError(f"Unable to determine mime type for path {path}")
 
-    raise BrowseError(f"Unable to determine mime type for path {path}")
+    return mime_type

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dovoljena je samo ena konfiguracija lokalnega IP-ja."
+            "single_instance_allowed": "\u017de konfigurirano. Mo\u017ena je samo ena konfiguracija."
         },
         "step": {
             "user": {

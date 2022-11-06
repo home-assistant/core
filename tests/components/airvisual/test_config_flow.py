@@ -4,8 +4,10 @@ from unittest.mock import patch
 from pyairvisual.errors import (
     AirVisualError,
     InvalidKeyError,
+    KeyExpiredError,
     NodeProError,
     NotFoundError,
+    UnauthorizedError,
 )
 import pytest
 
@@ -81,6 +83,28 @@ async def test_duplicate_error(hass, config, config_entry, data):
                 CONF_COUNTRY: "China",
             },
             InvalidKeyError,
+            {CONF_API_KEY: "invalid_api_key"},
+            INTEGRATION_TYPE_GEOGRAPHY_NAME,
+        ),
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+            KeyExpiredError,
+            {CONF_API_KEY: "invalid_api_key"},
+            INTEGRATION_TYPE_GEOGRAPHY_NAME,
+        ),
+        (
+            {
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+            UnauthorizedError,
             {CONF_API_KEY: "invalid_api_key"},
             INTEGRATION_TYPE_GEOGRAPHY_NAME,
         ),

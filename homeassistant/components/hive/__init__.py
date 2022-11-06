@@ -139,7 +139,7 @@ def refresh_system(
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
-    def __init__(self, hive, hive_device):
+    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
@@ -153,9 +153,9 @@ class HiveEntity(Entity):
             sw_version=self.device["deviceData"]["version"],
             via_device=(DOMAIN, self.device["parentDevice"]),
         )
-        self.attributes = {}
+        self.attributes: dict[str, Any] = {}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)

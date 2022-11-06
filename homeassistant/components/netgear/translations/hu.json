@@ -4,7 +4,7 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "config": "Csatlakoz\u00e1si vagy bejelentkez\u00e9si hiba: k\u00e9rj\u00fck, ellen\u0151rizze a konfigur\u00e1ci\u00f3t"
+            "config": "Csatlakoz\u00e1si vagy bejelentkez\u00e9si hiba: k\u00e9rem, ellen\u0151rizze a konfigur\u00e1ci\u00f3t"
         },
         "step": {
             "user": {

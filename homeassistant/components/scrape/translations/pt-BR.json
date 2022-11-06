@@ -29,11 +29,17 @@
                     "index": "Define qual dos elementos retornados pelo seletor CSS usar",
                     "resource": "A URL para o site que cont\u00e9m o valor",
                     "select": "Define qual tag pesquisar. Verifique os seletores CSS da Beautiful Soup para obter detalhes",
-                    "state_class": "O classe de estado do sensor",
+                    "state_class": "A classe de estado do sensor",
                     "value_template": "Define um modelo para obter o estado do sensor",
                     "verify_ssl": "Ativa/desativa a verifica\u00e7\u00e3o do certificado SSL/TLS, por exemplo, se for autoassinado"
                 }
             }
+        }
+    },
+    "issues": {
+        "moved_yaml": {
+            "description": "A configura\u00e7\u00e3o do Scrape usando YAML foi movida para a chave de integra\u00e7\u00e3o. \n\n Sua configura\u00e7\u00e3o YAML existente funcionar\u00e1 para mais duas vers\u00f5es. \n\n Migre sua configura\u00e7\u00e3o YAML para a chave de integra\u00e7\u00e3o de acordo com a documenta\u00e7\u00e3o.",
+            "title": "A configura\u00e7\u00e3o YAML de Scrape foi movida"
         }
     },
     "options": {
@@ -63,7 +69,7 @@
                     "index": "Define qual dos elementos retornados pelo seletor CSS usar",
                     "resource": "A URL para o site que cont\u00e9m o valor",
                     "select": "Define qual tag pesquisar. Verifique os seletores CSS da Beautiful Soup para obter detalhes",
-                    "state_class": "O classe de estado do sensor",
+                    "state_class": "A classe de estado do sensor",
                     "value_template": "Define um modelo para obter o estado do sensor",
                     "verify_ssl": "Ativa/desativa a verifica\u00e7\u00e3o do certificado SSL/TLS, por exemplo, se for autoassinado"
                 }

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta - kontrollera serienumret",
+            "invalid_ip": "Ogiltig IP-adress",
+            "invalid_serial": "Ogiltigt serienummer",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "IP-adress",
+                    "serial": "Serienummer (12 siffror)"
+                },
+                "description": "Konfigurera en Nob\u00f8 Ecohub som inte uppt\u00e4ckts i ditt lokala n\u00e4tverk. Om din hubb \u00e4r p\u00e5 ett annat n\u00e4tverk kan du fortfarande ansluta till det genom att ange hela serienumret (12 siffror) och dess IP-adress."
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Serienummersuffix (3 siffror)"
+                },
+                "description": "Konfigurerar {hub} . F\u00f6r att ansluta till hubben m\u00e5ste du ange de tre sista siffrorna i hubbens serienummer."
+            },
+            "user": {
+                "data": {
+                    "device": "Identifierade hubbar"
+                },
+                "description": "V\u00e4lj Nob\u00f8 Ecohub f\u00f6r att konfigurera."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "\u00c5sidos\u00e4tt typ"
+                },
+                "description": "V\u00e4lj \u00e5sidos\u00e4ttningstyp \"Nu\" f\u00f6r att avsluta \u00e5sidos\u00e4ttningen vid n\u00e4sta veckas profil\u00e4ndring."
+            }
+        }
+    }
+}

@@ -221,6 +221,8 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
+    _attr_should_poll = False
+
     def __init__(self) -> None:
         """Initialize the entity."""
         self._unique_id: str | None = None
@@ -237,11 +239,6 @@ class GeniusEntity(Entity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as geniushub entities should not be polled."""
-        return False
 
 
 class GeniusDevice(GeniusEntity):

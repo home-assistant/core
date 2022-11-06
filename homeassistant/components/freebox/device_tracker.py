@@ -4,8 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,12 +47,13 @@ def add_entities(
         new_tracked.append(FreeboxDevice(router, device))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
+
+    _attr_should_poll = False
 
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
@@ -93,14 +93,14 @@ class FreeboxDevice(ScannerEntity):
         return self._name
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def icon(self) -> str:
@@ -112,18 +112,13 @@ class FreeboxDevice(ScannerEntity):
         """Return the attributes."""
         return self._attrs
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     @callback
     def async_on_demand_update(self):
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
         self.async_on_remove(

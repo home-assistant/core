@@ -23,7 +23,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -63,7 +62,7 @@ class SensiboMotionSensorEntityDescription(
 class SensiboDeviceSensorEntityDescription(
     SensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Device sensor entity."""
 
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
@@ -132,6 +131,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
         extra_fn=None,
+        device_class="sensibo__sensitivity",
     ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
@@ -151,6 +151,32 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature feels like",
         value_fn=lambda data: data.feelslike,
+        extra_fn=None,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_low",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React low temperature threshold",
+        value_fn=lambda data: data.smart_low_temp_threshold,
+        extra_fn=lambda data: data.smart_low_state,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_high",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React high temperature threshold",
+        value_fn=lambda data: data.smart_high_temp_threshold,
+        extra_fn=lambda data: data.smart_high_state,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_type",
+        device_class="sensibo__smart_type",
+        name="Climate React type",
+        value_fn=lambda data: data.smart_type,
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),
@@ -178,6 +204,8 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
 )
 
+DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES, "airq": AIRQ_SENSOR_TYPES}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -200,20 +228,9 @@ async def async_setup_entry(
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in PURE_SENSOR_TYPES
-        if device_data.model == "pure"
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_SENSOR_TYPES
-        if device_data.model != "pure"
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in AIRQ_SENSOR_TYPES
-        if device_data.model == "airq"
+        for description in DESCRIPTION_BY_MODELS.get(
+            device_data.model, DEVICE_SENSOR_TYPES
+        )
     )
     async_add_entities(entities)
 
@@ -240,15 +257,12 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = entity_description.name
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return (
-                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
-            )
+            return TEMP_CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
@@ -282,15 +296,16 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return (
-                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
-            )
+            return TEMP_CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.device_data)
+        state = self.entity_description.value_fn(self.device_data)
+        if isinstance(state, str):
+            return state.lower()
+        return state
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

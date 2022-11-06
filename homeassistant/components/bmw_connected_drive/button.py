@@ -38,31 +38,31 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="light_flash",
         icon="mdi:car-light-alert",
-        name="Flash Lights",
+        name="Flash lights",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
         icon="mdi:bullhorn",
-        name="Sound Horn",
+        name="Sound horn",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_horn(),
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         icon="mdi:hvac",
-        name="Activate Air Conditioning",
+        name="Activate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
         icon="mdi:hvac-off",
-        name="Deactivate Air Conditioning",
+        name="Deactivate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
         icon="mdi:crosshairs-question",
-        name="Find Vehicle",
+        name="Find vehicle",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
     ),
     BMWButtonEntityDescription(
@@ -112,8 +112,6 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)
         self.entity_description = description
-
-        self._attr_name = f"{vehicle.name} {description.name}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
     async def async_press(self) -> None:

@@ -3,13 +3,14 @@ from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
 
-async def test_button(hass):
+async def test_button(hass: HomeAssistant) -> None:
     """Test states of the button."""
     registry = er.async_get(hass)
 
@@ -24,7 +25,7 @@ async def test_button(hass):
     assert entry.unique_id == "xyz12_clear_logs"
 
 
-async def test_button_press(hass):
+async def test_button_press(hass: HomeAssistant) -> None:
     """Test button press."""
     await init_integration(hass)
 

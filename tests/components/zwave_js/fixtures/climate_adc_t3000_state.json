@@ -58,7 +58,153 @@
         },
         "mandatorySupportedCCs": [32, 114, 64, 67, 134],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": [
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 11,
+          "isSecure": true
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 66,
+          "name": "Thermostat Operating State",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 68,
+          "name": "Thermostat Fan Mode",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 69,
+          "name": "Thermostat Fan State",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 100,
+          "name": "Humidity Control Setpoint",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 109,
+          "name": "Humidity Control Mode",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 110,
+          "name": "Humidity Control Operating State",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 7,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 129,
+          "name": "Clock",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
     }
   ],
   "values": [
@@ -81,9 +227,7 @@
         "unit": "\u00b0F"
       },
       "value": 72,
-      "nodeId": 68,
-      "newValue": 73,
-      "prevValue": 72.5
+      "nodeId": 68
     },
     {
       "endpoint": 0,
@@ -104,9 +248,7 @@
         "unit": "%"
       },
       "value": 34,
-      "nodeId": 68,
-      "newValue": 34,
-      "prevValue": 34
+      "nodeId": 68
     },
     {
       "endpoint": 0,
@@ -302,9 +444,7 @@
           "8": "Quiet circulation mode"
         }
       },
-      "value": 0,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -435,9 +575,7 @@
           "2": "De-humidifying"
         }
       },
-      "value": 0,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1149,9 +1287,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1177,9 +1313,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1205,9 +1339,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1233,9 +1365,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1261,9 +1391,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1289,9 +1417,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1317,9 +1443,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1345,9 +1469,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1373,9 +1495,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1401,9 +1521,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1429,9 +1547,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1457,9 +1573,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1485,9 +1599,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1513,9 +1625,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1541,9 +1651,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1569,9 +1677,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1597,9 +1703,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1625,9 +1729,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1653,9 +1755,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1681,9 +1781,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1709,9 +1807,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1737,9 +1833,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1765,9 +1859,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1793,9 +1885,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -3940,152 +4030,6 @@
     "mandatorySupportedCCs": [32, 114, 64, 67, 134],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 49,
-      "name": "Multilevel Sensor",
-      "version": 11,
-      "isSecure": true
-    },
-    {
-      "id": 64,
-      "name": "Thermostat Mode",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 66,
-      "name": "Thermostat Operating State",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 67,
-      "name": "Thermostat Setpoint",
-      "version": 3,
-      "isSecure": true
-    },
-    {
-      "id": 68,
-      "name": "Thermostat Fan Mode",
-      "version": 3,
-      "isSecure": true
-    },
-    {
-      "id": 69,
-      "name": "Thermostat Fan State",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 85,
-      "name": "Transport Service",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 100,
-      "name": "Humidity Control Setpoint",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 108,
-      "name": "Supervision",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 109,
-      "name": "Humidity Control Mode",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 110,
-      "name": "Humidity Control Operating State",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 113,
-      "name": "Notification",
-      "version": 7,
-      "isSecure": true
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 115,
-      "name": "Powerlevel",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 3,
-      "isSecure": true
-    },
-    {
-      "id": 128,
-      "name": "Battery",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 129,
-      "name": "Clock",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 159,
-      "name": "Security 2",
-      "version": 1,
-      "isSecure": true
-    }
-  ],
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0190:0x0006:0x0001:1.44",
   "statistics": {

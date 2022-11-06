@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,8 +29,6 @@ ATTR_ROUTE_NAME = "route_name"
 ATTR_NEXT_ARRIVAL = "next_arrival"
 ATTR_SECOND_NEXT_ARRIVAL = "second_next_arrival"
 ATTR_NEXT_DEPARTURE = "next_departure"
-
-ATTRIBUTION = "Data retrieved from telematics.oasa.gr"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE_ID = "route_id"
@@ -67,6 +65,8 @@ def setup_platform(
 
 class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
+
+    _attr_attribution = "Data retrieved from telematics.oasa.gr"
 
     def __init__(self, data, stop_id, route_id, name):
         """Initialize the sensor."""
@@ -111,7 +111,6 @@ class OASATelematicsSensor(SensorEntity):
                 {
                     ATTR_ROUTE_ID: self._times[0][ATTR_ROUTE_ID],
                     ATTR_STOP_ID: self._stop_id,
-                    ATTR_ATTRIBUTION: ATTRIBUTION,
                 }
             )
         params.update(
@@ -127,7 +126,7 @@ class OASATelematicsSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from OASA API and update the states."""
         self.data.update()
         self._times = self.data.info

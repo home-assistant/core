@@ -13,12 +13,13 @@ from homeassistant.components.zeroconf import (
     _get_announced_addresses,
 )
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.generated import zeroconf as zc_gen
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -327,6 +328,7 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
+    assert mock_config_flow.mock_calls[0][2]["context"] == {"source": "zeroconf"}
 
 
 async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
@@ -533,6 +535,10 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
     # One for HKC, and one for LIFX since lifx is local polling
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
+    assert mock_config_flow.mock_calls[1][2]["context"] == {
+        "source": "zeroconf",
+        "alternative_domain": "lifx",
+    }
 
 
 async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
@@ -1154,3 +1160,32 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
+
+
+async def test_setup_with_disallowed_characters_in_local_name(
+    hass, mock_async_zeroconf, caplog
+):
+    """Test we still setup with disallowed characters in the location name."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
+    ), patch.object(
+        hass.config,
+        "location_name",
+        "My.House",
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    calls = mock_async_zeroconf.async_register_service.mock_calls
+    assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
+
+
+async def test_start_with_frontend(hass, mock_async_zeroconf):
+    """Test we start with the frontend."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
+        await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_register_service.assert_called_once()

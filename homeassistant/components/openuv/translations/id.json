@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `{alternate_service}` dengan salah satu ID entitas berikut sebagai target: `{alternate_targets}`.",
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `{alternate_service}` dengan `{alternate_targets}` sebagai target.",
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        }
+    },
     "options": {
         "step": {
             "init": {

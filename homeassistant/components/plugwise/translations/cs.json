@@ -12,7 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Typ p\u0159ipojen\u00ed"
+                    "flow_type": "Typ p\u0159ipojen\u00ed",
+                    "host": "IP adresa"
                 },
                 "description": "Produkt:",
                 "title": "Typ Plugwise"

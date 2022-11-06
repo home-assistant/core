@@ -22,20 +22,15 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Part
 from homeassistant.setup import async_setup_component
 
+from .common import FAKE_TIME, DefaultSegment as Segment, generate_h264_video
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
-
-from tests.components.stream.common import (
-    FAKE_TIME,
-    DefaultSegment as Segment,
-    generate_h264_video,
-)
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
 PART_INDEPENDENT_PERIOD = int(1 / TEST_PART_DURATION) or 1
 BYTERANGE_LENGTH = 1
-INIT_BYTES = b"init"
+INIT_BYTES = b"\x00\x00\x00\x08moov"
 SEQUENCE_BYTES = bytearray(range(NUM_PART_SEGMENTS * BYTERANGE_LENGTH))
 ALT_SEQUENCE_BYTES = bytearray(range(20, 20 + NUM_PART_SEGMENTS * BYTERANGE_LENGTH))
 VERY_LARGE_LAST_BYTE_POS = 9007199254740991

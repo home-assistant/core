@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -118,8 +119,6 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             unique_id=unique_id,
         )
 
-        self._state = None
-
         auth = None
         if username := config.get(CONF_USERNAME):
             auth = aiohttp.BasicAuth(username, password=config[CONF_PASSWORD])
@@ -148,12 +147,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         template.attach(hass, self._headers)
         template.attach(hass, self._params)
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
 
@@ -161,7 +155,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             req = await self.set_device_state(body_on_t)
 
             if req.status == HTTPStatus.OK:
-                self._state = True
+                self._attr_is_on = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
@@ -169,14 +163,14 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         body_off_t = self._body_off.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_off_t)
             if req.status == HTTPStatus.OK:
-                self._state = False
+                self._attr_is_on = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
@@ -201,7 +195,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             )
             return req
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current state, catching errors."""
         try:
             await self.get_device_state(self.hass)
@@ -232,17 +226,17 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             )
             text = text.lower()
             if text == "true":
-                self._state = True
+                self._attr_is_on = True
             elif text == "false":
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
         else:
             if text == self._body_on.template:
-                self._state = True
+                self._attr_is_on = True
             elif text == self._body_off.template:
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
 
         return req

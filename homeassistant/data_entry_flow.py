@@ -5,6 +5,7 @@ import abc
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
@@ -15,6 +16,8 @@ from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
 from .util import uuid as uuid_util
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FlowResultType(StrEnum):
@@ -175,7 +178,7 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def async_get(self, flow_id: str) -> FlowResult | None:
+    def async_get(self, flow_id: str) -> FlowResult:
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
@@ -337,6 +340,11 @@ class FlowManager(abc.ABC):
         if not self._handler_progress_index[handler]:
             del self._handler_progress_index[handler]
 
+        try:
+            flow.async_remove()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
+
     async def _async_handle_step(
         self,
         flow: Any,
@@ -476,6 +484,7 @@ class FlowHandler:
             data=data,
             description=description,
             description_placeholders=description_placeholders,
+            context=self.context,
         )
 
     @callback
@@ -567,6 +576,10 @@ class FlowHandler:
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the config flow has been removed."""
 
 
 @callback

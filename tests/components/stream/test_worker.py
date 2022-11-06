@@ -22,6 +22,7 @@ import threading
 from unittest.mock import patch
 
 import av
+import numpy as np
 import pytest
 
 from homeassistant.components.stream import KeyFrameConverter, Stream, create_stream
@@ -47,9 +48,10 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
+from .common import generate_h264_video, generate_h265_video
+from .test_ll_hls import TEST_PART_DURATION
+
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-from tests.components.stream.common import generate_h264_video, generate_h265_video
-from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -88,6 +90,7 @@ def mock_stream_settings(hass):
             part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
             hls_advance_part_limit=3,
             hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            orientation=1,
         )
     }
 
@@ -239,7 +242,7 @@ class FakePyAvBuffer:
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
-        self.memory_file.write(b"0")
+        self.memory_file.write(b"\x00\x00\x00\x00moov")
 
     def close(self):
         """Close the buffer."""
@@ -284,7 +287,7 @@ def run_worker(hass, stream, stream_source, stream_settings=None):
         {},
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
-        KeyFrameConverter(hass),
+        KeyFrameConverter(hass, 1),
         threading.Event(),
     )
 
@@ -791,7 +794,7 @@ async def test_durations(hass, worker_finished_stream):
             assert math.isclose(
                 (av_part.duration - av_part.start_time) / av.time_base,
                 part.duration,
-                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+                abs_tol=2 / av_part.streams.video[0].average_rate + 1e-6,
             )
             # Also check that the sum of the durations so far matches the last dts
             # in the media.
@@ -897,24 +900,23 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
+        "orientation": 1,
         "start_worker": 1,
         "video_codec": "hevc",
         "worker_error": 1,
     }
 
 
-async def test_get_image(hass, filename):
+async def test_get_image(hass, h264_video, filename):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
-
-    source = generate_h264_video()
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
         "homeassistant.components.camera.img_util.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
-        stream = create_stream(hass, source, {})
+        stream = create_stream(hass, h264_video, {})
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))
@@ -935,6 +937,7 @@ async def test_worker_disable_ll_hls(hass):
         part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
         hls_advance_part_limit=3,
         hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        orientation=1,
     )
     py_av = MockPyAv()
     py_av.container.format.name = "hls"
@@ -945,3 +948,35 @@ async def test_worker_disable_ll_hls(hass):
         stream_settings=stream_settings,
     )
     assert stream_settings.ll_hls is False
+
+
+async def test_get_image_rotated(hass, h264_video, filename):
+    """Test that the has_keyframe metadata matches the media."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    # Since libjpeg-turbo is not installed on the CI runner, we use a mock
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+    ) as mock_turbo_jpeg_singleton:
+        mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
+        for orientation in (1, 8):
+            stream = create_stream(hass, h264_video, {})
+            stream._stream_settings.orientation = orientation
+
+            with patch.object(hass.config, "is_allowed_path", return_value=True):
+                make_recording = hass.async_create_task(stream.async_record(filename))
+                await make_recording
+            assert stream._keyframe_converter._image is None
+
+            assert await stream.async_get_image() == EMPTY_8_6_JPEG
+            await stream.stop()
+        assert (
+            np.rot90(
+                mock_turbo_jpeg_singleton.instance.return_value.encode.call_args_list[
+                    0
+                ][0][0]
+            )
+            == mock_turbo_jpeg_singleton.instance.return_value.encode.call_args_list[1][
+                0
+            ][0]
+        ).all()

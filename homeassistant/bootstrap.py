@@ -21,10 +21,16 @@ from .components import http, persistent_notification
 from .const import (
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .exceptions import HomeAssistantError
-from .helpers import area_registry, device_registry, entity_registry
+from .helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    recorder,
+)
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
@@ -66,6 +72,15 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
+}
+FRONTEND_INTEGRATIONS = {
+    # Get the frontend up and running as soon as possible so problem
+    # integrations can be removed and database migration status is
+    # visible in frontend
+    "frontend",
+}
+RECORDER_INTEGRATIONS = {
+    # Setup after frontend
     # To record data
     "recorder",
 }
@@ -83,10 +98,6 @@ STAGE_1_INTEGRATIONS = {
     "cloud",
     # Ensure supervisor is available
     "hassio",
-    # Get the frontend up and running as soon
-    # as possible so problem integrations can
-    # be removed
-    "frontend",
 }
 
 
@@ -420,7 +431,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         if remaining_with_setup_started or not previous_was_empty:
             async_dispatcher_send(
-                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+                hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
@@ -504,10 +515,43 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
+    # Load the registries and cache the result of platform.uname().processor
+    await asyncio.gather(
+        area_registry.async_load(hass),
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        issue_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
+    )
+
+    # Initialize recorder
+    if "recorder" in domains_to_setup:
+        recorder.async_initialize_recorder(hass)
+
     # Load logging as soon as possible
     if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
+
+    # Setup frontend
+    if frontend_domains := domains_to_setup & FRONTEND_INTEGRATIONS:
+        _LOGGER.info("Setting up frontend: %s", frontend_domains)
+        await async_setup_multi_components(hass, frontend_domains, config)
+
+    # Setup recorder
+    if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
+        _LOGGER.info("Setting up recorder: %s", recorder_domains)
+        await async_setup_multi_components(hass, recorder_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
@@ -518,7 +562,8 @@ async def _async_set_up_integrations(
     stage_1_domains: set[str] = set()
 
     # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1
+    # we plan on loading and promote them to stage 1. This is done only to not
+    # get misleading log messages
     deps_promotion: set[str] = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
@@ -535,24 +580,13 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
-
-    # Load the registries
-    await asyncio.gather(
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        area_registry.async_load(hass),
-        hass.async_add_executor_job(_cache_uname_processor),
+    stage_2_domains = (
+        domains_to_setup
+        - logging_domains
+        - frontend_domains
+        - recorder_domains
+        - debuggers
+        - stage_1_domains
     )
 
     # Start setup
@@ -588,7 +622,7 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
         "Integration setup times: %s",

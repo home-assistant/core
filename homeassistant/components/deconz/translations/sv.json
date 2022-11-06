@@ -4,6 +4,7 @@
             "already_configured": "Bryggan \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan.",
             "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
+            "no_hardware_available": "Ingen radioh\u00e5rdvara ansluten till deCONZ",
             "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
         },
         "error": {
@@ -25,12 +26,18 @@
                     "host": "V\u00e4rd",
                     "port": "Port"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4lj uppt\u00e4ckt deCONZ-gateway"
+                }
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "B\u00e5da knapparna",
+            "bottom_buttons": "Bottenknappar",
             "button_1": "F\u00f6rsta knappen",
             "button_2": "Andra knappen",
             "button_3": "Tredje knappen",
@@ -51,6 +58,7 @@
             "side_4": "Sida 4",
             "side_5": "Sida 5",
             "side_6": "Sida 6",
+            "top_buttons": "Toppknappar",
             "turn_off": "St\u00e4ng av",
             "turn_on": "Starta"
         },
@@ -62,6 +70,7 @@
             "remote_button_quadruple_press": "\"{subtype}\"-knappen klickades \nfyrfaldigt",
             "remote_button_quintuple_press": "\"{subtype}\"-knappen klickades \nfemfaldigt",
             "remote_button_rotated": "Knappen roterade \"{subtype}\"",
+            "remote_button_rotated_fast": "Knappen roterades snabbt \" {subtype} \"",
             "remote_button_rotation_stopped": "Knapprotationen \"{subtype}\" stoppades",
             "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
             "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
@@ -89,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Till\u00e5t deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper"
+                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper",
+                    "allow_new_devices": "Till\u00e5t automatiskt till\u00e4gg av nya enheter"
                 },
                 "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper",
                 "title": "deCONZ-inst\u00e4llningar"

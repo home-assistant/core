@@ -19,7 +19,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
     }
   }
 }

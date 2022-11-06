@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API\u30ad\u30fc"
+                },
+                "data_description": {
+                    "api_key": "\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u306b\u5f93\u3063\u3066\u3001\u65b0\u3057\u3044 API \u30ad\u30fc\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002"
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API\u30ad\u30fc"
+                },
+                "data_description": {
+                    "api_key": "\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u306b\u5f93\u3063\u3066 API \u30ad\u30fc\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002"
                 }
             }
         }

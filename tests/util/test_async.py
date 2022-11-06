@@ -168,7 +168,7 @@ async def test_check_loop_async_custom(caplog):
         hasync.check_loop(banned_function)
     assert (
         "Detected blocking call to banned_function inside the event loop. This is "
-        "causing stability issues. Please report issue to the custom component author "
+        "causing stability issues. Please report issue to the custom integration author "
         "for hue doing blocking calls at custom_components/hue/light.py, line 23: "
         "self.light.is_on" in caplog.text
     )

@@ -26,7 +26,9 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> XiaomiMiioDeviceScanner | None:
     """Return a Xiaomi MiIO device scanner."""
     scanner = None
     host = config[DOMAIN][CONF_HOST]

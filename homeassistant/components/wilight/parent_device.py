@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 import pywilight
-from pywilight.wilight_device import Device as PyWiLightDevice
+from pywilight.wilight_device import PyWiLightDevice
 import requests
 
 from homeassistant.config_entries import ConfigEntry

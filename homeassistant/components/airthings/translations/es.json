@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "description": "Inicie sesi\u00f3n en {url} para encontrar sus credenciales",
+                    "description": "Inicia sesi\u00f3n en {url} para encontrar tus credenciales",
                     "id": "ID",
                     "secret": "Secreto"
                 }

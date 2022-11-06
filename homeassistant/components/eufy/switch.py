@@ -1,6 +1,8 @@
 """Support for Eufy switches."""
 from __future__ import annotations
 
+from typing import Any
+
 import lakeside
 
 from homeassistant.components.switch import SwitchEntity
@@ -35,7 +37,7 @@ class EufySwitch(SwitchEntity):
         self._switch = lakeside.switch(self._address, self._code, self._type)
         self._switch.connect()
 
-    def update(self):
+    def update(self) -> None:
         """Synchronise state from the switch."""
         self._switch.update()
         self._state = self._switch.power
@@ -55,7 +57,7 @@ class EufySwitch(SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
         try:
             self._switch.set_state(True)
@@ -63,7 +65,7 @@ class EufySwitch(SwitchEntity):
             self._switch.connect()
             self._switch.set_state(power=True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified switch off."""
         try:
             self._switch.set_state(False)

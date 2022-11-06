@@ -14,6 +14,7 @@
             "invalid_serial": "Porta seriale non valida",
             "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
             "invalid_version": "Versione di MySensors non valida",
+            "mqtt_required": "L'integrazione MQTT non \u00e8 configurata",
             "not_a_number": "Digita un numero",
             "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
             "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",
@@ -67,6 +68,14 @@
                     "version": "Versione MySensors"
                 },
                 "description": "Configurazione del gateway Ethernet"
+            },
+            "select_gateway_type": {
+                "description": "Seleziona quale gateway configurare.",
+                "menu_options": {
+                    "gw_mqtt": "Configura un gateway MQTT",
+                    "gw_serial": "Configura un gateway seriale",
+                    "gw_tcp": "Configura un gateway TCP"
+                }
             },
             "user": {
                 "data": {

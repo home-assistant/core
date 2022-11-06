@@ -104,7 +104,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         if int_type := self.find_dpcode(
             description.humidity, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._set_humiditye = int_type
+            self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 

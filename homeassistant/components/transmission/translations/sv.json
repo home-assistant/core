@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Det g\u00e5r inte att ansluta till v\u00e4rden",
+            "invalid_auth": "Ogiltig autentisering",
             "name_exists": "Namnet finns redan"
         },
         "step": {
@@ -13,6 +14,7 @@
                 "data": {
                     "password": "L\u00f6senord"
                 },
+                "description": "L\u00f6senordet f\u00f6r {username} \u00e4r ogiltigt.",
                 "title": "\u00c5terautenticera integration"
             },
             "user": {

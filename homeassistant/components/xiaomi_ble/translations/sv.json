@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfiguration redan ig\u00e5ng",
+            "decryption_failed": "Den tillhandah\u00e5llna bindningsnyckeln fungerade inte, sensordata kunde inte dekrypteras. Kontrollera den och f\u00f6rs\u00f6k igen.",
+            "expected_24_characters": "F\u00f6rv\u00e4ntade ett hexadecimalt bindningsnyckel med 24 tecken.",
+            "expected_32_characters": "F\u00f6rv\u00e4ntade ett hexadecimalt bindningsnyckel med 32 tecken.",
+            "no_devices_found": "Inga enheter hittades p\u00e5 n\u00e4tverket",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "decryption_failed": "Den tillhandah\u00e5llna bindningsnyckeln fungerade inte, sensordata kunde inte dekrypteras. Kontrollera den och f\u00f6rs\u00f6k igen.",
+            "expected_24_characters": "F\u00f6rv\u00e4ntade ett hexadecimalt bindningsnyckel med 24 tecken.",
+            "expected_32_characters": "F\u00f6rv\u00e4ntade ett hexadecimalt bindningsnyckel med 32 tecken."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vill du s\u00e4tta upp {name}?"
+            },
+            "confirm_slow": {
+                "description": "Det har inte s\u00e4nts fr\u00e5n den h\u00e4r enheten under den senaste minuten s\u00e5 vi \u00e4r inte s\u00e4kra p\u00e5 om den h\u00e4r enheten anv\u00e4nder kryptering eller inte. Det kan bero p\u00e5 att enheten anv\u00e4nder ett l\u00e5ngsamt s\u00e4ndningsintervall. Bekr\u00e4fta att l\u00e4gga till den h\u00e4r enheten \u00e4nd\u00e5, n\u00e4sta g\u00e5ng en s\u00e4ndning tas emot kommer du att uppmanas att ange dess bindnyckel om det beh\u00f6vs."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindningsnyckel"
+                },
+                "description": "De sensordata som s\u00e4nds av sensorn \u00e4r krypterade. F\u00f6r att dekryptera dem beh\u00f6ver vi en hexadecimal bindningsnyckel med 32 tecken."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindningsnyckel"
+                },
+                "description": "De sensordata som s\u00e4nds av sensorn \u00e4r krypterade. F\u00f6r att dekryptera dem beh\u00f6ver vi en hexadecimal bindningsnyckel med 24 tecken."
+            },
+            "slow_confirm": {
+                "description": "Det har inte s\u00e4nts fr\u00e5n den h\u00e4r enheten under den senaste minuten s\u00e5 vi \u00e4r inte s\u00e4kra p\u00e5 om den h\u00e4r enheten anv\u00e4nder kryptering eller inte. Det kan bero p\u00e5 att enheten anv\u00e4nder ett l\u00e5ngsamt s\u00e4ndningsintervall. Bekr\u00e4fta att l\u00e4gga till den h\u00e4r enheten \u00e4nd\u00e5, n\u00e4sta g\u00e5ng en s\u00e4ndning tas emot kommer du att uppmanas att ange dess bindnyckel om det beh\u00f6vs."
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "V\u00e4lj en enhet att s\u00e4tta upp"
+            }
+        }
+    }
+}

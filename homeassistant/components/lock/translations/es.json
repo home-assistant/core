@@ -6,12 +6,12 @@
             "unlock": "Desbloquear {entity_name}"
         },
         "condition_type": {
-            "is_locked": "{entity_name} est\u00e1 bloqueado",
-            "is_unlocked": "{entity_name} est\u00e1 desbloqueado"
+            "is_locked": "{entity_name} est\u00e1 bloqueada",
+            "is_unlocked": "{entity_name} est\u00e1 desbloqueada"
         },
         "trigger_type": {
-            "locked": "{entity_name} bloqueado",
-            "unlocked": "{entity_name} desbloqueado"
+            "locked": "{entity_name} bloqueada",
+            "unlocked": "{entity_name} desbloqueada"
         }
     },
     "state": {

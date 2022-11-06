@@ -8,7 +8,7 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
             "pwd_and_ssh": "Csak jelsz\u00f3 vagy SSH kulcsf\u00e1jlt adjon meg",
-            "pwd_or_ssh": "K\u00e9rj\u00fck, adja meg a jelsz\u00f3t vagy az SSH kulcsf\u00e1jlt",
+            "pwd_or_ssh": "K\u00e9rem, adja meg a jelsz\u00f3t vagy az SSH kulcsf\u00e1jlt",
             "ssh_not_file": "Az SSH kulcsf\u00e1jl nem tal\u00e1lhat\u00f3",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

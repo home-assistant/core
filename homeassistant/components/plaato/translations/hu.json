@@ -20,7 +20,7 @@
                     "token": "Auth Token beilleszt\u00e9se ide",
                     "use_webhook": "Webhook haszn\u00e1lata"
                 },
-                "description": "Az API lek\u00e9rdez\u00e9s\u00e9hez egy `auth_token` sz\u00fcks\u00e9ges, amelyet az [ezek] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) utas\u00edt\u00e1sok k\u00f6vet\u00e9s\u00e9vel lehet megszerezni. \n\n Kiv\u00e1lasztott eszk\u00f6z: ** {device_type} ** \n\nHa ink\u00e1bb a be\u00e9p\u00edtett webhook m\u00f3dszert haszn\u00e1lja (csak az Airlock eset\u00e9ben), k\u00e9rj\u00fck, jel\u00f6lje be az al\u00e1bbi n\u00e9gyzetet, \u00e9s hagyja \u00fcresen az Auth Token elemet",
+                "description": "Az API lek\u00e9rdez\u00e9s\u00e9hez egy `auth_token` sz\u00fcks\u00e9ges, amelyet az [ezek] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) utas\u00edt\u00e1sok k\u00f6vet\u00e9s\u00e9vel lehet megszerezni. \n\nKiv\u00e1lasztott eszk\u00f6z: **{device_type}** \n\nHa ink\u00e1bb a be\u00e9p\u00edtett webhook m\u00f3dszert haszn\u00e1lja (csak az Airlock eset\u00e9ben), k\u00e9rem, jel\u00f6lje be az al\u00e1bbi n\u00e9gyzetet, \u00e9s hagyja \u00fcresen az Auth Token elemet",
                 "title": "API m\u00f3dszer kiv\u00e1laszt\u00e1sa"
             },
             "user": {

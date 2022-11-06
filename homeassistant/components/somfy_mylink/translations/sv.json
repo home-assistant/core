@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port",
+                    "system_id": "System-ID"
+                },
+                "description": "System-ID kan erh\u00e5llas i MyLink-appen under Integration genom att v\u00e4lja vilken tj\u00e4nst som helst som inte kommer fr\u00e5n molnet."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "target_id": "Konfigurera alternativ f\u00f6r ett skydd."
+                },
+                "title": "Konfigurera MyLink-alternativ"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "Locket \u00e4r omv\u00e4nt"
+                },
+                "description": "Konfigurera alternativ f\u00f6r ` {target_name} `",
+                "title": "Konfigurera MyLink Cover"
+            }
+        }
+    }
+}

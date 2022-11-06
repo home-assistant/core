@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557 - \u8acb\u6aa2\u67e5\u5e8f\u865f",
+            "invalid_ip": "IP \u4f4d\u5740\u7121\u6548",
+            "invalid_serial": "\u5e8f\u865f\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740",
+                    "serial": "\u5e8f\u865f\uff0812 \u4f4d\uff09"
+                },
+                "description": "\u8a2d\u5b9a\u672c\u5730\u7db2\u8def\u672a\u81ea\u52d5\u767c\u73fe\u7684 Nob\u00f8 Ecohub\u3002 \u5047\u5982 hub \u9023\u7dda\u81f3\u5176\u4ed6\u7db2\u8def\u3001\u53ef\u4ee5\u8a66\u8457\u8f38\u5165\u5b8c\u6574\u7684\u5e8f\u865f\uff0812 \u4f4d\u6578\uff09\u53ca\u5176 IP \u4f4d\u5740\u9032\u884c\u9023\u7dda\u3002"
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "\u5e8f\u865f\u5f8c\u7db4\uff083 \u4f4d\u6578\uff09"
+                },
+                "description": "\u8a2d\u5b9a {hub}\u3002\n\n\u6b32\u9023\u7dda\u81f3 Hub\u3001\u9700\u8981\u8f38\u5165\u81f3\u5c11 3 \u4f4d\u6578\u4e4b Hub \u5e8f\u865f\u3002"
+            },
+            "user": {
+                "data": {
+                    "device": "\u81ea\u52d5\u641c\u7d22\u5230\u7684 Hub"
+                },
+                "description": "\u9078\u64c7 Nob\u00f8 Ecohub \u4ee5\u9032\u884c\u8a2d\u5b9a\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "\u8986\u5beb\u985e\u5225"
+                },
+                "description": "\u9078\u64c7\u8986\u5beb\u985e\u5225 \"Now\" \u4ee5\u65bc\u4e0b\u9031\u6a94\u6848\u8b8a\u66f4\u6642\u7d50\u675f\u8986\u5beb\u3002"
+            }
+        }
+    }
+}

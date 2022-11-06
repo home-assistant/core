@@ -11,6 +11,7 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
@@ -28,7 +29,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -300,12 +300,6 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def get_interface(self, capability) -> AlexaCapability:
-        """Return the given AlexaInterface.
-
-        Raises _UnsupportedInterface.
-        """
-
     def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
 
@@ -460,7 +454,7 @@ class ClimateCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVAC_MODE_OFF in self.entity.attributes.get(
+        if climate.HVACMode.OFF in self.entity.attributes.get(
             climate.ATTR_HVAC_MODES, []
         ):
             yield AlexaPowerController(self.entity)

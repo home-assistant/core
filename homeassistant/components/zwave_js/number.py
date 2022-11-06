@@ -66,9 +66,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
             self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
+        self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
     @property
     def native_min_value(self) -> float:
@@ -115,10 +113,7 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
         super().__init__(config_entry, driver, info)
         max_value = cast(int, self.info.primary_value.metadata.max)
         min_value = cast(int, self.info.primary_value.metadata.min)
-        self.correction_factor = max_value - min_value
-        # Fallback in case we can't properly calculate correction factor
-        if self.correction_factor == 0:
-            self.correction_factor = 1
+        self.correction_factor = (max_value - min_value) or 1
 
         # Entity class attributes
         self._attr_native_min_value = 0

@@ -6,12 +6,34 @@
             "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_backup_json": "Ongeldige back-up-JSON"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Een automatische back-up herstellen",
+                    "upload_manual_backup": "Upload een handmatige back-up"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Selecteer de seri\u00eble poort voor je Zigbee-radio",
+                "title": "Selecteer een seri\u00eble poort"
+            },
             "confirm": {
                 "description": "Wilt u {name} instellen?"
+            },
+            "confirm_hardware": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "poortsnelheid"
+                }
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +50,12 @@
                 },
                 "description": "Voer poortspecifieke instellingen in",
                 "title": "Instellingen"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
+                "title": "Upload een handmatige back-up"
             },
             "user": {
                 "data": {
@@ -107,6 +135,47 @@
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Dit apparaat is niet een zha-apparaat.",
+            "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_backup_json": "Ongeldige back-up-JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Een automatische back-up herstellen",
+                    "upload_manual_backup": "Upload een handmatige back-up"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Selecteer de seri\u00eble poort voor je Zigbee-radio",
+                "title": "Selecteer een seri\u00eble poort"
+            },
+            "init": {
+                "description": "ZHA wordt gestopt. Wilt u doorgaan?",
+                "title": "ZHA opnieuw configureren"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "poortsnelheid"
+                }
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
+                "title": "Upload een handmatige back-up"
+            }
         }
     }
 }

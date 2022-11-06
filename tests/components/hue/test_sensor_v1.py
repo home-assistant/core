@@ -7,7 +7,7 @@ import aiohue
 from homeassistant.components import hue
 from homeassistant.components.hue.const import ATTR_HUE_EVENT
 from homeassistant.components.hue.v1 import sensor_base
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
@@ -351,7 +351,7 @@ async def test_sensors(hass, mock_bridge_v1):
     ent_reg = async_get(hass)
     assert (
         ent_reg.async_get("sensor.hue_dimmer_switch_1_battery_level").entity_category
-        == ENTITY_CATEGORY_DIAGNOSTIC
+        == EntityCategory.DIAGNOSTIC
     )
 
 

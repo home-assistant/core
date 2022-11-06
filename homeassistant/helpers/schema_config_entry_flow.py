@@ -134,7 +134,7 @@ class SchemaCommonFlowHandler:
             self._options.update(user_input)
 
         next_step_id: str = step_id
-        if form_step.next_step and (user_input is not None or form_step.schema is None):
+        if user_input is not None or form_step.schema is None:
             # Get next step
             next_step_id_or_end_flow = form_step.next_step(self._options)
             if next_step_id_or_end_flow is None:

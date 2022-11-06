@@ -3,8 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -41,6 +40,7 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -306,7 +306,7 @@ class Thermostat(HomeAccessory):
             if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
             serv_fan = self.add_preload_service(SERV_FANV2, self.fan_chars)
-            serv_thermostat.add_linked_service(serv_fan)
+            serv_fan.add_linked_service(serv_thermostat)
             self.char_active = serv_fan.configure_char(
                 CHAR_ACTIVE, value=1, setter_callback=self._set_fan_active
             )

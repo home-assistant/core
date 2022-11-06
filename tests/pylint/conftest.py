@@ -32,3 +32,21 @@ def type_hint_checker_fixture(hass_enforce_type_hints, linter) -> BaseChecker:
     type_hint_checker = hass_enforce_type_hints.HassTypeHintChecker(linter)
     type_hint_checker.module = "homeassistant.components.pylint_test"
     return type_hint_checker
+
+
+@pytest.fixture(name="hass_imports", scope="session")
+def hass_imports_fixture() -> ModuleType:
+    """Fixture to provide a requests mocker."""
+    loader = SourceFileLoader(
+        "hass_imports",
+        str(BASE_PATH.joinpath("pylint/plugins/hass_imports.py")),
+    )
+    return loader.load_module(None)
+
+
+@pytest.fixture(name="imports_checker")
+def imports_checker_fixture(hass_imports, linter) -> BaseChecker:
+    """Fixture to provide a requests mocker."""
+    type_hint_checker = hass_imports.HassImportsFormatChecker(linter)
+    type_hint_checker.module = "homeassistant.components.pylint_test"
+    return type_hint_checker

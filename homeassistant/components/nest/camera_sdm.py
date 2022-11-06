@@ -18,8 +18,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -73,11 +72,6 @@ class NestCamera(Camera):
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
 
     @property
     def unique_id(self) -> str:

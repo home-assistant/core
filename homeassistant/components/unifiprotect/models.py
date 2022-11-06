@@ -23,6 +23,7 @@ class PermRequired(int, Enum):
 
     NO_WRITE = 1
     WRITE = 2
+    DELETE = 3
 
 
 @dataclass

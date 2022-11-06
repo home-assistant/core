@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration der Radiothermostat-Klimaplattform mit YAML wird in Home Assistant 2022.9 entfernt. \n\nDeine vorhandene Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert. Entferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die YAML-Konfiguration des Funkthermostats wird entfernt"
+        }
+    },
     "options": {
         "step": {
             "init": {

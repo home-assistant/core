@@ -133,7 +133,7 @@ class DovadoSensor(SensorEntity):
             return round(float(state) / 1e6, 1)
         return state
 
-    def update(self):
+    def update(self) -> None:
         """Update sensor values."""
         self._data.update()
         self._attr_native_value = self._compute_state()

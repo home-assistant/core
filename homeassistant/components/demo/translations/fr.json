@@ -1,4 +1,35 @@
 {
+    "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "L'alimentation \u00e9lectrique doit \u00eatre remplac\u00e9e"
+                    }
+                }
+            },
+            "title": "L'alimentation \u00e9lectrique n'est pas stable"
+        },
+        "out_of_blinker_fluid": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Appuyez sur VALIDER une fois le liquide de clignotant rempli",
+                        "title": "Le liquide de clignotant doit \u00eatre rempli"
+                    }
+                }
+            },
+            "title": "Le r\u00e9servoir de liquide de clignotant est vide et doit \u00eatre rempli"
+        },
+        "transmogrifier_deprecated": {
+            "description": "Le composant de transmogrification est d\u00e9sormais obsol\u00e8te en raison de l'absence de contr\u00f4le local dans la nouvelle API",
+            "title": "Le composant de transmogrification est obsol\u00e8te"
+        },
+        "unfixable_problem": {
+            "description": "Ce probl\u00e8me ne va jamais s'arr\u00eater.",
+            "title": "Ce probl\u00e8me ne peut \u00eatre corrig\u00e9"
+        }
+    },
     "options": {
         "step": {
             "init": {

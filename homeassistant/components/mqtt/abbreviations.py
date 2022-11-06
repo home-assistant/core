@@ -52,6 +52,7 @@ ABBREVIATIONS = {
     "e": "encoding",
     "en": "enabled_by_default",
     "ent_cat": "entity_category",
+    "ent_pic": "entity_picture",
     "err_t": "error_topic",
     "err_tpl": "error_template",
     "fanspd_t": "fan_speed_topic",
@@ -80,6 +81,7 @@ ABBREVIATIONS = {
     "hs_stat_t": "hs_state_topic",
     "hs_val_tpl": "hs_value_template",
     "ic": "icon",
+    "img_e": "image_encoding",
     "init": "initial",
     "hum_cmd_t": "target_humidity_command_topic",
     "hum_cmd_tpl": "target_humidity_command_template",
@@ -98,6 +100,7 @@ ABBREVIATIONS = {
     "min_mirs": "min_mireds",
     "max_temp": "max_temp",
     "min_temp": "min_temp",
+    "mode": "mode",
     "mode_cmd_tpl": "mode_command_template",
     "mode_cmd_t": "mode_command_topic",
     "mode_stat_t": "mode_state_topic",
@@ -167,6 +170,8 @@ ABBREVIATIONS = {
     "pr_mode_val_tpl": "preset_mode_value_template",
     "pr_modes": "preset_modes",
     "r_tpl": "red_template",
+    "rel_s": "release_summary",
+    "rel_u": "release_url",
     "ret": "retain",
     "rgb_cmd_tpl": "rgb_command_template",
     "rgb_cmd_t": "rgb_command_topic",
@@ -240,6 +245,7 @@ ABBREVIATIONS = {
     "tilt_opt": "tilt_optimistic",
     "tilt_status_t": "tilt_status_topic",
     "tilt_status_tpl": "tilt_status_template",
+    "tit": "title",
     "t": "topic",
     "uniq_id": "unique_id",
     "unit_of_meas": "unit_of_measurement",
@@ -253,6 +259,9 @@ ABBREVIATIONS = {
     "xy_cmd_t": "xy_command_topic",
     "xy_stat_t": "xy_state_topic",
     "xy_val_tpl": "xy_value_template",
+    "l_ver_t": "latest_version_topic",
+    "l_ver_tpl": "latest_version_template",
+    "pl_inst": "payload_install",
 }
 
 DEVICE_ABBREVIATIONS = {
@@ -262,6 +271,7 @@ DEVICE_ABBREVIATIONS = {
     "name": "name",
     "mf": "manufacturer",
     "mdl": "model",
+    "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
 }

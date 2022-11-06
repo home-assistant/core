@@ -9,13 +9,13 @@ from typing import Any
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
@@ -25,9 +25,10 @@ from .const import DOMAIN
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
-        ENERGY_WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     )
 }
 ENERGY_PRICE_UNITS = tuple(
@@ -40,7 +41,12 @@ GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.GAS,
 )
 GAS_USAGE_UNITS = {
-    sensor.SensorDeviceClass.ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+    sensor.SensorDeviceClass.ENERGY: (
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
+    ),
     sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
@@ -48,6 +54,20 @@ GAS_PRICE_UNITS = tuple(
 )
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
+WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
+WATER_USAGE_UNITS = {
+    sensor.SensorDeviceClass.WATER: (
+        VOLUME_CUBIC_METERS,
+        VOLUME_CUBIC_FEET,
+        VOLUME_GALLONS,
+        VOLUME_LITERS,
+    ),
+}
+WATER_PRICE_UNITS = tuple(
+    f"/{unit}" for units in WATER_USAGE_UNITS.values() for unit in units
+)
+WATER_UNIT_ERROR = "entity_unexpected_unit_water"
+WATER_PRICE_UNIT_ERROR = "entity_unexpected_unit_water_price"
 
 
 @dataclasses.dataclass
@@ -263,10 +283,10 @@ def _async_validate_auto_generated_cost_entity(
 
 async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
     """Validate the energy configuration."""
-    manager = await data.async_get_manager(hass)
+    manager: data.EnergyManager = await data.async_get_manager(hass)
     statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]] = {}
     validate_calls = []
-    wanted_statistics_metadata = set()
+    wanted_statistics_metadata: set[str] = set()
 
     result = EnergyPreferencesValidation()
 
@@ -279,6 +299,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
         result.energy_sources.append(source_result)
 
         if source["type"] == "grid":
+            flow: data.FlowFromGridSourceType | data.FlowToGridSourceType
             for flow in source["flow_from"]:
                 wanted_statistics_metadata.add(flow["stat_energy_from"])
                 validate_calls.append(
@@ -294,14 +315,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_cost") is not None:
-                    wanted_statistics_metadata.add(flow["stat_cost"])
+                if (stat_cost := flow.get("stat_cost")) is not None:
+                    wanted_statistics_metadata.add(stat_cost)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_cost"],
+                            stat_cost,
                             source_result,
                         )
                     )
@@ -317,7 +338,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_from") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -325,7 +346,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_from"],
+                            flow["stat_energy_from"],
                             source_result,
                         )
                     )
@@ -345,14 +366,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_compensation") is not None:
-                    wanted_statistics_metadata.add(flow["stat_compensation"])
+                if (stat_compensation := flow.get("stat_compensation")) is not None:
+                    wanted_statistics_metadata.add(stat_compensation)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_compensation"],
+                            stat_compensation,
                             source_result,
                         )
                     )
@@ -368,7 +389,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_to") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -376,7 +397,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_to"],
+                            flow["stat_energy_to"],
                             source_result,
                         )
                     )
@@ -396,14 +417,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
             )
 
-            if source.get("stat_cost") is not None:
-                wanted_statistics_metadata.add(source["stat_cost"])
+            if (stat_cost := source.get("stat_cost")) is not None:
+                wanted_statistics_metadata.add(stat_cost)
                 validate_calls.append(
                     functools.partial(
                         _async_validate_cost_stat,
                         hass,
                         statistics_metadata,
-                        source["stat_cost"],
+                        stat_cost,
                         source_result,
                     )
                 )
@@ -419,7 +440,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-            if source.get("entity_energy_from") is not None and (
+            if (
                 source.get("entity_energy_price") is not None
                 or source.get("number_energy_price") is not None
             ):
@@ -427,7 +448,58 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     functools.partial(
                         _async_validate_auto_generated_cost_entity,
                         hass,
-                        source["entity_energy_from"],
+                        source["stat_energy_from"],
+                        source_result,
+                    )
+                )
+
+        elif source["type"] == "water":
+            wanted_statistics_metadata.add(source["stat_energy_from"])
+            validate_calls.append(
+                functools.partial(
+                    _async_validate_usage_stat,
+                    hass,
+                    statistics_metadata,
+                    source["stat_energy_from"],
+                    WATER_USAGE_DEVICE_CLASSES,
+                    WATER_USAGE_UNITS,
+                    WATER_UNIT_ERROR,
+                    source_result,
+                )
+            )
+
+            if (stat_cost := source.get("stat_cost")) is not None:
+                wanted_statistics_metadata.add(stat_cost)
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_cost_stat,
+                        hass,
+                        statistics_metadata,
+                        stat_cost,
+                        source_result,
+                    )
+                )
+            elif source.get("entity_energy_price") is not None:
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_price_entity,
+                        hass,
+                        source["entity_energy_price"],
+                        source_result,
+                        WATER_PRICE_UNITS,
+                        WATER_PRICE_UNIT_ERROR,
+                    )
+                )
+
+            if (
+                source.get("entity_energy_price") is not None
+                or source.get("number_energy_price") is not None
+            ):
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_auto_generated_cost_entity,
+                        hass,
+                        source["stat_energy_from"],
                         source_result,
                     )
                 )

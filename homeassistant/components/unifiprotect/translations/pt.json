@@ -22,5 +22,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_media": "N\u00famero m\u00e1ximo de eventos a serem carregados para o Media Browser (aumenta o uso de RAM)"
+                }
+            }
+        }
     }
 }

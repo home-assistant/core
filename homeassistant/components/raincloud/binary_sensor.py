@@ -58,7 +58,7 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
         self._state = getattr(self.data, self._sensor_type)

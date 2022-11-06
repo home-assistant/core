@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Tu instancia de Home Assistant debe estar accesible desde Internet para recibir mensajes webhook."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant debes configurar los [Webhooks en Mailgun]({mailgun_url}). \n\n Completa la siguiente informaci\u00f3n: \n\n - URL: `{webhook_url}` \n - M\u00e9todo: POST \n - Tipo de contenido: application/json \n\n Consulta [la documentaci\u00f3n]({docs_url}) sobre c\u00f3mo configurar las automatizaciones para manejar los datos entrantes."
+            "default": "Para enviar eventos a Home Assistant debes configurar los [Webhooks con Mailgun]({mailgun_url}). \n\n Completa la siguiente informaci\u00f3n: \n\n- URL: `{webhook_url}` \n- M\u00e9todo: POST \n- Tipo de contenido: application/json \n\nConsulta [la documentaci\u00f3n]({docs_url}) sobre c\u00f3mo configurar las automatizaciones para manejar los datos entrantes."
         },
         "step": {
             "user": {

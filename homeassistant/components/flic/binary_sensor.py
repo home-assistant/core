@@ -117,10 +117,16 @@ def start_scanning(config, add_entities, client):
     client.add_scan_wizard(scan_wizard)
 
 
-def setup_button(hass, config, add_entities, client, address):
+def setup_button(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    client,
+    address,
+) -> None:
     """Set up a single button device."""
-    timeout = config.get(CONF_TIMEOUT)
-    ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
+    timeout: int = config[CONF_TIMEOUT]
+    ignored_click_types: list[str] | None = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
     _LOGGER.info("Connected to button %s", address)
 
@@ -130,14 +136,25 @@ def setup_button(hass, config, add_entities, client, address):
 class FlicButton(BinarySensorEntity):
     """Representation of a flic button."""
 
-    def __init__(self, hass, client, address, timeout, ignored_click_types):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: pyflic.FlicClient,
+        address: str,
+        timeout: int,
+        ignored_click_types: list[str] | None,
+    ) -> None:
         """Initialize the flic button."""
 
+        self._attr_extra_state_attributes = {"address": address}
+        self._attr_name = f"flic_{address.replace(':', '')}"
         self._attr_unique_id = format_mac(address)
         self._hass = hass
         self._address = address
         self._timeout = timeout
-        self._is_down = False
+        self._attr_is_on = True
         self._ignored_click_types = ignored_click_types or []
         self._hass_click_types = {
             pyflic.ClickType.ButtonClick: CLICK_TYPE_SINGLE,
@@ -149,7 +166,7 @@ class FlicButton(BinarySensorEntity):
         self._channel = self._create_channel()
         client.add_connection_channel(self._channel)
 
-    def _create_channel(self):
+    def _create_channel(self) -> pyflic.ButtonConnectionChannel:
         """Create a new connection channel to the button."""
         channel = pyflic.ButtonConnectionChannel(self._address)
         channel.on_button_up_or_down = self._on_up_down
@@ -170,31 +187,6 @@ class FlicButton(BinarySensorEntity):
 
         return channel
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"flic_{self.address.replace(':', '')}"
-
-    @property
-    def address(self):
-        """Return the bluetooth address of the device."""
-        return self._address
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._is_down
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        return {"address": self.address}
-
     def _queued_event_check(self, click_type, time_diff):
         """Generate a log message and returns true if timeout exceeded."""
         time_string = f"{time_diff:d} {'second' if time_diff == 1 else 'seconds'}"
@@ -203,14 +195,14 @@ class FlicButton(BinarySensorEntity):
             _LOGGER.warning(
                 "Queued %s dropped for %s. Time in queue was %s",
                 click_type,
-                self.address,
+                self._address,
                 time_string,
             )
             return True
         _LOGGER.info(
             "Queued %s allowed for %s. Time in queue was %s",
             click_type,
-            self.address,
+            self._address,
             time_string,
         )
         return False
@@ -220,7 +212,7 @@ class FlicButton(BinarySensorEntity):
         if was_queued and self._queued_event_check(click_type, time_diff):
             return
 
-        self._is_down = click_type == pyflic.ClickType.ButtonDown
+        self._attr_is_on = click_type != pyflic.ClickType.ButtonDown
         self.schedule_update_ha_state()
 
     def _on_click(self, channel, click_type, was_queued, time_diff):
@@ -238,7 +230,7 @@ class FlicButton(BinarySensorEntity):
             EVENT_NAME,
             {
                 EVENT_DATA_NAME: self.name,
-                EVENT_DATA_ADDRESS: self.address,
+                EVENT_DATA_ADDRESS: self._address,
                 EVENT_DATA_QUEUED_TIME: time_diff,
                 EVENT_DATA_TYPE: hass_click_type,
             },
@@ -248,5 +240,5 @@ class FlicButton(BinarySensorEntity):
         """Remove device, if button disconnects."""
         if connection_status == pyflic.ConnectionStatus.Disconnected:
             _LOGGER.warning(
-                "Button (%s) disconnected. Reason: %s", self.address, disconnect_reason
+                "Button (%s) disconnected. Reason: %s", self._address, disconnect_reason
             )

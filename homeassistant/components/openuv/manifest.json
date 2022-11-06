@@ -6,5 +6,6 @@
   "requirements": ["pyopenuv==2022.04.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
-  "loggers": ["pyopenuv"]
+  "loggers": ["pyopenuv"],
+  "integration_type": "service"
 }

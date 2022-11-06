@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Kan inte ansluta till Eight Sleep-molnet: {error}"
+        },
+        "error": {
+            "cannot_connect": "Kan inte ansluta till Eight Sleep-molnet: {error}"
         },
         "step": {
             "user": {

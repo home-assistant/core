@@ -12,7 +12,10 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -50,6 +53,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Moon sensor."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "removed_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -72,11 +84,17 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_device_class = "moon__phase"
+    _attr_has_entity_name = True
+    _attr_name = "Phase"
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the moon sensor."""
-        self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name="Moon",
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""

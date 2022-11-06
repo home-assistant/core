@@ -18,7 +18,7 @@
             "unable_to_pair": "E\u015fle\u015ftirilemiyor, l\u00fctfen tekrar deneyin.",
             "unknown_error": "Cihaz bilinmeyen bir hata bildirdi. E\u015fle\u015ftirme ba\u015far\u0131s\u0131z oldu."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "T\u00fcm denetleyicilerde e\u015fle\u015ftirmeyi durdurun veya cihaz\u0131 yeniden ba\u015flatmay\u0131 deneyin, ard\u0131ndan e\u015fle\u015ftirmeye devam edin.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "G\u00fcvenli olmayan kurulum kodlar\u0131yla e\u015fle\u015ftirmeye izin verin.",
                     "pairing_code": "E\u015fle\u015ftirme Kodu"
                 },
-                "description": "HomeKit Denetleyici, ayr\u0131 bir HomeKit denetleyicisi veya iCloud olmadan g\u00fcvenli bir \u015fifreli ba\u011flant\u0131 kullanarak yerel alan a\u011f\u0131 \u00fczerinden {name} ile ileti\u015fim kurar. Bu aksesuar\u0131 kullanmak i\u00e7in HomeKit e\u015fle\u015ftirme kodunuzu (XXX-XX-XXX bi\u00e7iminde) girin. Bu kod genellikle cihaz\u0131n kendisinde veya ambalaj\u0131nda bulunur.",
+                "description": "HomeKit Denetleyici, ayr\u0131 bir HomeKit denetleyicisi veya iCloud olmadan g\u00fcvenli bir \u015fifreli ba\u011flant\u0131 kullanarak yerel alan a\u011f\u0131 \u00fczerinden {name} ( {category} ) ile ileti\u015fim kurar. Bu aksesuar\u0131 kullanmak i\u00e7in HomeKit e\u015fle\u015ftirme kodunuzu (XXX-XX-XXX bi\u00e7iminde) girin. Bu kod genellikle cihaz\u0131n kendisinde veya ambalaj\u0131nda bulunur.",
                 "title": "HomeKit Aksesuar Protokol\u00fc arac\u0131l\u0131\u011f\u0131yla bir cihazla e\u015fle\u015ftirin"
             },
             "protocol_error": {

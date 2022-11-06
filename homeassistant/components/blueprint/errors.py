@@ -91,3 +91,11 @@ class FileAlreadyExists(BlueprintWithNameException):
     def __init__(self, domain: str, blueprint_name: str) -> None:
         """Initialize blueprint exception."""
         super().__init__(domain, blueprint_name, "Blueprint already exists")
+
+
+class BlueprintInUse(BlueprintWithNameException):
+    """Error when a blueprint is in use."""
+
+    def __init__(self, domain: str, blueprint_name: str) -> None:
+        """Initialize blueprint exception."""
+        super().__init__(domain, blueprint_name, "Blueprint in use")

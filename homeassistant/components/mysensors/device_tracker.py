@@ -1,16 +1,16 @@
 """Support for tracking MySensors devices."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
-from homeassistant.components import mysensors
+from homeassistant.components.device_tracker import AsyncSeeCallback
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
+from .. import mysensors
 from .const import ATTR_GATEWAY_ID, DevId, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 
@@ -18,7 +18,7 @@ from .helpers import on_unload
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MySensors device scanner."""
@@ -63,7 +63,12 @@ async def async_setup_scanner(
 class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, hass: HomeAssistant, async_see: Callable, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        async_see: AsyncSeeCallback,
+        *args: Any,
+    ) -> None:
         """Set up instance."""
         super().__init__(*args)
         self.async_see = async_see

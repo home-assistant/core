@@ -28,6 +28,7 @@ from ..const import (
     SIGNAL_UPDATE_DEVICE,
 )
 from .base import AttrReportConfig, ClientChannel, ZigbeeChannel, parse_and_log_command
+from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:
     from . import ChannelPool
@@ -151,6 +152,15 @@ class BasicChannel(ZigbeeChannel):
         5: "Emergency mains constantly powered",
         6: "Emergency mains and transfer switch",
     }
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+        """Initialize Basic channel."""
+        super().__init__(cluster, ch_pool)
+        if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["trigger_indicator"] = True
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
@@ -331,6 +341,19 @@ class OnOffChannel(ZigbeeChannel):
         super().__init__(cluster, ch_pool)
         self._off_listener = None
 
+        if self.cluster.endpoint.model in (
+            "TS011F",
+            "TS0121",
+            "TS0001",
+            "TS0002",
+            "TS0003",
+            "TS0004",
+        ):
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["power_on_state"] = True
+
     @property
     def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
@@ -365,7 +388,7 @@ class OnOffChannel(ZigbeeChannel):
             should_accept = args[0]
             on_time = args[1]
             # 0 is always accept 1 is only accept when already on
-            if should_accept == 0 or (should_accept == 1 and self._state):
+            if should_accept == 0 or (should_accept == 1 and bool(self.on_off)):
                 if self._off_listener is not None:
                     self._off_listener()
                     self._off_listener = None

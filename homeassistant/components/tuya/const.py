@@ -182,6 +182,7 @@ class DPCode(StrEnum):
     CLEAN_TIME = "clean_time"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
     CLOUD_RECIPE_NUMBER = "cloud_recipe_number"
+    CLOSED_OPENED_KIT = "closed_opened_kit"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
@@ -433,7 +434,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=PERCENTAGE,
-        aliases={"pct", "percent"},
+        aliases={"pct", "percent", "% RH"},
         device_classes={
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.HUMIDITY,

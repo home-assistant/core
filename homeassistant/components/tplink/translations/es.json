@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Si dejas el host vac\u00edo, se usar\u00e1 descubrimiento para encontrar dispositivos."
+                "description": "Si dejas el host vac\u00edo, se usar\u00e1 el descubrimiento para encontrar dispositivos."
             }
         }
     }

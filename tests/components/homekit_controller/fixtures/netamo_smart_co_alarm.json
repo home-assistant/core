@@ -1,0 +1,362 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 19,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2.2.0",
+            "description": "Version",
+            "maxLen": 64
+          },
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "iid": 4,
+        "type": "EA22EA53-6227-55EA-AC24-73ACF3EEA0E8",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 340,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00F44C18-042E-5C4E-9A4C-561D44DCD804",
+            "iid": 339,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "g8d8a6c",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 7,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Smart CO Alarm",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "0",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Netatmo",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1234",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Smart CO Alarm",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.3",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 47,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "4.1;Sep 27 2021 12:54:49",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 325,
+            "perms": ["pr", "hd"],
+            "format": "data",
+            "value": "fa7beb3a4566c1fb"
+          }
+        ]
+      },
+      {
+        "iid": 17,
+        "type": "00000055-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000004C-0000-1000-8000-0026BB765291",
+            "iid": 203,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Setup"
+          },
+          {
+            "type": "0000004F-0000-1000-8000-0026BB765291",
+            "iid": 205,
+            "perms": [],
+            "format": "uint8",
+            "description": "Pairing Features"
+          },
+          {
+            "type": "0000004E-0000-1000-8000-0026BB765291",
+            "iid": 204,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Verify"
+          },
+          {
+            "type": "00000050-0000-1000-8000-0026BB765291",
+            "iid": 206,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null,
+            "description": "Pairing Pairings"
+          }
+        ]
+      },
+      {
+        "iid": 22,
+        "type": "0000007F-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 230,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "iid": 231,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Fault",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 42,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Carbon Monoxide Sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000091-0000-1000-8000-0026BB765291",
+            "iid": 41,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 0.0,
+            "description": "Carbon Monoxide Peak Level",
+            "minValue": 0.0,
+            "maxValue": 1000.0
+          },
+          {
+            "type": "00000019-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 333,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3
+          },
+          {
+            "type": "00000090-0000-1000-8000-0026BB765291",
+            "iid": 40,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 0.0,
+            "description": "Carbon Monoxide Level",
+            "minValue": 0.0,
+            "maxValue": 1000.0
+          },
+          {
+            "type": "0000000C-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 326,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "type": "0000007A-0000-1000-8000-0026BB765291",
+            "iid": 45,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Tampered",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000001-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 327,
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "type": "00000012-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 328,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3
+          },
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 43,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000069-0000-1000-8000-0026BB765291",
+            "iid": 229,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Carbon Monoxide Detected",
+            "minValue": 0,
+            "maxValue": 1
+          }
+        ]
+      },
+      {
+        "iid": 35,
+        "type": "00001801-0000-1000-8000-00805F9B34FB",
+        "characteristics": []
+      },
+      {
+        "iid": 36,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 336,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Battery Service",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 337,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000002-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 335,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 4
+          }
+        ]
+      },
+      {
+        "iid": 40,
+        "type": "00000004-4DDB-598F-A73F-006513F2DB6B",
+        "characteristics": [
+          {
+            "type": "00000007-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 187,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 14
+          },
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 183,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000009-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 184,
+            "perms": ["pw", "hd"],
+            "format": "uint8",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000006-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 188,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "0000000000000000"
+          },
+          {
+            "type": "0000000A-4DDB-598F-A73F-006513F2DB6B",
+            "iid": 324,
+            "perms": ["pr", "ev"],
+            "format": "uint32",
+            "value": 3
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -9,8 +9,10 @@ from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
     AirVisualError,
     InvalidKeyError,
+    KeyExpiredError,
     NodeProError,
     NotFoundError,
+    UnauthorizedError,
 )
 import voluptuous as vol
 
@@ -119,7 +121,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_API_KEY] not in valid_keys:
                 try:
                     await coro
-                except InvalidKeyError:
+                except (InvalidKeyError, KeyExpiredError, UnauthorizedError):
                     errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
                     errors[CONF_CITY] = "location_not_found"

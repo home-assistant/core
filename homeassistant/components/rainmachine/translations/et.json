@@ -18,10 +18,24 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "V\u00e4rskendage automaatikaid v\u00f5i skripte, mis seda olemit kasutavad, et kasutada selle asemel '{replacement_entity_id}'.",
+                        "title": "\u00dcksus {old_entity_id} eemaldatakse"
+                    }
+                }
+            },
+            "title": "\u00dcksus {old_entity_id} eemaldatakse"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Kasuta tsoonide t\u00f6\u00f6aegu rakendusest RainMachine",
                     "zone_run_time": "Vaiketsooni k\u00e4itamisaeg (sekundites)"
                 },
                 "title": "Seadista RainMachine"

@@ -585,17 +585,27 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {
+        CONF_NAME: "timer from storage",
+        CONF_DURATION: 33,
+        CONF_RESTORE: True,
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{timer_id}",
-            CONF_DURATION: 33,
-            CONF_RESTORE: True,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {
+        "id": "from_storage",
+        CONF_DURATION: "0:00:33",
+        CONF_NAME: "timer from storage",
+        CONF_RESTORE: True,
+    }
 
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))
@@ -672,7 +682,7 @@ async def test_restore_idle(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -712,7 +722,7 @@ async def test_restore_paused(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -756,7 +766,7 @@ async def test_restore_active_resume(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -807,7 +817,7 @@ async def test_restore_active_finished_outside_grace(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",

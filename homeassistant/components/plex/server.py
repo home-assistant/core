@@ -12,8 +12,7 @@ import plexapi.server
 from requests import Session
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import MEDIA_TYPE_PLAYLIST
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaType
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -462,24 +461,24 @@ class PlexServer:
                     continue
 
                 session_username = next(iter(session.usernames), None)
-                for player in session.players:
-                    unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
-                    if unique_id not in self.active_sessions:
-                        _LOGGER.debug("Creating new Plex session: %s", session)
-                        self.active_sessions[unique_id] = PlexSession(self, session)
-                    if session_username and session_username not in monitored_users:
-                        ignored_clients.add(player.machineIdentifier)
-                        _LOGGER.debug(
-                            "Ignoring %s client owned by '%s'",
-                            player.product,
-                            session_username,
-                        )
-                        continue
+                player = session.player
+                unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
+                if unique_id not in self.active_sessions:
+                    _LOGGER.debug("Creating new Plex session: %s", session)
+                    self.active_sessions[unique_id] = PlexSession(self, session)
+                if session_username and session_username not in monitored_users:
+                    ignored_clients.add(player.machineIdentifier)
+                    _LOGGER.debug(
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
+                    )
+                    continue
 
-                    process_device("session", player)
-                    available_clients[player.machineIdentifier][
-                        "session"
-                    ] = self.active_sessions[unique_id]
+                process_device("session", player)
+                available_clients[player.machineIdentifier][
+                    "session"
+                ] = self.active_sessions[unique_id]
 
         for device in devices:
             process_device("PMS", device)
@@ -627,7 +626,7 @@ class PlexServer:
             except NotFound as err:
                 raise MediaNotFound(f"Media for key {key} not found") from err
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]
                 return self.playlist(playlist_name)

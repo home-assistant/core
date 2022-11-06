@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEGREE,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_MILLIMETERS,
@@ -141,7 +142,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "IEC_ENERGY_COUNTER": SensorEntityDescription(
         key="IEC_ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -170,6 +171,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     "WIND_DIRECTION": SensorEntityDescription(

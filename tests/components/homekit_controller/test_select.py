@@ -3,7 +3,9 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import Helper, setup_test_component
+from homeassistant.helpers import entity_registry as er
+
+from .common import Helper, get_next_aid, setup_test_component
 
 
 def create_service_with_ecobee_mode(accessory: Accessory):
@@ -17,6 +19,25 @@ def create_service_with_ecobee_mode(accessory: Accessory):
     service.add_char(CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE)
 
     return service
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test we can migrate a select unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    select = entity_registry.async_get_or_create(
+        "select",
+        "homekit_controller",
+        f"homekit-0001-aid:{aid}-sid:8-cid:14",
+        suggested_object_id="testdevice_current_mode",
+    )
+
+    await setup_test_component(hass, create_service_with_ecobee_mode)
+
+    assert (
+        entity_registry.async_get(select.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8_14"
+    )
 
 
 async def test_read_current_mode(hass, utcnow):

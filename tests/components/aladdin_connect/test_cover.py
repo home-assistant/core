@@ -33,6 +33,7 @@ DEVICE_CONFIG_OPEN = {
     "name": "home",
     "status": "open",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_OPENING = {
@@ -41,6 +42,7 @@ DEVICE_CONFIG_OPENING = {
     "name": "home",
     "status": "opening",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_CLOSED = {
@@ -49,6 +51,7 @@ DEVICE_CONFIG_CLOSED = {
     "name": "home",
     "status": "closed",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_CLOSING = {
@@ -57,6 +60,7 @@ DEVICE_CONFIG_CLOSING = {
     "name": "home",
     "status": "closing",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_DISCONNECTED = {
@@ -65,6 +69,7 @@ DEVICE_CONFIG_DISCONNECTED = {
     "name": "home",
     "status": "open",
     "link_status": "Disconnected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_BAD = {

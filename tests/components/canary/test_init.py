@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from requests import ConnectTimeout
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.canary.const import CONF_FFMPEG_ARGUMENTS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
