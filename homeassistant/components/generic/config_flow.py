@@ -172,11 +172,8 @@ async def async_test_still(
     ) as err:
         _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
-
     if not image:
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
-    if not content_type.startswith("image/"):
-        return {CONF_STILL_IMAGE_URL: "invalid_still_image"}, None
 
     # We can check everything apart from svg files.
     if content_type != "image/svg+xml":
