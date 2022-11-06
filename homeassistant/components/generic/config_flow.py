@@ -74,7 +74,6 @@ SUPPORTED_IMAGE_TYPES = {
     "image/webp",
 }
 IMAGE_PREVIEWS_ACTIVE = "previews"
-SVG_REGEX = r"\s*(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b"
 
 
 def build_schema(
@@ -138,7 +137,7 @@ async def async_test_still(
 ) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt: str | None = None
-    content_type: str | None
+    content_type: str | None = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
         return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
     try:
@@ -170,7 +169,12 @@ async def async_test_still(
         TimeoutException,
         KeyError,
     ) as err:
-        _LOGGER.error("Error getting camera image from %s: %s", url, type(err).__name__)
+        _LOGGER.error(
+            "Error getting camera image from %s: %s",
+            url,
+            type(err).__name__,
+            exc_info=True,
+        )
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
     if not image:
         return {CONF_STILL_IMAGE_URL: "unable_still_load"}, None
@@ -180,7 +184,7 @@ async def async_test_still(
         imagefile = io.BytesIO(image)
         with contextlib.suppress(PIL.UnidentifiedImageError):
             img = PIL.Image.open(imagefile)
-            fmt = "image/" + str(img.format.lower())
+            fmt = f"image/{img.format.lower()}"
             if fmt != content_type:
                 _LOGGER.warning(
                     "Detected image content-type '%s' does not match the server reported content-type '%s'",
