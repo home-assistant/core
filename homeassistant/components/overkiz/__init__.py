@@ -191,7 +191,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Delete local auth token if local server is unloaded
         if token_uuid := entry.data.get(CONF_TOKEN_UUID):
             data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-            data.coordinator.client.delete_local_token(token_uuid)
+            # TODO delete local token on unload, get gateway_id
+            # data.coordinator.client.delete_local_token(gateway_id, token_uuid)
 
         hass.data[DOMAIN].pop(entry.entry_id)
 
