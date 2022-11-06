@@ -103,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     protect_version = data_service.api.bootstrap.nvr.version
-
     if protect_version.is_prerelease:
         ir.async_create_issue(
             hass,
