@@ -27,15 +27,25 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
 
-LOCAL = "local"
-LOCAL_HUB = {
-    LOCAL: OverkizServer(
-        name="Somfy TaHoma Developer Mode (local API)",
-        endpoint="",
-        manufacturer="Somfy",
-        configuration_url=None,
+
+# TODO move to PyOverkiz
+def generate_local_server(
+    host: str | None = None,
+    name: str | None = "Somfy TaHoma Developer Mode (local API)",
+    manufacturer: str | None = "Somfy",
+    configuration_url: str | None = None,
+) -> OverkizServer:
+    """Generate OverkizServer object for local API."""
+    return OverkizServer(
+        name=name,
+        endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/" if host else "",
+        manufacturer=manufacturer,
+        configuration_url=configuration_url,
     )
-}
+
+
+LOCAL = "local"
+LOCAL_HUB = {LOCAL: generate_local_server()}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,12 +67,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_hub = DEFAULT_HUB
         self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
 
-    async def async_validate_input(self, user_input: dict[str, Any]) -> None:
+    async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
         if user_input[CONF_HUB] == LOCAL:
+            # Create session on Somfy Europe to generate an access token for local API
             session = async_create_clientsession(self.hass)
             server = SUPPORTED_SERVERS["somfy_europe"]
             client = OverkizClient(
@@ -70,13 +81,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             await client.login(register_event_listener=False)
-
             gateways = await client.get_gateways()
 
             for gateway in gateways:
                 # Overkiz can return multiple gateways, but we only can generate a token
                 # for the main gateway.
-                if re.match(r"\d{4}-\d{4}-\d{4}", gateway_id):
+                if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
                     gateway_id = gateway.id
 
             token = await client.generate_local_token(gateway_id)
@@ -88,24 +98,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Somfy (self-signed) SSL cert uses the wrong common name
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
-            # TODO try if we can access the .local, otherwise remove the token
             local_client = OverkizClient(
                 username="",
                 password="",
                 token=token,
                 session=session,
-                server=OverkizServer(
-                    name="Somfy TaHoma Developer Mode (local API)",
-                    endpoint=f"https://{user_input[CONF_HOST]}/enduser-mobile-web/1/enduserAPI/",
-                    manufacturer="Somfy",
-                    configuration_url=None,
-                ),
+                server=generate_local_server(host=user_input[CONF_HOST]),
             )
 
-            # Test local connection
             try:
                 await local_client.login()
             except Exception as exception:  # pylint: disable=broad-except
+                # Remove local token when login is not succesfull
                 await client.delete_local_token(gateway_id, uuid)
 
                 raise exception

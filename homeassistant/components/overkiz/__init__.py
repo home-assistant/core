@@ -44,6 +44,8 @@ from .const import (
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
+from .config_flow import generate_local_server
+
 
 @dataclass
 class HomeAssistantOverkizData:
@@ -75,12 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             password="",
             token=token,
             session=session,
-            server=OverkizServer(
-                name="Somfy TaHoma Developer Mode (local API)",
-                endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/",
-                manufacturer="Somfy",
-                configuration_url=None,
-            ),
+            server=generate_local_server(host=host),
         )
     else:
         username = entry.data[CONF_USERNAME]
