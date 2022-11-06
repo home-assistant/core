@@ -35,6 +35,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -209,7 +210,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         await self.hass.async_add_executor_job(self._logout, conn)
 
-        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
+        user_input.update(
+            {
+                CONF_MAC: get_device_macs(info, wlan_settings),
+                CONF_MANUFACTURER: self.context.get(CONF_MANUFACTURER),
+            }
+        )
 
         if not self.unique_id:
             if serial_number := info.get("SerialNumber"):
@@ -263,6 +269,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "title_placeholders": {
                     CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
                 },
+                CONF_MANUFACTURER: discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER),
                 CONF_URL: url,
             }
         )

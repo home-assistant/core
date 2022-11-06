@@ -56,9 +56,11 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_UNIQUE_ID,
+    CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
@@ -412,9 +414,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
+            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
+            manufacturer=entry.data.get(CONF_MANUFACTURER),
             name=router.device_name,
-            manufacturer="Huawei",
         )
         hw_version = None
         sw_version = None
