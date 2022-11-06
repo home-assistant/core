@@ -44,11 +44,13 @@
     "step": {
       "user": {
         "title": "Options for Sony Bravia TV",
-        "description": "Ensure that your TV is turned on before trying to set it up.",
         "data": {
           "ignored_sources": "List of ignored sources"
         }
       }
+    },
+    "abort": {
+      "failed_update": "An error occurred while updating the list of sources.\n\n Ensure that your TV is turned on before trying to set it up."
     }
   }
 }

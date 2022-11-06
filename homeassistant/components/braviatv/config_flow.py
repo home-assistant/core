@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from contextlib import suppress
 from typing import Any
 from urllib.parse import urlparse
 
@@ -263,8 +262,11 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
             self.config_entry.entry_id
         ]
 
-        with suppress(BraviaTVError):
+        try:
             await coordinator.async_update_sources()
+        except BraviaTVError:
+            return self.async_abort(reason="failed_update")
+
         sources = coordinator.source_map.values()
         self.source_list = [item["title"] for item in sources]
         return await self.async_step_user()
