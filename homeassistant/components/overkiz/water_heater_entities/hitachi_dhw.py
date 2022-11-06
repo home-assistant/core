@@ -65,17 +65,17 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         )
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
-        if (
-            self.executor.select_state(OverkizState.MODBUS_CONTROL_DHW)
-            == OverkizCommandParam.STOP
-        ):
+        modbus_control = self.device.states[OverkizState.MODBUS_CONTROL_DHW]
+        if modbus_control and modbus_control.value_as_str == OverkizCommandParam.STOP:
             return STATE_OFF
 
-        return OVERKIZ_TO_OPERATION_MODE[
-            cast(str, self.executor.select_state(OverkizState.MODBUS_DHW_MODE))
-        ]
+        current_mode = self.device.states[OverkizState.MODBUS_DHW_MODE]
+        if current_mode and current_mode.value_as_str in OVERKIZ_TO_OPERATION_MODE:
+            return OVERKIZ_TO_OPERATION_MODE[current_mode.value_as_str]
+
+        return None
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
