@@ -16,6 +16,7 @@ from pyoverkiz.exceptions import (
 )
 from pyoverkiz.models import OverkizServer, obfuscate_id
 import voluptuous as vol
+import re
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
@@ -71,11 +72,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login(register_event_listener=False)
 
             gateways = await client.get_gateways()
+            valid_gateway = re.compile("\d{4}-\d{4}-\d{4}")
 
             for gateway in gateways:
                 # Generate tokens
-                # TODO check if gateway is in the right format
-                gateway_id = gateway.id
+                if valid_gateway.match(gateway.id):
+                    gateway_id = gateway.id
 
             token = await client.generate_local_token(gateway_id)
             uuid = await client.activate_local_token(
