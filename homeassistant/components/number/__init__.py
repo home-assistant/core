@@ -277,7 +277,12 @@ class NumberEntity(Entity):
         ):
             self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.min_value
-        return self._convert_to_state_value(self.native_min_value, floor_decimal)
+
+        # Some conversions may invert the scale, like color temperature mired to kelvin
+        return min(
+            self._convert_to_state_value(self.native_min_value, floor_decimal),
+            self._convert_to_state_value(self.native_max_value, ceil_decimal),
+        )
 
     @property
     def native_max_value(self) -> float:
@@ -304,7 +309,12 @@ class NumberEntity(Entity):
         ):
             self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.max_value
-        return self._convert_to_state_value(self.native_max_value, ceil_decimal)
+
+        # Some conversions may invert the scale, like color temperature mired to kelvin
+        return max(
+            self._convert_to_state_value(self.native_min_value, floor_decimal),
+            self._convert_to_state_value(self.native_max_value, ceil_decimal),
+        )
 
     @property
     def native_step(self) -> float | None:

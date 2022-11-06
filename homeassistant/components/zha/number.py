@@ -1,6 +1,7 @@
 """Support for ZHA AnalogOutput cluster."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -15,6 +16,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 from .core import discovery
 from .core.const import (
@@ -553,6 +558,16 @@ class StartUpColorTemperatureConfigurationEntity(
         if self._channel:
             self._attr_native_min_value: float = self._channel.min_mireds
             self._attr_native_max_value: float = self._channel.max_mireds
+
+    def _convert_to_state_value(
+        self, value: float, method: Callable[[float, int], float]
+    ) -> float:
+        """Convert a value in the number's native unit to the configured unit."""
+        return color_temperature_mired_to_kelvin(value)
+
+    def convert_to_native_value(self, value: float) -> float:
+        """Convert a value to the number's native unit."""
+        return color_temperature_kelvin_to_mired(value)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
