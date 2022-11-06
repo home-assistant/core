@@ -5,15 +5,28 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import OverkizCommandParam, UIClass, UIWidget
+from pyoverkiz.enums import MeasuredValueType, OverkizCommandParam, UIClass, UIWidget
 
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    TIME_SECONDS,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     Platform,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 
 DOMAIN: Final = "overkiz"
@@ -107,9 +120,40 @@ OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
 }
 
 OVERKIZ_UNIT_TO_HA: dict[str, str] = {
-    "core:ElectricalEnergyInKWh": ENERGY_KILO_WATT_HOUR,
-    "core:ElectricalEnergyInWh": ENERGY_WATT_HOUR,
-    "core:LuminanceInLux": LIGHT_LUX,
-    "core:TemperatureInCelcius": TEMP_CELSIUS,
-    "core:RelativeValueInPercentage": PERCENTAGE,
+    MeasuredValueType.ABSOLUTE_VALUE: "",
+    MeasuredValueType.ANGLE_IN_DEGREES: DEGREE,
+    # MeasuredValueType.ANGULAR_SPEED_IN_DEGREES_PER_SECOND: "",
+    MeasuredValueType.ELECTRICAL_ENERGY_IN_KWH: UnitOfEnergy.KILO_WATT_HOUR,
+    MeasuredValueType.ELECTRICAL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
+    MeasuredValueType.ELECTRICAL_POWER_IN_KW: UnitOfPower.KILO_WATT,
+    MeasuredValueType.ELECTRICAL_POWER_IN_W: UnitOfPower.WATT,
+    MeasuredValueType.ELECTRIC_CURRENT_IN_AMPERE: ELECTRIC_CURRENT_AMPERE,
+    MeasuredValueType.ELECTRIC_CURRENT_IN_MILLI_AMPERE: ELECTRIC_CURRENT_MILLIAMPERE,
+    # MeasuredValueType.ENERGY_IN_CAL: "",
+    # MeasuredValueType.ENERGY_IN_KCAL: "",
+    # MeasuredValueType.FLOW_IN_LITRE_PER_SECOND: "",
+    MeasuredValueType.FLOW_IN_METER_CUBE_PER_HOUR: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    # MeasuredValueType.FLOW_IN_METER_CUBE_PER_SECOND: "",
+    MeasuredValueType.FOSSIL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
+    # MeasuredValueType.GRADIENT_IN_PERCENTAGE_PER_SECOND: "",
+    MeasuredValueType.LENGTH_IN_METER: UnitOfLength.METERS,
+    MeasuredValueType.LINEAR_SPEED_IN_METER_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
+    MeasuredValueType.LUMINANCE_IN_LUX: LIGHT_LUX,
+    MeasuredValueType.PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
+    MeasuredValueType.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    # MeasuredValueType.PARTS_PER_QUADRILLION: "",
+    # MeasuredValueType.PARTS_PER_TRILLION: "",
+    # MeasuredValueType.POWER_PER_SQUARE_METER: "",
+    MeasuredValueType.PRESSURE_IN_HPA: UnitOfPressure.HPA,
+    MeasuredValueType.PRESSURE_IN_MILLI_BAR: UnitOfPressure.MBAR,
+    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: PERCENTAGE,
+    MeasuredValueType.TEMPERATURE_IN_CELCIUS: UnitOfTemperature.CELSIUS,
+    MeasuredValueType.TEMPERATURE_IN_KELVIN: UnitOfTemperature.KELVIN,
+    MeasuredValueType.TIME_IN_SECOND: TIME_SECONDS,
+    # MeasuredValueType.VECTOR_COORDINATE: "",
+    MeasuredValueType.VOLTAGE_IN_MILLI_VOLT: ELECTRIC_POTENTIAL_MILLIVOLT,
+    MeasuredValueType.VOLTAGE_IN_VOLT: ELECTRIC_POTENTIAL_VOLT,
+    MeasuredValueType.VOLUME_IN_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
+    MeasuredValueType.VOLUME_IN_GALLON: UnitOfVolume.GALLONS,
+    MeasuredValueType.VOLUME_IN_LITER: UnitOfVolume.LITERS,
 }
