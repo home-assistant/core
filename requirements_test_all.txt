@@ -46,7 +46,7 @@ PyTurboJPEG==1.6.7
 PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.14.1
+PyXiaomiGateway==0.14.3
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -158,7 +158,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.16
+aiohomekit==2.2.17
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -554,7 +554,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==2.2.3
+gcal-sync==4.0.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -899,13 +899,13 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.12.0
+oralb-ble==0.13.0
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
 # homeassistant.components.p1_monitor
-p1monitor==2.1.0
+p1monitor==2.1.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1046,7 +1046,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.3.0
+pyatmo==7.4.0
 
 # homeassistant.components.apple_tv
 pyatv==0.10.3
