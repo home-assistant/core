@@ -1,7 +1,7 @@
 """Support for Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -77,10 +77,10 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
-            state = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
+            state = self.device.states[OverkizState.CORE_OPERATING_MODE]
             return OVERKIZ_TO_HVAC_MODE[OverkizCommandParam(state)]
         if OverkizState.CORE_ON_OFF in self.device.states:
-            state = self.executor.select_state(OverkizState.CORE_ON_OFF)
+            state = self.device.states[OverkizState.CORE_ON_OFF]
             return OVERKIZ_TO_HVAC_MODE[OverkizCommandParam(state)]
 
         return HVACMode.OFF
@@ -118,16 +118,15 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        if OverkizState.CORE_TARGET_TEMPERATURE in self.device.states:
-            state = self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
-            return cast(float, state)
+        if state := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]:
+            return state.value_as_float
         return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
-            return cast(float, temperature.value)
+            return temperature.value_as_float
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
