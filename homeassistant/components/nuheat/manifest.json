@@ -3,7 +3,7 @@
   "name": "NuHeat",
   "documentation": "https://www.home-assistant.io/integrations/nuheat",
   "requirements": ["nuheat==1.0.0"],
-  "codeowners": [],
+  "codeowners": ["@tstabrawa"],
   "config_flow": true,
   "dhcp": [
     {
