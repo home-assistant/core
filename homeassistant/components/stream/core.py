@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 from aiohttp import web
 import async_timeout
 import attr
-import numpy as np
 
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -27,6 +26,7 @@ from .const import (
 
 if TYPE_CHECKING:
     from av import CodecContext, Packet
+    import numpy as np
 
     from . import Stream
 
@@ -386,17 +386,27 @@ class StreamView(HomeAssistantView):
         raise NotImplementedError()
 
 
-TRANSFORM_IMAGE_FUNCTION = (
-    lambda image: image,  # Unused
-    lambda image: image,  # No transform
-    lambda image: np.fliplr(image).copy(),  # Mirror
-    lambda image: np.rot90(image, 2).copy(),  # Rotate 180
-    lambda image: np.flipud(image).copy(),  # Flip
-    lambda image: np.flipud(np.rot90(image)).copy(),  # Rotate left and flip
-    lambda image: np.rot90(image).copy(),  # Rotate left
-    lambda image: np.flipud(np.rot90(image, -1)).copy(),  # Rotate right and flip
-    lambda image: np.rot90(image, -1).copy(),  # Rotate right
-)
+def _transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
+    """Transform the image using numpy."""
+
+    # Keep import here so that we can import stream integration without installing reqs
+    import numpy as np  # pylint: disable=import-outside-toplevel
+
+    if orientation == 2:  # Mirror
+        return np.fliplr(image).copy()
+    if orientation == 3:  # Rotate 180
+        return np.rot90(image, 2).copy()
+    if orientation == 4:  # Flip
+        return np.flipud(image).copy()
+    if orientation == 5:  # Rotate left and flip
+        return np.flipud(np.rot90(image)).copy()
+    if orientation == 6:  # Rotate left
+        return np.rot90(image).copy()
+    if orientation == 7:  # Rotate right and flip
+        return np.flipud(np.rot90(image, -1)).copy()
+    if orientation == 8:  # Rotate right
+        return np.rot90(image, -1).copy()
+    return image  # Transforms 0 and 1 (and others not yet defined) are identity
 
 
 class KeyFrameConverter:
@@ -450,7 +460,7 @@ class KeyFrameConverter:
     @staticmethod
     def transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
         """Transform image to a given orientation."""
-        return TRANSFORM_IMAGE_FUNCTION[orientation](image)
+        return _transform_image(image, orientation)
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
         """
