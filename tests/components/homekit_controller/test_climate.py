@@ -654,6 +654,11 @@ def create_heater_cooler_service(accessory):
     char = service.add_char(CharacteristicsTypes.ACTIVE)
     char.value = 1
 
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_TARGET)
+    char.minValue = 7
+    char.maxValue = 35
+    char.value = 0
+
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
     char.minValue = 7
     char.maxValue = 35
@@ -799,6 +804,58 @@ async def test_heater_cooler_change_thermostat_temperature(hass, utcnow):
         ServicesTypes.HEATER_COOLER,
         {
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 26,
+        },
+    )
+
+
+async def test_heater_cooler_change_thermostat_temperature_range(hass, utcnow):
+    """Test that we can set separate heat and cool setpoints in heat_cool mode."""
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "target_temp_high": 25,
+            "target_temp_low": 20,
+        },
+        blocking=True,
+    )
+
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.TEMPERATURE_TARGET: 22.5,
+            CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 20,
+            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 25,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.AUTOMATIC,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice", 
+            "temperature": 22, 
+            "hvac_mode": HVACMode.COOL
+        },
+        blocking=True,
+    )
+
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 22,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.COOL,
         },
     )
 

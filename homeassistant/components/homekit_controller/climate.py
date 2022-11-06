@@ -169,6 +169,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.TARGET_HEATER_COOLER_STATE,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD,
+            CharacteristicsTypes.TEMPERATURE_TARGET,
             CharacteristicsTypes.SWING_MODE,
         ]
 
@@ -176,7 +177,43 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL:
+
+        if state == TargetHeaterCoolerStateValues.AUTOMATIC:
+            chars: dict[str, Any] = {}
+
+            mode = MODE_HOMEKIT_TO_HASS[state]
+
+            if kwargs.get(ATTR_HVAC_MODE, mode) != mode:
+                mode = kwargs[ATTR_HVAC_MODE]
+                chars[CharacteristicsTypes.TARGET_HEATER_COOLER_STATE] = TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
+                    mode
+                ]
+
+            heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+
+            if (
+                (
+                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                    & self.supported_features
+                )
+                and heat_temp
+                and cool_temp
+            ):
+                if temp is None:
+                    temp = (cool_temp + heat_temp) / 2
+                chars.update(
+                    {
+                        CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: heat_temp,
+                        CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: cool_temp,
+                        CharacteristicsTypes.TEMPERATURE_TARGET: temp,
+                    }
+                )
+            else:
+                chars[CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD] = temp
+
+            await self.async_put_characteristics(chars)
+        elif state == TargetHeaterCoolerStateValues.COOL:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temp}
             )
@@ -200,7 +237,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 {CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE}
             )
             return
-        if hvac_mode not in {HVACMode.HEAT, HVACMode.COOL}:
+        if hvac_mode not in {HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL}:
             _LOGGER.warning(
                 "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
                 " Consider raising a ticket if you have this device and want to help us implement this feature",
@@ -209,6 +246,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             )
         await self.async_put_characteristics(
             {
+                CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
                 CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
                     hvac_mode
                 ],
@@ -224,6 +262,30 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
                 CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
             )
         if state == TargetHeaterCoolerStateValues.HEAT:
+            return self.service.value(
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+            )
+        return None
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach."""
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
+        ):
+            return self.service.value(
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+            )
+        return None
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach."""
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
+        ):
             return self.service.value(
                 CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
             )
@@ -376,6 +438,11 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
 
         if self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
+
+        if self.service.has(
+            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+        ) and self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if self.service.has(CharacteristicsTypes.SWING_MODE):
             features |= ClimateEntityFeature.SWING_MODE
