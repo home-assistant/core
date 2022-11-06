@@ -21,8 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -100,6 +101,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
+
+    protect_version = data_service.api.bootstrap.nvr.version
+
+    if protect_version.is_prerelease:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"ea_warning_{protect_version}",
+            is_fixable=False,
+            is_persistent=False,
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+            severity=IssueSeverity.WARNING,
+            translation_key="ea_warning",
+            translation_placeholders={"version": str(protect_version)},
+        )
 
     return True
 
