@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Mevcut {entity_name} u\u00e7ucu organik bile\u015fik konsantrasyon seviyesi",
             "is_voltage": "Mevcut {entity_name} voltaj\u0131",
             "is_volume": "Mevcut {entity_name} birimi",
+            "is_water": "Mevcut {entity_name} su",
             "is_weight": "Mevcut {entity_name} a\u011f\u0131rl\u0131\u011f\u0131"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "{entity_name} u\u00e7ucu organik bile\u015fik konsantrasyonu de\u011fi\u015fiklikleri",
             "voltage": "{entity_name} voltaj de\u011fi\u015fiklikleri",
             "volume": "{entity_name} birim de\u011fi\u015fiklikleri",
+            "water": "{entity_name} su de\u011fi\u015fimi",
             "weight": "{entity_name} a\u011f\u0131rl\u0131k de\u011fi\u015fiklikleri"
         }
     },

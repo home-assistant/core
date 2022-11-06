@@ -614,7 +614,7 @@ class ManifestJSONView(HomeAssistantView):
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
@@ -630,7 +630,7 @@ def websocket_get_panels(
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
     if hass.config.safe_mode:

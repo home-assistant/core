@@ -13,7 +13,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -185,7 +185,7 @@ async def ws_validate(
 async def ws_solar_forecast(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     manager: EnergyManager,
 ) -> None:
     """Handle solar forecast command."""
@@ -273,7 +273,7 @@ async def ws_get_fossil_energy_consumption(
         statistic_ids,
         "hour",
         True,
-        {"energy": ENERGY_KILO_WATT_HOUR},
+        {"energy": UnitOfEnergy.KILO_WATT_HOUR},
     )
 
     def _combine_sum_statistics(

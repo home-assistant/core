@@ -7,10 +7,10 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 import itertools
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
+from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD
 
 from homeassistant import config_entries
 from homeassistant.core import (
@@ -21,13 +21,13 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import AdvertisementTracker
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    NO_RSSI_VALUE,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -61,15 +61,15 @@ APPLE_MFR_ID: Final = 76
 APPLE_IBEACON_START_BYTE: Final = 0x02  # iBeacon (tilt_ble)
 APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
 APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
+APPLE_HOMEKIT_NOTIFY_START_BYTE: Final = 0x11  # homekit_controller
 APPLE_START_BYTES_WANTED: Final = {
     APPLE_IBEACON_START_BYTE,
     APPLE_HOMEKIT_START_BYTE,
+    APPLE_HOMEKIT_NOTIFY_START_BYTE,
     APPLE_DEVICE_ID_START_BYTE,
 }
 
-RSSI_SWITCH_THRESHOLD = 6
-
-MONOTONIC_TIME: Final = time.monotonic
+MONOTONIC_TIME: Final = monotonic_time_coarse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +127,7 @@ class BluetoothManager:
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+        self._sources: set[str] = set()
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -379,6 +380,7 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
+            and old_service_info.source in self._sources
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
             )
@@ -398,6 +400,7 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
+                        and old_connectable_service_info.source in self._sources
                         and self._prefer_previous_adv_from_different_source(
                             old_connectable_service_info, service_info
                         )
@@ -433,11 +436,7 @@ class BluetoothManager:
         ):
             return
 
-        if is_connectable_by_any_source := address in self._connectable_history:
-            # Bleak callbacks must get a connectable device
-            for callback_filters in self._bleak_callbacks:
-                _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
-
+        is_connectable_by_any_source = address in self._connectable_history
         if not connectable and is_connectable_by_any_source:
             # Since we have a connectable path and our BleakClient will
             # route any connection attempts to the connectable path, we
@@ -455,6 +454,11 @@ class BluetoothManager:
             matched_domains,
             advertisement_data.rssi,
         )
+
+        if is_connectable_by_any_source:
+            # Bleak callbacks must get a connectable device
+            for callback_filters in self._bleak_callbacks:
+                _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
         for match in self._callback_index.match_callbacks(service_info):
             callback = match[CALLBACK]
@@ -596,8 +600,10 @@ class BluetoothManager:
         def _unregister_scanner() -> None:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
+            self._sources.remove(scanner.source)
 
         scanners.append(scanner)
+        self._sources.add(scanner.source)
         return _unregister_scanner
 
     @hass_callback

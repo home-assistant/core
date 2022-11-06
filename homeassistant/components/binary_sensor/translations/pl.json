@@ -106,18 +106,18 @@
         }
     },
     "device_class": {
-        "co": "tlenek_w\u0119gla",
-        "cold": "zimno",
+        "co": "tlenek w\u0119gla",
+        "cold": "ch\u0142\u00f3d",
         "gas": "gaz",
-        "heat": "gor\u0105co",
-        "moisture": "wilgotno\u015b\u0107",
+        "heat": "ciep\u0142o",
+        "moisture": "wilgo\u0107",
         "motion": "ruch",
         "occupancy": "obecno\u015b\u0107",
         "power": "zasilanie",
         "problem": "problem",
         "smoke": "dym",
         "sound": "d\u017awi\u0119k",
-        "vibration": "wibracja"
+        "vibration": "wibracje"
     },
     "state": {
         "_": {

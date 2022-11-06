@@ -16,8 +16,8 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    hass: HomeAssistant,
     recorder_mock: None,
+    hass: HomeAssistant,
     enable_custom_integrations: None,
 ) -> None:
     """Test attributes to be excluded."""

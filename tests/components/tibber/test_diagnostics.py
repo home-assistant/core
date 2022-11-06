@@ -8,7 +8,7 @@ from .test_common import mock_get_homes
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client, recorder_mock, config_entry):
+async def test_entry_diagnostics(recorder_mock, hass, hass_client, config_entry):
     """Test config entry diagnostics."""
     with patch(
         "tibber.Tibber.update_info",
