@@ -73,7 +73,6 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
-    from paho.mqtt.client import MQTTMessage
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -620,7 +619,7 @@ class MQTT:
             )
 
     def _mqtt_on_message(
-        self, _mqttc: mqtt.Client, _userdata: None, msg: MQTTMessage
+        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
@@ -634,7 +633,7 @@ class MQTT:
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
+    def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
         _LOGGER.debug(
             "Received%s message on %s: %s",
             " retained" if msg.retain else "",
