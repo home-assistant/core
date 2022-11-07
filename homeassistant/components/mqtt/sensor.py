@@ -48,12 +48,15 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage, ReceivePayloadType
+from .models import (
+    MqttValueTemplate,
+    PayloadSentinel,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
-
-_SENTINEL = b"##SENTINEL##"
 
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
