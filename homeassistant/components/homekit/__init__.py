@@ -135,7 +135,7 @@ STATUS_WAIT = 3
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
-    5  # number of seconds to wait for homekit to see the c# change
+    10  # number of seconds to wait for homekit to see the c# change
 )
 
 
@@ -525,6 +525,7 @@ class HomeKit:
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
+        self._reset_lock = asyncio.Lock()
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
@@ -554,10 +555,11 @@ class HomeKit:
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
-        if not self.bridge:
-            await self.async_reset_accessories_in_accessory_mode(entity_ids)
-            return
-        await self.async_reset_accessories_in_bridge_mode(entity_ids)
+        async with self._reset_lock:
+            if not self.bridge:
+                await self.async_reset_accessories_in_accessory_mode(entity_ids)
+                return
+            await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
     async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
@@ -579,7 +581,6 @@ class HomeKit:
         assert self.driver is not None
 
         acc = cast(HomeAccessory, self.driver.accessory)
-        await self._async_shutdown_accessory(acc)
         if acc.entity_id not in entity_ids:
             return
         if not (state := self.hass.states.get(acc.entity_id)):
@@ -587,6 +588,7 @@ class HomeKit:
                 "The underlying entity %s disappeared during reset", acc.entity_id
             )
             return
+        await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
             self.hass.async_add_job(new_acc.run)
