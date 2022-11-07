@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -399,3 +400,16 @@ async def test_multiple_rest_endpoints(hass):
     assert hass.states.get("sensor.json_date_time").state == "07:11:08 PM"
     assert hass.states.get("sensor.json_time").state == "07:11:39 PM"
     assert hass.states.get("binary_sensor.binary_sensor").state == "on"
+
+
+async def test_empty_config(hass: HomeAssistant) -> None:
+    """Test setup with empty configuration.
+
+    For example (with rest.yaml an empty file):
+        rest: !include rest.yaml
+    """
+    assert not await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {}},
+    )
