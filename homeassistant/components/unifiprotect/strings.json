@@ -57,8 +57,8 @@
   },
   "issues": {
     "ea_warning": {
-      "title": "{version} is an Early Access version of UniFi Protect",
-      "description": "You are using {version} of UniFi Protect. Early Access versions are not supported by Home Assistant and may cause your UniFi Protect integration to break or not work as expected."
+      "title": "UniFi Protect v{version} is an Early Access version",
+      "description": "You are using v{version} of UniFi Protect which is an Early Access version. Early Access versions are not supported by Home Assistant and may cause your UniFi Protect integration to break or not work as expected."
     }
   }
 }
