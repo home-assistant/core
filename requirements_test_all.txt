@@ -179,6 +179,9 @@ aiolifx_effects==0.3.0
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
 
+# homeassistant.components.livisi
+aiolivisi==0.0.14
+
 # homeassistant.components.lookin
 aiolookin==0.1.1
 
@@ -215,7 +218,7 @@ aiopvpc==3.0.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.10.0
+aiopyarr==22.11.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.2.2
@@ -862,7 +865,7 @@ notify-events==1.0.4
 nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
-nuheat==0.3.0
+nuheat==1.0.0
 
 # homeassistant.components.numato
 numato-gpio==0.10.0
@@ -1454,7 +1457,7 @@ pytrafikverket==0.2.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.3.4
+pyunifiprotect==4.4.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1824,7 +1827,7 @@ zamg==0.1.1
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.84
+zha-quirks==0.0.85
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.0

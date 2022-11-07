@@ -217,6 +217,7 @@ FLOWS = {
         "lifx",
         "litejet",
         "litterrobot",
+        "livisi",
         "local_ip",
         "locative",
         "logi_circle",
