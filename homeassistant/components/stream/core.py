@@ -387,7 +387,9 @@ class StreamView(HomeAssistantView):
 
 
 def _transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
-    # Late import since tests require mqtt.camera -> stream.core
+    """Transform the image using numpy."""
+
+    # Keep import here so that we can import stream integration without installing reqs
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     if orientation == 2:  # Mirror
