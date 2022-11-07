@@ -28,15 +28,15 @@ class WeenectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         self._errors = {}
 
-        entries = self._async_current_entries()
-        for entry in entries:
-            if (
-                entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]
-                and entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
-            ):
-                return self.async_abort(reason="already_configured")
-
         if user_input is not None:
+            entries = self._async_current_entries()
+            for entry in entries:
+                if (
+                    entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]
+                    and entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
+                ):
+                    return self.async_abort(reason="already_configured")
+
             valid = await self._test_credentials(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )

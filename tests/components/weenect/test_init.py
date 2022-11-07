@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("bypass_get_trackers")
 async def test_setup_unload_and_reload_entry(hass):
-    """Test entry setup and unload."""
+    """Test entry setup, reload and unload."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
 
     assert await async_setup_entry(hass, config_entry)

@@ -27,13 +27,11 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 DEFAULT_UPDATE_RATE = 30
 
-DURATION_PATTERN = re.compile(r"\d\d[S,M,H]")
+DURATION_PATTERN = re.compile(r"^[0-9]+[SMH]$")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -44,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = WeenectDataUpdateCoordinator(hass, config_entry=entry, client=client)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
         hass.async_add_job(
@@ -109,10 +107,7 @@ class WeenectDataUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def transform_data(data: Any) -> dict[int, Any]:
         """Extract trackers from list and put them in a dict by tracker id."""
-        result = {}
-        for tracker in data["items"]:
-            result[tracker["id"]] = tracker
-        return result
+        return {tracker["id"]: tracker for tracker in data["items"]}
 
     @staticmethod
     def parse_duration(duration: str) -> timedelta | None:

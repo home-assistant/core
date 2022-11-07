@@ -18,18 +18,19 @@ class WeenectBaseEntity(CoordinatorEntity):
         """Init Base Entity for Weenect entities."""
         super().__init__(coordinator)
         self.id = tracker_id
+        data = self.coordinator.data[self.id]
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.id))},
-            name=str(self.coordinator.data[self.id]["name"]),
-            model=str(self.coordinator.data[self.id]["type"]),
+            name=str(data["name"]),
+            model=str(data["type"]),
             manufacturer="Weenect",
-            sw_version=str(self.coordinator.data[self.id]["firmware"]),
+            sw_version=str(data["firmware"]),
         )
         self._attr_extra_state_attributes = {
             "id": self.id,
-            "sim": str(self.coordinator.data[self.id]["sim"]),
-            "imei": str(self.coordinator.data[self.id]["imei"]),
+            "sim": str(data["sim"]),
+            "imei": str(data["imei"]),
         }
 
     async def _async_handle_tracker_removed(self, removed: list[int]) -> None:

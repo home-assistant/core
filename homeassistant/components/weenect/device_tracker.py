@@ -28,14 +28,9 @@ async def async_setup_entry(
     ) -> None:
         """Add device_trackers callback."""
 
-        trackers: list = []
-        for tracker_id in added:
-            trackers.append(
-                WeenectDeviceTracker(
-                    coordinator,
-                    tracker_id,
-                )
-            )
+        trackers = [
+            WeenectDeviceTracker(coordinator, tracker_id) for tracker_id in added
+        ]
 
         async_add_entities(trackers, True)
 
@@ -86,7 +81,7 @@ class WeenectDeviceTracker(WeenectBaseEntity, TrackerEntity):
 
     @property
     def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
+        """Return the source type, e.g. GPS or router, of the device."""
         return SourceType.GPS
 
     @property
