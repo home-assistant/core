@@ -56,15 +56,17 @@ class KodiConnectionManager:
 
         if (uid := entry.unique_id) is None:
             uid = entry.entry_id
-        self._uid = uid
+        if (device_name := entry.data[CONF_NAME]) is None:
+            device_name = entry.data[CONF_HOST]
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, self._uid)},
+            identifiers={(DOMAIN, uid)},
             manufacturer="Kodi",
-            name=entry.data[CONF_NAME],
+            name=device_name,
         )
 
+        self._uid = uid
         self._connect_error = False
         # To be able to remove callbacks reliably only once after close
         self._ws_connection_clear = False
@@ -164,7 +166,7 @@ class KodiConnectionManager:
             await self.close()
         if self._remove_watchdog is not None:
             self._remove_watchdog()
-            # A websocket connection was used when a watchdog was active.
+            # A websocket connection was used when a watchdog is active.
             # Only then the jsonrpc callbacks need to be unregistered.
             for api_method in self._connection_callbacks:
                 self.unregister_websocket_callback(api_method)
@@ -256,7 +258,7 @@ class KodiConnectionManager:
         setattr(self._connection.server, api_method, self._ws_callback_dummy)
 
         # del self._connection.server._server_request_handlers[method_name]
-        # would also work, but this access to a protected member is bad practice
+        # would also work, but access to a protected member is bad practice
         # and also gives a lint error.
 
     async def add_callback_on_connect(

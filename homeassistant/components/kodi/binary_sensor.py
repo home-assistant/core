@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CONNECTION, DOMAIN
+from .const import DATA_CONNECTION, DOMAIN, WS_DPMS, WS_SCREENSAVER
 from .kodi_connman import KodiConnectionClient, KodiConnectionManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,18 +30,18 @@ async def async_setup_entry(
 
     sensor_entities = [
         KodiBinaryEntity(
-            "Screensaver",
-            "GUI.OnScreensaverActivated",
-            "GUI.OnScreensaverDeactivated",
-            "System.ScreenSaverActive",
+            WS_SCREENSAVER["name"],
+            WS_SCREENSAVER["on"],
+            WS_SCREENSAVER["off"],
+            WS_SCREENSAVER["boolean"],
             uid,
             connman,
         ),
         KodiBinaryEntity(
-            "Energy saving",
-            "GUI.OnDPMSActivated",
-            "GUI.OnDPMSDeactivated",
-            "System.DPMSActive",
+            WS_DPMS["name"],
+            WS_DPMS["on"],
+            WS_DPMS["off"],
+            WS_DPMS["boolean"],
             uid,
             connman,
         ),
