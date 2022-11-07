@@ -4,11 +4,10 @@ from http import HTTPStatus
 
 import aiohttp
 import pytest
-import voluptuous
 
 from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
-from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,50 +30,72 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 
 
-async def test_setup_missing_config(hass: HomeAssistant) -> None:
+async def test_setup_missing_config(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup with configuration missing required entries."""
-    with pytest.raises(voluptuous.MultipleInvalid):
-        await rest.async_setup_platform(
-            hass, rest.PLATFORM_SCHEMA({CONF_PLATFORM: DOMAIN}), None
-        )
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: DOMAIN,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [switch.rest]: required key not provided" in caplog.text
 
 
-async def test_setup_missing_schema(hass: HomeAssistant) -> None:
+async def test_setup_missing_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup with resource missing schema."""
-    with pytest.raises(voluptuous.MultipleInvalid):
-        await rest.async_setup_platform(
-            hass,
-            rest.PLATFORM_SCHEMA({CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"}),
-            None,
-        )
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"},
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [switch.rest]: invalid url" in caplog.text
 
 
 async def test_setup_failed_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
     aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
-    assert not await rest.async_setup_platform(
+    assert await async_setup_component(
         hass,
-        rest.PLATFORM_SCHEMA(
-            {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"}
-        ),
-        None,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
+        },
     )
+    await hass.async_block_till_done()
+    assert "No route to resource/endpoint" in caplog.text
 
 
 async def test_setup_timeout(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection timeout occurs."""
     aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
-    assert not await rest.async_setup_platform(
+    assert await async_setup_component(
         hass,
-        rest.PLATFORM_SCHEMA(
-            {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"}
-        ),
-        None,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
+        },
     )
+    await hass.async_block_till_done()
+    assert "No route to resource/endpoint" in caplog.text
 
 
 async def test_setup_minimum(
@@ -83,12 +103,12 @@ async def test_setup_minimum(
 ) -> None:
     """Test setup with minimum configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
-    with assert_setup_component(1, Platform.SWITCH):
+    with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(
             hass,
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             {
-                Platform.SWITCH: {
+                SWITCH_DOMAIN: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                 }
@@ -103,12 +123,12 @@ async def test_setup_query_params(
 ) -> None:
     """Test setup with query params."""
     aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
-    with assert_setup_component(1, Platform.SWITCH):
+    with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(
             hass,
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             {
-                Platform.SWITCH: {
+                SWITCH_DOMAIN: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                     CONF_PARAMS: {"search": "something"},
@@ -125,9 +145,9 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         {
-            Platform.SWITCH: {
+            SWITCH_DOMAIN: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -139,7 +159,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, Platform.SWITCH)
+    assert_setup_component(1, SWITCH_DOMAIN)
 
 
 async def test_setup_with_state_resource(
@@ -150,9 +170,9 @@ async def test_setup_with_state_resource(
     aioclient_mock.get("http://localhost/state", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         {
-            Platform.SWITCH: {
+            SWITCH_DOMAIN: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -165,7 +185,7 @@ async def test_setup_with_state_resource(
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, Platform.SWITCH)
+    assert_setup_component(1, SWITCH_DOMAIN)
 
 
 async def test_setup_with_templated_headers_params(
@@ -175,9 +195,9 @@ async def test_setup_with_templated_headers_params(
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         {
-            Platform.SWITCH: {
+            SWITCH_DOMAIN: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -198,7 +218,7 @@ async def test_setup_with_templated_headers_params(
     assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
     assert aioclient_mock.mock_calls[-1][1].query["start"] == "0"
     assert aioclient_mock.mock_calls[-1][1].query["end"] == "5"
-    assert_setup_component(1, Platform.SWITCH)
+    assert_setup_component(1, SWITCH_DOMAIN)
 
 
 """Tests for REST switch platform."""
@@ -360,7 +380,7 @@ async def test_entity_config(
 
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     config = {
-        Platform.SWITCH: {
+        SWITCH_DOMAIN: {
             # REST configuration
             "platform": "rest",
             "method": "POST",
@@ -373,7 +393,7 @@ async def test_entity_config(
         },
     }
 
-    assert await async_setup_component(hass, Platform.SWITCH, config)
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
