@@ -1,5 +1,6 @@
 """Support for MQTT lights."""
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -600,7 +601,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
                 return
             try:
-                hs_color = tuple(float(val) for val in payload.split(",", 2))
+                hs_color = cast(
+                    tuple[float, float],
+                    tuple(float(val) for val in payload.split(",", 2)),
+                )
                 if self._optimistic_color_mode:
                     self._attr_color_mode = ColorMode.HS
                 self._attr_hs_color = hs_color
@@ -621,7 +625,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
                 return
 
-            xy_color = tuple(float(val) for val in payload.split(","))
+            xy_color = cast(
+                tuple[float, float], tuple(float(val) for val in payload.split(",", 2))
+            )
             if self._optimistic_color_mode:
                 self._attr_color_mode = ColorMode.XY
             self._attr_xy_color = xy_color
