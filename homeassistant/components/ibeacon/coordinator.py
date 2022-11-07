@@ -396,7 +396,8 @@ class IBeaconCoordinator:
                     )
                     continue
 
-            if service_info.rssi != ibeacon_advertisement.rssi:
+            if service_info.rssi != ibeacon_advertisement.rssi or service_info.source != ibeacon_advertisement.source:
+                ibeacon_advertisement.source = service_info.source
                 ibeacon_advertisement.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,
