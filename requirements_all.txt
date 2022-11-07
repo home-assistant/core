@@ -2094,7 +2094,7 @@ pytrafikverket==0.2.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.4.0
+pyunifiprotect==4.4.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2218,6 +2218,9 @@ russound==0.1.9
 
 # homeassistant.components.russound_rio
 russound_rio==0.1.8
+
+# homeassistant.components.ruuvitag_ble
+ruuvitag-ble==0.1.1
 
 # homeassistant.components.yamaha
 rxv==0.7.0

@@ -953,7 +953,7 @@
     },
     "deluge": {
       "name": "Deluge",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1052,7 +1052,7 @@
     },
     "discord": {
       "name": "Discord",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -1912,7 +1912,7 @@
     },
     "goalzero": {
       "name": "Goal Zero Yeti",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1957,7 +1957,7 @@
           "name": "Google Pub/Sub"
         },
         "google_sheets": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
@@ -2767,7 +2767,7 @@
     },
     "lidarr": {
       "name": "Lidarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3239,7 +3239,7 @@
     },
     "modem_callerid": {
       "name": "Phone Modem",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3486,7 +3486,7 @@
     },
     "nfandroidtv": {
       "name": "Notifications for Android TV / Fire TV",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4217,7 +4217,7 @@
     },
     "radarr": {
       "name": "Radarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4480,6 +4480,12 @@
           "name": "Russound RNET"
         }
       }
+    },
+    "ruuvitag_ble": {
+      "name": "RuuviTag BLE",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sabnzbd": {
       "name": "SABnzbd",
@@ -5044,7 +5050,7 @@
     },
     "steam_online": {
       "name": "Steam",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
