@@ -5,5 +5,6 @@
   "requirements": ["georss_ign_sismologia_client==0.3"],
   "codeowners": ["@exxamalte"],
   "iot_class": "cloud_polling",
-  "loggers": ["georss_ign_sismologia_client"]
+  "loggers": ["georss_ign_sismologia_client"],
+  "integration_type": "service"
 }
