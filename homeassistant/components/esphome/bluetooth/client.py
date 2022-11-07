@@ -137,6 +137,7 @@ class ESPHomeClient(BaseBleakClient):
         was_connected = self._is_connected
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         self._is_connected = False
+        self._notify_cancels.clear()
         if self._disconnected_event:
             self._disconnected_event.set()
             self._disconnected_event = None
@@ -463,12 +464,20 @@ class ESPHomeClient(BaseBleakClient):
                 UUID or directly by the BleakGATTCharacteristic object representing it.
             callback (function): The function to be called on notification.
         """
+        ble_handle = characteristic.handle
+        if ble_handle in self._notify_cancels:
+            raise BleakError(
+                "Notifications are already enabled on "
+                f"service:{characteristic.service_uuid} "
+                f"characteristic:{characteristic.uuid} "
+                f"handle:{ble_handle}"
+            )
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
-            characteristic.handle,
+            ble_handle,
             lambda handle, data: callback(data),
         )
-        self._notify_cancels[characteristic.handle] = cancel_coro
+        self._notify_cancels[ble_handle] = cancel_coro
 
     @api_error_as_bleak_error
     async def stop_notify(
@@ -483,5 +492,7 @@ class ESPHomeClient(BaseBleakClient):
                 directly by the BleakGATTCharacteristic object representing it.
         """
         characteristic = self._resolve_characteristic(char_specifier)
-        coro = self._notify_cancels.pop(characteristic.handle)
-        await coro()
+        # Do not raise KeyError if notifications are not enabled on this characteristic
+        # to be consistent with the behavior of the BlueZ backend
+        if coro := self._notify_cancels.pop(characteristic.handle, None):
+            await coro()

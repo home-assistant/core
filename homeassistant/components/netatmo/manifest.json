@@ -3,7 +3,7 @@
   "name": "Netatmo",
   "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
-  "requirements": ["pyatmo==7.3.0"],
+  "requirements": ["pyatmo==7.4.0"],
   "after_dependencies": ["cloud", "media_source"],
   "dependencies": ["application_credentials", "webhook"],
   "codeowners": ["@cgtobi"],

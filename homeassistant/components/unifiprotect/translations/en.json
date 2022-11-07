@@ -41,16 +41,18 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "You are using v{version} of UniFi Protect which is an Early Access version. Early Access versions are not supported by Home Assistant and may cause your UniFi Protect integration to break or not work as expected.",
+            "title": "UniFi Protect v{version} is an Early Access version"
+        }
+    },
     "options": {
-        "error": {
-            "invalid_mac_list": "Must be a list of MAC addresses seperated by commas"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
                     "disable_rtsp": "Disable the RTSP stream",
-                    "ignored_devices": "Comma separated list of MAC addresses of devices to ignore",
                     "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
                     "override_connection_host": "Override Connection Host"
                 },

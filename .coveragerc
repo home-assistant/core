@@ -35,6 +35,8 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airq/__init__.py
+    homeassistant/components/airq/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
     homeassistant/components/airthings_ble/__init__.py
@@ -951,6 +953,8 @@ omit =
     homeassistant/components/overkiz/sensor.py
     homeassistant/components/overkiz/siren.py
     homeassistant/components/overkiz/switch.py
+    homeassistant/components/overkiz/water_heater.py
+    homeassistant/components/overkiz/water_heater_entities/*
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py

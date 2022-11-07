@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "Kasutad UniFi Protecti {version}. Home Assistant ei toeta varajase juurdep\u00e4\u00e4su versioone ja see v\u00f5ib p\u00f5hjustada UniFi Protecti sidumise katkemist v\u00f5i ei t\u00f6\u00f6ta see ootusp\u00e4raselt.",
+            "title": "{version} on UniFi Protecti varajase juurdep\u00e4\u00e4su versioon"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Peab olema komadega eraldatud MAC-aadresside loend"
