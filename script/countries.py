@@ -3,6 +3,8 @@
 ISO does not publish a machine readable list free of charge, so the list is generated
 with help of the pycountry package.
 """
+import pathlib
+
 import black
 import pycountry
 
@@ -15,18 +17,12 @@ to the political situation in the world, please contact the ISO 3166 working gro
 To update, run python3 -m script.currencies
 \"\"\"
 
-COUNTRIES = {}
+COUNTRIES = {{ {} }}
 """.strip()
 
 countries = sorted({x.alpha_2 for x in pycountry.countries})
 
 countries_path = "homeassistant/generated/countries.py"
-with open(str(countries_path), "w") as fp:
-    fp.write(
-        black.format_str(
-            BASE.format(
-                ",".join(f'"{x}"' for x in countries),
-            ),
-            mode=black.Mode(),
-        )
-    )
+pathlib.Path("homeassistant/generated/countries.py").write_text(
+    black.format_str(BASE.format(repr(countries)[1:-1]), mode=black.Mode())
+)
