@@ -3,7 +3,7 @@
 To update, run python3 -m script.currencies
 """
 
-ACTIVE_CURRENCIES = (
+ACTIVE_CURRENCIES = {
     "AED",
     "AFN",
     "ALL",
@@ -163,9 +163,9 @@ ACTIVE_CURRENCIES = (
     "ZAR",
     "ZMW",
     "ZWL",
-)
+}
 
-HISTORIC_CURRENCIES = (
+HISTORIC_CURRENCIES = {
     "ADP",
     "AFA",
     "ALK",
@@ -287,4 +287,4 @@ HISTORIC_CURRENCIES = (
     "ZWD",
     "ZWN",
     "ZWR",
-)
+}

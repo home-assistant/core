@@ -1,4 +1,6 @@
 """Helper script to update currency list from the official source."""
+import pathlib
+
 import black
 from bs4 import BeautifulSoup
 import requests
@@ -9,9 +11,9 @@ BASE = """
 To update, run python3 -m script.currencies
 \"\"\"
 
-ACTIVE_CURRENCIES = {}
+ACTIVE_CURRENCIES = {{ {} }}
 
-HISTORIC_CURRENCIES = {}
+HISTORIC_CURRENCIES = {{ {} }}
 """.strip()
 
 req = requests.get(
@@ -45,14 +47,9 @@ historic_currencies = sorted(
     }
 )
 
-currencies_path = "homeassistant/generated/currencies.py"
-with open(str(currencies_path), "w") as fp:
-    fp.write(
-        black.format_str(
-            BASE.format(
-                ",".join(f'"{x}"' for x in active_currencies),
-                ",".join(f'"{x}"' for x in historic_currencies),
-            ),
-            mode=black.Mode(),
-        )
+pathlib.Path("homeassistant/generated/currencies.py").write_text(
+    black.format_str(
+        BASE.format(repr(active_currencies)[1:-1], repr(historic_currencies)[1:-1]),
+        mode=black.Mode(),
     )
+)
