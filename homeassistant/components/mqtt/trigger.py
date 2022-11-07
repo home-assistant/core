@@ -21,6 +21,7 @@ from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAUL
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
+    PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
@@ -76,7 +77,7 @@ async def async_attach_trigger(
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
         """Listen for MQTT messages."""
-        payload = value_template(mqttmsg.payload, "") or None
+        payload = value_template(mqttmsg.payload, PayloadSentinel.DEFAULT)
 
         if wanted_payload is None or wanted_payload == payload:
             data: dict[str, Any] = {
