@@ -146,7 +146,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        state_on = config.get(CONF_STATE_ON)
+        state_on: str | None = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
         state_off: str | None = config.get(CONF_STATE_OFF)

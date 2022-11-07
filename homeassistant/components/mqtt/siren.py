@@ -399,7 +399,6 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     def _update(self, data: SirenTurnOnServiceParameters) -> None:
         """Update the extra siren state attributes."""
-        update: dict[str, Any] = dict(data)
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
-            if self._attr_supported_features & support and attribute in update:
-                self._attr_extra_state_attributes[attribute] = update[attribute]
+            if self._attr_supported_features & support and attribute in data:
+                self._attr_extra_state_attributes[attribute] = data[attribute]  # type: ignore[literal-required]
