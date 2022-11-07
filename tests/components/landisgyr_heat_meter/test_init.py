@@ -60,6 +60,6 @@ async def test_migrate_entry(hass):
 
     # Check if entity unique id is migrated successfully
     assert entry.version == 2
-    assert entry.unique_id == "heat_meter_12345"
+    assert entry.unique_id == "12345"
     entity = registry.async_get("sensor.heat_meter_measuring_range")
-    assert entity.unique_id == "heat_meter_12345_measuring_range_m3ph"
+    assert entity.unique_id == "12345_measuring_range_m3ph"

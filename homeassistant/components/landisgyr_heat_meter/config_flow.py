@@ -87,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model, device_number = await self.validate_ultraheat(dev_path)
 
         _LOGGER.debug("Got model %s and device_number %s", model, device_number)
-        await self.async_set_unique_id(f"heat_meter_{device_number}")
+        await self.async_set_unique_id(f"{device_number}")
         self._abort_if_unique_id_configured()
         data = {
             CONF_DEVICE: dev_path,
