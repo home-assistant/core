@@ -32,6 +32,13 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
@@ -40,13 +47,6 @@ from .const import (
     CONF_STEP,
     CONF_TARGET_TEMP,
     DataType,
-    CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
 )
 from .modbus import ModbusHub
 
@@ -114,7 +114,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
                 (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
                 (CONF_HVAC_MODE_DRY, HVACMode.DRY),
-                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY)):
+                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
+            ):
                 if hvac_mode_kw in mode_value_config:
                     self._hvac_mode_mapping.append(
                         (mode_value_config[hvac_mode_kw], hvac_mode)

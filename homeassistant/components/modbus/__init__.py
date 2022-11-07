@@ -66,6 +66,13 @@ from .const import (  # noqa: F401
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_HUB,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
@@ -107,13 +114,6 @@ from .const import (  # noqa: F401
     TCP,
     UDP,
     DataType,
-    CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (

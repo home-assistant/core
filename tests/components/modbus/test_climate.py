@@ -10,6 +10,13 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
@@ -17,13 +24,6 @@ from homeassistant.components.modbus.const import (
     CONF_TARGET_TEMP,
     MODBUS_DOMAIN,
     DataType,
-    CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
