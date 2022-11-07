@@ -90,17 +90,8 @@ async def _async_update_cloudflare(
     records = await cfupdate.get_record_info(zone_id)
     _LOGGER.debug("Records: %s", records)
 
-    if not (location_info := await async_detect_location_info(session)):
-        _LOGGER.error("Unable to detect IP address")
-        return
+    location_info = await async_detect_location_info(session)
 
-    if not is_ipv4_address(location_info.ip):
-        # Only IPv4 is currently supported
-        _LOGGER.error(
-            "Detected IP address (%s), which is currently not supported",
-            location_info.ip,
-        )
-        return
-
-    await cfupdate.update_records(zone_id, records, location_info.ip)
-    _LOGGER.debug("Update for zone %s is complete", cfupdate.zone)
+    if location_info and is_ipv4_address(location_info.ip):
+        await cfupdate.update_records(zone_id, records, location_info.ip)
+        _LOGGER.debug("Update for zone %s is complete", cfupdate.zone)
