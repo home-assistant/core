@@ -27,7 +27,7 @@ PRESET_PROG = "prog"
 
 
 # Map Overkiz presets to Home Assistant presets
-OVERKIZ_TO_PRESET_MODE = {
+OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_NONE,
     OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.ECO: PRESET_ECO,
@@ -42,7 +42,7 @@ OVERKIZ_TO_PRESET_MODE = {
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
 # Map Overkiz HVAC modes to Home Assistant HVAC modes
-OVERKIZ_TO_HVAC_MODE = {
+OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
     OverkizCommandParam.ON: HVACMode.HEAT,
     OverkizCommandParam.OFF: HVACMode.OFF,
     OverkizCommandParam.AUTO: HVACMode.AUTO,
@@ -76,13 +76,11 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        if OverkizState.CORE_OPERATING_MODE in self.device.states:
-            state = self.device.states[OverkizState.CORE_OPERATING_MODE]
-            return OVERKIZ_TO_HVAC_MODE[OverkizCommandParam(state)]
-        if OverkizState.CORE_ON_OFF in self.device.states:
-            state = self.device.states[OverkizState.CORE_ON_OFF]
-            return OVERKIZ_TO_HVAC_MODE[OverkizCommandParam(state)]
-
+        states = self.device.states
+        if (state := states[OverkizState.CORE_OPERATING_MODE]) and state.value_as_str:
+            return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
+        if (state := states[OverkizState.CORE_ON_OFF]) and state.value_as_str:
+            return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
         return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -101,8 +99,10 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if state := self.device.states[OverkizState.IO_TARGET_HEATING_LEVEL]:
-            return OVERKIZ_TO_PRESET_MODE[OverkizCommandParam(state.value)]
+        if (
+            state := self.device.states[OverkizState.IO_TARGET_HEATING_LEVEL]
+        ) and state.value_as_str:
+            return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
