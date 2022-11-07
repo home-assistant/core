@@ -1033,8 +1033,6 @@ pyaehw4a1==0.3.9
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==2022.11.1
-
 # homeassistant.components.airvisual_pro
 pyairvisual==2022.11.1
 
