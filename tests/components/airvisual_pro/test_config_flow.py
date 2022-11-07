@@ -1,7 +1,7 @@
 """Test the AirVisual Pro config flow."""
 from unittest.mock import patch
 
-from pyairvisual.errors import NodeProError
+from pyairvisual.node import NodeProError
 import pytest
 
 from homeassistant import data_entry_flow

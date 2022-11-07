@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pyairvisual import NodeSamba
-from pyairvisual.errors import NodeProError
+from pyairvisual.node import NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries

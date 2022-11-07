@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from pyairvisual import NodeSamba
-from pyairvisual.errors import NodeProError
+from pyairvisual.node import NodeProError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
