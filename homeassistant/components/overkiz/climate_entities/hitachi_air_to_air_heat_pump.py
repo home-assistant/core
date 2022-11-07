@@ -25,6 +25,7 @@ from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_HOLIDAY_MODE = "holiday_mode"
+FAN_SILENT = "silent"
 
 FAN_SPEED_STATE = {
     Protocol.OVP: OverkizState.OVP_FAN_SPEED,
@@ -85,14 +86,14 @@ OVERKIZ_TO_FAN_MODES: dict[Protocol, dict[str, str]] = {
         OverkizCommandParam.HI: FAN_HIGH,
         OverkizCommandParam.LO: FAN_LOW,
         OverkizCommandParam.MED: FAN_MEDIUM,
-        OverkizCommandParam.SILENT: "silent",
+        OverkizCommandParam.SILENT: FAN_SILENT,
     },
     Protocol.HLRR_WIFI: {
         OverkizCommandParam.AUTO: FAN_AUTO,
         OverkizCommandParam.HIGH: FAN_HIGH,
         OverkizCommandParam.LOW: FAN_LOW,
         OverkizCommandParam.MEDIUM: FAN_MEDIUM,
-        OverkizCommandParam.SILENT: "silent",
+        OverkizCommandParam.SILENT: FAN_SILENT,
     },
 }
 
@@ -102,14 +103,14 @@ FAN_MODES_TO_OVERKIZ: dict[Protocol, dict[str, str]] = {
         FAN_HIGH: OverkizCommandParam.HI,
         FAN_LOW: OverkizCommandParam.LO,
         FAN_MEDIUM: OverkizCommandParam.MED,
-        "silent": OverkizCommandParam.SILENT,
+        FAN_SILENT: OverkizCommandParam.SILENT,
     },
     Protocol.HLRR_WIFI: {
         FAN_AUTO: OverkizCommandParam.AUTO,
         FAN_HIGH: OverkizCommandParam.HIGH,
         FAN_LOW: OverkizCommandParam.LOW,
         FAN_MEDIUM: OverkizCommandParam.MEDIUM,
-        "silent": OverkizCommandParam.SILENT,
+        FAN_SILENT: OverkizCommandParam.SILENT,
     },
 }
 
