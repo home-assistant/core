@@ -267,7 +267,7 @@ async def test_turn_on_success(
     await _async_setup_test_switch(hass, aioclient_mock)
 
     aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.get(RESOURCE, text="ON")
+    aioclient_mock.get(RESOURCE, exc=aiohttp.ClientError)
     assert await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -324,7 +324,7 @@ async def test_turn_off_success(
     await _async_setup_test_switch(hass, aioclient_mock)
 
     aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.get(RESOURCE, text="OFF")
+    aioclient_mock.get(RESOURCE, exc=aiohttp.ClientError)
     assert await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
