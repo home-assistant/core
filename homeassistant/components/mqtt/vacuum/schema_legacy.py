@@ -19,7 +19,7 @@ from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
-from ..models import MqttValueTemplate
+from ..models import MqttValueTemplate, PayloadSentinel
 from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
@@ -254,8 +254,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 battery_level = self._templates[
                     CONF_BATTERY_LEVEL_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if battery_level:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if battery_level is not PayloadSentinel.DEFAULT:
                     self._battery_level = int(battery_level)
 
             if (
@@ -264,8 +266,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 charging = self._templates[
                     CONF_CHARGING_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if charging:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if charging is not PayloadSentinel.DEFAULT:
                     self._charging = cv.boolean(charging)
 
             if (
@@ -274,8 +278,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 cleaning = self._templates[
                     CONF_CLEANING_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if cleaning:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if cleaning is not PayloadSentinel.DEFAULT:
                     self._cleaning = cv.boolean(cleaning)
 
             if (
@@ -284,8 +290,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 docked = self._templates[
                     CONF_DOCKED_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if docked:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if docked is not PayloadSentinel.DEFAULT:
                     self._docked = cv.boolean(docked)
 
             if (
@@ -294,8 +302,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 error = self._templates[
                     CONF_ERROR_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if error is not None:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if error is not PayloadSentinel.DEFAULT:
                     self._error = cv.string(error)
 
             if self._docked:
@@ -316,8 +326,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             ):
                 fan_speed = self._templates[
                     CONF_FAN_SPEED_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload, None)
-                if fan_speed:
+                ].async_render_with_possible_json_value(
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
+                if fan_speed is not PayloadSentinel.DEFAULT:
                     self._fan_speed = fan_speed
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
