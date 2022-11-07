@@ -1,4 +1,4 @@
-"""Config flow for Combined Energy API integration."""
+"""Config flow for Combined Energy integration."""
 from __future__ import annotations
 
 import logging
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Combined Energy API."""
+    """Handle a config flow for Combined Energy."""
 
     VERSION = 1
 

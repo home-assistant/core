@@ -1,5 +1,5 @@
 {
   "domain": "combined_energy",
   "name": "Combined Energy",
-  "integrations": ["combined_energy_api"]
+  "integrations": ["combined_energy"]
 }

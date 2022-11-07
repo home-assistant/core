@@ -1,9 +1,9 @@
 {
-  "domain": "combined_energy_api",
-  "name": "Combined Energy API",
+  "domain": "combined_energy",
+  "name": "Combined Energy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/combined_energy",
-  "requirements": ["combined-energy-api==0.4"],
+  "requirements": ["combined-energy-api==0.5"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

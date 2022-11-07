@@ -1,4 +1,4 @@
-"""The Combined Energy API integration."""
+"""The Combined Energy integration."""
 from __future__ import annotations
 
 from combined_energy import CombinedEnergy
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         installation = await api.installation()
     except CombinedEnergyError as ex:
-        LOGGER.error("Could not retrieve details from Combined Energy API")
+        LOGGER.error("Could not retrieve details from Combined Energy")
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

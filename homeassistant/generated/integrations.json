@@ -886,11 +886,11 @@
     "combined_energy": {
       "name": "Combined Energy",
       "integrations": {
-        "combined_energy_api": {
+        "combined_energy": {
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Combined Energy API"
+          "name": "Combined Energy"
         }
       }
     },
