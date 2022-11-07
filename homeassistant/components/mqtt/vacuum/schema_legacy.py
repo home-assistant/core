@@ -19,7 +19,7 @@ from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
-from ..models import MqttValueTemplate, PayloadSentinel
+from ..models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
@@ -226,7 +226,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 CONF_FAN_SPEED_TOPIC,
             )
         }
-        self._templates = {
+        self._templates: dict[str, MqttValueTemplate] = {
             key: config.get(key)
             for key in (
                 CONF_BATTERY_LEVEL_TEMPLATE,
@@ -246,7 +246,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT message."""
             if (
                 msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC]
@@ -257,7 +257,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 ].async_render_with_possible_json_value(
                     msg.payload, PayloadSentinel.DEFAULT
                 )
-                if battery_level is not PayloadSentinel.DEFAULT:
+                if battery_level and battery_level is not PayloadSentinel.DEFAULT:
                     self._battery_level = int(battery_level)
 
             if (
@@ -269,7 +269,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 ].async_render_with_possible_json_value(
                     msg.payload, PayloadSentinel.DEFAULT
                 )
-                if charging is not PayloadSentinel.DEFAULT:
+                if charging and charging is not PayloadSentinel.DEFAULT:
                     self._charging = cv.boolean(charging)
 
             if (
@@ -281,7 +281,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 ].async_render_with_possible_json_value(
                     msg.payload, PayloadSentinel.DEFAULT
                 )
-                if cleaning is not PayloadSentinel.DEFAULT:
+                if cleaning and cleaning is not PayloadSentinel.DEFAULT:
                     self._cleaning = cv.boolean(cleaning)
 
             if (
@@ -293,7 +293,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 ].async_render_with_possible_json_value(
                     msg.payload, PayloadSentinel.DEFAULT
                 )
-                if docked is not PayloadSentinel.DEFAULT:
+                if docked and docked is not PayloadSentinel.DEFAULT:
                     self._docked = cv.boolean(docked)
 
             if (
@@ -329,7 +329,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 ].async_render_with_possible_json_value(
                     msg.payload, PayloadSentinel.DEFAULT
                 )
-                if fan_speed is not PayloadSentinel.DEFAULT:
+                if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
                     self._fan_speed = fan_speed
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
