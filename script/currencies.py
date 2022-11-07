@@ -1,4 +1,5 @@
 """Helper script to update currency list from the official source."""
+import black
 from bs4 import BeautifulSoup
 import requests
 
@@ -34,14 +35,16 @@ HISTORIC_CURRENCIES = sorted(
 )
 
 print(
-    '_ACTIVE_CURRENCIES = {\n    "',
-    '", \n    "'.join(ACTIVE_CURRENCIES),
-    '",\n}',
-    sep="",
+    black.format_str(
+        "_ACTIVE_CURRENCIES = {" + ",".join(f'"{x}"' for x in ACTIVE_CURRENCIES) + "}",
+        mode=black.Mode(),
+    )
 )
 print(
-    '_HISTORIC_CURRENCIES = {\n    "',
-    '", \n    "'.join(HISTORIC_CURRENCIES),
-    '",\n}',
-    sep="",
+    black.format_str(
+        "_HISTORIC_CURRENCIES = {"
+        + ",".join(f'"{x}"' for x in HISTORIC_CURRENCIES)
+        + "}",
+        mode=black.Mode(),
+    )
 )
