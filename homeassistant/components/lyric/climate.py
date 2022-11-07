@@ -13,6 +13,10 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_OFF,
+    FAN_ON,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -61,6 +65,18 @@ LYRIC_HVAC_MODE_HEAT = "Heat"
 LYRIC_HVAC_MODE_COOL = "Cool"
 LYRIC_HVAC_MODE_HEAT_COOL = "Auto"
 
+LYRIC_HVAC_FAN_ON = "On"
+LYRIC_HVAC_FAN_OFF = "Off"
+LYRIC_HVAC_FAN_AUTO = "Auto"
+LYRIC_HVAC_FAN_CIRCULATE = "Circulate"
+
+LYRIC_FAN_MODES = {
+    FAN_ON: LYRIC_HVAC_FAN_ON,
+    FAN_OFF: LYRIC_HVAC_FAN_OFF,
+    FAN_AUTO: LYRIC_HVAC_FAN_AUTO,
+    FAN_DIFFUSE: LYRIC_HVAC_FAN_CIRCULATE,
+}
+
 LYRIC_HVAC_MODES = {
     HVACMode.OFF: LYRIC_HVAC_MODE_OFF,
     HVACMode.HEAT: LYRIC_HVAC_MODE_HEAT,
@@ -79,6 +95,13 @@ HVAC_ACTIONS = {
     LYRIC_HVAC_ACTION_OFF: HVACAction.OFF,
     LYRIC_HVAC_ACTION_HEAT: HVACAction.HEATING,
     LYRIC_HVAC_ACTION_COOL: HVACAction.COOLING,
+}
+
+FAN_MODES = {
+    LYRIC_HVAC_FAN_ON: FAN_ON,
+    LYRIC_HVAC_FAN_OFF: FAN_OFF,
+    LYRIC_HVAC_FAN_AUTO: FAN_AUTO,
+    LYRIC_HVAC_FAN_CIRCULATE: FAN_DIFFUSE,
 }
 
 SERVICE_HOLD_TIME = "set_hold_time"
@@ -175,6 +198,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             support_flags = SUPPORT_FLAGS_LCC
         else:
             support_flags = SUPPORT_FLAGS_TCC
+        try:
+            # See if we can change fan mode
+            if self.device.attributes["settings"]["fan"]["changeableValues"]["mode"]:
+                support_flags |= ClimateEntityFeature.FAN_MODE
+        except KeyError:
+            pass
         return support_flags
 
     @property
@@ -193,6 +222,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
         if action == HVACAction.OFF and self.hvac_mode != HVACMode.OFF:
             action = HVACAction.IDLE
+        if (
+            action == HVACAction.OFF or action == HVACAction.IDLE
+        ) and self.fan_mode == FAN_ON:
+            action = HVACAction.FAN
         return action
 
     @property
@@ -266,6 +299,33 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
             return device.maxHeatSetpoint
         return device.maxCoolSetpoint
+
+    @property
+    def fan_mode(self) -> str:
+        """Returns current fan mode."""
+        fan_settings = self.device.attributes["settings"]["fan"]
+        return FAN_MODES[fan_settings["changeableValues"]["mode"]]
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Returns fan modes."""
+        fan_settings = self.device.attributes["settings"]["fan"]
+        return [
+            FAN_MODES[mode]
+            for mode in fan_settings["allowedModes"]
+            if mode in FAN_MODES
+        ]
+
+    async def async_set_fan_mode(self, fan_mode) -> None:
+        """Set fan mode."""
+        _LOGGER.debug(f"Set fan mode to: {fan_mode}")
+        try:
+            await self._update_fan(
+                self.location, self.device, LYRIC_FAN_MODES[fan_mode]
+            )
+        except LYRIC_EXCEPTIONS as exception:
+            _LOGGER.error(exception)
+        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

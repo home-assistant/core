@@ -149,6 +149,7 @@ class LyricEntity(CoordinatorEntity):
         self._location = location
         self._mac_id = device.macID
         self._update_thermostat = coordinator.data.update_thermostat
+        self._update_fan = coordinator.data.update_fan
 
     @property
     def unique_id(self) -> str:
