@@ -8,4 +8,8 @@ import pycountry
 
 COUNTRIES = sorted({x.alpha_2 for x in pycountry.countries})
 
-print(black.format_str("{" + ",".join(COUNTRIES) + "}", mode=black.Mode()))
+print(
+    black.format_str(
+        "{" + ",".join(f'"{x}"' for x in COUNTRIES) + "}", mode=black.Mode()
+    )
+)
