@@ -125,6 +125,8 @@ async def test_config_climate(hass, mock_modbus):
                             CONF_HVAC_MODE_HEAT: 1,
                             CONF_HVAC_MODE_COOL: 2,
                             CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_AUTO: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
                         },
                     },
                 }
@@ -139,6 +141,8 @@ async def test_config_hvac_mode_register(hass, mock_modbus):
     assert HVACMode.HEAT in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.HEAT_COOL in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.FAN_ONLY in state.attributes[ATTR_HVAC_MODES]
 
 
 @pytest.mark.parametrize(
