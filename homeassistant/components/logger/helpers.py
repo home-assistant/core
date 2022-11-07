@@ -191,13 +191,8 @@ class LoggerSettings:
             loggers = [domain]
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
-        # Consider potentially chattier log levels already set in configuration.yaml
-        if yaml_log_settings := self._async_get_logger_logs():
-            for logger in loggers:
-                combined_logs[logger] = _chattiest_log_level(
-                    combined_logs[logger],
-                    yaml_log_settings.get(logger, logging.NOTSET),
-                )
+        # Don't override the log levels with the ones from YAML
+        # since we want whatever the user is asking for to be honored
 
         set_log_levels(hass, combined_logs)
 
