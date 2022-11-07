@@ -15,7 +15,11 @@ from pycfdns.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -84,7 +88,7 @@ async def _async_update_cloudflare(
     session: ClientSession,
     cfupdate: CloudflareUpdater,
     zone_id: str,
-):
+) -> None:
     _LOGGER.debug("Starting update for zone %s", cfupdate.zone)
 
     records = await cfupdate.get_record_info(zone_id)
@@ -92,6 +96,8 @@ async def _async_update_cloudflare(
 
     location_info = await async_detect_location_info(session)
 
-    if location_info and is_ipv4_address(location_info.ip):
-        await cfupdate.update_records(zone_id, records, location_info.ip)
-        _LOGGER.debug("Update for zone %s is complete", cfupdate.zone)
+    if not location_info or not is_ipv4_address(location_info.ip):
+        raise HomeAssistantError("Could not get external IPv4 address")
+
+    await cfupdate.update_records(zone_id, records, location_info.ip)
+    _LOGGER.debug("Update for zone %s is complete", cfupdate.zone)
