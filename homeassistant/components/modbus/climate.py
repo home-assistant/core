@@ -40,6 +40,13 @@ from .const import (
     CONF_STEP,
     CONF_TARGET_TEMP,
     DataType,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
 )
 from .modbus import ModbusHub
 
@@ -99,10 +106,18 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
-            for hvac_mode in HVACMode:
-                if hvac_mode.value in mode_value_config:
+
+            for hvac_mode_kw, hvac_mode in (
+                (CONF_HVAC_MODE_OFF, HVACMode.OFF),
+                (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
+                (CONF_HVAC_MODE_COOL, HVACMode.COOL),
+                (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
+                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+                (CONF_HVAC_MODE_DRY, HVACMode.DRY),
+                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY)):
+                if hvac_mode_kw in mode_value_config:
                     self._hvac_mode_mapping.append(
-                        (mode_value_config[hvac_mode.value], hvac_mode)
+                        (mode_value_config[hvac_mode_kw], hvac_mode)
                     )
                     self._attr_hvac_modes.append(hvac_mode)
 

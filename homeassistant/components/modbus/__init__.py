@@ -107,6 +107,13 @@ from .const import (  # noqa: F401
     TCP,
     UDP,
     DataType,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
@@ -227,13 +234,13 @@ CLIMATE_SCHEMA = vol.All(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(HVACMode.OFF.value): cv.positive_int,
-                        vol.Optional(HVACMode.HEAT.value): cv.positive_int,
-                        vol.Optional(HVACMode.COOL.value): cv.positive_int,
-                        vol.Optional(HVACMode.HEAT_COOL.value): cv.positive_int,
-                        vol.Optional(HVACMode.AUTO.value): cv.positive_int,
-                        vol.Optional(HVACMode.DRY.value): cv.positive_int,
-                        vol.Optional(HVACMode.FAN_ONLY.value): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
                     },
                 }
             ),
