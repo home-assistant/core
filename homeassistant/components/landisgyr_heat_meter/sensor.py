@@ -37,7 +37,7 @@ async def async_setup_entry(
     sensors = []
 
     for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, unique_id, description, device))
+        sensors.append(HeatMeterSensor(coordinator, description, device))
 
     async_add_entities(sensors)
 
@@ -45,7 +45,7 @@ async def async_setup_entry(
 class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator, unique_id, description, device):
+    def __init__(self, coordinator, description, device):
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
