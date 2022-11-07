@@ -19,6 +19,7 @@ from .const import (
     CONNECTIVITY_UPDATE_DELAY,
     LOGGER,
     READINGS_INCREMENT,
+    READINGS_INITIAL_DELTA,
     READINGS_UPDATE_DELAY,
 )
 
@@ -63,7 +64,7 @@ class CombinedEnergyDataService(Generic[_T]):
         except CombinedEnergyAuthError as ex:
             raise ConfigEntryAuthFailed from ex
         except CombinedEnergyError as ex:
-            raise UpdateFailed("Error updating Combined Energy API") from ex
+            raise UpdateFailed("Error updating Combined Energy") from ex
         return self.data
 
 
@@ -91,7 +92,9 @@ class CombinedEnergyReadingsDataService(
         """Initialize the data service."""
         super().__init__(hass, api)
         self._readings_iterator = ReadingsIterator(
-            self.api, increment=READINGS_INCREMENT, initial_delta=timedelta(minutes=5)
+            self.api,
+            increment=READINGS_INCREMENT,
+            initial_delta=READINGS_INITIAL_DELTA,
         )
 
     @property
