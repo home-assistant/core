@@ -47,11 +47,15 @@ from .entity import OverkizDescriptiveEntity, OverkizDeviceClass, OverkizEntity
 
 def _unit_of_measurement(device: Device, default: str) -> str | None:
     """Retrieve the unit of measurement from Overkiz attributes."""
-    if unit := device.attributes.get(OverkizAttribute.CORE_MEASURED_VALUE_TYPE):
-        if unit.value_as_str:
-            return OVERKIZ_UNIT_TO_HA.get(unit.value_as_str, default)
-        else:
-            return default
+    attrs = device.attributes
+    if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and unit.value_as_str:
+        return OVERKIZ_UNIT_TO_HA.get(unit.value_as_str, default)
+    if (
+        unit := attrs[
+            OverkizAttribute.CORE_ELECTRIC_POWER_CONSUMPTION_STATE_MEASURED_VALUE_TYPE
+        ]
+    ) and unit.value_as_str:
+        return OVERKIZ_UNIT_TO_HA.get(unit.value_as_str, default)
     return default
 
 
