@@ -226,7 +226,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 CONF_FAN_SPEED_TOPIC,
             )
         }
-        self._templates: dict[str, MqttValueTemplate] = {
+        self._templates = {
             key: config.get(key)
             for key in (
                 CONF_BATTERY_LEVEL_TEMPLATE,
