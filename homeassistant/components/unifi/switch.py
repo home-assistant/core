@@ -59,6 +59,7 @@ Handler = TypeVar("Handler")
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
+@callback
 def async_dpi_group_is_on_fn(
     api: aiounifi.Controller, dpi_group: DPIRestrictionGroup
 ) -> bool:
@@ -70,13 +71,15 @@ def async_dpi_group_is_on_fn(
     )
 
 
+@callback
 def async_sub_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
     """Check if sub device object is disabled."""
-    device_id = obj_id.split("_", 1)[0]
+    device_id = obj_id.partition("_")[0]
     device = controller.api.devices[device_id]
     return controller.available and not device.disabled
 
 
+@callback
 def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
     client = api.clients[obj_id]
@@ -87,10 +90,11 @@ def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
+@callback
 def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device
-        obj_id = obj_id.split("_", 1)[0]
+        obj_id = obj_id.partition("_")[0]
 
     device = api.devices[obj_id]
     return DeviceInfo(
@@ -103,6 +107,7 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
+@callback
 def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
@@ -138,7 +143,7 @@ async def async_outlet_control_fn(
     api: aiounifi.Controller, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
-    mac, index = obj_id.split("_", 1)
+    mac, _, index = obj_id.partition("_")
     device = api.devices[mac]
     await api.request(DeviceSetOutletRelayRequest.create(device, int(index), target))
 
@@ -147,7 +152,7 @@ async def async_poe_port_control_fn(
     api: aiounifi.Controller, obj_id: str, target: bool
 ) -> None:
     """Control poe state."""
-    mac, index = obj_id.split("_", 1)
+    mac, _, index = obj_id.partition("_")
     device = api.devices[mac]
     state = "auto" if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
@@ -495,7 +500,7 @@ class UnifiSwitchEntity(SwitchEntity):
         controller: UniFiController,
         description: UnifiEntityDescription,
     ) -> None:
-        """Set up dpi switch."""
+        """Set up UniFi switch entity."""
         self._obj_id = obj_id
         self.controller = controller
         self.entity_description = description
@@ -511,20 +516,21 @@ class UnifiSwitchEntity(SwitchEntity):
         self._attr_name = description.name_fn(obj)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on connectivity for client."""
+        """Turn on switch."""
         await self.entity_description.control_fn(
             self.controller.api, self._obj_id, True
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off connectivity for client."""
+        """Turn off switch."""
         await self.entity_description.control_fn(
             self.controller.api, self._obj_id, False
         )
 
     async def async_added_to_hass(self) -> None:
-        """Register callback to known apps."""
-        handler = self.entity_description.api_handler_fn(self.controller.api)
+        """Register callbacks."""
+        description = self.entity_description
+        handler = description.api_handler_fn(self.controller.api)
         self.async_on_remove(
             handler.subscribe(
                 self.async_signalling_callback,
@@ -551,36 +557,35 @@ class UnifiSwitchEntity(SwitchEntity):
                 self.remove_item,
             )
         )
-        if self.entity_description.event_to_subscribe is not None:
+        if description.event_to_subscribe is not None:
             self.async_on_remove(
                 self.controller.api.events.subscribe(
                     self.async_event_callback,
-                    self.entity_description.event_to_subscribe,
+                    description.event_to_subscribe,
                 )
             )
-        if self.entity_description.custom_subscribe is not None:
+        if description.custom_subscribe is not None:
             self.async_on_remove(
-                self.entity_description.custom_subscribe(self.controller.api)(
+                description.custom_subscribe(self.controller.api)(
                     self.async_signalling_callback, ItemEvent.CHANGED
                 ),
             )
 
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the clients state."""
+        """Update the switch state."""
         if event == ItemEvent.DELETED and obj_id == self._obj_id:
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        if not self.entity_description.supported_fn(self.controller.api, self._obj_id):
+        description = self.entity_description
+        if not description.supported_fn(self.controller.api, self._obj_id):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        obj = self.entity_description.object_fn(self.controller.api, self._obj_id)
-        self._attr_is_on = self.entity_description.is_on_fn(self.controller.api, obj)
-        self._attr_available = self.entity_description.available_fn(
-            self.controller, self._obj_id
-        )
+        obj = description.object_fn(self.controller.api, self._obj_id)
+        self._attr_is_on = description.is_on_fn(self.controller.api, obj)
+        self._attr_available = description.available_fn(self.controller, self._obj_id)
         self.async_write_ha_state()
 
     @callback
@@ -593,13 +598,14 @@ class UnifiSwitchEntity(SwitchEntity):
         """Event subscription callback."""
         if event.mac != self._obj_id:
             return
-        assert isinstance(self.entity_description.event_to_subscribe, tuple)
-        assert isinstance(self.entity_description.event_is_on, tuple)
-        if event.key in self.entity_description.event_to_subscribe:
-            self._attr_is_on = event.key in self.entity_description.event_is_on
-        self._attr_available = self.entity_description.available_fn(
-            self.controller, self._obj_id
-        )
+
+        description = self.entity_description
+        assert isinstance(description.event_to_subscribe, tuple)
+        assert isinstance(description.event_is_on, tuple)
+
+        if event.key in description.event_to_subscribe:
+            self._attr_is_on = event.key in description.event_is_on
+        self._attr_available = description.available_fn(self.controller, self._obj_id)
         self.async_write_ha_state()
 
     async def options_updated(self) -> None:
