@@ -4,8 +4,7 @@ from __future__ import annotations
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.types import StateType as OverkizStateType
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -15,6 +14,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -40,42 +40,43 @@ ROOM_TEMPERATURE_STATE = [
 ]
 SWING_STATE = [OverkizState.OVP_SWING, OverkizState.HLRRWIFI_SWING]
 
-OVERKIZ_TO_HVAC_MODES = {
-    "autocooling": HVACMode.AUTO,
-    "autoheating": HVACMode.AUTO,
-    "off": HVACMode.OFF,
-    "heating": HVACMode.HEAT,
-    "fan": HVACMode.FAN_ONLY,
-    "dehumidify": HVACMode.DRY,
-    "cooling": HVACMode.COOL,
-    "auto": HVACMode.AUTO,
+OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
+    OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
+    OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
+    OverkizCommandParam.OFF: HVACMode.OFF,
+    OverkizCommandParam.HEATING: HVACMode.HEAT,
+    OverkizCommandParam.FAN: HVACMode.FAN_ONLY,
+    OverkizCommandParam.DEHUMIDIFY: HVACMode.DRY,
+    OverkizCommandParam.COOLING: HVACMode.COOL,
+    OverkizCommandParam.AUTO: HVACMode.AUTO,
 }
 
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
-OVERKIZ_TO_SWING_MODES = {
-    "both": SWING_BOTH,
-    "horizontal": SWING_HORIZONTAL,
-    "stop": SWING_OFF,
-    "vertical": SWING_VERTICAL,
+OVERKIZ_TO_SWING_MODES: dict[str, str] = {
+    OverkizCommandParam.BOTH: SWING_BOTH,
+    OverkizCommandParam.HORIZONTAL: SWING_HORIZONTAL,
+    OverkizCommandParam.STOP: SWING_OFF,
+    OverkizCommandParam.VERTICAL: SWING_VERTICAL,
 }
 
 SWING_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_SWING_MODES.items()}
 
-HLRRWIFI_OVERKIZ_TO_FAN_MODES = {
-    "auto": FAN_AUTO,
-    "high": FAN_HIGH,
-    "low": FAN_LOW,
-    "medium": FAN_MEDIUM,
-    "silent": "silent",
+
+HLRRWIFI_OVERKIZ_TO_FAN_MODES: dict[str, str] = {
+    OverkizCommandParam.AUTO: FAN_AUTO,
+    OverkizCommandParam.HIGH: FAN_HIGH,
+    OverkizCommandParam.LOW: FAN_LOW,
+    OverkizCommandParam.MEDIUM: FAN_MEDIUM,
+    OverkizCommandParam.SILENT: "silent",
 }
 
-OVP_OVERKIZ_TO_FAN_MODES = {
-    "auto": FAN_AUTO,
-    "hi": FAN_HIGH,
-    "lo": FAN_LOW,
-    "med": FAN_MEDIUM,
-    "silent": "silent",
+OVP_OVERKIZ_TO_FAN_MODES: dict[str, str] = {
+    OverkizCommandParam.AUTO: FAN_AUTO,
+    OverkizCommandParam.HI: FAN_HIGH,
+    OverkizCommandParam.LO: FAN_LOW,
+    OverkizCommandParam.MED: FAN_MEDIUM,
+    OverkizCommandParam.SILENT: "silent",
 }
 
 FAN_MODES_TO_HLRRWIFI_OVERKIZ = {v: k for k, v in HLRRWIFI_OVERKIZ_TO_FAN_MODES.items()}
@@ -106,7 +107,8 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if self.executor.has_state(*SWING_STATE):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
-        self._attr_device_info["manufacturer"] = "Hitachi"
+        if self._attr_device_info:
+            self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
     def hvac_mode(self) -> str:
@@ -196,12 +198,12 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
     async def _global_control(
         self,
-        main_operation=None,
-        target_temperature=None,
-        fan_mode=None,
-        hvac_mode=None,
-        swing_mode=None,
-        leave_home=None,
+        main_operation: str = None,
+        target_temperature: float = None,
+        fan_mode: str = None,
+        hvac_mode: str = None,
+        swing_mode: str = None,
+        leave_home: str = None,
     ):
         """Execute globalControl command with all parameters."""
         if self.device.controllable_name == OVP_HLINK_MAIN_CONTROLLER:
@@ -232,7 +234,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 leave_home or self._select_state(*LEAVE_HOME_STATE),  # Leave Home
             )
 
-    def _select_state(self, *states) -> OverkizStateType:
+    def _select_state(self, *states: str) -> OverkizStateType:
         """Make all strings lowercase, since Hi Kumo server returns capitalized strings for some devices."""
         state = self.executor.select_state(*states)
 
