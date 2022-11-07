@@ -4,8 +4,8 @@ from __future__ import annotations
 import asyncio
 from typing import Final
 
+from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi
-from aionanoleaf import ClientConnectorError
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
