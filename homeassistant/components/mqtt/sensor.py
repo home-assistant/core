@@ -45,7 +45,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -244,7 +244,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """(Re)Subscribe to topics."""
         topics = {}
 
-        def _update_state(msg):
+        def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
             if expire_after is not None and expire_after > 0:
@@ -262,20 +262,25 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            payload = self._template(msg.payload, default=self.native_value)
-
-            if payload is not None and self.device_class in (
+            payload = self._template(msg.payload, default=PayloadSentinel.DEFAULT)
+            if payload is PayloadSentinel.DEFAULT:
+                return
+            if self.device_class not in {
                 SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
-            ):
-                if (payload := dt_util.parse_datetime(payload)) is None:
-                    _LOGGER.warning(
-                        "Invalid state message '%s' from '%s'", msg.payload, msg.topic
-                    )
-                elif self.device_class == SensorDeviceClass.DATE:
-                    payload = payload.date()
-
-            self._attr_native_value = payload
+            }:
+                self._attr_native_value = str(payload)
+                return
+            if (payload_datetime := dt_util.parse_datetime(str(payload))) is None:
+                _LOGGER.warning(
+                    "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+                )
+                self._attr_native_value = None
+                return
+            if self.device_class == SensorDeviceClass.DATE:
+                self._attr_native_value = payload_datetime.date()
+                return
+            self._attr_native_value = payload_datetime
 
         def _update_last_reset(msg):
             payload = self._last_reset_template(msg.payload)
