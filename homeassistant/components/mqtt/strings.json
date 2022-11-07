@@ -80,22 +80,22 @@
     "step": {
       "broker": {
         "title": "Broker options",
-        "description": "Please enter the connection information of your MQTT broker.",
+        "description": "[%key:component::mqtt::config::step::broker::description%]",
         "data": {
-          "broker": "Broker",
+          "broker": "[%key:component::mqtt::config::step::broker::data::broker%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "advanced_options": "Advanced options",
-          "certificate": "Upload custom CA certificate file",
-          "client_id": "Client ID (leave empty to randomly generated one)",
-          "client_cert": "Upload client certificate file",
-          "client_key": "Upload private key file",
-          "keepalive": "The time between sending keep alive messages",
-          "tls_insecure": "Ignore broker certificate validation",
-          "protocol": "MQTT protocol",
-          "set_ca_cert": "Broker certificate validation",
-          "set_client_cert": "Use a client certificate"
+          "advanced_options": "[%key:component::mqtt::config::step::broker::data::advanced_options%]",
+          "certificate": "[%key:component::mqtt::config::step::broker::data::certificate%]",
+          "client_id": "[%key:component::mqtt::config::step::broker::data::client_id%]",
+          "client_cert": "[%key:component::mqtt::config::step::broker::data::client_cert%]",
+          "client_key": "[%key:component::mqtt::config::step::broker::data::client_key%]",
+          "keepalive": "[%key:component::mqtt::config::step::broker::data::keepalive%]",
+          "tls_insecure": "[%key:component::mqtt::config::step::broker::data::tls_insecure%]",
+          "protocol": "[%key:component::mqtt::config::step::broker::data::protocol%]",
+          "set_ca_cert": "[%key:component::mqtt::config::step::broker::data::set_ca_cert%]",
+          "set_client_cert": "[%key:component::mqtt::config::step::broker::data::set_client_cert%]"
         }
       },
       "options": {
@@ -118,15 +118,15 @@
       }
     },
     "error": {
-      "bad_birth": "Invalid birth topic",
-      "bad_will": "Invalid will topic",
-      "bad_discovery_prefix": "Invalid discovery prefix",
-      "bad_certificate": "The CA certificate is invalid",
-      "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
-      "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
-      "bad_client_cert_key": "Client certificate and private are no valid pair",
+      "bad_birth": "[%key:component::mqtt::config::error::bad_birth%]",
+      "bad_will": "[%key:component::mqtt::config::error::bad_will%]",
+      "bad_discovery_prefix": "[%key:component::mqtt::config::error::bad_discovery_prefix%]",
+      "bad_certificate": "[%key:component::mqtt::config::error::bad_certificate%]",
+      "bad_client_cert": "[%key:component::mqtt::config::error::bad_client_cert%]",
+      "bad_client_key": "[%key:component::mqtt::config::error::bad_client_key%]",
+      "bad_client_cert_key": "[%key:component::mqtt::config::error::bad_client_cert_key%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_inclusion": "The client certificate and private key must be configured together"
+      "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
     }
   }
 }
