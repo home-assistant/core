@@ -231,8 +231,21 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[LEAVE_HOME_STATE[self.device.protocol]]
-        ) and state.value_as_str:
+            self.device.protocol == Protocol.OVP
+            and (state := self.device.states["core:HolidaysModeState"])
+            and state.value_as_str
+        ):
+            if state.value_as_str == OverkizCommandParam.ON:
+                return PRESET_HOLIDAY_MODE
+
+            if state.value_as_str == OverkizCommandParam.OFF:
+                return PRESET_NONE
+
+        if (
+            self.device.protocol == Protocol.HLRR_WIFI
+            and (state := self.device.states[LEAVE_HOME_STATE[self.device.protocol]])
+            and state.value_as_str
+        ):
             if state.value_as_str == OverkizCommandParam.ON:
                 return PRESET_HOLIDAY_MODE
 
@@ -243,11 +256,23 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode == PRESET_HOLIDAY_MODE:
-            await self._global_control(leave_home=OverkizCommandParam.ON)
+        # OVP uses setHolidays, where HLRRWIFI uses an extra parameter in global control
+        if self.device.protocol == Protocol.HLRR_WIFI:
+            if preset_mode == PRESET_HOLIDAY_MODE:
+                await self._global_control(leave_home=OverkizCommandParam.ON)
 
-        if preset_mode == PRESET_NONE:
-            await self._global_control(leave_home=OverkizCommandParam.OFF)
+            if preset_mode == PRESET_NONE:
+                await self._global_control(leave_home=OverkizCommandParam.OFF)
+
+        if self.device.protocol == Protocol.OVP:
+            if preset_mode == PRESET_HOLIDAY_MODE:
+                await self.executor.async_execute_command(
+                    "setHolidays", OverkizCommandParam.ON  # add to OverkizCommand
+                )
+            if preset_mode == PRESET_NONE:
+                await self.executor.async_execute_command(
+                    "setHolidays", OverkizCommandParam.OFF  # add to OverkizCommand
+                )
 
     async def _global_control(
         self,
