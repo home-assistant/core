@@ -1,7 +1,7 @@
 """Support for HitachiAirToAirHeatPump."""
 from __future__ import annotations
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, Protocol
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.climate import (
@@ -24,8 +24,6 @@ from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_HOLIDAY_MODE = "holiday_mode"
-
-OVP_HLINK_MAIN_CONTROLLER = "ovp:HLinkMainController"
 
 FAN_SPEED_STATE = [OverkizState.OVP_FAN_SPEED, OverkizState.HLRRWIFI_FAN_SPEED]
 LEAVE_HOME_STATE = [OverkizState.OVP_LEAVE_HOME, OverkizState.HLRRWIFI_LEAVE_HOME]
@@ -131,7 +129,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        if self.device.controllable_name == OVP_HLINK_MAIN_CONTROLLER:
+        if self.device.protocol == Protocol.OVP:
             return OVP_OVERKIZ_TO_FAN_MODES[self._select_state(*FAN_SPEED_STATE)]
 
         return HLRRWIFI_OVERKIZ_TO_FAN_MODES[self._select_state(*FAN_SPEED_STATE)]
@@ -139,14 +137,14 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        if self.device.controllable_name == OVP_HLINK_MAIN_CONTROLLER:
+        if self.device.protocol == Protocol.OVP:
             return [*FAN_MODES_TO_OVP_OVERKIZ]
 
         return [*FAN_MODES_TO_HLRRWIFI_OVERKIZ]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if self.device.controllable_name == OVP_HLINK_MAIN_CONTROLLER:
+        if self.device.protocol == Protocol.OVP:
             await self._global_control(fan_mode=FAN_MODES_TO_OVP_OVERKIZ[fan_mode])
         else:
             await self._global_control(fan_mode=FAN_MODES_TO_HLRRWIFI_OVERKIZ[fan_mode])
@@ -204,9 +202,9 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         hvac_mode: str = None,
         swing_mode: str = None,
         leave_home: str = None,
-    ):
+    ) -> None:
         """Execute globalControl command with all parameters."""
-        if self.device.controllable_name == OVP_HLINK_MAIN_CONTROLLER:
+        if self.device.protocol == Protocol.OVP:
             await self.executor.async_execute_command(
                 OverkizCommand.GLOBAL_CONTROL,
                 main_operation
