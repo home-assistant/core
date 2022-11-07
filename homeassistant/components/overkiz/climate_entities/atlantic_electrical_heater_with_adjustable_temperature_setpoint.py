@@ -53,6 +53,8 @@ OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
+TEMPERATURE_SENSOR_DEVICE_INDEX = 2
+
 
 class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     OverkizEntity, ClimateEntity
@@ -71,7 +73,9 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(2)
+        self.temperature_device = self.executor.linked_device(
+            TEMPERATURE_SENSOR_DEVICE_INDEX
+        )
 
     @property
     def hvac_mode(self) -> str:
