@@ -1,6 +1,7 @@
 """Config flow for Livisi Home Assistant."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 from aiohttp import ClientConnectorError
@@ -45,10 +46,8 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "wrong_ip_address"
         else:
             controller_info: dict[str, Any] = {}
-            try:
-                controller_info = await self.get_controller()
-            except ClientConnectorError:
-                errors["base"] = "cannot_connect"
+            with suppress(ClientConnectorError):
+                controller_info = await self.aio_livisi.async_get_controller()
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
             errors["base"] = "cannot_connect"
@@ -87,7 +86,3 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 **user_input,
             },
         )
-
-    async def get_controller(self) -> dict[str, Any]:
-        """Return the LIVISI controller data."""
-        return await self.aio_livisi.async_get_controller()
