@@ -30,6 +30,13 @@ class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
     PlugwiseBinarySensorEntityDescription(
+        key="compressor_state",
+        name="Compressor state",
+        icon="mdi:hvac",
+        icon_off="mdi:hvac-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
         name="DHW state",
         icon="mdi:water-pump",

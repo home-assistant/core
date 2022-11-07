@@ -75,6 +75,13 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Questa immagine sembra buona."
+                },
+                "description": "![Anteprima immagine fissa fotocamera]({preview_url})",
+                "title": "Anteprima"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipo di contenuto"

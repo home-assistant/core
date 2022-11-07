@@ -6,6 +6,7 @@ import datetime
 from datetime import timedelta
 import re
 import time
+from typing import Final
 
 from aioesphomeapi import BluetoothLEAdvertisement
 from bleak.backends.device import BLEDevice
@@ -19,8 +20,18 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import monotonic_time_coarse
 
 TWO_CHAR = re.compile("..")
+
+# The maximum time between advertisements for a device to be considered
+# stale when the advertisement tracker can determine the interval for
+# connectable devices.
+#
+# BlueZ uses 180 seconds by default but we give it a bit more time
+# to account for the esp32's bluetooth stack being a bit slower
+# than BlueZ's.
+CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 195
 
 
 class ESPHomeScanner(BaseHaScanner):
@@ -44,8 +55,12 @@ class ESPHomeScanner(BaseHaScanner):
         self._connector = connector
         self._connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
+        self._fallback_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         if connectable:
             self._details["connector"] = connector
+            self._fallback_seconds = (
+                CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+            )
 
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -60,7 +75,7 @@ class ESPHomeScanner(BaseHaScanner):
         expired = [
             address
             for address, timestamp in self._discovered_device_timestamps.items()
-            if now - timestamp > FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+            if now - timestamp > self._fallback_seconds
         ]
         for address in expired:
             del self._discovered_device_advertisement_datas[address]
@@ -84,7 +99,7 @@ class ESPHomeScanner(BaseHaScanner):
     @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
-        now = time.monotonic()
+        now = monotonic_time_coarse()
         address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
         name = adv.name
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):

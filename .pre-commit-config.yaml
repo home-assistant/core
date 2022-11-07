@@ -61,11 +61,11 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.27.1
+    rev: v1.28.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.6.1
+    rev: v2.7.1
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update

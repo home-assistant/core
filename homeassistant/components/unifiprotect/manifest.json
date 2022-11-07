@@ -1,9 +1,10 @@
 {
   "domain": "unifiprotect",
   "name": "UniFi Protect",
+  "integration_type": "hub",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
-  "requirements": ["pyunifiprotect==4.2.0", "unifi-discovery==1.1.7"],
+  "requirements": ["pyunifiprotect==4.4.0", "unifi-discovery==1.1.7"],
   "dependencies": ["http"],
   "codeowners": ["@briis", "@AngellusMortis", "@bdraco"],
   "quality_scale": "platinum",

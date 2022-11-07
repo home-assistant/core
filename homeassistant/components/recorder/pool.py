@@ -128,6 +128,7 @@ class MutexPool(StaticPool):  # type: ignore[misc]
 
         if DEBUG_MUTEX_POOL:
             _LOGGER.debug("%s wait conn%s", threading.current_thread().name, trace_msg)
+        # pylint: disable-next=consider-using-with
         got_lock = MutexPool.pool_lock.acquire(timeout=1)
         if not got_lock:
             raise SQLAlchemyError

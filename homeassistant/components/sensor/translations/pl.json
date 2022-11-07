@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "obecny poziom st\u0119\u017cenia lotnych zwi\u0105zk\u00f3w organicznych {entity_name}",
             "is_voltage": "obecne napi\u0119cie {entity_name}",
             "is_volume": "obecna obj\u0119to\u015b\u0107 {entity_name}",
+            "is_water": "obecny poziom wody {entity_name}",
             "is_weight": "obecna waga {entity_name}"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia lotnych zwi\u0105zk\u00f3w organicznych",
             "voltage": "zmieni si\u0119 napi\u0119cie w {entity_name}",
             "volume": "zmieni si\u0119 obj\u0119to\u015b\u0107 {entity_name}",
+            "water": "zmieni si\u0119 poziom wody {entity_name}",
             "weight": "zmieni si\u0119 waga {entity_name}"
         }
     },

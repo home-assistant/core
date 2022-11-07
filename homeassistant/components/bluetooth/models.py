@@ -18,13 +18,11 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
-from bleak_retry_connector import freshen_ble_device
+from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from .const import NO_RSSI_VALUE
 
 if TYPE_CHECKING:
 
@@ -266,6 +264,7 @@ class HaBleakClientWrapper(BleakClient):
             self.__address = address_or_ble_device
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
+        self.__ble_device: BLEDevice | None = None
         self._backend: BaseBleakClient | None = None  # type: ignore[assignment]
 
     @property
@@ -285,15 +284,24 @@ class HaBleakClientWrapper(BleakClient):
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
-        if not self._backend:
+        if (
+            not self._backend
+            or not self.__ble_device
+            or not self._async_get_backend_for_ble_device(self.__ble_device)
+        ):
+            assert MANAGER is not None
             wrapped_backend = (
                 self._async_get_backend() or self._async_get_fallback_backend()
             )
-            self._backend = wrapped_backend.client(
+            self.__ble_device = (
                 await freshen_ble_device(wrapped_backend.device)
-                or wrapped_backend.device,
+                or wrapped_backend.device
+            )
+            self._backend = wrapped_backend.client(
+                self.__ble_device,
                 disconnected_callback=self.__disconnected_callback,
                 timeout=self.__timeout,
+                hass=MANAGER.hass,
             )
         return await super().connect(**kwargs)
 

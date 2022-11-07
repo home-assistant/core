@@ -5,18 +5,18 @@
             "already_in_progress": "Nederlands",
             "cannot_connect": "Nederlands",
             "no_devices_found": "Nederlands",
-            "unknown": "Nederlands"
+            "unknown": "Onverwachte fout"
         },
         "flow_title": "Nederlands",
         "step": {
             "bluetooth_confirm": {
-                "description": "Nederlands"
+                "description": "Wilt u {name} instellen?"
             },
             "user": {
                 "data": {
-                    "address": "Nederlands"
+                    "address": "Apparaat"
                 },
-                "description": "Nederlands"
+                "description": "Kies een apparaat om in te stellen"
             }
         }
     }

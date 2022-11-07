@@ -6,8 +6,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, cast
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
 from homeassistant.core import HomeAssistant, callback
@@ -87,8 +86,7 @@ async def async_setup_entry(
                 and not new_members_only
             ):
                 new_entities.append(Life360DeviceTracker(coordinator, member_id))
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     process_data(new_members_only=False)
     entry.async_on_unload(coordinator.async_add_listener(process_data))

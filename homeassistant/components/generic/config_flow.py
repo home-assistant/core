@@ -394,8 +394,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Generic IP Camera options flow."""
         self.config_entry = config_entry
-        self.cached_user_input: dict[str, Any] = {}
-        self.cached_title = ""
+        self.user_input: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -410,9 +409,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
             )
             errors = errors | await async_test_stream(hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
-            stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
-                title = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if still_url is None:
                     # If user didn't specify a still image URL,
                     # The automatically generated still image that stream generates
@@ -438,10 +435,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                         ),
                     ),
                 }
-                return self.async_create_entry(
-                    title=title,
-                    data=data,
-                )
+                self.user_input = data
+                # temporary preview for user to check the image
+                self.context["preview_cam"] = data
+                return await self.async_step_confirm_still()
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(
@@ -450,6 +447,30 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 self.show_advanced_options,
             ),
             errors=errors,
+        )
+
+    async def async_step_confirm_still(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle user clicking confirm after still preview."""
+        if user_input:
+            if not user_input.get(CONF_CONFIRMED_OK):
+                return await self.async_step_init()
+            return self.async_create_entry(
+                title=self.config_entry.title,
+                data=self.user_input,
+            )
+        register_preview(self.hass)
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        return self.async_show_form(
+            step_id="confirm_still",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CONFIRMED_OK, default=False): bool,
+                }
+            ),
+            description_placeholders={"preview_url": preview_url},
+            errors=None,
         )
 
 
@@ -468,9 +489,13 @@ class CameraImagePreview(HomeAssistantView):
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         try:
-            flow: FlowResult = self.hass.config_entries.flow.async_get(flow_id)
-        except UnknownFlow as exc:
-            raise web.HTTPNotFound() from exc
+            flow = self.hass.config_entries.flow.async_get(flow_id)
+        except UnknownFlow:
+            try:
+                flow = self.hass.config_entries.options.async_get(flow_id)
+            except UnknownFlow as exc:
+                _LOGGER.warning("Unknown flow while getting image preview")
+                raise web.HTTPNotFound() from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:

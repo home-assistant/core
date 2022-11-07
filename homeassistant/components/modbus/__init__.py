@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -65,6 +66,9 @@ from .const import (  # noqa: F401
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_HUB,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -218,6 +222,21 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+            vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_MODE_VALUES: {
+                        vol.Optional(HVACMode.OFF.value): cv.positive_int,
+                        vol.Optional(HVACMode.HEAT.value): cv.positive_int,
+                        vol.Optional(HVACMode.COOL.value): cv.positive_int,
+                        vol.Optional(HVACMode.HEAT_COOL.value): cv.positive_int,
+                        vol.Optional(HVACMode.AUTO.value): cv.positive_int,
+                        vol.Optional(HVACMode.DRY.value): cv.positive_int,
+                        vol.Optional(HVACMode.FAN_ONLY.value): cv.positive_int,
+                    },
+                }
+            ),
         }
     ),
 )
@@ -268,7 +287,12 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
-            [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
+            [
+                CALL_TYPE_COIL,
+                CALL_TYPE_DISCRETE,
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
         ),
         vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }

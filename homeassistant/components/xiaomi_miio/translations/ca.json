@@ -5,7 +5,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "incomplete_info": "Informaci\u00f3 incompleta per configurar el dispositiu, no s'ha proporcionat cap amfitri\u00f3 o token.",
             "not_xiaomi_miio": "Xiaomi Miio encara no \u00e9s compatible amb el dispositiu.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unknown": "Error inesperat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",

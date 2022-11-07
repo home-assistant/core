@@ -3,6 +3,11 @@
         "error": {
             "invalid_port": "Poort wordt al gebruikt.",
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Ecowitt wilt instellen?"
+            }
         }
     }
 }

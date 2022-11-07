@@ -19,8 +19,8 @@ from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -35,6 +35,7 @@ from .const import (
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
     IDENTIFIER_SERIAL_NUMBER,
+    STARTUP_EXCEPTIONS,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
@@ -176,6 +177,25 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
+    async def _async_retry_populate_ble_accessory_state(self, event: Event) -> None:
+        """Try again to populate the BLE accessory state.
+
+        If the accessory was asleep at startup we need to retry
+        since we continued on to allow startup to proceed.
+
+        If this fails the state may be inconsistent, but will
+        get corrected as soon as the accessory advertises again.
+        """
+        try:
+            await self.pairing.async_populate_accessories_state(force_update=True)
+        except STARTUP_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Failed to populate BLE accessory state for %s, accessory may be sleeping"
+                " and will be retried the next time it advertises: %s",
+                self.config_entry.title,
+                ex,
+            )
+
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         pairing = self.pairing
@@ -192,12 +212,21 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
+        attempts = None if self.hass.state == CoreState.running else 1
         try:
-            await self.pairing.async_populate_accessories_state(force_update=True)
+            await self.pairing.async_populate_accessories_state(
+                force_update=True, attempts=attempts
+            )
         except AccessoryNotFoundError:
             if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
                 raise
+            entry.async_on_unload(
+                self.hass.bus.async_listen(
+                    EVENT_HOMEASSISTANT_STARTED,
+                    self._async_retry_populate_ble_accessory_state,
+                )
+            )
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
