@@ -1,6 +1,7 @@
 """Configure number in a device through MQTT topic."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 
@@ -47,7 +48,13 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,9 +77,9 @@ MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-def validate_config(config):
+def validate_config(config: ConfigType) -> ConfigType:
     """Validate that the configuration is valid, throws if it isn't."""
-    if config.get(CONF_MIN) >= config.get(CONF_MAX):
+    if config[CONF_MIN] >= config[CONF_MAX]:
         raise vol.Invalid(f"'{CONF_MAX}' must be > '{CONF_MIN}'")
 
     return config
@@ -147,8 +154,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
@@ -160,33 +167,39 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _entity_id_format = number.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
-        """Initialize the MQTT Number."""
-        self._config = config
-        self._optimistic = False
-        self._sub_state = None
+    _optimistic: bool
+    _command_template: Callable[[PublishPayloadType], PublishPayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
+        """Initialize the MQTT Number."""
         RestoreNumber.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._config = config
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        self._templates = {
-            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                config.get(CONF_COMMAND_TEMPLATE), entity=self
-            ).async_render,
-            CONF_VALUE_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_VALUE_TEMPLATE),
-                entity=self,
-            ).async_render_with_possible_json_value,
-        }
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE), entity=self
+        ).async_render
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
+
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_mode = config[CONF_MODE]
         self._attr_native_max_value = config[CONF_MAX]
@@ -194,14 +207,15 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_step = config[CONF_STEP]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
+            num_value: int | float | None
+            payload = str(self._value_template(msg.payload))
             try:
                 if payload == self._config[CONF_PAYLOAD_RESET]:
                     num_value = None
@@ -245,7 +259,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -260,7 +274,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         if value.is_integer():
             current_number = int(value)
-        payload = self._templates[CONF_COMMAND_TEMPLATE](current_number)
+        payload = self._command_template(current_number)
 
         if self._optimistic:
             self._attr_native_value = current_number
