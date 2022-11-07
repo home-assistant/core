@@ -6,5 +6,6 @@
   "requirements": ["aio_geojson_geonetnz_volcano==0.6"],
   "codeowners": ["@exxamalte"],
   "iot_class": "cloud_polling",
-  "loggers": ["aio_geojson_geonetnz_volcano"]
+  "loggers": ["aio_geojson_geonetnz_volcano"],
+  "integration_type": "service"
 }

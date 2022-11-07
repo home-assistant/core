@@ -26,13 +26,11 @@ from homeassistant.const import (
     CONF_NAME,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -103,20 +101,20 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
@@ -132,20 +130,24 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -157,10 +159,10 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
-        unit_imperial=SPEED_MILES_PER_HOUR,
-        unit_metric=SPEED_METERS_PER_SECOND,
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         imperial_conversion=lambda val: SpeedConverter.convert(
-            val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
     ),
     TomorrowioSensorEntityDescription(

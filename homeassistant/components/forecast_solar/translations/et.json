@@ -25,7 +25,7 @@
                     "inverter_size": "Inverteri v\u00f5imsus (vatti)",
                     "modules power": "P\u00e4ikesemoodulite koguv\u00f5imsus vattides"
                 },
-                "description": "Need v\u00e4\u00e4rtused v\u00f5imaldavad muuta Solar.Forecast tulemust. Vaata dokumentatsiooni kui asi on ebaselge."
+                "description": "Need v\u00e4\u00e4rtused v\u00f5imaldavad muuta Solar.Forecast tulemust. Vaata dokumentatsiooni kui see v\u00e4li on ebaselge."
             }
         }
     }
