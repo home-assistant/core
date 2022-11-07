@@ -98,12 +98,26 @@ class ColorChannel(ZigbeeChannel):
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this channel supports."""
-        return self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
+        min_mireds = self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
+        if min_mireds == 0:
+            self.warning(
+                "[Min mireds is 0, setting to %s] Please open an issue on the quirks repo to have this device corrected",
+                self.MIN_MIREDS,
+            )
+            min_mireds = self.MIN_MIREDS
+        return min_mireds
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this channel supports."""
-        return self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
+        max_mireds = self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
+        if max_mireds == 0:
+            self.warning(
+                "[Max mireds is 0, setting to %s] Please open an issue on the quirks repo to have this device corrected",
+                self.MAX_MIREDS,
+            )
+            max_mireds = self.MAX_MIREDS
+        return max_mireds
 
     @property
     def hs_supported(self) -> bool:

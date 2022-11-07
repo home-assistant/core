@@ -27,7 +27,10 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
-        self.base_device_url, *_ = self.device_url.split("#")
+        split_device_url = self.device_url.split("#")
+        self.base_device_url = split_device_url[0]
+        if len(split_device_url) == 2:
+            self.index_device_url = split_device_url[1]
         self.executor = OverkizExecutor(device_url, coordinator)
 
         self._attr_assumed_state = not self.device.states

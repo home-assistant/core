@@ -83,6 +83,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
+    coordinator: ScrapeCoordinator
+    sensors_config: list[ConfigType]
     if discovery_info is None:
         async_create_issue(
             hass,
@@ -97,45 +99,42 @@ async def async_setup_platform(
         rest = create_rest_data_from_config(hass, resource_config)
 
         coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
-        await coordinator.async_refresh()
-        if coordinator.data is None:
-            raise PlatformNotReady
 
-        sensor_config = config
-        template_config = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-        )(sensor_config)
+        sensors_config = [
+            vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA)(
+                config
+            )
+        ]
 
     else:
         coordinator = discovery_info["coordinator"]
-        sensor_config = discovery_info["config"]
-        template_config = sensor_config
+        sensors_config = discovery_info["configs"]
 
-    name: str = template_config[CONF_NAME]
-    unique_id: str | None = template_config.get(CONF_UNIQUE_ID)
-    select: str | None = sensor_config.get(CONF_SELECT)
-    attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
-    index: int = sensor_config[CONF_INDEX]
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
 
-    if value_template is not None:
-        value_template.hass = hass
+    entities: list[ScrapeSensor] = []
+    for sensor_config in sensors_config:
+        value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = hass
 
-    async_add_entities(
-        [
+        entities.append(
             ScrapeSensor(
                 hass,
                 coordinator,
-                template_config,
-                name,
-                unique_id,
-                select,
-                attr,
-                index,
+                sensor_config,
+                sensor_config[CONF_NAME],
+                sensor_config.get(CONF_UNIQUE_ID),
+                sensor_config.get(CONF_SELECT),
+                sensor_config.get(CONF_ATTRIBUTE),
+                sensor_config[CONF_INDEX],
                 value_template,
             )
-        ],
-    )
+        )
+
+    async_add_entities(entities)
 
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):

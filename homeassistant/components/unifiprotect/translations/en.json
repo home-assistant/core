@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "You are using {version} of UniFi Protect. Early Access versions are not supported by Home Assistant and may cause your UniFi Protect integration to break or not work as expected.",
+            "title": "{version} is an Early Access version of UniFi Protect"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Must be a list of MAC addresses seperated by commas"

@@ -2,8 +2,8 @@
   "domain": "nuheat",
   "name": "NuHeat",
   "documentation": "https://www.home-assistant.io/integrations/nuheat",
-  "requirements": ["nuheat==0.3.0"],
-  "codeowners": [],
+  "requirements": ["nuheat==1.0.0"],
+  "codeowners": ["@tstabrawa"],
   "config_flow": true,
   "dhcp": [
     {

@@ -77,9 +77,9 @@
         "step": {
             "confirm_still": {
                 "data": {
-                    "confirmed_ok": "Questa immagine appare bene"
+                    "confirmed_ok": "Questa immagine sembra buona."
                 },
-                "description": "![Anteprima dell' immagine fissa della fotocamera]({preview_url})",
+                "description": "![Anteprima immagine fissa fotocamera]({preview_url})",
                 "title": "Anteprima"
             },
             "content_type": {
