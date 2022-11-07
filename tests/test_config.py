@@ -214,6 +214,8 @@ def test_core_config_schema():
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
+        {"country": "xx"},
+        {"language": "xx"},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -228,6 +230,8 @@ def test_core_config_schema():
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
+            "country": "SE",
+            "language": "sv",
         }
     )
 
@@ -393,6 +397,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
         },
         "key": "core.config",
         "version": 1,
@@ -410,6 +416,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.currency == "EUR"
+    assert hass.config.country == "SE"
+    assert hass.config.language == "sv"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source is ConfigSource.STORAGE
@@ -476,6 +484,9 @@ async def test_migration_and_updating_configuration(hass, hass_storage):
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
     expected_new_core_data["minor_version"] = 2
+    # defaults for country and language
+    expected_new_core_data["data"]["country"] = None
+    expected_new_core_data["data"]["language"] = "en"
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
@@ -527,6 +538,8 @@ async def test_loading_configuration(hass):
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
             "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
         },
     )
 
@@ -545,6 +558,8 @@ async def test_loading_configuration(hass):
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.legacy_templates is True
     assert hass.config.currency == "EUR"
+    assert hass.config.country == "SE"
+    assert hass.config.language == "sv"
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):
