@@ -192,7 +192,7 @@ class LoggerSettings:
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
         # Don't override the log levels with the ones from YAML
-        # since we want whatever the user is asking for to be honored
+        # since we want whatever the user is asking for to be honored.
 
         set_log_levels(hass, combined_logs)
 

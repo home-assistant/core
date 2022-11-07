@@ -153,7 +153,7 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
-        "homeassistant.components.websocket_api": logging.WARNING
+        "homeassistant.components.websocket_api": logging.ERROR
     }
 
     await websocket_client.send_json(
@@ -191,5 +191,5 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
-        "homeassistant.components.websocket_api": logging.WARNING
+        "homeassistant.components.websocket_api": logging.NOTSET
     }
