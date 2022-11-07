@@ -6,22 +6,45 @@ import aiohttp
 import pytest
 
 from homeassistant.components.rest import DOMAIN
-import homeassistant.components.rest.switch as rest
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
+from homeassistant.components.rest.switch import (
+    CONF_BODY_OFF,
+    CONF_BODY_ON,
+    CONF_STATE_RESOURCE,
+)
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SCAN_INTERVAL,
+    SwitchDeviceClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
+    CONF_ICON,
+    CONF_METHOD,
     CONF_NAME,
     CONF_PARAMS,
     CONF_PLATFORM,
     CONF_RESOURCE,
+    CONF_UNIQUE_ID,
     CONTENT_TYPE_JSON,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 NAME = "foo"
@@ -34,16 +57,10 @@ async def test_setup_missing_config(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with configuration missing required entries."""
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {
-                CONF_PLATFORM: DOMAIN,
-            }
-        },
-    )
+    config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN}}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
+    assert_setup_component(0, SWITCH_DOMAIN)
     assert "Invalid config for [switch.rest]: required key not provided" in caplog.text
 
 
@@ -51,14 +68,10 @@ async def test_setup_missing_schema(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with resource missing schema."""
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"},
-        },
-    )
+    config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"}}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
+    assert_setup_component(0, SWITCH_DOMAIN)
     assert "Invalid config for [switch.rest]: invalid url" in caplog.text
 
 
@@ -68,15 +81,11 @@ async def test_setup_failed_connect(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
-    aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
-        },
-    )
+    aioclient_mock.get(RESOURCE, exc=aiohttp.ClientError)
+    config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
+    assert_setup_component(0, SWITCH_DOMAIN)
     assert "No route to resource/endpoint" in caplog.text
 
 
@@ -86,15 +95,11 @@ async def test_setup_timeout(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection timeout occurs."""
-    aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
-        },
-    )
+    aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
+    config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
+    assert_setup_component(0, SWITCH_DOMAIN)
     assert "No route to resource/endpoint" in caplog.text
 
 
@@ -102,18 +107,10 @@ async def test_setup_minimum(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with minimum configuration."""
-    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     with assert_setup_component(1, SWITCH_DOMAIN):
-        assert await async_setup_component(
-            hass,
-            SWITCH_DOMAIN,
-            {
-                SWITCH_DOMAIN: {
-                    CONF_PLATFORM: DOMAIN,
-                    CONF_RESOURCE: "http://localhost",
-                }
-            },
-        )
+        assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
@@ -123,18 +120,15 @@ async def test_setup_query_params(
 ) -> None:
     """Test setup with query params."""
     aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
+    config = {
+        SWITCH_DOMAIN: {
+            CONF_PLATFORM: DOMAIN,
+            CONF_RESOURCE: RESOURCE,
+            CONF_PARAMS: {"search": "something"},
+        }
+    }
     with assert_setup_component(1, SWITCH_DOMAIN):
-        assert await async_setup_component(
-            hass,
-            SWITCH_DOMAIN,
-            {
-                SWITCH_DOMAIN: {
-                    CONF_PLATFORM: DOMAIN,
-                    CONF_RESOURCE: "http://localhost",
-                    CONF_PARAMS: {"search": "something"},
-                }
-            },
-        )
+        assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 1
@@ -142,21 +136,18 @@ async def test_setup_query_params(
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {
-                CONF_PLATFORM: DOMAIN,
-                CONF_NAME: "foo",
-                CONF_RESOURCE: "http://localhost",
-                CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
-                rest.CONF_BODY_ON: "custom on text",
-                rest.CONF_BODY_OFF: "custom off text",
-            }
-        },
-    )
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    config = {
+        SWITCH_DOMAIN: {
+            CONF_PLATFORM: DOMAIN,
+            CONF_NAME: "foo",
+            CONF_RESOURCE: RESOURCE,
+            CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
+            CONF_BODY_ON: "custom on text",
+            CONF_BODY_OFF: "custom off text",
+        }
+    }
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
@@ -166,23 +157,20 @@ async def test_setup_with_state_resource(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTPStatus.NOT_FOUND)
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.NOT_FOUND)
     aioclient_mock.get("http://localhost/state", status=HTTPStatus.OK)
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {
-                CONF_PLATFORM: DOMAIN,
-                CONF_NAME: "foo",
-                CONF_RESOURCE: "http://localhost",
-                rest.CONF_STATE_RESOURCE: "http://localhost/state",
-                CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
-                rest.CONF_BODY_ON: "custom on text",
-                rest.CONF_BODY_OFF: "custom off text",
-            }
-        },
-    )
+    config = {
+        SWITCH_DOMAIN: {
+            CONF_PLATFORM: DOMAIN,
+            CONF_NAME: "foo",
+            CONF_RESOURCE: RESOURCE,
+            CONF_STATE_RESOURCE: "http://localhost/state",
+            CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
+            CONF_BODY_ON: "custom on text",
+            CONF_BODY_OFF: "custom off text",
+        }
+    }
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
@@ -192,26 +180,23 @@ async def test_setup_with_templated_headers_params(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: {
-                CONF_PLATFORM: DOMAIN,
-                CONF_NAME: "foo",
-                CONF_RESOURCE: "http://localhost",
-                CONF_HEADERS: {
-                    "Accept": CONTENT_TYPE_JSON,
-                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
-                },
-                CONF_PARAMS: {
-                    "start": 0,
-                    "end": "{{ 3 + 2 }}",
-                },
-            }
-        },
-    )
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    config = {
+        SWITCH_DOMAIN: {
+            CONF_PLATFORM: DOMAIN,
+            CONF_NAME: "foo",
+            CONF_RESOURCE: "http://localhost",
+            CONF_HEADERS: {
+                "Accept": CONTENT_TYPE_JSON,
+                "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+            },
+            CONF_PARAMS: {
+                "start": 0,
+                "end": "{{ 3 + 2 }}",
+            },
+        }
+    }
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][3].get("Accept") == CONTENT_TYPE_JSON
@@ -221,156 +206,234 @@ async def test_setup_with_templated_headers_params(
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
-"""Tests for REST switch platform."""
+# Tests for REST switch platform.
 
 
-def _setup_test_switch(hass: HomeAssistant) -> None:
+async def _async_setup_test_switch(hass: HomeAssistant) -> None:
     headers = {"Content-type": CONTENT_TYPE_JSON}
-    config = rest.PLATFORM_SCHEMA(
-        {
-            CONF_PLATFORM: "switch",
-            CONF_NAME: NAME,
-            CONF_DEVICE_CLASS: DEVICE_CLASS,
-            CONF_RESOURCE: RESOURCE,
-            rest.CONF_STATE_RESOURCE: STATE_RESOURCE,
-            rest.CONF_HEADERS: headers,
-        }
-    )
-    switch = rest.RestSwitch(hass, config, None)
-    switch.hass = hass
-    return switch, config[rest.CONF_BODY_ON], config[rest.CONF_BODY_OFF]
+    config = {
+        CONF_PLATFORM: DOMAIN,
+        CONF_NAME: NAME,
+        CONF_DEVICE_CLASS: DEVICE_CLASS,
+        CONF_RESOURCE: RESOURCE,
+        CONF_STATE_RESOURCE: STATE_RESOURCE,
+        CONF_HEADERS: headers,
+    }
+
+    assert await async_setup_component(hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: config})
+    await hass.async_block_till_done()
+    assert_setup_component(1, SWITCH_DOMAIN)
 
 
-def test_name(hass: HomeAssistant) -> None:
+async def test_name(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the name."""
-    switch, body_on, body_off = _setup_test_switch(hass)
-    assert switch.name == NAME
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+
+    state = hass.states.get("switch.foo")
+    assert state.attributes[ATTR_FRIENDLY_NAME] == NAME
 
 
-def test_device_class(hass: HomeAssistant) -> None:
-    """Test the name."""
-    switch, body_on, body_off = _setup_test_switch(hass)
-    assert switch.device_class == DEVICE_CLASS
+async def test_device_class(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the device class."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+
+    state = hass.states.get("switch.foo")
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS
 
 
-def test_is_on_before_update(hass: HomeAssistant) -> None:
+async def test_is_on_before_update(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test is_on in initial state."""
-    switch, body_on, body_off = _setup_test_switch(hass)
-    assert switch.is_on is None
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+
+    state = hass.states.get("switch.foo")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_turn_on_success(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on."""
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_on()
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
-    assert body_on.template == aioclient_mock.mock_calls[-1][2].decode()
-    assert switch.is_on
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[-1][2].decode() == "ON"
+    assert hass.states.get("switch.foo").state == STATE_ON
 
 
 async def test_turn_on_status_not_ok(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when error status returned."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_on()
+    await _async_setup_test_switch(hass)
 
-    assert body_on.template == aioclient_mock.mock_calls[-1][2].decode()
-    assert switch.is_on is None
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[-1][2].decode() == "ON"
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_turn_on_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when timeout occurs."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_on()
+    await _async_setup_test_switch(hass)
 
-    assert switch.is_on is None
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_turn_off_success(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_off()
+    await _async_setup_test_switch(hass)
 
-    assert body_off.template == aioclient_mock.mock_calls[-1][2].decode()
-    assert not switch.is_on
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[-1][2].decode() == "OFF"
+
+    assert hass.states.get("switch.foo").state == STATE_OFF
 
 
 async def test_turn_off_status_not_ok(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when error status returned."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_off()
+    await _async_setup_test_switch(hass)
 
-    assert body_off.template == aioclient_mock.mock_calls[-1][2].decode()
-    assert switch.is_on is None
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[-1][2].decode() == "OFF"
+
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_turn_off_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when timeout occurs."""
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     aioclient_mock.post(RESOURCE, exc=asyncio.TimeoutError())
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_turn_on()
+    await _async_setup_test_switch(hass)
 
-    assert switch.is_on is None
+    assert await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_update_when_on(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is on."""
-    switch, body_on, body_off = _setup_test_switch(hass)
-    aioclient_mock.get(RESOURCE, text=body_on.template)
-    await switch.async_update()
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
-    assert switch.is_on
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE, text="ON")
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_ON
 
 
 async def test_update_when_off(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is off."""
-    switch, body_on, body_off = _setup_test_switch(hass)
-    aioclient_mock.get(RESOURCE, text=body_off.template)
-    await switch.async_update()
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
-    assert not switch.is_on
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE, text="OFF")
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_OFF
 
 
 async def test_update_when_unknown(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when unknown status returned."""
-    aioclient_mock.get(RESOURCE, text="unknown status")
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_update()
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
-    assert switch.is_on is None
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE, text="unknown status")
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_update_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when timeout occurs."""
-    aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
-    switch, body_on, body_off = _setup_test_switch(hass)
-    await switch.async_update()
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+    await _async_setup_test_switch(hass)
 
-    assert switch.is_on is None
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 async def test_entity_config(
@@ -378,18 +441,18 @@ async def test_entity_config(
 ) -> None:
     """Test entity configuration."""
 
-    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     config = {
         SWITCH_DOMAIN: {
             # REST configuration
-            "platform": "rest",
-            "method": "POST",
-            "resource": "http://localhost",
+            CONF_PLATFORM: "rest",
+            CONF_METHOD: "POST",
+            CONF_RESOURCE: "http://localhost",
             # Entity configuration
-            "icon": "{{'mdi:one_two_three'}}",
-            "picture": "{{'blabla.png'}}",
-            "name": "{{'REST' + ' ' + 'Switch'}}",
-            "unique_id": "very_unique",
+            CONF_ICON: "{{'mdi:one_two_three'}}",
+            CONF_PICTURE: "{{'blabla.png'}}",
+            CONF_NAME: "{{'REST' + ' ' + 'Switch'}}",
+            CONF_UNIQUE_ID: "very_unique",
         },
     }
 
@@ -402,7 +465,7 @@ async def test_entity_config(
     state = hass.states.get("switch.rest_switch")
     assert state.state == "unknown"
     assert state.attributes == {
-        "entity_picture": "blabla.png",
-        "friendly_name": "REST Switch",
-        "icon": "mdi:one_two_three",
+        ATTR_ENTITY_PICTURE: "blabla.png",
+        ATTR_FRIENDLY_NAME: "REST Switch",
+        ATTR_ICON: "mdi:one_two_three",
     }
