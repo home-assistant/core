@@ -1,6 +1,7 @@
 """The tests for the REST switch platform."""
 import asyncio
 from http import HTTPStatus
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -209,7 +210,11 @@ async def test_setup_with_templated_headers_params(
 # Tests for REST switch platform.
 
 
-async def _async_setup_test_switch(hass: HomeAssistant) -> None:
+async def _async_setup_test_switch(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
+
     headers = {"Content-type": CONTENT_TYPE_JSON}
     config = {
         CONF_PLATFORM: DOMAIN,
@@ -224,11 +229,13 @@ async def _async_setup_test_switch(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert_setup_component(1, SWITCH_DOMAIN)
 
+    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    aioclient_mock.clear_requests()
+
 
 async def test_name(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the name."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
     state = hass.states.get("switch.foo")
     assert state.attributes[ATTR_FRIENDLY_NAME] == NAME
@@ -238,8 +245,7 @@ async def test_device_class(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the device class."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
     state = hass.states.get("switch.foo")
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS
@@ -249,8 +255,7 @@ async def test_is_on_before_update(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test is_on in initial state."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
     state = hass.states.get("switch.foo")
     assert state.state == STATE_UNKNOWN
@@ -260,15 +265,17 @@ async def test_turn_on_success(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert aioclient_mock.mock_calls[-1][2].decode() == "ON"
     assert hass.states.get("switch.foo").state == STATE_ON
@@ -278,14 +285,17 @@ async def test_turn_on_status_not_ok(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when error status returned."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert aioclient_mock.mock_calls[-1][2].decode() == "ON"
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
@@ -295,14 +305,17 @@ async def test_turn_on_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when timeout occurs."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
@@ -311,14 +324,17 @@ async def test_turn_off_success(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert aioclient_mock.mock_calls[-1][2].decode() == "OFF"
 
@@ -329,14 +345,17 @@ async def test_turn_off_status_not_ok(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when error status returned."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert aioclient_mock.mock_calls[-1][2].decode() == "OFF"
 
@@ -347,14 +366,17 @@ async def test_turn_off_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when timeout occurs."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    aioclient_mock.post(RESOURCE, exc=asyncio.TimeoutError())
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.foo"}, blocking=True
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.rest.switch.RestSwitch.async_update"):
+        aioclient_mock.post(RESOURCE, exc=asyncio.TimeoutError())
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
@@ -363,16 +385,10 @@ async def test_update_when_on(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is on."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    aioclient_mock.clear_requests()
     aioclient_mock.get(RESOURCE, text="ON")
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_ON
@@ -382,16 +398,10 @@ async def test_update_when_off(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is off."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    aioclient_mock.clear_requests()
     aioclient_mock.get(RESOURCE, text="OFF")
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_OFF
@@ -401,16 +411,10 @@ async def test_update_when_unknown(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when unknown status returned."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    aioclient_mock.clear_requests()
     aioclient_mock.get(RESOURCE, text="unknown status")
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
@@ -420,17 +424,10 @@ async def test_update_timeout(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when timeout occurs."""
-    aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
-    await _async_setup_test_switch(hass)
+    await _async_setup_test_switch(hass, aioclient_mock)
 
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
-
-    aioclient_mock.clear_requests()
     aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
