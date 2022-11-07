@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/google_sheets/",
   "requirements": ["gspread==5.5.0"],
   "codeowners": ["@tkdrob"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
 }

@@ -17,7 +17,7 @@
                     "api_key": "Kunci API"
                 },
                 "data_description": {
-                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API baru."
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
                 }
             },
             "user": {
@@ -25,7 +25,7 @@
                     "api_key": "Kunci API"
                 },
                 "data_description": {
-                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API."
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API"
                 }
             }
         }

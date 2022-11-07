@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Ponovna provjera autenti\u010dnosti je uspje\u0161na"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Lozinka"
+                }
+            }
+        }
+    }
+}
