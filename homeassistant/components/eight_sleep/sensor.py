@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -179,7 +179,7 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
         if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_native_unit_of_measurement = TEMP_CELSIUS
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
             self._attr_native_unit_of_measurement = "Score"
 
@@ -280,7 +280,7 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
     _attr_icon = "mdi:thermometer"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,

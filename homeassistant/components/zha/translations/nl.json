@@ -55,6 +55,7 @@
                 "data": {
                     "uploaded_backup_file": "Een bestand uploaden"
                 },
+                "description": "Herstel je netwerkinstellingen van ge-upload backup-JSON-bestand. Je kunt deze dpwnloaden van een andere ZHA installatie via **Netwerkinstellingen**, of gebruik een Zigbee2MQTT `coordinator_backup.json` bestand.",
                 "title": "Upload een handmatige back-up"
             },
             "user": {
@@ -174,6 +175,7 @@
                 "data": {
                     "uploaded_backup_file": "Een bestand uploaden"
                 },
+                "description": "Herstel je netwerkinstellingen van ge-upload backup-JSON-bestand. Je kunt deze dpwnloaden van een andere ZHA installatie via **Netwerkinstellingen**, of gebruik een Zigbee2MQTT `coordinator_backup.json` bestand.",
                 "title": "Upload een handmatige back-up"
             }
         }

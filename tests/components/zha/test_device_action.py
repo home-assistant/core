@@ -290,7 +290,7 @@ async def test_action(hass, device_ias, device_inovelli):
                                 "domain": DOMAIN,
                                 "device_id": inovelli_reg_device.id,
                                 "type": "issue_individual_led_effect",
-                                "effect_type": "Open_Close",
+                                "effect_type": "Falling",
                                 "led_number": 1,
                                 "duration": 5,
                                 "level": 10,
