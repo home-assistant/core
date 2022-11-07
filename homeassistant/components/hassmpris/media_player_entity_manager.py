@@ -469,9 +469,9 @@ class EntityManager:
 
         all_player_entries = self._player_registry_entries()
         for player_id in [_get_player_id(e) for e in all_player_entries]:
-            self._sync_player_presence(player_id)
+            await self._sync_player_presence(player_id)
 
-    def _sync_player_presence(
+    async def _sync_player_presence(
         self,
         player_id: str,
     ):
@@ -480,6 +480,7 @@ class EntityManager:
         `player` will be None if the directory of known players does not
         contain it.  Else it will be defined.
         """
+        print("syncing player presence", player_id)
 
         def is_first_instance() -> bool:
             return not bool(re.match(".* [(]\\d+[)]", player_id))
@@ -501,6 +502,13 @@ class EntityManager:
                 # is not implemented for most players).
                 _LOGGER.debug("%X: resuscitating known player %s", id(self), player_id)
                 self._add_player(player_id, initially_off=True)
+            elif is_off_or_absent():
+                # This player is in our directory but is in off or unknown
+                # state.  We have to update its state to off, since this code
+                # may have come back from reconnection, and .
+                off_playa = self.players.get(player_id)
+                if off_playa is not None:
+                    await off_playa.update_state(STATE_OFF)
         else:
             # This is a second instance of a player.
             # E.g. `VLC media player`` is not a second instance,
@@ -529,7 +537,11 @@ class EntityManager:
             finished_syncing = False
             async for update in self.client.stream_updates():
                 if not started_syncing:
-                    # First update.  Mark entities available.
+                    # First update.  Mark entities available.  This does not
+                    # mark players as off or idle or any other state — that
+                    # happens below in _handle_update() and then at the end
+                    # in _finish_initial_players_sync() for all entities that
+                    # did not get corresponding updates from the server.
                     await self._mark_all_entities_available()
                     started_syncing = True
                 if update.HasField("player"):
@@ -597,4 +609,4 @@ class EntityManager:
 
         # Final hook to remove duplicates which are gone.
         if fire_status_update_observed and REMOVE_CLONES_WHILE_RUNNING:
-            self._sync_player_presence(player_id)
+            await self._sync_player_presence(player_id)
