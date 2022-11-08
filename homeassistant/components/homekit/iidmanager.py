@@ -8,7 +8,6 @@ This module generates and stores them in a HA storage.
 """
 from __future__ import annotations
 
-import logging
 from uuid import UUID
 
 from pyhap.util import uuid_to_hap_type
@@ -25,8 +24,6 @@ ALLOCATIONS_KEY = "allocations"
 
 IID_MIN = 1
 IID_MAX = 18446744073709551615
-
-_LOGGER = logging.getLogger(__name__)
 
 ACCESSORY_INFORMATION_SERVICE = "3E"
 
@@ -112,14 +109,6 @@ class AccessoryIIDStorage:
         aid_str = str(aid)
         accessory_allocation = self.allocations.setdefault(aid_str, {})
         accessory_allocated_iids = self.allocated_iids.setdefault(aid_str, [1])
-
-        _LOGGER.error(
-            "Get_or_allocate_iid: aid=%s %s - accessory_allocated_iids=%s",
-            aid,
-            allocation_key,
-            accessory_allocated_iids,
-        )
-
         if service_hap_type == ACCESSORY_INFORMATION_SERVICE and char_uuid is None:
             return 1
         if allocation_key in accessory_allocation:
@@ -129,20 +118,6 @@ class AccessoryIIDStorage:
         else:
             allocated_iid = 2
 
-        _LOGGER.error(
-            "%s",
-            [
-                "allocating",
-                aid,
-                allocation_key,
-                "accessory_allocation",
-                accessory_allocation,
-                "allocated_iid",
-                allocated_iid,
-                "accessory_allocated_iids",
-                accessory_allocated_iids,
-            ],
-        )
         accessory_allocation[allocation_key] = allocated_iid
         accessory_allocated_iids.append(allocated_iid)
         self._async_schedule_save()
