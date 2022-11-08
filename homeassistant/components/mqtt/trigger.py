@@ -13,7 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .. import mqtt
@@ -50,13 +50,12 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data: dict[str, Any] = dict(trigger_info["trigger_data"])
+    trigger_data: TriggerData = trigger_info["trigger_data"]
     command_template: Callable[
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
     ] = MqttCommandTemplate(config.get(CONF_PAYLOAD), hass=hass).async_render
-    value_template: Callable[
-        [ReceivePayloadType, str], ReceivePayloadType
-    ] = MqttValueTemplate(
+    value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
+    value_template = MqttValueTemplate(
         config.get(CONF_VALUE_TEMPLATE), hass=hass
     ).async_render_with_possible_json_value
     encoding: str | None = config[CONF_ENCODING] or None
@@ -70,16 +69,17 @@ async def async_attach_trigger(
 
     topic_template: Template = config[CONF_TOPIC]
     topic_template.hass = hass
-    topic: str = mqtt.util.valid_subscribe_topic(
-        topic_template.async_render(variables, limited=True, parse_result=False)
-    )
+    topic = topic_template.async_render(variables, limited=True, parse_result=False)
+    mqtt.util.valid_subscribe_topic(topic)
 
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
         """Listen for MQTT messages."""
-        payload = value_template(mqttmsg.payload, PayloadSentinel.DEFAULT)
-
-        if wanted_payload is None or wanted_payload == payload:
+        if wanted_payload is None or (
+            (payload := value_template(mqttmsg.payload, PayloadSentinel.DEFAULT))
+            and payload is not PayloadSentinel.DEFAULT
+            and wanted_payload == payload
+        ):
             data: dict[str, Any] = {
                 **trigger_data,
                 "platform": "mqtt",
