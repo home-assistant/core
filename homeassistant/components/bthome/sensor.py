@@ -194,21 +194,21 @@ SENSOR_DESCRIPTIONS = {
         Units.LENGTH_MILLIMETERS,
     ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.DISTANCE}_{Units.LENGTH_MILLIMETERS}",
-        device_class=None,
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for distance sensor in m
     (BTHomeSensorDeviceClass.DISTANCE, Units.LENGTH_METERS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.DISTANCE}_{Units.LENGTH_METERS}",
-        device_class=None,
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Used for time sensor
-    (BTHomeSensorDeviceClass.TIME, Units.TIME_SECONDS): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.TIME}_{Units.TIME_SECONDS}",
-        device_class=None,
+    # Used for duration sensor
+    (BTHomeSensorDeviceClass.DURATION, Units.TIME_SECONDS): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.DURATION}_{Units.TIME_SECONDS}",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -218,7 +218,7 @@ SENSOR_DESCRIPTIONS = {
         Units.ELECTRIC_CURRENT_AMPERE,
     ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.CURRENT}_{Units.ELECTRIC_CURRENT_AMPERE}",
-        device_class=None,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -228,8 +228,15 @@ SENSOR_DESCRIPTIONS = {
         Units.SPEED_METERS_PER_SECOND,
     ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.SPEED}_{Units.SPEED_METERS_PER_SECOND}",
-        device_class=None,
+        device_class=SensorDeviceClass.SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for UV index sensor
+    (BTHomeSensorDeviceClass.UV_INDEX, None,): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
+        device_class=None,
+        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

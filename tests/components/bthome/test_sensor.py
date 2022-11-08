@@ -1,6 +1,8 @@
 """Test the BTHome sensors."""
 
 
+import logging
+
 import pytest
 
 from homeassistant.components.bthome.const import DOMAIN
@@ -11,6 +13,8 @@ from . import make_bthome_v1_adv, make_bthome_v2_adv, make_encrypted_bthome_v1_a
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # Tests for BTHome v1
@@ -358,7 +362,7 @@ async def test_v1_sensors(
         assert sensor.state == meas["expected_state"]
         assert sensor_attr[ATTR_FRIENDLY_NAME] == meas["friendly_name"]
         if ATTR_UNIT_OF_MEASUREMENT in sensor_attr:
-            # Count sensor does not have a unit of measurement
+            # Some sensors don't have a unit of measurement
             assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
         assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -711,8 +715,8 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_time",
-                    "friendly_name": "Test Device 18B2 Time",
+                    "sensor_entity": "sensor.test_device_18b2_duration",
+                    "friendly_name": "Test Device 18B2 Duration",
                     "unit_of_measurement": "s",
                     "state_class": "measurement",
                     "expected_state": "13.39",
@@ -750,6 +754,115 @@ async def test_v1_sensors(
                     "unit_of_measurement": "m/s",
                     "state_class": "measurement",
                     "expected_state": "133.9",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x45\x11\x01",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature",
+                    "friendly_name": "Test Device 18B2 Temperature",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "27.3",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x46\x32",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_uv_index",
+                    "friendly_name": "Test Device 18B2 Uv Index",
+                    "state_class": "measurement",
+                    "expected_state": "5.0",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x02\xca\x09\x02\xcf\x09",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature_1",
+                    "friendly_name": "Test Device 18B2 Temperature 1",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "25.06",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature_2",
+                    "friendly_name": "Test Device 18B2 Temperature 2",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "25.11",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x02\xca\x09\x02\xcf\x09\x02\xcf\x08\x03\xb7\x18\x03\xb7\x17\x01\x5d",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature_1",
+                    "friendly_name": "Test Device 18B2 Temperature 1",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "25.06",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature_2",
+                    "friendly_name": "Test Device 18B2 Temperature 2",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "25.11",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_temperature_3",
+                    "friendly_name": "Test Device 18B2 Temperature 3",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "22.55",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_humidity_1",
+                    "friendly_name": "Test Device 18B2 Humidity 1",
+                    "unit_of_measurement": "%",
+                    "state_class": "measurement",
+                    "expected_state": "63.27",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_humidity_2",
+                    "friendly_name": "Test Device 18B2 Humidity 2",
+                    "unit_of_measurement": "%",
+                    "state_class": "measurement",
+                    "expected_state": "60.71",
+                },
+                {
+                    "sensor_entity": "sensor.test_device_18b2_battery",
+                    "friendly_name": "Test Device 18B2 Battery",
+                    "unit_of_measurement": "%",
+                    "state_class": "measurement",
+                    "expected_state": "93",
                 },
             ],
         ),
@@ -807,12 +920,14 @@ async def test_v2_sensors(
     assert len(hass.states.async_all()) == len(result)
 
     for meas in result:
+        _LOGGER.error(meas)
         sensor = hass.states.get(meas["sensor_entity"])
+        _LOGGER.error(hass.states)
         sensor_attr = sensor.attributes
         assert sensor.state == meas["expected_state"]
         assert sensor_attr[ATTR_FRIENDLY_NAME] == meas["friendly_name"]
         if ATTR_UNIT_OF_MEASUREMENT in sensor_attr:
-            # Count sensor does not have a unit of measurement
+            # Some sensors don't have a unit of measurement
             assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
         assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
     assert await hass.config_entries.async_unload(entry.entry_id)
