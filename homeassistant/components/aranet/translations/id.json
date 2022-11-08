@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "integrations_diabled": "Perangkat ini tidak memiliki integrasi yang diaktifkan. Aktifkan integrasi rumah cerdas menggunakan aplikasi dan coba lagi.",
+            "no_devices_found": "Tidak ditemukan perangkat Aranet yang tidak dikonfigurasi.",
+            "outdated_version": "Perangkat ini menggunakan firmware usang. Perbarui setidaknya ke firmware v1.2.0 dan coba lagi."
+        },
+        "error": {
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Perangkat"
+                },
+                "description": "Pilih perangkat untuk disiapkan"
+            }
+        }
+    }
+}

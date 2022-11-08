@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "\u6b63\u5728\u4f7f\u7528\u7684  UniFi Protect {version} \u7248\u3001\u70ba Home Assistant \u4e0d\u652f\u63f4\u7684\u6436\u5148\u9ad4\u9a57\u7248\u672c\uff0c\u53ef\u80fd\u6703\u5c0e\u81f4 UniFi Protect \u6574\u5408\u51fa\u73fe\u554f\u984c\u3001\u6216\u7121\u6cd5\u6b63\u5e38\u5de5\u4f5c\u3002",
+            "title": "UniFi Protect {version} \u7248\u70ba\u6436\u5148\u9ad4\u9a57\u7248"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "\u5fc5\u9808\u70ba\u4ee5\u9017\u865f\uff08\uff1a\uff09\u5206\u9694\u958b\u7684 MAC \u5730\u5740\u5217\u8868"

@@ -25,7 +25,7 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _T = TypeVar("_T")
 _DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator"
 )
 
 

@@ -159,7 +159,7 @@ async def test_climate_thermostat_schedule_temporary_hold(hass):
     # opportunistic set
     state = hass.states.get("climate.temp_bathroom")
     assert state.attributes["preset_mode"] == "Temporary Hold"
-    assert state.attributes["temperature"] == 50.0
+    assert state.attributes["temperature"] == 90.0
 
     # and the api poll returns it to the mock
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))

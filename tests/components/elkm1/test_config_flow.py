@@ -2,6 +2,7 @@
 from dataclasses import asdict
 from unittest.mock import patch
 
+from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
@@ -1317,3 +1318,285 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_multiple_instances_with_discovery(hass):
+    """Test we can setup a secure elk."""
+
+    elk_discovery_1 = ElkSystem("aa:bb:cc:dd:ee:ff", "127.0.0.1", 2601)
+    elk_discovery_2 = ElkSystem("aa:bb:cc:dd:ee:fe", "127.0.0.2", 2601)
+
+    with _patch_discovery(device=elk_discovery_1):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": elk_discovery_1.mac_address},
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(device=elk_discovery_1), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "ElkM1 ddeeff"
+    assert result3["data"] == {
+        "auto_configure": True,
+        "host": "elks://127.0.0.1",
+        "password": "test-password",
+        "prefix": "",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Now try to add another instance with the different discovery info
+    with _patch_discovery(device=elk_discovery_2):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": elk_discovery_2.mac_address},
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(device=elk_discovery_2), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "ElkM1 ddeefe"
+    assert result3["data"] == {
+        "auto_configure": True,
+        "host": "elks://127.0.0.2",
+        "password": "test-password",
+        "prefix": "ddeefe",
+        "username": "test-username",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Finally, try to add another instance manually with no discovery info
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=None, sync_complete=True)
+
+    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "non-secure",
+                "address": "1.2.3.4",
+                "prefix": "guest_house",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "guest_house"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elk://1.2.3.4",
+        "prefix": "guest_house",
+        "username": "",
+        "password": "",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_multiple_instances_with_tls_v12(hass):
+    """Test we can setup a secure elk with tls v1_2."""
+
+    elk_discovery_1 = ElkSystem("aa:bb:cc:dd:ee:ff", "127.0.0.1", 2601)
+    elk_discovery_2 = ElkSystem("aa:bb:cc:dd:ee:fe", "127.0.0.2", 2601)
+
+    with _patch_discovery(device=elk_discovery_1):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": elk_discovery_1.mac_address},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert not result["errors"]
+    assert result2["step_id"] == "discovered_connection"
+    with _patch_discovery(device=elk_discovery_1), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "protocol": "TLS 1.2",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "ElkM1 ddeeff"
+    assert result3["data"] == {
+        "auto_configure": True,
+        "host": "elksv1_2://127.0.0.1",
+        "password": "test-password",
+        "prefix": "",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Now try to add another instance with the different discovery info
+    with _patch_discovery(device=elk_discovery_2):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_elk(elk=mocked_elk):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": elk_discovery_2.mac_address},
+        )
+        await hass.async_block_till_done()
+
+    with _patch_discovery(device=elk_discovery_2), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "protocol": "TLS 1.2",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "ElkM1 ddeefe"
+    assert result3["data"] == {
+        "auto_configure": True,
+        "host": "elksv1_2://127.0.0.2",
+        "password": "test-password",
+        "prefix": "ddeefe",
+        "username": "test-username",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Finally, try to add another instance manually with no discovery info
+
+    with _patch_discovery(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "manual_connection"
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(no_device=True), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "protocol": "TLS 1.2",
+                "address": "1.2.3.4",
+                "prefix": "guest_house",
+                "password": "test-password",
+                "username": "test-username",
+            },
+        )
+        await hass.async_block_till_done()
+
+    import pprint
+
+    pprint.pprint(result2)
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "guest_house"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elksv1_2://1.2.3.4",
+        "prefix": "guest_house",
+        "password": "test-password",
+        "username": "test-username",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

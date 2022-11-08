@@ -89,6 +89,13 @@ COMBINED_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    {
+        DOMAIN: vol.All(
+            # convert empty dict to empty list
+            lambda x: [] if x == {} else x,
+            cv.ensure_list,
+            [COMBINED_SCHEMA],
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )

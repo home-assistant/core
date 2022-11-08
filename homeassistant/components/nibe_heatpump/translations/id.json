@@ -4,7 +4,7 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
-            "address": "Alamat IP jarak jauh yang ditentukan tidak valid. Alamat harus berupa alamat IPv4.",
+            "address": "Alamat IP jarak jauh yang ditentukan tidak valid. Alamat harus berupa alamat IP atau nama host yang dapat ditemukan.",
             "address_in_use": "Port mendengarkan yang dipilih sudah digunakan pada sistem ini.",
             "model": "Model yang dipilih tampaknya tidak mendukung modbus40",
             "read": "Kesalahan pada permintaan baca dari pompa. Verifikasi `Port baca jarak jauh` atau `Alamat IP jarak jauh` Anda.",
@@ -14,11 +14,18 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Alamat IP jarak jauh",
+                    "ip_address": "Alamat jarak jauh",
                     "listening_port": "Port mendengarkan lokal",
                     "remote_read_port": "Port baca jarak jauh",
                     "remote_write_port": "Port tulis jarak jauh"
-                }
+                },
+                "data_description": {
+                    "ip_address": "Alamat unit NibeGW. Perangkat harus dikonfigurasi dengan alamat statis.",
+                    "listening_port": "Port lokal pada sistem ini, tempat unit NibeGW dikonfigurasi untuk mengirim data.",
+                    "remote_read_port": "Port yang digunakan unit NibeGW untuk mendengarkan permintaan baca.",
+                    "remote_write_port": "Port yang digunakan unit NibeGW untuk mendengarkan permintaan tulis."
+                },
+                "description": "Sebelum mencoba mengkonfigurasi integrasi, pastikan bahwa:\n- Unit NibeGW terhubung ke pompa pemanas.\n- Aksesori MODBUS40 telah diaktifkan dalam konfigurasi pompa pemanas.\n- Pompa belum masuk ke dalam kondisi alarm tentang ketiadaan aksesori MODBUS40."
             }
         }
     }

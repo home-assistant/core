@@ -19,7 +19,7 @@
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere Pure Energie Meter (`{model}`) a Home Assistant?",
-                "title": "Scoperto dispositivo Pure Energie Meter"
+                "title": "Rilevato dispositivo Pure Energie Meter"
             }
         }
     }
