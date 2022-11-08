@@ -1,37 +1,42 @@
 """Hassfest utils."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping, Collection, Iterable
 
 
-def _dict_to_str(data: dict) -> str:
-    """Return a string representation of a dict."""
-    items = [f"'{key}':{to_string(value)}" for key, value in data.items()]
-    result = "{"
-    for item in items:
-        result += str(item)
-        result += ","
-    result += "}"
-    return result
+def _wrap_items(items: Iterable[str], opener: str, closer: str, sort=False, ) -> str:
+    """Wrap pre-formatted Python reprs in braces, optionally sorting them."""
+    # The trailing comma is imperative so Black doesn't format some items
+    # on one line and some on multiple.
+    if sort:
+        items = sorted(items)
+    return f"{opener}{','.join(items)},{closer}"
 
 
-def _list_to_str(data: dict) -> str:
-    """Return a string representation of a list."""
-    items = [to_string(value) for value in data]
-    result = "["
-    for item in items:
-        result += str(item)
-        result += ","
-    result += "]"
-    return result
+def _mapping_to_str(data: Mapping) -> str:
+    """Return a string representation of a mapping."""
+    return _wrap_items(
+        (f"{to_string(key)}:{to_string(value)}" for key, value in data.items()),
+        opener="{",
+        closer="}",
+        sort=True,
+    )
+
+
+def _collection_to_str(
+    data: Collection, opener: str = "[", closer: str = "]", sort=False
+) -> str:
+    """Return a string representation of a collection."""
+    items = (to_string(value) for value in data)
+    return _wrap_items(items, opener, closer, sort=sort)
 
 
 def to_string(data: Any) -> str:
     """Return a string representation of the input."""
     if isinstance(data, dict):
-        return _dict_to_str(data)
+        return _mapping_to_str(data)
     if isinstance(data, list):
-        return _list_to_str(data)
-    if isinstance(data, str):
-        return "'" + data + "'"
-    return data
+        return _collection_to_str(data)
+    if isinstance(data, set):
+        return _collection_to_str(data, "{", "}", sort=True)
+    return repr(data)
