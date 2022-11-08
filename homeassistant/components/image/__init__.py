@@ -199,11 +199,16 @@ class ImageServeView(HomeAssistantView):
         )
 
 
-def _generate_thumbnail(original_path, content_type, target_path, target_size):
+def _generate_thumbnail(
+    original_path: pathlib.Path,
+    content_type: str,
+    target_path: pathlib.Path,
+    target_size: tuple[int, int],
+) -> None:
     """Generate a size."""
     image = ImageOps.exif_transpose(Image.open(original_path))
     image.thumbnail(target_size)
-    image.save(target_path, format=content_type.split("/", 1)[1])
+    image.save(target_path, format=content_type.partition("/")[-1])
 
 
 def _validate_size_from_filename(filename: str) -> tuple[int, int]:
