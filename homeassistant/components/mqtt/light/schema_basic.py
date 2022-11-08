@@ -548,7 +548,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             if rgb is None:
                 return
-            self._attr_rgb_color = rgb
+            self._attr_rgb_color = cast(tuple[int, int, int], rgb)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
@@ -565,7 +565,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             if rgbw is None:
                 return
-            self._attr_rgbw_color = rgbw
+            self._attr_rgbw_color = cast(tuple[int, int, int, int], rgbw)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBW_STATE_TOPIC, rgbw_received)
@@ -582,7 +582,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             if rgbww is None:
                 return
-            self._attr_rgbww_color = rgbww
+            self._attr_rgbww_color = cast(tuple[int, int, int, int, int], rgbww)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBWW_STATE_TOPIC, rgbww_received)
@@ -750,7 +750,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+                    brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 255
             return tuple(int(channel * brightness / 255) for channel in color)
 
         def render_rgbx(
@@ -871,8 +871,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
             rgb_color: tuple[int, ...] = self.rgb_color or (255,) * 3
-            rgb: tuple[int, ...] = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
+            rgb_scaled = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
+            rgb_s = render_rgbx(rgb_scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (

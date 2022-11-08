@@ -210,7 +210,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize MQTT JSON light."""
-        self._fixed_color_mode: ColorMode | None = None
+        self._fixed_color_mode: ColorMode | str | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -250,11 +250,11 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if config[CONF_HS] or config[CONF_RGB] or config[CONF_XY]:
                 color_modes.add(ColorMode.HS)
             self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
-            if len(self.supported_color_modes) == 1:
+            if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._fixed_color_mode = next(iter(self.supported_color_modes))
         else:
             self._attr_supported_color_modes = self._config[CONF_SUPPORTED_COLOR_MODES]
-            if len(self.supported_color_modes) == 1:
+            if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._attr_color_mode = next(iter(self.supported_color_modes))
 
     def _update_color(self, values: dict[str, Any]) -> None:
@@ -394,7 +394,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     )
 
             if (
-                ColorMode.COLOR_TEMP in self.supported_color_modes
+                self.supported_color_modes
+                and ColorMode.COLOR_TEMP in self.supported_color_modes
                 and not self._config[CONF_COLOR_MODE]
             ):
                 # Deprecated color handling

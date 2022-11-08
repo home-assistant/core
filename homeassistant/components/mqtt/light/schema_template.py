@@ -163,7 +163,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     ) -> None:
         """Initialize a MQTT Template light."""
         # features
-        self._fixed_color_mode: ColorMode | None = None
+        self._fixed_color_mode: ColorMode | str | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -211,7 +211,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             color_modes.add(ColorMode.HS)
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         self._fixed_color_mode = None
-        if len(self.supported_color_modes) == 1:
+        if self.supported_color_modes and len(self.supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(self.supported_color_modes))
 
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
