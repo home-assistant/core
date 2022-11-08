@@ -6,7 +6,7 @@
           "nibegw": "NibeGW",
           "modbus": "Modbus"
         },
-        "description": "Pick the connection method to your pump. In general F-series pumps require a Nibe GW custom accessory, while a S-series pump have Modbus support built in."
+        "description": "Pick the connection method to your pump. In general, F-series pumps require a Nibe GW custom accessory, while an S-series pump has Modbus support built-in."
       },
       "modbus": {
         "data": {
