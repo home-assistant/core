@@ -1,24 +1,24 @@
 """Test the ibeacon sensors."""
 
 
-import time
 from dataclasses import replace
 from datetime import timedelta
-
-import pytest
+import time
 
 from bleak.backends.scanner import BLEDevice
-from homeassistant.components.ibeacon.const import DOMAIN, UPDATE_INTERVAL, ATTR_SOURCE
+import pytest
+
+from homeassistant.components.ibeacon.const import ATTR_SOURCE, DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_HOME
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
 from . import (
     BLUECHARM_BEACON_SERVICE_INFO,
+    BLUECHARM_BEACON_SERVICE_INFO_2,
     BLUECHARM_BEACON_SERVICE_INFO_DBUS,
     TESLA_TRANSIENT,
     TESLA_TRANSIENT_BLE_DEVICE,
-    BLUECHARM_BEACON_SERVICE_INFO_2,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
