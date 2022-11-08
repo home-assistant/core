@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await tibber_connection.update_info()
-        if tibber_connection.name == "":
+        if not tibber_connection.name:
             msg = "Could not fetch Tibber data. Requesting retry."
             _LOGGER.warning(msg)
             raise ConfigEntryNotReady(msg)
