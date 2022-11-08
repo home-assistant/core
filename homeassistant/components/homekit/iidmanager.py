@@ -119,7 +119,11 @@ class AccessoryIIDStorage:
         else:
             allocated_iid = 2
         accessory_allocation[allocation_key] = allocated_iid
-        accessory_allocated_iids.append(allocated_iid)
+        if allocated_iid not in accessory_allocated_iids:
+            # Make sure we don't add the same iid twice
+            # in the event we see the ACCESSORY_INFORMATION_SERVICE
+            # again on a reload
+            accessory_allocated_iids.append(allocated_iid)
         self._async_schedule_save()
         return allocated_iid
 
