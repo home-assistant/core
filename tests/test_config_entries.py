@@ -3332,7 +3332,7 @@ async def test_reauth(hass):
     assert len(hass.config_entries.flow.async_progress()) == 2
 
 
-async def test_wait_for_loading_entry(hass):
+async def test_wait_for_loading_entry(hass: HomeAssistant) -> None:
     """Test waiting for entry to be set up."""
 
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -3346,15 +3346,14 @@ async def test_wait_for_loading_entry(hass):
 
     flow = hass.config_entries.flow
 
-    async def _load_entry():
-        # Mock config entry
+    async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
-        hass.async_add_job(_load_entry)
+        hass.async_create_task(_load_entry())
         new_state = await hass.config_entries.async_wait_for_states(
             entry,
             {
@@ -3367,7 +3366,7 @@ async def test_wait_for_loading_entry(hass):
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_wait_for_loading_failed_entry(hass):
+async def test_wait_for_loading_failed_entry(hass: HomeAssistant) -> None:
     """Test waiting for entry to be set up that fails loading."""
 
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -3376,20 +3375,18 @@ async def test_wait_for_loading_failed_entry(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    await entry.async_setup(hass)
     await hass.async_block_till_done()
 
     flow = hass.config_entries.flow
 
-    async def _load_entry():
-        # Mock config entry
+    async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
-        hass.async_add_job(_load_entry)
+        hass.async_create_task(_load_entry())
         new_state = await hass.config_entries.async_wait_for_states(
             entry,
             {
@@ -3402,7 +3399,7 @@ async def test_wait_for_loading_failed_entry(hass):
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
-async def test_wait_for_loading_timeout(hass):
+async def test_wait_for_loading_timeout(hass: HomeAssistant) -> None:
     """Test waiting for entry to be set up that fails with a timeout."""
 
     async def _async_setup_entry(hass, entry):
@@ -3414,20 +3411,18 @@ async def test_wait_for_loading_timeout(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=_async_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    await entry.async_setup(hass)
     await hass.async_block_till_done()
 
     flow = hass.config_entries.flow
 
-    async def _load_entry():
-        # Mock config entry
+    async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
     entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
-        hass.async_add_job(_load_entry)
+        hass.async_create_task(_load_entry())
         with pytest.raises(asyncio.exceptions.TimeoutError):
             await hass.config_entries.async_wait_for_states(
                 entry,
