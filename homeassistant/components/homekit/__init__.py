@@ -945,7 +945,6 @@ class HomeKit:
                         self._name,
                         trigger,
                         ex,
-                        exc_info=True,
                     )
                     continue
                 valid_device_triggers.append(trigger)
