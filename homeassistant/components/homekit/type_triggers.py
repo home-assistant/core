@@ -53,8 +53,6 @@ class DeviceTriggerAccessory(HomeAccessory):
             if (entity_id := trigger.get("entity_id")) and (
                 entry := ent_reg.async_get(entity_id)
             ):
-                # Shouldn't be possible to it to not have an entry
-                # since the device could not be created without it
                 unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
             if (metadata := trigger.get("metadata")) and (
                 secondary := metadata.get("secondary")
