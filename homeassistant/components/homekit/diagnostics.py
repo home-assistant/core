@@ -31,6 +31,8 @@ async def async_get_config_entry_diagnostics(
             "options": dict(entry.options),
         },
     }
+    if homekit.iid_storage:
+        data["iid_storage"] = homekit.iid_storage.allocations
     if not homekit.driver:  # not started yet or startup failed
         return data
     driver: AccessoryDriver = homekit.driver
