@@ -51,7 +51,6 @@ async def test_config_entry_running(hass, hass_client, hk_driver, mock_async_zer
                 "3E__23_": 5,
                 "3E__30_": 6,
                 "3E__52_": 7,
-                "3E___": 1,
                 "A2__37_": 9,
                 "A2___": 8,
             }
@@ -278,7 +277,6 @@ async def test_config_entry_accessory(
                 "3E__23_": 5,
                 "3E__30_": 6,
                 "3E__52_": 7,
-                "3E___": 1,
                 "43__25_": 11,
                 "43___": 10,
                 "A2__37_": 9,
