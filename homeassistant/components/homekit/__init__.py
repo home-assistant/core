@@ -933,8 +933,8 @@ class HomeKit:
                 valid_device_ids,
             )
         ).items():
-            if not (device := dev_reg.async_get(device_id)):
-                continue
+            device = dev_reg.async_get(device_id)
+            assert device is not None
             valid_device_triggers: list[dict[str, Any]] = []
             for trigger in device_triggers:
                 try:
