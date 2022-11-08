@@ -757,7 +757,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.1.1
+life360==5.3.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
