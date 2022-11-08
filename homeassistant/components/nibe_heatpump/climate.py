@@ -25,6 +25,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, LOGGER, Coordinator
+from .const import (
+    VALUES_MIXING_VALVE_CLOSED_STATE,
+    VALUES_PRIORITY_COOLING,
+    VALUES_PRIORITY_HEATING,
+)
 
 
 @dataclass
@@ -285,11 +290,14 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             self._attr_target_temperature_high = None
 
         if prio := _get_value(self._coil_prio):
-            if _get_value(self._coil_mixing_valve_state) == 30:
+            if (
+                _get_value(self._coil_mixing_valve_state)
+                in VALUES_MIXING_VALVE_CLOSED_STATE
+            ):
                 self._attr_hvac_action = HVACAction.IDLE
-            elif prio == "HEAT":
+            elif prio in VALUES_PRIORITY_HEATING:
                 self._attr_hvac_action = HVACAction.HEATING
-            elif prio == "COOLING":
+            elif prio in VALUES_PRIORITY_COOLING:
                 self._attr_hvac_action = HVACAction.COOLING
             else:
                 self._attr_hvac_action = HVACAction.IDLE
