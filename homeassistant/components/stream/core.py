@@ -387,7 +387,7 @@ class StreamView(HomeAssistantView):
 
 
 def _transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
-    """Transform the image using numpy."""
+    """Transform the image to a given orientation using numpy."""
 
     if orientation in (0, 1):  # Unused/identity orientations
         return image
