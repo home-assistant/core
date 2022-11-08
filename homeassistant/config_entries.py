@@ -662,7 +662,7 @@ class ConfigEntry:
         """Start a reauth flow."""
         if any(
             flow
-            for flow in hass.config_entries.flow.async_progress()
+            for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
             if flow["context"].get("source") == SOURCE_REAUTH
             and flow["context"].get("entry_id") == self.entry_id
         ):
