@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: list[dict[str, str]]) -> str:
@@ -28,7 +28,7 @@ def generate_and_validate(integrations: list[dict[str, str]]) -> str:
                 }
             )
 
-    return format_python(f"USB={to_string(match_list)}")
+    return format_python_namespace({"USB": match_list})
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

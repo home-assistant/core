@@ -1,14 +1,20 @@
 """Hassfest utils."""
 from __future__ import annotations
 
-from typing import Any, Mapping, Collection, Iterable
+from collections.abc import Collection, Iterable, Mapping
+from typing import Any
 
 import black
 
 DEFAULT_GENERATOR = "script.hassfest"
 
 
-def _wrap_items(items: Iterable[str], opener: str, closer: str, sort=False, ) -> str:
+def _wrap_items(
+    items: Iterable[str],
+    opener: str,
+    closer: str,
+    sort=False,
+) -> str:
     """Wrap pre-formatted Python reprs in braces, optionally sorting them."""
     # The trailing comma is imperative so Black doesn't format some items
     # on one line and some on multiple.
@@ -61,3 +67,28 @@ To update, run python3 -m {generator}
 {content}
 """
     return black.format_str(content.strip(), mode=black.Mode())
+
+
+def format_python_namespace(
+    content: dict[str, Any],
+    *,
+    annotations: dict[str, str] | None = None,
+    generator: str = DEFAULT_GENERATOR,
+) -> str:
+    """Generate a nicely formatted "namespace" file.
+
+    The keys of the `content` dict will be used as variable names.
+    """
+
+    def _get_annotation(key: str) -> str:
+        annotation = (annotations or {}).get(key)
+        return f": {annotation}" if annotation else ""
+
+    code = "\n\n".join(
+        f"{key}{_get_annotation(key)}" f" = {to_string(value)}"
+        for key, value in sorted(content.items())
+    )
+    if annotations:
+        # If we had any annotations, add the __future__ import.
+        code = f"from __future__ import annotations\n{code}"
+    return format_python(code, generator=generator)

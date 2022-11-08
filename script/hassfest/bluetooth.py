@@ -2,13 +2,7 @@
 from __future__ import annotations
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
-
-BASE = """
-from __future__ import annotations
-
-BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = {}
-""".strip()
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: list[dict[str, str]]):
@@ -29,7 +23,10 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    return format_python(BASE.format(to_string(match_list)))
+    return format_python_namespace(
+        {"BLUETOOTH": match_list},
+        annotations={"BLUETOOTH": "list[dict[str, bool | str | int | list[int]]]"},
+    )
 
 
 def validate(integrations: dict[str, Integration], config: Config):

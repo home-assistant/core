@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: dict[str, Integration]):
@@ -26,7 +26,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
         for topic in mqtt:
             data[domain].append(topic)
 
-    return format_python(f"MQTT = {to_string(data)}")
+    return format_python_namespace({"MQTT": data})
 
 
 def validate(integrations: dict[str, Integration], config: Config):

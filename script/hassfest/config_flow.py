@@ -6,7 +6,7 @@ import pathlib
 
 from .brand import validate as validate_brands
 from .model import Brand, Config, Integration
-from .serializer import format_python, to_string
+from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
@@ -80,7 +80,7 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
         else:
             domains["integration"].append(domain)
 
-    return format_python(f"FLOWS={to_string(domains)}")
+    return format_python_namespace({"FLOWS": domains})
 
 
 def _populate_brand_integrations(

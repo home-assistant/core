@@ -4,12 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
-
-
-def sort_dict(value):
-    """Sort a dictionary."""
-    return {key: value[key] for key in sorted(value)}
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: dict[str, Integration]):
@@ -29,9 +24,9 @@ def generate_and_validate(integrations: dict[str, Integration]):
             continue
 
         for matcher in ssdp:
-            data[domain].append(sort_dict(matcher))
+            data[domain].append(matcher)
 
-    return format_python(f"SSDP = {to_string(data)}")
+    return format_python_namespace({"SSDP": data})
 
 
 def validate(integrations: dict[str, Integration], config: Config):

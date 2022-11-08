@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
-
-BASE = """APPLICATION_CREDENTIALS = {}"""
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
@@ -20,7 +18,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config) 
 
         match_list.append(domain)
 
-    return format_python(BASE.format(to_string(match_list)))
+    return format_python_namespace({"APPLICATION_CREDENTIALS": match_list})
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

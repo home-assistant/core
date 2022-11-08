@@ -6,7 +6,7 @@ from collections import defaultdict
 from homeassistant.loader import async_process_zeroconf_match_dict
 
 from .model import Config, Integration
-from .serializer import format_python, to_string
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: dict[str, Integration]):
@@ -69,11 +69,11 @@ def generate_and_validate(integrations: dict[str, Integration]):
                 warned.add(key_2)
                 break
 
-    zeroconf = {key: service_type_dict[key] for key in sorted(service_type_dict)}
-    homekit = {key: homekit_dict[key] for key in sorted(homekit_dict)}
-
-    return format_python(
-        f"ZEROCONF = {to_string(zeroconf)}\n" f"HOMEKIT = {to_string(homekit)}"
+    return format_python_namespace(
+        {
+            "HOMEKIT": {key: homekit_dict[key] for key in homekit_dict},
+            "ZEROCONF": {key: service_type_dict[key] for key in service_type_dict},
+        }
     )
 
 

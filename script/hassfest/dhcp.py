@@ -2,13 +2,7 @@
 from __future__ import annotations
 
 from .model import Config, Integration
-from .serializer import format_python
-
-BASE = """
-from __future__ import annotations
-
-DHCP: list[dict[str, str | bool]] = {}
-""".strip()
+from .serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: list[dict[str, str]]):
@@ -29,7 +23,10 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    return format_python(BASE.format(repr(match_list)))
+    return format_python_namespace(
+        {"DHCP": match_list},
+        annotations={"DHCP": "list[dict[str, str | bool]]"},
+    )
 
 
 def validate(integrations: dict[str, Integration], config: Config):
