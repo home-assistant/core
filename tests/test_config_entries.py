@@ -3287,6 +3287,7 @@ async def test_disallow_entry_reload_with_setup_in_progresss(hass, manager):
 async def test_reauth(hass):
     """Test the async_reauth_helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
+    entry2 = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -3313,7 +3314,19 @@ async def test_reauth(hass):
 
     assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
 
+    assert entry.entry_id != entry2.entry_id
+
     # Check we can't start duplicate flows
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
-    assert len(flows) == 1
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check we can't start duplicate when the context context is different
+    entry.async_start_reauth(hass, {"diff": "diff"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check we can start a reauth for a different entry
+    entry2.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 2
