@@ -3332,7 +3332,7 @@ async def test_reauth(hass):
     assert len(hass.config_entries.flow.async_progress()) == 2
 
 
-async def test_wait_for_loading_entry(hass: HomeAssistant):
+async def test_wait_for_loading_entry(hass):
     """Test waiting for entry to be set up."""
 
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -3366,7 +3366,7 @@ async def test_wait_for_loading_entry(hass: HomeAssistant):
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_wait_for_loading_failed_entry(hass: HomeAssistant):
+async def test_wait_for_loading_failed_entry(hass):
     """Test waiting for entry to be set up that fails loading."""
 
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -3400,8 +3400,8 @@ async def test_wait_for_loading_failed_entry(hass: HomeAssistant):
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
-async def test_wait_for_loading_timeout(hass: HomeAssistant):
-    """Test waiting for entry to be set up that fails loading."""
+async def test_wait_for_loading_timeout(hass):
+    """Test waiting for entry to be set up that fails with a timeout."""
 
     async def _async_setup_entry(hass, entry):
         await asyncio.sleep(1)
