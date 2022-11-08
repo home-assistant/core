@@ -6,6 +6,7 @@ from typing import Any
 
 from nibe.coil import Coil
 from nibe.exceptions import CoilNotFoundException
+from nibe.heatpump import Series
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -24,7 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, LOGGER, Coordinator
-from .const import Series
 
 
 @dataclass
