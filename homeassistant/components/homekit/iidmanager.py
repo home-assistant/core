@@ -109,12 +109,12 @@ class AccessoryIIDStorage:
         # AID must be a string since JSON keys cannot be int
         aid_str = str(aid)
         accessory_allocation = self.allocations.setdefault(aid_str, {})
-        accessory_allocated_iids = self.allocated_iids.setdefault(aid_str, [])
+        accessory_allocated_iids = self.allocated_iids.setdefault(aid_str, [1])
         if service_hap_type == ACCESSORY_INFORMATION_SERVICE and char_uuid is None:
-            allocated_iid = 1
-        elif allocation_key in accessory_allocation:
+            return 1
+        if allocation_key in accessory_allocation:
             return accessory_allocation[allocation_key]
-        elif accessory_allocated_iids:
+        if accessory_allocated_iids:
             allocated_iid = accessory_allocated_iids[-1] + 1
         else:
             allocated_iid = 2
