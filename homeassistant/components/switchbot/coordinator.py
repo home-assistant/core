@@ -61,7 +61,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.base_unique_id = base_unique_id
         self.model = model
         self._ready_event = asyncio.Event()
-        self._was_available = False
+        self._was_unavailable = False
 
     @callback
     def _async_handle_unavailable(
@@ -69,7 +69,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     ) -> None:
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(service_info)
-        self._was_available = True
+        self._was_unavailable = True
 
     @callback
     def _async_handle_bluetooth_event(
@@ -88,9 +88,9 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         if "modelName" in adv.data:
             self._ready_event.set()
         _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
-        if not self.device.advertisement_changed(adv) and not self._was_available:
+        if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
-        self._was_available = False
+        self._was_unavailable = False
         self.data = flatten_sensors_data(adv.data)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
