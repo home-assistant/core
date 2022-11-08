@@ -389,6 +389,9 @@ class StreamView(HomeAssistantView):
 def _transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
     """Transform the image using numpy."""
 
+    if orientation in (0, 1):  # Unused/identity orientations
+        return image
+
     # Keep import here so that we can import stream integration without installing reqs
     import numpy as np  # pylint: disable=import-outside-toplevel
 
@@ -406,7 +409,7 @@ def _transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
         return np.flipud(np.rot90(image, -1)).copy()
     if orientation == 8:  # Rotate right
         return np.rot90(image, -1).copy()
-    return image  # Transforms 0 and 1 (and others not yet defined) are identity
+    return image  # Don't crash when using an unknown orientation
 
 
 class KeyFrameConverter:
