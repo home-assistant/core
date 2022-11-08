@@ -3349,7 +3349,6 @@ async def test_wait_for_loading_entry(hass: HomeAssistant) -> None:
     async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
-    entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
@@ -3382,7 +3381,6 @@ async def test_wait_for_loading_failed_entry(hass: HomeAssistant) -> None:
     async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
-    entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
@@ -3418,7 +3416,6 @@ async def test_wait_for_loading_timeout(hass: HomeAssistant) -> None:
     async def _load_entry() -> None:
         assert await async_setup_component(hass, "test", {})
 
-    entry = MockConfigEntry(title="test_title", domain="test")
     entry.add_to_hass(hass)
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
