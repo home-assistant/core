@@ -657,7 +657,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
         """Get IID for object."""
         aid = obj.broker.aid
         if isinstance(obj, Characteristic):
-            service = obj.service
+            service: Service = obj.service
             iid = self._iid_storage.get_or_allocate_iid(
                 aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
             )

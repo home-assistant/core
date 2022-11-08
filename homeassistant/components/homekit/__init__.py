@@ -940,8 +940,8 @@ class HomeKit:
                 try:
                     await async_validate_trigger_config(self.hass, trigger)
                 except vol.Invalid as ex:
-                    _LOGGER.warning(
-                        "HomeKit %s cannot add trigger %s because it is invalid: %s",
+                    _LOGGER.debug(
+                        "%s: cannot add unsupported trigger %s because it requires additional inputs which are not supported by HomeKit: %s",
                         self._name,
                         trigger,
                         ex,
