@@ -39,22 +39,27 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
         assert device_triggers is not None
-        import pprint
+        #        import pprint
 
-        pprint.pprint(device_triggers)
+        #        pprint.pprint(device_triggers)
         for idx, trigger in enumerate(device_triggers):
-            type_ = trigger["type"]
-            subtype = trigger.get("subtype")
+            type_: str = trigger["type"]
+            subtype: str | None = trigger.get("subtype")
             unique_id = f'{type_}-{subtype or ""}'
-            if device_id := trigger.get("device_id"):
-                unique_id += f"_{device_id}"
+            if entity_id := trigger.get("entity_id"):
+                unique_id += f"-entity_id:{entity_id}"
             if (metadata := trigger.get("metadata")) and (
                 secondary := metadata.get("secondary")
-            ):
-                unique_id += f"_{secondary}"
-            trigger_name = (
-                f"{type_.title()} {subtype.title()}" if subtype else type_.title()
-            )
+            ) is not None:
+                unique_id += f"-secondary:{secondary}"
+            trigger_name_parts = [type_.replace("_", " ").title()]
+            if subtype:
+                trigger_name_parts.append(subtype.replace("_", " ").title())
+            if entity_id and (state := self.hass.states.get(entity_id)):
+                trigger_name_parts.append(state.name)
+            if secondary:
+                trigger_name_parts.append(str(secondary))
+            trigger_name = " ".join(trigger_name_parts)
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
