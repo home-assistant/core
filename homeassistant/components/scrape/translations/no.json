@@ -36,6 +36,12 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "description": "Konfigurering av Scrape ved hjelp av YAML har blitt flyttet til integrasjonsn\u00f8kkel. \n\n Din eksisterende YAML-konfigurasjon vil fungere for 2 flere versjoner. \n\n Migrer YAML-konfigurasjonen til integrasjonsn\u00f8kkelen i henhold til dokumentasjonen.",
+            "title": "Scrape YAML-konfigurasjonen er flyttet"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity, entity_registry
@@ -426,7 +427,11 @@ class ShellyRpcEntity(entity.Entity):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Call RPC for entity {self.name} failed, method: {method}, params: {params}, error: {repr(err)}"
+                f"Call RPC for {self.name} connection error, method: {method}, params: {params}, error: {repr(err)}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                f"Call RPC for {self.name} request error, method: {method}, params: {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
@@ -611,6 +616,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         """Initialize the sleeping sensor."""
         self.sensors = sensors
         self.last_state: StateType = None
+        self.last_unit: str | None = None
         self.coordinator = coordinator
         self.attribute = attribute
         self.block: Block | None = block  # type: ignore[assignment]
@@ -640,6 +646,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
 
         if last_state is not None:
             self.last_state = last_state.state
+            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @callback
     def _update_callback(self) -> None:
@@ -692,6 +699,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
     ) -> None:
         """Initialize the sleeping sensor."""
         self.last_state: StateType = None
+        self.last_unit: str | None = None
         self.coordinator = coordinator
         self.key = key
         self.attribute = attribute
@@ -721,3 +729,4 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
 
         if last_state is not None:
             self.last_state = last_state.state
+            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

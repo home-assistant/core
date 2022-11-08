@@ -15,14 +15,19 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 
 @respx.mock
-async def test_setup_with_endpoint_timeout_with_recovery(hass):
+async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) -> None:
     """Test setup with an endpoint that times out that recovers."""
     await async_setup_component(hass, "homeassistant", {})
 
@@ -129,7 +134,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
 
 
 @respx.mock
-async def test_setup_minimum_resource_template(hass):
+async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration (resource_template)."""
 
     respx.get("http://localhost").respond(
@@ -187,7 +192,7 @@ async def test_setup_minimum_resource_template(hass):
 
 
 @respx.mock
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -236,7 +241,7 @@ async def test_reload(hass):
 
 
 @respx.mock
-async def test_reload_and_remove_all(hass):
+async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
     """Verify we can reload and remove all."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -283,7 +288,7 @@ async def test_reload_and_remove_all(hass):
 
 
 @respx.mock
-async def test_reload_fails_to_read_configuration(hass):
+async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
     """Verify reload when configuration is missing or broken."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -327,7 +332,7 @@ async def test_reload_fails_to_read_configuration(hass):
 
 
 @respx.mock
-async def test_multiple_rest_endpoints(hass):
+async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
     """Test multiple rest endpoints."""
 
     respx.get("http://date.jsontest.com").respond(
@@ -399,3 +404,17 @@ async def test_multiple_rest_endpoints(hass):
     assert hass.states.get("sensor.json_date_time").state == "07:11:08 PM"
     assert hass.states.get("sensor.json_time").state == "07:11:39 PM"
     assert hass.states.get("binary_sensor.binary_sensor").state == "on"
+
+
+async def test_empty_config(hass: HomeAssistant) -> None:
+    """Test setup with empty configuration.
+
+    For example (with rest.yaml an empty file):
+        rest: !include rest.yaml
+    """
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {}},
+    )
+    assert_setup_component(0, DOMAIN)

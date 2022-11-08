@@ -152,7 +152,6 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
-    supported_brands: dict[str, str]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -265,7 +264,6 @@ async def async_get_integration_descriptions(
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
-        "hardware": {},
         "helper": {},
     }
 
@@ -274,14 +272,14 @@ async def async_get_integration_descriptions(
         if integration.integration_type in ("entity", "system"):
             continue
 
-        for integration_type in ("integration", "hardware", "helper"):
+        for integration_type in ("integration", "helper"):
             if integration.domain not in core_flows[integration_type]:
                 continue
             del core_flows[integration_type][integration.domain]
         if integration.domain in core_flows["translated_name"]:
             core_flows["translated_name"].remove(integration.domain)
 
-        if integration.integration_type in ("hardware", "helper"):
+        if integration.integration_type == "helper":
             integration_key: str = integration.integration_type
         else:
             integration_key = "integration"

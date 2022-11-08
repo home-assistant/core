@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Lozinka",
+                    "username": "Korisni\u010dko ime"
+                }
+            }
+        }
+    }
+}

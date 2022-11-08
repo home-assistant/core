@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import datetime
 import logging
 import platform
-import time
 from typing import Any
 
 import async_timeout
@@ -22,6 +21,7 @@ from dbus_fast import InvalidMessageError
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
 from .const import (
@@ -35,7 +35,7 @@ from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBl
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
-MONOTONIC_TIME = time.monotonic
+MONOTONIC_TIME = monotonic_time_coarse
 
 # or_patterns is a workaround for the fact that passive scanning
 # needs at least one matcher to be set. The below matcher
@@ -209,7 +209,7 @@ class HaScanner(BaseHaScanner):
         service_info = BluetoothServiceInfoBleak(
             name=advertisement_data.local_name or device.name or device.address,
             address=device.address,
-            rssi=device.rssi,
+            rssi=advertisement_data.rssi,
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,

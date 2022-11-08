@@ -109,11 +109,12 @@ class Integration:
                 continue
 
             init = fil / "__init__.py"
-            if not init.exists():
+            manifest = fil / "manifest.json"
+            if not init.exists() and not manifest.exists():
                 print(
-                    f"Warning: {init} missing, skipping directory. "
-                    "If this is your development environment, "
-                    "you can safely delete this folder."
+                    f"Warning: {init} and manifest.json missing, "
+                    "skipping directory. If this is your development "
+                    "environment, you can safely delete this folder."
                 )
                 continue
 
@@ -170,9 +171,9 @@ class Integration:
         return self.manifest.get("dependencies", [])
 
     @property
-    def supported_brands(self) -> dict[str]:
-        """Return dict of supported brands."""
-        return self.manifest.get("supported_brands", {})
+    def supported_by(self) -> str:
+        """Return the integration supported by this virtual integration."""
+        return self.manifest.get("supported_by", {})
 
     @property
     def integration_type(self) -> str:
@@ -183,6 +184,11 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @property
+    def iot_standards(self) -> list[str]:
+        """Return the IoT standard supported by this virtual integration."""
+        return self.manifest.get("iot_standards", [])
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""

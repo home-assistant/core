@@ -10,8 +10,10 @@ import os
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
+from pyhap.service import Service
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -77,13 +79,7 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import (
-    HomeAccessory,
-    HomeBridge,
-    HomeDriver,
-    HomeIIDManager,
-    get_accessory,
-)
+from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -142,7 +138,7 @@ STATUS_WAIT = 3
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
-    5  # number of seconds to wait for homekit to see the c# change
+    10  # number of seconds to wait for homekit to see the c# change
 )
 
 
@@ -532,6 +528,7 @@ class HomeKit:
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
+        self._reset_lock = asyncio.Lock()
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
@@ -551,7 +548,7 @@ class HomeKit:
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
-            iid_manager=HomeIIDManager(self.iid_storage),
+            iid_storage=self.iid_storage,
         )
 
         # If we do not load the mac address will be wrong
@@ -561,21 +558,24 @@ class HomeKit:
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
-        if not self.bridge:
-            await self.async_reset_accessories_in_accessory_mode(entity_ids)
-            return
-        await self.async_reset_accessories_in_bridge_mode(entity_ids)
+        async with self._reset_lock:
+            if not self.bridge:
+                await self.async_reset_accessories_in_accessory_mode(entity_ids)
+                return
+            await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
     async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
         assert self.driver is not None
         await accessory.stop()
         # Deallocate the IIDs for the accessory
-        iid_manager = self.driver.iid_manager
-        for service in accessory.services:
-            iid_manager.remove_iid(iid_manager.remove_obj(service))
-            for char in service.characteristics:
-                iid_manager.remove_iid(iid_manager.remove_obj(char))
+        iid_manager = accessory.iid_manager
+        services: list[Service] = accessory.services
+        for service in services:
+            iid_manager.remove_obj(service)
+            characteristics: list[Characteristic] = service.characteristics
+            for char in characteristics:
+                iid_manager.remove_obj(char)
 
     async def async_reset_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
@@ -584,7 +584,6 @@ class HomeKit:
         assert self.driver is not None
 
         acc = cast(HomeAccessory, self.driver.accessory)
-        await self._async_shutdown_accessory(acc)
         if acc.entity_id not in entity_ids:
             return
         if not (state := self.hass.states.get(acc.entity_id)):
@@ -592,6 +591,7 @@ class HomeKit:
                 "The underlying entity %s disappeared during reset", acc.entity_id
             )
             return
+        await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
             self.hass.async_add_job(new_acc.run)

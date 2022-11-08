@@ -3,7 +3,7 @@
   "name": "Yale Access Bluetooth",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yalexs_ble",
-  "requirements": ["yalexs-ble==1.9.4"],
+  "requirements": ["yalexs-ble==1.9.5"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [
@@ -12,8 +12,5 @@
       "service_uuid": "0000fe24-0000-1000-8000-00805f9b34fb"
     }
   ],
-  "iot_class": "local_push",
-  "supported_brands": {
-    "august_ble": "August Bluetooth"
-  }
+  "iot_class": "local_push"
 }

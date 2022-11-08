@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "historic_currency": {
+      "title": "The configured currency is no longer in use",
+      "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
+    }
+  },
   "system_health": {
     "info": {
       "arch": "CPU Architecture",

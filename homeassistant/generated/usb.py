@@ -5,6 +5,12 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "homeassistant_sky_connect",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*skyconnect v1.0*",
+    },
+    {
         "domain": "insteon",
         "vid": "10BF",
     },

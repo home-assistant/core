@@ -6,5 +6,6 @@
   "requirements": ["aioambient==2021.11.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_push",
-  "loggers": ["aioambient"]
+  "loggers": ["aioambient"],
+  "integration_type": "hub"
 }

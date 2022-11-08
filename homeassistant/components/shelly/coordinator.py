@@ -8,19 +8,17 @@ from typing import Any, cast
 
 import aioshelly
 from aioshelly.block_device import BlockDevice
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTR_BETA,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
@@ -43,7 +41,12 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .utils import device_update_info, get_block_device_name, get_rpc_device_name
+from .utils import (
+    device_update_info,
+    get_block_device_name,
+    get_rpc_device_name,
+    get_rpc_device_wakeup_period,
+)
 
 
 @dataclass
@@ -249,43 +252,6 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
 
-    async def async_trigger_ota_update(self, beta: bool = False) -> None:
-        """Trigger or schedule an ota update."""
-        update_data = self.device.status["update"]
-        LOGGER.debug("OTA update service - update_data: %s", update_data)
-
-        if not update_data["has_update"] and not beta:
-            LOGGER.warning("No OTA update available for device %s", self.name)
-            return
-
-        if beta and not update_data.get("beta_version"):
-            LOGGER.warning(
-                "No OTA update on beta channel available for device %s", self.name
-            )
-            return
-
-        if update_data["status"] == "updating":
-            LOGGER.warning("OTA update already in progress for %s", self.name)
-            return
-
-        new_version = update_data["new_version"]
-        if beta:
-            new_version = update_data["beta_version"]
-        LOGGER.info(
-            "Start OTA update of device %s from '%s' to '%s'",
-            self.name,
-            self.device.firmware_version,
-            new_version,
-        )
-        try:
-            result = await self.device.trigger_ota_update(beta=beta)
-        except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
-        except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
-        else:
-            LOGGER.debug("Result of OTA update call: %s", result)
-
     def shutdown(self) -> None:
         """Shutdown the coordinator."""
         self.device.shutdown()
@@ -394,6 +360,24 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
+    def update_sleep_period(self) -> bool:
+        """Check device sleep period & update if changed."""
+        if (
+            not self.device.initialized
+            or not (wakeup_period := get_rpc_device_wakeup_period(self.device.status))
+            or wakeup_period == self.entry.data.get(CONF_SLEEP_PERIOD)
+        ):
+            return False
+
+        data = {**self.entry.data}
+        data[CONF_SLEEP_PERIOD] = wakeup_period
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+        update_interval = SLEEP_PERIOD_MULTIPLIER * wakeup_period
+        self.update_interval = timedelta(seconds=update_interval)
+
+        return True
+
     @callback
     def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
@@ -403,6 +387,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             or self.device.event == self._last_event
         ):
             return
+
+        self.update_sleep_period()
 
         self._last_event = self.device.event
 
@@ -432,6 +418,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
+        if self.update_sleep_period():
+            return
+
         if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(
@@ -480,42 +469,6 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
 
-    async def async_trigger_ota_update(self, beta: bool = False) -> None:
-        """Trigger an ota update."""
-
-        update_data = self.device.status["sys"]["available_updates"]
-        LOGGER.debug("OTA update service - update_data: %s", update_data)
-
-        if not bool(update_data) or (not update_data.get("stable") and not beta):
-            LOGGER.warning("No OTA update available for device %s", self.name)
-            return
-
-        if beta and not update_data.get(ATTR_BETA):
-            LOGGER.warning(
-                "No OTA update on beta channel available for device %s", self.name
-            )
-            return
-
-        new_version = update_data.get("stable", {"version": ""})["version"]
-        if beta:
-            new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
-
-        assert self.device.shelly
-        LOGGER.info(
-            "Start OTA update of device %s from '%s' to '%s'",
-            self.name,
-            self.device.firmware_version,
-            new_version,
-        )
-        try:
-            await self.device.trigger_ota_update(beta=beta)
-        except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
-        except InvalidAuthError:
-            self.entry.async_start_reauth(self.hass)
-        else:
-            LOGGER.debug("OTA update call successful")
-
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
         await self.device.shutdown()
@@ -553,7 +506,7 @@ class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.update_status()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)

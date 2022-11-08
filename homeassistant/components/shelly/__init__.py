@@ -16,7 +16,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_COAP_PORT,
@@ -113,13 +112,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    temperature_unit = "C" if hass.config.units is METRIC_SYSTEM else "F"
-
     options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
-        temperature_unit,
     )
 
     coap_context = await get_coap_context(hass)
@@ -143,6 +139,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                 )
             },
         )
+    # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -231,6 +228,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
                 )
             },
         )
+    # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -295,9 +293,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    if shelly_entry_data.device is not None:
-        # If device is present, block/rpc coordinator is not setup yet
-        shelly_entry_data.device.shutdown()
+    # If device is present, block/rpc coordinator is not setup yet
+    device = shelly_entry_data.device
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+        return True
+    if isinstance(device, BlockDevice):
+        device.shutdown()
         return True
 
     platforms = RPC_SLEEPING_PLATFORMS
