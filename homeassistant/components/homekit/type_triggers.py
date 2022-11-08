@@ -58,7 +58,7 @@ class DeviceTriggerAccessory(HomeAccessory):
                 trigger_name_parts.append(subtype.replace("_", " ").title())
             if entity_id and (state := self.hass.states.get(entity_id)):
                 trigger_name_parts.append(state.name)
-            if secondary:
+            if secondary is not None:
                 trigger_name_parts.append(str(secondary))
             trigger_name = cleanup_name_for_homekit(" ".join(trigger_name_parts))
             serv_stateless_switch = self.add_preload_service(
