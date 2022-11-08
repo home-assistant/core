@@ -33,7 +33,7 @@ CONF_INSTALLATION_ID: Final[str] = "installation_id"
 DEFAULT_NAME: Final[str] = "Combined Energy"
 
 CONNECTIVITY_UPDATE_DELAY: Final[timedelta] = timedelta(seconds=30)
-LOG_SESSION_REFRESH_DELAY: Final[timedelta] = timedelta(minutes=15)
+LOG_SESSION_REFRESH_DELAY: Final[timedelta] = timedelta(minutes=10)
 READINGS_UPDATE_DELAY: Final[timedelta] = timedelta(minutes=1)
 
 # Increment size in seconds; Valid values are 5/300/1800 (5s/5m/30m)
@@ -52,33 +52,8 @@ SENSOR_DESCRIPTIONS_GENERIC_CONSUMER = [
     SensorEntityDescription(
         key="energy_consumed",
         name="Energy Consumption",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="energy_consumed_solar",
-        name="Energy Consumption Solar",
-        icon="mdi:solar-power",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="energy_consumed_battery",
-        name="Energy Consumption Battery",
-        icon="mdi:home-battery",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="energy_consumed_grid",
-        name="Energy Consumption Grid",
-        icon="mdi:transmission-tower",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
@@ -89,12 +64,31 @@ SENSOR_DESCRIPTIONS_GENERIC_CONSUMER = [
         device_class=SensorDeviceClass.POWER,
     ),
     SensorEntityDescription(
+        key="energy_consumed_solar",
+        name="Energy Consumption Solar",
+        icon="mdi:solar-power",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="power_consumption_solar",
         name="Power Consumption Solar",
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energy_consumed_battery",
+        name="Energy Consumption Battery",
+        icon="mdi:home-battery",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_consumption_battery",
@@ -106,12 +100,22 @@ SENSOR_DESCRIPTIONS_GENERIC_CONSUMER = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
+        key="energy_consumed_grid",
+        name="Energy Consumption Grid",
+        icon="mdi:transmission-tower",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="power_consumption_grid",
         name="Power Consumption Grid",
         icon="mdi:transmission-tower",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
     ),
 ]
 SENSOR_DESCRIPTIONS = {
@@ -120,13 +124,13 @@ SENSOR_DESCRIPTIONS = {
             key="energy_supplied",
             name="Energy Supplied",
             icon="mdi:solar-power",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
         ),
         SensorEntityDescription(
             key="power_supply",
-            name="Power Supply",
+            name="Power Supplied",
             icon="mdi:solar-power",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
@@ -164,6 +168,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
             SensorEntityDescription(
                 key="temp_sensor2",
@@ -172,6 +177,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
             SensorEntityDescription(
                 key="temp_sensor3",
@@ -180,6 +186,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
             SensorEntityDescription(
                 key="temp_sensor4",
@@ -188,6 +195,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
             SensorEntityDescription(
                 key="temp_sensor5",
@@ -196,6 +204,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
             SensorEntityDescription(
                 key="temp_sensor6",
@@ -204,6 +213,7 @@ SENSOR_DESCRIPTIONS = {
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
+                entity_registry_enabled_default=False,
             ),
         ]
     ),
@@ -212,34 +222,9 @@ SENSOR_DESCRIPTIONS = {
             key="energy_supplied",
             name="Energy Import",
             icon="mdi:transmission-tower",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="energy_consumed",
-            name="Energy Export",
-            icon="mdi:transmission-tower",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="energy_consumed_solar",
-            name="Energy Export Solar",
-            icon="mdi:transmission-tower",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-        ),
-        SensorEntityDescription(
-            key="energy_consumed_battery",
-            name="Energy Export Battery",
-            icon="mdi:transmission-tower",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            entity_registry_enabled_default=False,
         ),
         SensorEntityDescription(
             key="power_supply",
@@ -250,11 +235,28 @@ SENSOR_DESCRIPTIONS = {
             device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
+            key="energy_consumed",
+            name="Energy Export",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+        ),
+        SensorEntityDescription(
             key="power_consumption",
             name="Power Export",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed_solar",
+            name="Energy Export Solar",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            entity_registry_enabled_default=False,
         ),
         SensorEntityDescription(
             key="power_consumption_solar",
@@ -263,6 +265,16 @@ SENSOR_DESCRIPTIONS = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
             device_class=SensorDeviceClass.POWER,
+            entity_registry_enabled_default=False,
+        ),
+        SensorEntityDescription(
+            key="energy_consumed_battery",
+            name="Energy Export Battery",
+            icon="mdi:transmission-tower",
+            state_class=SensorStateClass.TOTAL,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            entity_registry_enabled_default=False,
         ),
         SensorEntityDescription(
             key="power_consumption_battery",
