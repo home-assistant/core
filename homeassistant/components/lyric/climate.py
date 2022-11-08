@@ -222,9 +222,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
         if action == HVACAction.OFF and self.hvac_mode != HVACMode.OFF:
             action = HVACAction.IDLE
-        if (
-            action == HVACAction.OFF or action == HVACAction.IDLE
-        ) and self.fan_mode == FAN_ON:
+        if (action in (HVACAction.OFF, HVACAction.IDLE)) and self.fan_mode == FAN_ON:
             action = HVACAction.FAN
         return action
 
@@ -318,7 +316,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode) -> None:
         """Set fan mode."""
-        _LOGGER.debug(f"Set fan mode to: {fan_mode}")
+        _LOGGER.debug("Set fan mode to %s", fan_mode)
         try:
             await self._update_fan(
                 self.location, self.device, LYRIC_FAN_MODES[fan_mode]
