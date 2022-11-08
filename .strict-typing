@@ -273,6 +273,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
+homeassistant.components.unifi.switch
 homeassistant.components.unifi.update
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*

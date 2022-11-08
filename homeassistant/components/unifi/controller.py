@@ -90,7 +90,7 @@ class UniFiController:
 
         api.callback = self.async_unifi_signalling_callback
 
-        self.available = True
+        self.available: bool = True
         self.progress = None
         self.wireless_clients = None
 
@@ -140,7 +140,7 @@ class UniFiController:
         # Config entry option with list of clients to control network access.
         self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
         # Config entry option to control DPI restriction groups.
-        self.option_dpi_restrictions = options.get(
+        self.option_dpi_restrictions: bool = options.get(
             CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
         )
 
