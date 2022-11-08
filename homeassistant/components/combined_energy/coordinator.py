@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .backports import anext  # pylint: disable=redefined-builtin
 from .const import (
     CONNECTIVITY_UPDATE_DELAY,
+    LOG_SESSION_REFRESH_DELAY,
     LOGGER,
     READINGS_INCREMENT,
     READINGS_INITIAL_DELTA,
@@ -81,6 +82,19 @@ class CombinedEnergyConnectivityDataService(
     async def update_data(self) -> ConnectionStatus:
         """Update data."""
         return await self.api.communication_status()
+
+
+class CombinedEnergyLogSessionService(CombinedEnergyDataService[None]):
+    """Triggers a log session refresh event keep readings data flowing."""
+
+    @property
+    def update_interval(self) -> timedelta:
+        """Update interval."""
+        return LOG_SESSION_REFRESH_DELAY
+
+    async def update_data(self) -> None:
+        """Update data."""
+        await self.api.start_log_session()
 
 
 class CombinedEnergyReadingsDataService(
