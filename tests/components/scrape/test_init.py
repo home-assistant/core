@@ -6,8 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.scrape.const import DOMAIN
-from homeassistant.components.scrape.sensor import SCAN_INTERVAL
+from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -67,7 +66,7 @@ async def test_setup_no_data_fails_with_recovery(
         assert "Platform scrape not ready yet" in caplog.text
 
         mocker.payload = "test_scrape_sensor"
-        async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+        async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")

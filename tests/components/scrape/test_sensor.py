@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.scrape.sensor import SCAN_INTERVAL
+from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -298,7 +298,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
         assert state.state == "Current Version: 2021.12.10"
 
         mocker.payload = "test_scrape_sensor_no_data"
-        async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+        async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
