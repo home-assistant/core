@@ -15,7 +15,7 @@
           "modbus_unit": "Modbus Unit Identifier"
         },
         "data_description": {
-          "modbus_url": "Modbus URL that describes the connection to your Heat Pump or MODBUS40 unit. It should be on the form tcp://[HOST]:[PORT] for Modbus TCP connection, serial://[LOCAL DEVICE] for a local Modbus RTU connection, rfc2217://[HOST]:[PORT] for a remote telnet based Modbus RTU connection.",
+          "modbus_url": "Modbus URL that describes the connection to your Heat Pump or MODBUS40 unit. It should be on the form:\n - `tcp://[HOST]:[PORT]` for Modbus TCP connection\n - `serial://[LOCAL DEVICE]` for a local Modbus RTU connection\n - `rfc2217://[HOST]:[PORT]` for a remote telnet based Modbus RTU connection.",
           "modbus_unit": "Unit identification for you Heat Pump. Can usually be left at 0."
         }
       },
