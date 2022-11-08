@@ -7,6 +7,8 @@ from enum import Enum
 import socket
 from typing import Any
 
+from aiohttp import CookieJar
+from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
     Light,
@@ -16,9 +18,23 @@ from pyunifiprotect.data import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, ModelType
+from .const import (
+    CONF_ALL_UPDATES,
+    CONF_OVERRIDE_CHOST,
+    DEVICES_FOR_SUBSCRIBE,
+    DOMAIN,
+    ModelType,
+)
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -106,3 +122,24 @@ def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
     """Generate entry specific dispatch ID."""
 
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
+
+
+@callback
+def async_create_api_client(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> ProtectApiClient:
+    """Create ProtectApiClient from config entry."""
+
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    return ProtectApiClient(
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        verify_ssl=entry.data[CONF_VERIFY_SSL],
+        session=session,
+        subscribed_models=DEVICES_FOR_SUBSCRIBE,
+        override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
+        ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
+    )
