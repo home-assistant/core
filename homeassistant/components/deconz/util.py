@@ -1,4 +1,4 @@
-"""Utilities for deCONZ component."""
+"""Utilities for deCONZ integration."""
 from __future__ import annotations
 
 
