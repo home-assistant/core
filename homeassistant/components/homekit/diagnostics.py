@@ -67,7 +67,9 @@ def _get_accessory_diagnostics(
     hass: HomeAssistant, accessory: HomeAccessory
 ) -> dict[str, Any]:
     """Return diagnostics for an accessory."""
-    entity_state = hass.states.get(accessory.entity_id)
+    entity_state = None
+    if accessory.entity_id:
+        entity_state = hass.states.get(accessory.entity_id)
     data = {
         "aid": accessory.aid,
         "config": accessory.config,
