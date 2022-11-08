@@ -13,7 +13,7 @@ from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW
 from nibe.exceptions import CoilNotFoundException, CoilReadException
-from nibe.heatpump import HeatPump, Model
+from nibe.heatpump import HeatPump, Model, Series
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -44,7 +44,6 @@ from .const import (
     CONF_WORD_SWAP,
     DOMAIN,
     LOGGER,
-    Series,
 )
 
 PLATFORMS: list[Platform] = [
@@ -199,9 +198,7 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
     @property
     def series(self) -> Series:
         """Return which series of pump we are connected to."""
-        if self.heatpump.model in (Model.S1155, Model.S1255, Model.S320, Model.SMOS40):
-            return Series.S
-        return Series.F
+        return self.heatpump.series
 
     @property
     def coils(self) -> list[Coil]:

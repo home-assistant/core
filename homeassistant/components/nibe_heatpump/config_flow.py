@@ -1,13 +1,18 @@
 """Config flow for Nibe Heat Pump integration."""
 from __future__ import annotations
 
-import errno
-from socket import gaierror
 from typing import Any
 
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW
-from nibe.exceptions import CoilNotFoundException, CoilReadException, CoilWriteException
+from nibe.exceptions import (
+    AddressInUseException,
+    CoilNotFoundException,
+    CoilReadException,
+    CoilReadSendException,
+    CoilWriteException,
+    CoilWriteSendException,
+)
 from nibe.heatpump import HeatPump, Model
 import voluptuous as vol
 import yarl
@@ -96,24 +101,17 @@ async def validate_nibegw_input(
 
     try:
         await connection.start()
-    except OSError as exception:
-        if exception.errno == errno.EADDRINUSE:
-            raise FieldError(
-                "Address already in use", "listening_port", "address_in_use"
-            ) from exception
-        raise
+    except AddressInUseException as exception:
+        raise FieldError(
+            "Address already in use", "listening_port", "address_in_use"
+        ) from exception
 
     try:
-        coil = heatpump.get_coil_by_name("modbus40-word-swap-48852")
-        coil = await connection.read_coil(coil)
-        word_swap = coil.value == "ON"
-        coil = await connection.write_coil(coil)
-    except gaierror as exception:
-        raise FieldError(str(exception), "ip_address", "address") from exception
+        await connection.verify_connectivity()
+    except (CoilReadSendException, CoilWriteSendException) as exception:
+        raise FieldError(str(exception), CONF_IP_ADDRESS, "address") from exception
     except CoilNotFoundException as exception:
-        raise FieldError(
-            "Model selected doesn't seem to support expected coils", "base", "model"
-        ) from exception
+        raise FieldError("Coils not found", "base", "model") from exception
     except CoilReadException as exception:
         raise FieldError("Timeout on read from pump", "base", "read") from exception
     except CoilWriteException as exception:
@@ -123,7 +121,7 @@ async def validate_nibegw_input(
 
     return f"{data[CONF_MODEL]} at {data[CONF_IP_ADDRESS]}", {
         **data,
-        CONF_WORD_SWAP: word_swap,
+        CONF_WORD_SWAP: heatpump.word_swap,
         CONF_CONNECTION_TYPE: CONF_CONNECTION_TYPE_NIBEGW,
     }
 
@@ -148,17 +146,11 @@ async def validate_modbus_input(
     await connection.start()
 
     try:
-        coil = heatpump.get_coil_by_name("reset-alarm-40023")
-        coil = await connection.read_coil(coil)
-        value: str | int = 0
-        if coil.mappings:
-            value = coil.mappings[str(value)]
-        coil.value = value
-        coil = await connection.write_coil(coil)
+        await connection.verify_connectivity()
+    except (CoilReadSendException, CoilWriteSendException) as exception:
+        raise FieldError(str(exception), CONF_MODBUS_URL, "address") from exception
     except CoilNotFoundException as exception:
-        raise FieldError(
-            "Model selected doesn't seem to support expected coils", "base", "model"
-        ) from exception
+        raise FieldError("Coils not found", "base", "model") from exception
     except CoilReadException as exception:
         raise FieldError("Timeout on read from pump", "base", "read") from exception
     except CoilWriteException as exception:

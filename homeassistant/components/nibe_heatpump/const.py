@@ -1,5 +1,4 @@
 """Constants for the Nibe Heat Pump integration."""
-from enum import Enum, auto
 import logging
 
 DOMAIN = "nibe_heatpump"
@@ -14,10 +13,3 @@ CONF_CONNECTION_TYPE_NIBEGW = "nibegw"
 CONF_CONNECTION_TYPE_MODBUS = "modbus"
 CONF_MODBUS_URL = "modbus_url"
 CONF_MODBUS_UNIT = "modbus_unit"
-
-
-class Series(Enum):
-    """Model series of heat pumps."""
-
-    S = auto()
-    F = auto()
