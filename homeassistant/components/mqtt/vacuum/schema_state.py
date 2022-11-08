@@ -161,7 +161,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
-        self._state = None
+        self._attr_state = None
         self._state_attrs = {}
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -212,7 +212,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
             ):
-                self._state = (
+                self._attr_state = (
                     POSSIBLE_STATES[payload[STATE]] if payload[STATE] else None
                 )
                 del payload[STATE]
@@ -233,12 +233,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def state(self):
-        """Return state of vacuum."""
-        # Super method returns None
-        return self._state
 
     async def async_start(self):
         """Start the vacuum."""
