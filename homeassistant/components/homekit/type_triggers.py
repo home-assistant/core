@@ -39,10 +39,19 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
         assert device_triggers is not None
+        import pprint
+
+        pprint.pprint(device_triggers)
         for idx, trigger in enumerate(device_triggers):
             type_ = trigger["type"]
             subtype = trigger.get("subtype")
             unique_id = f'{type_}-{subtype or ""}'
+            if device_id := trigger.get("device_id"):
+                unique_id += f"_{device_id}"
+            if (metadata := trigger.get("metadata")) and (
+                secondary := metadata.get("secondary")
+            ):
+                unique_id += f"_{secondary}"
             trigger_name = (
                 f"{type_.title()} {subtype.title()}" if subtype else type_.title()
             )
