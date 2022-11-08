@@ -203,7 +203,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> Any:
+def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
     if currency in HISTORIC_CURRENCIES:
         ir.async_create_issue(
             hass,
