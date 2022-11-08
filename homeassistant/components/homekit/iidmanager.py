@@ -8,7 +8,6 @@ This module generates and stores them in a HA storage.
 """
 from __future__ import annotations
 
-import logging
 from uuid import UUID
 
 from pyhap.util import uuid_to_hap_type
@@ -26,7 +25,7 @@ ALLOCATIONS_KEY = "allocations"
 IID_MIN = 1
 IID_MAX = 18446744073709551615
 
-_LOGGER = logging.getLogger(__name__)
+
 ACCESSORY_INFORMATION_SERVICE = "3E"
 
 

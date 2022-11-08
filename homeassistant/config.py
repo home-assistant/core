@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
+from contextlib import suppress
 import logging
 import os
 from pathlib import Path
@@ -47,12 +48,19 @@ from .const import (
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
-from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .core import (
+    DOMAIN as CONF_CORE,
+    ConfigSource,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from .exceptions import HomeAssistantError
 from .helpers import (
     config_per_platform,
     config_validation as cv,
     extract_domain_configs,
+    issue_registry as ir,
 )
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
@@ -199,6 +207,27 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
+
+def _validate_currency(data: Any) -> Any:
+    hass = async_get_hass()
+    try:
+        return cv.currency(data)
+    except vol.InInvalid:
+        with suppress(vol.InInvalid):
+            currency = cv.historic_currency(data)
+            ir.async_create_issue(
+                hass,
+                "homeassistant",
+                "historic_currency",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="historic_currency",
+                translation_placeholders={"currency": currency},
+            )
+            return currency
+        raise
+
+
 CORE_CONFIG_SCHEMA = vol.All(
     CUSTOMIZE_CONFIG_SCHEMA.extend(
         {
@@ -250,10 +279,10 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable=no-value-for-parameter
+            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
-            vol.Optional(CONF_CURRENCY): cv.currency,
+            vol.Optional(CONF_CURRENCY): _validate_currency,
         }
     ),
     _filter_bad_internal_external_urls,

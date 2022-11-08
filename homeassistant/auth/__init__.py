@@ -5,7 +5,6 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
-from functools import lru_cache
 from typing import Any, Optional, cast
 
 import jwt
@@ -140,22 +139,6 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
         result["result"] = credentials
         return result
-
-
-@lru_cache(64)
-def _unverified_claims_decode_cache(token: str) -> dict[str, Any] | None:
-    """Cache the unverified decode.
-
-    Anything returned from this function cannot be used to
-    validate must be passed to jwt.decode at again
-    without verify_signature=False before it can be trusted.
-    """
-    try:
-        return jwt.decode(
-            token, algorithms=["HS256"], options={"verify_signature": False}
-        )
-    except jwt.DecodeError:
-        return None
 
 
 class AuthManager:
@@ -373,8 +356,7 @@ class AuthManager:
         provider = self._async_get_auth_provider(credentials)
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
-            # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(credentials)  # type: ignore[attr-defined]
+            await provider.async_will_remove_credentials(credentials)
 
         await self._store.async_remove_credentials(credentials)
 
@@ -571,7 +553,11 @@ class AuthManager:
         self, token: str
     ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
-        if (unverif_claims := _unverified_claims_decode_cache(token)) is None:
+        try:
+            unverif_claims = jwt.decode(
+                token, algorithms=["HS256"], options={"verify_signature": False}
+            )
+        except jwt.InvalidTokenError:
             return None
 
         refresh_token = await self.async_get_refresh_token(
