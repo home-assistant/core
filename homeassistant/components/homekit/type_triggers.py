@@ -18,6 +18,7 @@ from .const import (
     SERV_SERVICE_LABEL,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
+from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class DeviceTriggerAccessory(HomeAccessory):
                 trigger_name_parts.append(state.name)
             if secondary:
                 trigger_name_parts.append(str(secondary))
-            trigger_name = " ".join(trigger_name_parts)
+            trigger_name = cleanup_name_for_homekit(" ".join(trigger_name_parts))
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
