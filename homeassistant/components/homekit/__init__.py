@@ -76,13 +76,7 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import (
-    HomeAccessory,
-    HomeBridge,
-    HomeDriver,
-    HomeIIDManager,
-    get_accessory,
-)
+from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -551,7 +545,7 @@ class HomeKit:
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
-            iid_manager=HomeIIDManager(self.iid_storage),
+            iid_storage=self.iid_storage,
         )
 
         # If we do not load the mac address will be wrong
