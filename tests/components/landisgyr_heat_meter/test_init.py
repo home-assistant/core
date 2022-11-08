@@ -46,6 +46,8 @@ async def test_migrate_entry(hass):
     assert entry.data == entry_data
     assert entry.version == 1
 
+    entry.add_to_hass(hass)
+
     # Create entity entry to migrate to new unique ID
     registry = er.async_get(hass)
     registry.async_get_or_create(
@@ -56,7 +58,9 @@ async def test_migrate_entry(hass):
         config_entry=entry,
     )
 
-    await entry.async_migrate(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert "landisgyr_heat_meter" in hass.config.components
 
     # Check if entity unique id is migrated successfully
     assert entry.version == 2
