@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
