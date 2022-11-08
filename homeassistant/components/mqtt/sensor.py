@@ -176,6 +176,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
+    _expire_after: int | None
     _expired: bool | None
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
@@ -193,12 +194,11 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
-        expire_after: int | None
         last_state: State | None
         last_sensor_data: SensorExtraStoredData | None
         if (
-            (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
-            and expire_after > 0
+            self._expire_after is not None
+            and self._expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
             and (last_sensor_data := await self.async_get_last_sensor_data())
@@ -207,7 +207,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
             # MqttEntity.async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
         ):
-            expiration_at = last_state.last_changed + timedelta(seconds=expire_after)
+            expiration_at = last_state.last_changed + timedelta(
+                seconds=self._expire_after
+            )
             if expiration_at < (time_now := dt_util.utcnow()):
                 # Skip reactivating the sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
@@ -246,8 +248,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
-        expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
-        if expire_after is not None and expire_after > 0:
+        self._expire_after = config.get(CONF_EXPIRE_AFTER)
+        if self._expire_after is not None and self._expire_after > 0:
             self._expired = True
         else:
             self._expired = None
@@ -265,9 +267,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
         def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
-            expire_after: int | None = self._config.get(CONF_EXPIRE_AFTER)
-            if expire_after is not None and expire_after > 0:
-                # When expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+            if self._expire_after is not None and self._expire_after > 0:
+                # When self._expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
                 self._expired = False
 
                 # Reset old trigger
@@ -275,13 +276,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self._expiration_trigger()
 
                 # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
+                expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
 
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self._value_is_expired, expiration_at
                 )
 
-            payload = self._template(msg.payload, default=PayloadSentinel.DEFAULT)
+            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
             if self.device_class not in {
@@ -372,8 +373,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     @property
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
-        expire_after = self._config.get(CONF_EXPIRE_AFTER)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
-            expire_after is None or not self._expired
+            self._expire_after is None or not self._expired
         )
