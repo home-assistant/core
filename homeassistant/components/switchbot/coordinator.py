@@ -61,7 +61,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.base_unique_id = base_unique_id
         self.model = model
         self._ready_event = asyncio.Event()
-        self._was_unavailable = False
+        self._was_unavailable = True
 
     @callback
     def _async_handle_unavailable(
