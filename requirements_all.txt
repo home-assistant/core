@@ -1487,7 +1487,7 @@ pybravia==0.2.3
 pycarwings2==2.13
 
 # homeassistant.components.cloudflare
-pycfdns==1.2.2
+pycfdns==2.0.0
 
 # homeassistant.components.channels
 pychannels==1.2.3
