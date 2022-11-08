@@ -180,14 +180,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         self._fixed_color_mode = None
         if len(self.supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(self.supported_color_modes))
+            self._attr_color_mode = self._fixed_color_mode
 
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
         if config.get(CONF_EFFECT_LIST) is not None:
             features = features | LightEntityFeature.EFFECT
-
         self._attr_supported_features = features
-        if self._fixed_color_mode:
-            self._attr_color_mode = self._fixed_color_mode
 
     def _update_color_mode(self):
         """Update the color_mode attribute."""
