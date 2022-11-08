@@ -90,6 +90,7 @@ from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -1666,71 +1667,4 @@ historic_currency = vol.In(
 
 country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
 
-language = vol.In(
-    # The list of RFC 5646 language codes is aligned with frontend file
-    # src/translations/translationMetadata.json
-    {
-        "af",
-        "ar",
-        "bg",
-        "bn",
-        "bs",
-        "ca",
-        "cs",
-        "cy",
-        "da",
-        "de",
-        "el",
-        "en",
-        "en-GB",
-        "eo",
-        "es",
-        "es-419",
-        "et",
-        "eu",
-        "fa",
-        "fi",
-        "fr",
-        "fy",
-        "gl",
-        "gsw",
-        "he",
-        "hi",
-        "hr",
-        "hu",
-        "hy",
-        "id",
-        "is",
-        "it",
-        "ja",
-        "ka",
-        "ko",
-        "lb",
-        "lt",
-        "lv",
-        "ml",
-        "nb",
-        "nl",
-        "nn",
-        "pl",
-        "pt",
-        "pt-BR",
-        "ro",
-        "ru",
-        "sk",
-        "sl",
-        "sr",
-        "sr-Latn",
-        "sv",
-        "ta",
-        "te",
-        "th",
-        "tr",
-        "uk",
-        "ur",
-        "vi",
-        "zh-Hans",
-        "zh-Hant",
-    },
-    msg="invalid RFC 5646 formatted language",
-)
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")
