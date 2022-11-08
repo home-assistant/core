@@ -197,8 +197,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
         last_state: State | None
         last_sensor_data: SensorExtraStoredData | None
         if (
-            self._expire_after is not None
-            and self._expire_after > 0
+            (_expire_after := self._expire_after) is not None
+            and _expire_after > 0
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
             and (last_sensor_data := await self.async_get_last_sensor_data())
@@ -207,9 +207,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             # MqttEntity.async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
         ):
-            expiration_at = last_state.last_changed + timedelta(
-                seconds=self._expire_after
-            )
+            expiration_at = last_state.last_changed + timedelta(seconds=_expire_after)
             if expiration_at < (time_now := dt_util.utcnow()):
                 # Skip reactivating the sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
