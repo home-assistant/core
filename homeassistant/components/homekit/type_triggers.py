@@ -7,9 +7,11 @@ from typing import Any
 from pyhap.const import CATEGORY_SENSOR
 
 from homeassistant.core import CALLBACK_TYPE, Context
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.trigger import async_initialize_triggers
 
 from .accessories import TYPES, HomeAccessory
+from .aidmanager import get_system_unique_id
 from .const import (
     CHAR_NAME,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
@@ -40,6 +42,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
         assert device_triggers is not None
+        ent_reg = entity_registry.async_get(self.hass)
         for idx, trigger in enumerate(device_triggers):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
@@ -48,7 +51,10 @@ class DeviceTriggerAccessory(HomeAccessory):
             # restarts. This is the best we can currently do.
             unique_id = f'{type_}-{subtype or ""}'
             if entity_id := trigger.get("entity_id"):
-                unique_id += f"-entity_id:{entity_id}"
+                if entry := ent_reg.async_get(entity_id):
+                    unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
+                else:
+                    unique_id += f"-entity_id:{entity_id}"
             if (metadata := trigger.get("metadata")) and (
                 secondary := metadata.get("secondary")
             ) is not None:
