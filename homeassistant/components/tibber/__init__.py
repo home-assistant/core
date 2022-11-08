@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await tibber_connection.update_info()
         if not tibber_connection.name:
-            raise ConfigEntryNotReady("Could not fetch Tibber data. Requesting retry.")
+            raise ConfigEntryNotReady("Could not fetch Tibber data.")
 
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady from err
