@@ -62,7 +62,7 @@ async def test_many_groups_same_address_ignored(hass):
                 76: b"\x02\x15BlueCharmBeacons" + bytearray([i]) + b"\xfe\x13U\xc5"
             },
             service_uuids=[],
-            source="local5",
+            source="local",
         )
         inject_bluetooth_service_info(hass, service_info)
 
@@ -169,7 +169,7 @@ async def test_rotating_major_minor_and_mac(hass):
                 + b"U\xc5"
             },
             service_uuids=[],
-            source="local5",
+            source="local",
         )
         inject_bluetooth_service_info(hass, service_info)
         await hass.async_block_till_done()
@@ -203,7 +203,7 @@ async def test_rotating_major_minor_and_mac_no_name(hass):
                 + b"U\xc5"
             },
             service_uuids=[],
-            source="local5",
+            source="local",
         )
         inject_bluetooth_service_info(hass, service_info)
         await hass.async_block_till_done()
