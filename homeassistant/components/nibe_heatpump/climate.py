@@ -320,7 +320,7 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
         coordinator = self.coordinator
         hvac_mode = kwargs.get(ATTR_HVAC_MODE, self._attr_hvac_mode)
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE, None)) is not None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             if hvac_mode == HVACMode.HEAT:
                 await coordinator.async_write_coil(
                     self._coil_setpoint_heat, temperature
@@ -334,8 +334,8 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
                     f"Don't known which temperature to control for hvac mode: {self._attr_hvac_mode}"
                 )
 
-        if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW, None)) is not None:
+        if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
             await coordinator.async_write_coil(self._coil_setpoint_heat, temperature)
 
-        if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH, None)) is not None:
+        if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
             await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
