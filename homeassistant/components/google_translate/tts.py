@@ -96,6 +96,10 @@ SUPPORT_LANGUAGES = [
 
 DEFAULT_LANG = "en"
 
+SUPPORT_OPTIONS = ["tld"]
+
+DEFAULT_TLD = "com"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
 )
@@ -125,9 +129,17 @@ class GoogleProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @property
+    def supported_options(self):
+        """Return a list of supported options."""
+        return SUPPORT_OPTIONS
+
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        tts = gTTS(text=message, lang=language)
+        tld = DEFAULT_TLD
+        if options is not None and "tld" in options.keys():
+            tld = options["tld"]
+        tts = gTTS(text=message, lang=language, tld=tld)
         mp3_data = BytesIO()
 
         try:
