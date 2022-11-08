@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 DOMAIN = "scrape"
 DEFAULT_NAME = "Web scrape"
 DEFAULT_VERIFY_SSL = True
-DEFAULT_SCAN_INTERVAL = timedelta(60 * 10)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORMS = [Platform.SENSOR]
 
