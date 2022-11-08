@@ -22,7 +22,6 @@ COUNTRIES = {{ {} }}
 
 countries = sorted({x.alpha_2 for x in pycountry.countries})
 
-countries_path = "homeassistant/generated/countries.py"
 pathlib.Path("homeassistant/generated/countries.py").write_text(
     black.format_str(BASE.format(repr(countries)[1:-1]), mode=black.Mode())
 )
