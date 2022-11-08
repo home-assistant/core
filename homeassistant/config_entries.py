@@ -660,24 +660,25 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
-        flow_context = {
-            "source": SOURCE_REAUTH,
-            "entry_id": self.entry_id,
-            "title_placeholders": {"name": self.title},
-            "unique_id": self.unique_id,
-        }
-
-        if context:
-            flow_context.update(context)
-
-        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
-            if flow["context"] == flow_context:
-                return
+        if any(
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"].get("source") == SOURCE_REAUTH
+            and flow["context"].get("entry_id") == self.entry_id
+        ):
+            # Reauth flow already in progress for this entry
+            return
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 self.domain,
-                context=flow_context,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
                 data=self.data | (data or {}),
             )
         )
