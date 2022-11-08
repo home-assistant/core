@@ -173,14 +173,13 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
-        self._attr_is_on = False
         self._attr_battery_level = 0
+        self._attr_is_on = False
         self._attr_fan_speed = "unknown"
 
         self._charging = False
         self._docked = False
         self._error = None
-        self._attr_status = "Unknown"
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -314,7 +313,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                     self._attr_status = "Docked & Charging"
                 else:
                     self._attr_status = "Docked"
-            elif self._attr_is_on:
+            elif self.is_on:
                 self._attr_status = "Cleaning"
             elif self._error:
                 self._attr_status = f"Error: {self._error}"
@@ -473,7 +472,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         """Set fan speed."""
         if (
             self.supported_features & VacuumEntityFeature.FAN_SPEED == 0
-        ) or fan_speed not in self._attr_fan_speed_list:
+        ) or fan_speed not in self.fan_speed_list:
             return None
 
         await self.async_publish(
