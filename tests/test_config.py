@@ -28,7 +28,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
@@ -445,7 +445,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.config_source is ConfigSource.STORAGE
 
 
-async def test_igration_and_updating_configuration(hass, hass_storage):
+async def test_migration_and_updating_configuration(hass, hass_storage):
     """Test updating configuration stores the new configuration."""
     core_data = {
         "data": {
@@ -1205,3 +1205,17 @@ def test_identify_config_schema(domain, schema, expected):
         config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))
         == expected
     )
+
+
+def test_core_config_schema_historic_currency(hass):
+    """Test core config schema."""
+    config_util.CORE_CONFIG_SCHEMA(
+        {
+            "currency": "LTT",
+        }
+    )
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    assert issue
+    assert issue.translation_placeholders == {"currency": "LTT"}
