@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,6 +36,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the UniFi Network integration."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
+
+    # Removal of legacy PoE control was introduced with 2022.12
+    async_remove_poe_client_entities(hass, config_entry)
 
     # Flat configuration was introduced with 2021.3
     await async_flatten_entry_data(hass, config_entry)
@@ -80,6 +84,24 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         async_unload_services(hass)
 
     return await controller.async_reset()
+
+
+@callback
+def async_remove_poe_client_entities(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Remove PoE client entities."""
+    ent_reg = er.async_get(hass)
+
+    entity_ids_to_be_removed = [
+        entry.entity_id
+        for entry in ent_reg.entities.values()
+        if entry.config_entry_id == config_entry.entry_id
+        and entry.unique_id.startswith("poe-")
+    ]
+
+    for entity_id in entity_ids_to_be_removed:
+        ent_reg.async_remove(entity_id)
 
 
 async def async_flatten_entry_data(

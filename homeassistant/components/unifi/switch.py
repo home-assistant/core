@@ -44,11 +44,9 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, POE_SWITCH
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .unifi_client import UniFiClient
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
@@ -268,48 +266,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.entities[DOMAIN] = {POE_SWITCH: set()}
 
     if controller.site_role != "admin":
         return
-
-    # Store previously known POE control entities in case their POE are turned off.
-    known_poe_clients = []
-    entity_registry = er.async_get(hass)
-    for entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-
-        if not entry.unique_id.startswith(POE_SWITCH):
-            continue
-
-        mac = entry.unique_id.replace(f"{POE_SWITCH}-", "")
-        if mac not in controller.api.clients:
-            continue
-
-        known_poe_clients.append(mac)
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
             client = controller.api.clients_all[mac]
             controller.api.clients.process_raw([client.raw])
-
-    @callback
-    def items_added(
-        clients: set = controller.api.clients,
-        devices: set = controller.api.devices,
-    ) -> None:
-        """Update the values of the controller."""
-        if controller.option_poe_clients:
-            add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
-
-    for signal in (controller.signal_update, controller.signal_options_update):
-        config_entry.async_on_unload(
-            async_dispatcher_connect(hass, signal, items_added)
-        )
-
-    items_added()
-    known_poe_clients.clear()
 
     @callback
     def async_load_entities(description: UnifiEntityDescription) -> None:
@@ -339,153 +303,6 @@ async def async_setup_entry(
 
     for description in ENTITY_DESCRIPTIONS:
         async_load_entities(description)
-
-
-@callback
-def add_poe_entities(controller, async_add_entities, clients, known_poe_clients):
-    """Add new switch entities from the controller."""
-    switches = []
-
-    devices = controller.api.devices
-
-    for mac in clients:
-        if mac in controller.entities[DOMAIN][POE_SWITCH]:
-            continue
-
-        client = controller.api.clients[mac]
-
-        # Try to identify new clients powered by POE.
-        # Known POE clients have been created in previous HASS sessions.
-        # If port_poe is None the port does not support POE
-        # If poe_enable is False we can't know if a POE client is available for control.
-        if mac not in known_poe_clients and (
-            mac in controller.wireless_clients
-            or client.switch_mac not in devices
-            or not devices[client.switch_mac].ports[client.switch_port].port_poe
-            or not devices[client.switch_mac].ports[client.switch_port].poe_enable
-            or controller.mac == client.mac
-        ):
-            continue
-
-        # Multiple POE-devices on same port means non UniFi POE driven switch
-        multi_clients_on_port = False
-        for client2 in controller.api.clients.values():
-
-            if mac in known_poe_clients:
-                break
-
-            if (
-                client2.is_wired
-                and client.mac != client2.mac
-                and client.switch_mac == client2.switch_mac
-                and client.switch_port == client2.switch_port
-            ):
-                multi_clients_on_port = True
-                break
-
-        if multi_clients_on_port:
-            continue
-
-        switches.append(UniFiPOEClientSwitch(client, controller))
-
-    async_add_entities(switches)
-
-
-class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
-    """Representation of a client that uses POE."""
-
-    DOMAIN = DOMAIN
-    TYPE = POE_SWITCH
-
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(self, client, controller):
-        """Set up POE switch."""
-        super().__init__(client, controller)
-
-        self.poe_mode = None
-        if client.switch_port and self.port.poe_mode != "off":
-            self.poe_mode = self.port.poe_mode
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        if self.poe_mode:  # POE is enabled and client in a known state
-            return
-
-        if (state := await self.async_get_last_state()) is None:
-            return
-
-        self.poe_mode = state.attributes.get("poe_mode")
-
-        if not self.client.switch_mac:
-            self.client.raw["sw_mac"] = state.attributes.get("switch")
-
-        if not self.client.switch_port:
-            self.client.raw["sw_port"] = state.attributes.get("port")
-
-    @property
-    def is_on(self):
-        """Return true if POE is active."""
-        return self.port.poe_mode != "off"
-
-    @property
-    def available(self) -> bool:
-        """Return if switch is available.
-
-        Poe_mode None means its POE state is unknown.
-        Sw_mac unavailable means restored client.
-        """
-        return (
-            self.poe_mode is not None
-            and self.controller.available
-            and self.client.switch_port
-            and self.client.switch_mac
-            and self.client.switch_mac in self.controller.api.devices
-        )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable POE for client."""
-        await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(
-                self.device, self.client.switch_port, self.poe_mode
-            )
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable POE for client."""
-        await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(
-                self.device, self.client.switch_port, "off"
-            )
-        )
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {
-            "power": self.port.poe_power,
-            "switch": self.client.switch_mac,
-            "port": self.client.switch_port,
-            "poe_mode": self.poe_mode,
-        }
-        return attributes
-
-    @property
-    def device(self):
-        """Shortcut to the switch that client is connected to."""
-        return self.controller.api.devices[self.client.switch_mac]
-
-    @property
-    def port(self):
-        """Shortcut to the switch port that client is connected to."""
-        return self.device.ports[self.client.switch_port]
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        if not self.controller.option_poe_clients:
-            await self.remove_item({self.client.mac})
 
 
 class UnifiSwitchEntity(SwitchEntity):
