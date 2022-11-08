@@ -212,6 +212,7 @@ HARDWARE_INTEGRATIONS = {
     "odroid-c4": "hardkernel",
     "odroid-n2": "hardkernel",
     "odroid-xu4": "hardkernel",
+    "odroid-u3": "hardkernel",
     "rpi2": "raspberry_pi",
     "rpi3": "raspberry_pi",
     "rpi3-64": "raspberry_pi",

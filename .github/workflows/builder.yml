@@ -184,6 +184,7 @@ jobs:
           - odroid-c4
           - odroid-n2
           - odroid-xu
+          - odroid-u
           - qemuarm
           - qemuarm-64
           - qemux86

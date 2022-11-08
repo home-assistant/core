@@ -752,6 +752,7 @@ async def test_coordinator_updates(hass, caplog):
         ({"board": "odroid-c4"}, "hardkernel"),
         ({"board": "odroid-n2"}, "hardkernel"),
         ({"board": "odroid-xu4"}, "hardkernel"),
+        ({"board": "odroid-u3"}, "hardkernel"),
         ({"board": "rpi2"}, "raspberry_pi"),
         ({"board": "rpi3"}, "raspberry_pi"),
         ({"board": "rpi3-64"}, "raspberry_pi"),

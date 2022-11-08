@@ -13,6 +13,7 @@ BOARD_NAMES = {
     "odroid-c4": "Hardkernel Odroid-C4",
     "odroid-n2": "Home Assistant Blue / Hardkernel Odroid-N2",
     "odroid-xu4": "Hardkernel Odroid-XU4",
+    "odroid-u3": "Hardkernel Odroid-U3",
 }
 
 
