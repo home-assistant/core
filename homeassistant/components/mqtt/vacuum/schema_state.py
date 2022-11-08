@@ -161,7 +161,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
-        self._attr_state = None
         self._state_attrs = {}
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
