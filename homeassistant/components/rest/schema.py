@@ -75,7 +75,7 @@ BINARY_SENSOR_SCHEMA = {
 }
 
 
-COMBINED_SCHEMA = vol.All(
+COMBINED_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         **RESOURCE_SCHEMA,
@@ -85,11 +85,17 @@ COMBINED_SCHEMA = vol.All(
         vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
             cv.ensure_list, [vol.Schema(BINARY_SENSOR_SCHEMA)]
         ),
-    },
-    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    {
+        DOMAIN: vol.All(
+            # convert empty dict to empty list
+            lambda x: [] if x == {} else x,
+            cv.ensure_list,
+            [COMBINED_SCHEMA],
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
