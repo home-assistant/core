@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from demetriek import (
-    LaMetricDevice,
     LaMetricError,
     Model,
     Notification,
@@ -35,20 +34,31 @@ async def async_get_service(
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][
         discovery_info["entry_id"]
     ]
-    return LaMetricNotificationService(coordinator.lametric)
+    return LaMetricNotificationService(coordinator)
 
 
 class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
-    def __init__(self, lametric: LaMetricDevice) -> None:
+    def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
         """Initialize the service."""
-        self.lametric = lametric
+        self.coordinator = coordinator
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a LaMetric device."""
         if not (data := kwargs.get(ATTR_DATA)):
             data = {}
+
+        priority = NotificationPriority(data.get(CONF_PRIORITY, "info"))
+        await self.coordinator.async_refresh()
+
+        if (
+            self.coordinator.data.screensaver.enabled
+            and priority != NotificationPriority.CRITICAL
+        ):
+            raise ValueError(
+                "Cannot send non-critical messages while screensaver mode is enabled"
+            )
 
         sound = None
         if CONF_SOUND in data:
@@ -56,7 +66,7 @@ class LaMetricNotificationService(BaseNotificationService):
 
         notification = Notification(
             icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),
-            priority=NotificationPriority(data.get(CONF_PRIORITY, "info")),
+            priority=priority,
             model=Model(
                 frames=[
                     Simple(
@@ -70,6 +80,6 @@ class LaMetricNotificationService(BaseNotificationService):
         )
 
         try:
-            await self.lametric.notify(notification=notification)
+            await self.coordinator.lametric.notify(notification=notification)
         except LaMetricError as ex:
             raise HomeAssistantError("Could not send LaMetric notification") from ex
