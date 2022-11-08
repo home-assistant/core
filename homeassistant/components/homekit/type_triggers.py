@@ -39,9 +39,6 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
         assert device_triggers is not None
-        #        import pprint
-
-        #        pprint.pprint(device_triggers)
         for idx, trigger in enumerate(device_triggers):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
