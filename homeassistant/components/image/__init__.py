@@ -6,6 +6,7 @@ import logging
 import pathlib
 import secrets
 import shutil
+from typing import Any
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
@@ -71,7 +72,7 @@ class ImageStorageCollection(collection.StorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
@@ -88,7 +89,7 @@ class ImageStorageCollection(collection.StorageCollection):
 
         return data
 
-    def _move_data(self, data):
+    def _move_data(self, data: dict[str, Any]) -> int:
         """Move data."""
         uploaded_file: FileField = data.pop("file")
 
@@ -119,15 +120,24 @@ class ImageStorageCollection(collection.StorageCollection):
         return media_file.stat().st_size
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_ID]
+        return str(info[CONF_ID])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(
+        self,
+        data: dict[str, Any],
+        update_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """Return a new updated data object."""
         return {**data, **self.UPDATE_SCHEMA(update_data)}
 
-    async def _change_listener(self, change_type, item_id, data):
+    async def _change_listener(
+        self,
+        change_type: str,
+        item_id: str,
+        data: dict[str, Any],
+    ) -> None:
         """Handle change."""
         if change_type != collection.CHANGE_REMOVED:
             return
@@ -141,7 +151,7 @@ class ImageUploadView(HomeAssistantView):
     url = "/api/image/upload"
     name = "api:image:upload"
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
         # Increase max payload
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
@@ -159,14 +169,21 @@ class ImageServeView(HomeAssistantView):
     requires_auth = False
 
     def __init__(
-        self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
+        self,
+        image_folder: pathlib.Path,
+        image_collection: ImageStorageCollection,
     ) -> None:
         """Initialize image serve view."""
         self.transform_lock = asyncio.Lock()
         self.image_folder = image_folder
         self.image_collection = image_collection
 
-    async def get(self, request: web.Request, image_id: str, filename: str):
+    async def get(
+        self,
+        request: web.Request,
+        image_id: str,
+        filename: str,
+    ) -> web.FileResponse:
         """Serve image."""
         try:
             width, height = _validate_size_from_filename(filename)
