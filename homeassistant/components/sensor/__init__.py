@@ -113,10 +113,10 @@ class SensorDeviceClass(StrEnum):
 
     # Numerical device classes, these should be aligned with NumberDeviceClass
     ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
-    """Accumulared precipitation.
+    """Accumulated precipitation.
 
-    Unit of measurement: `UnitOfAccumulatedVolumtericFlux` enum
-    - SI /metric: `mm`
+    Unit of measurement: `UnitOfAccumulatedVolumetricFlux` enum
+    - SI / metric: `mm`
     - USCS / imperial: `in`
     """
 
