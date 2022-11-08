@@ -28,7 +28,7 @@ from . import DOMAIN, LOGGER, Coordinator
 
 
 @dataclass
-class ClimateDescriptionMixin:
+class NibeClimateDescriptionMixin:
     """Mixin for required fields."""
 
     current_address: int
@@ -42,7 +42,7 @@ class ClimateDescriptionMixin:
 
 
 @dataclass
-class ClimateDescription(ClimateEntityDescription, ClimateDescriptionMixin):
+class NibeClimateDescription(ClimateEntityDescription, NibeClimateDescriptionMixin):
     """Base description."""
 
 
@@ -53,7 +53,7 @@ ADDRESS_COOLING_WITH_ROOM_SENSOR_F = 47340
 ADDRESS_COOLING_WITH_ROOM_SENSOR_S = 40171
 
 CLIMATE_SYSTEMS_F = (
-    ClimateDescription(
+    NibeClimateDescription(
         key="s1",
         name="Climate System S1",
         current_address=40033,
@@ -65,7 +65,7 @@ CLIMATE_SYSTEMS_F = (
         use_room_sensor_address=47394,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_F,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s2",
         name="Climate System S2",
         current_address=40032,
@@ -77,7 +77,7 @@ CLIMATE_SYSTEMS_F = (
         use_room_sensor_address=47393,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_F,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s3",
         name="Climate System S3",
         current_address=40031,
@@ -89,7 +89,7 @@ CLIMATE_SYSTEMS_F = (
         use_room_sensor_address=47392,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_F,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s4",
         name="Climate System S4",
         current_address=40030,
@@ -104,7 +104,7 @@ CLIMATE_SYSTEMS_F = (
 )
 
 CLIMATE_SYSTEMS_S = (
-    ClimateDescription(
+    NibeClimateDescription(
         key="s1",
         name="Climate System S1",
         current_address=30027,
@@ -116,7 +116,7 @@ CLIMATE_SYSTEMS_S = (
         use_room_sensor_address=40203,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_S,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s2",
         name="Climate System S2",
         current_address=30026,
@@ -128,7 +128,7 @@ CLIMATE_SYSTEMS_S = (
         use_room_sensor_address=40202,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_S,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s3",
         name="Climate System S3",
         current_address=30025,
@@ -140,7 +140,7 @@ CLIMATE_SYSTEMS_S = (
         use_room_sensor_address=40201,
         cooling_with_room_sensor_address=ADDRESS_COOLING_WITH_ROOM_SENSOR_S,
     ),
-    ClimateDescription(
+    NibeClimateDescription(
         key="s4",
         name="Climate System S4",
         current_address=30024,
@@ -181,7 +181,7 @@ async def async_setup_entry(
 class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
     """Climate entity."""
 
-    entity_description: ClimateDescription
+    entity_description: NibeClimateDescription
     _attr_entity_category = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -195,7 +195,7 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
     def __init__(
         self,
         coordinator: Coordinator,
-        entity_description: ClimateDescription,
+        entity_description: NibeClimateDescription,
     ) -> None:
         """Initialize entity."""
         super().__init__(
