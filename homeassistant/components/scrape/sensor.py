@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
@@ -43,12 +44,17 @@ from homeassistant.helpers.template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -98,7 +104,8 @@ async def async_setup_platform(
         resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
         rest = create_rest_data_from_config(hass, resource_config)
 
-        coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+        scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        coordinator = ScrapeCoordinator(hass, rest, scan_interval)
 
         sensors_config = [
             vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA)(
