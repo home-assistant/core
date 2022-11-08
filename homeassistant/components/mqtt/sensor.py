@@ -177,7 +177,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expired: bool | None
-    _template: Callable[..., ReceivePayloadType]
+    _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
