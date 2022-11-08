@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
@@ -43,7 +44,7 @@ from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 CONF_ATTR = "attribute"
 CONF_SELECT = "select"
@@ -111,7 +112,8 @@ async def async_setup_platform(
 
     rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
 
-    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    coordinator = ScrapeCoordinator(hass, rest, scan_interval)
     await coordinator.async_refresh()
     if coordinator.data is None:
         raise PlatformNotReady

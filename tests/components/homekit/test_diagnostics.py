@@ -43,6 +43,18 @@ async def test_config_entry_running(hass, hass_client, hk_driver, mock_async_zer
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert diag == {
         "bridge": {},
+        "iid_storage": {
+            "1": {
+                "3E__14_": 2,
+                "3E__20_": 3,
+                "3E__21_": 4,
+                "3E__23_": 5,
+                "3E__30_": 6,
+                "3E__52_": 7,
+                "A2__37_": 9,
+                "A2___": 8,
+            }
+        },
         "accessories": [
             {
                 "aid": 1,
@@ -257,6 +269,20 @@ async def test_config_entry_accessory(
         },
         "config_version": 2,
         "pairing_id": ANY,
+        "iid_storage": {
+            "1": {
+                "3E__14_": 2,
+                "3E__20_": 3,
+                "3E__21_": 4,
+                "3E__23_": 5,
+                "3E__30_": 6,
+                "3E__52_": 7,
+                "43__25_": 11,
+                "43___": 10,
+                "A2__37_": 9,
+                "A2___": 8,
+            }
+        },
         "status": 1,
     }
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
