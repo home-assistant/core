@@ -34,8 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_HASS_CONFIG] = config
     return True
-
-
+    
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
@@ -53,6 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await tibber_connection.update_info()
+        if tibber_connection.name == "":
+            msg = "Could not fetch Tibber data. Requesting retry."
+            _LOGGER.warning(msg)
+            raise ConfigEntryNotReady(msg)
+
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
