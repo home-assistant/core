@@ -168,16 +168,10 @@ class ImageServeView(HomeAssistantView):
 
     async def get(self, request: web.Request, image_id: str, filename: str):
         """Serve image."""
-        image_size = filename.split("-", 1)[0]
         try:
-            parts = image_size.split("x", 1)
-            width = int(parts[0])
-            height = int(parts[1])
+            width, height = _validate_size_from_filename(filename)
         except (ValueError, IndexError) as err:
             raise web.HTTPBadRequest from err
-
-        if not width or width != height or width not in VALID_SIZES:
-            raise web.HTTPBadRequest
 
         image_info = self.image_collection.data.get(image_id)
 
@@ -210,3 +204,23 @@ def _generate_thumbnail(original_path, content_type, target_path, target_size):
     image = ImageOps.exif_transpose(Image.open(original_path))
     image.thumbnail(target_size)
     image.save(target_path, format=content_type.split("/", 1)[1])
+
+
+def _validate_size_from_filename(filename: str) -> tuple[int, int]:
+    """Parse image size from the given filename (of the form WIDTHxHEIGHT-filename).
+
+    >>> _validate_size_from_filename("100x100-image.png")
+    (100, 100)
+    >>> _validate_size_from_filename("jeff.png")
+    Traceback (most recent call last):
+    ...
+    """
+    image_size = filename.partition("-")[0]
+    if not image_size:
+        raise ValueError("Invalid filename")
+    width_s, _, height_s = image_size.partition("x")
+    width = int(width_s)
+    height = int(height_s)
+    if not width or width != height or width not in VALID_SIZES:
+        raise ValueError(f"Invalid size {image_size}")
+    return (width, height)
