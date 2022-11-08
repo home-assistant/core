@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "\u00d6n az UniFi Protect {version} verzi\u00f3j\u00e1t haszn\u00e1lja. A korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3kat Home Assistant nem t\u00e1mogatja, \u00e9s az UniFi Protect integr\u00e1ci\u00f3ja le\u00e1llhat, vagy nem az elv\u00e1rt m\u00f3don m\u0171k\u00f6dhet.",
+            "title": "{version} UniFi Protect korai hozz\u00e1f\u00e9r\u00e9si verzi\u00f3"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Egy list\u00e1ra van sz\u00fcks\u00e9g, melyben a MAC-c\u00edmek vessz\u0151vel vannak elv\u00e1lasztva"

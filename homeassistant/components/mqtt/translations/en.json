@@ -13,7 +13,7 @@
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
-            "invalid_inclusion": "The client certificate and private key must be configured together"
+            "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
         "step": {
             "broker": {
@@ -87,7 +87,7 @@
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
-            "invalid_inclusion": "The client certificate and private key must be configured together"
+            "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
         "step": {
             "broker": {
