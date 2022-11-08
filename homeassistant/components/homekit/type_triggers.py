@@ -46,9 +46,13 @@ class DeviceTriggerAccessory(HomeAccessory):
         for idx, trigger in enumerate(device_triggers):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
-            # Triggers don't really have a unique ID, so use the data in
+            #
+            # Triggers don't have a unique ID, so use the data in
             # the dict to build one to ensure we assign the same iid between
-            # restarts. This is the best we can currently do.
+            # restarts.
+            #
+            # We are subject to the same caveats as AID allocation
+            #
             unique_id = f'{type_}-{subtype or ""}'
             if (entity_id := trigger.get("entity_id")) and (
                 entry := ent_reg.async_get(entity_id)
