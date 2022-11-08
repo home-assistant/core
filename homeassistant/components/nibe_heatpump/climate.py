@@ -169,7 +169,7 @@ async def async_setup_entry(
     def climate_systems():
         for description in CLIMATE_SYSTEMS.get(coordinator.series, ()):
             try:
-                yield Climate(coordinator, description)
+                yield NibeClimateEntity(coordinator, description)
             except CoilNotFoundException as exception:
                 LOGGER.debug(
                     "Skipping climate: %s due to %s", description.key, exception
@@ -178,7 +178,7 @@ async def async_setup_entry(
     async_add_entities(climate_systems())
 
 
-class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
+class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
     """Climate entity."""
 
     entity_description: NibeClimateDescription
