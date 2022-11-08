@@ -20,7 +20,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -182,8 +181,16 @@ async def async_setup_entry(
 class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
     """Climate entity."""
 
-    _attr_entity_category = None
     entity_description: ClimateDescription
+    _attr_entity_category = None
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+    _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.HEAT]
+    _attr_target_temperature_step = 0.5
+    _attr_max_temp = 35.0
+    _attr_min_temp = 5.0
 
     def __init__(
         self,
@@ -210,21 +217,12 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
         self._attr_device_info = coordinator.device_info
         self._attr_hvac_action = HVACAction.IDLE
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.HEAT]
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.TARGET_TEMPERATURE
-        )
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature = None
-        self._attr_target_temperature_step = 0.5
         self._attr_entity_registry_enabled_default = (
             entity_description.active_accessory_address is None
         )
-
-        self._attr_max_temp = 35.0
-        self._attr_min_temp = 5.0
 
         def _get(address: int) -> Coil:
             return coordinator.heatpump.get_coil_by_address(address)
@@ -254,23 +252,24 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
         if not self.coordinator.data:
             return
 
-        self._attr_current_temperature = self.coordinator.get_coil_float(
-            self._coil_current
-        )
+        def _get_value(coil: Coil) -> int | str | float | None:
+            return self.coordinator.get_coil_value(coil)
+
+        def _get_float(coil: Coil) -> float | None:
+            return self.coordinator.get_coil_float(coil)
+
+        self._attr_current_temperature = _get_float(self._coil_current)
 
         mode = HVACMode.OFF
-        if self.coordinator.get_coil_value(self._coil_use_room_sensor) == "ON":
-            if (
-                self.coordinator.get_coil_value(self._coil_cooling_with_room_sensor)
-                == "ON"
-            ):
+        if _get_value(self._coil_use_room_sensor) == "ON":
+            if _get_value(self._coil_cooling_with_room_sensor) == "ON":
                 mode = HVACMode.HEAT_COOL
             else:
                 mode = HVACMode.HEAT
         self._attr_hvac_mode = mode
 
-        setpoint_heat = self.coordinator.get_coil_float(self._coil_setpoint_heat)
-        setpoint_cool = self.coordinator.get_coil_float(self._coil_setpoint_cool)
+        setpoint_heat = _get_float(self._coil_setpoint_heat)
+        setpoint_cool = _get_float(self._coil_setpoint_cool)
 
         if mode == HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
@@ -285,12 +284,8 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
             self._attr_target_temperature_low = None
             self._attr_target_temperature_high = None
 
-        if prio := self.coordinator.get_coil_value(self._coil_prio):
-            if (
-                mixing_valve_state := self.coordinator.get_coil_value(
-                    self._coil_mixing_valve_state
-                )
-            ) and mixing_valve_state == 30:
+        if prio := _get_value(self._coil_prio):
+            if _get_value(self._coil_mixing_valve_state) == 30:
                 self._attr_hvac_action = HVACAction.IDLE
             elif prio == "HEAT":
                 self._attr_hvac_action = HVACAction.HEATING
@@ -306,44 +301,41 @@ class Climate(CoordinatorEntity[Coordinator], ClimateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.last_update_success:
+        coordinator = self.coordinator
+        active_address = self._coil_active_accessory_address
+
+        if not coordinator.last_update_success:
             return False
 
-        if not self._coil_active_accessory_address:
+        if not active_address:
             return True
 
-        if active_accessory := self.coordinator.get_coil_value(
-            self._coil_active_accessory_address
-        ):
+        if active_accessory := coordinator.get_coil_value(active_address):
             return active_accessory == "ON"
 
         return False
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperatures."""
-
+        coordinator = self.coordinator
         hvac_mode = kwargs.get(ATTR_HVAC_MODE, self._attr_hvac_mode)
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE, None)) is not None:
             if hvac_mode == HVACMode.HEAT:
-                await self.coordinator.async_write_coil(
+                await coordinator.async_write_coil(
                     self._coil_setpoint_heat, temperature
                 )
             elif hvac_mode == HVACMode.COOL:
-                await self.coordinator.async_write_coil(
+                await coordinator.async_write_coil(
                     self._coil_setpoint_cool, temperature
                 )
             else:
-                raise HomeAssistantError(
+                raise ValueError(
                     f"Don't known which temperature to control for hvac mode: {self._attr_hvac_mode}"
                 )
 
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW, None)) is not None:
-            await self.coordinator.async_write_coil(
-                self._coil_setpoint_heat, temperature
-            )
+            await coordinator.async_write_coil(self._coil_setpoint_heat, temperature)
 
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH, None)) is not None:
-            await self.coordinator.async_write_coil(
-                self._coil_setpoint_cool, temperature
-            )
+            await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
