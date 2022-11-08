@@ -1808,7 +1808,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
         self.country: str | None = None
-        self.language: str = "en"
+        self._language: str | None = None
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
@@ -1838,6 +1838,13 @@ class Config:
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+    @property
+    def language(self) -> str | None:
+        """Return the configured language."""
+        if self._language is not None:
+            return self._language
+        return "en"
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -1971,7 +1978,7 @@ class Config:
         if country is not _UNDEF:
             self.country = cast(Optional[str], country)
         if language is not None:
-            self.language = language
+            self._language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -2028,7 +2035,7 @@ class Config:
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
-            "language": self.language,
+            "language": self._language,
         }
 
         await self._store.async_save(data)

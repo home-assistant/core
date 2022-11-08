@@ -486,10 +486,12 @@ async def test_migration_and_updating_configuration(hass, hass_storage):
     expected_new_core_data["minor_version"] = 2
     # defaults for country and language
     expected_new_core_data["data"]["country"] = None
-    expected_new_core_data["data"]["language"] = "en"
+    expected_new_core_data["data"]["language"] = None
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
+    assert hass.config.country is None
+    assert hass.config.language == "en"
 
 
 async def test_override_stored_configuration(hass, hass_storage):

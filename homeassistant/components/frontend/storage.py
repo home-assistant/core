@@ -23,6 +23,22 @@ async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_user_data)
 
 
+async def async_user_store(hass: HomeAssistant, user_id: str) -> tuple[Store, Any]:
+    """Access a user store."""
+    stores, data = hass.data[DATA_STORAGE]
+    if (store := stores.get(user_id)) is None:
+        store = stores[user_id] = Store(
+            hass,
+            STORAGE_VERSION_USER_DATA,
+            f"frontend.user_data_{user_id}",
+        )
+
+    if user_id not in data:
+        data[user_id] = await store.async_load() or {}
+
+    return store, data
+
+
 def with_store(orig_func: Callable) -> Callable:
     """Decorate function to provide data."""
 
@@ -31,18 +47,9 @@ def with_store(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
 
-        if (store := stores.get(user_id)) is None:
-            store = stores[user_id] = Store(
-                hass,
-                STORAGE_VERSION_USER_DATA,
-                f"frontend.user_data_{connection.user.id}",
-            )
-
-        if user_id not in data:
-            data[user_id] = await store.async_load() or {}
+        store, data = await async_user_store(hass, user_id)
 
         await orig_func(hass, connection, msg, store, data[user_id])
 
