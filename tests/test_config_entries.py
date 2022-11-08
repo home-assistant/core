@@ -3355,7 +3355,7 @@ async def test_wait_for_loading_entry(hass):
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
         hass.async_add_job(_load_entry)
-        await hass.config_entries.async_wait_for_states(
+        new_state = await hass.config_entries.async_wait_for_states(
             entry,
             {
                 config_entries.ConfigEntryState.LOADED,
@@ -3363,6 +3363,7 @@ async def test_wait_for_loading_entry(hass):
             },
             timeout=1.0,
         )
+        assert new_state is config_entries.ConfigEntryState.LOADED
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
@@ -3389,7 +3390,7 @@ async def test_wait_for_loading_failed_entry(hass):
     flow = hass.config_entries.flow
     with patch.object(flow, "async_init", wraps=flow.async_init):
         hass.async_add_job(_load_entry)
-        await hass.config_entries.async_wait_for_states(
+        new_state = await hass.config_entries.async_wait_for_states(
             entry,
             {
                 config_entries.ConfigEntryState.LOADED,
@@ -3397,6 +3398,7 @@ async def test_wait_for_loading_failed_entry(hass):
             },
             timeout=1.0,
         )
+        assert new_state is config_entries.ConfigEntryState.SETUP_ERROR
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
