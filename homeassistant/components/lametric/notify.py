@@ -50,15 +50,17 @@ class LaMetricNotificationService(BaseNotificationService):
             data = {}
 
         priority = NotificationPriority(data.get(CONF_PRIORITY, "info"))
-        await self.coordinator.async_refresh()
 
-        if (
-            self.coordinator.data.screensaver.enabled
-            and priority != NotificationPriority.CRITICAL
-        ):
-            raise ValueError(
-                "Cannot send non-critical messages while screensaver mode is enabled"
-            )
+        if priority != NotificationPriority.CRITICAL:
+            # LaMetric devices will refuse non-critical messages when in screensaver
+            # mode, so if we have such a message, we get the latest coordinator data
+            # to see whether screensaver mode is enabled:
+            await self.coordinator.async_refresh()
+
+            if self.coordinator.data.screensaver.enabled:
+                raise ValueError(
+                    "Cannot send non-critical messages while in screensaver mode"
+                )
 
         sound = None
         if CONF_SOUND in data:
