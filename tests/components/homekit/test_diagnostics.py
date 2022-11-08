@@ -379,7 +379,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 7,
                                 "perms": ["pr"],
                                 "type": "52",
-                                "value": ANY,
+                                "value": "2022.12.0",
                             },
                         ],
                         "iid": 1,
@@ -432,14 +432,14 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 6,
                                 "perms": ["pr"],
                                 "type": "30",
-                                "value": device_id,
+                                "value": ANY,
                             },
                             {
                                 "format": "string",
                                 "iid": 7,
                                 "perms": ["pr"],
                                 "type": "52",
-                                "value": "2022.12.0",
+                                "value": ANY,
                             },
                         ],
                         "iid": 1,
@@ -460,7 +460,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 10,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Changed States " "Ceiling Lights " "False",
+                                "value": "Ceiling Lights " "Changed States",
                             },
                             {
                                 "format": "uint8",
@@ -506,7 +506,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 16,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Turned Off " "Ceiling Lights " "False",
+                                "value": "Ceiling Lights " "Turned Off",
                             },
                             {
                                 "format": "uint8",
@@ -552,7 +552,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 22,
                                 "perms": ["pr"],
                                 "type": "23",
-                                "value": "Turned On " "Ceiling Lights " "False",
+                                "value": "Ceiling Lights " "Turned On",
                             },
                             {
                                 "format": "uint8",
@@ -605,5 +605,8 @@ async def test_config_entry_with_trigger_accessory(
         "pairing_id": ANY,
         "status": 1,
     }
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
+        "homeassistant.components.homekit.HomeKit.async_stop"
+    ), patch("homeassistant.components.homekit.async_port_is_available"):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

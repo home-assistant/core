@@ -51,11 +51,12 @@ class DeviceTriggerAccessory(HomeAccessory):
                 entry := ent_reg.async_get(entity_id)
             ):
                 unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
-            trigger_name_parts = [type_.replace("_", " ").title()]
-            if subtype:
-                trigger_name_parts.append(subtype.replace("_", " ").title())
+            trigger_name_parts = []
             if entity_id and (state := self.hass.states.get(entity_id)):
                 trigger_name_parts.append(state.name)
+            trigger_name_parts.append(type_.replace("_", " ").title())
+            if subtype:
+                trigger_name_parts.append(subtype.replace("_", " ").title())
             trigger_name = cleanup_name_for_homekit(" ".join(trigger_name_parts))
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
