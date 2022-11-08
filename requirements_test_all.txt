@@ -183,7 +183,7 @@ aiolifx_themes==0.2.0
 aiolookin==0.1.1
 
 # homeassistant.components.lyric
-aiolyric==1.0.8
+aiolyric==1.0.10
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8

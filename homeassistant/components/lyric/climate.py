@@ -302,13 +302,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     @property
     def fan_mode(self) -> str:
-        """Returns current fan mode."""
+        """Return current fan mode."""
         fan_settings = self.device.attributes["settings"]["fan"]
         return FAN_MODES[fan_settings["changeableValues"]["mode"]]
 
     @property
     def fan_modes(self) -> list[str] | None:
-        """Returns fan modes."""
+        """Return fan modes."""
         fan_settings = self.device.attributes["settings"]["fan"]
         return [
             FAN_MODES[mode]
