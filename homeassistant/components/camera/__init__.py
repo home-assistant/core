@@ -350,6 +350,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
+    hass.http.register_view(CameraStreamSourceView(component))
 
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
@@ -775,6 +776,21 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
+
+
+class CameraStreamSourceView(CameraView):
+    """Camera view to get stream source."""
+
+    url = "/api/camera_stream_source/{entity_id}"
+    name = "api:camera:stream_source"
+    requires_auth = True
+
+    async def handle(self, request: web.Request, camera: Camera) -> web.Response:
+        """Return the stream source."""
+        stream_source = await camera.stream_source()
+        if stream_source is None:
+            raise web.HTTPNotFound()
+        return web.Response(text=stream_source)
 
 
 @websocket_api.websocket_command(
