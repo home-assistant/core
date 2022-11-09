@@ -36,7 +36,7 @@ async def async_setup_entry(
     entities: list[FritzboxLight] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for ain, device in coordinator.data.items():
+    for ain, device in coordinator.data.devices.items():
         if not device.has_lightbulb:
             continue
 
@@ -88,36 +88,36 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """If the light is currently on or off."""
-        return self.device.state  # type: ignore [no-any-return]
+        return self.entity.state  # type: ignore [no-any-return]
 
     @property
     def brightness(self) -> int:
         """Return the current Brightness."""
-        return self.device.level  # type: ignore [no-any-return]
+        return self.entity.level  # type: ignore [no-any-return]
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
-        if self.device.color_mode != COLOR_MODE:
+        if self.entity.color_mode != COLOR_MODE:
             return None
 
-        hue = self.device.hue
-        saturation = self.device.saturation
+        hue = self.entity.hue
+        saturation = self.entity.saturation
 
         return (hue, float(saturation) * 100.0 / 255.0)
 
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        if self.device.color_mode != COLOR_TEMP_MODE:
+        if self.entity.color_mode != COLOR_TEMP_MODE:
             return None
 
-        return self.device.color_temp  # type: ignore [no-any-return]
+        return self.entity.color_temp  # type: ignore [no-any-return]
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self.device.color_mode == COLOR_MODE:
+        if self.entity.color_mode == COLOR_MODE:
             return ColorMode.HS
         return ColorMode.COLOR_TEMP
 
@@ -130,7 +130,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         """Turn the light on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             level = kwargs[ATTR_BRIGHTNESS]
-            await self.hass.async_add_executor_job(self.device.set_level, level)
+            await self.hass.async_add_executor_job(self.entity.set_level, level)
         if kwargs.get(ATTR_HS_COLOR) is not None:
             # Try setunmappedcolor first. This allows free color selection,
             # but we don't know if its supported by all devices.
@@ -139,7 +139,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
                 unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
                 unmapped_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
                 await self.hass.async_add_executor_job(
-                    self.device.set_unmapped_color, (unmapped_hue, unmapped_saturation)
+                    self.entity.set_unmapped_color, (unmapped_hue, unmapped_saturation)
                 )
             # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
             except HTTPError as err:
@@ -157,18 +157,18 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
                     key=lambda x: abs(x - unmapped_saturation),
                 )
                 await self.hass.async_add_executor_job(
-                    self.device.set_color, (hue, saturation)
+                    self.entity.set_color, (hue, saturation)
                 )
 
         if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
             await self.hass.async_add_executor_job(
-                self.device.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN]
+                self.entity.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
 
-        await self.hass.async_add_executor_job(self.device.set_state_on)
+        await self.hass.async_add_executor_job(self.entity.set_state_on)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.hass.async_add_executor_job(self.device.set_state_off)
+        await self.hass.async_add_executor_job(self.entity.set_state_off)
         await self.coordinator.async_refresh()

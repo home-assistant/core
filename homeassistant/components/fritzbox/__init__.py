@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
+from pyfritzhome.devicetypes import FritzhomeTemplate
+from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -108,30 +110,33 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator]):
         self.ain = ain
         if entity_description is not None:
             self.entity_description = entity_description
-            self._attr_name = f"{self.device.name} {entity_description.name}"
+            self._attr_name = f"{self.entity.name} {entity_description.name}"
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
-            self._attr_name = self.device.name
+            self._attr_name = self.entity.name
             self._attr_unique_id = ain
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.device.present
+        return super().available and (
+            isinstance(self.entity, FritzhomeTemplate) or self.entity.present
+        )
 
     @property
-    def device(self) -> FritzhomeDevice:
+    def entity(self) -> FritzhomeEntityBase:
         """Return device object from coordinator."""
-        return self.coordinator.data[self.ain]
+        return self.coordinator.data.devices[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
+        is_device = isinstance(self.entity, FritzhomeDevice)
         return DeviceInfo(
-            name=self.device.name,
+            name=self.entity.name,
             identifiers={(DOMAIN, self.ain)},
-            manufacturer=self.device.manufacturer,
-            model=self.device.productname,
-            sw_version=self.device.fw_version,
+            manufacturer=self.entity.manufacturer if is_device else None,
+            model=self.entity.productname if is_device else None,
+            sw_version=self.entity.fw_version if is_device else None,
             configuration_url=self.coordinator.configuration_url,
         )

@@ -25,7 +25,7 @@ async def async_setup_entry(
 
     async_add_entities(
         FritzboxCover(coordinator, ain)
-        for ain, device in coordinator.data.items()
+        for ain, device in coordinator.data.devices.items()
         if device.has_blind
     )
 
@@ -45,34 +45,34 @@ class FritzboxCover(FritzBoxEntity, CoverEntity):
     def current_cover_position(self) -> int | None:
         """Return the current position."""
         position = None
-        if self.device.levelpercentage is not None:
-            position = 100 - self.device.levelpercentage
+        if self.entity.levelpercentage is not None:
+            position = 100 - self.entity.levelpercentage
         return position
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self.device.levelpercentage is None:
+        if self.entity.levelpercentage is None:
             return None
-        return self.device.levelpercentage == 100  # type: ignore [no-any-return]
+        return self.entity.levelpercentage == 100  # type: ignore [no-any-return]
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.hass.async_add_executor_job(self.device.set_blind_open)
+        await self.hass.async_add_executor_job(self.entity.set_blind_open)
         await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(self.device.set_blind_close)
+        await self.hass.async_add_executor_job(self.entity.set_blind_close)
         await self.coordinator.async_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
-            self.device.set_level_percentage, 100 - kwargs[ATTR_POSITION]
+            self.entity.set_level_percentage, 100 - kwargs[ATTR_POSITION]
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.hass.async_add_executor_job(self.device.set_blind_stop)
+        await self.hass.async_add_executor_job(self.entity.set_blind_stop)
         await self.coordinator.async_refresh()

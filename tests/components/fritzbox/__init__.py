@@ -34,6 +34,7 @@ async def setup_config_entry(
     entry.add_to_hass(hass)
     if device is not None and fritz is not None:
         fritz().get_devices.return_value = [device]
+        fritz().get_templates.return_value = []
     result = await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
         await hass.async_block_till_done()

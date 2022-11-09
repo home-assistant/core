@@ -73,7 +73,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzboxBinarySensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             for description in BINARY_SENSOR_TYPES
             if description.suitable(device)
         ]
@@ -93,10 +93,10 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator, ain, entity_description)
-        self._attr_name = f"{self.device.name} {entity_description.name}"
+        self._attr_name = f"{self.entity.name} {entity_description.name}"
         self._attr_unique_id = f"{ain}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self.entity_description.is_on(self.device)
+        return self.entity_description.is_on(self.entity)

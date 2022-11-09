@@ -220,7 +220,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             for description in SENSOR_TYPES
             if description.suitable(device)
         ]
@@ -235,4 +235,4 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.native_value(self.device)
+        return self.entity_description.native_value(self.entity)

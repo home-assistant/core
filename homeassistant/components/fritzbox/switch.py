@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzboxSwitch(coordinator, ain)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             if device.has_switch
         ]
     )
@@ -33,14 +33,14 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self.device.switch_state  # type: ignore [no-any-return]
+        return self.entity.switch_state  # type: ignore [no-any-return]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(self.device.set_switch_state_on)
+        await self.hass.async_add_executor_job(self.entity.set_switch_state_on)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(self.device.set_switch_state_off)
+        await self.hass.async_add_executor_job(self.entity.set_switch_state_off)
         await self.coordinator.async_refresh()
