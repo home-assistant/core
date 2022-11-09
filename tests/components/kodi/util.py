@@ -50,7 +50,15 @@ TEST_IMPORT = {
 
 
 def get_kodi_connection(
-    host, port, ws_port, username, password, ssl=False, timeout=5, session=None
+    # pylint: disable=unused-argument
+    host,
+    port,
+    ws_port,
+    username,
+    password,
+    ssl=False,
+    timeout=5,
+    session=None,
 ):
     """Get Kodi connection."""
     if ws_port is None:
