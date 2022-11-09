@@ -199,7 +199,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _send_command_topic: str | None
     _set_fan_speed_topic: str | None
     _state_topics: dict[str, Any]
-    _templates: dict[str, Callable[..., ReceivePayloadType]]
+    _templates: dict[
+        str, Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
+    ]
 
     def __init__(
         self,
