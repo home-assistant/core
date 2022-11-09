@@ -1,10 +1,8 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import logging
-from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
@@ -19,17 +17,10 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    Context,
-    Event,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.trigger import TriggerActionType
+from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -163,43 +154,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, service)
 
     return unload_ok
-
-
-class PluggableAction:
-    """A pluggable action handler."""
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._actions: dict[
-            Callable[[], None],
-            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
-        ] = {}
-
-    def __bool__(self) -> bool:
-        """Return if we have something attached."""
-        return bool(self._actions)
-
-    @callback
-    def async_attach(
-        self, action: TriggerActionType, variables: dict[str, Any]
-    ) -> Callable[[], None]:
-        """Attach a device trigger for turn on."""
-
-        @callback
-        def _remove() -> None:
-            del self._actions[_remove]
-
-        job = HassJob(action)
-
-        self._actions[_remove] = (job, variables)
-
-        return _remove
-
-    @callback
-    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
-        """Run all turn on triggers."""
-        for job, variables in self._actions.values():
-            hass.async_run_hass_job(job, variables, context)
 
 
 class WebOsClientWrapper:
