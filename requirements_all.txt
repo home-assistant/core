@@ -1195,6 +1195,7 @@ numato-gpio==0.10.0
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
+# homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.23.2
