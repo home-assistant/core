@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, Union
 
 import attr
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -26,7 +27,13 @@ if TYPE_CHECKING:
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
-_SENTINEL = object()
+
+class PayloadSentinel(StrEnum):
+    """Sentinel for `async_render_with_possible_json_value`."""
+
+    NONE = "none"
+    DEFAULT = "default"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,7 +196,7 @@ class MqttValueTemplate:
     def async_render_with_possible_json_value(
         self,
         payload: ReceivePayloadType,
-        default: ReceivePayloadType | object = _SENTINEL,
+        default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
@@ -213,7 +220,7 @@ class MqttValueTemplate:
                 )
             values[ATTR_THIS] = self._template_state
 
-        if default == _SENTINEL:
+        if default is PayloadSentinel.NONE:
             _LOGGER.debug(
                 "Rendering incoming payload '%s' with variables %s and %s",
                 payload,

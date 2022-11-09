@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_BASIC,
     CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
@@ -583,6 +584,20 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
     _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"TexasInstruments"},
+    models={"ti.router"},
+)
+class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
+    """Representation of a ZHA TI transmit power configuration entity."""
+
+    _attr_native_min_value: float = -20
+    _attr_native_max_value: float = 20
+    _zcl_attribute: str = "transmit_power"
+    _attr_name = "Transmit power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)

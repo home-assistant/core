@@ -7,7 +7,6 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 import itertools
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
@@ -22,6 +21,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import AdvertisementTracker
 from .const import (
@@ -69,7 +69,7 @@ APPLE_START_BYTES_WANTED: Final = {
     APPLE_DEVICE_ID_START_BYTE,
 }
 
-MONOTONIC_TIME: Final = time.monotonic
+MONOTONIC_TIME: Final = monotonic_time_coarse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +127,7 @@ class BluetoothManager:
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+        self._sources: set[str] = set()
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -379,6 +380,7 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
+            and old_service_info.source in self._sources
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
             )
@@ -398,6 +400,7 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
+                        and old_connectable_service_info.source in self._sources
                         and self._prefer_previous_adv_from_different_source(
                             old_connectable_service_info, service_info
                         )
@@ -597,8 +600,10 @@ class BluetoothManager:
         def _unregister_scanner() -> None:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
+            self._sources.remove(scanner.source)
 
         scanners.append(scanner)
+        self._sources.add(scanner.source)
         return _unregister_scanner
 
     @hass_callback

@@ -76,6 +76,14 @@ ESPHOME_API_PORT = 6053
 
 CONNECT_DELAY_S = 1.0
 
+HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): str,
+        vol.Required("port"): dict,
+        vol.Required("radio_type"): str,
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -181,6 +189,13 @@ class BaseZhaFlow(FlowHandler):
 
         async with self._connect_zigpy_app() as app:
             await app.backups.restore_backup(backup, **kwargs)
+
+    def _parse_radio_type(self, radio_type: str) -> RadioType:
+        """Parse a radio type name, accounting for past aliases."""
+        if radio_type == "efr32":
+            return RadioType.ezsp
+
+        return RadioType[radio_type]
 
     async def _detect_radio_type(self) -> bool:
         """Probe all radio types on the current port."""
@@ -544,6 +559,24 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
     VERSION = 3
 
+    async def _set_unique_id_or_update_path(
+        self, unique_id: str, device_path: str
+    ) -> None:
+        """Set the flow's unique ID and update the device path if it isn't unique."""
+        current_entry = await self.async_set_unique_id(unique_id)
+
+        if not current_entry:
+            return
+
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {
+                    **current_entry.data.get(CONF_DEVICE, {}),
+                    CONF_DEVICE_PATH: device_path,
+                },
+            }
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -600,16 +633,11 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        if current_entry := await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_DEVICE: {
-                        **current_entry.data.get(CONF_DEVICE, {}),
-                        CONF_DEVICE_PATH: dev_path,
-                    },
-                }
-            )
+
+        await self._set_unique_id_or_update_path(
+            unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
+            device_path=dev_path,
+        )
 
         # If they already have a discovery for deconz we ignore the usb discovery as
         # they probably want to use it there instead
@@ -645,7 +673,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             port = DEFAULT_ZHA_ZEROCONF_PORT
 
         if "radio_type" in discovery_info.properties:
-            self._radio_type = RadioType[discovery_info.properties["radio_type"]]
+            self._radio_type = self._parse_radio_type(
+                discovery_info.properties["radio_type"]
+            )
         elif "efr32" in local_name:
             self._radio_type = RadioType.ezsp
         else:
@@ -654,15 +684,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         node_name = local_name[: -len(".local")]
         device_path = f"socket://{discovery_info.host}:{port}"
 
-        if current_entry := await self.async_set_unique_id(node_name):
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_DEVICE: {
-                        **current_entry.data.get(CONF_DEVICE, {}),
-                        CONF_DEVICE_PATH: device_path,
-                    },
-                }
-            )
+        await self._set_unique_id_or_update_path(
+            unique_id=node_name,
+            device_path=device_path,
+        )
 
         self.context["title_placeholders"] = {CONF_NAME: node_name}
         self._title = device_path
@@ -674,34 +699,31 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self, data: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle hardware flow."""
-        if not data:
-            return self.async_abort(reason="invalid_hardware_data")
-        if data.get("radio_type") != "efr32":
-            return self.async_abort(reason="invalid_hardware_data")
-
-        self._radio_type = RadioType.ezsp
-
-        schema = {
-            vol.Required(
-                CONF_DEVICE_PATH, default=self._device_path or vol.UNDEFINED
-            ): str
-        }
-
-        radio_schema = self._radio_type.controller.SCHEMA_DEVICE.schema
-        assert not isinstance(radio_schema, vol.Schema)
-
-        for param, value in radio_schema.items():
-            if param in SUPPORTED_PORT_SETTINGS:
-                schema[param] = value
-
         try:
-            device_settings = vol.Schema(schema)(data.get("port"))
+            discovery_data = HARDWARE_DISCOVERY_SCHEMA(data)
         except vol.Invalid:
             return self.async_abort(reason="invalid_hardware_data")
 
-        self._title = data.get("name", data["port"]["path"])
+        name = discovery_data["name"]
+        radio_type = self._parse_radio_type(discovery_data["radio_type"])
+
+        try:
+            device_settings = radio_type.controller.SCHEMA_DEVICE(
+                discovery_data["port"]
+            )
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_hardware_data")
+
+        await self._set_unique_id_or_update_path(
+            unique_id=f"{name}_{radio_type.name}_{device_settings[CONF_DEVICE_PATH]}",
+            device_path=device_settings[CONF_DEVICE_PATH],
+        )
+
+        self._title = name
+        self._radio_type = radio_type
         self._device_path = device_settings[CONF_DEVICE_PATH]
         self._device_settings = device_settings
+        self.context["title_placeholders"] = {CONF_NAME: name}
 
         return await self.async_step_confirm()
 

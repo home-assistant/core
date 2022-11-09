@@ -1,7 +1,7 @@
 {
   "domain": "homeassistant_sky_connect",
   "name": "Home Assistant Sky Connect",
-  "config_flow": false,
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
   "dependencies": ["hardware", "usb"],
   "codeowners": ["@home-assistant/core"],

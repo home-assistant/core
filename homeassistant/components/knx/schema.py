@@ -21,7 +21,14 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.number import NumberMode
-from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+)
+from homeassistant.components.switch import (
+    DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -72,8 +79,8 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[misc]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[misc]
+numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
+sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
 
 
@@ -852,6 +859,7 @@ class SensorSchema(KNXPlatformSchema):
             vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
             vol.Required(CONF_TYPE): sensor_type_validator,
             vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
@@ -873,6 +881,7 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )

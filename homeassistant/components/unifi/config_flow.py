@@ -37,14 +37,12 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
-    DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
 from .controller import UniFiController, get_unifi_controller
@@ -396,10 +394,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
-                    vol.Optional(
-                        CONF_POE_CLIENTS,
-                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
-                    ): bool,
                     vol.Optional(
                         CONF_DPI_RESTRICTIONS,
                         default=self.options.get(

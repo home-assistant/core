@@ -35,6 +35,8 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airq/__init__.py
+    homeassistant/components/airq/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
     homeassistant/components/airthings_ble/__init__.py
@@ -455,7 +457,7 @@ omit =
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
-    homeassistant/components/glances/__init__.py
+    homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
@@ -676,7 +678,6 @@ omit =
     homeassistant/components/lcn/services.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
-    homeassistant/components/led_ble/util.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/lidarr/__init__.py
@@ -951,6 +952,8 @@ omit =
     homeassistant/components/overkiz/sensor.py
     homeassistant/components/overkiz/siren.py
     homeassistant/components/overkiz/switch.py
+    homeassistant/components/overkiz/water_heater.py
+    homeassistant/components/overkiz/water_heater_entities/*
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py
@@ -999,6 +1002,7 @@ omit =
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
+    homeassistant/components/pushbullet/api.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
     homeassistant/components/pushover/notify.py
@@ -1582,6 +1586,9 @@ omit =
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
+    homeassistant/components/zamg/__init__.py
+    homeassistant/components/zamg/const.py
+    homeassistant/components/zamg/coordinator.py
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py
     homeassistant/components/zengge/light.py

@@ -4,6 +4,31 @@ from __future__ import annotations
 from typing import Any
 
 
+def return_integration_config(
+    *,
+    authentication=None,
+    username=None,
+    password=None,
+    headers=None,
+    sensors=None,
+) -> dict[str, dict[str, Any]]:
+    """Return config."""
+    config = {
+        "resource": "https://www.home-assistant.io",
+        "verify_ssl": True,
+        "sensor": sensors,
+    }
+    if authentication:
+        config["authentication"] = authentication
+    if username:
+        config["username"] = username
+        config["password"] = password
+    if headers:
+        config["headers"] = headers
+
+    return config
+
+
 def return_config(
     select,
     name,
@@ -19,6 +44,7 @@ def return_config(
     password=None,
     headers=None,
     unique_id=None,
+    remove_platform=False,
 ) -> dict[str, dict[str, Any]]:
     """Return config."""
     config = {
@@ -26,7 +52,11 @@ def return_config(
         "resource": "https://www.home-assistant.io",
         "select": select,
         "name": name,
+        "index": 0,
+        "verify_ssl": True,
     }
+    if remove_platform:
+        config.pop("platform")
     if attribute:
         config["attribute"] = attribute
     if index:
@@ -41,6 +71,7 @@ def return_config(
         config["state_class"] = state_class
     if authentication:
         config["authentication"] = authentication
+    if username:
         config["username"] = username
         config["password"] = password
     if headers:
