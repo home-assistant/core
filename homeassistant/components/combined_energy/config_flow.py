@@ -1,7 +1,6 @@
 """Config flow for Combined Energy integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from combined_energy import CombinedEnergy
@@ -19,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_INSTALLATION_ID, DEFAULT_NAME, DOMAIN, LOGGER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
