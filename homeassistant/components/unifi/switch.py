@@ -179,6 +179,7 @@ class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[Handler,
     """Class describing UniFi switch entity."""
 
     custom_subscribe: Callable[[aiounifi.Controller], Subscription] | None = None
+    only_event_for_state_change: bool = False
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
@@ -198,6 +199,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiEntityDescription, ...] = (
         is_on_fn=lambda api, client: not client.blocked,
         name_fn=lambda client: None,
         object_fn=lambda api, obj_id: api.clients[obj_id],
+        only_event_for_state_change=True,
         supported_fn=lambda api, obj_id: True,
         unique_id_fn=lambda obj_id: f"block-{obj_id}",
     ),
@@ -400,8 +402,9 @@ class UnifiSwitchEntity(SwitchEntity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        obj = description.object_fn(self.controller.api, self._obj_id)
-        self._attr_is_on = description.is_on_fn(self.controller.api, obj)
+        if not description.only_event_for_state_change:
+            obj = description.object_fn(self.controller.api, self._obj_id)
+            self._attr_is_on = description.is_on_fn(self.controller.api, obj)
         self._attr_available = description.available_fn(self.controller, self._obj_id)
         self.async_write_ha_state()
 
