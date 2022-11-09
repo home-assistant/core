@@ -367,8 +367,6 @@ class UnifiBlockClientSwitch(SwitchEntity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        client = self.controller.api.clients[self._obj_id]
-        self._attr_is_on = not client.blocked
         self._attr_available = self.controller.available
         self.async_write_ha_state()
 
