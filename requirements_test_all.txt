@@ -158,7 +158,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.18
+aiohomekit==2.2.19
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -386,7 +386,7 @@ brother==2.0.0
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==1.2.2
+bthome-ble==2.2.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -679,7 +679,7 @@ homepluscontrol==0.0.5
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.3
+huawei-lte-api==1.6.7
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -757,7 +757,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.1.1
+life360==5.3.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
@@ -850,7 +850,7 @@ nextcord==2.0.0a8
 nextdns==1.1.1
 
 # homeassistant.components.nibe_heatpump
-nibe==1.2.0
+nibe==1.2.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -870,6 +870,7 @@ numato-gpio==0.10.0
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
+# homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.23.2
@@ -899,7 +900,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.13.0
+oralb-ble==0.14.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1531,6 +1532,9 @@ rpi-bad-power==0.1.0
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
 
+# homeassistant.components.ruuvitag_ble
+ruuvitag-ble==0.1.1
+
 # homeassistant.components.yamaha
 rxv==0.7.0
 
@@ -1756,7 +1760,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.10
+wallbox==0.4.12
 
 # homeassistant.components.folder_watcher
 watchdog==2.1.9

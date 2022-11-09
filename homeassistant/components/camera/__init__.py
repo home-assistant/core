@@ -30,6 +30,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.stream import (
     FORMAT_CONTENT_TYPE,
     OUTPUT_FORMATS,
+    Orientation,
     Stream,
     create_stream,
 )
@@ -859,8 +860,9 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs = hass.data[DATA_CAMERA_PREFS].get(msg["entity_id"])
-    connection.send_result(msg["id"], prefs.as_dict())
+    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
+    camera_prefs = prefs.get(msg["entity_id"])
+    connection.send_result(msg["id"], camera_prefs.as_dict())
 
 
 @websocket_api.websocket_command(
@@ -868,7 +870,7 @@ async def websocket_get_prefs(
         vol.Required("type"): "camera/update_prefs",
         vol.Required("entity_id"): cv.entity_id,
         vol.Optional(PREF_PRELOAD_STREAM): bool,
-        vol.Optional(PREF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
+        vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
 @websocket_api.async_response
@@ -876,7 +878,7 @@ async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs = hass.data[DATA_CAMERA_PREFS]
+    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
 
     changes = dict(msg)
     changes.pop("id")
@@ -955,7 +957,8 @@ async def _async_stream_endpoint_url(
         )
 
     # Update keepalive setting which manages idle shutdown
-    camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
+    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
+    camera_prefs = prefs.get(camera.entity_id)
     stream.keepalive = camera_prefs.preload_stream
     stream.orientation = camera_prefs.orientation
 

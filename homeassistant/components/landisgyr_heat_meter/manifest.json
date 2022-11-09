@@ -9,5 +9,6 @@
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@vpathuis"],
+  "dependencies": ["usb"],
   "iot_class": "local_polling"
 }
