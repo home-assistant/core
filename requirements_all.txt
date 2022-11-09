@@ -201,6 +201,9 @@ aiolifx_effects==0.3.0
 # homeassistant.components.lifx
 aiolifx_themes==0.2.0
 
+# homeassistant.components.livisi
+aiolivisi==0.0.14
+
 # homeassistant.components.lookin
 aiolookin==0.1.1
 
@@ -240,7 +243,7 @@ aiopvpc==3.0.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.10.0
+aiopyarr==22.11.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.2.2
@@ -448,6 +451,10 @@ bluetooth-adapters==0.7.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.3.6
+
+# homeassistant.components.bluetooth
+# homeassistant.components.led_ble
+bluetooth-data-tools==0.2.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -877,7 +884,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221102.1
+home-assistant-frontend==20221108.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1159,7 +1166,7 @@ nextcord==2.0.0a8
 nextdns==1.1.1
 
 # homeassistant.components.nibe_heatpump
-nibe==0.5.0
+nibe==1.2.1
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1487,7 +1494,7 @@ pybravia==0.2.3
 pycarwings2==2.13
 
 # homeassistant.components.cloudflare
-pycfdns==1.2.2
+pycfdns==2.0.0
 
 # homeassistant.components.channels
 pychannels==1.2.3
@@ -2087,7 +2094,7 @@ pytrafikverket==0.2.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.3.4
+pyunifiprotect==4.4.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2394,9 +2401,6 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.0
 
-# homeassistant.components.nibe_heatpump
-tenacity==8.0.1
-
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
@@ -2619,7 +2623,7 @@ zengge==0.2
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.84
+zha-quirks==0.0.85
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

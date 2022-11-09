@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "Du verwendest v{version} von UniFi Protect, einer Early-Access-Version. Early-Access-Versionen werden von Home Assistant nicht unterst\u00fctzt und k\u00f6nnen dazu f\u00fchren, dass deine UniFi Protect-Integration nicht oder nicht wie erwartet funktioniert.",
+            "title": "UniFi Protect v{version} ist eine Early-Access-Version"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Muss eine durch Kommas getrennte Liste von MAC-Adressen sein"

@@ -102,8 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
-    protect_version = data_service.api.bootstrap.nvr.version
-    if protect_version.is_prerelease:
+    if await data_service.api.bootstrap.get_is_prerelease():
+        protect_version = data_service.api.bootstrap.nvr.version
         ir.async_create_issue(
             hass,
             DOMAIN,
