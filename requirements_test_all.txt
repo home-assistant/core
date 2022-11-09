@@ -682,7 +682,7 @@ homepluscontrol==0.0.5
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.3
+huawei-lte-api==1.6.7
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -903,7 +903,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.13.0
+oralb-ble==0.14.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
