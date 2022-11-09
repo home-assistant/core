@@ -174,7 +174,6 @@ SENSOR_DESCRIPTIONS = {
     (BTHomeSensorDeviceClass.COUNT, None): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.COUNT}",
         device_class=None,
-        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
