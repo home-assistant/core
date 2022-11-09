@@ -143,11 +143,6 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        return {}
-
-    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         value = self._raw_value
@@ -160,14 +155,18 @@ class EnergySensor(CombinedEnergyReadingsSensor):
     """Sensor for energy readings."""
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if last_update := self._last_update:
+            return {"last_updated": last_update.isoformat()}
+        return None
+
+    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor for a power value."""
         if (value := self._raw_value) is not None:
-            self._attr_last_reset = self._last_update
             value = sum(value)
             return round(value, 2)
-
-        self._attr_last_reset = None
         return None
 
 
