@@ -12,7 +12,6 @@ from homeassistant.components.camera.const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
 )
-from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -302,8 +301,9 @@ async def test_websocket_update_preload_prefs(hass, hass_ws_client, mock_camera)
     )
     msg = await client.receive_json()
 
-    # There should be no preferences
-    assert not msg["result"]
+    # The default prefs should be returned. Preload stream should be False
+    assert msg["success"]
+    assert msg["result"][PREF_PRELOAD_STREAM] is False
 
     # Update the preference
     await client.send_json(
@@ -421,12 +421,12 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
 
 async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: False})
+    demo_settings = camera.DynamicStreamSettings(preload_stream=False, orientation=1)
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get",
-        return_value=demo_prefs,
+        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         new_callable=PropertyMock,
@@ -440,12 +440,12 @@ async def test_no_preload_stream(hass, mock_stream):
 
 async def test_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: True})
+    demo_settings = camera.DynamicStreamSettings(preload_stream=True, orientation=1)
     with patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(
-        "homeassistant.components.camera.prefs.CameraPreferences.get",
-        return_value=demo_prefs,
+        "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+        return_value=demo_settings,
     ), patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",

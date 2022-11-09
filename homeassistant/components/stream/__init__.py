@@ -25,7 +25,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
 
@@ -70,6 +70,9 @@ from .core import (
 from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
+if TYPE_CHECKING:
+    from homeassistant.components.camera import DynamicStreamSettings
+
 __all__ = [
     "ATTR_SETTINGS",
     "CONF_EXTRA_PART_WAIT_TIME",
@@ -105,6 +108,7 @@ def create_stream(
     hass: HomeAssistant,
     stream_source: str,
     options: Mapping[str, str | bool | float],
+    dynamic_stream_settings: DynamicStreamSettings,
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
@@ -156,6 +160,7 @@ def create_stream(
         stream_source,
         pyav_options=pyav_options,
         stream_settings=stream_settings,
+        dynamic_stream_settings=dynamic_stream_settings,
         stream_label=stream_label,
     )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
@@ -231,7 +236,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
-            orientation=Orientation.NO_TRANSFORM,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
@@ -246,7 +250,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def shutdown(event: Event) -> None:
         """Stop all stream workers."""
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
-            stream.keepalive = False
+            stream.dynamic_stream_settings.preload_stream = False
         if awaitables := [
             asyncio.create_task(stream.stop())
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
@@ -268,6 +272,7 @@ class Stream:
         source: str,
         pyav_options: dict[str, str],
         stream_settings: StreamSettings,
+        dynamic_stream_settings: DynamicStreamSettings,
         stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
@@ -276,14 +281,16 @@ class Stream:
         self.pyav_options = pyav_options
         self._stream_settings = stream_settings
         self._stream_label = stream_label
-        self.keepalive = False
+        self.dynamic_stream_settings = dynamic_stream_settings
         self.access_token: str | None = None
         self._start_stop_lock = asyncio.Lock()
         self._thread: threading.Thread | None = None
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter(hass, stream_settings)
+        self._keyframe_converter = KeyFrameConverter(
+            hass, stream_settings, dynamic_stream_settings
+        )
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -292,16 +299,6 @@ class Stream:
             else _LOGGER
         )
         self._diagnostics = Diagnostics()
-
-    @property
-    def orientation(self) -> Orientation:
-        """Return the current orientation setting."""
-        return self._stream_settings.orientation
-
-    @orientation.setter
-    def orientation(self, value: Orientation) -> None:
-        """Set the stream orientation setting."""
-        self._stream_settings.orientation = value
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -326,7 +323,8 @@ class Stream:
 
             async def idle_callback() -> None:
                 if (
-                    not self.keepalive or fmt == RECORDER_PROVIDER
+                    not self.dynamic_stream_settings.preload_stream
+                    or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:
                     await self.remove_provider(self._outputs[fmt])
                 self.check_idle()
@@ -335,6 +333,7 @@ class Stream:
                 self.hass,
                 IdleTimer(self.hass, timeout, idle_callback),
                 self._stream_settings,
+                self.dynamic_stream_settings,
             )
             self._outputs[fmt] = provider
 
@@ -413,8 +412,12 @@ class Stream:
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
-            self._diagnostics.set_value("keepalive", self.keepalive)
-            self._diagnostics.set_value("orientation", self.orientation)
+            self._diagnostics.set_value(
+                "keepalive", self.dynamic_stream_settings.preload_stream
+            )
+            self._diagnostics.set_value(
+                "orientation", self.dynamic_stream_settings.orientation
+            )
             self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
@@ -473,7 +476,7 @@ class Stream:
         self._outputs = {}
         self.access_token = None
 
-        if not self.keepalive:
+        if not self.dynamic_stream_settings.preload_stream:
             await self._stop()
 
     async def _stop(self) -> None:

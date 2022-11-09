@@ -8,6 +8,7 @@ import io
 import av
 import numpy as np
 
+from homeassistant.components.camera import DynamicStreamSettings
 from homeassistant.components.stream.core import Segment
 from homeassistant.components.stream.fmp4utils import (
     TRANSFORM_MATRIX_TOP,
@@ -16,8 +17,8 @@ from homeassistant.components.stream.fmp4utils import (
 )
 
 FAKE_TIME = datetime.utcnow()
-# Segment with defaults filled in for use in tests
 
+# Segment with defaults filled in for use in tests
 DefaultSegment = partial(
     Segment,
     init=None,
@@ -170,3 +171,8 @@ def assert_mp4_has_transform_matrix(mp4: bytes, orientation: int):
         mp4[tkhd_location + tkhd_length - 44 : tkhd_location + tkhd_length - 8]
         == TRANSFORM_MATRIX_TOP[orientation] + XYW_ROW
     )
+
+
+def dynamic_stream_settings():
+    """Create new dynamic stream settings."""
+    return DynamicStreamSettings(preload_stream=False, orientation=1)
