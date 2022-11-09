@@ -32,8 +32,8 @@ if TYPE_CHECKING:
 
     from .controller import UniFiController
 
-Data = TypeVar("Data")
-Handler = TypeVar("Handler")
+_DataT = TypeVar("_DataT")
+_HandlerT = TypeVar("_HandlerT")
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
@@ -67,25 +67,27 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
 
 
 @dataclass
-class UnifiEntityLoader(Generic[Handler, Data]):
+class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
     allowed_fn: Callable[[UniFiController, str], bool]
-    api_handler_fn: Callable[[aiounifi.Controller], Handler]
+    api_handler_fn: Callable[[aiounifi.Controller], _HandlerT]
     available_fn: Callable[[UniFiController, str], bool]
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
     device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    name_fn: Callable[[Data], str | None]
-    object_fn: Callable[[aiounifi.Controller, str], Data]
-    state_fn: Callable[[aiounifi.Controller, Data], bool]
+    name_fn: Callable[[_DataT], str | None]
+    object_fn: Callable[[aiounifi.Controller, str], _DataT]
+    state_fn: Callable[[aiounifi.Controller, _DataT], bool]
     supported_fn: Callable[[aiounifi.Controller, str], bool | None]
     unique_id_fn: Callable[[str], str]
 
 
 @dataclass
-class UnifiEntityDescription(UpdateEntityDescription, UnifiEntityLoader[Handler, Data]):
+class UnifiEntityDescription(
+    UpdateEntityDescription, UnifiEntityLoader[_HandlerT, _DataT]
+):
     """Class describing UniFi update entity."""
 
     custom_subscribe: Callable[[aiounifi.Controller], Subscription] | None = None

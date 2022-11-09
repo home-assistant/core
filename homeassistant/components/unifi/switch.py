@@ -51,8 +51,8 @@ from .controller import UniFiController
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
-Data = TypeVar("Data")
-Handler = TypeVar("Handler")
+_DataT = TypeVar("_DataT")
+_HandlerT = TypeVar("_HandlerT")
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
@@ -157,25 +157,27 @@ async def async_poe_port_control_fn(
 
 
 @dataclass
-class UnifiEntityLoader(Generic[Handler, Data]):
+class UnifiEntityLoader(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
     allowed_fn: Callable[[UniFiController, str], bool]
-    api_handler_fn: Callable[[aiounifi.Controller], Handler]
+    api_handler_fn: Callable[[aiounifi.Controller], _HandlerT]
     available_fn: Callable[[UniFiController, str], bool]
     control_fn: Callable[[aiounifi.Controller, str, bool], Coroutine[Any, Any, None]]
     device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    is_on_fn: Callable[[aiounifi.Controller, Data], bool]
-    name_fn: Callable[[Data], str | None]
-    object_fn: Callable[[aiounifi.Controller, str], Data]
+    is_on_fn: Callable[[aiounifi.Controller, _DataT], bool]
+    name_fn: Callable[[_DataT], str | None]
+    object_fn: Callable[[aiounifi.Controller, str], _DataT]
     supported_fn: Callable[[aiounifi.Controller, str], bool | None]
     unique_id_fn: Callable[[str], str]
 
 
 @dataclass
-class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[Handler, Data]):
+class UnifiEntityDescription(
+    SwitchEntityDescription, UnifiEntityLoader[_HandlerT, _DataT]
+):
     """Class describing UniFi switch entity."""
 
     custom_subscribe: Callable[[aiounifi.Controller], Subscription] | None = None
