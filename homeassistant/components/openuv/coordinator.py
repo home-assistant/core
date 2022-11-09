@@ -56,9 +56,7 @@ class ReauthFlowManager:
     @callback
     def _get_active_reauth_flow(self) -> FlowResult | None:
         """Get an active reauth flow (if it exists)."""
-        for flow in self.entry.async_get_active_reauth_flows(self.hass):
-            return flow
-        return None
+        return next(iter(self.entry.async_get_active_reauth_flows(self.hass)), None)
 
     @callback
     def cancel_reauth(self) -> None:
