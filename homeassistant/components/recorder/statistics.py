@@ -1216,11 +1216,28 @@ def _get_max_mean_min_statistic(
     return result
 
 
+def _first_statistic(
+    session: Session,
+    table: type[Statistics | StatisticsShortTerm],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the data of the oldest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start.asc())
+        .limit(1)
+    )
+    stats = execute_stmt_lambda_element(session, stmt)
+    return process_timestamp(stats[0].start) if stats else None
+
+
 def _get_oldest_sum_statistic(
     session: Session,
     head_start_time: datetime | None,
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
+    oldest_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1231,10 +1248,10 @@ def _get_oldest_sum_statistic(
         start_time: datetime | None,
         table: type[Statistics | StatisticsShortTerm],
         metadata_id: int,
-    ) -> tuple[float | None, datetime | None]:
+    ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(table.sum, table.start)
+            lambda: select(table.sum)
             .filter(table.metadata_id == metadata_id)
             .filter(table.sum.is_not(None))
             .order_by(table.start.asc())
@@ -1248,48 +1265,40 @@ def _get_oldest_sum_statistic(
             else:
                 period = start_time.replace(minute=0, second=0, microsecond=0)
             prev_period = period - table.duration
-            stmt += lambda q: q.filter(table.start == prev_period)
+            stmt += lambda q: q.filter(table.start >= prev_period)
         stats = execute_stmt_lambda_element(session, stmt)
-        return (
-            (stats[0].sum, process_timestamp(stats[0].start)) if stats else (None, None)
-        )
+        return stats[0].sum if stats else None
 
-    oldest_start: datetime | None
     oldest_sum: float | None = None
 
+    if not tail_only and oldest_stat is not None:
+        assert main_start_time is not None
+        period = main_start_time.replace(minute=0, second=0, microsecond=0)
+        prev_period = period - Statistics.duration
+        if prev_period < oldest_stat:
+            return 0
+
     if head_start_time is not None:
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
             session, head_start_time, StatisticsShortTerm, metadata_id
         )
-        if (
-            oldest_start is not None
-            and oldest_start < head_start_time
-            and oldest_sum is not None
-        ):
+        if oldest_sum is not None:
             return oldest_sum
 
     if not tail_only:
         assert main_start_time is not None
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
             session, main_start_time, Statistics, metadata_id
         )
-        if (
-            oldest_start is not None
-            and oldest_start < main_start_time
-            and oldest_sum is not None
-        ):
+        if oldest_sum is not None:
             return oldest_sum
         return 0
 
     if tail_start_time is not None:
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
             session, tail_start_time, StatisticsShortTerm, metadata_id
         )
-        if (
-            oldest_start is not None
-            and oldest_start < tail_start_time
-            and oldest_sum is not None
-        ):
+        if oldest_sum is not None:
             return oldest_sum
 
     return 0
@@ -1373,51 +1382,79 @@ def statistic_during_period(
 
     result: dict[str, Any] = {}
 
-    # To calculate the summary, data from the statistics (hourly) and short_term_statistics
-    # (5 minute) tables is combined
-    # - The short term statistics table is used for the head and tail of the period,
-    #   if the period it doesn't start or end on a full hour
-    # - The statistics table is used for the remainder of the time
-    now = dt_util.utcnow()
-    if end_time is not None and end_time > now:
-        end_time = now
-
-    tail_only = (
-        start_time is not None
-        and end_time is not None
-        and end_time - start_time < timedelta(hours=1)
-    )
-
-    # Calculate the head period
-    head_start_time: datetime | None = None
-    head_end_time: datetime | None = None
-    if not tail_only and start_time is not None and start_time.minute:
-        head_start_time = start_time
-        head_end_time = start_time.replace(
-            minute=0, second=0, microsecond=0
-        ) + timedelta(hours=1)
-
-    # Calculate the tail period
-    tail_start_time: datetime | None = None
-    tail_end_time: datetime | None = None
-    if end_time is None:
-        tail_start_time = now.replace(minute=0, second=0, microsecond=0)
-    elif end_time.minute:
-        tail_start_time = (
-            start_time
-            if tail_only
-            else end_time.replace(minute=0, second=0, microsecond=0)
-        )
-        tail_end_time = end_time
-
-    # Calculate the main period
-    main_start_time: datetime | None = None
-    main_end_time: datetime | None = None
-    if not tail_only:
-        main_start_time = start_time if head_end_time is None else head_end_time
-        main_end_time = end_time if tail_start_time is None else tail_start_time
-
     with session_scope(hass=hass) as session:
+        # Fetch metadata for the given statistic_id
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
+        if not metadata:
+            return result
+
+        metadata_id = metadata[statistic_id][0]
+
+        oldest_stat = _first_statistic(session, Statistics, metadata_id)
+        if valid_statistic_id(statistic_id):
+            oldest_5_min_stat = None
+        else:
+            oldest_5_min_stat = _first_statistic(
+                session, StatisticsShortTerm, metadata_id
+            )
+
+        # To calculate the summary, data from the statistics (hourly) and
+        # short_term_statistics (5 minute) tables is combined
+        # - The short term statistics table is used for the head and tail of the period,
+        #   if the period it doesn't start or end on a full hour
+        # - The statistics table is used for the remainder of the time
+        now = dt_util.utcnow()
+        if end_time is not None and end_time > now:
+            end_time = now
+
+        tail_only = (
+            start_time is not None
+            and end_time is not None
+            and end_time - start_time < timedelta(hours=1)
+        )
+
+        # Calculate the head period
+        head_start_time: datetime | None = None
+        head_end_time: datetime | None = None
+        if (
+            not tail_only
+            and oldest_stat is not None
+            and oldest_5_min_stat is not None
+            and oldest_5_min_stat - oldest_stat < timedelta(hours=1)
+            and (start_time is None or start_time < oldest_5_min_stat)
+        ):
+            # To improve accuracy of averaged for statistics which were added within
+            # recorder's retention period.
+            head_start_time = oldest_5_min_stat
+            head_end_time = oldest_5_min_stat.replace(
+                minute=0, second=0, microsecond=0
+            ) + timedelta(hours=1)
+        elif not tail_only and start_time is not None and start_time.minute:
+            head_start_time = start_time
+            head_end_time = start_time.replace(
+                minute=0, second=0, microsecond=0
+            ) + timedelta(hours=1)
+
+        # Calculate the tail period
+        tail_start_time: datetime | None = None
+        tail_end_time: datetime | None = None
+        if end_time is None:
+            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif end_time.minute:
+            tail_start_time = (
+                start_time
+                if tail_only
+                else end_time.replace(minute=0, second=0, microsecond=0)
+            )
+            tail_end_time = end_time
+
+        # Calculate the main period
+        main_start_time: datetime | None = None
+        main_end_time: datetime | None = None
+        if not tail_only:
+            main_start_time = start_time if head_end_time is None else head_end_time
+            main_end_time = end_time if tail_start_time is None else tail_start_time
+
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if not metadata:
@@ -1449,6 +1486,7 @@ def statistic_during_period(
                     head_start_time,
                     main_start_time,
                     tail_start_time,
+                    oldest_stat,
                     tail_only,
                     metadata_id,
                 )
