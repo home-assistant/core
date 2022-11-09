@@ -155,7 +155,7 @@ effect_colorloop:
           unit_of_measurement: "%"
     saturation_min:
       name: Minimum saturation
-      description: Percentage indicating the minimum saturation of the colors in the loop. Leave this out to use the default value of 80%.
+      description: Percentage indicating the minimum saturation of the colors in the loop.
       default: 80
       selector:
         number:
@@ -164,7 +164,7 @@ effect_colorloop:
           unit_of_measurement: "%"
     saturation_max:
       name: Maximum saturation
-      description: Percentage indicating the maximum saturation of the colors in the loop. Leave this out to use the default value of 100%.
+      description: Percentage indicating the maximum saturation of the colors in the loop.
       default: 100
       selector:
         number:
