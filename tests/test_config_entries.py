@@ -3321,7 +3321,7 @@ async def test_reauth(hass):
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
 
-    # Check that we can't start duplicate reauth flow when the context is different
+    # Check that we can't start duplicate reauth flows when the context is different
     entry.async_start_reauth(hass, {"diff": "diff"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
