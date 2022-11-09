@@ -9,6 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 if TYPE_CHECKING:
     from io import BufferedIOBase
 
+    from .core import Orientation
+
 
 def find_box(
     mp4_bytes: bytes, target_type: bytes, box_start: int = 0
@@ -192,7 +194,7 @@ TRANSFORM_MATRIX_TOP = (
 )
 
 
-def transform_init(init: bytes, orientation: int) -> bytes:
+def transform_init(init: bytes, orientation: Orientation) -> bytes:
     """Change the transformation matrix in the header."""
     if orientation == 1:
         return init

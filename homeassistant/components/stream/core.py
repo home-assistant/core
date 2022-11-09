@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
 import datetime
+from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -35,6 +36,19 @@ _LOGGER = logging.getLogger(__name__)
 PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
+class Orientation(IntEnum):
+    """Orientations for stream transforms."""
+
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+    SIX = 6
+    SEVEN = 7
+    EIGHT = 8
+
+
 @attr.s(slots=True)
 class StreamSettings:
     """Stream settings."""
@@ -44,7 +58,7 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
-    orientation: int = attr.ib()
+    orientation: Orientation = attr.ib()
 
 
 STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
@@ -53,7 +67,7 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
     part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
     hls_advance_part_limit=3,
     hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-    orientation=1,
+    orientation=Orientation.ONE,
 )
 
 

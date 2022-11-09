@@ -30,6 +30,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.stream import (
     FORMAT_CONTENT_TYPE,
     OUTPUT_FORMATS,
+    Orientation,
     Stream,
     create_stream,
 )
@@ -868,7 +869,7 @@ async def websocket_get_prefs(
         vol.Required("type"): "camera/update_prefs",
         vol.Required("entity_id"): cv.entity_id,
         vol.Optional(PREF_PRELOAD_STREAM): bool,
-        vol.Optional(PREF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
+        vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
 @websocket_api.async_response
