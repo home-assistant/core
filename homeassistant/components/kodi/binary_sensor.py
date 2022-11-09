@@ -11,8 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .connection_manager import KodiConnectionClient, KodiConnectionManager
 from .const import DATA_CONNECTION, DOMAIN, WS_DPMS, WS_SCREENSAVER
-from .kodi_connman import KodiConnectionClient, KodiConnectionManager
 
 _LOGGER = logging.getLogger(__name__)
 

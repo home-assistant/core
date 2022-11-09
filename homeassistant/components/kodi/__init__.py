@@ -6,8 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 
+from .connection_manager import KodiConnectionManager
 from .const import DATA_CONNECTION, DATA_REMOVE_LISTENER, DOMAIN
-from .kodi_connman import KodiConnectionManager
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]

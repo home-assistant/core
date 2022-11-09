@@ -48,6 +48,7 @@ from .browse_media import (
     library_payload,
     media_source_content_filter,
 )
+from .connection_manager import KodiConnectionClient, KodiConnectionManager
 from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
@@ -59,7 +60,6 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
-from .kodi_connman import KodiConnectionClient, KodiConnectionManager
 
 _KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
 _P = ParamSpec("_P")

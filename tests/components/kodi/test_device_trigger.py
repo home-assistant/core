@@ -1,15 +1,13 @@
 """The tests for Kodi device triggers."""
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from . import init_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -26,9 +24,8 @@ def calls(hass):
 
 
 @pytest.fixture
-async def kodi_media_player(hass):
+async def kodi_media_player(kodi_connection):  # pylint: disable=unused-argument
     """Get a kodi media player."""
-    await init_integration(hass)
     return f"{MP_DOMAIN}.name"
 
 
