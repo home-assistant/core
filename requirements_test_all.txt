@@ -386,7 +386,7 @@ brother==2.0.0
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==1.2.2
+bthome-ble==2.2.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
