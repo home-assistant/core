@@ -39,7 +39,7 @@ from homeassistant.components.stream.const import (
     SEGMENT_DURATION_ADJUSTER,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from homeassistant.components.stream.core import StreamSettings
+from homeassistant.components.stream.core import Orientation, StreamSettings
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
@@ -931,7 +931,7 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
-        "orientation": 1,
+        "orientation": Orientation.NO_TRANSFORM,
         "start_worker": 1,
         "video_codec": "hevc",
         "worker_error": 1,
@@ -989,7 +989,7 @@ async def test_get_image_rotated(hass, h264_video, filename):
         "homeassistant.components.camera.img_util.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
-        for orientation in (1, 8):
+        for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):
             stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
             stream.dynamic_stream_settings.orientation = orientation
 

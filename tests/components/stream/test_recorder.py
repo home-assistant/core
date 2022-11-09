@@ -14,7 +14,7 @@ from homeassistant.components.stream.const import (
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
 )
-from homeassistant.components.stream.core import Part
+from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -277,7 +277,7 @@ async def test_record_stream_rotate(hass, filename, h264_video):
 
     with patch("homeassistant.components.stream.Stream", wraps=MockStream):
         stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
-        stream.dynamic_stream_settings.orientation = 8
+        stream.dynamic_stream_settings.orientation = Orientation.ROTATE_RIGHT
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))

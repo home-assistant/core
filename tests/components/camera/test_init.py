@@ -421,7 +421,9 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
 
 async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_settings = camera.DynamicStreamSettings(preload_stream=False, orientation=1)
+    demo_settings = camera.DynamicStreamSettings(
+        preload_stream=False, orientation=camera.Orientation.NO_TRANSFORM
+    )
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
     ) as mock_request_stream, patch(
@@ -440,7 +442,9 @@ async def test_no_preload_stream(hass, mock_stream):
 
 async def test_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
-    demo_settings = camera.DynamicStreamSettings(preload_stream=True, orientation=1)
+    demo_settings = camera.DynamicStreamSettings(
+        preload_stream=True, orientation=camera.Orientation.NO_TRANSFORM
+    )
     with patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(

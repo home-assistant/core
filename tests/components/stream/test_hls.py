@@ -16,7 +16,7 @@ from homeassistant.components.stream.const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from homeassistant.components.stream.core import Part
+from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -186,7 +186,7 @@ async def test_hls_stream(
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
-        "orientation": 1,
+        "orientation": Orientation.NO_TRANSFORM,
         "start_worker": 1,
         "video_codec": "h264",
         "worker_error": 1,
@@ -550,7 +550,7 @@ async def test_hls_stream_rotate(
     assert master_playlist_response.status == HTTPStatus.OK
 
     # Fetch rotated init
-    stream.dynamic_stream_settings.orientation = 6
+    stream.dynamic_stream_settings.orientation = Orientation.ROTATE_LEFT
     init_response = await hls_client.get("/init.mp4")
     assert init_response.status == HTTPStatus.OK
     init = await init_response.read()
