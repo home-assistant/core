@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.18
+aiohomekit==2.2.19
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -485,7 +485,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==1.2.2
+bthome-ble==2.2.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1022,7 +1022,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.1.1
+life360==5.3.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3

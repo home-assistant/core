@@ -5,6 +5,7 @@ from typing import Optional, Union
 
 from sensor_state_data import (
     DeviceKey,
+    SensorDescription,
     SensorDeviceClass,
     SensorDeviceInfo,
     SensorUpdate,
@@ -69,9 +70,8 @@ SENSOR_DESCRIPTIONS = {
         entity_registry_enabled_default=False,
     ),
     (SensorDeviceClass.COUNT, None): SensorEntityDescription(
-        key=f"{SensorDeviceClass.COUNT}_movement",
+        key="movement_counter",
         device_class=SensorDeviceClass.COUNT,
-        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -89,7 +89,7 @@ def _sensor_device_info_to_hass(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
-    hass_device_info = DeviceInfo({})
+    hass_device_info = DeviceInfo()
     if sensor_device_info.name is not None:
         hass_device_info[const.ATTR_NAME] = sensor_device_info.name
     if sensor_device_info.manufacturer is not None:
@@ -97,6 +97,13 @@ def _sensor_device_info_to_hass(
     if sensor_device_info.model is not None:
         hass_device_info[const.ATTR_MODEL] = sensor_device_info.model
     return hass_device_info
+
+
+def _to_sensor_key(
+    description: SensorDescription,
+) -> tuple[SensorDeviceClass, Units | None]:
+    assert description.device_class is not None
+    return (description.device_class, description.native_unit_of_measurement)
 
 
 def sensor_update_to_bluetooth_data_update(
@@ -110,10 +117,10 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             _device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_class, description.native_unit_of_measurement)
+                _to_sensor_key(description)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if _to_sensor_key(description) in SENSOR_DESCRIPTIONS
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value

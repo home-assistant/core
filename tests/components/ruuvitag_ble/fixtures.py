@@ -23,4 +23,4 @@ RUUVITAG_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 CONFIGURED_NAME = "RuuviTag EFAF"
-CONFIGURED_PREFIX = CONFIGURED_NAME.lower().replace(":", "_").replace(" ", "_")
+CONFIGURED_PREFIX = "ruuvitag_efaf"
