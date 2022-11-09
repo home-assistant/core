@@ -1035,7 +1035,9 @@ async def _async_process_single_config(
         return automation.name == name and automation.raw_config == config.raw_config
 
     automation_configs = await _prepare_automation_config(hass, config, automation_id)
-    automation = component.get_entity(automation_id)
+    automation = next(
+        (x for x in component.entities if x.unique_id == automation_id), None
+    )
     automation_config = automation_configs[0] if automation_configs else None
 
     if automation_matches_config(automation, automation_config):
