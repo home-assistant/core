@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzEntityDescriptionMixinBase
@@ -80,7 +80,7 @@ async def async_setup_entry(
     )
 
 
-class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
+class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
     entity_description: FritzBinarySensorEntityDescription

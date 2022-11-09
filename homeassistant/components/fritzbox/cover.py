@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
     )
 
 
-class FritzboxCover(FritzBoxEntity, CoverEntity):
+class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
     """The cover class for FRITZ!SmartHome covers."""
 
     _attr_device_class = CoverDeviceClass.BLIND

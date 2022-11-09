@@ -1,8 +1,9 @@
 """Support for AVM FRITZ!SmartHome devices."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-from pyfritzhome.devicetypes import FritzhomeTemplate
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -95,7 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator]):
+class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
     """Basis FritzBox entity."""
 
     def __init__(
@@ -117,26 +118,41 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator]):
             self._attr_unique_id = ain
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and (
-            isinstance(self.entity, FritzhomeTemplate) or self.entity.present
-        )
+    @abstractmethod
+    def entity(self) -> FritzhomeEntityBase:
+        """Return device object from coordinator."""
 
     @property
-    def entity(self) -> FritzhomeEntityBase:
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
+            name=self.entity.name,
+            identifiers={(DOMAIN, self.ain)},
+            configuration_url=self.coordinator.configuration_url,
+        )
+
+
+class FritzBoxDeviceEntity(FritzBoxEntity):
+    """Reflects FritzhomeDevice and uses its attributes to construct FritzBoxDeviceEntity."""
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.entity.present
+
+    @property
+    def entity(self) -> FritzhomeDevice:
         """Return device object from coordinator."""
         return self.coordinator.data.devices[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        is_device = isinstance(self.entity, FritzhomeDevice)
         return DeviceInfo(
             name=self.entity.name,
             identifiers={(DOMAIN, self.ain)},
-            manufacturer=self.entity.manufacturer if is_device else None,
-            model=self.entity.productname if is_device else None,
-            sw_version=self.entity.fw_version if is_device else None,
+            manufacturer=self.entity.manufacturer,
+            model=self.entity.productname,
+            sw_version=self.entity.fw_version,
             configuration_url=self.coordinator.configuration_url,
         )

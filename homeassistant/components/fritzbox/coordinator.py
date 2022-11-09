@@ -4,9 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyfritzhome import Fritzhome, LoginError
+from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
-from pyfritzhome.devicetypes.fritzhomedevicebase import FritzhomeDeviceBase
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +20,7 @@ from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
 class FritzboxCoordinatorData:
     """Data Type of FritzboxDataUpdateCoordinator's data."""
 
-    devices: dict[str, FritzhomeDeviceBase]
+    devices: dict[str, FritzhomeDevice]
     templates: dict[str, FritzhomeTemplate]
 
 

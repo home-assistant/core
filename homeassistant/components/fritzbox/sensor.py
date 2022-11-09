@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzEntityDescriptionMixinBase
 
@@ -227,7 +227,7 @@ async def async_setup_entry(
     )
 
 
-class FritzBoxSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     """The entity class for FRITZ!SmartHome sensors."""
 
     entity_description: FritzSensorEntityDescription

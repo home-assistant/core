@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import (
     COLOR_MODE,
     COLOR_TEMP_MODE,
@@ -58,7 +58,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FritzboxLight(FritzBoxEntity, LightEntity):
+class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     """The light class for FRITZ!SmartHome lightbulbs."""
 
     def __init__(

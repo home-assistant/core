@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     )
 
 
-class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
+class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property

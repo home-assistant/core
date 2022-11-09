@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -61,7 +61,7 @@ async def async_setup_entry(
     )
 
 
-class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
+class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
     _attr_precision = PRECISION_HALVES
