@@ -760,6 +760,42 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
     )
 
 
+async def test_can_turn_on_after_off(hass, utcnow):
+    """
+    Test that we always force device from inactive to active when setting mode.
+
+    This is a regression test for #81863.
+    """
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+        },
+    )
+
+
 async def test_heater_cooler_change_thermostat_temperature(hass, utcnow):
     """Test that we can change the target temperature."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
