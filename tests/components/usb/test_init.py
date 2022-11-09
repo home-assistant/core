@@ -877,6 +877,35 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
         assert usb.async_is_plugged_in(hass, matcher)
 
 
+@pytest.mark.parametrize(
+    "matcher",
+    [
+        {"vid": "abcd"},
+        {"pid": "123a"},
+        {"serial_number": "1234ABCD"},
+        {"manufacturer": "Some Manufacturer"},
+        {"description": "A description"},
+    ],
+)
+async def test_async_is_plugged_in_case_enforcement(hass, matcher):
+    """Test `async_is_plugged_in` throws an error when incorrect cases are used."""
+
+    new_usb = [{"domain": "test1", "vid": "ABCD"}]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        with pytest.raises(ValueError):
+            usb.async_is_plugged_in(hass, matcher)
+
+
 async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_client):
     """Test the websocket call triggers a discovery request callback."""
     mock_callback = Mock()

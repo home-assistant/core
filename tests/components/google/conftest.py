@@ -206,9 +206,13 @@ def mock_events_list(
     ) -> None:
         if calendar_id is None:
             calendar_id = CALENDAR_ID
+        resp = {
+            **response,
+            "nextSyncToken": "sync-token",
+        }
         aioclient_mock.get(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
-            json=response,
+            json=resp,
             exc=exc,
         )
         return
@@ -236,9 +240,13 @@ def mock_calendars_list(
     """Fixture to construct a fake calendar list API response."""
 
     def _result(response: dict[str, Any], exc: ClientError | None = None) -> None:
+        resp = {
+            **response,
+            "nextSyncToken": "sync-token",
+        }
         aioclient_mock.get(
             f"{API_BASE_URL}/users/me/calendarList",
-            json=response,
+            json=resp,
             exc=exc,
         )
         return

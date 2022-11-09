@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "La valuta {currency} non \u00e8 pi\u00f9 in uso, riconfigura la configurazione della valuta.",
+            "title": "La valuta configurata non \u00e8 pi\u00f9 in uso"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Architettura della CPU",

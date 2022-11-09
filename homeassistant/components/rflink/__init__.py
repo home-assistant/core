@@ -337,6 +337,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._attr_unique_id = device_id
         if name:
             self._name = name
         else:

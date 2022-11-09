@@ -5,7 +5,8 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "incomplete_info": "Kurulum cihaz\u0131 i\u00e7in eksik bilgi, ana bilgisayar veya anahtar sa\u011flanmad\u0131.",
             "not_xiaomi_miio": "Cihaz (hen\u00fcz) Xiaomi Miio taraf\u0131ndan desteklenmiyor.",
-            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",

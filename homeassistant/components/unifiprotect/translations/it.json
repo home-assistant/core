@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "Si sta utilizzando v{version} di UniFi Protect che \u00e8 una versione in accesso anticipato. Le versioni in accesso anticipato non sono supportate da Home Assistant e potrebbero causare l'interruzione o il mancato funzionamento dell'integrazione di UniFi Protect.",
+            "title": "UniFi Protect v{version} \u00e8 una versione in accesso anticipato"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Deve essere un elenco di indirizzi MAC separati da virgole"

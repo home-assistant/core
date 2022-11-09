@@ -209,6 +209,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_FORECAST_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
@@ -266,6 +267,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_RAIN,
         name="Rain",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_RAIN_PROB,
@@ -277,6 +279,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_SNOW,
         name="Snow",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW_PROB,

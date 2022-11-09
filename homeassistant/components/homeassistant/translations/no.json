@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "Valutaen {currency} er ikke lenger i bruk, vennligst konfigurer valutakonfigurasjonen p\u00e5 nytt.",
+            "title": "Tollet er ugyldig eller ikke lenger autorisert."
+        }
+    },
     "system_health": {
         "info": {
             "arch": "CPU-arkitektur",

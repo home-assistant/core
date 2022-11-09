@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Wyst\u0105pi\u0142 b\u0142\u0105d podczas aktualizowania listy \u017ar\u00f3de\u0142.\n\nUpewnij si\u0119, \u017ce telewizor jest w\u0142\u0105czony, zanim spr\u00f3bujesz go skonfigurowa\u0107."
+        },
         "step": {
             "user": {
                 "data": {
