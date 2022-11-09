@@ -22,12 +22,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DATA_API_CLIENT,
     DATA_INSTALLATION,
+    DATA_LOG_SESSION,
     DOMAIN,
     SENSOR_DESCRIPTION_CONNECTED,
     SENSOR_DESCRIPTIONS,
 )
 from .coordinator import (
     CombinedEnergyConnectivityDataService,
+    CombinedEnergyLogSessionService,
     CombinedEnergyReadingsDataService,
 )
 
@@ -43,12 +45,15 @@ async def async_setup_entry(
     installation: Installation = hass.data[DOMAIN][entry.entry_id][DATA_INSTALLATION]
 
     # Initialise services
-    await api.start_log_session()
     connection = CombinedEnergyConnectivityDataService(hass, api)
+    log_session = CombinedEnergyLogSessionService(hass, api)
     readings = CombinedEnergyReadingsDataService(hass, api)
-    for service in (connection, readings):
+    for service in (connection, log_session, readings):
         service.async_setup()
         await service.coordinator.async_refresh()
+
+    # Store log session into Data
+    hass.data[DOMAIN][entry.entry_id][DATA_LOG_SESSION] = log_session
 
     # Build entity list
     sensor_factory = CombinedEnergyReadingsSensorFactory(hass, installation, readings)
@@ -122,10 +127,20 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def _raw_value(self):
-        """Get raw reading value from device."""
+        """Get raw reading value from device readings."""
+        value = None
         if device_readings := self.device_readings:
-            return getattr(device_readings, self.entity_description.key)
-        return None
+            value = getattr(device_readings, self.entity_description.key)
+        self._attr_available = value is not None
+        return value
+
+    @property
+    def _last_update(self):
+        """Get last update time from device readings."""
+        value = None
+        if device_readings := self.device_readings:
+            value = device_readings.range_start
+        return value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -148,7 +163,11 @@ class EnergySensor(CombinedEnergyReadingsSensor):
     def native_value(self) -> float | None:
         """Return the state of the sensor for a power value."""
         if (value := self._raw_value) is not None:
-            return round(sum(value), 2)
+            self._attr_last_reset = self._last_update
+            value = sum(value)
+            return round(value, 2)
+
+        self._attr_last_reset = None
         return None
 
 
@@ -163,23 +182,38 @@ class PowerSensor(CombinedEnergyReadingsSensor):
         return None
 
 
+class PowerFactorSensor(CombinedEnergyReadingsSensor):
+    """Sensor for power factor readings."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor for a power factor value."""
+        if (value := self._raw_value) is not None:
+            # The API expresses the power factor as a fraction convert to %
+            return round(value[-1] * 100, 1)
+        return None
+
+
 class WaterVolumeSensor(CombinedEnergyReadingsSensor):
     """Sensor for water volume readings."""
 
     @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor for a power value."""
+    def native_value(self) -> int | None:
+        """Return the state of the sensor for a water volume value."""
         if (value := self._raw_value) is not None:
+            # Get last entry and round to a whole number
             return int(round(value[-1], 0))
         return None
 
 
+# Map of common device classes to specific sensor types
 SENSOR_TYPE_MAP: dict[
     SensorDeviceClass | str | None, type[CombinedEnergyReadingsSensor]
 ] = {
     SensorDeviceClass.ENERGY: EnergySensor,
     SensorDeviceClass.POWER: PowerSensor,
     SensorDeviceClass.WATER: WaterVolumeSensor,
+    SensorDeviceClass.POWER_FACTOR: PowerFactorSensor,
     None: CombinedEnergyReadingsSensor,
 }
 
@@ -219,6 +253,7 @@ class CombinedEnergyReadingsSensorFactory:
                     name=device.display_name,
                 )
 
+                # Generate sensors from descriptions for the current device type
                 for description in descriptions:
                     if sensor_type := SENSOR_TYPE_MAP.get(
                         description.device_class, CombinedEnergyReadingsSensor
