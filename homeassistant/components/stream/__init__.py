@@ -63,6 +63,7 @@ from .core import (
     STREAM_SETTINGS_NON_LL_HLS,
     IdleTimer,
     KeyFrameConverter,
+    Orientation,
     StreamOutput,
     StreamSettings,
 )
@@ -82,6 +83,7 @@ __all__ = [
     "SOURCE_TIMEOUT",
     "Stream",
     "create_stream",
+    "Orientation",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,7 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
-            orientation=1,
+            orientation=Orientation.NO_TRANSFORM,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
@@ -292,12 +294,12 @@ class Stream:
         self._diagnostics = Diagnostics()
 
     @property
-    def orientation(self) -> int:
+    def orientation(self) -> Orientation:
         """Return the current orientation setting."""
         return self._stream_settings.orientation
 
     @orientation.setter
-    def orientation(self, value: int) -> None:
+    def orientation(self, value: Orientation) -> None:
         """Set the stream orientation setting."""
         self._stream_settings.orientation = value
 
