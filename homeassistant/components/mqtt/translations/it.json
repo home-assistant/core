@@ -10,7 +10,7 @@
             "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
             "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
-            "bad_discovery_prefix": "Prefisso di ricerca non valido",
+            "bad_discovery_prefix": "Prefisso di rilevamento non valido",
             "bad_will": "Argomento testamento non valido",
             "cannot_connect": "Impossibile connettersi",
             "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
@@ -20,15 +20,15 @@
                 "data": {
                     "advanced_options": "Opzioni avanzate",
                     "broker": "Broker",
-                    "certificate": "Percorso del file del certificato CA personalizzato",
-                    "client_cert": "Percorso per un file di certificato cliente",
-                    "client_id": "ID cliente (lasciare vuoto per generarne uno in modo casuale)",
-                    "client_key": "Percorso per un file della chiave privata",
+                    "certificate": "Carica il file del certificato CA personalizzato",
+                    "client_cert": "Carica il file del certificato client",
+                    "client_id": "ID client (lasciare vuoto per generarne uno casualmente)",
+                    "client_key": "Carica il file della chiave privata",
                     "discovery": "Attiva il rilevamento",
-                    "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento attivit\u00e0",
+                    "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento in attivit\u00e0",
                     "password": "Password",
                     "port": "Porta",
-                    "protocol": "Protocollo MQTT",
+                    "protocol": "protocollo MQTT",
                     "set_ca_cert": "Convalida del certificato del broker",
                     "set_client_cert": "Usa un certificato client",
                     "tls_insecure": "Ignora la convalida del certificato del broker",
@@ -38,7 +38,7 @@
             },
             "hassio_confirm": {
                 "data": {
-                    "discovery": "Attiva il rilevamento"
+                    "discovery": "Abilita il rilevamento"
                 },
                 "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo: {addon}?",
                 "title": "Broker MQTT tramite il componente aggiuntivo di Home Assistant"
@@ -81,13 +81,13 @@
         "error": {
             "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Il certificato CA non \u00e8 valido",
-            "bad_client_cert": "Certificato cliente non valido, assicurarsi che venga fornito un file con codice PEM",
+            "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
             "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di rilevamento non valido",
-            "bad_will": "Argomento di testamento non valido",
+            "bad_will": "Argomento testamento non valido",
             "cannot_connect": "Impossibile connettersi",
-            "invalid_inclusion": "Il certificato e la chiave privata del client devono essere configurati insieme"
+            "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
         },
         "step": {
             "broker": {
@@ -95,15 +95,15 @@
                     "advanced_options": "Opzioni avanzate",
                     "broker": "Broker",
                     "certificate": "Carica il file del certificato CA personalizzato",
-                    "client_cert": "Carica il file del certificato cliente",
-                    "client_id": "ID cliente (lasciare vuoto per generarne uno in modo casuale)",
+                    "client_cert": "Carica il file del certificato client",
+                    "client_id": "ID client (lasciare vuoto per generarne uno casualmente)",
                     "client_key": "Carica il file della chiave privata",
-                    "keepalive": "Il tempo che intercorre tra l'invio di messaggi di mantenimento comunicazioni",
+                    "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento in attivit\u00e0",
                     "password": "Password",
                     "port": "Porta",
-                    "protocol": "Protocollo MQTT",
+                    "protocol": "protocollo MQTT",
                     "set_ca_cert": "Convalida del certificato del broker",
-                    "set_client_cert": "Utilizza un certificato client",
+                    "set_client_cert": "Usa un certificato client",
                     "tls_insecure": "Ignora la convalida del certificato del broker",
                     "username": "Nome utente"
                 },
@@ -117,7 +117,7 @@
                     "birth_qos": "QoS del messaggio birth",
                     "birth_retain": "Persistenza del messaggio birth",
                     "birth_topic": "Argomento del messaggio birth",
-                    "discovery": "Attiva il rilevamento",
+                    "discovery": "Abilita il rilevamento",
                     "discovery_prefix": "Rileva prefisso",
                     "will_enable": "Abilita il messaggio testamento",
                     "will_payload": "Payload del messaggio testamento",
