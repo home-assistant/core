@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+API_HEAT_METER_SERVICE = (
+    "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
+)
 
 
 @patch(API_HEAT_METER_SERVICE)
