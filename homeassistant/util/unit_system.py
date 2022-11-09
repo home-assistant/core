@@ -9,36 +9,18 @@ import voluptuous as vol
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
-    LENGTH_CENTIMETERS,
-    LENGTH_FEET,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
-    LENGTH_YARD,
     MASS,
-    MASS_GRAMS,
-    MASS_KILOGRAMS,
-    MASS_OUNCES,
-    MASS_POUNDS,
-    PRECIPITATION_INCHES,
-    PRECIPITATION_MILLIMETERS,
     PRESSURE,
-    PRESSURE_PA,
-    PRESSURE_PSI,
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
     WIND_SPEED,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.helpers.frame import report
 
@@ -59,7 +41,12 @@ _CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
-MASS_UNITS: set[str] = {MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS}
+MASS_UNITS: set[str] = {
+    UnitOfMass.POUNDS,
+    UnitOfMass.OUNCES,
+    UnitOfMass.KILOGRAMS,
+    UnitOfMass.GRAMS,
+}
 
 PRESSURE_UNITS = PressureConverter.VALID_UNITS
 
@@ -67,29 +54,26 @@ VOLUME_UNITS = VolumeConverter.VALID_UNITS
 
 WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
 
-TEMPERATURE_UNITS: set[str] = {TEMP_FAHRENHEIT, TEMP_CELSIUS}
+TEMPERATURE_UNITS: set[str] = {UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS}
 
 
 def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
-        units = LENGTH_UNITS
-    elif unit_type == ACCUMULATED_PRECIPITATION:
-        units = LENGTH_UNITS
-    elif unit_type == WIND_SPEED:
-        units = WIND_SPEED_UNITS
-    elif unit_type == TEMPERATURE:
-        units = TEMPERATURE_UNITS
-    elif unit_type == MASS:
-        units = MASS_UNITS
-    elif unit_type == VOLUME:
-        units = VOLUME_UNITS
-    elif unit_type == PRESSURE:
-        units = PRESSURE_UNITS
-    else:
-        return False
-
-    return unit in units
+        return unit in LENGTH_UNITS
+    if unit_type == ACCUMULATED_PRECIPITATION:
+        return unit in LENGTH_UNITS
+    if unit_type == WIND_SPEED:
+        return unit in WIND_SPEED_UNITS
+    if unit_type == TEMPERATURE:
+        return unit in TEMPERATURE_UNITS
+    if unit_type == MASS:
+        return unit in MASS_UNITS
+    if unit_type == VOLUME:
+        return unit in VOLUME_UNITS
+    if unit_type == PRESSURE:
+        return unit in PRESSURE_UNITS
+    return False
 
 
 class UnitSystem:
@@ -263,44 +247,62 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    accumulated_precipitation=UnitOfLength.MILLIMETERS,
     conversions={
         # Convert non-metric distances
-        ("distance", LENGTH_FEET): LENGTH_METERS,
-        ("distance", LENGTH_INCHES): LENGTH_MILLIMETERS,
-        ("distance", LENGTH_MILES): LENGTH_KILOMETERS,
-        ("distance", LENGTH_YARD): LENGTH_METERS,
+        ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
+        ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
+        ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
+        ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
+        # Convert non-metric volumes of gas meters
+        ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric speeds except knots to km/h
-        ("speed", SPEED_FEET_PER_SECOND): SPEED_KILOMETERS_PER_HOUR,
-        ("speed", SPEED_MILES_PER_HOUR): SPEED_KILOMETERS_PER_HOUR,
+        ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
+        # Convert non-metric volumes
+        ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
+        ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        # Convert non-metric volumes of water meters
+        ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
     },
-    length=LENGTH_KILOMETERS,
-    mass=MASS_GRAMS,
-    pressure=PRESSURE_PA,
-    temperature=TEMP_CELSIUS,
-    volume=VOLUME_LITERS,
-    wind_speed=SPEED_METERS_PER_SECOND,
+    length=UnitOfLength.KILOMETERS,
+    mass=UnitOfMass.GRAMS,
+    pressure=UnitOfPressure.PA,
+    temperature=UnitOfTemperature.CELSIUS,
+    volume=UnitOfVolume.LITERS,
+    wind_speed=UnitOfSpeed.METERS_PER_SECOND,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    accumulated_precipitation=PRECIPITATION_INCHES,
+    accumulated_precipitation=UnitOfLength.INCHES,
     conversions={
         # Convert non-USCS distances
-        ("distance", LENGTH_CENTIMETERS): LENGTH_INCHES,
-        ("distance", LENGTH_KILOMETERS): LENGTH_MILES,
-        ("distance", LENGTH_METERS): LENGTH_FEET,
-        ("distance", LENGTH_MILLIMETERS): LENGTH_INCHES,
+        ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
+        ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
+        ("distance", UnitOfLength.METERS): UnitOfLength.FEET,
+        ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS volumes of gas meters
+        ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS speeds except knots to mph
-        ("speed", SPEED_METERS_PER_SECOND): SPEED_MILES_PER_HOUR,
-        ("speed", SPEED_KILOMETERS_PER_HOUR): SPEED_MILES_PER_HOUR,
+        ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
+        ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,
+        # Convert non-USCS volumes
+        ("volume", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        ("volume", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
+        ("volume", UnitOfVolume.MILLILITERS): UnitOfVolume.FLUID_OUNCES,
+        # Convert non-USCS volumes of water meters
+        ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
     },
-    length=LENGTH_MILES,
-    mass=MASS_POUNDS,
-    pressure=PRESSURE_PSI,
-    temperature=TEMP_FAHRENHEIT,
-    volume=VOLUME_GALLONS,
-    wind_speed=SPEED_MILES_PER_HOUR,
+    length=UnitOfLength.MILES,
+    mass=UnitOfMass.POUNDS,
+    pressure=UnitOfPressure.PSI,
+    temperature=UnitOfTemperature.FAHRENHEIT,
+    volume=UnitOfVolume.GALLONS,
+    wind_speed=UnitOfSpeed.MILES_PER_HOUR,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM

@@ -1,17 +1,14 @@
 """Support for MQTT switches."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import switch
-from homeassistant.components.switch import (
-    DEVICE_CLASSES_SCHEMA,
-    SwitchDeviceClass,
-    SwitchEntity,
-)
+from homeassistant.components.switch import DEVICE_CLASSES_SCHEMA, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -26,6 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -46,7 +44,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate
+from .models import MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Switch"
@@ -111,8 +109,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT switch."""
     async_add_entities([MqttSwitch(hass, config, config_entry, discovery_data)])
@@ -123,27 +121,35 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
-    def __init__(self, hass, config, config_entry, discovery_data):
-        """Initialize the MQTT switch."""
-        self._state = None
+    _optimistic: bool
+    _state_on: str
+    _state_off: str
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-        self._state_on = None
-        self._state_off = None
-        self._optimistic = None
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
+        """Initialize the MQTT switch."""
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        state_on = config.get(CONF_STATE_ON)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+
+        state_on: str | None = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
-        state_off = config.get(CONF_STATE_OFF)
+        state_off: str | None = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         self._optimistic = (
@@ -154,20 +160,20 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg):
+        def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
             payload = self._value_template(msg.payload)
             if payload == self._state_on:
-                self._state = True
+                self._attr_is_on = True
             elif payload == self._state_off:
-                self._state = False
+                self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
-                self._state = None
+                self._attr_is_on = None
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -188,27 +194,17 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
-            self._state = last_state.state == STATE_ON
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
+            self._attr_is_on = last_state.state == STATE_ON
 
     @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def device_class(self) -> SwitchDeviceClass | None:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
@@ -224,7 +220,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -241,5 +237,5 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()

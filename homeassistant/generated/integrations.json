@@ -89,6 +89,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "airq": {
+      "name": "air-Q",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airthings": {
       "name": "Airthings",
       "integrations": {
@@ -312,6 +318,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "aranet": {
+      "name": "Aranet",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "arcam_fmj": {
       "name": "Arcam FMJ Receivers",
@@ -595,6 +607,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "brandt": {
+      "name": "Brandt Smart Control",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "brel_home": {
       "name": "Brel Home",
@@ -930,7 +947,7 @@
     },
     "deluge": {
       "name": "Deluge",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1029,7 +1046,7 @@
     },
     "discord": {
       "name": "Discord",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -1718,7 +1735,7 @@
           "name": "AVM FRITZ!SmartHome"
         },
         "fritzbox_callmonitor": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "AVM FRITZ!Box Call Monitor"
@@ -1767,7 +1784,7 @@
     },
     "gdacs": {
       "name": "Global Disaster Alert and Coordination System (GDACS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1823,13 +1840,13 @@
       "name": "GeoNet",
       "integrations": {
         "geonetnz_quakes": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "GeoNet NZ Quakes"
         },
         "geonetnz_volcano": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "GeoNet NZ Volcano"
@@ -1889,7 +1906,7 @@
     },
     "goalzero": {
       "name": "Goal Zero Yeti",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1934,7 +1951,7 @@
           "name": "Google Pub/Sub"
         },
         "google_sheets": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
@@ -2108,6 +2125,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "hexaom": {
+      "name": "Hexaom Hexaconnect",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "hi_kumo": {
       "name": "Hitachi Hi Kumo",
@@ -2327,7 +2349,7 @@
     },
     "ign_sismologia": {
       "name": "IGN Sismolog\u00eda",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2739,7 +2761,7 @@
     },
     "lidarr": {
       "name": "Lidarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2808,6 +2830,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "livisi": {
+      "name": "LIVISI Smart Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
@@ -3205,7 +3233,7 @@
     },
     "modem_callerid": {
       "name": "Phone Modem",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3452,7 +3480,7 @@
     },
     "nfandroidtv": {
       "name": "Notifications for Android TV / Fire TV",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3825,7 +3853,7 @@
     },
     "ovo_energy": {
       "name": "OVO Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4079,7 +4107,7 @@
     "pushbullet": {
       "name": "Pushbullet",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "pushover": {
@@ -4183,7 +4211,7 @@
     },
     "radarr": {
       "name": "Radarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4447,6 +4475,12 @@
         }
       }
     },
+    "ruuvitag_ble": {
+      "name": "RuuviTag BLE",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",
@@ -4468,7 +4502,7 @@
           "name": "Samsung Family Hub"
         },
         "samsungtv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Samsung Smart TV"
@@ -4680,6 +4714,11 @@
       "name": "Simply Automated",
       "integration_type": "virtual",
       "supported_by": "upb"
+    },
+    "simu": {
+      "name": "SIMU LiveIn2",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
     },
     "simulated": {
       "name": "Simulated",
@@ -5005,7 +5044,7 @@
     },
     "steam_online": {
       "name": "Steam",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5145,7 +5184,7 @@
     },
     "system_bridge": {
       "name": "System Bridge",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5400,7 +5439,7 @@
     },
     "tomorrowio": {
       "name": "Tomorrow.io",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5589,6 +5628,11 @@
         }
       }
     },
+    "ubiwizz": {
+      "name": "Ubiwizz",
+      "integration_type": "virtual",
+      "supported_by": "overkiz"
+    },
     "uk_transport": {
       "name": "UK Transport",
       "integration_type": "hub",
@@ -5627,7 +5671,7 @@
     },
     "upnp": {
       "name": "UPnP/IGD",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5649,7 +5693,7 @@
     },
     "usgs_earthquakes_feed": {
       "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -6093,7 +6137,7 @@
     "zamg": {
       "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "zengge": {
@@ -6212,7 +6256,7 @@
     "min_max": {
       "integration_type": "helper",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "calculated"
     },
     "schedule": {
       "integration_type": "helper",

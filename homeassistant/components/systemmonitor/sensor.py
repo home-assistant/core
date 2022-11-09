@@ -97,13 +97,13 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
         name="IPv4 address",
-        icon="mdi:server-network",
+        icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "ipv6_address": SysMonitorSensorEntityDescription(
         key="ipv6_address",
         name="IPv6 address",
-        icon="mdi:server-network",
+        icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "last_boot": SysMonitorSensorEntityDescription(

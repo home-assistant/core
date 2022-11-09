@@ -1332,3 +1332,15 @@ def test_currency():
 
     for value in ("EUR", "USD"):
         assert schema(value)
+
+
+def test_historic_currency():
+    """Test historic currency validator."""
+    schema = vol.Schema(cv.historic_currency)
+
+    for value in (None, "BTC", "EUR"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("DEM", "NLG"):
+        assert schema(value)

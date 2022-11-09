@@ -53,7 +53,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_loads
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, subscription
@@ -82,7 +81,12 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
+from .models import (
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
@@ -287,6 +291,7 @@ async def async_get_platform_config_from_yaml(
     config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
+    platform_configs: Any | None
     mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
         config_yaml = mqtt_data.config
@@ -294,6 +299,7 @@ async def async_get_platform_config_from_yaml(
         return []
     if not (platform_configs := config_yaml.get(platform_domain)):
         return []
+    assert isinstance(platform_configs, list)
     return platform_configs
 
 
@@ -662,7 +668,9 @@ def stop_discovery_updates(
     clear_discovery_hash(hass, discovery_hash)
 
 
-async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: dict):
+async def async_remove_discovery_payload(
+    hass: HomeAssistant, discovery_data: DiscoveryInfoType
+) -> None:
     """Clear retained discovery topic in broker to avoid rediscovery after a restart of HA."""
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
     await async_publish(hass, discovery_topic, "", retain=True)
@@ -820,7 +828,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_discovery_updated: Callable | None = None
+        self._remove_discovery_updated: Callable[[], None] | None = None
         self._removed_from_hass = False
         if discovery_data is None:
             return
@@ -1169,7 +1177,7 @@ def update_device(
     device_info = device_info_from_specifications(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
-        update_device_info = cast(dict, device_info)
+        update_device_info = cast(dict[str, Any], device_info)
         update_device_info["config_entry_id"] = config_entry_id
         device = device_registry.async_get_or_create(**update_device_info)
 

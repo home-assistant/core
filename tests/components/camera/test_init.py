@@ -367,7 +367,7 @@ async def test_websocket_update_orientation_prefs(hass, hass_ws_client, mock_cam
     assert response["success"]
 
     er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
-    assert er_camera_prefs[PREF_ORIENTATION] == 3
+    assert er_camera_prefs[PREF_ORIENTATION] == camera.Orientation.ROTATE_180
     assert response["result"][PREF_ORIENTATION] == er_camera_prefs[PREF_ORIENTATION]
     # Check that the preference was saved
     await client.send_json(
@@ -375,7 +375,7 @@ async def test_websocket_update_orientation_prefs(hass, hass_ws_client, mock_cam
     )
     msg = await client.receive_json()
     # orientation entry for this camera should have been added
-    assert msg["result"]["orientation"] == 3
+    assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
