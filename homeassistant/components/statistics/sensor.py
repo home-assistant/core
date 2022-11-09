@@ -78,6 +78,7 @@ STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
+STAT_PERCENTILE = "percentile"
 STAT_STANDARD_DEVIATION = "standard_deviation"
 STAT_SUM = "sum"
 STAT_SUM_DIFFERENCES = "sum_differences"
@@ -106,6 +107,7 @@ STATS_NUMERIC_SUPPORT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
     STAT_SUM,
     STAT_SUM_DIFFERENCES,
@@ -154,6 +156,7 @@ STAT_NUMERIC_RETAIN_UNIT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
     STAT_SUM,
     STAT_SUM_DIFFERENCES,
@@ -174,6 +177,7 @@ CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
+CONF_PERCENTILE = "percentile"
 
 DEFAULT_NAME = "Stats"
 DEFAULT_PRECISION = 2
@@ -241,6 +245,9 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
+        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=99)
+        ),
     }
 )
 PLATFORM_SCHEMA = vol.All(
@@ -270,6 +277,7 @@ async def async_setup_platform(
                 samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
                 samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
+                percentile=config[CONF_PERCENTILE],
             )
         ],
         update_before_add=True,
@@ -288,6 +296,7 @@ class StatisticsSensor(SensorEntity):
         samples_max_buffer_size: int,
         samples_max_age: timedelta | None,
         precision: int,
+        percentile: int,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -302,6 +311,7 @@ class StatisticsSensor(SensorEntity):
         self._samples_max_buffer_size: int = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
+        self._percentile: int = percentile
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
@@ -679,6 +689,12 @@ class StatisticsSensor(SensorEntity):
     def _stat_noisiness(self) -> StateType:
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
+        return None
+
+    def _stat_percentile(self) -> StateType:
+        if len(self.states) >= 2:
+            percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
+            return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
