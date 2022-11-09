@@ -802,7 +802,13 @@ async def _async_process_config(
         automation: AutomationEntity, config: AutomationEntityConfig
     ) -> bool:
         name = _automation_name(config)
-        return automation.name == name and automation.raw_config == config.raw_config
+        assert config.raw_config
+        unique_id: str | None = config.raw_config.get(CONF_ID)
+        return (
+            automation.unique_id == unique_id
+            and automation.name == name
+            and automation.raw_config == config.raw_config
+        )
 
     def find_matches(
         automations: list[AutomationEntity],
