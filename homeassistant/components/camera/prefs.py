@@ -35,7 +35,9 @@ class CameraEntityPreferences:
     @property
     def orientation(self) -> Orientation:
         """Return the current stream orientation settings."""
-        return cast(Orientation, self._prefs.get(PREF_ORIENTATION, Orientation.ONE))
+        return cast(
+            Orientation, self._prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM)
+        )
 
 
 class CameraPreferences:

@@ -39,14 +39,14 @@ PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 class Orientation(IntEnum):
     """Orientations for stream transforms."""
 
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
-    SIX = 6
-    SEVEN = 7
-    EIGHT = 8
+    NO_TRANSFORM = 1
+    MIRROR = 2
+    ROTATE_180 = 3
+    FLIP = 4
+    ROTATE_LEFT_AND_FLIP = 5
+    ROTATE_LEFT = 6
+    ROTATE_RIGHT_AND_FLIP = 7
+    ROTATE_RIGHT = 8
 
 
 @attr.s(slots=True)
@@ -67,7 +67,7 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
     part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
     hls_advance_part_limit=3,
     hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-    orientation=Orientation.ONE,
+    orientation=Orientation.NO_TRANSFORM,
 )
 
 

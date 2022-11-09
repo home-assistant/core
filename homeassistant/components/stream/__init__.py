@@ -231,7 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
-            orientation=Orientation.ONE,
+            orientation=Orientation.NO_TRANSFORM,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
