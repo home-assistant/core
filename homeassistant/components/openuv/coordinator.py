@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from pyopenuv.errors import InvalidApiKeyError, OpenUvError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.debounce import Debouncer
@@ -56,7 +56,10 @@ class ReauthFlowManager:
     @callback
     def _get_active_reauth_flow(self) -> FlowResult | None:
         """Get an active reauth flow (if it exists)."""
-        return next(iter(self.entry.async_get_active_reauth_flows(self.hass)), None)
+        return next(
+            iter(self.entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})),
+            None,
+        )
 
     @callback
     def cancel_reauth(self) -> None:

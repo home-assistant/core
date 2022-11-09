@@ -663,7 +663,7 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
-        if any(self.async_get_active_reauth_flows(hass)):
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
 
@@ -682,14 +682,14 @@ class ConfigEntry:
         )
 
     @callback
-    def async_get_active_reauth_flows(
-        self, hass: HomeAssistant
+    def async_get_active_flows(
+        self, hass: HomeAssistant, sources: set[str]
     ) -> Generator[FlowResult, None, None]:
-        """Get any active reauth flows for this entry."""
+        """Get any active flows of certain sources for this entry."""
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
-            if flow["context"].get("source") == SOURCE_REAUTH
+            if flow["context"].get("source") in sources
             and flow["context"].get("entry_id") == self.entry_id
         )
 
