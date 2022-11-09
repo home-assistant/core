@@ -140,11 +140,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
     _attr_entity_category = None
     _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
-    _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-    )
-    _attr_target_temperature_step = 0.5
+    _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
 
