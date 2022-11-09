@@ -51,7 +51,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="name",
         name="Station name",
         device_class=None,
-        native_unit_of_measurement=None,
         icon="mdi:label-outline",
         entity_registry_enabled_default=False,
     ),
@@ -59,7 +58,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="weather",
         name="Weather",
         device_class=None,
-        native_unit_of_measurement=None,
         icon="mdi:weather-sunny",  # but will adapt to current conditions
         entity_registry_enabled_default=True,
     ),
@@ -91,7 +89,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_direction",
         name="Wind direction",
-        native_unit_of_measurement=None,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
     ),
@@ -108,7 +105,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility",
         name="Visibility",
         device_class=None,
-        native_unit_of_measurement=None,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
