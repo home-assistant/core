@@ -87,6 +87,16 @@ class CombinedEnergyConnectivityDataService(
 class CombinedEnergyLogSessionService(CombinedEnergyDataService[None]):
     """Triggers a log session refresh event keep readings data flowing."""
 
+    def async_setup(self) -> None:
+        """Configure data service coordinator."""
+        super().async_setup()
+        self.coordinator.async_add_listener(self.update_listener)
+
+    @staticmethod
+    def update_listener():
+        """Log that the session has been restarted."""
+        LOGGER.info("Log session has been restarted")
+
     @property
     def update_interval(self) -> timedelta:
         """Update interval."""
