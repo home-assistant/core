@@ -7,6 +7,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
@@ -61,7 +62,7 @@ from .const import (
     DEFAULT_WILL,
     SUPPORTED_PROTOCOLS,
 )
-from .util import _VALID_QOS_SCHEMA, valid_publish_topic
+from .util import valid_publish_topic, valid_qos_schema
 
 DEFAULT_TLS_PROTOCOL = "auto"
 
@@ -148,11 +149,21 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
         vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
         vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
     required=True,
 )
+MQTT_WILL_BIRTH_SCHEMA_YAML = vol.Schema(
+    {
+        vol.Required(ATTR_TOPIC): valid_publish_topic,
+        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    },
+    required=True,
+)
+
 
 CONFIG_SCHEMA_ENTRY = vol.Schema(
     {
@@ -197,8 +208,8 @@ CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(SUPPORTED_PROTOCOLS)),
-        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA_YAML,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA_YAML,
         vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.

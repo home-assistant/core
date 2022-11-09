@@ -9,28 +9,23 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PAYLOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_PAYLOAD,
-    ATTR_QOS,
-    ATTR_RETAIN,
-    ATTR_TOPIC,
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
     DATA_MQTT,
     DEFAULT_ENCODING,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
     DOMAIN,
 )
 from .models import MqttData
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
+
+_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -38,6 +33,11 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         return None
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+
+
+def valid_qos_schema(qos: Any) -> int:
+    """Validate that QOS value is valid."""
+    return _VALID_QOS_SCHEMA(qos)
 
 
 def valid_topic(topic: Any) -> str:
@@ -110,19 +110,6 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise vol.Invalid("Wildcards can not be used in topic names")
     return validated_topic
-
-
-_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
-
-MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    },
-    required=True,
-)
 
 
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:

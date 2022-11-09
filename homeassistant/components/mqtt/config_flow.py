@@ -44,7 +44,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY
+from .config_integration import CONFIG_SCHEMA_ENTRY, MQTT_WILL_BIRTH_SCHEMA
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -71,7 +71,6 @@ from .const import (
     SUPPORTED_PROTOCOLS,
 )
 from .util import (
-    MQTT_WILL_BIRTH_SCHEMA,
     async_create_certificate_temp_files,
     get_file_path,
     valid_publish_topic,
