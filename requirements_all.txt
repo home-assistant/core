@@ -2529,7 +2529,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.10
+wallbox==0.4.12
 
 # homeassistant.components.waqi
 waqiasync==1.0.0
