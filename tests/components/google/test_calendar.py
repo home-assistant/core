@@ -301,15 +301,12 @@ async def test_missing_summary(hass, mock_events_list_items, component_setup):
 async def test_update_error(
     hass,
     component_setup,
-    mock_calendars_list,
     mock_events_list,
-    test_api_calendar,
     aioclient_mock,
 ):
     """Test that the calendar update handles a server error."""
 
     now = dt_util.now()
-    mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list(
         {
             "items": [
@@ -516,7 +513,6 @@ async def test_opaque_event(
 async def test_scan_calendar_error(
     hass,
     component_setup,
-    test_api_calendar,
     mock_calendars_list,
     config_entry,
 ):
