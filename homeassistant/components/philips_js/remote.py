@@ -65,7 +65,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
         else:
-            await self.coordinator.turn_on.async_run(self.hass, self._context)
+            self.coordinator.turn_on.async_run(self.hass, self._context)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    HassJob,
     HomeAssistant,
     callback,
     is_callback,
@@ -66,6 +67,48 @@ class TriggerInfo(TypedDict):
     home_assistant_start: bool
     variables: TemplateVarsType
     trigger_data: TriggerData
+
+
+class PluggableAction:
+    """A pluggable action handler."""
+
+    def __init__(self, update: CALLBACK_TYPE | None = None) -> None:
+        """Initialize."""
+        self._update = update
+        self._actions: dict[
+            CALLBACK_TYPE,
+            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
+        ] = {}
+
+    def __bool__(self) -> bool:
+        """Return if we have something attached."""
+        return bool(self._actions)
+
+    @callback
+    def async_attach(
+        self, action: TriggerActionType, variables: dict[str, Any]
+    ) -> CALLBACK_TYPE:
+        """Attach a device trigger."""
+
+        @callback
+        def _remove() -> None:
+            del self._actions[_remove]
+            if self._update:
+                self._update()
+
+        job = HassJob(action)
+
+        self._actions[_remove] = (job, variables)
+        if self._update:
+            self._update()
+
+        return _remove
+
+    @callback
+    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
+        """Run all triggers."""
+        for job, variables in self._actions.values():
+            hass.async_run_hass_job(job, variables, context)
 
 
 async def _async_get_trigger_platform(
