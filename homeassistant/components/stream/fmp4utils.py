@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .core import Orientation
+
 if TYPE_CHECKING:
     from io import BufferedIOBase
-
-    from .core import Orientation
 
 
 def find_box(
