@@ -55,6 +55,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
             self.fritz.update_devices()
+            self.fritz.update_templates()
 
         devices = self.fritz.get_devices()
         device_data = {}
