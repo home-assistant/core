@@ -37,7 +37,7 @@ PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 class Orientation(IntEnum):
-    """Orientations for stream transforms."""
+    """Orientations for stream transforms. These are based on EXIF orientation tags."""
 
     NO_TRANSFORM = 1
     MIRROR = 2
