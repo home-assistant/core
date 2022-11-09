@@ -4839,6 +4839,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "signal_messenger_jsonrpc": {
+      "name": "Signal Messenger (JSONRPC)",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "cloud_push"
+    },
     "simplepush": {
       "name": "Simplepush",
       "integration_type": "hub",

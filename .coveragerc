@@ -1131,6 +1131,7 @@ omit =
     homeassistant/components/sia/sia_entity_base.py
     homeassistant/components/sia/utils.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/signal_messenger_jsonrpc/notify.py
     homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
