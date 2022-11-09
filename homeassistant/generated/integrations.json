@@ -5687,7 +5687,7 @@
     },
     "usgs_earthquakes_feed": {
       "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
