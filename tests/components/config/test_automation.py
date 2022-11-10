@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
@@ -23,19 +24,18 @@ async def setup_automation(
 
 
 @pytest.mark.parametrize("automation_config", ({},))
-async def test_get_device_config(hass, hass_client, setup_automation):
-    """Test getting device config."""
+async def test_get_automation_config(
+    hass: HomeAssistant, hass_client, hass_config_store, setup_automation
+):
+    """Test getting automation config."""
     with patch.object(config, "SECTIONS", ["automation"]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client()
 
-    def mock_read(path):
-        """Mock reading data."""
-        return [{"id": "sun"}, {"id": "moon"}]
+    hass_config_store["automations.yaml"] = [{"id": "sun"}, {"id": "moon"}]
 
-    with patch("homeassistant.components.config._read", mock_read):
-        resp = await client.get("/api/config/automation/config/moon")
+    resp = await client.get("/api/config/automation/config/moon")
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
@@ -44,84 +44,80 @@ async def test_get_device_config(hass, hass_client, setup_automation):
 
 
 @pytest.mark.parametrize("automation_config", ({},))
-async def test_update_device_config(hass, hass_client, setup_automation):
-    """Test updating device config."""
+async def test_update_automation_config(
+    hass: HomeAssistant, hass_client, hass_config_store, setup_automation
+):
+    """Test updating automation config."""
     with patch.object(config, "SECTIONS", ["automation"]):
         await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("automation")) == []
 
     client = await hass_client()
 
     orig_data = [{"id": "sun"}, {"id": "moon"}]
+    hass_config_store["automations.yaml"] = orig_data
 
-    def mock_read(path):
-        """Mock reading data."""
-        return orig_data
-
-    written = []
-
-    def mock_write(path, data):
-        """Mock writing data."""
-        written.append(data)
-
-    with patch("homeassistant.components.config._read", mock_read), patch(
-        "homeassistant.components.config._write", mock_write
-    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        resp = await client.post(
-            "/api/config/automation/config/moon",
-            data=json.dumps({"trigger": [], "action": [], "condition": []}),
-        )
+    resp = await client.post(
+        "/api/config/automation/config/moon",
+        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("automation")) == [
+        "automation.automation_0"
+    ]
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    assert list(orig_data[1]) == ["id", "trigger", "condition", "action"]
-    assert orig_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
-    assert written[0] == orig_data
+    new_data = hass_config_store["automations.yaml"]
+    assert list(new_data[1]) == ["id", "trigger", "condition", "action"]
+    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
 
 
 @pytest.mark.parametrize("automation_config", ({},))
-async def test_update_remove_key_device_config(hass, hass_client, setup_automation):
-    """Test updating device config while removing a key."""
+async def test_update_remove_key_automation_config(
+    hass: HomeAssistant, hass_client, hass_config_store, setup_automation
+):
+    """Test updating automation config while removing a key."""
     with patch.object(config, "SECTIONS", ["automation"]):
         await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("automation")) == []
 
     client = await hass_client()
 
     orig_data = [{"id": "sun", "key": "value"}, {"id": "moon", "key": "value"}]
+    hass_config_store["automations.yaml"] = orig_data
 
-    def mock_read(path):
-        """Mock reading data."""
-        return orig_data
-
-    written = []
-
-    def mock_write(path, data):
-        """Mock writing data."""
-        written.append(data)
-
-    with patch("homeassistant.components.config._read", mock_read), patch(
-        "homeassistant.components.config._write", mock_write
-    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        resp = await client.post(
-            "/api/config/automation/config/moon",
-            data=json.dumps({"trigger": [], "action": [], "condition": []}),
-        )
+    resp = await client.post(
+        "/api/config/automation/config/moon",
+        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("automation")) == [
+        "automation.automation_0"
+    ]
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    assert list(orig_data[1]) == ["id", "trigger", "condition", "action"]
-    assert orig_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
-    assert written[0] == orig_data
+    new_data = hass_config_store["automations.yaml"]
+    assert list(new_data[1]) == ["id", "trigger", "condition", "action"]
+    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
 
 
 @pytest.mark.parametrize("automation_config", ({},))
-async def test_bad_formatted_automations(hass, hass_client, setup_automation):
+async def test_bad_formatted_automations(
+    hass: HomeAssistant, hass_client, hass_config_store, setup_automation
+):
     """Test that we handle automations without ID."""
     with patch.object(config, "SECTIONS", ["automation"]):
         await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("automation")) == []
 
     client = await hass_client()
 
@@ -132,34 +128,25 @@ async def test_bad_formatted_automations(hass, hass_client, setup_automation):
         },
         {"id": "moon"},
     ]
+    hass_config_store["automations.yaml"] = orig_data
 
-    def mock_read(path):
-        """Mock reading data."""
-        return orig_data
-
-    written = []
-
-    def mock_write(path, data):
-        """Mock writing data."""
-        written.append(data)
-
-    with patch("homeassistant.components.config._read", mock_read), patch(
-        "homeassistant.components.config._write", mock_write
-    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        resp = await client.post(
-            "/api/config/automation/config/moon",
-            data=json.dumps({"trigger": [], "action": [], "condition": []}),
-        )
-        await hass.async_block_till_done()
+    resp = await client.post(
+        "/api/config/automation/config/moon",
+        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("automation")) == [
+        "automation.automation_0"
+    ]
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    # Verify ID added to orig_data
-    assert "id" in orig_data[0]
-
-    assert orig_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
+    # Verify ID added
+    new_data = hass_config_store["automations.yaml"]
+    assert "id" in new_data[0]
+    assert new_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
 
 
 @pytest.mark.parametrize(
@@ -179,7 +166,9 @@ async def test_bad_formatted_automations(hass, hass_client, setup_automation):
         ],
     ),
 )
-async def test_delete_automation(hass, hass_client, setup_automation):
+async def test_delete_automation(
+    hass: HomeAssistant, hass_client, hass_config_store, setup_automation
+):
     """Test deleting an automation."""
     ent_reg = er.async_get(hass)
 
@@ -188,31 +177,27 @@ async def test_delete_automation(hass, hass_client, setup_automation):
     with patch.object(config, "SECTIONS", ["automation"]):
         assert await async_setup_component(hass, "config", {})
 
+    assert sorted(hass.states.async_entity_ids("automation")) == [
+        "automation.automation_0",
+        "automation.automation_1",
+    ]
+
     client = await hass_client()
 
     orig_data = [{"id": "sun"}, {"id": "moon"}]
+    hass_config_store["automations.yaml"] = orig_data
 
-    def mock_read(path):
-        """Mock reading data."""
-        return orig_data
+    resp = await client.delete("/api/config/automation/config/sun")
+    await hass.async_block_till_done()
 
-    written = []
-
-    def mock_write(path, data):
-        """Mock writing data."""
-        written.append(data)
-
-    with patch("homeassistant.components.config._read", mock_read), patch(
-        "homeassistant.components.config._write", mock_write
-    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        resp = await client.delete("/api/config/automation/config/sun")
-        await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("automation")) == [
+        "automation.automation_1",
+    ]
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    assert len(written) == 1
-    assert written[0][0]["id"] == "moon"
+    assert hass_config_store["automations.yaml"] == [{"id": "moon"}]
 
     assert len(ent_reg.entities) == 1
