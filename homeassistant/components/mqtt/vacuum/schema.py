@@ -27,7 +27,7 @@ def services_to_strings(
     return [
         service_to_string[service]
         for service in service_to_string
-        if service and services
+        if service & services
     ]
 
 
