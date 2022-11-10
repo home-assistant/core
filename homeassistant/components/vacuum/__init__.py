@@ -180,7 +180,7 @@ class _BaseVacuum(Entity):
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_supported_features: VacuumEntityFeature
+    _attr_supported_features: VacuumEntityFeature | int
 
     @property
     def supported_features(self) -> VacuumEntityFeature | int:

@@ -112,7 +112,7 @@ class LockEntity(Entity):
     _attr_is_unlocking: bool | None = None
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
-    _attr_supported_features: LockEntityFeature | None = None
+    _attr_supported_features: LockEntityFeature | int | None
 
     @property
     def changed_by(self) -> str | None:

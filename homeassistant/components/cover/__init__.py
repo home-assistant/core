@@ -232,7 +232,7 @@ class CoverEntity(Entity):
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
-    _attr_supported_features: CoverEntityFeature | None = None
+    _attr_supported_features: CoverEntityFeature | int | None
 
     _cover_is_last_toggle_direction_open = True
 

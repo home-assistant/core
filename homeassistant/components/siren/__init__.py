@@ -163,7 +163,7 @@ class SirenEntity(ToggleEntity):
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
-    _attr_supported_features: SirenEntityFeature | None = None
+    _attr_supported_features: SirenEntityFeature | int | None
 
     @final
     @property

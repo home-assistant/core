@@ -793,7 +793,7 @@ class LightEntity(ToggleEntity):
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
     _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
-    _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
+    _attr_supported_features: LightEntityFeature | int = 0
     _attr_xy_color: tuple[float, float] | None = None
 
     @property

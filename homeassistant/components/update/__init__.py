@@ -190,7 +190,7 @@ class UpdateEntity(RestoreEntity):
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_state: None = None
-    _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
+    _attr_supported_features: UpdateEntityFeature | int = 0
     _attr_title: str | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False

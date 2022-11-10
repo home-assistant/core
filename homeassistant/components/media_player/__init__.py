@@ -492,7 +492,7 @@ class MediaPlayerEntity(Entity):
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
     _attr_state: MediaPlayerState | str | None = None
-    _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
+    _attr_supported_features: MediaPlayerEntityFeature | int = 0
     _attr_volume_level: float | None = None
 
     # Implement these for your media player

@@ -167,7 +167,7 @@ class WaterHeaterEntity(Entity):
     _attr_operation_list: list[str] | None = None
     _attr_precision: float
     _attr_state: None = None
-    _attr_supported_features: WaterHeaterEntityFeature
+    _attr_supported_features: WaterHeaterEntityFeature | int
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None

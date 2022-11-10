@@ -166,7 +166,7 @@ class RemoteEntity(ToggleEntity):
     entity_description: RemoteEntityDescription
     _attr_activity_list: list[str] | None = None
     _attr_current_activity: str | None = None
-    _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
+    _attr_supported_features: RemoteEntityFeature | int = 0
 
     @property
     def supported_features(self) -> RemoteEntityFeature | int:
