@@ -36,10 +36,6 @@ from . import (
     vacuum as vacuum_platform,
 )
 from .const import (
-    ATTR_PAYLOAD,
-    ATTR_QOS,
-    ATTR_RETAIN,
-    ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
@@ -56,12 +52,10 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
     DEFAULT_WILL,
     SUPPORTED_PROTOCOLS,
 )
-from .util import _VALID_QOS_SCHEMA, valid_publish_topic
+from .util import valid_birth_will, valid_publish_topic
 
 DEFAULT_TLS_PROTOCOL = "auto"
 
@@ -144,16 +138,6 @@ CLIENT_KEY_AUTH_MSG = (
     "the MQTT broker configuration"
 )
 
-MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
-    {
-        vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
-        vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    },
-    required=True,
-)
-
 CONFIG_SCHEMA_ENTRY = vol.Schema(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -170,8 +154,8 @@ CONFIG_SCHEMA_ENTRY = vol.Schema(
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(SUPPORTED_PROTOCOLS)),
-        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_WILL_MESSAGE): valid_birth_will,
+        vol.Optional(CONF_BIRTH_MESSAGE): valid_birth_will,
         vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
@@ -197,8 +181,8 @@ CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(SUPPORTED_PROTOCOLS)),
-        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_WILL_MESSAGE): valid_birth_will,
+        vol.Optional(CONF_BIRTH_MESSAGE): valid_birth_will,
         vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
