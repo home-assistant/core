@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
 from types import MappingProxyType
@@ -698,7 +698,9 @@ class HKDevice:
         """Read latest state from homekit accessory."""
         return await self.pairing.get_characteristics(*args, **kwargs)
 
-    async def put_characteristics(self, characteristics) -> None:
+    async def put_characteristics(
+        self, characteristics: Iterable[tuple[int, int, Any]]
+    ) -> None:
         """Control a HomeKit device state from Home Assistant."""
         results = await self.pairing.put_characteristics(characteristics)
 
