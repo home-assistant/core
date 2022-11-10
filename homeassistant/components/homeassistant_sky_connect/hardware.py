@@ -17,6 +17,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     return [
         HardwareInfo(
             board=None,
+            config_entries=[entry.entry_id],
             dongle=USBInfo(
                 vid=entry.data["vid"],
                 pid=entry.data["pid"],
