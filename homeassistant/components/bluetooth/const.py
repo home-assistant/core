@@ -59,6 +59,15 @@ SCANNER_WATCHDOG_TIMEOUT: Final = 90
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
 
 
+# When the linux kernel is configured with
+# CONFIG_FW_LOADER_USER_HELPER_FALLBACK it
+# can take up to 120s before the USB device
+# is available if the firmware files
+# are not present
+LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS = 120
+BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS = 5
+
+
 class AdapterDetails(TypedDict, total=False):
     """Adapter details."""
 
