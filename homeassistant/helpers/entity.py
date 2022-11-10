@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum, auto
+from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
@@ -289,7 +289,7 @@ class Entity(ABC):
     _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
-    _attr_supported_features: int | None = None
+    _attr_supported_features: IntFlag | None = None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -445,7 +445,7 @@ class Entity(ABC):
         return False
 
     @property
-    def supported_features(self) -> int | None:
+    def supported_features(self) -> IntFlag | None:
         """Flag supported features."""
         return self._attr_supported_features
 
