@@ -14,11 +14,17 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_PAYLOAD,
+    ATTR_QOS,
+    ATTR_RETAIN,
+    ATTR_TOPIC,
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
     DATA_MQTT,
     DEFAULT_ENCODING,
+    DEFAULT_QOS,
+    DEFAULT_RETAIN,
     DOMAIN,
 )
 from .models import MqttData
@@ -33,11 +39,6 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         return None
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
-
-
-def valid_qos_schema(qos: Any) -> int:
-    """Validate that QOS value is valid."""
-    return _VALID_QOS_SCHEMA(qos)
 
 
 def valid_topic(topic: Any) -> str:
@@ -110,6 +111,30 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise vol.Invalid("Wildcards can not be used in topic names")
     return validated_topic
+
+
+def valid_qos_schema(qos: Any) -> int:
+    """Validate that QOS value is valid."""
+    return _VALID_QOS_SCHEMA(qos)
+
+
+_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+    {
+        vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
+        vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    },
+    required=True,
+)
+
+
+def valid_birth_will(config: ConfigType) -> ConfigType:
+    """Validate a birth or will configuration and required topic/payload."""
+    _MQTT_WILL_BIRTH_SCHEMA(config)
+    if config and ATTR_TOPIC not in config:
+        raise vol.MultipleInvalid("Topic/payload options missing")
+    return config
 
 
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:

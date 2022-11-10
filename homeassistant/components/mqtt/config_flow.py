@@ -44,7 +44,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY, MQTT_WILL_BIRTH_SCHEMA
+from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -73,6 +73,7 @@ from .const import (
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
+    valid_birth_will,
     valid_publish_topic,
 )
 
@@ -325,7 +326,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_BIRTH_MESSAGE,
                     _birth_will("birth"),
                     "bad_birth",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["birth_enable"]:
                 options_config[CONF_BIRTH_MESSAGE] = {}
@@ -335,7 +336,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_WILL_MESSAGE,
                     _birth_will("will"),
                     "bad_will",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["will_enable"]:
                 options_config[CONF_WILL_MESSAGE] = {}
