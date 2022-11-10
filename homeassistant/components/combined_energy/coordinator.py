@@ -129,9 +129,6 @@ class CombinedEnergyReadingsDataService(
     async def update_data(self) -> dict[int, DeviceReadings]:
         """Update data."""
         readings = await anext(self._readings_iterator)
-        if readings is None:
-            return {}
-
         return {
             device.device_id: device
             for device in readings.devices
