@@ -43,8 +43,8 @@
     },
     "issues": {
         "ea_warning": {
-            "description": "Est\u00e0s utilitzant la {version} d'UniFi Protect. Les versions d'acc\u00e9s anticipat no s\u00f3n compatibles amb Home Assistant i poden fer que la teva integraci\u00f3 d'UniFi Protect s'espatlli o no funcioni correctament.",
-            "title": "{version} \u00e9s una versi\u00f3 d'acc\u00e9s anticipat d'UniFi Protect"
+            "description": "Est\u00e0s utilitzant UniFi Protect v{version} que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. Les versions d'acc\u00e9s anticipat no s\u00f3n compatibles amb Home Assistant i poden fer que la teva integraci\u00f3 d'UniFi Protect s'espatlli o no funcioni correctament.",
+            "title": "UniFi Protect v{version} \u00e9s una versi\u00f3 d'acc\u00e9s anticipat"
         }
     },
     "options": {
