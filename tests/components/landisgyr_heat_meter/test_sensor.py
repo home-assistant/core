@@ -31,6 +31,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 NUMBER_AVAILABLE_ENTITIES = 27
+API_HEAT_METER_SERVICE = (
+    "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
+)
 
 
 @dataclass
@@ -46,7 +49,7 @@ class MockHeatMeterResponse:
     meter_date_time: datetime.datetime
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
+@patch(API_HEAT_METER_SERVICE)
 async def test_create_sensors(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
@@ -95,7 +98,7 @@ async def test_create_sensors(mock_heat_meter, hass):
     state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
     assert state
     assert state.state == "30.83336"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
 
     state = hass.states.get("sensor.heat_meter_volume_usage")
     assert state
@@ -118,7 +121,7 @@ async def test_create_sensors(mock_heat_meter, hass):
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+@patch(API_HEAT_METER_SERVICE)
 async def test_mwh_is_supplied(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
@@ -159,17 +162,17 @@ async def test_mwh_is_supplied(mock_heat_meter, hass):
     state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
     assert state.state == "123.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
     assert state
     assert state.state == "111.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+@patch(API_HEAT_METER_SERVICE)
 async def test_restore_state(mock_heat_meter, hass):
     """Test sensor restore state."""
     # Home assistant is not running yet
@@ -190,7 +193,7 @@ async def test_restore_state(mock_heat_meter, hass):
                 ),
                 {
                     "native_value": 34167.0,
-                    "native_unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
+                    "native_unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
                     "icon": "mdi:fire",
                     "last_reset": last_reset,
                 },
@@ -245,7 +248,7 @@ async def test_restore_state(mock_heat_meter, hass):
     state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
     assert state.state == "34167.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_volume_usage")
@@ -260,7 +263,7 @@ async def test_restore_state(mock_heat_meter, hass):
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+@patch(API_HEAT_METER_SERVICE)
 async def test_no_data_from_api(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {

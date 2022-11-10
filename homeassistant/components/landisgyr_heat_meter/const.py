@@ -42,7 +42,7 @@ HEAT_METER_SENSOR_TYPES = (
         key="heat_usage_gj",
         icon="mdi:fire",
         name="Heat usage GJ",
-        native_unit_of_measurement="GJ",
+        native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -58,7 +58,7 @@ HEAT_METER_SENSOR_TYPES = (
         key="heat_previous_year_gj",
         icon="mdi:fire",
         name="Heat previous year GJ",
-        native_unit_of_measurement="GJ",
+        native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
