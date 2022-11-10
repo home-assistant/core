@@ -13,6 +13,7 @@ from aioesphomeapi import (
     BLEConnectionError,
 )
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
+from aioesphomeapi.core import BluetoothGATTAPIError
 import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
@@ -83,6 +84,17 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             return await func(self, *args, **kwargs)
         except TimeoutAPIError as err:
             raise asyncio.TimeoutError(str(err)) from err
+        except BluetoothGATTAPIError as ex:
+            # If the device disconnects in the middle of an operation
+            # be sure to make it as disconnected so any library using
+            # the proxy knows to reconnect.
+            #
+            # Because callbacks are delivered asynchronously its possible
+            # that we find out during the operation before the callback
+            # is delivered.
+            if ex.error.error == -1:
+                self._async_ble_device_disconnected()  # pylint: disable=protected-access
+            raise BleakError(str(ex)) from ex
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
 
