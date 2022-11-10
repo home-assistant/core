@@ -1,7 +1,7 @@
 """Preference management for camera component."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Final, Union, cast
 
 from homeassistant.components.stream import Orientation
@@ -23,13 +23,6 @@ class DynamicStreamSettings:
 
     preload_stream: bool
     orientation: Orientation
-
-    def as_dict(self) -> dict[str, bool | Orientation]:
-        """Return dictionary version."""
-        return {
-            PREF_PRELOAD_STREAM: self.preload_stream,
-            PREF_ORIENTATION: self.orientation,
-        }
 
 
 class CameraPreferences:
@@ -97,7 +90,7 @@ class CameraPreferences:
                 )
             if dynamic_stream_settings:
                 dynamic_stream_settings.orientation = orientation
-        return self.get_dynamic_stream_settings(entity_id).as_dict()
+        return asdict(self.get_dynamic_stream_settings(entity_id))
 
     def get_dynamic_stream_settings(self, entity_id: str) -> DynamicStreamSettings:
         """Get the DynamicStreamSettings for the entity."""

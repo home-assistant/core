@@ -5,7 +5,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
@@ -864,7 +864,7 @@ async def websocket_get_prefs(
     """Handle request for account info."""
     prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
     entity_prefs = prefs.get_dynamic_stream_settings(msg["entity_id"])
-    connection.send_result(msg["id"], entity_prefs.as_dict())
+    connection.send_result(msg["id"], asdict(entity_prefs))
 
 
 @websocket_api.websocket_command(
