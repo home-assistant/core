@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "check_api_key": {
+        "description": "Input your PurpleAir API key. If you have both a read and write API key, this should be the read API key.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "by_coordinates": {
+        "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "distance": "The radius (in kilometers) to search within"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

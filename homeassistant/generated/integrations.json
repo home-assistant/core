@@ -4159,6 +4159,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "purpleair": {
+      "name": "PurpleAir",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "push": {
       "name": "Push",
       "integration_type": "hub",

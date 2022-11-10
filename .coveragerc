@@ -1001,6 +1001,9 @@ omit =
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
+    homeassistant/components/purpleair/__init__.py
+    homeassistant/components/purpleair/coordinator.py
+    homeassistant/components/purpleair/sensor.py
     homeassistant/components/pushbullet/api.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py

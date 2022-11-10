@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_api_key": "Invalid API key",
+            "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "distance": "The radius (in kilometers) to search within",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude"
+            },
+            "check_api_key": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "Input your PurpleAir API key. If you have both a read and write API key, this should be the read API key."
+            }
+        }
+    }
+}
