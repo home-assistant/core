@@ -492,7 +492,7 @@ class MediaPlayerEntity(Entity):
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
     _attr_state: MediaPlayerState | str | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
@@ -692,7 +692,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_group_members
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
@@ -1000,7 +1000,7 @@ class MediaPlayerEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
+        supported_features = self.supported_features or MediaPlayerEntityFeature(0)
         data: dict[str, Any] = {}
 
         if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (

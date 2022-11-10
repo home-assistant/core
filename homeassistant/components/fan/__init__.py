@@ -190,7 +190,7 @@ class FanEntity(ToggleEntity):
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
     _attr_speed_count: int
-    _attr_supported_features: int = 0
+    _attr_supported_features: FanEntityFeature = FanEntityFeature(0)
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -363,7 +363,7 @@ class FanEntity(ToggleEntity):
         return data
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 

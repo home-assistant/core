@@ -167,7 +167,7 @@ class WaterHeaterEntity(Entity):
     _attr_operation_list: list[str] | None = None
     _attr_precision: float
     _attr_state: None = None
-    _attr_supported_features: int
+    _attr_supported_features: WaterHeaterEntityFeature
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
@@ -191,7 +191,7 @@ class WaterHeaterEntity(Entity):
     @property
     def capability_attributes(self) -> Mapping[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
+        supported_features = self.supported_features or WaterHeaterEntityFeature(0)
 
         data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(
@@ -238,7 +238,7 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        supported_features = self.supported_features or 0
+        supported_features = self.supported_features or WaterHeaterEntityFeature(0)
 
         if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -340,6 +340,11 @@ class WaterHeaterEntity(Entity):
         return TemperatureConverter.convert(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
+
+    @property
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features
 
 
 async def async_service_away_mode(
