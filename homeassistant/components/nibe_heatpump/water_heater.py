@@ -12,6 +12,7 @@ from nibe.heatpump import Series
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
     STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
     STATE_OFF,
     WaterHeaterEntity,
     WaterHeaterEntityEntityDescription,
@@ -19,11 +20,15 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_PRIORITY_HOT_WATER
+from .const import VALUES_PRIORITY_HOT_WATER, VALUES_TEMPORARY_LUX_INACTIVE
+
+ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 
 
 @dataclass
@@ -36,6 +41,7 @@ class WaterHeaterDescriptionMixin:
     stop_temperature_address: dict[str, int]
     prio_address: int
     active_accessory_address: int | None
+    temporary_lux_address: int | None
 
 
 @dataclass
@@ -63,6 +69,7 @@ WATER_HEATERS_F = (
         },
         prio_address=43086,
         active_accessory_address=None,
+        temporary_lux_address=48132,
     ),
 )
 
@@ -84,6 +91,7 @@ WATER_HEATERS_S = (
         },
         prio_address=31029,
         active_accessory_address=None,
+        temporary_lux_address=None,
     ),
 )
 
@@ -91,6 +99,14 @@ WATER_HEATERS = {
     Series.F: WATER_HEATERS_F,
     Series.S: WATER_HEATERS_S,
 }
+
+
+def _id_from_mapping_key(value: str):
+    return value.lower().replace(" ", "_")
+
+
+def _mapping_key_from_id(value: str):
+    return value.replace("_", " ").upper()
 
 
 async def async_setup_entry(
@@ -116,6 +132,8 @@ class WaterHeaterEntityFixed(WaterHeaterEntity):
     """Base class to disentangle the configuration of operation mode from the state."""
 
     _attr_operation_mode: str | None
+    _attr_preset_mode: str | None = None
+    _attr_preset_modes: list[str] | None = None
 
     @property
     def operation_mode(self) -> str | None:
@@ -125,12 +143,26 @@ class WaterHeaterEntityFixed(WaterHeaterEntity):
         return self.current_operation
 
     @property
+    def preset_mode(self) -> str | None:
+        """Return the preset mode currently configured."""
+        return self._attr_preset_mode
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return the preset mode currently configured."""
+        return self._attr_preset_modes
+
+    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra state attributes."""
-        data = {}
-        supported_features = self.supported_features or 0
-        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
-            data[ATTR_OPERATION_MODE] = self._attr_operation_mode
+        data: dict[str, Any] = {}
+        if (operation_mode := self.operation_mode) is not None:
+            data[ATTR_OPERATION_MODE] = operation_mode
+        if (preset_mode := self.preset_mode) is not None:
+            data[ATTR_PRESET_MODE] = preset_mode
+        if (preset_modes := self.preset_modes) is not None:
+            data[ATTR_PRESET_MODES] = preset_modes
+
         return data
 
 
@@ -158,6 +190,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
                 *set(desc.stop_temperature_address.values()),
                 desc.prio_address,
                 desc.active_accessory_address,
+                desc.temporary_lux_address,
             },
         )
         self.entity_description = desc
@@ -171,9 +204,10 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
 
         self._attr_current_operation = None
         self._attr_operation_mode = None
+        self._attr_preset_mode = None
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
-        self._attr_operation_list: list[str] | None = None
+        self._attr_operation_list = [STATE_HEAT_PUMP]
 
         def _get(address: int) -> Coil:
             return coordinator.heatpump.get_coil_by_address(address)
@@ -185,13 +219,21 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         self._coil_start_temperature = _map(desc.start_temperature_address)
         self._coil_stop_temperature = _map(desc.stop_temperature_address)
         self._coil_prio = _get(desc.prio_address)
+        self._coil_temporary_lux: Coil | None = None
+        if desc.temporary_lux_address:
+            self._coil_temporary_lux = _get(desc.temporary_lux_address)
         self._coil_active_accessory: Coil | None = None
         if address := desc.active_accessory_address:
             self._coil_active_accessory = _get(address)
 
         self._coil_hot_water_comfort_mode = _get(desc.hot_water_comfort_mode_address)
         if mappings := self._coil_hot_water_comfort_mode.mappings:
-            self._attr_operation_list = list(mappings.values())
+            self._attr_preset_modes = [
+                _id_from_mapping_key(mapping) for mapping in mappings.values()
+            ]
+
+        if self._coil_temporary_lux:
+            self._attr_operation_list.append(STATE_HIGH_DEMAND)
 
         self._attr_temperature_unit = self._coil_current.unit
 
@@ -214,7 +256,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         if (mode := _get_value(self._coil_hot_water_comfort_mode)) and isinstance(
             mode, str
         ):
-            self._attr_operation_mode = mode
+            self._attr_preset_mode = _id_from_mapping_key(mode)
             self._attr_target_temperature_low = _get_float(
                 self._coil_start_temperature.get(mode)
             )
@@ -222,9 +264,16 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
                 self._coil_stop_temperature.get(mode)
             )
         else:
-            self._attr_operation_mode = None
+            self._attr_preset_mode = None
             self._attr_target_temperature_low = None
             self._attr_target_temperature_high = None
+
+        if (
+            mode := _get_value(self._coil_temporary_lux)
+        ) is None or mode in VALUES_TEMPORARY_LUX_INACTIVE:
+            self._attr_operation_mode = STATE_HEAT_PUMP
+        else:
+            self._attr_operation_mode = STATE_HIGH_DEMAND
 
         if prio := _get_value(self._coil_prio):
             if prio in VALUES_PRIORITY_HOT_WATER:
@@ -254,6 +303,20 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
+        if not self._coil_temporary_lux:
+            raise HomeAssistantError("Not supported")
+
+        if operation_mode == STATE_HEAT_PUMP:
+            await self.coordinator.async_write_coil(self._coil_temporary_lux, "OFF")
+        elif operation_mode == STATE_HIGH_DEMAND:
+            await self.coordinator.async_write_coil(
+                self._coil_temporary_lux, "ONE TIME INCREASE"
+            )
+        else:
+            raise ValueError(f"Unsupported operation mode {operation_mode}")
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new target operation mode."""
         await self.coordinator.async_write_coil(
-            self._coil_hot_water_comfort_mode, operation_mode
+            self._coil_hot_water_comfort_mode, _mapping_key_from_id(preset_mode)
         )
