@@ -120,8 +120,8 @@ def valid_qos_schema(qos: Any) -> int:
 
 _MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
-        vol.Inclusive(ATTR_TOPIC, "topic_payload"): valid_publish_topic,
-        vol.Inclusive(ATTR_PAYLOAD, "topic_payload"): cv.string,
+        vol.Required(ATTR_TOPIC): valid_publish_topic,
+        vol.Required(ATTR_PAYLOAD): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
@@ -131,9 +131,8 @@ _MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 
 def valid_birth_will(config: ConfigType) -> ConfigType:
     """Validate a birth or will configuration and required topic/payload."""
-    _MQTT_WILL_BIRTH_SCHEMA(config)
-    if config and ATTR_TOPIC not in config:
-        raise vol.MultipleInvalid("Topic/payload options missing")
+    if config:
+        config = _MQTT_WILL_BIRTH_SCHEMA(config)
     return config
 
 
