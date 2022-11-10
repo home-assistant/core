@@ -17,7 +17,6 @@ from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "landisgyr_heat_meter"
 
-GJ_TO_MWH = 0.277778  # conversion factor
 ULTRAHEAT_TIMEOUT = 30  # reading the IR port can take some time
 
 HEAT_METER_SENSOR_TYPES = (
@@ -37,23 +36,22 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
     ),
-    # Diagnostic entity for debugging, this will match the value in GJ indicated on the meter's display
     SensorEntityDescription(
         key="heat_usage_gj",
         icon="mdi:fire",
         name="Heat usage GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="heat_previous_year",
         icon="mdi:fire",
-        name="Heat usage previous year",
+        name="Heat previous year",
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Diagnostic entity for debugging, this will match the value in GJ of previous year indicated on the meter's display
     SensorEntityDescription(
         key="heat_previous_year_gj",
         icon="mdi:fire",

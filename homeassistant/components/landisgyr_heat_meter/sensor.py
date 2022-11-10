@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .const import GJ_TO_MWH, HEAT_METER_SENSOR_TYPES
+from .const import HEAT_METER_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,6 @@ class HeatMeterSensor(
         self.entity_description = description
 
         self._attr_device_info = device
-        self._attr_should_poll = bool(self.key in ("heat_usage", "heat_previous_year"))
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -98,16 +97,15 @@ class HeatMeterSensor(
             else:
                 self._attr_native_value = asdict(self.coordinator.data)[self.key]
 
-        # Some models will supply MWh directly. If not, GJ will be converted to MWh.
+        # Some models will supply MWh, these are handled here.
         if self.key == "heat_usage":
             if hasattr(self.coordinator.data, "heat_usage_mwh") and isinstance(
                 self.coordinator.data.heat_usage_mwh, float
             ):
                 self._attr_native_value = self.coordinator.data.heat_usage_mwh
             else:
-                self._attr_native_value = convert_gj_to_mwh(
-                    self.coordinator.data.heat_usage_gj
-                )
+                # Explicitly set it to None to prevent restored data to pop up
+                self._attr_native_value = None
 
         if self.key == "heat_previous_year":
             if hasattr(self.coordinator.data, "heat_previous_year_mwh") and isinstance(
@@ -115,17 +113,11 @@ class HeatMeterSensor(
             ):
                 self._attr_native_value = self.coordinator.data.heat_previous_year_mwh
             else:
-                self._attr_native_value = convert_gj_to_mwh(
-                    self.coordinator.data.heat_previous_year_gj
-                )
+                # Explicitly set it to None to prevent restored data to pop up
+                self._attr_native_value = None
 
         self.async_write_ha_state()
         _LOGGER.debug(
             "Updated value of %s",
             self.key,
         )
-
-
-def convert_gj_to_mwh(gigajoule: float) -> float:
-    """Convert GJ to MWh using the conversion value."""
-    return round(gigajoule * GJ_TO_MWH, 5)

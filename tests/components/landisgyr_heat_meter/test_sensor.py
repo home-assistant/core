@@ -50,7 +50,7 @@ class MockHeatMeterResponse:
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_create_sensors(mock_heat_meter, hass):
+async def test_sensors_gj(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
         "device": "/dev/USB0",
@@ -88,17 +88,25 @@ async def test_create_sensors(mock_heat_meter, hass):
     assert len(hass.states.async_all()) == 27
     entity_reg = entity_registry.async_get(hass)
 
-    state = hass.states.get("sensor.heat_meter_heat_usage")
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
-    assert state.state == "34.16669"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
+    assert state.state == "123.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
-    state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
+    state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
-    assert state.state == "30.83336"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
+    assert state.state == "unknown"
+
+    state = hass.states.get("sensor.heat_meter_heat_previous_year_gj")
+    assert state
+    assert state.state == "111.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.GIGA_JOULE
+
+    state = hass.states.get("sensor.heat_meter_heat_previous_year")
+    assert state
+    assert state.state == "unknown"
 
     state = hass.states.get("sensor.heat_meter_volume_usage")
     assert state
@@ -122,7 +130,7 @@ async def test_create_sensors(mock_heat_meter, hass):
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_mwh_is_supplied(mock_heat_meter, hass):
+async def test_sensors_mwh(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
         "device": "/dev/USB0",
@@ -156,7 +164,6 @@ async def test_mwh_is_supplied(mock_heat_meter, hass):
     )
     await hass.async_block_till_done()
 
-    # check if 26 attributes have been created
     assert len(hass.states.async_all()) == NUMBER_AVAILABLE_ENTITIES
 
     state = hass.states.get("sensor.heat_meter_heat_usage")
@@ -166,10 +173,18 @@ async def test_mwh_is_supplied(mock_heat_meter, hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
-    state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
+    state = hass.states.get("sensor.heat_meter_heat_previous_year")
     assert state
     assert state.state == "111.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
+
+    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    assert state
+    assert state.state == "unknown"
+
+    state = hass.states.get("sensor.heat_meter_heat_previous_year_gj")
+    assert state
+    assert state.state == "unknown"
 
 
 @patch(API_HEAT_METER_SERVICE)
@@ -296,6 +311,6 @@ async def test_no_data_from_api(mock_heat_meter, hass):
     assert state
     assert state.state == "unknown"
 
-    state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
+    state = hass.states.get("sensor.heat_meter_heat_previous_year")
     assert state
     assert state.state == "unknown"
