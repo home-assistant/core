@@ -30,7 +30,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    ) -> SpeedTestOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SpeedTestOptionsFlowHandler(config_entry)
 
