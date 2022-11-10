@@ -16,10 +16,10 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
 )
-from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
 SCHEMA_BASE = {
-    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): valid_qos_schema,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 

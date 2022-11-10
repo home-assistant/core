@@ -1729,7 +1729,11 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 def test_compile_hourly_statistics_unavailable(
     hass_recorder, caplog, device_class, state_unit, value
 ):
-    """Test compiling hourly statistics, with the sensor being unavailable."""
+    """Test compiling hourly statistics, with one sensor being unavailable.
+
+    sensor.test1 is unavailable and should not have statistics generated
+    sensor.test2 should have statistics generated
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})

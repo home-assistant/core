@@ -9,7 +9,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PAYLOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
@@ -31,6 +30,8 @@ from .const import (
 from .models import MqttData
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
+
+_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -112,17 +113,27 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
-_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+def valid_qos_schema(qos: Any) -> int:
+    """Validate that QOS value is valid."""
+    return _VALID_QOS_SCHEMA(qos)
 
-MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+
+_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+        vol.Required(ATTR_PAYLOAD): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
     required=True,
 )
+
+
+def valid_birth_will(config: ConfigType) -> ConfigType:
+    """Validate a birth or will configuration and required topic/payload."""
+    if config:
+        config = _MQTT_WILL_BIRTH_SCHEMA(config)
+    return config
 
 
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:

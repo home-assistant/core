@@ -151,6 +151,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
+homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -191,6 +192,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nextdns.*
 homeassistant.components.nfandroidtv.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
@@ -229,6 +231,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
+homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
