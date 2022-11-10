@@ -177,13 +177,11 @@ SENSOR_DESCRIPTIONS = {
     # Used for count sensor
     (BTHomeSensorDeviceClass.COUNT, None): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.COUNT}",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Used for rotation sensor
     (BTHomeSensorDeviceClass.ROTATION, Units.DEGREE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.ROTATION}_{Units.DEGREE}",
-        device_class=None,
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -234,8 +232,6 @@ SENSOR_DESCRIPTIONS = {
     # Used for UV index sensor
     (BTHomeSensorDeviceClass.UV_INDEX, None,): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
-        device_class=None,
-        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
