@@ -32,10 +32,7 @@ from .schema_state import (
 
 def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
-    schemas: dict[str, vol.Schema] = {
-        LEGACY: DISCOVERY_SCHEMA_LEGACY,
-        STATE: DISCOVERY_SCHEMA_STATE,
-    }
+    schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
     return config
 
@@ -43,17 +40,14 @@ def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
 # Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
 def validate_mqtt_vacuum(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema (deprecated)."""
-    schemas: dict[str, vol.Schema] = {
-        LEGACY: PLATFORM_SCHEMA_LEGACY,
-        STATE: PLATFORM_SCHEMA_STATE,
-    }
+    schemas = {LEGACY: PLATFORM_SCHEMA_LEGACY, STATE: PLATFORM_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
     return config
 
 
 def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum modern schema."""
-    schemas: dict[str, vol.Schema] = {
+    schemas = {
         LEGACY: PLATFORM_SCHEMA_LEGACY_MODERN,
         STATE: PLATFORM_SCHEMA_STATE_MODERN,
     }
@@ -112,7 +106,7 @@ async def _async_setup_entity(
     discovery_data: dict | None = None,
 ) -> None:
     """Set up the MQTT vacuum."""
-    setup_entity: dict[str, Callable[..., Coroutine[Any, Any, None]]] = {
+    setup_entity = {
         LEGACY: async_setup_entity_legacy,
         STATE: async_setup_entity_state,
     }
