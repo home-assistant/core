@@ -21,8 +21,8 @@ STORAGE_VERSION: Final = 1
 class DynamicStreamSettings:
     """Stream settings which are managed and updated by the camera entity."""
 
-    preload_stream: bool
-    orientation: Orientation
+    preload_stream: bool = False
+    orientation: Orientation = Orientation.NO_TRANSFORM
 
 
 class CameraPreferences:

@@ -28,7 +28,6 @@ from homeassistant.components.stream import (
     HLS_PROVIDER,
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
-    Orientation,
     create_stream,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -255,9 +254,7 @@ async def async_test_stream(
             hass,
             stream_source,
             stream_options,
-            DynamicStreamSettings(
-                preload_stream=False, orientation=Orientation.NO_TRANSFORM
-            ),
+            DynamicStreamSettings(),
             "test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)

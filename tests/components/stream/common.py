@@ -175,6 +175,4 @@ def assert_mp4_has_transform_matrix(mp4: bytes, orientation: Orientation):
 
 def dynamic_stream_settings():
     """Create new dynamic stream settings."""
-    return DynamicStreamSettings(
-        preload_stream=False, orientation=Orientation.NO_TRANSFORM
-    )
+    return DynamicStreamSettings()
