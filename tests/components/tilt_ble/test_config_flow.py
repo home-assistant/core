@@ -21,7 +21,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.tilt_ble.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}

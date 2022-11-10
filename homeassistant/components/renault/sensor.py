@@ -23,7 +23,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -189,17 +188,22 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        # For vehicles that DO NOT report charging power in watts, this seems to
+        # correspond to the maximum power that would be admissible by the car based
+        # on the battery state, regardless of the type of charger.
         key="charging_power",
         condition_lambda=lambda a: not a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         data_key="chargingInstantaneousPower",
-        device_class=SensorDeviceClass.CURRENT,
+        device_class=SensorDeviceClass.POWER,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        name="Charging power",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        name="Admissible charging power",
+        native_unit_of_measurement=POWER_KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        # For vehicles that DO report charging power in watts, this is the power
+        # effectively being transferred to the car.
         key="charging_power",
         condition_lambda=lambda a: a.details.reports_charging_power_in_watts(),
         coordinator="battery",

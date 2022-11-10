@@ -16,7 +16,6 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -473,7 +472,6 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         result["flow_id"],
         user_input={
             CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-            CONF_POE_CLIENTS: False,
             CONF_DPI_RESTRICTIONS: False,
         },
     )
@@ -498,7 +496,6 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
-        CONF_POE_CLIENTS: False,
         CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
