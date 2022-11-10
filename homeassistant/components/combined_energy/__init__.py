@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from combined_energy import CombinedEnergy
-from combined_energy.exceptions import CombinedEnergyError
+from combined_energy.exceptions import CombinedEnergyAuthError, CombinedEnergyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -33,6 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         installation = await api.installation()
+    except CombinedEnergyAuthError as ex:
+        LOGGER.error("Authentication failed accessing API: %s", ex)
+        raise ConfigEntryAuthFailed from ex
     except CombinedEnergyError as ex:
         LOGGER.error("Could not retrieve details from Combined Energy")
         raise ConfigEntryNotReady from ex
