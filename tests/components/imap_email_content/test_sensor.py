@@ -14,9 +14,10 @@ from homeassistant.helpers.template import Template
 class FakeEMailReader:
     """A test class for sending test emails."""
 
-    def __init__(self, messages):
+    def __init__(self, messages, decode_payload=False):
         """Set up the fake email reader."""
         self._messages = messages
+        self._decode_payload = decode_payload
 
     def connect(self):
         """Stay always Connected."""
@@ -27,6 +28,10 @@ class FakeEMailReader:
         if len(self._messages) == 0:
             return None
         return self._messages.popleft()
+
+    def should_decode_payload(self) -> bool:
+        """Return the value of configuration parameter decode_payload."""
+        return self._decode_payload
 
 
 async def test_allowed_sender(hass):
@@ -145,6 +150,49 @@ async def test_multi_part_only_other_text(hass):
     assert sensor.extra_state_attributes["body"] == "Test Message"
 
 
+async def test_multi_part_with_text_and_html_base64_encoded_and_decode_payload_false_return_base64(
+    hass,
+):
+    """
+    Test with multi part emails with text and html encoded in base64.
+
+    With the config value decode_payload set to False
+    The sensor body will be the base64 encoded text part.
+    """
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Link"
+    msg["From"] = "sender@test.com"
+
+    text = "Test Message ✉"
+    html = "<html><head></head><body>Test Message ✉</body></html>"
+
+    # with utf-8 charset, MIMEText créate an base64 encoded body
+    textPart = MIMEText(text, "plain", _charset="utf-8")
+    htmlPart = MIMEText(html, "html", _charset="utf-8")
+    assert textPart.get("Content-Transfer-Encoding") == "base64"
+    assert htmlPart.get("Content-Transfer-Encoding") == "base64"
+
+    msg.attach(textPart)
+    msg.attach(htmlPart)
+
+    sensor = imap_email_content.EmailContentSensor(
+        hass,
+        FakeEMailReader(deque([msg]), decode_payload=False),
+        "test_emails_sensor",
+        ["sender@test.com"],
+        None,
+    )
+
+    sensor.entity_id = "sensor.emailtest"
+    sensor.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+    assert sensor.state == "Link"
+    assert (
+        sensor.extra_state_attributes["body"]
+        == base64.standard_b64encode(text.encode()).decode("utf-8") + "\n"
+    )
+
+
 async def test_multi_part_with_text_and_html_base64_encoded_return_text_part(hass):
     """
     Test with multi part emails with text and html encoded in base64.
@@ -169,7 +217,7 @@ async def test_multi_part_with_text_and_html_base64_encoded_return_text_part(has
 
     sensor = imap_email_content.EmailContentSensor(
         hass,
-        FakeEMailReader(deque([msg])),
+        FakeEMailReader(deque([msg]), decode_payload=True),
         "test_emails_sensor",
         ["sender@test.com"],
         None,
@@ -202,7 +250,7 @@ async def test_multi_part_only_html_base64_encoded(hass):
 
     sensor = imap_email_content.EmailContentSensor(
         hass,
-        FakeEMailReader(deque([msg])),
+        FakeEMailReader(deque([msg]), decode_payload=True),
         "test_emails_sensor",
         ["sender@test.com"],
         None,
@@ -236,7 +284,7 @@ async def test_multi_part_only_untyped_text_base64_encoded(hass):
 
     sensor = imap_email_content.EmailContentSensor(
         hass,
-        FakeEMailReader(deque([msg])),
+        FakeEMailReader(deque([msg]), decode_payload=True),
         "test_emails_sensor",
         ["sender@test.com"],
         None,
@@ -270,7 +318,7 @@ async def test_multi_part_only_plain_text_without_Content_Transfer_Encoding(hass
 
     sensor = imap_email_content.EmailContentSensor(
         hass,
-        FakeEMailReader(deque([msg])),
+        FakeEMailReader(deque([msg]), decode_payload=True),
         "test_emails_sensor",
         ["sender@test.com"],
         None,
@@ -315,7 +363,7 @@ async def test_multi_part_with_text_quoted_printable_encoded(hass):
 
     sensor = imap_email_content.EmailContentSensor(
         hass,
-        FakeEMailReader(deque([msg])),
+        FakeEMailReader(deque([msg]), decode_payload=True),
         "test_emails_sensor",
         ["sender@test.com"],
         None,

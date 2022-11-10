@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERVER = "server"
 CONF_SENDERS = "senders"
 CONF_FOLDER = "folder"
+CONF_DECODE_PAYLOAD = "decode_payload"
 
 ATTR_FROM = "from"
 ATTR_BODY = "body"
@@ -49,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
+        vol.Optional(CONF_DECODE_PAYLOAD, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
@@ -67,6 +69,7 @@ def setup_platform(
         config[CONF_SERVER],
         config[CONF_PORT],
         config[CONF_FOLDER],
+        config[CONF_DECODE_PAYLOAD],
         config[CONF_VERIFY_SSL],
     )
 
@@ -87,13 +90,16 @@ def setup_platform(
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port, folder, verify_ssl):
+    def __init__(
+        self, user, password, server, port, folder, decode_payload, verify_ssl
+    ):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
         self._server = server
         self._port = port
         self._folder = folder
+        self._decode_payload = decode_payload
         self._verify_ssl = verify_ssl
         self._last_id = None
         self._unread_ids = deque([])
@@ -159,6 +165,10 @@ class EmailReader:
 
         return None
 
+    def should_decode_payload(self) -> bool:
+        """Return the value of configuration parameter decode_payload."""
+        return self._decode_payload
+
 
 class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
@@ -196,7 +206,9 @@ class EmailContentSensor(SensorEntity):
             ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
             ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
             ATTR_DATE: email_message["Date"],
-            ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
+            ATTR_BODY: EmailContentSensor.get_msg_text(
+                email_message, self._email_reader.should_decode_payload()
+            ),
         }
         return self._value_template.render(variables, parse_result=False)
 
@@ -219,7 +231,7 @@ class EmailContentSensor(SensorEntity):
         return str(header)
 
     @staticmethod
-    def get_msg_text(email_message):
+    def get_msg_text(email_message, decode_payload):
         """
         Get the message text from the email.
 
@@ -232,15 +244,15 @@ class EmailContentSensor(SensorEntity):
         for part in email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = part.get_payload(decode=True)
+                    message_text = part.get_payload(decode=decode_payload)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = part.get_payload(decode=True)
+                    message_html = part.get_payload(decode=decode_payload)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
             ):
-                message_untyped_text = part.get_payload(decode=True)
+                message_untyped_text = part.get_payload(decode=decode_payload)
 
         if message_text is not None:
             message = message_text
@@ -252,10 +264,12 @@ class EmailContentSensor(SensorEntity):
             message = message_untyped_text
 
         else:
-            message = email_message.get_payload(decode=True)
+            message = email_message.get_payload(decode=decode_payload)
 
-        # .get_payload(decode=True) return binary data, so we need to decode it to string
-        return message.decode(sys.stdout.encoding)
+        if decode_payload:
+            # .get_payload(decode=True) return binary data, so we need to decode it to string
+            return message.decode(sys.stdout.encoding)
+        return message
 
     def update(self) -> None:
         """Read emails and publish state change."""
@@ -277,5 +291,7 @@ class EmailContentSensor(SensorEntity):
                 ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
                 ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
                 ATTR_DATE: email_message["Date"],
-                ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
+                ATTR_BODY: EmailContentSensor.get_msg_text(
+                    email_message, self._email_reader.should_decode_payload()
+                ),
             }
