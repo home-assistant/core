@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .common import FritzBoxBaseEntity, FritzBoxTools
+from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DEFAULT_GUEST_WIFI_QR_REFRESH_SEC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,24 +25,24 @@ async def async_setup_entry(
 ) -> None:
     """Add a entities from a config_entry."""
     _LOGGER.debug("Setting up FRITZ!Box camera entities")
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
     entities = await hass.async_add_executor_job(
-        _setup_guest_wifi_qr, fritzbox_tools, entry.title
+        _setup_guest_wifi_qr, avm_wrapper, entry.title
     )
 
     async_add_entities(entities, True)
 
 
 def _setup_guest_wifi_qr(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+    avm_wrapper: AvmWrapper, device_friendly_name: str
 ) -> list[FritzGuestWifiQRCamera]:
     """Set up guest wifi entity to display the qr code."""
     _LOGGER.debug("Setting up qr code camera entity")
-    ssid = fritzbox_tools.fritz_guest_wifi.ssid
+    ssid = avm_wrapper.fritz_guest_wifi.ssid
     return [
         FritzGuestWifiQRCamera(
-            fritzbox_tools,
+            avm_wrapper,
             device_friendly_name,
             ssid,
         )
@@ -56,7 +56,7 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
 
     def __init__(
         self,
-        fritzbox_tools: FritzBoxTools,
+        avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         ssid: str,
     ) -> None:
@@ -65,15 +65,16 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
 
         self._attr_name = f"{device_friendly_name} {ssid} {self.QR_CODE}"
         self._attr_unique_id = (
-            f"{fritzbox_tools.unique_id}-{slugify(ssid)}-{slugify(self.QR_CODE)}"
+            f"{avm_wrapper.unique_id}-{slugify(ssid)}-{slugify(self.QR_CODE)}"
         )
         self._attr_icon = "mdi:qrcode-scan"
-        super().__init__(fritzbox_tools, device_friendly_name)
+        super().__init__(avm_wrapper, device_friendly_name)
 
         self.content_type = "image/svg+xml"
         self._ssid: str = ssid
         self._last_qr: bytes | None = None
         self._refresh_at: datetime | None = None
+        self._avm_wrapper: AvmWrapper = avm_wrapper
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -94,7 +95,7 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
         """Generate a QR code for the guest wifi."""
         _LOGGER.debug("start generating guest wifi qr code")
         return bytes(
-            self._avm_device.fritz_guest_wifi.get_wifi_qr_code("svg").getvalue()
+            self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code("svg").getvalue()
         )
 
     async def async_camera_image(
