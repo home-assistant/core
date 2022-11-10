@@ -9,7 +9,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.water_heater import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODES,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import State
@@ -42,7 +42,7 @@ async def test_exclude_attributes(recorder_mock, hass):
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) > 1
     for state in states:
-        assert ATTR_OPERATION_LIST not in state.attributes
+        assert ATTR_OPERATION_MODES not in state.attributes
         assert ATTR_MIN_TEMP not in state.attributes
         assert ATTR_MAX_TEMP not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes

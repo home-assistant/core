@@ -5,24 +5,14 @@ components. Instead call the service directly.
 """
 from homeassistant.components.water_heater import (
     _LOGGER,
-    ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
+    ATTR_PRESET_MODE,
     DOMAIN,
-    SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
-
-
-async def async_set_away_mode(hass, away_mode, entity_id=ENTITY_MATCH_ALL):
-    """Turn all or specified water_heater devices away mode on."""
-    data = {ATTR_AWAY_MODE: away_mode}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_SET_AWAY_MODE, data, blocking=True)
 
 
 async def async_set_temperature(
@@ -54,3 +44,13 @@ async def async_set_operation_mode(hass, operation_mode, entity_id=ENTITY_MATCH_
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
     )
+
+
+async def async_set_preset_mode(hass, preset_mode, entity_id=ENTITY_MATCH_ALL):
+    """Set new target operation mode."""
+    data = {ATTR_PRESET_MODE: preset_mode}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True)

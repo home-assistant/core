@@ -6,43 +6,20 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
-    ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
+    ATTR_PRESET_MODE,
     DOMAIN,
-    SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_GAS,
-    STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND,
-    STATE_PERFORMANCE,
+    WaterHeaterOperationMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-VALID_STATES = {
-    STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_GAS,
-    STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PERFORMANCE,
-}
 
 
 async def _async_reproduce_state(
@@ -57,7 +34,7 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if state.state not in VALID_STATES:
+    if state.state not in WaterHeaterOperationMode.__members__.values():
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -68,21 +45,18 @@ async def _async_reproduce_state(
         cur_state.state == state.state
         and cur_state.attributes.get(ATTR_TEMPERATURE)
         == state.attributes.get(ATTR_TEMPERATURE)
-        and cur_state.attributes.get(ATTR_AWAY_MODE)
-        == state.attributes.get(ATTR_AWAY_MODE)
+        and cur_state.attributes.get(ATTR_OPERATION_MODE)
+        == state.attributes.get(ATTR_OPERATION_MODE)
+        and cur_state.attributes.get(ATTR_PRESET_MODE)
+        == state.attributes.get(ATTR_PRESET_MODE)
     ):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state != cur_state.state:
-        if state.state == STATE_ON:
-            service = SERVICE_TURN_ON
-        elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
-        else:
-            service = SERVICE_SET_OPERATION_MODE
-            service_data[ATTR_OPERATION_MODE] = state.state
+        service = SERVICE_SET_OPERATION_MODE
+        service_data[ATTR_OPERATION_MODE] = state.state
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
@@ -105,15 +79,16 @@ async def _async_reproduce_state(
         )
 
     if (
-        state.attributes.get(ATTR_AWAY_MODE) != cur_state.attributes.get(ATTR_AWAY_MODE)
-        and state.attributes.get(ATTR_AWAY_MODE) is not None
+        state.attributes.get(ATTR_PRESET_MODE)
+        != cur_state.attributes.get(ATTR_PRESET_MODE)
+        and state.attributes.get(ATTR_PRESET_MODE) is not None
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            SERVICE_SET_PRESET_MODE,
             {
                 ATTR_ENTITY_ID: state.entity_id,
-                ATTR_AWAY_MODE: state.attributes.get(ATTR_AWAY_MODE),
+                ATTR_PRESET_MODE: state.attributes.get(ATTR_PRESET_MODE),
             },
             context=context,
             blocking=True,

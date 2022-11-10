@@ -11,6 +11,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,8 +20,6 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -44,9 +43,9 @@ DOMAIN = "water_heater"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"
+SERVICE_SET_PRESET_MODE = "set_preset_mode"
 
 STATE_ECO = "eco"
 STATE_ELECTRIC = "electric"
@@ -56,41 +55,52 @@ STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
 
+class WaterHeaterOperationMode(StrEnum):
+    """Supported operation modes of a heater."""
+
+    OFF = "off"
+    ON = "on"
+    LEGIONELLA_PREVENTION = "legionella_prevention"
+    BOOST = "boost"
+    AWAY = "away"
+
+
+class WaterHeaterCurrentOperation(StrEnum):
+    """Supported current operations of a heater."""
+
+    OFF = "off"
+    IDLE = "idle"
+    HEATING = "heating"
+    LEGIONELLA_PREVENTION = "legionella_prevention"
+    BOOST = "boost"
+
+
 class WaterHeaterEntityFeature(IntEnum):
     """Supported features of the fan entity."""
 
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
-    AWAY_MODE = 4
+    PRESET_MODE = 8
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the WaterHeaterEntityFeature enum instead.
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_OPERATION_MODE = 2
-SUPPORT_AWAY_MODE = 4
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_OPERATION_MODE = "operation_mode"
-ATTR_OPERATION_LIST = "operation_list"
+ATTR_OPERATION_MODES = "operation_modes"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
+ATTR_CURRENT_OPERATION = "current_operation"
+ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 
-CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
+CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW]
 
 _LOGGER = logging.getLogger(__name__)
 
 ON_OFF_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
-SET_AWAY_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_AWAY_MODE): cv.boolean,
-    }
-)
 SET_TEMPERATURE_SCHEMA = vol.Schema(
     vol.All(
         {
@@ -118,21 +128,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
+        SERVICE_SET_PRESET_MODE,
+        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        "async_set_preset_mode",
+        [WaterHeaterEntityFeature.PRESET_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_TEMPERATURE,
+        SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set,
+        [WaterHeaterEntityFeature.TARGET_TEMPERATURE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_set_operation_mode",
+        [WaterHeaterEntityFeature.OPERATION_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA, "async_turn_off"
+        SERVICE_TURN_OFF,
+        ON_OFF_SERVICE_SCHEMA,
+        "async_turn_off",
+        [WaterHeaterEntityFeature.OPERATION_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA, "async_turn_on"
+        SERVICE_TURN_ON,
+        ON_OFF_SERVICE_SCHEMA,
+        "async_turn_on",
+        [WaterHeaterEntityFeature.OPERATION_MODE],
     )
 
     return True
@@ -159,15 +182,17 @@ class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
 
     entity_description: WaterHeaterEntityEntityDescription
-    _attr_current_operation: str | None = None
+    _attr_current_operation: WaterHeaterCurrentOperation | str | None = None
     _attr_current_temperature: float | None = None
-    _attr_is_away_mode_on: bool | None = None
     _attr_max_temp: float
     _attr_min_temp: float
-    _attr_operation_list: list[str] | None = None
+    _attr_operation_mode: WaterHeaterOperationMode | str | None = None
+    _attr_operation_modes: list[WaterHeaterOperationMode] | list[str]
     _attr_precision: float
+    _attr_preset_mode: str | None
+    _attr_preset_modes: list[str] | None
     _attr_state: None = None
-    _attr_supported_features: int
+    _attr_supported_features: int = 0
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
@@ -177,7 +202,7 @@ class WaterHeaterEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        return self.current_operation
+        return self.operation_mode
 
     @property
     def precision(self) -> float:
@@ -189,9 +214,14 @@ class WaterHeaterEntity(Entity):
         return PRECISION_WHOLE
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return self._attr_supported_features
+
+    @property
     def capability_attributes(self) -> Mapping[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
+        supported_features = self.supported_features
 
         data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(
@@ -203,7 +233,10 @@ class WaterHeaterEntity(Entity):
         }
 
         if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
-            data[ATTR_OPERATION_LIST] = self.operation_list
+            data[ATTR_OPERATION_MODES] = self.operation_modes
+
+        if supported_features & WaterHeaterEntityFeature.PRESET_MODE:
+            data[ATTR_PRESET_MODES] = self.preset_modes
 
         return data
 
@@ -238,14 +271,9 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        supported_features = self.supported_features or 0
-
-        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
-            data[ATTR_OPERATION_MODE] = self.current_operation
-
-        if supported_features & WaterHeaterEntityFeature.AWAY_MODE:
-            is_away = self.is_away_mode_on
-            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
+        data[ATTR_OPERATION_MODE] = self.operation_mode
+        data[ATTR_CURRENT_OPERATION] = self.current_operation
+        data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
 
@@ -255,14 +283,19 @@ class WaterHeaterEntity(Entity):
         return self._attr_temperature_unit
 
     @property
-    def current_operation(self) -> str | None:
-        """Return current operation ie. eco, electric, performance, ..."""
+    def current_operation(self) -> WaterHeaterCurrentOperation | str | None:
+        """Return current operation."""
         return self._attr_current_operation
 
     @property
-    def operation_list(self) -> list[str] | None:
+    def operation_mode(self) -> WaterHeaterOperationMode | str | None:
+        """Return the operation mode active."""
+        return self._attr_operation_mode
+
+    @property
+    def operation_modes(self) -> list[WaterHeaterOperationMode] | list[str]:
         """Return the list of available operation modes."""
-        return self._attr_operation_list
+        return self._attr_operation_modes
 
     @property
     def current_temperature(self) -> float | None:
@@ -285,9 +318,20 @@ class WaterHeaterEntity(Entity):
         return self._attr_target_temperature_low
 
     @property
-    def is_away_mode_on(self) -> bool | None:
-        """Return true if away mode is on."""
-        return self._attr_is_away_mode_on
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode.
+
+        Requires WaterHeaterEntityFeature.PRESET_MODE.
+        """
+        return self._attr_preset_mode
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes.
+
+        Requires WaterHeaterEntityFeature.PRESET_MODE.
+        """
+        return self._attr_preset_modes
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -299,29 +343,45 @@ class WaterHeaterEntity(Entity):
             ft.partial(self.set_temperature, **kwargs)
         )
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    def set_operation_mode(self, operation_mode: WaterHeaterOperationMode) -> None:
         """Set new target operation mode."""
         raise NotImplementedError()
 
-    async def async_set_operation_mode(self, operation_mode: str) -> None:
+    async def async_set_operation_mode(
+        self, operation_mode: WaterHeaterOperationMode
+    ) -> None:
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
-    def turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if turn_on := getattr(self, "turn_on"):
+            await self.hass.async_add_executor_job(turn_on)
+            return
+
+        if WaterHeaterOperationMode.ON not in self.operation_modes:
+            raise NotImplementedError()
+
+        await self.async_set_operation_mode(WaterHeaterOperationMode.ON)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        if turn_off := getattr(self, "turn_off"):
+            await self.hass.async_add_executor_job(turn_off)
+            return
+
+        if WaterHeaterOperationMode.OFF not in self.operation_modes:
+            raise NotImplementedError()
+
+        await self.async_set_operation_mode(WaterHeaterOperationMode.OFF)
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
         raise NotImplementedError()
 
-    async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
-        await self.hass.async_add_executor_job(self.turn_away_mode_on)
-
-    def turn_away_mode_off(self) -> None:
-        """Turn away mode off."""
-        raise NotImplementedError()
-
-    async def async_turn_away_mode_off(self) -> None:
-        """Turn away mode off."""
-        await self.hass.async_add_executor_job(self.turn_away_mode_off)
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
     @property
     def min_temp(self) -> float:
@@ -340,16 +400,6 @@ class WaterHeaterEntity(Entity):
         return TemperatureConverter.convert(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
-
-
-async def async_service_away_mode(
-    entity: WaterHeaterEntity, service: ServiceCall
-) -> None:
-    """Handle away mode service."""
-    if service.data[ATTR_AWAY_MODE]:
-        await entity.async_turn_away_mode_on()
-    else:
-        await entity.async_turn_away_mode_off()
 
 
 async def async_service_temperature_set(

@@ -2440,10 +2440,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="current_operation",
-                    return_type=["str", None],
+                    return_type=["WaterHeaterCurrentOperation | str", None],
                 ),
                 TypeHintMatch(
-                    function_name="operation_list",
+                    function_name="operation_modes",
                     return_type=["list[str]", None],
                 ),
                 TypeHintMatch(
@@ -2474,7 +2474,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="set_operation_mode",
-                    arg_types={1: "str"},
+                    arg_types={1: "WaterHeaterOperationMode"},
                     return_type=None,
                     has_async_counterpart=True,
                 ),

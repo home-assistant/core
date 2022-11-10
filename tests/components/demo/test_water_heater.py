@@ -26,8 +26,8 @@ async def test_setup_params(hass):
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.attributes.get("temperature") == 119
-    assert state.attributes.get("away_mode") == "off"
-    assert state.attributes.get("operation_mode") == "eco"
+    assert state.attributes.get("operation_mode") == "on"
+    assert state.attributes.get("preset_mode") == "eco"
 
 
 async def test_default_setup_params(hass):
@@ -61,47 +61,43 @@ async def test_set_operation_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("operation_mode") == "eco"
-    assert state.state == "eco"
+    assert state.attributes.get("preset_mode") == "eco"
+    assert state.state == "on"
     with pytest.raises(vol.Invalid):
         await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("operation_mode") == "eco"
-    assert state.state == "eco"
+    assert state.attributes.get("preset_mode") == "eco"
+    assert state.state == "on"
 
 
 async def test_set_operation(hass):
     """Test setting of new operation mode."""
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("operation_mode") == "eco"
-    assert state.state == "eco"
-    await common.async_set_operation_mode(hass, "electric", ENTITY_WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "on"
+    assert state.state == "on"
+    await common.async_set_operation_mode(hass, "boost", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("operation_mode") == "electric"
-    assert state.state == "electric"
+    assert state.attributes.get("operation_mode") == "boost"
+    assert state.state == "boost"
 
 
-async def test_set_away_mode_bad_attr(hass):
+async def test_set_preset_mode_bad_attr(hass):
     """Test setting the away mode without required attribute."""
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("away_mode") == "off"
+    assert state.attributes.get("preset_mode") == "eco"
     with pytest.raises(vol.Invalid):
-        await common.async_set_away_mode(hass, None, ENTITY_WATER_HEATER)
-    assert state.attributes.get("away_mode") == "off"
-
-
-async def test_set_away_mode_on(hass):
-    """Test setting the away mode on/true."""
-    await common.async_set_away_mode(hass, True, ENTITY_WATER_HEATER)
+        await common.async_set_preset_mode(hass, None, ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("away_mode") == "on"
+    assert state.attributes.get("preset_mode") == "eco"
 
 
-async def test_set_away_mode_off(hass):
-    """Test setting the away mode off/false."""
-    await common.async_set_away_mode(hass, False, ENTITY_WATER_HEATER_CELSIUS)
-    state = hass.states.get(ENTITY_WATER_HEATER_CELSIUS)
-    assert state.attributes.get("away_mode") == "off"
+async def test_set_preset_mode(hass):
+    """Test setting the away mode on/true."""
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("preset_mode") == "eco"
+    await common.async_set_preset_mode(hass, "normal", ENTITY_WATER_HEATER)
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("preset_mode") == "normal"
 
 
 async def test_set_only_target_temp_with_convert(hass):
