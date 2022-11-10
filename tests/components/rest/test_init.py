@@ -428,10 +428,8 @@ async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
         "pack_list": {"rest": [{"resource": "http://url2"}]},
     }
     config = {hass_config.CONF_CORE: {hass_config.CONF_PACKAGES: packages}}
-    with patch("homeassistant.config._LOGGER.error") as logerr:
-        await hass_config.merge_packages_config(hass, config, packages)
+    await hass_config.merge_packages_config(hass, config, packages)
 
-    assert logerr.call_count == 0
     assert len(config) == 2
     assert len(config["rest"]) == 2
     assert config["rest"][0]["resource"] == "http://url1"
