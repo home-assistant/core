@@ -4159,7 +4159,7 @@
     },
     "qld_bushfire": {
       "name": "Queensland Bushfire Alert",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
