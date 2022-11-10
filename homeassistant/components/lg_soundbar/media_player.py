@@ -82,7 +82,7 @@ class LGDevice(MediaPlayerEntity):
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
-        data = response["data"]
+        data = response["data"] if "data" in response else {}
         if response["msg"] == "EQ_VIEW_INFO":
             if "i_bass" in data:
                 self._bass = data["i_bass"]
