@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import IntEnum
+from enum import IntFlag
 from functools import partial
 import logging
 import os
@@ -95,7 +95,7 @@ STATE_STREAMING: Final = "streaming"
 STATE_IDLE: Final = "idle"
 
 
-class CameraEntityFeature(IntEnum):
+class CameraEntityFeature(IntFlag):
     """Supported features of the camera entity."""
 
     ON_OFF = 1
