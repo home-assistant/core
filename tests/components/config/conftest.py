@@ -1,4 +1,4 @@
-"""Test Automation config panel."""
+"""Test fixtures for the config integration."""
 from contextlib import contextmanager
 from copy import deepcopy
 import json
