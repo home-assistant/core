@@ -933,5 +933,6 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
 def test_device_classes_aligned():
     """Make sure all number device classes are also available in SensorDeviceClass."""
 
-    for number_device_class in NumberDeviceClass:
-        assert hasattr(SensorDeviceClass, number_device_class.name)
+    for device_class in NumberDeviceClass:
+        assert hasattr(SensorDeviceClass, device_class.name)
+        assert getattr(SensorDeviceClass, device_class.name).value == device_class.value

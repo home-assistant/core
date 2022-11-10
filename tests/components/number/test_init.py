@@ -860,8 +860,9 @@ def test_device_classes_aligned():
         SensorDeviceClass.TIMESTAMP,
     }
 
-    for sensor_device_class in SensorDeviceClass:
-        if sensor_device_class in non_numeric_device_classes:
+    for device_class in SensorDeviceClass:
+        if device_class in non_numeric_device_classes:
             continue
 
-        assert hasattr(NumberDeviceClass, sensor_device_class.name)
+        assert hasattr(NumberDeviceClass, device_class.name)
+        assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
