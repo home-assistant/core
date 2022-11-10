@@ -2713,6 +2713,20 @@ async def test_device_attr(hass):
     assert_result_info(info, True)
     assert info.rate_limit is None
 
+    # Test filter syntax (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' | device_attr('model') }}}}"
+    )
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test filter syntax (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ '{device_entry.id}' | is_device_attr('model', 'test') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
 
 async def test_area_id(hass):
     """Test area_id function."""

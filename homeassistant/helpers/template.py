@@ -202,6 +202,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
+        super().__init__()
         self.render_result = render_result
 
     def __str__(self) -> str:
@@ -2088,7 +2089,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = pass_context(self.globals["device_attr"])
+
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.filters["is_device_attr"] = pass_context(self.globals["is_device_attr"])
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
