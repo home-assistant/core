@@ -452,7 +452,7 @@ class Camera(Entity):
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
     @property
-    def supported_features(self) -> CameraEntityFeature:
+    def supported_features(self) -> CameraEntityFeature | int:
         """Flag supported features."""
         return self._attr_supported_features
 

@@ -552,7 +552,7 @@ class ClimateEntity(Entity):
             await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
-    def supported_features(self) -> ClimateEntityFeature:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         return self._attr_supported_features
 

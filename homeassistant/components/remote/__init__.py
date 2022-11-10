@@ -169,7 +169,7 @@ class RemoteEntity(ToggleEntity):
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @property
-    def supported_features(self) -> RemoteEntityFeature:
+    def supported_features(self) -> RemoteEntityFeature | int:
         """Flag supported features."""
         return self._attr_supported_features
 

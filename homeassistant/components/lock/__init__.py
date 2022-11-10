@@ -193,6 +193,6 @@ class LockEntity(Entity):
         return STATE_LOCKED if locked else STATE_UNLOCKED
 
     @property
-    def supported_features(self) -> LockEntityFeature | None:
+    def supported_features(self) -> LockEntityFeature | int | None:
         """Return the list of supported features."""
         return self._attr_supported_features

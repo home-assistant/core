@@ -363,7 +363,7 @@ class FanEntity(ToggleEntity):
         return data
 
     @property
-    def supported_features(self) -> FanEntityFeature:
+    def supported_features(self) -> FanEntityFeature | int:
         """Flag supported features."""
         return self._attr_supported_features
 

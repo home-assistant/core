@@ -292,7 +292,7 @@ class CoverEntity(Entity):
         return data
 
     @property
-    def supported_features(self) -> CoverEntityFeature:
+    def supported_features(self) -> CoverEntityFeature | int:
         """Flag supported features."""
         if self._attr_supported_features is not None:
             return self._attr_supported_features

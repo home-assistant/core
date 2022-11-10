@@ -692,7 +692,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_group_members
 
     @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported."""
         return self._attr_supported_features
 

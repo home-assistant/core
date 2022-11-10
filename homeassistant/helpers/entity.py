@@ -445,7 +445,7 @@ class Entity(ABC):
         return False
 
     @property
-    def supported_features(self) -> IntFlag | None:
+    def supported_features(self) -> IntFlag | int | None:
         """Flag supported features."""
         return self._attr_supported_features
 

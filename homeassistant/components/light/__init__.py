@@ -1060,6 +1060,6 @@ class LightEntity(ToggleEntity):
         return self._attr_supported_color_modes
 
     @property
-    def supported_features(self) -> LightEntityFeature:
+    def supported_features(self) -> LightEntityFeature | int:
         """Flag supported features."""
         return self._attr_supported_features

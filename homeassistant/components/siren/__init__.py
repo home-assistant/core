@@ -193,6 +193,6 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def supported_features(self) -> SirenEntityFeature | None:
+    def supported_features(self) -> SirenEntityFeature | int | None:
         """Return the list of supported features."""
         return self._attr_supported_features

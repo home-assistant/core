@@ -342,7 +342,7 @@ class WaterHeaterEntity(Entity):
         )
 
     @property
-    def supported_features(self) -> WaterHeaterEntityFeature:
+    def supported_features(self) -> WaterHeaterEntityFeature | int:
         """Return the list of supported features."""
         return self._attr_supported_features
 

@@ -226,6 +226,6 @@ class HumidifierEntity(ToggleEntity):
         return self._attr_max_humidity
 
     @property
-    def supported_features(self) -> HumidifierEntityFeature | None:
+    def supported_features(self) -> HumidifierEntityFeature | int | None:
         """Return the list of supported features."""
         return self._attr_supported_features

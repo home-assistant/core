@@ -207,7 +207,7 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
+    def supported_features(self) -> AlarmControlPanelEntityFeature | int:
         """Return the list of supported features."""
         return self._attr_supported_features
 

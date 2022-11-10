@@ -183,7 +183,7 @@ class _BaseVacuum(Entity):
     _attr_supported_features: VacuumEntityFeature
 
     @property
-    def supported_features(self) -> VacuumEntityFeature:
+    def supported_features(self) -> VacuumEntityFeature | int:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 

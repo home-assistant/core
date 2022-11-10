@@ -270,7 +270,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_release_url
 
     @property
-    def supported_features(self) -> UpdateEntityFeature:
+    def supported_features(self) -> UpdateEntityFeature | int:
         """Flag supported features."""
         return self._attr_supported_features
 
