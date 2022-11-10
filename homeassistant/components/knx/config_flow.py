@@ -561,6 +561,6 @@ async def scan_for_gateways(stop_on_found: int = 0) -> list[GatewayDescriptor]:
     """Scan for gateways within the network."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(
-        xknx, stop_on_found=stop_on_found, timeout_in_seconds=3
+        xknx, stop_on_found=stop_on_found, timeout_in_seconds=2
     )
     return await gatewayscanner.scan()
