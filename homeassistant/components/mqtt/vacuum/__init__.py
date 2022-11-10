@@ -1,9 +1,7 @@
 """Support for MQTT vacuums."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import functools
-from typing import Any
 
 import voluptuous as vol
 
@@ -102,8 +100,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT vacuum."""
     setup_entity = {

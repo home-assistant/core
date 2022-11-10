@@ -24,18 +24,18 @@ def services_to_strings(
     service_to_string: dict[VacuumEntityFeature, str],
 ) -> list[str]:
     """Convert SUPPORT_* service bitmask to list of service strings."""
-    strings: list[str] = []
-    for service in service_to_string:
-        if service & services:
-            strings.append(service_to_string[service])
-    return strings
+    return [
+        service_to_string[service]
+        for service in service_to_string
+        if service and services
+    ]
 
 
 def strings_to_services(
     strings: list[str], string_to_service: dict[str, VacuumEntityFeature]
-) -> VacuumEntityFeature:
+) -> VacuumEntityFeature | int:
     """Convert service strings to SUPPORT_* service bitmask."""
-    services: VacuumEntityFeature = 0
+    services: VacuumEntityFeature | int = 0
     for string in strings:
         services |= string_to_service[string]
     return services
