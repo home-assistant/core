@@ -198,7 +198,7 @@ async def async_setup_entry(
                         entity_entry.entity_id,
                     )
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
-            # Prefer calendar sync down of resources when possible. However, sync does not
+            # Prefer calendar sync down of resources when possible. However, sync does not work
             # for search. Also free-busy calendars denormalize recurring events as individual
             # events which is not efficient for sync
             if (
