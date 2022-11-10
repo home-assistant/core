@@ -1561,6 +1561,9 @@ screenlogicpy==0.5.4
 # homeassistant.components.backup
 securetar==2022.2.0
 
+# homeassistant.components.fritz
+segno==1.5.2
+
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.11.0

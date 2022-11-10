@@ -2,7 +2,11 @@
   "domain": "fritz",
   "name": "AVM FRITZ!Box Tools",
   "documentation": "https://www.home-assistant.io/integrations/fritz",
-  "requirements": ["fritzconnection[qr]==1.10.3", "xmltodict==0.13.0"],
+  "requirements": [
+    "fritzconnection[qr]==1.10.3",
+    "xmltodict==0.13.0",
+    "segno==1.5.2"
+  ],
   "dependencies": ["network"],
   "codeowners": ["@mammuth", "@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
