@@ -46,7 +46,6 @@ class CameraPreferences:
         *,
         preload_stream: bool | UndefinedType = UNDEFINED,
         orientation: Orientation | UndefinedType = UNDEFINED,
-        stream_options: dict[str, str] | UndefinedType = UNDEFINED,
     ) -> dict[str, bool | Orientation]:
         """Update camera preferences.
 
