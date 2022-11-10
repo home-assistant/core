@@ -234,6 +234,9 @@ aioopenexchangerates==0.4.0
 # homeassistant.components.acmeda
 aiopulse==0.4.3
 
+# homeassistant.components.purpleair
+aiopurpleair==2022.11.1
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==2.0.3
 
@@ -252,7 +255,7 @@ aioqsw==0.2.2
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2022.03.0
+aioridwell==2022.11.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
