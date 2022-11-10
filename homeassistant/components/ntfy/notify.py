@@ -29,9 +29,8 @@ DEFAULT_URL = "https://ntfy.sh"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(
-            CONF_TOPIC  # have to set topic globally in the configuration, can override in "data"
-        ): cv.string,
+        # have to set topic globally in the configuration, can override in "data"
+        vol.Required(CONF_TOPIC): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
         vol.Optional(CONF_PASSWORD): cv.string,
