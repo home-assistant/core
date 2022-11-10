@@ -1,0 +1,11 @@
+notify:
+  name: Send a notification
+  description: Sends a notification message to selected notify platform.
+  fields:
+    message:
+      name: Message
+      description: Message body of the notification.
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:

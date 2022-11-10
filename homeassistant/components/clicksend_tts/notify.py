@@ -3,7 +3,7 @@ from http import HTTPStatus
 import json
 import logging
 
-import requests
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -41,12 +41,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+async def get_service(hass, config, discovery_info=None):
     """Get the ClickSend notification service."""
-    if not _authenticate(config):
+    if not await _authenticate(config):
         _LOGGER.error("You are not authorized to access ClickSend")
         return None
-
     return ClicksendNotificationService(config)
 
 
@@ -57,54 +56,58 @@ class ClicksendNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.username = config[CONF_USERNAME]
         self.api_key = config[CONF_API_KEY]
-        self.recipient = config[CONF_RECIPIENT]
+        self.recipients = config[CONF_RECIPIENT]
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
         self.caller = config.get(CONF_CALLER)
-        if self.caller is None:
-            self.caller = self.recipient
 
-    def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
-        data = {
-            "messages": [
+        data = {"messages": []}
+        for recipient in self.recipients.split(","):
+            data["messages"].append(
                 {
                     "source": "hass.notify",
                     "from": self.caller,
-                    "to": self.recipient,
+                    "to": recipient.strip(),
                     "body": message,
                     "lang": self.language,
                     "voice": self.voice,
                 }
-            ]
-        }
+            )
         api_url = f"{BASE_API_URL}/voice/send"
-        resp = requests.post(
-            api_url,
-            data=json.dumps(data),
-            headers=HEADERS,
-            auth=(self.username, self.api_key),
-            timeout=TIMEOUT,
-        )
+        async with aiohttp.ClientSession(headers=HEADERS) as session:
+            async with session.post(
+                api_url,
+                data=json.dumps(data).encode("utf-8"),
+                auth=aiohttp.BasicAuth(self.username, self.api_key),
+            ) as resp:
+                if resp.status == HTTPStatus.OK:
+                    return
+                obj = await resp.json()
+                response_msg = obj.get("response_msg")
+                response_code = obj.get("response_code")
+                _LOGGER.error(
+                    "Error %s : %s (Code %s)",
+                    resp.status_code,
+                    response_msg,
+                    response_code,
+                )
 
-        if resp.status_code == HTTPStatus.OK:
-            return
-        obj = json.loads(resp.text)
-        response_msg = obj["response_msg"]
-        response_code = obj["response_code"]
-        _LOGGER.error(
-            "Error %s : %s (Code %s)", resp.status_code, response_msg, response_code
-        )
 
-
-def _authenticate(config):
+async def _authenticate(config):
     """Authenticate with ClickSend."""
-    api_url = f"{BASE_API_URL}/account"
-    resp = requests.get(
-        api_url,
-        headers=HEADERS,
-        auth=(config.get(CONF_USERNAME), config.get(CONF_API_KEY)),
-        timeout=TIMEOUT,
-    )
+    url = f"{BASE_API_URL}/account"
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(
+            url, auth=aiohttp.BasicAuth(config[CONF_USERNAME], config[CONF_API_KEY])
+        ) as resp:
+            received = resp.status == 200
+            payload = await resp.json()
 
-    return resp.status_code == HTTPStatus.OK
+            if received:
+                active = payload["data"]["active"] == 1
+                if active:
+                    return True
+                return False
+            return False

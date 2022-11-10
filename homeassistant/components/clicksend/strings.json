@@ -1,0 +1,19 @@
+{
+  "config": {
+    "error": {
+      "auth": "Invalid Credentials/Expired Account"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "username": "Username",
+          "recipient": "Recepient",
+          "sender": "Sender"
+        },
+        "description": "Enter Configurations for ClickSend SMS.",
+        "title": "ClickSend SMS Configurations"
+      }
+    }
+  }
+}

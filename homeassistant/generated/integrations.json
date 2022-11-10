@@ -601,12 +601,12 @@
       "name": "ClickSend",
       "integrations": {
         "clicksend": {
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "ClickSend SMS"
         },
         "clicksend_tts": {
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "ClickSend TTS"
         }

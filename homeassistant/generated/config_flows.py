@@ -62,6 +62,8 @@ FLOWS = {
         "canary",
         "cast",
         "cert_expiry",
+        "clicksend",
+        "clicksend_tts",
         "cloudflare",
         "co2signal",
         "coinbase",

@@ -1,0 +1,22 @@
+{
+  "config": {
+    "error": {
+      "auth": "Invalid Credentials/Expired Account"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "username": "Username",
+          "recipient": "Recepient",
+          "sender": "Sender",
+          "language": "Language",
+          "voice": "Voice",
+          "caller": "Sender"
+        },
+        "description": "Enter Configurations for ClickSend TTS.",
+        "title": "ClickSend TTS Configurations"
+      }
+    }
+  }
+}
