@@ -51,13 +51,18 @@ from .const import (
     CONF_CLIENT_KEY,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_ENCODING,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_TRANSPORT,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_31,
+    TRANSPORT_WEBSOCKETS,
 )
 from .models import (
     AsyncMessageCallbackType,
@@ -281,7 +286,8 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = mqtt.Client(client_id, protocol=proto)
+        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._client = mqtt.Client(client_id, protocol=proto, transport=transport)
 
         # Enable logging
         self._client.enable_logger()
@@ -299,6 +305,12 @@ class MqttClientSetup:
         client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
+        if transport == TRANSPORT_WEBSOCKETS:
+            ws_path = config.get(CONF_WS_PATH)
+            ws_headers = config.get(CONF_WS_HEADERS)
+            self._client.ws_set_options(ws_path, ws_headers)
+        ws_path = config.get(CONF_WS_PATH)
+        ws_headers = config.get(CONF_WS_HEADERS)
         if certificate is not None:
             self._client.tls_set(
                 certificate,
