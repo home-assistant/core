@@ -12,7 +12,8 @@
             "too_many_attempts": "Massa intents amb un 'token' inv\u00e0lid, bloquejat temporalment",
             "too_many_requests": "Massa sol\u00b7licituds, torna-ho a provar m\u00e9s tard",
             "unknown": "Error inesperat",
-            "unknown_user": "Usuari desconegut. Els comptes de Somfy Protect no s\u00f3n compatibles amb aquesta integraci\u00f3."
+            "unknown_user": "Usuari desconegut. Els comptes de Somfy Protect no s\u00f3n compatibles amb aquesta integraci\u00f3.",
+            "unsupported_hardware": "{unsupported_device} no \u00e9s compatible amb aquesta integraci\u00f3."
         },
         "flow_title": "Passarel\u00b7la: {gateway_id}",
         "step": {

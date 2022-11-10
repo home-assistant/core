@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for Plugwise."""
 from datetime import timedelta
-from typing import Any, NamedTuple
+from typing import NamedTuple, cast
 
 from plugwise import Smile
+from plugwise.constants import DeviceData, GatewayData
 from plugwise.exceptions import PlugwiseException, XMLDataMissingError
 
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 class PlugwiseData(NamedTuple):
     """Plugwise data stored in the DataUpdateCoordinator."""
 
-    gateway: dict[str, Any]
-    devices: dict[str, dict[str, Any]]
+    gateway: GatewayData
+    devices: dict[str, DeviceData]
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
@@ -52,4 +53,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             ) from err
         except PlugwiseException as err:
             raise UpdateFailed(f"Updated failed for: {self.api.smile_name}") from err
-        return PlugwiseData(*data)
+        return PlugwiseData(
+            gateway=cast(GatewayData, data[0]),
+            devices=cast(dict[str, DeviceData], data[1]),
+        )

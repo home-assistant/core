@@ -1,10 +1,10 @@
 """Support for SwitchBee entity."""
 import logging
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import SwitchBeeBaseDevice
+from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,12 +46,15 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
         self._is_online: bool = True
+        identifier = (
+            device.id if device.type == DeviceType.Thermostat else device.unit_id
+        )
         self._attr_device_info = DeviceInfo(
             name=device.zone,
             identifiers={
                 (
                     DOMAIN,
-                    f"{device.unit_id}-{coordinator.mac_formatted}",
+                    f"{identifier}-{coordinator.mac_formatted}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,
@@ -108,3 +111,6 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
                 self.name,
             )
             self._is_online = True
+
+    def _get_coordinator_device(self) -> _DeviceTypeT:
+        return cast(_DeviceTypeT, self.coordinator.data[self._device.id])

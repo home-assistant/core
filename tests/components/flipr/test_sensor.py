@@ -69,7 +69,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.flipr_myfliprid_water_temp")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "10.5"
 

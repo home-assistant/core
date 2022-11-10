@@ -34,7 +34,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -1465,3 +1469,63 @@ async def test_thermostat_hvac_mode_failure(
     with pytest.raises(HomeAssistantError):
         await common.async_set_preset_mode(hass, PRESET_ECO)
         await hass.async_block_till_done()
+
+
+async def test_thermostat_available(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
+    """Test a thermostat that is available."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "COOLING",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "COOL",
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 29.9,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "coolCelsius": 28.0,
+            },
+            "sdm.devices.traits.Connectivity": {"status": "ONLINE"},
+        },
+    )
+    await setup_platform()
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVACMode.COOL
+
+
+async def test_thermostat_unavailable(
+    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+):
+    """Test a thermostat that is unavailable."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "COOLING",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "COOL",
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 29.9,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "coolCelsius": 28.0,
+            },
+            "sdm.devices.traits.Connectivity": {"status": "OFFLINE"},
+        },
+    )
+    await setup_platform()
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == STATE_UNAVAILABLE

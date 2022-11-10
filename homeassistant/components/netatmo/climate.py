@@ -315,7 +315,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
-            await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
+            await self._room.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 

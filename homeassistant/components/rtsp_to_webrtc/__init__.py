@@ -19,6 +19,7 @@ Other integrations may use this integration with these steps:
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import async_timeout
 from rtsp_to_webrtc.client import get_adaptive_client
@@ -109,7 +110,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 )
 @callback
 def ws_get_settings(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle the websocket command."""
     connection.send_result(

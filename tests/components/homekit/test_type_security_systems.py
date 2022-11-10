@@ -282,13 +282,16 @@ async def test_supported_states(hass, hk_driver, events):
         },
     ]
 
+    aid = 1
+
     for test_config in test_configs:
         attrs = {"supported_features": test_config.get("features")}
 
         hass.states.async_set(entity_id, None, attributes=attrs)
         await hass.async_block_till_done()
 
-        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
+        aid += 1
+        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, aid, config)
         await acc.run()
         await hass.async_block_till_done()
 

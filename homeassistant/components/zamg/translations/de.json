@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Wetterstation ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "unknown": "ID der Wetterstation ist unbekannt",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "ID der Wetterstation (nächstgelegene Station as Defaultwert)"
+                },
+                "description": "Richte zamg f\u00fcr die Integration mit Home Assistant ein."
+            }
+        }
+    }
+}

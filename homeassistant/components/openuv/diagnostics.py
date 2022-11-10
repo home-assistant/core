@@ -5,18 +5,27 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 
-from . import OpenUV
 from .const import DOMAIN
+from .coordinator import OpenUvCoordinator
 
 CONF_COORDINATES = "coordinates"
+CONF_TITLE = "title"
 
 TO_REDACT = {
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    # Config entry title and unique ID may contain sensitive data:
+    CONF_TITLE,
+    CONF_UNIQUE_ID,
 }
 
 
@@ -24,12 +33,15 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    openuv: OpenUV = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
-    return {
-        "entry": {
-            "data": async_redact_data(entry.data, TO_REDACT),
-            "options": async_redact_data(entry.options, TO_REDACT),
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "data": {
+                coordinator_name: coordinator.data
+                for coordinator_name, coordinator in coordinators.items()
+            },
         },
-        "data": async_redact_data(openuv.data, TO_REDACT),
-    }
+        TO_REDACT,
+    )

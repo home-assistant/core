@@ -8,6 +8,8 @@
             "missing_configuration": "LaMetricu integratsioon pole konfigureeritud. Palun j\u00e4rgige dokumentatsiooni.",
             "no_devices": "Volitatud kasutajal pole LaMetricu seadmeid",
             "no_url_available": "URL pole saadaval. Teavet selle veateate kohta saab [check the help section]({docs_url})",
+            "reauth_device_not_found": "Seadet, mida proovid uuesti autentida, ei leita sellelt LaMetricu kontolt",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "error": {

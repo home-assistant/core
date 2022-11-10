@@ -1,8 +1,10 @@
 """HTTP views to interact with the area registry."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.area_registry import async_get
 
 
@@ -17,7 +19,11 @@ async def async_setup(hass):
 
 @websocket_api.websocket_command({vol.Required("type"): "config/area_registry/list"})
 @callback
-def websocket_list_areas(hass, connection, msg):
+def websocket_list_areas(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle list areas command."""
     registry = async_get(hass)
     connection.send_result(
@@ -35,7 +41,11 @@ def websocket_list_areas(hass, connection, msg):
 )
 @websocket_api.require_admin
 @callback
-def websocket_create_area(hass, connection, msg):
+def websocket_create_area(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Create area command."""
     registry = async_get(hass)
 
@@ -59,7 +69,11 @@ def websocket_create_area(hass, connection, msg):
 )
 @websocket_api.require_admin
 @callback
-def websocket_delete_area(hass, connection, msg):
+def websocket_delete_area(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Delete area command."""
     registry = async_get(hass)
 
@@ -81,7 +95,11 @@ def websocket_delete_area(hass, connection, msg):
 )
 @websocket_api.require_admin
 @callback
-def websocket_update_area(hass, connection, msg):
+def websocket_update_area(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update area websocket command."""
     registry = async_get(hass)
 

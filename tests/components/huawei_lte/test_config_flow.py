@@ -5,6 +5,7 @@ from unittest.mock import patch
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
 import pytest
+import requests.exceptions
 from requests.exceptions import ConnectionError
 from requests_mock import ANY
 
@@ -119,27 +120,66 @@ def login_requests_mock(requests_mock):
 
 
 @pytest.mark.parametrize(
-    ("code", "errors"),
+    ("request_outcome", "fixture_override", "errors"),
     (
-        (LoginErrorEnum.USERNAME_WRONG, {CONF_USERNAME: "incorrect_username"}),
-        (LoginErrorEnum.PASSWORD_WRONG, {CONF_PASSWORD: "incorrect_password"}),
         (
-            LoginErrorEnum.USERNAME_PWD_WRONG,
+            {
+                "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
+            },
+            {},
+            {CONF_USERNAME: "incorrect_username"},
+        ),
+        (
+            {
+                "text": f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
+            },
+            {},
+            {CONF_PASSWORD: "incorrect_password"},
+        ),
+        (
+            {
+                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_WRONG}</code><message/></error>",
+            },
+            {},
             {CONF_USERNAME: "invalid_auth"},
         ),
-        (LoginErrorEnum.USERNAME_PWD_OVERRUN, {"base": "login_attempts_exceeded"}),
-        (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
+        (
+            {
+                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_OVERRUN}</code><message/></error>",
+            },
+            {},
+            {"base": "login_attempts_exceeded"},
+        ),
+        (
+            {
+                "text": f"<error><code>{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}</code><message/></error>",
+            },
+            {},
+            {"base": "response_error"},
+        ),
+        ({}, {CONF_URL: "/foo/bar"}, {CONF_URL: "invalid_url"}),
+        (
+            {
+                "exc": requests.exceptions.Timeout,
+            },
+            {},
+            {CONF_URL: "connection_timeout"},
+        ),
     ),
 )
-async def test_login_error(hass, login_requests_mock, code, errors):
+async def test_login_error(
+    hass, login_requests_mock, request_outcome, fixture_override, errors
+):
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
-        text=f"<error><code>{code}</code><message/></error>",
+        **request_outcome,
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -170,7 +210,43 @@ async def test_success(hass, login_requests_mock):
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
-async def test_ssdp(hass):
+@pytest.mark.parametrize(
+    ("upnp_data", "expected_result"),
+    (
+        (
+            {
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+                ssdp.ATTR_UPNP_SERIAL: "00000000",
+            },
+            {
+                "type": data_entry_flow.FlowResultType.FORM,
+                "step_id": "user",
+                "errors": {},
+            },
+        ),
+        (
+            {
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+                # No ssdp.ATTR_UPNP_SERIAL
+            },
+            {
+                "type": data_entry_flow.FlowResultType.FORM,
+                "step_id": "user",
+                "errors": {},
+            },
+        ),
+        (
+            {
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Some other device",
+            },
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "not_huawei_lte",
+            },
+        ),
+    ),
+)
+async def test_ssdp(hass, upnp_data, expected_result):
     """Test SSDP discovery initiates config properly."""
     url = "http://192.168.100.1/"
     context = {"source": config_entries.SOURCE_SSDP}
@@ -183,21 +259,93 @@ async def test_ssdp(hass):
             ssdp_location="http://192.168.100.1:60957/rootDesc.xml",
             upnp={
                 ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
                 ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
                 ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
                 ssdp.ATTR_UPNP_MODEL_NAME: "Huawei router",
                 ssdp.ATTR_UPNP_MODEL_NUMBER: "12345678",
                 ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-                ssdp.ATTR_UPNP_SERIAL: "00000000",
                 ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+                **upnp_data,
             },
         ),
     )
 
+    for k, v in expected_result.items():
+        assert result[k] == v
+    if result.get("data_schema"):
+        result["data_schema"]({})[CONF_URL] == url
+
+
+@pytest.mark.parametrize(
+    ("login_response_text", "expected_result", "expected_entry_data"),
+    (
+        (
+            "<response>OK</response>",
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "reauth_successful",
+            },
+            FIXTURE_USER_INPUT,
+        ),
+        (
+            f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
+            {
+                "type": data_entry_flow.FlowResultType.FORM,
+                "errors": {CONF_PASSWORD: "incorrect_password"},
+                "step_id": "reauth_confirm",
+            },
+            {**FIXTURE_USER_INPUT, CONF_PASSWORD: "invalid-password"},
+        ),
+    ),
+)
+async def test_reauth(
+    hass, login_requests_mock, login_response_text, expected_result, expected_entry_data
+):
+    """Test reauth."""
+    mock_entry_data = {**FIXTURE_USER_INPUT, CONF_PASSWORD: "invalid-password"}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UNIQUE_ID,
+        data=mock_entry_data,
+        title="Reauth canary",
+    )
+    entry.add_to_hass(hass)
+
+    context = {
+        "source": config_entries.SOURCE_REAUTH,
+        "unique_id": entry.unique_id,
+        "entry_id": entry.entry_id,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context=context, data=entry.data
+    )
+
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["data_schema"]({})[CONF_URL] == url
+    assert result["step_id"] == "reauth_confirm"
+    assert result["data_schema"]({}) == {
+        CONF_USERNAME: mock_entry_data[CONF_USERNAME],
+        CONF_PASSWORD: mock_entry_data[CONF_PASSWORD],
+    }
+    assert not result["errors"]
+
+    login_requests_mock.request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        text=login_response_text,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
+            CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
+        },
+    )
+    await hass.async_block_till_done()
+
+    for k, v in expected_result.items():
+        assert result[k] == v
+    for k, v in expected_entry_data.items():
+        assert entry.data[k] == v
 
 
 async def test_options(hass):

@@ -87,5 +87,20 @@
             "remote_button_short_release": "\"{subtype}\" \u677e\u5f00",
             "remote_button_triple_press": "\"{subtype}\" \u4e09\u8fde\u51fb"
         }
+    },
+    "options": {
+        "step": {
+            "intent_migrate": {
+                "title": "\u8fc1\u79fb\u5230\u65b0\u7684\u65e0\u7ebf\u7535\u8bbe\u7f6e"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "\u60a8\u662f\u5426\u6b63\u5728\u8fc1\u79fb\u5230\u65b0\u65e0\u7ebf\u7535\u6216\u91cd\u65b0\u914d\u7f6e\u5f53\u524d\u65e0\u7ebf\u7535\uff1f",
+                "menu_options": {
+                    "intent_migrate": "\u8fc1\u79fb\u5230\u65b0\u7684\u65e0\u7ebf\u7535\u8bbe\u7f6e",
+                    "intent_reconfigure": "\u91cd\u65b0\u914d\u7f6e\u5f53\u524d\u65e0\u7ebf\u7535"
+                },
+                "title": "\u8fc1\u79fb\u6216\u91cd\u65b0\u914d\u7f6e"
+            }
+        }
     }
 }

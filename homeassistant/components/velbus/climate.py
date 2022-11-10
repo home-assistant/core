@@ -15,8 +15,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN, PRESET_MODES
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
