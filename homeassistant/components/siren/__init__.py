@@ -64,7 +64,7 @@ def process_turn_on_params(
 
     Filters out unsupported params and validates the rest.
     """
-    supported_features = siren.supported_features or SirenEntityFeature(0)
+    supported_features = siren.supported_features or 0
 
     if not supported_features & SirenEntityFeature.TONES:
         params.pop(ATTR_TONE, None)
@@ -169,7 +169,7 @@ class SirenEntity(ToggleEntity):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        supported_features = self.supported_features or SirenEntityFeature(0)
+        supported_features = self.supported_features or 0
 
         if (
             supported_features & SirenEntityFeature.TONES

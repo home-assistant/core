@@ -143,7 +143,7 @@ class HumidifierEntity(ToggleEntity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or HumidifierEntityFeature(0)
+        supported_features = self.supported_features or 0
         data: dict[str, int | list[str] | None] = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
@@ -167,7 +167,7 @@ class HumidifierEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features or HumidifierEntityFeature(0)
+        supported_features = self.supported_features or 0
         data: dict[str, int | str | None] = {}
 
         if self.target_humidity is not None:

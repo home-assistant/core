@@ -1000,7 +1000,7 @@ class MediaPlayerEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or MediaPlayerEntityFeature(0)
+        supported_features = self.supported_features or 0
         data: dict[str, Any] = {}
 
         if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
