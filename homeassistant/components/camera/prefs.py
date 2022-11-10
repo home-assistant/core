@@ -36,18 +36,9 @@ class CameraPreferences:
         self._store = Store[dict[str, dict[str, Union[bool, Orientation]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
-        # Local copy of the preload_stream prefs
-        self._prefs: dict[str, dict[str, bool | Orientation]] | None = None
         self._dynamic_stream_settings_by_entity_id: dict[
             str, DynamicStreamSettings
         ] = {}
-
-    async def async_initialize(self) -> None:
-        """Finish initializing the preferences."""
-        if (prefs := await self._store.async_load()) is None:
-            prefs = {}
-
-        self._prefs = prefs
 
     async def async_update(
         self,
@@ -70,14 +61,11 @@ class CameraPreferences:
             entity_id
         )
         if preload_stream is not UNDEFINED:
-            # Prefs already initialized.
-            assert self._prefs is not None
-            if not self._prefs.get(entity_id):
-                self._prefs[entity_id] = {}
-            self._prefs[entity_id][PREF_PRELOAD_STREAM] = preload_stream
-            await self._store.async_save(self._prefs)
             if dynamic_stream_settings:
                 dynamic_stream_settings.preload_stream = preload_stream
+            preload_prefs = await self._store.async_load() or {}
+            preload_prefs[entity_id] = {PREF_PRELOAD_STREAM: preload_stream}
+            await self._store.async_save(preload_prefs)
 
         if orientation is not UNDEFINED:
             if (registry := er.async_get(self._hass)).async_get(entity_id):
@@ -90,21 +78,22 @@ class CameraPreferences:
                 )
             if dynamic_stream_settings:
                 dynamic_stream_settings.orientation = orientation
-        return asdict(self.get_dynamic_stream_settings(entity_id))
+        return asdict(await self.get_dynamic_stream_settings(entity_id))
 
-    def get_dynamic_stream_settings(self, entity_id: str) -> DynamicStreamSettings:
+    async def get_dynamic_stream_settings(
+        self, entity_id: str
+    ) -> DynamicStreamSettings:
         """Get the DynamicStreamSettings for the entity."""
         if settings := self._dynamic_stream_settings_by_entity_id.get(entity_id):
             return settings
         # Get preload stream setting from prefs
         # Get orientation setting from entity registry
-        # Prefs are already initialized.
-        assert self._prefs is not None
         reg_entry = er.async_get(self._hass).async_get(entity_id)
         er_prefs = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
+        preload_prefs = await self._store.async_load() or {}
         settings = DynamicStreamSettings(
             preload_stream=cast(
-                bool, self._prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False)
+                bool, preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False)
             ),
             orientation=er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM),
         )
