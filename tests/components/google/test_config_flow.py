@@ -104,7 +104,7 @@ async def primary_calendar(
     """Fixture to return the primary calendar."""
     mock_calendar_get(
         "primary",
-        {"id": primary_calendar_email, "summary": "Personal", "accessRole": "owner"},
+        {"id": primary_calendar_email, "summary": "Personal"},
         exc=primary_calendar_error,
     )
 
