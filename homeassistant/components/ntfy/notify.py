@@ -1,6 +1,6 @@
 """ntfy platform for notify component."""
 import logging
-from typing import Any
+from typing import Any, Union
 
 import requests
 import voluptuous as vol
@@ -73,12 +73,12 @@ class NtfyNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         *,
-        url,
-        topic,
-        auth,
-        verify_ssl,
+        url: cv.url,
+        topic: cv.string,
+        auth: Union[requests.auth.HTTPBasicAuth, None],
+        verify_ssl: cv.boolean,
     ):
         """Initialize the service."""
         self._hass = hass
