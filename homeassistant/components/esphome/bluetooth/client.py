@@ -86,12 +86,12 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             raise asyncio.TimeoutError(str(err)) from err
         except BluetoothGATTAPIError as ex:
             # If the device disconnects in the middle of an operation
-            # be sure to make it as disconnected so any library using
+            # be sure to mark it as disconnected so any library using
             # the proxy knows to reconnect.
             #
             # Because callbacks are delivered asynchronously its possible
-            # that we find out during the operation before the callback
-            # is delivered.
+            # that we find out about the disconnection during the operation
+            # before the callback is delivered.
             if ex.error.error == -1:
                 _LOGGER.debug(
                     "%s: %s - %s: BLE device disconnected during %s operation",
