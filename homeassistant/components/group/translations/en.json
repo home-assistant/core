@@ -29,10 +29,12 @@
             },
             "light": {
                 "data": {
+                    "all": "All entities",
                     "entities": "Members",
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
                 "title": "Add Group"
             },
             "lock": {
@@ -53,10 +55,12 @@
             },
             "switch": {
                 "data": {
+                    "all": "All entities",
                     "entities": "Members",
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
                 "title": "Add Group"
             },
             "user": {

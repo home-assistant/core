@@ -87,6 +87,20 @@ def light_switch_options_schema(
     )
 
 
+LIGHT_CONFIG_SCHEMA = basic_group_config_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
+SWITCH_CONFIG_SCHEMA = basic_group_config_schema("switch").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
 GROUP_TYPES = [
     "binary_sensor",
     "cover",
@@ -124,18 +138,14 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         basic_group_config_schema("cover"), set_group_type("cover")
     ),
     "fan": SchemaFlowFormStep(basic_group_config_schema("fan"), set_group_type("fan")),
-    "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"), set_group_type("light")
-    ),
+    "light": SchemaFlowFormStep(LIGHT_CONFIG_SCHEMA, set_group_type("light")),
     "lock": SchemaFlowFormStep(
         basic_group_config_schema("lock"), set_group_type("lock")
     ),
     "media_player": SchemaFlowFormStep(
         basic_group_config_schema("media_player"), set_group_type("media_player")
     ),
-    "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"), set_group_type("switch")
-    ),
+    "switch": SchemaFlowFormStep(SWITCH_CONFIG_SCHEMA, set_group_type("switch")),
 }
 
 

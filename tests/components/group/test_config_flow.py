@@ -19,10 +19,12 @@ from tests.common import MockConfigEntry
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        ("light", "on", "on", {}, {}, {"all": False}, {}),
+        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
-        ("switch", "on", "on", {}, {}, {}, {}),
+        ("switch", "on", "on", {}, {}, {"all": False}, {}),
+        ("switch", "on", "on", {}, {"all": True}, {"all": True}, {}),
     ),
 )
 async def test_config_flow(
