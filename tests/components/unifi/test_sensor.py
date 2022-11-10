@@ -13,10 +13,8 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
@@ -188,35 +186,6 @@ async def test_uptime_sensors(
     assert len(hass.states.async_all()) == 1
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
-
-    # Enable option
-
-    options[CONF_ALLOW_UPTIME_SENSORS] = True
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.config_entries.async_update_entry(config_entry, options=options.copy())
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
-    assert hass.states.get("sensor.client1_uptime")
-
-    # Try to add the sensors again, using a signal
-
-    clients_connected = {uptime_client["mac"]}
-    devices_connected = set()
-
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    async_dispatcher_send(
-        hass,
-        controller.signal_update,
-        clients_connected,
-        devices_connected,
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
 
 async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
