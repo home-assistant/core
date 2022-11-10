@@ -14,7 +14,14 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonManager,
+    AddonState,
+    HassioServiceInfo,
+    is_hassio,
+)
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -27,7 +34,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import disconnect_client
-from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
+from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
