@@ -60,6 +60,14 @@ TEST_EVENT = {
 }
 
 
+@pytest.fixture(
+    autouse=True, scope="module", params=["reader", "owner", "freeBusyReader"]
+)
+def calendar_access_role(request) -> str:
+    """Fixture to exercise access roles in tests."""
+    return request.param
+
+
 @pytest.fixture(autouse=True)
 def mock_test_setup(
     test_api_calendar,
@@ -720,12 +728,15 @@ async def test_invalid_unique_id_cleanup(
 
 
 @pytest.mark.parametrize(
-    "time_zone,event_order",
+    "time_zone,event_order,calendar_access_role",
+    # This only tests the reader role to force testing against the local
+    # database filtering based on start/end time. (free busy reader would
+    # just use the API response which this test is not exercising)
     [
-        ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
-        ("America/Regina", ["One", "Two", "All Day Event"]),
-        ("UTC", ["One", "All Day Event", "Two"]),
-        ("Asia/Tokyo", ["All Day Event", "One", "Two"]),
+        ("America/Los_Angeles", ["One", "Two", "All Day Event"], "reader"),
+        ("America/Regina", ["One", "Two", "All Day Event"], "reader"),
+        ("UTC", ["One", "All Day Event", "Two"], "reader"),
+        ("Asia/Tokyo", ["All Day Event", "One", "Two"], "reader"),
     ],
 )
 async def test_all_day_iter_order(

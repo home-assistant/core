@@ -10,7 +10,7 @@ from typing import Any
 
 from gcal_sync.api import GoogleCalendarService, ListEventsRequest, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import DateOrDatetime, Event
+from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
@@ -198,7 +198,13 @@ async def async_setup_entry(
                         entity_entry.entity_id,
                     )
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
-            if search := data.get(CONF_SEARCH):
+            # Prefer calendar sync down of resources when possible. However, sync does not
+            # for search. Also free-busy calendars denormalize recurring events as individual
+            # events which is not efficient for sync
+            if (
+                search := data.get(CONF_SEARCH)
+                or calendar_item.access_role == AccessRole.FREE_BUSY_READER
+            ):
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
