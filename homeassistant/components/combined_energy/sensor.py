@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence
-from typing import Any
+from datetime import datetime
 
 from combined_energy import CombinedEnergy
 from combined_energy.models import Device, DeviceReadings, Installation
@@ -128,19 +128,14 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     @property
     def _raw_value(self):
         """Get raw reading value from device readings."""
-        value = None
         if device_readings := self.device_readings:
-            value = getattr(device_readings, self.entity_description.key)
-        self._attr_available = value is not None
-        return value
+            return getattr(device_readings, self.entity_description.key)
+        return None
 
     @property
-    def _last_update(self):
-        """Get last update time from device readings."""
-        value = None
-        if device_readings := self.device_readings:
-            value = device_readings.range_start
-        return value
+    def available(self) -> bool:
+        """Indicate if the entity is available."""
+        return self._raw_value is not None
 
     @property
     def native_value(self) -> float | None:
@@ -155,10 +150,10 @@ class EnergySensor(CombinedEnergyReadingsSensor):
     """Sensor for energy readings."""
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if last_update := self._last_update:
-            return {"last_updated": last_update.isoformat()}
+    def last_reset(self) -> datetime | None:
+        """Last time the data was reset."""
+        if device_readings := self.device_readings:
+            return device_readings.range_start
         return None
 
     @property
