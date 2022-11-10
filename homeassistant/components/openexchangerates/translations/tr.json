@@ -26,8 +26,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "YAML kullanarak A\u00e7\u0131k D\u00f6viz Kurlar\u0131n\u0131 yap\u0131land\u0131rma kald\u0131r\u0131l\u0131yor. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131. \n\n Open Exchange Rates YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
-            "title": "A\u00e7\u0131k D\u00f6viz Kurlar\u0131 YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+            "description": "YAML kullanarak A\u00e7\u0131k D\u00f6viz Kurlar\u0131n\u0131 yap\u0131land\u0131rma kald\u0131r\u0131ld\u0131. \n\n Open Exchange Rates YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "A\u00e7\u0131k D\u00f6viz Kurlar\u0131 YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131ld\u0131"
         }
     }
 }

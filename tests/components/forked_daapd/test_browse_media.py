@@ -16,7 +16,7 @@ from homeassistant.components.spotify.const import (
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
-TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
+TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 
 
 async def test_async_browse_media(hass, hass_ws_client, config_entry):
@@ -255,7 +255,7 @@ async def test_async_browse_spotify(hass, hass_ws_client, config_entry):
     assert await async_setup_component(hass, spotify.DOMAIN, {})
     await hass.async_block_till_done()
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.spotify_async_browse_media"
@@ -290,6 +290,52 @@ async def test_async_browse_spotify(hass, hass_ws_client, config_entry):
                 "entity_id": TEST_MASTER_ENTITY_NAME,
                 "media_content_type": f"{SPOTIFY_MEDIA_PLAYER_PREFIX}library",
                 "media_content_id": SPOTIFY_MEDIA_PLAYER_PREFIX,
+            }
+        )
+        msg = await client.receive_json()
+        # Assert WebSocket response
+        assert msg["id"] == 1
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+
+
+async def test_async_browse_media_source(hass, hass_ws_client, config_entry):
+    """Test browsing media_source."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.media_source.async_browse_media"
+    ) as mock_media_source_browse:
+        children = [
+            BrowseMedia(
+                title="Test mp3",
+                media_class=MediaClass.MUSIC,
+                media_content_id="media-source://test_dir/test.mp3",
+                media_content_type="audio/aac",
+                can_play=False,
+                can_expand=True,
+            )
+        ]
+        mock_media_source_browse.return_value = BrowseMedia(
+            title="Audio Folder",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="media-source://audio_folder",
+            media_content_type=MediaType.APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": TEST_MASTER_ENTITY_NAME,
+                "media_content_type": MediaType.APP,
+                "media_content_id": "media-source://audio_folder",
             }
         )
         msg = await client.receive_json()

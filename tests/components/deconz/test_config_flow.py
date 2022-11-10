@@ -545,7 +545,9 @@ async def test_flow_hassio_discovery(hass):
                 CONF_PORT: 80,
                 CONF_SERIAL: BRIDGEID,
                 CONF_API_KEY: API_KEY,
-            }
+            },
+            name="Mock Addon",
+            slug="deconz",
         ),
         context={"source": SOURCE_HASSIO},
     )
@@ -593,7 +595,9 @@ async def test_hassio_discovery_update_configuration(hass, aioclient_mock):
                     CONF_PORT: 8080,
                     CONF_API_KEY: "updated",
                     CONF_SERIAL: BRIDGEID,
-                }
+                },
+                name="Mock Addon",
+                slug="deconz",
             ),
             context={"source": SOURCE_HASSIO},
         )
@@ -619,7 +623,9 @@ async def test_hassio_discovery_dont_update_configuration(hass, aioclient_mock):
                 CONF_PORT: 80,
                 CONF_API_KEY: API_KEY,
                 CONF_SERIAL: BRIDGEID,
-            }
+            },
+            name="Mock Addon",
+            slug="deconz",
         ),
         context={"source": SOURCE_HASSIO},
     )

@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
@@ -28,8 +23,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = "identity"
-
-ATTRIBUTION = "Data provided by Discogs"
 
 DEFAULT_NAME = "Discogs"
 
@@ -111,6 +104,8 @@ def setup_platform(
 class DiscogsSensor(SensorEntity):
     """Create a new Discogs sensor for a specific type."""
 
+    _attr_attribution = "Data provided by Discogs"
+
     def __init__(self, discogs_data, name, description: SensorEntityDescription):
         """Initialize the Discogs sensor."""
         self.entity_description = description
@@ -135,12 +130,10 @@ class DiscogsSensor(SensorEntity):
                 "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
 
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
 

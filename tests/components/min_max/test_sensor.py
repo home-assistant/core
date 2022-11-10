@@ -14,6 +14,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -63,6 +64,7 @@ async def test_min_sensor(hass):
             "name": "test_min",
             "type": "min",
             "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
         }
     }
 
@@ -80,6 +82,10 @@ async def test_min_sensor(hass):
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.test_min")
+    assert entity.unique_id == "very_unique_id"
 
 
 async def test_max_sensor(hass):

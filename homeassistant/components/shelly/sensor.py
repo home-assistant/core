@@ -32,8 +32,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from . import BlockDeviceWrapper
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
+from .coordinator import ShellyBlockCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -42,16 +42,12 @@ from .entity import (
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    get_device_uptime,
-    is_rpc_device_externally_powered,
-    temperature_unit,
-)
+from .utils import get_device_entry_gen, get_device_uptime
 
 
 @dataclass
@@ -83,7 +79,7 @@ SENSORS: Final = {
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
         name="Device Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,7 +140,7 @@ SENSORS: Final = {
         key="emeter|powerFactor",
         name="Power Factor",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: abs(round(value * 100, 1)),
+        value=lambda value: round(value * 100, 1),
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -225,7 +221,7 @@ SENSORS: Final = {
     ("sensor", "temp"): BlockSensorDescription(
         key="sensor|temp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -234,7 +230,7 @@ SENSORS: Final = {
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -348,17 +344,17 @@ RPC_SENSORS: Final = {
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
-        name="Temperature",
+        name="Device Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda status, _: round(status["tC"], 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
     ),
     "temperature_0": RpcSensorDescription(
-        key="temperature:0",
+        key="temperature",
         sub_key="tC",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -376,7 +372,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
     ),
     "uptime": RpcSensorDescription(
         key="sys",
@@ -386,10 +382,10 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
     ),
     "humidity_0": RpcSensorDescription(
-        key="humidity:0",
+        key="humidity",
         sub_key="rh",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
@@ -406,9 +402,28 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "voltmeter": RpcSensorDescription(
+        key="voltmeter",
+        sub_key="voltage",
+        name="Voltmeter",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda status, _: round(float(status), 2),
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
+        available=lambda status: status is not None,
+    ),
+    "analoginput": RpcSensorDescription(
+        key="analoginput",
+        sub_key="percent",
+        name="Analog Input",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
     ),
 }
 
@@ -431,9 +446,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
-        )
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_SENSORS,
+                RpcSleepingSensor,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
+            )
+        return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
@@ -465,17 +490,15 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        coordinator: ShellyBlockCoordinator,
         block: Block,
         attribute: str,
         description: BlockSensorDescription,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(wrapper, block, attribute, description)
+        super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if unit_fn := description.unit_fn:
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
 
     @property
     def native_value(self) -> StateType:
@@ -512,7 +535,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        coordinator: ShellyBlockCoordinator,
         block: Block | None,
         attribute: str,
         description: BlockSensorDescription,
@@ -520,11 +543,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        super().__init__(wrapper, block, attribute, description, entry, sensors)
-
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if block and (unit_fn := description.unit_fn):
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
+        super().__init__(coordinator, block, attribute, description, entry, sensors)
 
     @property
     def native_value(self) -> StateType:
@@ -533,3 +552,33 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.block is not None:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit
+
+
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
+    """Represent a RPC sleeping sensor."""
+
+    entity_description: RpcSensorDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return value of sensor."""
+        if self.coordinator.device.initialized:
+            return self.attribute_value
+
+        return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.coordinator.device.initialized:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit

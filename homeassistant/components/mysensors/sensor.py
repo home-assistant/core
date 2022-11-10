@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
@@ -242,7 +243,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
             return custom_unit
 
         if set_req(self.value_type) == set_req.V_TEMP:
-            if self.hass.config.units.is_metric:
+            if self.hass.config.units is METRIC_SYSTEM:
                 return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
 

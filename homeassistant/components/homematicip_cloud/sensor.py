@@ -130,8 +130,7 @@ async def async_setup_entry(
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):

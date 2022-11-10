@@ -22,6 +22,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_IAS_WD,
     CHANNEL_INOVELLI,
+    CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -123,6 +124,7 @@ class ZHADefaultToneSelectEntity(
     """Representation of a ZHA default siren tone select entity."""
 
     _enum = IasWd.Warning.WarningMode
+    _attr_name = "Default siren tone"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -132,6 +134,7 @@ class ZHADefaultSirenLevelSelectEntity(
     """Representation of a ZHA default siren level select entity."""
 
     _enum = IasWd.Warning.SirenLevel
+    _attr_name = "Default siren level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -141,6 +144,7 @@ class ZHADefaultStrobeLevelSelectEntity(
     """Representation of a ZHA default siren strobe level select entity."""
 
     _enum = IasWd.StrobeLevel
+    _attr_name = "Default strobe level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -148,6 +152,7 @@ class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__nam
     """Representation of a ZHA default siren strobe select entity."""
 
     _enum = Strobe
+    _attr_name = "Default strobe"
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
@@ -220,6 +225,86 @@ class ZHAStartupOnOffSelectEntity(
 
     _select_attr = "start_up_on_off"
     _enum = OnOff.StartUpOnOff
+    _attr_name = "Start-up behavior"
+
+
+class TuyaPowerOnState(types.enum8):
+    """Tuya power on state enum."""
+
+    Off = 0x00
+    On = 0x01
+    LastState = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_7tdtqgwv",
+        "_TZE200_amp6tsvy",
+        "_TZE200_oisqyl4o",
+        "_TZE200_vhy3iakz",
+        "_TZ3000_uim07oem",
+        "_TZE200_wfxuhoea",
+        "_TZE200_tviaymwx",
+        "_TZE200_g1ib5ldv",
+        "_TZE200_wunufsil",
+        "_TZE200_7deq70b8",
+        "_TZE200_tz32mtza",
+        "_TZE200_2hf7x9n3",
+        "_TZE200_aqnazj70",
+        "_TZE200_1ozguk6x",
+        "_TZE200_k6jhsr0q",
+        "_TZE200_9mahtqtg",
+    },
+)
+class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_state"):
+    """Representation of a ZHA power on state select entity."""
+
+    _select_attr = "power_on_state"
+    _enum = TuyaPowerOnState
+    _attr_name = "Power on state"
+
+
+class MoesBacklightMode(types.enum8):
+    """MOES switch backlight mode enum."""
+
+    Off = 0x00
+    LightWhenOn = 0x01
+    LightWhenOff = 0x02
+    Freeze = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_7tdtqgwv",
+        "_TZE200_amp6tsvy",
+        "_TZE200_oisqyl4o",
+        "_TZE200_vhy3iakz",
+        "_TZ3000_uim07oem",
+        "_TZE200_wfxuhoea",
+        "_TZE200_tviaymwx",
+        "_TZE200_g1ib5ldv",
+        "_TZE200_wunufsil",
+        "_TZE200_7deq70b8",
+        "_TZE200_tz32mtza",
+        "_TZE200_2hf7x9n3",
+        "_TZE200_aqnazj70",
+        "_TZE200_1ozguk6x",
+        "_TZE200_k6jhsr0q",
+        "_TZE200_9mahtqtg",
+    },
+)
+class MoesBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
+    """Moes devices have a different backlight mode select options."""
+
+    _select_attr = "backlight_mode"
+    _enum = MoesBacklightMode
+    _attr_name = "Backlight mode"
 
 
 class AqaraMotionSensitivities(types.enum8):
@@ -234,10 +319,55 @@ class AqaraMotionSensitivities(types.enum8):
     channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion sensitivity configuration entity."""
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
+    _attr_name = "Motion sensitivity"
+
+
+class HueV1MotionSensitivities(types.enum8):
+    """Hue v1 motion sensitivities."""
+
+    Low = 0x00
+    Medium = 0x01
+    High = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_OCCUPANCY,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001"},
+)
+class HueV1MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _attr_name = "Hue motion sensitivity"
+    _enum = HueV1MotionSensitivities
+
+
+class HueV2MotionSensitivities(types.enum8):
+    """Hue v2 motion sensitivities."""
+
+    Lowest = 0x00
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+    Highest = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_OCCUPANCY,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML002", "SML003", "SML004"},
+)
+class HueV2MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _attr_name = "Hue motion sensitivity"
+    _enum = HueV2MotionSensitivities
 
 
 class AqaraMonitoringModess(types.enum8):
@@ -253,6 +383,7 @@ class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
 
     _select_attr = "monitoring_mode"
     _enum = AqaraMonitoringModess
+    _attr_name = "Monitoring mode"
 
 
 class AqaraApproachDistances(types.enum8):
@@ -269,6 +400,7 @@ class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
 
     _select_attr = "approach_distance"
     _enum = AqaraApproachDistances
+    _attr_name = "Approach distance"
 
 
 class AqaraE1ReverseDirection(types.enum8):
@@ -286,6 +418,7 @@ class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
 
     _select_attr = "window_covering_mode"
     _enum = AqaraE1ReverseDirection
+    _attr_name = "Curtain mode"
 
 
 class InovelliOutputMode(types.enum1):

@@ -7,13 +7,9 @@ from math import ceil
 from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.errors import (
-    AirVisualError,
-    InvalidKeyError,
-    KeyExpiredError,
-    NodeProError,
-    UnauthorizedError,
-)
+from pyairvisual.cloud_api import InvalidKeyError, KeyExpiredError, UnauthorizedError
+from pyairvisual.errors import AirVisualError
+from pyairvisual.node import NodeProError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
