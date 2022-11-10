@@ -360,8 +360,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def preload_stream(_event: Event) -> None:
         for camera in component.entities:
-            camera_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
-            if not camera_prefs.preload_stream:
+            stream_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
+            if not stream_prefs.preload_stream:
                 continue
             stream = await camera.async_create_stream()
             if not stream:
@@ -862,8 +862,8 @@ async def websocket_get_prefs(
 ) -> None:
     """Handle request for account info."""
     prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-    entity_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
-    connection.send_result(msg["id"], asdict(entity_prefs))
+    stream_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
+    connection.send_result(msg["id"], asdict(stream_prefs))
 
 
 @websocket_api.websocket_command(
