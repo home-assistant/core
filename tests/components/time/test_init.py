@@ -12,7 +12,7 @@ from homeassistant.components.time import (
 class MockTimeEntity(TimeEntity):
     """Mock time device to use in tests."""
 
-    def __init__(self, native_value: datetime | time = time(12, 0, 0)):
+    def __init__(self, native_value=time(12, 0, 0)):
         """Initialize mock time entity."""
         self._attr_native_value = native_value
 
