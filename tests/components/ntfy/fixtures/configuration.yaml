@@ -1,5 +1,0 @@
-notify:
-  - name: ntfy_reloaded
-    platform: ntfy
-    resource: https://ntfy.sh
-    topic: my_topic
