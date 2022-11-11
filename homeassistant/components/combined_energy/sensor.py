@@ -60,6 +60,7 @@ async def async_setup_entry(
     entities: list[CombinedEnergyReadingsSensor | CombinedEnergyConnectedSensor] = list(
         sensor_factory.entities()
     )
+    # Insert connected as the first sensor
     entities.insert(0, CombinedEnergyConnectedSensor(entry.title, connection))
 
     async_add_entities(entities)
@@ -71,7 +72,7 @@ class CombinedEnergyConnectedSensor(CoordinatorEntity, BinarySensorEntity):
     data_service: CombinedEnergyConnectivityDataService
 
     def __init__(
-        self, platform_name: str, data_service: CombinedEnergyConnectivityDataService
+        self, entry_title: str, data_service: CombinedEnergyConnectivityDataService
     ) -> None:
         """Initialise Connected Sensor."""
         super().__init__(data_service.coordinator)
@@ -79,7 +80,7 @@ class CombinedEnergyConnectedSensor(CoordinatorEntity, BinarySensorEntity):
         self.data_service = data_service
         self.entity_description = SENSOR_DESCRIPTION_CONNECTED
 
-        self._attr_name = f"{platform_name} {self.entity_description.name}"
+        self._attr_name = f"{entry_title} {self.entity_description.name}"
         self._attr_unique_id = f"install_{self.data_service.api.installation_id}-{self.entity_description.key}"
 
     @property
