@@ -89,7 +89,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             # be sure to mark it as disconnected so any library using
             # the proxy knows to reconnect.
             #
-            # Because callbacks are delivered asynchronously its possible
+            # Because callbacks are delivered asynchronously it's possible
             # that we find out about the disconnection during the operation
             # before the callback is delivered.
             if ex.error.error == -1:
