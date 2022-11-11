@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class DemoDate(DateEntity):
-    """Representation of a demo Date/time entity."""
+    """Representation of a demo Date entity."""
 
     _attr_should_poll = False
 
@@ -56,7 +56,7 @@ class DemoDate(DateEntity):
         icon: str,
         assumed_state: bool,
     ) -> None:
-        """Initialize the Demo Date/Time entity."""
+        """Initialize the Demo Date entity."""
         self._attr_assumed_state = assumed_state
         self._attr_icon = icon
         self._attr_name = name or DEVICE_DEFAULT_NAME
