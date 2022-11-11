@@ -134,7 +134,6 @@ class DateTimeEntity(Entity):
 
     entity_description: DateTimeEntityDescription
     _attr_native_value: datetime | None
-    _attr_value: None = None
     _attr_year: None = None
     _attr_month: None = None
     _attr_day: None = None
