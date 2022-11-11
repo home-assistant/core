@@ -1101,7 +1101,6 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
 
 async def test_try_connection_with_advanced_parameters(
     hass,
-    mqtt_mock_entry_with_yaml_config,
     mock_try_connection_success,
     tmp_path,
     mock_ssl_context,
@@ -1132,6 +1131,9 @@ async def test_try_connection_with_advanced_parameters(
         mqtt.CONF_PORT: 1234,
         mqtt.CONF_USERNAME: "user",
         mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_PATH: "/path/",
+        mqtt.CONF_WS_HEADERS: {"h1": "v1", "h2": "v2"},
         mqtt.CONF_KEEPALIVE: 30,
         mqtt.CONF_DISCOVERY: True,
         mqtt.CONF_BIRTH_MESSAGE: {
@@ -1166,6 +1168,9 @@ async def test_try_connection_with_advanced_parameters(
             mqtt.CONF_PASSWORD: "pass",
             mqtt.CONF_TLS_INSECURE: True,
             mqtt.CONF_PROTOCOL: "3.1.1",
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_PATH: "/path/",
+            mqtt.CONF_WS_HEADERS: '{"h1": "v1", "h2": "v2"}',
         }
         for k, v in defaults.items():
             assert get_default(result["data_schema"].schema, k) == v
@@ -1181,7 +1186,7 @@ async def test_try_connection_with_advanced_parameters(
         )
         assert config_entry.data[mqtt.CONF_CERTIFICATE] == "auto"
 
-        # test we can chante username and password
+        # test we can change username and password
         # as it was configured as auto in configuration.yaml is is migrated now
         mock_try_connection_success.reset_mock()
         result = await hass.config_entries.options.async_configure(
@@ -1194,6 +1199,9 @@ async def test_try_connection_with_advanced_parameters(
                 "set_ca_cert": "auto",
                 "set_client_cert": True,
                 mqtt.CONF_TLS_INSECURE: True,
+                mqtt.CONF_TRANSPORT: "websockets",
+                mqtt.CONF_WS_PATH: "/new/path",
+                mqtt.CONF_WS_HEADERS: '{"h3": "v3"}',
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -1216,6 +1224,12 @@ async def test_try_connection_with_advanced_parameters(
         assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
             "keyfile"
         ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY)
+
+        # check if websockets options are set
+        assert mock_try_connection_success.ws_set_options.mock_calls[0][1] == (
+            "/new/path",
+            {"h3": "v3"},
+        )
 
         # Accept default option
         result = await hass.config_entries.options.async_configure(
@@ -1266,6 +1280,7 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema["set_ca_cert"]
     assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
     assert result["data_schema"].schema[mqtt.CONF_PROTOCOL]
+    assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
     assert mqtt.CONF_CLIENT_CERT not in result["data_schema"].schema
     assert mqtt.CONF_CLIENT_KEY not in result["data_schema"].schema
 
@@ -1281,6 +1296,8 @@ async def test_setup_with_advanced_settings(
             "set_ca_cert": "auto",
             "set_client_cert": True,
             mqtt.CONF_TLS_INSECURE: True,
+            mqtt.CONF_PROTOCOL: "3.1.1",
+            mqtt.CONF_TRANSPORT: "websockets",
         },
     )
     assert result["type"] == "form"
@@ -1294,6 +1311,9 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_PROTOCOL]
     assert result["data_schema"].schema[mqtt.CONF_CLIENT_CERT]
     assert result["data_schema"].schema[mqtt.CONF_CLIENT_KEY]
+    assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
+    assert result["data_schema"].schema[mqtt.CONF_WS_PATH]
+    assert result["data_schema"].schema[mqtt.CONF_WS_HEADERS]
 
     # third iteration, advanced settings with client cert and key set
     result = await hass.config_entries.options.async_configure(
@@ -1309,6 +1329,9 @@ async def test_setup_with_advanced_settings(
             mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
             mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
             mqtt.CONF_TLS_INSECURE: True,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_PATH: "/custom_path/",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2" }',
         },
     )
 
@@ -1323,3 +1346,21 @@ async def test_setup_with_advanced_settings(
         },
     )
     assert result["type"] == "create_entry"
+
+    # Check config entry result
+    assert config_entry.data == {
+        "broker": "test-broker",
+        "port": 2345,
+        "username": "user",
+        "password": "secret",
+        "keepalive": 30,
+        "client_cert": "## mock client certificate file ##",
+        "client_key": "## mock key file ##",
+        "tls_insecure": True,
+        "transport": "websockets",
+        "ws_path": "/custom_path/",
+        "ws_headers": {"header_1": "content_header_1", "header_2": "content_header_2"},
+        "certificate": "auto",
+        "discovery": True,
+        "discovery_prefix": "homeassistant_test",
+    }
