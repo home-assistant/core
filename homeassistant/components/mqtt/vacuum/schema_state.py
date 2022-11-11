@@ -171,8 +171,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
-    _supported_features: VacuumEntityFeature | int
-    _fan_speed_list: list[str]
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
     _payloads: dict[str, Any]

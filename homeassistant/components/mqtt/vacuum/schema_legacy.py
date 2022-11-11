@@ -190,7 +190,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
     _encoding: str | None
-    _fan_speed_list: list[str]
     _qos: bool
     _retain: bool
     _payloads: dict[str, str]
@@ -289,15 +288,15 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC]
                 and CONF_BATTERY_LEVEL_TEMPLATE in self._config
             ):
-                battery_level: ReceivePayloadType = self._templates[
-                    CONF_BATTERY_LEVEL_TEMPLATE
-                ](msg.payload, PayloadSentinel.DEFAULT)
+                battery_level = self._templates[CONF_BATTERY_LEVEL_TEMPLATE](
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
                 if battery_level and battery_level is not PayloadSentinel.DEFAULT:
                     self._attr_battery_level = max(0, min(100, int(battery_level)))
 
             if (
                 msg.topic == self._state_topics[CONF_CHARGING_TOPIC]
-                and CONF_CHARGING_TEMPLATE in self._config
+                and CONF_CHARGING_TEMPLATE in self._templates
             ):
                 charging = self._templates[CONF_CHARGING_TEMPLATE](
                     msg.payload, PayloadSentinel.DEFAULT
