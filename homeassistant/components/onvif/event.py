@@ -8,7 +8,7 @@ import datetime as dt
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
@@ -20,6 +20,7 @@ from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
 SUBSCRIPTION_ERRORS = (
+    XMLParseError,
     Fault,
     asyncio.TimeoutError,
     TransportError,
@@ -153,7 +154,8 @@ class EventManager:
             .isoformat(timespec="seconds")
             .replace("+00:00", "Z")
         )
-        await self._subscription.Renew(termination_time)
+        with suppress(*SUBSCRIPTION_ERRORS):
+            await self._subscription.Renew(termination_time)
 
     def async_schedule_pull(self) -> None:
         """Schedule async_pull_messages to run."""
