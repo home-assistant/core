@@ -1,4 +1,4 @@
-"""Component to allow setting date/time as platforms."""
+"""Component to allow setting time as platforms."""
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -72,6 +72,6 @@ class DemoTime(TimeEntity):
         )
 
     async def async_set_value(self, time_value: time) -> None:
-        """Update the date/time."""
+        """Update the time."""
         self._attr_native_value = time_value
         self.async_write_ha_state()
