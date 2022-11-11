@@ -131,7 +131,7 @@ class TimeEntity(Entity):
     @final
     def value(self) -> time | None:
         """Return the entity value to represent the entity state."""
-        # If native value is a datetime, onlt return the time
+        # If native value is a datetime, only return the time
         if isinstance(self.native_value, datetime):
             return self.native_value.time()
         return self.native_value
