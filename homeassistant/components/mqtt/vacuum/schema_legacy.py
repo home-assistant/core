@@ -350,9 +350,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 msg.topic == self._state_topics[CONF_FAN_SPEED_TOPIC]
                 and CONF_FAN_SPEED_TEMPLATE in self._config
             ):
-                fan_speed: ReceivePayloadType | None = self._templates[
-                    CONF_FAN_SPEED_TEMPLATE
-                ](msg.payload, PayloadSentinel.DEFAULT)
+                fan_speed = self._templates[CONF_FAN_SPEED_TEMPLATE](
+                    msg.payload, PayloadSentinel.DEFAULT
+                )
                 if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
                     self._attr_fan_speed = str(fan_speed)
 
