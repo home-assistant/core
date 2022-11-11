@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
@@ -28,6 +29,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
+    EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -91,7 +93,9 @@ def build_schema(user_input: Mapping[str, Any], is_options_flow: bool = False):
         vol.Required(
             CONF_SENSOR,
             description={"suggested_value": user_input.get(CONF_SENSOR)},
-        ): EntitySelector(),
+        ): EntitySelector(
+            EntitySelectorConfig(device_class=SensorDeviceClass.TEMPERATURE)
+        ),
         vol.Optional(
             CONF_MAX_TEMP,
             description={
