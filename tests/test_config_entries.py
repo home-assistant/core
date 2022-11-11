@@ -3287,6 +3287,7 @@ async def test_disallow_entry_reload_with_setup_in_progresss(hass, manager):
 async def test_reauth(hass):
     """Test the async_reauth_helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
+    entry2 = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -3313,7 +3314,150 @@ async def test_reauth(hass):
 
     assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
 
-    # Check we can't start duplicate flows
+    assert entry.entry_id != entry2.entry_id
+
+    # Check that we can't start duplicate reauth flows
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
-    assert len(flows) == 1
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can't start duplicate reauth flows when the context is different
+    entry.async_start_reauth(hass, {"diff": "diff"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can start a reauth flow for a different entry
+    entry2.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 2
+
+
+async def test_wait_for_loading_entry(hass: HomeAssistant) -> None:
+    """Test waiting for entry to be set up."""
+
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+
+    async def _load_entry() -> None:
+        assert await async_setup_component(hass, "test", {})
+
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        hass.async_create_task(_load_entry())
+        new_state = await hass.config_entries.async_wait_for_states(
+            entry,
+            {
+                config_entries.ConfigEntryState.LOADED,
+                config_entries.ConfigEntryState.SETUP_ERROR,
+            },
+            timeout=1.0,
+        )
+        assert new_state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_wait_for_loading_failed_entry(hass: HomeAssistant) -> None:
+    """Test waiting for entry to be set up that fails loading."""
+
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=HomeAssistantError)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+
+    async def _load_entry() -> None:
+        assert await async_setup_component(hass, "test", {})
+
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        hass.async_create_task(_load_entry())
+        new_state = await hass.config_entries.async_wait_for_states(
+            entry,
+            {
+                config_entries.ConfigEntryState.LOADED,
+                config_entries.ConfigEntryState.SETUP_ERROR,
+            },
+            timeout=1.0,
+        )
+        assert new_state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+
+async def test_wait_for_loading_timeout(hass: HomeAssistant) -> None:
+    """Test waiting for entry to be set up that fails with a timeout."""
+
+    async def _async_setup_entry(hass, entry):
+        await asyncio.sleep(1)
+        return True
+
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+
+    async def _load_entry() -> None:
+        assert await async_setup_component(hass, "test", {})
+
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        hass.async_create_task(_load_entry())
+        with pytest.raises(asyncio.exceptions.TimeoutError):
+            await hass.config_entries.async_wait_for_states(
+                entry,
+                {
+                    config_entries.ConfigEntryState.LOADED,
+                    config_entries.ConfigEntryState.SETUP_ERROR,
+                },
+                timeout=0.1,
+            )
+
+
+async def test_get_active_flows(hass):
+    """Test the async_get_active_flows helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init):
+        entry.async_start_reauth(
+            hass,
+            context={"extra_context": "some_extra_context"},
+            data={"extra_data": 1234},
+        )
+        await hass.async_block_till_done()
+
+    # Check that there's an active reauth flow:
+    active_reauth_flow = next(
+        iter(entry.async_get_active_flows(hass, {config_entries.SOURCE_REAUTH})), None
+    )
+    assert active_reauth_flow is not None
+
+    # Check that there isn't any other flow (in this case, a user flow):
+    active_user_flow = next(
+        iter(entry.async_get_active_flows(hass, {config_entries.SOURCE_USER})), None
+    )
+    assert active_user_flow is None

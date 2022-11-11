@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Det oppsto en feil under oppdatering av kildelisten. \n\n S\u00f8rg for at TV-en er sl\u00e5tt p\u00e5 f\u00f8r du pr\u00f8ver \u00e5 sette den opp."
+        },
         "step": {
             "user": {
                 "data": {

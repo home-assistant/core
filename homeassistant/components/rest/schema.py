@@ -89,6 +89,12 @@ COMBINED_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            cv.remove_falsy,
+            [COMBINED_SCHEMA],
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )

@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Erweiterte Optionen",
                     "broker": "Server",
-                    "certificate": "Pfad zur benutzerdefinierten CA-Zertifikatsdatei",
-                    "client_cert": "Pfad zur Client-Zertifikatsdatei",
+                    "certificate": "Hochladen einer benutzerdefinierten CA-Zertifikatsdatei",
+                    "client_cert": "Client-Zertifikatsdatei hochladen",
                     "client_id": "Client-ID (leer lassen, um eine zuf\u00e4llig generierte zu erhalten)",
-                    "client_key": "Pfad zur privaten Schl\u00fcsseldatei",
+                    "client_key": "Private Schl\u00fcsseldatei hochladen",
                     "discovery": "Suche aktivieren",
                     "keepalive": "Die Zeit zwischen dem Senden von Keep-Alive-Nachrichten",
                     "password": "Passwort",
@@ -93,7 +93,7 @@
             "broker": {
                 "data": {
                     "advanced_options": "Erweiterte Optionen",
-                    "broker": "Broker",
+                    "broker": "Server",
                     "certificate": "Hochladen einer benutzerdefinierten CA-Zertifikatsdatei",
                     "client_cert": "Client-Zertifikatsdatei hochladen",
                     "client_id": "Client-ID (leer lassen, um eine zuf\u00e4llig generierte zu erhalten)",
@@ -117,7 +117,7 @@
                     "birth_qos": "Birth Nachricht QoS",
                     "birth_retain": "Birth Nachricht zwischenspeichern",
                     "birth_topic": "Thema der Birth Nachricht",
-                    "discovery": "Erkennung aktivieren",
+                    "discovery": "Suche aktivieren",
                     "discovery_prefix": "Discovery-Pr\u00e4fix",
                     "will_enable": "Letzten Willen aktivieren",
                     "will_payload": "Nutzdaten der Letzter-Wille Nachricht",

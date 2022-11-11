@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from asyncio import Future
 from collections.abc import Callable, Iterable
+import datetime
 import logging
 import platform
 from typing import TYPE_CHECKING, cast
@@ -21,6 +22,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -33,6 +35,7 @@ from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_HW_VERSION,
     ADAPTER_SW_VERSION,
+    BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
@@ -40,6 +43,7 @@ from .const import (
     DEFAULT_ADDRESS,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
     AdapterDetails,
 )
@@ -298,8 +302,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_discover_adapters(hass, discovered_adapters)
 
     discovery_debouncer = Debouncer(
-        hass, _LOGGER, cooldown=5, immediate=False, function=_async_rediscover_adapters
+        hass,
+        _LOGGER,
+        cooldown=BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
+        immediate=False,
+        function=_async_rediscover_adapters,
     )
+
+    async def _async_call_debouncer(now: datetime.datetime) -> None:
+        """Call the debouncer at a later time."""
+        await discovery_debouncer.async_call()
 
     def _async_trigger_discovery() -> None:
         # There are so many bluetooth adapter models that
@@ -310,6 +322,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # present.
         _LOGGER.debug("Triggering bluetooth usb discovery")
         hass.async_create_task(discovery_debouncer.async_call())
+        # Because it can take 120s for the firmware loader
+        # fallback to timeout we need to wait that plus
+        # the debounce time to ensure we do not miss the
+        # adapter becoming available to DBus since otherwise
+        # we will never see the new adapter until
+        # Home Assistant is restarted
+        async_call_later(
+            hass,
+            BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS + LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
+            _async_call_debouncer,
+        )
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
     hass.bus.async_listen_once(
@@ -402,15 +425,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    scanner = HaScanner(hass, mode, adapter, address)
+    new_info_callback = async_get_advertisement_callback(hass)
+    scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    info_callback = async_get_advertisement_callback(hass)
-    entry.async_on_unload(scanner.async_register_callback(info_callback))
     try:
         await scanner.async_start()
     except ScannerStartError as err:

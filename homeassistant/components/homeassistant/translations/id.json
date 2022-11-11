@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "Mata uang {currency} tidak lagi digunakan, konfigurasikan ulang konfigurasi mata uang.",
+            "title": "Mata uang yang dikonfigurasi tidak lagi digunakan"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Arsitektur CPU",

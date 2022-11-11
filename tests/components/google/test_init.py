@@ -768,7 +768,7 @@ async def test_assign_unique_id(
 
     mock_calendar_get(
         "primary",
-        {"id": EMAIL_ADDRESS, "summary": "Personal", "accessRole": "reader"},
+        {"id": EMAIL_ADDRESS, "summary": "Personal"},
     )
 
     mock_calendars_list({"items": [test_api_calendar]})

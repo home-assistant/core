@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "{currency} p\u00e9nznem m\u00e1r nincs haszn\u00e1latban, k\u00e9rj\u00fck, konfigur\u00e1lja \u00fajra a p\u00e9nznemet.",
+            "title": "A be\u00e1ll\u00edtott p\u00e9nznem m\u00e1r nincs haszn\u00e1latban"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Processzor architekt\u00fara",

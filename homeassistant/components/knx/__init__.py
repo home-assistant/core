@@ -500,7 +500,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}  # type: ignore[misc]
+                    {_filter: transcoder for _filter in _filters}  # type: ignore[type-abstract]
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
@@ -532,7 +532,7 @@ class KNXModule:
             transcoder := DPTBase.parse_transcoder(dpt)
         ):
             self._group_address_transcoder.update(
-                {_address: transcoder for _address in group_addresses}  # type: ignore[misc]
+                {_address: transcoder for _address in group_addresses}  # type: ignore[type-abstract]
             )
         for group_address in group_addresses:
             if group_address in self._knx_event_callback.group_addresses:
