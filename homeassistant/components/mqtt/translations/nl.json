@@ -5,15 +5,30 @@
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "bad_birth": "Ongeldig `birth` topic",
+            "bad_certificate": "Het CA certificaat bestand is ongeldig",
+            "bad_client_cert": "Ongeldig client-certificaat, zorg voor een PEM gecodeerd bestand",
+            "bad_client_cert_key": "Client certificaat en priv\u00e9sleutel zijn geen geldig paar",
+            "bad_client_key": "Ongeldige priv\u00e9sleutel (private key), zorg voor een PEM gecodeerd bestand zonder wachtwoord",
+            "bad_discovery_prefix": "Ongeldig discovery voorvoegsel",
+            "bad_will": "Ongeldig `will` topic",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_inclusion": "Het client-certificaat en priv\u00e9sleutel moeten samen worden geconfigureerd"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Geavanceerde opties",
                     "broker": "Broker",
+                    "client_id": "Client ID (leeg laten voor een willekeurig ID)",
                     "discovery": "Detectie inschakelen",
+                    "keepalive": "Tijd tussen het verzenden van keep-a-live berichten",
                     "password": "Wachtwoord",
                     "port": "Poort",
+                    "protocol": "MQTT protocol",
+                    "set_ca_cert": "Broker certificaatvalidatie",
+                    "set_client_cert": "Gebruik een client-certificaat",
+                    "tls_insecure": "Negeer validatie van brokercertificaten",
                     "username": "Gebruikersnaam"
                 },
                 "description": "MQTT"
@@ -49,18 +64,44 @@
             "button_triple_press": "\" {subtype} \" driemaal geklikt"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Handmatig geconfigureerd MQTT {platform}(en) gevonden onder de platform sleutel `{platform}`.\n\nVerplaats a.u.b. deze configuratieinstellingen naar de `mqtt` configuratie sleutel en herstart Home Assistant om het probleem te verhelpen. Zie de [documentatie]({more_info_url}), voor meer informatie.",
+            "title": "Handmatig geconfigureerd platform {platform}(s) vereist aandacht"
+        },
+        "deprecated_yaml_broker_settings": {
+            "description": "De volgende instellingen gevonden in `configuration.yaml` zijn gemigreerd naar de MQTT configuratieinstellingen en overschrijven nu de instellingen in `configuration.yaml`:\n`{deprecated_settings}`\n\nVerwijderd deze instellingen van `configuration.yaml` en herstart Home Assistant om dit probleem op te lossen. Zie de [documentatie]({more_info_url}), voor meer informatie.",
+            "title": "Verouderde MQTT instellingen gevonden in `configuration.yaml`"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Ongeldig birth topic",
+            "bad_certificate": "Het CA certificaat bestand is ongeldig",
+            "bad_client_cert": "Ongeldig client certificaat, zorg voor een PEM gecodeerd bestand",
+            "bad_client_cert_key": "Client-certificaat en priv\u00e9sleutel zijn geen geldig paar",
+            "bad_client_key": "Ongeldige priv\u00e9sleutel (private key), zorg voor een PEM gecodeerd bestand zonder wachtwoord",
+            "bad_discovery_prefix": "Ongeldig discovery voorvoegsel",
             "bad_will": "Ongeldig will topic",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_inclusion": "Het client-certificaat en priv\u00e9sleutel moeten samen worden geconfigureerd"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Geavanceerde opties",
                     "broker": "Broker",
+                    "certificate": "Upload CA certificaat bestand",
+                    "client_cert": "Upload private certificaat bestand",
+                    "client_id": "Client ID (leeg laten voor een willekeurig ID)",
+                    "client_key": "Upload private key bestand",
+                    "keepalive": "Tijd tussen het verzenden van keep-a-live berichten",
                     "password": "Wachtwoord",
                     "port": "Poort",
+                    "protocol": "MQTT protocol",
+                    "set_ca_cert": "Broker certificaatvalidatie",
+                    "set_client_cert": "Gebruik een client-certificaat",
+                    "tls_insecure": "Negeer validatie van brokercertificaten",
                     "username": "Gebruikersnaam"
                 },
                 "description": "Voer de verbindingsgegevens van uw MQTT-broker in.",
@@ -68,14 +109,15 @@
             },
             "options": {
                 "data": {
-                    "birth_enable": "Geboortebericht inschakelen",
-                    "birth_payload": "Birth message payload",
-                    "birth_qos": "Birth message QoS",
+                    "birth_enable": "Geboortebericht inschakelen (birth)",
+                    "birth_payload": "Birth bericht inhoud",
+                    "birth_qos": "Birth bericht QoS",
                     "birth_retain": "Verbind bericht onthouden",
-                    "birth_topic": "Birth message onderwerp",
+                    "birth_topic": "Birth bericht topic",
                     "discovery": "Discovery inschakelen",
-                    "will_enable": "Offline bericht inschakelen",
-                    "will_payload": "Offline bericht inhoud",
+                    "discovery_prefix": "Discovery-voorvoegsel",
+                    "will_enable": "Offline bericht inschakelen (will)",
+                    "will_payload": "Will bericht inhoud",
                     "will_qos": "Offline bericht QoS",
                     "will_retain": "Offline bericht onthouden",
                     "will_topic": "Offline bericht topic"

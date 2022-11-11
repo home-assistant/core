@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Final, Union, cast
 
+from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -18,11 +19,11 @@ STORAGE_VERSION: Final = 1
 class CameraEntityPreferences:
     """Handle preferences for camera entity."""
 
-    def __init__(self, prefs: dict[str, bool | int]) -> None:
+    def __init__(self, prefs: dict[str, bool | Orientation]) -> None:
         """Initialize prefs."""
         self._prefs = prefs
 
-    def as_dict(self) -> dict[str, bool | int]:
+    def as_dict(self) -> dict[str, bool | Orientation]:
         """Return dictionary version."""
         return self._prefs
 
@@ -32,9 +33,11 @@ class CameraEntityPreferences:
         return cast(bool, self._prefs.get(PREF_PRELOAD_STREAM, False))
 
     @property
-    def orientation(self) -> int:
+    def orientation(self) -> Orientation:
         """Return the current stream orientation settings."""
-        return self._prefs.get(PREF_ORIENTATION, 1)
+        return cast(
+            Orientation, self._prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM)
+        )
 
 
 class CameraPreferences:
@@ -45,11 +48,11 @@ class CameraPreferences:
         self._hass = hass
         # The orientation prefs are stored in in the entity registry options
         # The preload_stream prefs are stored in this Store
-        self._store = Store[dict[str, dict[str, Union[bool, int]]]](
+        self._store = Store[dict[str, dict[str, Union[bool, Orientation]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         # Local copy of the preload_stream prefs
-        self._prefs: dict[str, dict[str, bool | int]] | None = None
+        self._prefs: dict[str, dict[str, bool | Orientation]] | None = None
 
     async def async_initialize(self) -> None:
         """Finish initializing the preferences."""
@@ -63,9 +66,9 @@ class CameraPreferences:
         entity_id: str,
         *,
         preload_stream: bool | UndefinedType = UNDEFINED,
-        orientation: int | UndefinedType = UNDEFINED,
+        orientation: Orientation | UndefinedType = UNDEFINED,
         stream_options: dict[str, str] | UndefinedType = UNDEFINED,
-    ) -> dict[str, bool | int]:
+    ) -> dict[str, bool | Orientation]:
         """Update camera preferences.
 
         Returns a dict with the preferences on success.

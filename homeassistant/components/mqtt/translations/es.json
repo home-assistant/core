@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Opciones avanzadas",
                     "broker": "Br\u00f3ker",
-                    "certificate": "Ruta al archivo de certificado de la CA personalizado",
-                    "client_cert": "Ruta a un archivo de certificado de cliente",
+                    "certificate": "Subir archivo de certificado de la CA personalizado",
+                    "client_cert": "Subir archivo de certificado de cliente",
                     "client_id": "ID de cliente (dejar vac\u00edo para generar uno aleatoriamente)",
-                    "client_key": "Ruta a un archivo de clave privada",
+                    "client_key": "Subir archivo de clave privada",
                     "discovery": "Habilitar descubrimiento",
                     "keepalive": "El tiempo entre el env\u00edo de mensajes keep alive",
                     "password": "Contrase\u00f1a",

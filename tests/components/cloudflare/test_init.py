@@ -1,11 +1,16 @@
 """Test the Cloudflare integration."""
+from unittest.mock import patch
+
 from pycfdns.exceptions import (
     CloudflareAuthenticationException,
     CloudflareConnectionException,
 )
+import pytest
 
 from homeassistant.components.cloudflare.const import DOMAIN, SERVICE_UPDATE_RECORDS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.location import LocationInfo
 
 from . import ENTRY_CONFIG, init_integration
 
@@ -70,12 +75,51 @@ async def test_integration_services(hass, cfupdate):
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_RECORDS,
-        {},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.cloudflare.async_detect_location_info",
+        return_value=LocationInfo(
+            "0.0.0.0",
+            "US",
+            "USD",
+            "CA",
+            "California",
+            "San Diego",
+            "92122",
+            "America/Los_Angeles",
+            32.8594,
+            -117.2073,
+            True,
+        ),
+    ):
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_RECORDS,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     instance.update_records.assert_called_once()
+
+
+async def test_integration_services_with_issue(hass, cfupdate):
+    """Test integration services with issue."""
+    instance = cfupdate.return_value
+
+    entry = await init_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.cloudflare.async_detect_location_info",
+        return_value=None,
+    ), pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_RECORDS,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    instance.update_records.assert_not_called()
