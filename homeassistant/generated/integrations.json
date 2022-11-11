@@ -924,8 +924,8 @@
       "iot_class": "local_push"
     },
     "datetime": {
-      "config_flow": false,
-      "iot_class": null
+      "integration_type": "hub",
+      "config_flow": false
     },
     "ddwrt": {
       "name": "DD-WRT",

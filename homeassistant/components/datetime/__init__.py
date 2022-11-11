@@ -25,7 +25,10 @@ from .const import (
     ATTR_DATE,
     ATTR_DATETIME,
     ATTR_DAY,
+    ATTR_HOUR,
+    ATTR_MINUTE,
     ATTR_MONTH,
+    ATTR_SECOND,
     ATTR_TIME,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
@@ -137,6 +140,9 @@ class DateTimeEntity(Entity):
     _attr_year: None = None
     _attr_month: None = None
     _attr_day: None = None
+    _attr_hour: None = None
+    _attr_minute: None = None
+    _attr_second: None = None
     _attr_timestamp: None = None
     _attr_state: None = None
 
@@ -148,6 +154,9 @@ class DateTimeEntity(Entity):
             ATTR_DAY: self.day,
             ATTR_MONTH: self.month,
             ATTR_YEAR: self.year,
+            ATTR_HOUR: self.hour,
+            ATTR_MINUTE: self.minute,
+            ATTR_SECOND: self.second,
             ATTR_TIMESTAMP: self.timestamp,
         }
         return {k: v for k, v in state_attr.items() if v is not None}
@@ -183,6 +192,30 @@ class DateTimeEntity(Entity):
         if self.native_value is None:
             return None
         return self.native_value.year
+
+    @property
+    @final
+    def hour(self) -> int | None:
+        """Return hour from value."""
+        if self.native_value is None:
+            return None
+        return self.native_value.hour
+
+    @property
+    @final
+    def minute(self) -> int | None:
+        """Return minute from value."""
+        if self.native_value is None:
+            return None
+        return self.native_value.minute
+
+    @property
+    @final
+    def second(self) -> int | None:
+        """Return second from value."""
+        if self.native_value is None:
+            return None
+        return self.native_value.second
 
     @property
     @final

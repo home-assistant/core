@@ -4,9 +4,12 @@ DOMAIN = "datetime"
 
 ATTR_DATE = "date"
 ATTR_DATETIME = "datetime"
-ATTR_TIME = "time"
 ATTR_DAY = "day"
+ATTR_HOUR = "hour"
+ATTR_MINUTE = "minute"
 ATTR_MONTH = "month"
+ATTR_SECOND = "second"
+ATTR_TIME = "time"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_YEAR = "year"
 

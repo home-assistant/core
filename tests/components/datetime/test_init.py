@@ -8,7 +8,10 @@ from homeassistant.components.datetime import (
     ATTR_DATE,
     ATTR_DATETIME,
     ATTR_DAY,
+    ATTR_HOUR,
+    ATTR_MINUTE,
     ATTR_MONTH,
+    ATTR_SECOND,
     ATTR_TIME,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
@@ -43,11 +46,17 @@ async def test_datetime_default():
     assert datetime_entity.day == 1
     assert datetime_entity.month == 1
     assert datetime_entity.year == 2020
+    assert datetime_entity.hour == 12
+    assert datetime_entity.minute == 0
+    assert datetime_entity.second == 0
     assert datetime_entity.timestamp == 1577898000.0
     assert datetime_entity.state_attributes == {
         ATTR_DAY: 1,
         ATTR_MONTH: 1,
         ATTR_YEAR: 2020,
+        ATTR_HOUR: 12,
+        ATTR_MINUTE: 0,
+        ATTR_SECOND: 0,
         ATTR_TIMESTAMP: 1577898000.0,
     }
 
