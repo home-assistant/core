@@ -224,6 +224,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etouser",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        previous_value_drop_threshold=0.2,
     ),
     # This sensor is manually created using the most recent X-Axis value from the chartData
     GrowattSensorEntityDescription(
@@ -240,5 +241,6 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        previous_value_drop_threshold=0.2,
     ),
 )
