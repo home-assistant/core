@@ -9,7 +9,7 @@ class MockDateEntity(DateEntity):
 
     _attr_name = "date"
 
-    def __init__(self, native_value: datetime | date = date(2020, 1, 1)) -> None:
+    def __init__(self, native_value=date(2020, 1, 1)) -> None:
         """Initialize mock date entity."""
         self._attr_native_value = native_value
 
