@@ -6,10 +6,10 @@
         "error": {
             "address": "Podano nieprawid\u0142owy zdalny adres IP. Adres musi by\u0107 adresem IP lub rozpoznawaln\u0105 nazw\u0105 hosta.",
             "address_in_use": "Wybrany port nas\u0142uchiwania jest ju\u017c u\u017cywany w tym systemie.",
-            "model": "Wybrany model nie obs\u0142uguje modbus40",
+            "model": "Wybrany model nie obs\u0142uguje MODBUS40",
             "read": "B\u0142\u0105d przy \u017c\u0105daniu odczytu z pompy. Sprawd\u017a \u201eZdalny port odczytu\u201d lub \u201eZdalny adres IP\u201d.",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
-            "url": "Podany adres URL nie jest poprawnie sformu\u0142owanym i obs\u0142ugiwanym adresem URL",
+            "url": "Podany adres URL nie jest poprawnie sformu\u0142owany lub obs\u0142ugiwany",
             "write": "B\u0142\u0105d przy \u017c\u0105daniu zapisu do pompy. Sprawd\u017a \u201eZdalny port zapisu\u201d lub \u201eZdalny adres IP\u201d."
         },
         "step": {
@@ -53,9 +53,9 @@
                     "remote_read_port": "Port, na kt\u00f3rym urz\u0105dzenie NibeGW nas\u0142uchuje \u017c\u0105da\u0144 odczytu.",
                     "remote_write_port": "Port, na kt\u00f3rym urz\u0105dzenie NibeGW nas\u0142uchuje \u017c\u0105da\u0144 zapisu."
                 },
-                "description": "Wybierz metod\u0119 po\u0142\u0105czenia z pomp\u0105. Og\u00f3lnie rzecz bior\u0105c, pompy serii F wymagaj\u0105 niestandardowego akcesorium Nibe GW, podczas gdy pompy serii S maj\u0105 wbudowan\u0105 obs\u0142ug\u0119 protoko\u0142u Modbus.",
+                "description": "Wybierz metod\u0119 po\u0142\u0105czenia z pomp\u0105. Og\u00f3lnie rzecz bior\u0105c, pompy serii F wymagaj\u0105 niestandardowego akcesorium NibeGW, podczas gdy pompy serii S maj\u0105 wbudowan\u0105 obs\u0142ug\u0119 protoko\u0142u Modbus.",
                 "menu_options": {
-                    "modbus": "Modbus",
+                    "modbus": "MODBUS",
                     "nibegw": "NibeGW"
                 }
             }

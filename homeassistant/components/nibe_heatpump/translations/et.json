@@ -6,10 +6,10 @@
         "error": {
             "address": "M\u00e4\u00e4ratud vale kaugaadress. Aadress peab olema IP-aadress v\u00f5i lahendatav hostinimi.",
             "address_in_use": "Valitud kuulamisport on selles s\u00fcsteemis juba kasutusel.",
-            "model": "Valitud mudel ei n\u00e4i toetavat modbus40.",
-            "read": "Viga pumba lugemistaotlusel. Kinnitage oma \"Kaugloetav port\" v\u00f5i \"Kaug-IP-aadress\".",
+            "model": "Valitud mudel ei n\u00e4i toetavat MODBUS40",
+            "read": "Viga pumba lugemistaotlusel. Kinnita oma \"Kaugloetav port\" v\u00f5i \"Kaug-IP-aadress\".",
             "unknown": "Ootamatu t\u00f5rge",
-            "url": "M\u00e4\u00e4ratud URL ei ole h\u00e4sti vormindatud ja toetatud URL",
+            "url": "M\u00e4\u00e4ratud URL ei ole h\u00e4sti vormindatud ja toetatud",
             "write": "Viga pumba kirjutamise taotlusel. Kontrollige oma `kaugkirjutusport` v\u00f5i `kaug-IP-aadress`."
         },
         "step": {
