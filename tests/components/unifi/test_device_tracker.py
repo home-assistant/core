@@ -607,15 +607,6 @@ async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
     assert hass.states.get("device_tracker.client")
     assert not hass.states.get("device_tracker.device")
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_TRACK_DEVICES: True},
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.client")
-    assert hass.states.get("device_tracker.device")
-
 
 async def test_option_ssid_filter(
     hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
@@ -1007,7 +998,7 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
         "version": "4.0.42.10433",
     }
 
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_TRACK_DEVICES: False},
@@ -1018,16 +1009,6 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.client")
     assert not hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_TRACK_DEVICES: True},
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client")
-    assert hass.states.get("device_tracker.device")
 
 
 async def test_dont_track_wired_clients(hass, aioclient_mock, mock_device_registry):
