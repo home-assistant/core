@@ -1,10 +1,10 @@
 {
-    "domain": "heatzy",
-    "name": "Heatzy",
-    "config_flow": true,
-    "documentation": "https://www.home-assistant.io/integrations/heatzy",
-    "requirements": ["heatzypy==0.1.4.2"],
-    "dependencies": [],
-    "codeowners": ["@cyr-ius"],
-    "iot_class": "cloud_polling"
+  "domain": "heatzy",
+  "name": "Heatzy",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/heatzy",
+  "requirements": ["heatzypy==2.1.1"],
+  "dependencies": [],
+  "codeowners": ["@cyr-ius"],
+  "iot_class": "cloud_polling"
 }

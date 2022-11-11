@@ -2148,6 +2148,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "heatzy": {
+      "name": "Heatzy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",

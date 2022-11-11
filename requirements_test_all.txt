@@ -652,7 +652,7 @@ hatasmota==0.6.1
 hdate==0.10.4
 
 # homeassistant.components.heatzy
-heatzypy==0.1.4.2
+heatzypy==2.1.1
 
 # homeassistant.components.here_travel_time
 here_routing==0.1.1
