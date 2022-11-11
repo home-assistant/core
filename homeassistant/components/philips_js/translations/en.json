@@ -34,7 +34,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_notify": "Allow usage of data notification service."
+                    "allow_notify": "Allow usage of data notification service.",
+                    "turn_on_action": "Action to perform to attempt to turn on a device that is physically off"
                 }
             }
         }

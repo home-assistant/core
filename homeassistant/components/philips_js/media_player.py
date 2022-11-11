@@ -151,8 +151,10 @@ class PhilipsTVMediaPlayer(
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
             self._state = MediaPlayerState.ON
+        elif self.coordinator.turn_on:
+            await self.coordinator.turn_on.async_run(context=self._context)
         else:
-            await self.coordinator.turn_on.async_run(self.hass, self._context)
+            raise NotImplementedError("No turn on action have been defined")
         await self._async_update_soon()
 
     async def async_turn_off(self) -> None:

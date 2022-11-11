@@ -16,9 +16,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import ActionSelector, ActionSelectorConfig
 
 from . import LOGGER
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_SYSTEM,
+    CONF_TURN_ON_ACTION,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+)
 
 
 async def _validate_input(
@@ -178,6 +186,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_ALLOW_NOTIFY,
                     default=self.config_entry.options.get(CONF_ALLOW_NOTIFY),
                 ): bool,
+                vol.Optional(CONF_TURN_ON_ACTION): ActionSelector(
+                    ActionSelectorConfig()
+                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
