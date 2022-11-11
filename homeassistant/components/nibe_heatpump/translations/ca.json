@@ -18,6 +18,22 @@
                     "model": "Model de bomba de calor"
                 }
             },
+            "nibegw": {
+                "data": {
+                    "ip_address": "Adre\u00e7a remota",
+                    "listening_port": "Port local d'escolta",
+                    "model": "Model de bomba de calor",
+                    "remote_read_port": "Port remot de lectura",
+                    "remote_write_port": "Port remot d'escriptura"
+                },
+                "data_description": {
+                    "ip_address": "Adre\u00e7a de la unitat NibeGW. El dispositiu hauria d'estar configurat amb una adre\u00e7a est\u00e0tica.",
+                    "listening_port": "Port local d'aquest sistema al qual la unitat NibeGW est\u00e0 configurada per enviar-hi dades.",
+                    "remote_read_port": "Port on la unitat NibeGW espera les sol\u00b7licituds de lectura.",
+                    "remote_write_port": "Port on la unitat NibeGW espera les sol\u00b7licituds d'escriptura."
+                },
+                "description": "Abans d'intentar configurar la integraci\u00f3, comprova que:\n - La unitat NibeGW est\u00e0 connectada a una bomba de calor.\n - S'ha activat l'accessori MODBUS40 a la configuraci\u00f3 de la bomba de calor.\n - La bomba no ha entrat en estat d'alarma per falta de l'accessori MODBUS40."
+            },
             "user": {
                 "data": {
                     "ip_address": "Adre\u00e7a remota",

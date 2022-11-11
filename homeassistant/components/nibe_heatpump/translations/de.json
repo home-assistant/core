@@ -6,11 +6,11 @@
         "error": {
             "address": "Ung\u00fcltige Remote-Adresse angegeben. Die Adresse muss eine IP-Adresse oder ein aufl\u00f6sbarer Hostname sein.",
             "address_in_use": "Der ausgew\u00e4hlte Listening-Port wird auf diesem System bereits verwendet.",
-            "model": "Das ausgew\u00e4hlte Modell scheint modbus40 nicht zu unterst\u00fctzen",
-            "read": "Fehler bei Leseanforderung von Pumpe. \u00dcberpr\u00fcfe deinen \u201eRemote-Leseport\u201c oder \u201eRemote-IP-Adresse\u201c.",
+            "model": "Das ausgew\u00e4hlte Modell scheint MODBUS40 nicht zu unterst\u00fctzen",
+            "read": "Fehler bei Leseanforderung von Pumpe. \u00dcberpr\u00fcfe deinen \u201eRemote-Leseport\u201c oder \u201eRemote-Adresse\u201c.",
             "unknown": "Unerwarteter Fehler",
-            "url": "Die angegebene URL ist keine wohlgeformte und unterst\u00fctzte URL",
-            "write": "Fehler bei Schreibanforderung an Pumpe. \u00dcberpr\u00fcfe deinen \u201eRemote-Schreibport\u201c oder \u201eRemote-IP-Adresse\u201c."
+            "url": "Die angegebene URL ist weder wohlgeformt noch wird sie unterst\u00fctzt.",
+            "write": "Fehler bei Schreibanforderung an Pumpe. \u00dcberpr\u00fcfe deinen \u201eRemote-Schreibport\u201c oder \u201eRemote-Adresse\u201c."
         },
         "step": {
             "modbus": {
@@ -53,7 +53,7 @@
                     "remote_read_port": "Der Port, an dem das NibeGW-Ger\u00e4t auf Leseanfragen wartet.",
                     "remote_write_port": "Der Port, an dem das NibeGW-Ger\u00e4t auf Schreibanfragen wartet."
                 },
-                "description": "W\u00e4hle die Verbindungsmethode zu deiner Pumpe. Im Allgemeinen erfordern Pumpen der F-Serie ein kundenspezifisches Nibe GW-Zubeh\u00f6r, w\u00e4hrend eine Pumpe der S-Serie \u00fcber eine integrierte Modbus-Unterst\u00fctzung verf\u00fcgt.",
+                "description": "W\u00e4hle die Verbindungsmethode zu deiner Pumpe. Im Allgemeinen erfordern Pumpen der F-Serie ein kundenspezifisches NibeGW-Zubeh\u00f6r, w\u00e4hrend eine Pumpe der S-Serie \u00fcber eine integrierte Modbus-Unterst\u00fctzung verf\u00fcgt.",
                 "menu_options": {
                     "modbus": "Modbus",
                     "nibegw": "NibeGW"

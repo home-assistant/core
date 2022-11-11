@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.20.2
+PySwitchbot==0.20.3
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -346,7 +346,7 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.8.3
+bleak-retry-connector==2.8.4
 
 # homeassistant.components.bluetooth
 bleak==0.19.2

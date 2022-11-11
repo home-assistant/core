@@ -418,3 +418,19 @@ async def test_empty_config(hass: HomeAssistant) -> None:
         {DOMAIN: {}},
     )
     assert_setup_component(0, DOMAIN)
+
+
+async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
+    """Test configuration via packages."""
+    packages = {
+        "pack_dict": {"rest": {}},
+        "pack_11": {"rest": {"resource": "http://url1"}},
+        "pack_list": {"rest": [{"resource": "http://url2"}]},
+    }
+    config = {hass_config.CONF_CORE: {hass_config.CONF_PACKAGES: packages}}
+    await hass_config.merge_packages_config(hass, config, packages)
+
+    assert len(config) == 2
+    assert len(config["rest"]) == 2
+    assert config["rest"][0]["resource"] == "http://url1"
+    assert config["rest"][1]["resource"] == "http://url2"

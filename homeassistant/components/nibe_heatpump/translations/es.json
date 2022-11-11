@@ -6,11 +6,11 @@
         "error": {
             "address": "Se especific\u00f3 una direcci\u00f3n remota no v\u00e1lida. La direcci\u00f3n debe ser una direcci\u00f3n IP o un nombre de host resoluble.",
             "address_in_use": "El puerto de escucha seleccionado ya est\u00e1 en uso en este sistema.",
-            "model": "El modelo seleccionado no parece ser compatible con modbus40",
-            "read": "Error en la solicitud de lectura de la bomba. Verifica tu `Puerto de lectura remoto` o `Direcci\u00f3n IP remota`.",
+            "model": "El modelo seleccionado no parece ser compatible con MODBUS40",
+            "read": "Error en la solicitud de lectura de la bomba. Verifica tu `Puerto de lectura remoto` o `Direcci\u00f3n remota`.",
             "unknown": "Error inesperado",
-            "url": "La URL especificada no es una URL bien formada y compatible",
-            "write": "Error en la solicitud de escritura a la bomba. Verifica tu `Puerto de escritura remoto` o `Direcci\u00f3n IP remota`."
+            "url": "La URL especificada no est\u00e1 bien formada ni es compatible",
+            "write": "Error en la solicitud de escritura a la bomba. Verifica tu `Puerto de escritura remoto` o `Direcci\u00f3n remota`."
         },
         "step": {
             "modbus": {
@@ -20,7 +20,7 @@
                     "model": "Modelo de bomba de calor"
                 },
                 "data_description": {
-                    "modbus_unit": "Identificaci\u00f3n de la unidad para su bomba de calor. Por lo general, se puede dejar en 0.",
+                    "modbus_unit": "Identificaci\u00f3n de la unidad para tu bomba de calor. Por lo general, se puede dejar en 0.",
                     "modbus_url": "URL Modbus que describe la conexi\u00f3n a tu bomba de calor o unidad MODBUS40. Debe estar en el formato:\n - `tcp://[HOST]:[PUERTO]` para conexi\u00f3n Modbus TCP\n - `serial://[DISPOSITIVO LOCAL]` para una conexi\u00f3n Modbus RTU local\n - `rfc2217://[HOST]:[PUERTO]` para una conexi\u00f3n remota Modbus RTU basada en telnet."
                 }
             },
@@ -53,7 +53,7 @@
                     "remote_read_port": "El puerto en el que la unidad NibeGW est\u00e1 escuchando las peticiones de lectura.",
                     "remote_write_port": "El puerto en el que la unidad NibeGW est\u00e1 escuchando peticiones de escritura."
                 },
-                "description": "Elige el m\u00e9todo de conexi\u00f3n a tu bomba. En general, las bombas de la serie F requieren un accesorio personalizado Nibe GW, mientras que una bomba de la serie S tiene soporte Modbus incorporado.",
+                "description": "Elige el m\u00e9todo de conexi\u00f3n a tu bomba. En general, las bombas de la serie F requieren un accesorio personalizado NibeGW, mientras que una bomba de la serie S tiene soporte Modbus incorporado.",
                 "menu_options": {
                     "modbus": "Modbus",
                     "nibegw": "NibeGW"
