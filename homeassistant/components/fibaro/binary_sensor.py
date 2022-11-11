@@ -62,6 +62,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         """Initialize the binary_sensor."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self._own_extra_state_attributes: Mapping[str, Any] = {}
         stype = None
         if fibaro_device.type in SENSOR_TYPES:
             stype = fibaro_device.type
@@ -71,37 +72,37 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
             self._attr_device_class = SENSOR_TYPES[stype][2]
             self._attr_icon = SENSOR_TYPES[stype][1]
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra state attributes of the device."""
+        return super().extra_state_attributes | self._own_extra_state_attributes
+
     def update(self) -> None:
         """Get the latest data and update the state."""
         if self.device_class == BinarySensorDeviceClass.MOVING:
-            self._attr_is_on = self._is_moving()
+            # Accelerator sensors have values for the three axis x, y and z
+            moving_values = self._get_moving_values()
+            self._attr_is_on = self._is_moving(moving_values)
+            self._own_extra_state_attributes = self._get_xyz_moving(moving_values)
         else:
             self._attr_is_on = self.current_binary_state
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes of the device."""
+    def _get_xyz_moving(self, moving_values: Mapping[str, Any]) -> Mapping[str, Any]:
+        """Return x y z values of the accelerator sensor value."""
         attrs = {}
+        for axis_name in ("x", "y", "z"):
+            attrs[axis_name] = float(moving_values[axis_name])
+        return attrs
 
-        # Accelerator sensors have values for the three axis x, y and z
-        if self.device_class == BinarySensorDeviceClass.MOVING:
-            moving_values = self._get_moving_values()
-            for axis_name in ("x", "y", "z"):
-                attrs[axis_name] = float(moving_values[axis_name])
-
-        return super().extra_state_attributes | attrs
-
-    def _is_moving(self) -> bool:
+    def _is_moving(self, moving_values: Mapping[str, Any]) -> bool:
         """Return that a moving is detected when one axis reports a value."""
-        moving_values = self._get_moving_values()
-
         for axis_name in ("x", "y", "z"):
             if float(moving_values[axis_name]) != 0:
                 return True
         return False
 
     def _get_moving_values(self) -> Mapping[str, Any]:
-        """Get the moving values in a dict."""
+        """Get the moving values of the accelerator sensor in a dict."""
         value = self.fibaro_device.properties.value
         if isinstance(value, str):
             # HC2 returns dict as str
