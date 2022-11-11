@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from typing import Optional, Union
-from homeassistant.helpers.entity import EntityCategory
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
 
@@ -30,6 +29,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
