@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "\u826f\u597d",
+            "hazardous": "\u5371\u96aa",
+            "moderate": "\u4e2d\u7b49",
+            "unhealthy": "\u4e0d\u5065\u5eb7",
+            "unhealthy_for_sensitive_groups": "\u5c0d\u654f\u611f\u65cf\u7fa4\u4e0d\u5065\u5eb7",
+            "very_unhealthy": "\u975e\u5e38\u4e0d\u5065\u5eb7"
+        },
+        "climacell__pollen_index": {
+            "high": "\u9ad8",
+            "low": "\u4f4e",
+            "medium": "\u4e2d",
+            "none": "\u7121",
+            "very_high": "\u6975\u9ad8",
+            "very_low": "\u6975\u4f4e"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "\u51cd\u96e8",
+            "ice_pellets": "\u51b0\u73e0",
+            "none": "\u7121",
+            "rain": "\u4e0b\u96e8",
+            "snow": "\u4e0b\u96ea"
+        }
+    }
+}
