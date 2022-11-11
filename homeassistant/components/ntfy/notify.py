@@ -1,6 +1,8 @@
 """ntfy platform for notify component."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Union
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -48,11 +50,11 @@ def get_service(
     discovery_info=None,  # pylint: disable=hass-argument-type
 ) -> BaseNotificationService:
     """Get the ntfy notification service."""
-    url = config.get(CONF_URL)
-    topic = config.get(CONF_TOPIC)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+    url = str(config.get(CONF_URL))
+    topic = str(config.get(CONF_TOPIC))
+    username = str(config.get(CONF_USERNAME))
+    password = str(config.get(CONF_PASSWORD))
+    verify_ssl = bool(config.get(CONF_VERIFY_SSL))
 
     if username and password:
         auth = requests.auth.HTTPBasicAuth(username, password)
@@ -75,11 +77,11 @@ class NtfyNotificationService(BaseNotificationService):
         self,
         hass: HomeAssistant,
         *,
-        url: cv.url,
-        topic: cv.string,
-        auth: Union[requests.auth.HTTPBasicAuth, None],
-        verify_ssl: cv.boolean,
-    ):
+        url: str,
+        topic: str,
+        auth: requests.auth.HTTPBasicAuth | None,
+        verify_ssl: bool,
+    ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._url = url
