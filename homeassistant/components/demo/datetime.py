@@ -1,9 +1,9 @@
 """Demo platform that offers a fake Date/time entity."""
 from __future__ import annotations
 
-from datetime import date, datetime, time
+from datetime import datetime
 
-from homeassistant.components.datetime import DateTimeEntity, DateTimeMode
+from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
@@ -30,22 +30,6 @@ async def async_setup_platform(
                 "mdi:calendar-clock",
                 False,
             ),
-            DemoDateTime(
-                "date",
-                "Date",
-                date(2020, 1, 1),
-                "mdi:calendar",
-                False,
-                mode=DateTimeMode.DATE,
-            ),
-            DemoDateTime(
-                "time",
-                "Time",
-                time(12, 0, 0),
-                "mdi:clock",
-                False,
-                mode=DateTimeMode.TIME,
-            ),
         ]
     )
 
@@ -68,15 +52,13 @@ class DemoDateTime(DateTimeEntity):
         self,
         unique_id: str,
         name: str,
-        state: datetime | date | time,
+        state: datetime,
         icon: str,
         assumed_state: bool,
-        mode: DateTimeMode = DateTimeMode.DATETIME,
     ) -> None:
         """Initialize the Demo Date/Time entity."""
         self._attr_assumed_state = assumed_state
         self._attr_icon = icon
-        self._attr_mode = mode
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_native_value = state
         self._attr_unique_id = unique_id
@@ -89,7 +71,7 @@ class DemoDateTime(DateTimeEntity):
             name=self.name,
         )
 
-    async def async_set_datetime(self, dt_or_d_or_t: datetime | date | time) -> None:
+    async def async_set_value(self, dt_value: datetime) -> None:
         """Update the date/time."""
-        self._attr_native_value = dt_or_d_or_t
+        self._attr_native_value = dt_value
         self.async_write_ha_state()

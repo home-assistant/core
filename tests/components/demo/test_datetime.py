@@ -1,11 +1,7 @@
 """The tests for the demo datetime component."""
 import pytest
 
-from homeassistant.components.datetime import (
-    ATTR_DATETIME,
-    DOMAIN,
-    SERVICE_SET_DATETIME,
-)
+from homeassistant.components.datetime import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
@@ -29,7 +25,7 @@ async def test_set_datetime(hass):
     """Test set datetime service."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DATETIME,
+        SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: ENTITY_DATETIME, ATTR_DATETIME: "2021-02-03 01:02:03"},
         blocking=True,
     )
