@@ -126,6 +126,7 @@ class DateEntity(Entity):
     @final
     def value(self) -> date | None:
         """Return the entity value to represent the entity state."""
+        # If native value is a datetime, only return the date.
         if isinstance(self.native_value, datetime):
             return self.native_value.date()
         return self.native_value

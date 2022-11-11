@@ -7,7 +7,7 @@ set_value:
   fields:
     date:
       name: Date
-      description: Set the date of a date entity using the format %Y-%m-%d.
+      description: The date to set.
       required: false
       example: "2022/11/01"
       selector:
