@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(
     hass: HomeAssistant,
     config: ConfigType,
-    discovery_info=None,  # pylint: disable=hass-argument-type
+    discovery_info: Any = None,  # pylint: disable=hass-argument-type
 ) -> BaseNotificationService:
     """Get the ntfy notification service."""
     url = str(config.get(CONF_URL))
@@ -109,7 +109,7 @@ class NtfyNotificationService(BaseNotificationService):
 
             # Title already exists in kwargs
 
-            def _data_template_creator(value):
+            def _data_template_creator(value: Any) -> Any:
                 """Recursive template creator helper function."""
                 if isinstance(value, dict):
                     return value
