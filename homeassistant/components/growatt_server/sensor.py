@@ -83,6 +83,10 @@ async def async_setup_entry(
     api = growattServer.GrowattApi()
     api.server_url = url
 
+    # Temporary work-around for #81951 (https://github.com/home-assistant/core/issues/81951) - Will be addressed correctly in a subsequent PR
+    headers = {"User-Agent": "Dalvik/2.1.0 (Linux; U; Android Device)"}
+    api.session.headers.update(headers)
+
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
 
     probe = GrowattData(api, username, password, plant_id, "total")
