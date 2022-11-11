@@ -783,6 +783,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
 /tests/components/nsw_rural_fire_service_feed/ @exxamalte
 /homeassistant/components/ntfy/ @nwithan8
+/tests/components/ntfy/ @nwithan8
 /homeassistant/components/nuheat/ @tstabrawa
 /tests/components/nuheat/ @tstabrawa
 /homeassistant/components/nuki/ @pschmitt @pvizeli @pree
