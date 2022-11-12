@@ -9,7 +9,6 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     async_register_scanner,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
@@ -19,7 +18,6 @@ from .scanner import ShellyBLEScanner
 
 BLE_SCRIPT_CODE = """
 // Home Assistant BLE script v0.1.0
-
 BLE.Scanner.Subscribe(function (ev, res) {
     if (ev === BLE.Scanner.SCAN_RESULT) {
         Shelly.emitEvent("ble.scan_result", [
@@ -57,12 +55,11 @@ async def _async_get_scripts_by_name(device: RpcDevice) -> dict[str, int]:
 
 async def async_connect_scanner(
     hass: HomeAssistant,
-    entry: ConfigEntry,
     coordinator: ShellyRpcCoordinator,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
-    assert entry.unique_id is not None
-    source = format_mac(entry.unique_id)
+    device = coordinator.device
+    source = format_mac(coordinator.mac)
     new_info_callback = async_get_advertisement_callback(hass)
     scanner = ShellyBLEScanner(hass, source, new_info_callback)
     unload_callbacks = [
@@ -70,7 +67,6 @@ async def async_connect_scanner(
         scanner.async_setup(),
         coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
-    device = coordinator.device
     script_name_to_id = await _async_get_scripts_by_name(device)
     if BLE_SCRIPT_NAME not in script_name_to_id:
         await device.call_rpc("Script.Create", {"name": BLE_SCRIPT_NAME})
