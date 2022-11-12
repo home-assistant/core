@@ -16,8 +16,10 @@ class ShellyBLEScanner(BaseRemoteHaScanner):
     """Scanner for shelly."""
 
     @callback
-    def async_on_update(self, event: dict[str, Any]) -> None:
+    def async_on_event(self, event: dict[str, Any]) -> None:
         """Handle device update."""
+        if event.get("event") != "ble.scan_result":
+            return
         try:
             address, rssi, adv_base64, scan_base64 = event["data"]
             name, manufacturer_data, service_data, service_uuids = parse_ble_event(
