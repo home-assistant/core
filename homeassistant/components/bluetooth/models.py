@@ -235,16 +235,21 @@ class BaseRemoteHaScanner(BaseHaScanner):
                 and prev_device.name
                 and len(prev_device.name) > len(local_name)
             ):
-                name = prev_device.name
-            service_uuids = list(set(prev_advertisement.service_uuids + service_uuids))
-            service_data = {**prev_advertisement.service_data, **service_data}
-            manufacturer_data = {
-                **prev_advertisement.manufacturer_data,
-                **manufacturer_data,
-            }
+                local_name = prev_device.name
+            if service_uuids:
+                service_uuids = list(
+                    set(service_uuids + prev_advertisement.service_uuids)
+                )
+            if prev_advertisement.service_data:
+                service_data = {**prev_advertisement.service_data, **service_data}
+            if prev_advertisement.manufacturer_data:
+                manufacturer_data = {
+                    **prev_advertisement.manufacturer_data,
+                    **manufacturer_data,
+                }
 
         advertisement_data = AdvertisementData(
-            local_name=None if name == "" else name,
+            local_name=None if local_name == "" else local_name,
             manufacturer_data=manufacturer_data,
             service_data=service_data,
             service_uuids=service_uuids,
@@ -254,7 +259,7 @@ class BaseRemoteHaScanner(BaseHaScanner):
         )
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
-            name=name,
+            name=local_name,
             details=self._details,
             rssi=rssi,  # deprecated, will be removed in newer bleak
         )

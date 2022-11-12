@@ -13,9 +13,10 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
-from ..const import BLE_SCRIPT_NAME
 from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
+
+BLE_SCRIPT_NAME = "homeassistant_ble_integration"
 
 BLE_CODE = """
 // Home Assistant BLE script v0.1.0
@@ -74,7 +75,7 @@ async def async_connect_scanner(
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),
-        coordinator.async_subscribe_ble_events(scanner.async_on_update),
+        coordinator.async_subscribe_events(scanner.async_on_event),
     ]
     script_name_to_id = await _async_get_scripts_by_name(device)
     if BLE_SCRIPT_NAME not in script_name_to_id:

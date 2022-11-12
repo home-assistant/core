@@ -24,7 +24,6 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
-    BLE_SCAN_RESULT_EVENT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -338,7 +337,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._ble_callback: Callable[[dict[str, Any]], None] | None = None
+        self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
@@ -381,15 +380,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         return True
 
     @callback
-    def async_subscribe_ble_events(
-        self, ble_callback: Callable[[dict[str, Any]], None]
+    def async_subscribe_events(
+        self, event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
-        """Subscribe to BLE events."""
+        """Subscribe to events."""
 
         def _unsubscribe() -> None:
-            self._ble_callback = None
+            self._event_listeners.remove(event_callback)
 
-        self._ble_callback = ble_callback
+        self._event_listeners.append(event_callback)
 
         return _unsubscribe
 
@@ -406,11 +405,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.update_sleep_period()
 
         self._last_event = self.device.event
+        events: list[dict[str, Any]] = self.device.event["events"]
 
-        for event in self.device.event["events"]:
+        for event in events:
             event_type = event.get("event")
             if event_type is None:
                 continue
+
+            for event_callback in self._event_listeners:
+                event_callback(event)
 
             if event_type == "config_changed":
                 LOGGER.info(
@@ -419,8 +422,6 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
-            elif self._ble_callback and event_type == BLE_SCAN_RESULT_EVENT:
-                self._ble_callback(event)
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
