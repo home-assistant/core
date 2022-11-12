@@ -29,6 +29,8 @@ from .const import (
 if TYPE_CHECKING:
     from av import CodecContext, Packet
 
+    from homeassistant.components.camera import DynamicStreamSettings
+
     from . import Stream
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +60,6 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
-    orientation: Orientation = attr.ib()
 
 
 STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
@@ -67,7 +68,6 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
     part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
     hls_advance_part_limit=3,
     hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-    orientation=Orientation.NO_TRANSFORM,
 )
 
 
@@ -273,12 +273,14 @@ class StreamOutput:
         hass: HomeAssistant,
         idle_timer: IdleTimer,
         stream_settings: StreamSettings,
+        dynamic_stream_settings: DynamicStreamSettings,
         deque_maxlen: int | None = None,
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self.idle_timer = idle_timer
         self.stream_settings = stream_settings
+        self.dynamic_stream_settings = dynamic_stream_settings
         self._event = asyncio.Event()
         self._part_event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
@@ -427,7 +429,12 @@ class KeyFrameConverter:
     If unsuccessful, get_image will return the previous image
     """
 
-    def __init__(self, hass: HomeAssistant, stream_settings: StreamSettings) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        stream_settings: StreamSettings,
+        dynamic_stream_settings: DynamicStreamSettings,
+    ) -> None:
         """Initialize."""
 
         # Keep import here so that we can import stream integration without installing reqs
@@ -441,6 +448,7 @@ class KeyFrameConverter:
         self._lock = asyncio.Lock()
         self._codec_context: CodecContext | None = None
         self._stream_settings = stream_settings
+        self._dynamic_stream_settings = dynamic_stream_settings
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
         """
@@ -498,12 +506,13 @@ class KeyFrameConverter:
         if frames:
             frame = frames[0]
             if width and height:
-                if self._stream_settings.orientation >= 5:
+                if self._dynamic_stream_settings.orientation >= 5:
                     frame = frame.reformat(width=height, height=width)
                 else:
                     frame = frame.reformat(width=width, height=height)
             bgr_array = self.transform_image(
-                frame.to_ndarray(format="bgr24"), self._stream_settings.orientation
+                frame.to_ndarray(format="bgr24"),
+                self._dynamic_stream_settings.orientation,
             )
             self._image = bytes(self._turbojpeg.encode(bgr_array))
 
