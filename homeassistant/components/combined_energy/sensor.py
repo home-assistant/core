@@ -1,6 +1,7 @@
 """Support for getting collected information from Combined Energy."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Generator, Sequence
 from datetime import datetime
 
@@ -97,6 +98,8 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     data_service: CombinedEnergyReadingsDataService
     entity_description: SensorEntityDescription
 
+    native_value_rounding: int = 2
+
     def __init__(
         self,
         device: Device,
@@ -123,7 +126,7 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
     def device_readings(self) -> DeviceReadings | None:
         """Get readings for specific device."""
         if data := self.data_service.data:
-            return data[self.device_id]
+            return data.get(self.device_id, None)
         return None
 
     @property
@@ -138,13 +141,26 @@ class CombinedEnergyReadingsSensor(CoordinatorEntity, SensorEntity):
         """Indicate if the entity is available."""
         return self._raw_value is not None
 
+    @abstractmethod
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        value = self._raw_value
-        if isinstance(value, Sequence):
-            value = value[-1]
-        return round(value, 2) if value is not None else None
+        if (raw_value := self._raw_value) is not None:
+            return self._to_native_value(raw_value)
+        return None
+
+
+class GenericSensor(CombinedEnergyReadingsSensor):
+    """Sensor that returns the last value of a sequence of readings."""
+
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+        if isinstance(raw_value, Sequence):
+            raw_value = raw_value[-1]
+        return round(raw_value, self.native_value_rounding)
 
 
 class EnergySensor(CombinedEnergyReadingsSensor):
@@ -157,48 +173,37 @@ class EnergySensor(CombinedEnergyReadingsSensor):
             return device_readings.range_start
         return None
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor for a power value."""
-        if (value := self._raw_value) is not None:
-            value = sum(value)
-            return round(value, 2)
-        return None
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+        value = sum(raw_value)
+        return round(value, self.native_value_rounding)
 
 
 class PowerSensor(CombinedEnergyReadingsSensor):
     """Sensor for power readings."""
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor for a power value."""
-        if (value := self._raw_value) is not None:
-            return round(value, 2)
-        return None
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+        return round(raw_value, self.native_value_rounding)
 
 
 class PowerFactorSensor(CombinedEnergyReadingsSensor):
     """Sensor for power factor readings."""
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor for a power factor value."""
-        if (value := self._raw_value) is not None:
-            # The API expresses the power factor as a fraction convert to %
-            return round(value[-1] * 100, 1)
-        return None
+    native_value_rounding = 1
+
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+        # The API expresses the power factor as a fraction convert to %
+        return round(raw_value[-1] * 100, self.native_value_rounding)
 
 
 class WaterVolumeSensor(CombinedEnergyReadingsSensor):
     """Sensor for water volume readings."""
 
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor for a water volume value."""
-        if (value := self._raw_value) is not None:
-            # Get last entry and round to a whole number
-            return int(round(value[-1], 0))
-        return None
+    def _to_native_value(self, raw_value):
+        """Convert non-none raw value into usable sensor value."""
+        return int(round(raw_value[-1], 0))
 
 
 # Map of common device classes to specific sensor types
@@ -209,7 +214,7 @@ SENSOR_TYPE_MAP: dict[
     SensorDeviceClass.POWER: PowerSensor,
     SensorDeviceClass.WATER: WaterVolumeSensor,
     SensorDeviceClass.POWER_FACTOR: PowerFactorSensor,
-    None: CombinedEnergyReadingsSensor,
+    None: GenericSensor,
 }
 
 
@@ -231,27 +236,31 @@ class CombinedEnergyReadingsSensorFactory:
         self.installation = installation
         self.readings = readings
 
+    def _generate_device_info(self, device: Device) -> DeviceInfo:
+        """Generate device info from API device response."""
+        return DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN,
+                    f"install_{self.installation.installation_id}-device_{device.device_id}",
+                )
+            },
+            manufacturer=device.device_manufacturer,
+            model=device.device_model_name,
+            name=device.display_name,
+        )
+
     def entities(self) -> Generator[CombinedEnergyReadingsSensor, None, None]:
         """Generate entities."""
 
         for device in self.installation.devices:
             if descriptions := SENSOR_DESCRIPTIONS.get(device.device_type):
-                device_info = DeviceInfo(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"install_{self.installation.installation_id}-device_{device.device_id}",
-                        )
-                    },
-                    manufacturer=device.device_manufacturer,
-                    model=device.device_model_name,
-                    name=device.display_name,
-                )
+                device_info = self._generate_device_info(device)
 
                 # Generate sensors from descriptions for the current device type
                 for description in descriptions:
                     if sensor_type := SENSOR_TYPE_MAP.get(
-                        description.device_class, CombinedEnergyReadingsSensor
+                        description.device_class, GenericSensor
                     ):
                         yield sensor_type(
                             device,

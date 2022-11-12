@@ -39,12 +39,13 @@ def mock_api_instance(monkeypatch):
 
 
 async def test_async_setup_entry__where_component_is_successfully_registered(
-    hass: HomeAssistant, config_entry: ConfigEntry, monkeypatch
+    hass: HomeAssistant, config_entry: ConfigEntry, monkeypatch, installation
 ):
     """Check that component is successfully configured and registered."""
     mock_api_instance = AsyncMock(
         combined_energy.CombinedEnergy,
-        installation=AsyncMock(return_value="AnInstallation"),
+        installation_id=99999,
+        installation=AsyncMock(return_value=installation),
     )
     mock_api_type = Mock(return_value=mock_api_instance)
     monkeypatch.setattr(combined_energy, "CombinedEnergy", mock_api_type)
@@ -64,7 +65,7 @@ async def test_async_setup_entry__where_component_is_successfully_registered(
     )
     assert (
         hass.data["combined_energy"]["beef"][combined_energy.DATA_INSTALLATION]
-        == "AnInstallation"
+        is installation
     )
 
 
