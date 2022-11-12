@@ -84,13 +84,16 @@ def decode_ad(
 
 
 def parse_ble_event(
-    address: str, advertisement_data_b64: str, scan_response_b64: str
-) -> tuple[str | None, dict[int, bytes], dict[str, bytes], list[str]]:
+    address: str, rssi: int, advertisement_data_b64: str, scan_response_b64: str
+) -> tuple[
+    str, int, str | None, list[str], dict[str, bytes], dict[int, bytes], int | None
+]:
     """Convert ad data to BLEDevice and AdvertisementData."""
     manufacturer_data: dict[int, bytes] = {}
     service_data: dict[str, bytes] = {}
     service_uuids: list[str] = []
     local_name: str | None = None
+    tx_power: int | None = None
 
     for gap_data in advertisement_data_b64, scan_response_b64:
         gap_data_byte = b64decode(gap_data)
@@ -121,5 +124,15 @@ def parse_ble_event(
                 service_data[f"{uuid_int:08x}-{BLE_UUID}"] = gap_value[4:]
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_128BIT_UUID:
                 service_data[str(UUID(bytes=gap_value[:16]))] = gap_value[16:]
+            elif gap_type == BLEGAPType.TYPE_TX_POWER_LEVEL:
+                tx_power = int.from_bytes(gap_value, "little", signed=True)
 
-    return local_name, manufacturer_data, service_data, service_uuids
+    return (
+        address.upper(),
+        rssi,
+        local_name,
+        service_uuids,
+        service_data,
+        manufacturer_data,
+        tx_power,
+    )
