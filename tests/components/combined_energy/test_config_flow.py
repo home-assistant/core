@@ -138,6 +138,7 @@ async def test_form__where_installation_id_already_configured(hass: HomeAssistan
                 CONF_INSTALLATION_ID: 99999999,
             },
             source=config_entries.SOURCE_USER,
+            unique_id="combined_energy-99999999",
         )
     )
 
@@ -155,5 +156,5 @@ async def test_form__where_installation_id_already_configured(hass: HomeAssistan
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_INSTALLATION_ID: "already_configured"}
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
