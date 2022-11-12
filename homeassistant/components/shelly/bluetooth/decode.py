@@ -1,10 +1,15 @@
 """Decode a BLE GAP AD structure from a shelly."""
 
-# This needs to be moved to the aioshelly lib
+from __future__ import annotations
 
-import base64
+# This needs to be moved to the aioshelly lib
+from base64 import b64decode
 from collections.abc import Iterable
 from enum import IntEnum
+from uuid import UUID
+
+from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 
 
 class BLEGAPType(IntEnum):
@@ -58,15 +63,61 @@ def decode_ad(encoded_struct: bytes) -> Iterable[tuple[BLEGAPType, bytes]]:
         offset += 1 + length
 
 
-def test_decoder() -> None:
-    """Test the decoder."""
-    msg = "AgEGFv9MAAYxAIK3JI37ygoAShYBAkUeEkQECE9udg=="
-    msg = "Dhbw/zYCFrLcDRU2zclkAwL1/gsJRlNDLUJQMTA1Tg=="
-    raw = base64.b64decode(msg)
-    import pprint  # pylint: disable=import-outside-toplevel
+def parse_ble_event(
+    address: str, rssi: int, advertisement_data_b64: str, scan_response_b64: str
+) -> tuple[BLEDevice, AdvertisementData]:
+    """Convert ad data to BLEDevice and AdvertisementData."""
+    manufacturer_data: dict[int, bytes] = {}
+    service_data: dict[str, bytes] = {}
+    service_uuids: list[str] = []
+    local_name: str | None = None
 
-    pprint.pprint(raw)
-    pprint.pprint(list(decode_ad(raw)))
+    for gap_data in advertisement_data_b64, scan_response_b64:
+        gap_data_byte = b64decode(gap_data)
+        for gap_type, gap_value in decode_ad(gap_data_byte):
+            if gap_type == BLEGAPType.TYPE_SHORT_LOCAL_NAME and not local_name:
+                local_name = gap_value.decode("utf-8")
+            elif gap_type == BLEGAPType.TYPE_COMPLETE_LOCAL_NAME:
+                local_name = gap_value.decode("utf-8")
+            elif gap_type == BLEGAPType.TYPE_MANUFACTURER_SPECIFIC_DATA:
+                manufacturer_id = int.from_bytes(gap_value[:2], "little")
+                manufacturer_data[manufacturer_id] = gap_value[2:]
+            elif gap_type in {
+                BLEGAPType.TYPE_16BIT_SERVICE_UUID_COMPLETE,
+                BLEGAPType.TYPE_16BIT_SERVICE_UUID_MORE_AVAILABLE,
+            }:
+                service_uuids.append(
+                    f"0000{gap_value.hex()}-0000-1000-8000-00805f9b34fb"
+                )
+            elif gap_type in {
+                BLEGAPType.TYPE_128BIT_SERVICE_UUID_MORE_AVAILABLE,
+                BLEGAPType.TYPE_128BIT_SERVICE_UUID_COMPLETE,
+            }:
+                service_uuids.append(f"{gap_value.hex()}-0000-1000-8000-00805f9b34fb")
+            elif gap_type == BLEGAPType.TYPE_SERVICE_DATA:
+                service_data[
+                    f"0000{gap_value[:2].hex()}-0000-1000-8000-00805f9b34fb"
+                ] = gap_value[2:]
+            elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_32BIT_UUID:
+                service_data[
+                    f"{gap_value[:4].hex()}-0000-1000-8000-00805f9b34fb"
+                ] = gap_value[4:]
+            elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_128BIT_UUID:
+                service_data[str(UUID(bytes=gap_value[:16]))] = gap_value[16:]
 
-
-test_decoder()
+    advertisement_data = AdvertisementData(
+        local_name=None if local_name == "" else local_name,
+        manufacturer_data=manufacturer_data,
+        service_data=service_data,
+        service_uuids=service_uuids,
+        rssi=rssi,
+        tx_power=-127,
+        platform_data=(),
+    )
+    device = BLEDevice(  # type: ignore[no-untyped-call]
+        address=address,
+        name=local_name,
+        details={},
+        rssi=rssi,  # deprecated, will be removed in newer bleak
+    )
+    return device, advertisement_data
