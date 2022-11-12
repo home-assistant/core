@@ -1851,7 +1851,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==0.6.0
+pyrainbird==0.6.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
