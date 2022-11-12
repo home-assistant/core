@@ -11,6 +11,8 @@ from uuid import UUID
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
+BLE_UUID = "0000-1000-8000-00805f9b34fb"
+
 
 class BLEGAPType(IntEnum):
     """Advertising data types."""
@@ -86,22 +88,16 @@ def parse_ble_event(
                 BLEGAPType.TYPE_16BIT_SERVICE_UUID_COMPLETE,
                 BLEGAPType.TYPE_16BIT_SERVICE_UUID_MORE_AVAILABLE,
             }:
-                service_uuids.append(
-                    f"0000{gap_value.hex()}-0000-1000-8000-00805f9b34fb"
-                )
+                service_uuids.append(f"0000{gap_value.hex()}-{BLE_UUID}")
             elif gap_type in {
                 BLEGAPType.TYPE_128BIT_SERVICE_UUID_MORE_AVAILABLE,
                 BLEGAPType.TYPE_128BIT_SERVICE_UUID_COMPLETE,
             }:
-                service_uuids.append(f"{gap_value.hex()}-0000-1000-8000-00805f9b34fb")
+                service_uuids.append(f"{gap_value.hex()}-{BLE_UUID}")
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA:
-                service_data[
-                    f"0000{gap_value[:2].hex()}-0000-1000-8000-00805f9b34fb"
-                ] = gap_value[2:]
+                service_data[f"0000{gap_value[:2].hex()}-{BLE_UUID}"] = gap_value[2:]
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_32BIT_UUID:
-                service_data[
-                    f"{gap_value[:4].hex()}-0000-1000-8000-00805f9b34fb"
-                ] = gap_value[4:]
+                service_data[f"{gap_value[:4].hex()}-{BLE_UUID}"] = gap_value[4:]
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_128BIT_UUID:
                 service_data[str(UUID(bytes=gap_value[:16]))] = gap_value[16:]
 
