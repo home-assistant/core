@@ -54,19 +54,22 @@ async def async_validate_trigger_config(
     return config
 
 
+def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
+    """Return data for a turn on trigger."""
+
+    return {
+        CONF_PLATFORM: "device",
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: TURN_ON_PLATFORM_TYPE,
+    }
+
+
 async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = []
-    base_trigger = {
-        CONF_PLATFORM: "device",
-        CONF_DEVICE_ID: device_id,
-        CONF_DOMAIN: DOMAIN,
-    }
-
-    triggers.append({**base_trigger, CONF_TYPE: TURN_ON_PLATFORM_TYPE})
-
+    triggers = [async_get_turn_on_trigger(device_id)]
     return triggers
 
 

@@ -6,12 +6,16 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    PluggableAction,
+    TriggerActionType,
+    TriggerInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
+from ..device_trigger import async_get_turn_on_trigger
 from ..helpers import (
-    async_get_client_wrapper_by_device_entry,
     async_get_device_entry_by_device_id,
     async_get_device_id_from_entity_id,
 )
@@ -69,10 +73,10 @@ async def async_attach_trigger(
             "description": f"webostv turn on trigger for {device_name}",
         }
 
-        client_wrapper = async_get_client_wrapper_by_device_entry(hass, device)
+        turn_on_trigger = async_get_turn_on_trigger(device_id)
 
         unsubs.append(
-            client_wrapper.turn_on.async_attach(action, {"trigger": variables})
+            PluggableAction.async_attach_all(hass, turn_on_trigger, action, variables)
         )
 
     @callback

@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
@@ -87,8 +86,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.options = options
         self._notify_future: asyncio.Task | None = None
-
-        self.turn_on = PluggableAction(self.async_update_listeners)
 
         super().__init__(
             hass,

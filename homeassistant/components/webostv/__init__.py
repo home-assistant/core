@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -163,7 +162,6 @@ class WebOsClientWrapper:
         """Set up the client."""
         self.host = host
         self.client_key = client_key
-        self.turn_on = PluggableAction()
         self.client: WebOsClient | None = None
 
     async def connect(self) -> None:

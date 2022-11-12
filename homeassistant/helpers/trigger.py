@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass, field
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
@@ -39,6 +41,8 @@ _PLATFORM_ALIASES = {
     "homeassistant": ("event", "numeric_state", "state", "time_pattern", "time"),
 }
 
+DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
+
 
 class TriggerActionType(Protocol):
     """Protocol type for trigger action callback."""
@@ -69,6 +73,21 @@ class TriggerInfo(TypedDict):
     trigger_data: TriggerData
 
 
+@dataclass
+class PluggableActionsEntry:
+    """Entry in pluggable actions."""
+
+    plugs: list[PluggableAction] = field(default_factory=list)
+    actions: dict[
+        object,
+        tuple[
+            TriggerActionType,
+            dict[str, Any],
+            dict[PluggableAction, list[CALLBACK_TYPE]],
+        ],
+    ] = field(default_factory=dict)
+
+
 class PluggableAction:
     """A pluggable action handler."""
 
@@ -83,6 +102,65 @@ class PluggableAction:
     def __bool__(self) -> bool:
         """Return if we have something attached."""
         return bool(self._actions)
+
+    @staticmethod
+    def async_get_registry(hass: HomeAssistant) -> dict[tuple, PluggableActionsEntry]:
+        """Return the pluggable actions registry."""
+
+        if data := hass.data.get(DATA_PLUGGABLE_ACTIONS):
+            return data  # type: ignore[no-any-return]
+        data = defaultdict(PluggableActionsEntry)
+        hass.data[DATA_PLUGGABLE_ACTIONS] = data
+        return data
+
+    @staticmethod
+    def async_attach_all(
+        hass: HomeAssistant,
+        trigger: dict[str, str],
+        action: TriggerActionType,
+        variables: dict[str, Any],
+    ) -> CALLBACK_TYPE:
+        """Find all registered plugs of given trigger config."""
+
+        key = tuple(sorted(trigger.items()))
+        entry = PluggableAction.async_get_registry(hass)[key]
+
+        @callback
+        def _remove() -> None:
+            """Remove this action attachment, and disconnect all plugs."""
+            _, _, removals = entry.actions.pop(_remove)
+            for removal in removals.values():
+                for function in removal:
+                    function()
+
+        removals: dict[PluggableAction, list[CALLBACK_TYPE]] = {
+            plug: [plug.async_attach(action, variables)] for plug in entry.plugs
+        }
+        entry.actions[_remove] = (action, variables, removals)
+
+        return _remove
+
+    @callback
+    def async_register(self, hass: HomeAssistant, trigger: ConfigType) -> CALLBACK_TYPE:
+        """Register plug in the global plugs dictionary."""
+
+        key = tuple(sorted(trigger.items()))
+        entry = PluggableAction.async_get_registry(hass)[key]
+
+        for action, variables, removals in entry.actions.values():
+            functions = removals.setdefault(self, [])
+            functions.append(self.async_attach(action, variables))
+
+        @callback
+        def _remove() -> None:
+            """Remove plug from registration, and make sure no action holds on to disconnection functions."""
+            for _, _, removals in entry.actions.values():
+                removals.pop(self, None)
+            entry.plugs.remove(self)
+
+        entry.plugs.append(self)
+
+        return _remove
 
     @callback
     def async_attach(
