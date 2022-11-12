@@ -471,7 +471,7 @@ doorbirdpy==2.1.0
 dsmr_parser==0.33
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.46
+dynalite_devices==0.1.47
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
