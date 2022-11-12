@@ -1,7 +1,9 @@
 """Bluetooth support for shelly."""
 from __future__ import annotations
 
-import logging
+from typing import TypedDict
+
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
@@ -11,13 +13,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
+from ..const import BLE_SCRIPT_NAME
 from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
 
-_LOGGER = logging.getLogger(__name__)
+BLE_SCRIPT_CODE = """
+// Home Assistant BLE script v0.1.0
 
-BLE_SCRIPT = """
- BLE.Scanner.Subscribe(function (ev, res) {
+BLE.Scanner.Subscribe(function (ev, res) {
     if (ev === BLE.Scanner.SCAN_RESULT) {
         Shelly.emitEvent("ble.scan_result", [
             res.addr,
@@ -27,7 +30,6 @@ BLE_SCRIPT = """
         ]);
     }
 });
-
 BLE.Scanner.Start({
     duration_ms: -1,
     active: true,
@@ -35,6 +37,22 @@ BLE.Scanner.Start({
     window_ms: 30,
 });
 """
+
+
+class ShellyScript(TypedDict, total=False):
+    """Shelly Script."""
+
+    id: int
+    name: str
+    enable: bool
+    running: bool
+
+
+async def _async_get_scripts_by_name(device: RpcDevice) -> dict[str, int]:
+    """Get scripts by name."""
+    data = await device.call_rpc("Script.List")
+    scripts: list[ShellyScript] = data["scripts"]
+    return {script["name"]: script["id"] for script in scripts}
 
 
 async def async_connect_scanner(
@@ -52,8 +70,18 @@ async def async_connect_scanner(
         scanner.async_setup(),
         coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
-    # TODO: upload the BLE_SCRIPT to the device
-    # TODO: start the scanner script
+    device = coordinator.device
+    script_name_to_id = await _async_get_scripts_by_name(device)
+    if BLE_SCRIPT_NAME not in script_name_to_id:
+        await device.call_rpc("Script.Create", {"name": BLE_SCRIPT_NAME})
+        script_name_to_id = await _async_get_scripts_by_name(device)
+
+    ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
+    await device.call_rpc("Script.Stop", {"id": ble_script_id})
+    await device.call_rpc(
+        "Script.PutCode", {"id": ble_script_id, "code": BLE_SCRIPT_CODE}
+    )
+    await device.call_rpc("Script.Start", {"id": ble_script_id})
 
     @hass_callback
     def _async_unload() -> None:
