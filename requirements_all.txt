@@ -609,7 +609,7 @@ dwdwfsapi==1.0.5
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.46
+dynalite_devices==0.1.47
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
