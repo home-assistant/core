@@ -16,7 +16,7 @@ from ..const import BLE_SCRIPT_NAME
 from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
 
-BLE_SCRIPT_CODE = """
+BLE_CODE = """
 // Home Assistant BLE script v0.1.0
 BLE.Scanner.Subscribe(function (ev, res) {
     if (ev === BLE.Scanner.SCAN_RESULT) {
@@ -68,16 +68,15 @@ async def async_connect_scanner(
         coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
     script_name_to_id = await _async_get_scripts_by_name(device)
+    call_rpc = device.call_rpc
     if BLE_SCRIPT_NAME not in script_name_to_id:
-        await device.call_rpc("Script.Create", {"name": BLE_SCRIPT_NAME})
+        await call_rpc("Script.Create", {"name": BLE_SCRIPT_NAME})
         script_name_to_id = await _async_get_scripts_by_name(device)
 
     ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
-    await device.call_rpc("Script.Stop", {"id": ble_script_id})
-    await device.call_rpc(
-        "Script.PutCode", {"id": ble_script_id, "code": BLE_SCRIPT_CODE}
-    )
-    await device.call_rpc("Script.Start", {"id": ble_script_id})
+    await call_rpc("Script.Stop", {"id": ble_script_id})
+    await call_rpc("Script.PutCode", {"id": ble_script_id, "code": BLE_CODE})
+    await call_rpc("Script.Start", {"id": ble_script_id})
 
     @hass_callback
     def _async_unload() -> None:
