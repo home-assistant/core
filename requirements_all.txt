@@ -1043,7 +1043,7 @@ logi_circle==0.2.3
 london-tube-status==0.5
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.2
+luftdaten==0.7.4
 
 # homeassistant.components.lupusec
 lupupy==0.1.9
