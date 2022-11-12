@@ -63,14 +63,14 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         self._own_extra_state_attributes: Mapping[str, Any] = {}
-        stype = None
+        self._fibaro_sensor_type = None
         if fibaro_device.type in SENSOR_TYPES:
-            stype = fibaro_device.type
+            self._fibaro_sensor_type = fibaro_device.type
         elif fibaro_device.baseType in SENSOR_TYPES:
-            stype = fibaro_device.baseType
-        if stype:
-            self._attr_device_class = SENSOR_TYPES[stype][2]
-            self._attr_icon = SENSOR_TYPES[stype][1]
+            self._fibaro_sensor_type = fibaro_device.baseType
+        if self._fibaro_sensor_type:
+            self._attr_device_class = SENSOR_TYPES[self._fibaro_sensor_type][2]
+            self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -79,7 +79,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the state."""
-        if self.device_class == BinarySensorDeviceClass.MOVING:
+        if self._fibaro_sensor_type == "com.fibaro.accelerometer":
             # Accelerator sensors have values for the three axis x, y and z
             moving_values = self._get_moving_values()
             self._attr_is_on = self._is_moving(moving_values)
