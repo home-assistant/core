@@ -156,6 +156,3 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
-
-BLE_SCAN_RESULT_EVENT = "ble.scan_result"
-BLE_SCRIPT_NAME = "homeassistant_ble_integration"
