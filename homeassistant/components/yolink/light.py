@@ -38,8 +38,8 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     ) -> None:
         """Init YoLink Dimmer entity."""
         super().__init__(config_entry, coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_id}_light_state"
-        self._attr_name = f"{coordinator.device.device_name} (State)"
+        self._attr_unique_id = f"{coordinator.device.device_id}"
+        self._attr_name = "Dimmer State"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -47,8 +47,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         self._attr_is_on = state.get("state") == "open"
-        brightness = state.get("brightness")
-        if brightness is not None:
+        if (brightness := state.get("brightness")) is not None:
             self._attr_brightness = round(255 * brightness / 100)
         self.async_write_ha_state()
 
