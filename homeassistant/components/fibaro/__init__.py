@@ -84,6 +84,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
