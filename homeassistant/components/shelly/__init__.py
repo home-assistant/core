@@ -236,8 +236,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    @callback
-    def _async_rpc_device_setup() -> None:
+    async def _async_rpc_device_setup() -> None:
         """Set up a RPC based device that is online."""
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         shelly_entry_data.rpc.async_setup()
@@ -250,9 +249,10 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             )
             platforms = RPC_PLATFORMS
 
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+
         # TODO: only connect the scanner if enabled in config options active/true/false
-        hass.async_create_task(async_connect_scanner(hass, shelly_entry_data.rpc))
-        hass.config_entries.async_setup_platforms(entry, platforms)
+        entry.async_on_unload(await async_connect_scanner(hass, shelly_entry_data.rpc))
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -264,7 +264,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(device.config)
             hass.config_entries.async_update_entry(entry, data=data)
 
-        _async_rpc_device_setup()
+        hass.async_create_task(_async_rpc_device_setup())
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -276,7 +276,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
 
-        _async_rpc_device_setup()
+        await _async_rpc_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         shelly_entry_data.device = device
@@ -287,7 +287,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        _async_rpc_device_setup()
+        await _async_rpc_device_setup()
 
     return True
 
