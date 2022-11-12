@@ -59,7 +59,7 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
-    source = format_mac(coordinator.mac)
+    source = format_mac(coordinator.mac).upper()
     new_info_callback = async_get_advertisement_callback(hass)
     scanner = ShellyBLEScanner(hass, source, new_info_callback)
     unload_callbacks = [
