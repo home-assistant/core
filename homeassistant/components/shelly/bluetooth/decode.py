@@ -63,7 +63,11 @@ def decode_ad(
     while offset < len(encoded_struct):
         try:
             length = encoded_struct[offset]
+            if not length:
+                return
             type_ = encoded_struct[offset + 1]
+            if not type_:
+                return
             value = encoded_struct[offset + 2 :][: length - 1]
         except IndexError as ex:
             _LOGGER.error(
