@@ -54,14 +54,14 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await api.installation()
         except CombinedEnergyAuthError:
-            self._errors[CONF_USERNAME] = "invalid_auth"
+            self._errors["base"] = "invalid_auth"
         except CombinedEnergyPermissionError:
             self._errors[CONF_INSTALLATION_ID] = "installation_not_accessible"
         except CombinedEnergyTimeoutError:
-            self._errors[CONF_USERNAME] = "cannot_connect"
+            self._errors["base"] = "cannot_connect"
         except CombinedEnergyError:
             LOGGER.exception("Unexpected error verifying connection to API")
-            self._errors[CONF_INSTALLATION_ID] = "cannot_connect"
+            self._errors["base"] = "cannot_connect"
         else:
             return True
         return False
