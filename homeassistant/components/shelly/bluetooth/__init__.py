@@ -30,7 +30,10 @@ async def async_connect_scanner(
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),
+        device.subscribe_updates(scanner.async_on_update),
     ]
+    # TODO: upload the scanner script to the device
+    # TODO: start the scanner script
 
     @hass_callback
     def _async_unload() -> None:

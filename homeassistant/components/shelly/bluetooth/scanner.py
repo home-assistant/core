@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import re
 import time
-from typing import Final
+from typing import Any, Final
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -20,6 +20,8 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
+
+from .decode import parse_ble_event
 
 TWO_CHAR = re.compile("..")
 
@@ -88,25 +90,34 @@ class ShellyBLEScanner(BaseHaScanner):
         return self._discovered_device_advertisement_datas
 
     @callback
-    def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
+    def async_on_update(self, update: Any) -> None:
+        """Handle device update."""
+        import pprint
+
+        pprint.pprint(update)
+
+    @callback
+    def async_on_ble_event(self, event: Any) -> None:
         """Call the registered callback."""
+        rssi, address, adv_base64, scan_base64 = event
+        name, manufacturer_data, service_data, service_uuids = parse_ble_event(
+            adv_base64, scan_base64
+        )
         now = monotonic_time_coarse()
-        address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
-        name = adv.name
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
             # If the last discovery had the full local name
             # and this one doesn't, keep the old one as we
             # always want the full local name over the short one
             prev_device = prev_discovery[0]
-            if len(prev_device.name) > len(adv.name):
+            if len(prev_device.name) > len(name):
                 name = prev_device.name
 
         advertisement_data = AdvertisementData(
             local_name=None if name == "" else name,
-            manufacturer_data=adv.manufacturer_data,
-            service_data=adv.service_data,
-            service_uuids=adv.service_uuids,
-            rssi=adv.rssi,
+            manufacturer_data=manufacturer_data,
+            service_data=service_data,
+            service_uuids=service_uuids,
+            rssi=rssi,
             tx_power=-127,
             platform_data=(),
         )
@@ -114,7 +125,7 @@ class ShellyBLEScanner(BaseHaScanner):
             address=address,
             name=name,
             details=self._details,
-            rssi=adv.rssi,  # deprecated, will be removed in newer bleak
+            rssi=rssi,  # deprecated, will be removed in newer bleak
         )
         self._discovered_device_advertisement_datas[address] = (
             device,
@@ -125,7 +136,7 @@ class ShellyBLEScanner(BaseHaScanner):
             BluetoothServiceInfoBleak(
                 name=advertisement_data.local_name or device.name or device.address,
                 address=device.address,
-                rssi=adv.rssi,
+                rssi=rssi,
                 manufacturer_data=advertisement_data.manufacturer_data,
                 service_data=advertisement_data.service_data,
                 service_uuids=advertisement_data.service_uuids,

@@ -8,9 +8,6 @@ from collections.abc import Iterable
 from enum import IntEnum
 from uuid import UUID
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
-
 BLE_UUID = "0000-1000-8000-00805f9b34fb"
 
 
@@ -66,8 +63,8 @@ def decode_ad(encoded_struct: bytes) -> Iterable[tuple[BLEGAPType, bytes]]:
 
 
 def parse_ble_event(
-    address: str, rssi: int, advertisement_data_b64: str, scan_response_b64: str
-) -> tuple[BLEDevice, AdvertisementData]:
+    advertisement_data_b64: str, scan_response_b64: str
+) -> tuple[str | None, dict[int, bytes], dict[str, bytes], list[str]]:
     """Convert ad data to BLEDevice and AdvertisementData."""
     manufacturer_data: dict[int, bytes] = {}
     service_data: dict[str, bytes] = {}
@@ -101,19 +98,4 @@ def parse_ble_event(
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_128BIT_UUID:
                 service_data[str(UUID(bytes=gap_value[:16]))] = gap_value[16:]
 
-    advertisement_data = AdvertisementData(
-        local_name=None if local_name == "" else local_name,
-        manufacturer_data=manufacturer_data,
-        service_data=service_data,
-        service_uuids=service_uuids,
-        rssi=rssi,
-        tx_power=-127,
-        platform_data=(),
-    )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
-        address=address,
-        name=local_name,
-        details={},
-        rssi=rssi,  # deprecated, will be removed in newer bleak
-    )
-    return device, advertisement_data
+    return local_name, manufacturer_data, service_data, service_uuids

@@ -17,6 +17,7 @@ from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .bluetooth import async_connect_scanner
 from .const import (
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
@@ -158,6 +159,9 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
             platforms = BLOCK_PLATFORMS
 
+        # FIXME: only connect the scanner if enabled
+        # TODO: upload the scanner script
+        async_connect_scanner(hass, entry, device)
         hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
