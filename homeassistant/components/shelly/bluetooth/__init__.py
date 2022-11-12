@@ -59,6 +59,7 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
+    call_rpc = device.call_rpc
     source = format_mac(coordinator.mac).upper()
     new_info_callback = async_get_advertisement_callback(hass)
     scanner = ShellyBLEScanner(hass, source, new_info_callback)
@@ -68,12 +69,12 @@ async def async_connect_scanner(
         coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
     script_name_to_id = await _async_get_scripts_by_name(device)
-    call_rpc = device.call_rpc
     if BLE_SCRIPT_NAME not in script_name_to_id:
         await call_rpc("Script.Create", {"name": BLE_SCRIPT_NAME})
         script_name_to_id = await _async_get_scripts_by_name(device)
 
     ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
+
     await call_rpc("Script.Stop", {"id": ble_script_id})
     await call_rpc("Script.PutCode", {"id": ble_script_id, "code": BLE_CODE})
     await call_rpc("Script.Start", {"id": ble_script_id})
