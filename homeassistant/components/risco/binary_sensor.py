@@ -35,6 +35,10 @@ async def async_setup_entry(
             RiscoLocalAlarmedBinarySensor(local_data.system.id, zone_id, zone)
             for zone_id, zone in local_data.system.zones.items()
         )
+        async_add_entities(
+            RiscoLocalArmedBinarySensor(local_data.system.id, zone_id, zone)
+            for zone_id, zone in local_data.system.zones.items()
+        )
     else:
         coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
             config_entry.entry_id
@@ -92,8 +96,6 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
 class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation whether a zone in Risco local is currently triggering an alarm."""
 
-    _attr_should_poll = False
-
     def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
         super().__init__(
@@ -108,3 +110,22 @@ class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.alarmed
+
+
+class RiscoLocalArmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
+    """Representation whether a zone in Risco local is currently armed."""
+
+    def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
+        """Init the zone."""
+        super().__init__(
+            system_id=system_id,
+            name="Armed",
+            suffix="_armed",
+            zone_id=zone_id,
+            zone=zone,
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if sensor is on."""
+        return self._zone.armed
