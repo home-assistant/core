@@ -34,9 +34,7 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
-CONFIG_DIAGNOSTIC_MATCH = functools.partial(
-    ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
-)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.UPDATE)
 
 
 async def async_setup_entry(
@@ -57,7 +55,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_OTA)
+@STRICT_MATCH(channel_names=CHANNEL_OTA)
 class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     """Representation of a ZHA firmware update entity."""
 
@@ -67,7 +65,6 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -81,6 +78,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self._attr_name = "Firmware"
 
         self._ota_channel = self.cluster_channels[CHANNEL_OTA]
+
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
         self._finished_event = asyncio.Event()
