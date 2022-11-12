@@ -9,6 +9,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.helpers.device_registry import format_mac
 
 from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
@@ -23,7 +24,7 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
-    source = str(entry.unique_id)
+    source = format_mac(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
     scanner = ShellyBLEScanner(hass, source, new_info_callback)
     unload_callbacks = [
