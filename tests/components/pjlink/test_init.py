@@ -80,4 +80,4 @@ async def test_initialization(projector_from_address, hass):
         assert "source_list" in state.attributes
         source_list = state.attributes["source_list"]
 
-        assert {"HDMI 1", "HDMI 2", "VGA 1"} == set(source_list)
+        assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
