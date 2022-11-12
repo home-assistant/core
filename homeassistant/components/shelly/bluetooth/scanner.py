@@ -95,14 +95,15 @@ class ShellyBLEScanner(BaseHaScanner):
         try:
             self.async_on_ble_event(event["data"])
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to parse BLE event: %s", err)
+            _LOGGER.error("Failed to parse BLE event: %s", err, exc_info=True)
 
     @callback
     def async_on_ble_event(self, event: list[Any]) -> None:
         """Call the registered callback."""
-        rssi, address, adv_base64, scan_base64 = event
+        _LOGGER.warning("BLE event: %s", event)
+        address, rssi, adv_base64, scan_base64 = event
         name, manufacturer_data, service_data, service_uuids = parse_ble_event(
-            adv_base64, scan_base64
+            address, adv_base64, scan_base64
         )
         now = monotonic_time_coarse()
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):

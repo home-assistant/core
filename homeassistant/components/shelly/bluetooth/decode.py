@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-# This needs to be moved to the aioshelly lib
 from base64 import b64decode
 from collections.abc import Iterable
 from enum import IntEnum
+
+# This needs to be moved to the aioshelly lib
+import logging
 from uuid import UUID
 
 BLE_UUID = "0000-1000-8000-00805f9b34fb"
+_LOGGER = logging.getLogger(__name__)
 
 
 class BLEGAPType(IntEnum):
     """Advertising data types."""
 
+    TYPE_UNKNOWN = 0x00
     TYPE_FLAGS = 0x01
     TYPE_16BIT_SERVICE_UUID_MORE_AVAILABLE = 0x02
     TYPE_16BIT_SERVICE_UUID_COMPLETE = 0x03
@@ -51,19 +55,28 @@ class BLEGAPType(IntEnum):
 BLEGAPType_MAP = {gap_ad.value: gap_ad for gap_ad in BLEGAPType}
 
 
-def decode_ad(encoded_struct: bytes) -> Iterable[tuple[BLEGAPType, bytes]]:
+def decode_ad(
+    address: str, encoded_struct: bytes
+) -> Iterable[tuple[BLEGAPType, bytes]]:
     """Decode a BLE GAP AD structure."""
     offset = 0
     while offset < len(encoded_struct):
-        length = encoded_struct[offset]
-        type_ = encoded_struct[offset + 1]
-        value = encoded_struct[offset + 2 :][: length - 1]
-        yield BLEGAPType_MAP[type_], value
+        try:
+            length = encoded_struct[offset]
+            type_ = encoded_struct[offset + 1]
+            value = encoded_struct[offset + 2 :][: length - 1]
+        except IndexError as ex:
+            _LOGGER.error(
+                "%s: Invalid BLE GAP AD structure: %s (%s)", address, encoded_struct, ex
+            )
+            return
+
+        yield BLEGAPType_MAP.get(type_, BLEGAPType.TYPE_UNKNOWN), value
         offset += 1 + length
 
 
 def parse_ble_event(
-    advertisement_data_b64: str, scan_response_b64: str
+    address: str, advertisement_data_b64: str, scan_response_b64: str
 ) -> tuple[str | None, dict[int, bytes], dict[str, bytes], list[str]]:
     """Convert ad data to BLEDevice and AdvertisementData."""
     manufacturer_data: dict[int, bytes] = {}
@@ -73,7 +86,7 @@ def parse_ble_event(
 
     for gap_data in advertisement_data_b64, scan_response_b64:
         gap_data_byte = b64decode(gap_data)
-        for gap_type, gap_value in decode_ad(gap_data_byte):
+        for gap_type, gap_value in decode_ad(address, gap_data_byte):
             if gap_type == BLEGAPType.TYPE_SHORT_LOCAL_NAME and not local_name:
                 local_name = gap_value.decode("utf-8")
             elif gap_type == BLEGAPType.TYPE_COMPLETE_LOCAL_NAME:
