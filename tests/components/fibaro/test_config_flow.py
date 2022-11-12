@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fibaro import DOMAIN
+from homeassistant.components.fibaro.config_flow import _normalize_url
 from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
@@ -362,3 +363,33 @@ async def test_reauth_auth_failure(hass):
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_normalize_url_does_not_touch_valid_url():
+    """Test that a correctly entere url is not touched."""
+    data = {CONF_URL: TEST_URL}
+    assert _normalize_url(data)[CONF_URL] == TEST_URL
+
+
+async def test_normalize_url_add_http():
+    """Test that http is added if missing."""
+    data = {CONF_URL: "192.168.1.1/api/"}
+    assert _normalize_url(data)[CONF_URL] == "http://192.168.1.1/api/"
+
+
+async def test_normalize_url_add_missing_slash_at_the_end():
+    """Test that a / is added at the end."""
+    data = {CONF_URL: "http://192.168.1.1/api"}
+    assert _normalize_url(data)[CONF_URL] == "http://192.168.1.1/api/"
+
+
+async def test_normalize_url_add_api():
+    """Test that api/ is added."""
+    data = {CONF_URL: "http://192.168.1.1/"}
+    assert _normalize_url(data)[CONF_URL] == "http://192.168.1.1/api/"
+
+
+async def test_normalize_url_add_api_with_leading_slash():
+    """Test that /api/ is added."""
+    data = {CONF_URL: "http://192.168.1.1"}
+    assert _normalize_url(data)[CONF_URL] == "http://192.168.1.1/api/"
