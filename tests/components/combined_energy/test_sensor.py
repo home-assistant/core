@@ -79,6 +79,8 @@ class TestCombinedEnergyReadings:
             data={
                 13: Mock(
                     models.DeviceReadings,
+                    range_start=datetime(2022, 11, 11, 11, 11, 11),
+                    no_value=None,
                     generic_value=[12.345, 67.896],
                     energy_value=[0.01, 0.02],
                     power_value=3.456,
@@ -89,17 +91,29 @@ class TestCombinedEnergyReadings:
         )
 
     @pytest.mark.parametrize(
-        "sensor_type, key, expected",
+        "sensor_type, key, expected_value, expected_available",
         (
-            (sensor.GenericSensor, "generic_value", 67.9),
-            (sensor.EnergySensor, "energy_value", 0.03),
-            (sensor.PowerSensor, "power_value", 3.46),
-            (sensor.PowerFactorSensor, "power_factor_value", -99.7),
-            (sensor.WaterVolumeSensor, "water_volume_value", 127),
+            (sensor.GenericSensor, "generic_value", 67.9, True),
+            (sensor.EnergySensor, "energy_value", 0.03, True),
+            (sensor.PowerSensor, "power_value", 3.46, True),
+            (sensor.PowerFactorSensor, "power_factor_value", -99.7, True),
+            (sensor.WaterVolumeSensor, "water_volume_value", 127, True),
+            (sensor.GenericSensor, "no_value", None, False),
+            (sensor.EnergySensor, "no_value", None, False),
+            (sensor.PowerSensor, "no_value", None, False),
+            (sensor.PowerFactorSensor, "no_value", None, False),
+            (sensor.WaterVolumeSensor, "no_value", None, False),
         ),
     )
-    def test_native_value(
-        self, hass, installation, data_service, sensor_type, key, expected
+    def test_sensor_values(
+        self,
+        hass,
+        installation,
+        data_service,
+        sensor_type,
+        key,
+        expected_value,
+        expected_available,
     ):
         """Test that native values are correctly cast."""
         factory = sensor.CombinedEnergyReadingsSensorFactory(
@@ -112,5 +126,28 @@ class TestCombinedEnergyReadings:
 
         actual = target.native_value
 
+        assert actual == expected_value
+        assert target.available is expected_available
+
+    @pytest.mark.parametrize(
+        "device_id, expected",
+        (
+            (13, datetime(2022, 11, 11, 11, 11, 11)),
+            (42, None),
+        ),
+    )
+    def test_energy_sensor_last_reset(
+        self, hass, installation, data_service, device_id, expected
+    ):
+        """Test last reset value is correct for energy sensors."""
+        factory = sensor.CombinedEnergyReadingsSensorFactory(
+            hass, installation, data_service
+        )
+        device = mock_device(models.DeviceType.EnergyBalance, device_id=device_id)
+        device_info = factory._generate_device_info(device)
+        description = mock_description("energy_value")
+        target = sensor.EnergySensor(device, device_info, description, data_service)
+
+        actual = target.last_reset
+
         assert actual == expected
-        assert target.available
