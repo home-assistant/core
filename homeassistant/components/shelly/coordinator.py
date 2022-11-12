@@ -19,12 +19,12 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    BLE_SCAN_RESULT_EVENT,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
+    BLE_SCAN_RESULT_EVENT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DOMAIN,

@@ -16,6 +16,26 @@ from .scanner import ShellyBLEScanner
 
 _LOGGER = logging.getLogger(__name__)
 
+BLE_SCRIPT = """
+ BLE.Scanner.Subscribe(function (ev, res) {
+    if (ev === BLE.Scanner.SCAN_RESULT) {
+        Shelly.emitEvent("ble.scan_result", [
+            res.addr,
+            res.rssi,
+            btoa(res.advData),
+            btoa(res.scanRsp)
+        ]);
+    }
+});
+
+BLE.Scanner.Start({
+    duration_ms: -1,
+    active: true,
+    interval_ms: 320,
+    window_ms: 30,
+});
+"""
+
 
 async def async_connect_scanner(
     hass: HomeAssistant,
@@ -32,7 +52,7 @@ async def async_connect_scanner(
         scanner.async_setup(),
         coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
-    # TODO: upload the scanner script to the device
+    # TODO: upload the BLE_SCRIPT to the device
     # TODO: start the scanner script
 
     @hass_callback
