@@ -250,10 +250,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             )
             platforms = RPC_PLATFORMS
 
-        # FIXME: only connect the scanner if enabled
-        hass.async_create_task(
-            async_connect_scanner(hass, entry, shelly_entry_data.rpc)
-        )
+        # TODO: only connect the scanner if enabled in config options active/true/false
+        hass.async_create_task(async_connect_scanner(hass, shelly_entry_data.rpc))
         hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback

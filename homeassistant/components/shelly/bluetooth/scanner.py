@@ -93,15 +93,19 @@ class ShellyBLEScanner(BaseHaScanner):
     def async_on_update(self, event: dict[str, Any]) -> None:
         """Handle device update."""
         try:
-            self.async_on_ble_event(event["data"])
+            address, rssi, adv_base64, scan_base64 = event["data"]
+            self._async_on_ble_event(address, rssi, adv_base64, scan_base64)
         except Exception as err:  # pylint: disable=broad-except
+            # Broad exception catch because we have no control over the
+            # data that is coming in.
             _LOGGER.error("Failed to parse BLE event: %s", err, exc_info=True)
 
     @callback
-    def async_on_ble_event(self, event: list[Any]) -> None:
+    def _async_on_ble_event(
+        self, _address: str, rssi: int, adv_base64: str, scan_base64: str
+    ) -> None:
         """Call the registered callback."""
-        _LOGGER.warning("BLE event: %s", event)
-        address, rssi, adv_base64, scan_base64 = event
+        address: str = _address.upper()
         name, manufacturer_data, service_data, service_uuids = parse_ble_event(
             address, adv_base64, scan_base64
         )

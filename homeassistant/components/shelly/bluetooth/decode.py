@@ -67,7 +67,11 @@ def decode_ad(
             value = encoded_struct[offset + 2 :][: length - 1]
         except IndexError as ex:
             _LOGGER.error(
-                "%s: Invalid BLE GAP AD structure: %s (%s)", address, encoded_struct, ex
+                "%s: Invalid BLE GAP AD structure at offset %s: %s (%s)",
+                address,
+                offset,
+                encoded_struct,
+                ex,
             )
             return
 
@@ -98,12 +102,12 @@ def parse_ble_event(
                 BLEGAPType.TYPE_16BIT_SERVICE_UUID_COMPLETE,
                 BLEGAPType.TYPE_16BIT_SERVICE_UUID_MORE_AVAILABLE,
             }:
-                service_uuids.append(f"0000{gap_value.hex()}-{BLE_UUID}")
+                service_uuids.append(f"0000{gap_value[:2].hex()}-{BLE_UUID}")
             elif gap_type in {
                 BLEGAPType.TYPE_128BIT_SERVICE_UUID_MORE_AVAILABLE,
                 BLEGAPType.TYPE_128BIT_SERVICE_UUID_COMPLETE,
             }:
-                service_uuids.append(f"{gap_value.hex()}-{BLE_UUID}")
+                service_uuids.append(str(UUID(bytes=gap_value[:16])))
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA:
                 service_data[f"0000{gap_value[:2].hex()}-{BLE_UUID}"] = gap_value[2:]
             elif gap_type == BLEGAPType.TYPE_SERVICE_DATA_32BIT_UUID:
