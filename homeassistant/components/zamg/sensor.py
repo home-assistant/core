@@ -190,9 +190,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-API_FIELDS: dict[str, tuple[str, _DType]] = {
-    desc.para_name: (desc.key, desc.dtype) for desc in SENSOR_TYPES
-}
+API_FIELDS: list[str] = [desc.para_name for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
@@ -266,6 +264,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
+        coordinator.api_fields = API_FIELDS
 
     @property
     def native_value(self) -> StateType:

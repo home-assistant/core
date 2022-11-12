@@ -1,6 +1,8 @@
 """Tests for the Zamg config flow."""
 from unittest.mock import MagicMock
 
+from zamg.exceptions import ZamgApiError, ZamgStationNotFoundError
+
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN, LOGGER
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
@@ -36,6 +38,21 @@ async def test_full_user_flow_implementation(
     assert result["result"].unique_id == TEST_STATION_ID
 
 
+async def test_error_closest_station(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test with error of reading from Zamg."""
+    mock_zamg.closest_station.side_effect = ZamgApiError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
+
+
 async def test_error_update(
     hass: HomeAssistant,
     mock_zamg: MagicMock,
@@ -50,7 +67,7 @@ async def test_error_update(
     assert result.get("type") == FlowResultType.FORM
     LOGGER.debug(result)
     assert result.get("data_schema") != ""
-    mock_zamg.update.side_effect = ValueError
+    mock_zamg.update.side_effect = ZamgApiError
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -200,7 +217,23 @@ async def test_import_flow_invalid_station(
     mock_setup_entry: None,
 ) -> None:
     """Test import flow with invalid station."""
-    mock_zamg.closest_station.return_value = ""
+    mock_zamg.closest_station.side_effect = ZamgStationNotFoundError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: ""},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "station_not_found"
+
+
+async def test_import_flow_zamg_error(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test import flow with error on getting zamg stations."""
+    mock_zamg.zamg_stations.side_effect = ZamgApiError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

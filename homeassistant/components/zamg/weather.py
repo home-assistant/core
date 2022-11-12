@@ -125,7 +125,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
-            return float(self.coordinator.data[self.station_id]["FF"]["data"])
+            return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
         except (KeyError, ValueError):
             return None
 
