@@ -32,6 +32,7 @@ from .. import (  # noqa: F401
     sensor,
     siren,
     switch,
+    update,
 )
 from . import const as zha_const, registries as zha_regs
 
