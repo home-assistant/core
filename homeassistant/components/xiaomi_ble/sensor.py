@@ -29,6 +29,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -64,12 +65,14 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
         key=str(Units.ELECTRIC_POTENTIAL_VOLT),
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (
         DeviceClass.SIGNAL_STRENGTH,
@@ -80,6 +83,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Used for e.g. moisture sensor on HHCCJCY01
     (None, Units.PERCENTAGE): SensorEntityDescription(
