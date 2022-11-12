@@ -67,7 +67,7 @@ async def async_attach_trigger(
         }
 
         turn_on_trigger = async_get_turn_on_trigger(config[CONF_DEVICE_ID])
-        return PluggableAction.async_attach_all(
+        return PluggableAction.async_attach_trigger(
             hass, turn_on_trigger, action, variables
         )
 

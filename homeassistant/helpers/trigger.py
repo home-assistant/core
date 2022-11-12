@@ -74,41 +74,35 @@ class TriggerInfo(TypedDict):
 
 
 @dataclass
-class PluggableActionEntry:
-    """Holder to keep track of a single action and all plugs that is currently reacting."""
-
-    action: TriggerActionType
-    variables: dict[str, Any]
-    removals: dict[PluggableAction, list[CALLBACK_TYPE]] = field(default_factory=dict)
-
-
-@dataclass
 class PluggableActionsEntry:
     """Holder to keep track of all plugs and actions for a given trigger."""
 
-    plugs: list[PluggableAction] = field(default_factory=list)
-    actions: dict[object, PluggableActionEntry] = field(default_factory=dict)
+    plugs: set[PluggableAction] = field(default_factory=set)
+    actions: dict[object, tuple[HassJob, dict[str, Any]]] = field(default_factory=dict)
 
 
 class PluggableAction:
     """A pluggable action handler."""
 
+    _trigger: dict[str, str]
+    _entry: PluggableActionsEntry | None = None
+
     def __init__(self, update: CALLBACK_TYPE | None = None) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[
-            CALLBACK_TYPE,
-            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
-        ] = {}
 
     def __bool__(self) -> bool:
         """Return if we have something attached."""
-        return bool(self._actions)
+        return bool(self._entry and self._entry.actions)
+
+    def async_run_update(self) -> None:
+        """Run update function if one exists."""
+        if self._update:
+            self._update()
 
     @staticmethod
     def async_get_registry(hass: HomeAssistant) -> dict[tuple, PluggableActionsEntry]:
         """Return the pluggable actions registry."""
-
         if data := hass.data.get(DATA_PLUGGABLE_ACTIONS):
             return data  # type: ignore[no-any-return]
         data = defaultdict(PluggableActionsEntry)
@@ -116,84 +110,65 @@ class PluggableAction:
         return data
 
     @staticmethod
-    def async_attach_all(
+    def async_attach_trigger(
         hass: HomeAssistant,
         trigger: dict[str, str],
         action: TriggerActionType,
         variables: dict[str, Any],
     ) -> CALLBACK_TYPE:
         """Find all registered plugs of given trigger config."""
-
-        key = tuple(sorted(trigger.items()))
         reg = PluggableAction.async_get_registry(hass)
-        entries = reg[key]
+        key = tuple(sorted(trigger.items()))
+        entry = reg[key]
+
+        def _update() -> None:
+            for plug in entry.plugs:
+                plug.async_run_update()
 
         @callback
         def _remove() -> None:
             """Remove this action attachment, and disconnect all plugs."""
-            entry = entries.actions.pop(_remove)
-            for removal in entry.removals.values():
-                for function in removal:
-                    function()
-            if not entries.actions and not entries.plugs:
+            del entry.actions[_remove]
+            _update()
+            if not entry.actions and not entry.plugs:
                 del reg[key]
 
-        removals: dict[PluggableAction, list[CALLBACK_TYPE]] = {
-            plug: [plug.async_attach(action, variables)] for plug in entries.plugs
-        }
-        entries.actions[_remove] = PluggableActionEntry(action, variables, removals)
+        job = HassJob(action)
+        entry.actions[_remove] = (job, variables)
+        _update()
 
         return _remove
 
     @callback
-    def async_register(self, hass: HomeAssistant, trigger: ConfigType) -> CALLBACK_TYPE:
+    def async_register(
+        self, hass: HomeAssistant, trigger: dict[str, str]
+    ) -> CALLBACK_TYPE:
         """Register plug in the global plugs dictionary."""
 
-        key = tuple(sorted(trigger.items()))
         reg = PluggableAction.async_get_registry(hass)
-        entries = reg[key]
-
-        for entry in entries.actions.values():
-            functions = entry.removals.setdefault(self, [])
-            functions.append(self.async_attach(entry.action, entry.variables))
+        key = tuple(sorted(trigger.items()))
+        self._entry = reg[key]
+        self._entry.plugs.add(self)
+        self.async_run_update()
 
         @callback
         def _remove() -> None:
             """Remove plug from registration, and make sure no action holds on to disconnection functions."""
-            for entry in entries.actions.values():
-                entry.removals.pop(self, None)
-            entries.plugs.remove(self)
-            if not entries.actions and not entries.plugs:
+            assert self._entry
+            self._entry.plugs.remove(self)
+            if not self._entry.actions and not self._entry.plugs:
                 del reg[key]
-
-        entries.plugs.append(self)
-
-        return _remove
-
-    @callback
-    def async_attach(
-        self, action: TriggerActionType, variables: dict[str, Any]
-    ) -> CALLBACK_TYPE:
-        """Attach a device trigger."""
-
-        @callback
-        def _remove() -> None:
-            del self._actions[_remove]
-            if self._update:
-                self._update()
-
-        job = HassJob(action)
-
-        self._actions[_remove] = (job, variables)
-        if self._update:
-            self._update()
+            self._entry = None
+            self.async_run_update()
 
         return _remove
 
     @callback
     def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
         """Run all triggers."""
-        for job, variables in self._actions.values():
+        if not self._entry:
+            return
+        for job, variables in self._entry.actions.values():
             hass.async_run_hass_job(job, variables, context)
 
 

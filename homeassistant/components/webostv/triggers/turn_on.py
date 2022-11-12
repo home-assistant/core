@@ -76,7 +76,9 @@ async def async_attach_trigger(
         turn_on_trigger = async_get_turn_on_trigger(device_id)
 
         unsubs.append(
-            PluggableAction.async_attach_all(hass, turn_on_trigger, action, variables)
+            PluggableAction.async_attach_trigger(
+                hass, turn_on_trigger, action, variables
+            )
         )
 
     @callback
