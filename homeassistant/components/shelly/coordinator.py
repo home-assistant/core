@@ -19,6 +19,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    BLE_SCAN_RESULT_EVENT,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
@@ -418,7 +419,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
-            elif self._ble_callback and event_type == "ble.scan_result":
+            elif self._ble_callback and event_type == BLE_SCAN_RESULT_EVENT:
                 self._ble_callback(event)
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 self.hass.bus.async_fire(
