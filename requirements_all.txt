@@ -553,7 +553,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.72.0
+dbus-fast==1.73.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1255,7 +1255,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.14.1
+oralb-ble==0.14.2
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2624,7 +2624,7 @@ zengge==0.2
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.85
+zha-quirks==0.0.86
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

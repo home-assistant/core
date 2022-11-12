@@ -433,7 +433,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.72.0
+dbus-fast==1.73.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -900,7 +900,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.14.1
+oralb-ble==0.14.2
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1825,7 +1825,7 @@ zamg==0.1.1
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.85
+zha-quirks==0.0.86
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.0
