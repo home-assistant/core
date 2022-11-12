@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import ElmaxCoordinator
+from .common import ElmaxCoordinator, DummyPanel
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -27,18 +27,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class DummyPanel(PanelEntry):
-    """Helper class for wrapping a directly accessed Elmax Panel."""
-
-    def __init__(self, panel_uri):
-        """Construct the object."""
-        super().__init__(panel_uri, True, {})
-
-    def get_name_by_user(self, username: str) -> str:
-        """Return the panel name."""
-        return f"Direct Panel {self.hash}"
 
 
 async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
@@ -98,9 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store a global reference to the coordinator for later use
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     # Perform platform initialization.
     await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
     return True
+
+
+async def update_listener(hass, entry):
+    """Handle options and config-entry update."""
+    # TODO
+    print(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

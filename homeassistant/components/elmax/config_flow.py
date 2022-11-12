@@ -144,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         status = await client.get_current_panel_status()
         return await self._check_unique_and_create_entry(
             unique_id=status.panel_id,
-            title=f"Elmax Direct {client_api_url}",
+            title=f"Elmax Direct ({status.panel_id})",
             data={
                 CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
                 CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
@@ -403,23 +403,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm", data_schema=schema, errors=errors
         )
 
+    async def _async_handle_entry_match(self, local_id:str, remote_id:str, base_uri:str):
+        # Look for another entry with the same PANEL_ID (local or remote).
+        # If there already is a matching panel, take the change to notify the Coordinator
+        # so that it uses the newly discovered IP address. This mitigates the issues
+        # arising with DHCP and IP changes of the panels.
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_ELMAX_PANEL_ID] in (local_id, remote_id):
+                # If the discovery reveals an entry with different target-uri for the same PANEL_ID,
+                # it means the panel has changed it's IP and we need to update the config-data entry accordingly.
+                new_uri = get_direct_api_url(base_uri)
+                if entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD) == CONF_ELMAX_MODE_DIRECT and entry.data[CONF_ELMAX_MODE_DIRECT_URI].lstrip("https").lstrip("http") != new_uri.lstrip("https").lstrip("http"):
+                    new_data = dict()
+                    new_data.update(entry.data)
+                    new_data[CONF_ELMAX_MODE_DIRECT_URI] = new_uri
+                    self.hass.config_entries.async_update_entry(entry,
+                                                                unique_id=entry.unique_id,
+                                                                data=new_data)
+                # Abort the configuration, as there already is an entry for this integration.
+                self.async_abort(reason="already_configured")
+
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
-
-        # Currently, we are using the IP as hostname. This might be a problem if the user is using
-        # DHCP on their Elmax panel. In the future we might consider the usage of discovery_info.hostname instead.
         host = discovery_info.host
         port = discovery_info.port
+        local_id = discovery_info.properties.get("idl")
+        remote_id = discovery_info.properties.get("idr")
         schema = "http"
         if discovery_info.type == "_elmax-ssl._tcp.local.":
             schema = "https"
         client_api_url = f"{schema}://{host}:{port}"
-        # The current version of the local APIs do not expose the panel ID within the txt records,
-        # so we cannot immediately identify a panel that is being already added (IP is not enough as
-        # using DHCP this might be volatile). When this gets changed on Elmax side, we can use the local
-        # method _async_abort_entries_match({PANEL_ID: panel_id}) to prevent duplicate entries
+        await self._async_handle_entry_match(local_id, remote_id, client_api_url)
+
         self._zeroconf_panel_api_uri = client_api_url
         return self.async_show_form(
             step_id="zeroconf_setup", data_schema=ZEROCONF_SETUP_SCHEMA

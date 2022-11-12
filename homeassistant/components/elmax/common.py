@@ -34,7 +34,19 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_direct_api_url(base_uri: str) -> str:
     """Return the direct API url given the base URI."""
-    return f"{base_uri.strip('/')}/{ELMAX_LOCAL_API_PATH}"
+    return f"{base_uri.strip('/').lower()}/{ELMAX_LOCAL_API_PATH}"
+
+
+class DummyPanel(PanelEntry):
+    """Helper class for wrapping a directly accessed Elmax Panel."""
+
+    def __init__(self, panel_uri):
+        """Construct the object."""
+        super().__init__(panel_uri, True, {})
+
+    def get_name_by_user(self, username: str) -> str:
+        """Return the panel name."""
+        return f"Direct Panel {self.hash}"
 
 
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):

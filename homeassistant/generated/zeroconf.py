@@ -194,6 +194,11 @@ ZEROCONF = {
             "domain": "elgato",
         },
     ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
+        },
+    ],
     "_elmax._tcp.local.": [
         {
             "domain": "elmax",
