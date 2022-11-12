@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import datetime
 from datetime import timedelta
-import re
+import logging
 import time
 from typing import Any, Final
 
@@ -23,7 +23,7 @@ from homeassistant.util.dt import monotonic_time_coarse
 
 from .decode import parse_ble_event
 
-TWO_CHAR = re.compile("..")
+_LOGGER = logging.getLogger(__name__)
 
 # The maximum time between advertisements for a device to be considered
 # stale when the advertisement tracker can determine the interval for
@@ -90,14 +90,15 @@ class ShellyBLEScanner(BaseHaScanner):
         return self._discovered_device_advertisement_datas
 
     @callback
-    def async_on_update(self, update: Any) -> None:
+    def async_on_update(self, event: dict[str, Any]) -> None:
         """Handle device update."""
-        import pprint
-
-        pprint.pprint(update)
+        try:
+            self.async_on_ble_event(event["data"])
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to parse BLE event: %s", err)
 
     @callback
-    def async_on_ble_event(self, event: Any) -> None:
+    def async_on_ble_event(self, event: list[Any]) -> None:
         """Call the registered callback."""
         rssi, address, adv_base64, scan_base64 = event
         name, manufacturer_data, service_data, service_uuids = parse_ble_event(
@@ -109,11 +110,12 @@ class ShellyBLEScanner(BaseHaScanner):
             # and this one doesn't, keep the old one as we
             # always want the full local name over the short one
             prev_device = prev_discovery[0]
-            if len(prev_device.name) > len(name):
+            name_len = 0 if name is None else len(name)
+            if prev_device.name is not None and len(prev_device.name) > name_len:
                 name = prev_device.name
 
         advertisement_data = AdvertisementData(
-            local_name=None if name == "" else name,
+            local_name=name,
             manufacturer_data=manufacturer_data,
             service_data=service_data,
             service_uuids=service_uuids,

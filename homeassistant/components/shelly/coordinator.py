@@ -1,7 +1,7 @@
 """Coordinators for the Shelly integration."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, cast
@@ -13,7 +13,7 @@ from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -337,6 +337,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._ble_callback: Callable[[dict[str, Any]], None] | None = None
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
@@ -379,6 +380,19 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         return True
 
     @callback
+    def async_subscribe_ble_events(
+        self, ble_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to BLE events."""
+
+        def _unsubscribe() -> None:
+            self._ble_callback = None
+
+        self._ble_callback = ble_callback
+
+        return _unsubscribe
+
+    @callback
     def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
         if (
@@ -404,6 +418,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
+            elif self._ble_callback and event_type == "ble.scan_result":
+                self._ble_callback(event)
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,

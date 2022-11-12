@@ -159,9 +159,6 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
             platforms = BLOCK_PLATFORMS
 
-        # FIXME: only connect the scanner if enabled
-        # TODO: upload the scanner script
-        async_connect_scanner(hass, entry, device)
         hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
@@ -253,6 +250,10 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             )
             platforms = RPC_PLATFORMS
 
+        # FIXME: only connect the scanner if enabled
+        hass.async_create_task(
+            async_connect_scanner(hass, entry, shelly_entry_data.rpc)
+        )
         hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
