@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from aioshelly.block_device import BlockDevice
-
 from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     async_register_scanner,
@@ -12,6 +10,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
+from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_connect_scanner(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    device: BlockDevice,
+    coordinator: ShellyRpcCoordinator,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
@@ -30,7 +29,7 @@ async def async_connect_scanner(
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),
-        device.subscribe_updates(scanner.async_on_update),
+        coordinator.async_subscribe_ble_events(scanner.async_on_update),
     ]
     # TODO: upload the scanner script to the device
     # TODO: start the scanner script
