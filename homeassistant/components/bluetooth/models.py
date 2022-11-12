@@ -227,7 +227,8 @@ class BaseRemoteHaScanner(BaseHaScanner):
         now = monotonic_time_coarse()
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
             # Merge the new data with the old data
-            # to function the same as BlueZ
+            # to function the same as BlueZ which
+            # merges the dicts on PropertiesChanged
             prev_device = prev_discovery[0]
             prev_advertisement = prev_discovery[1]
             if (
@@ -236,7 +237,7 @@ class BaseRemoteHaScanner(BaseHaScanner):
                 and len(prev_device.name) > len(local_name)
             ):
                 local_name = prev_device.name
-            if service_uuids:
+            if prev_advertisement.service_uuids:
                 service_uuids = list(
                     set(service_uuids + prev_advertisement.service_uuids)
                 )
