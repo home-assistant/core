@@ -75,11 +75,12 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_INSTALLATION_ID: user_input[CONF_INSTALLATION_ID],
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                        CONF_INSTALLATION_ID: installation_id,
                     },
                 )
+
         else:
             user_input = {
                 CONF_NAME: DEFAULT_NAME,
@@ -90,7 +91,6 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders={},
             data_schema=vol.Schema(
                 {
                     vol.Required(
