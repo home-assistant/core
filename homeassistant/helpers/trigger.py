@@ -74,18 +74,20 @@ class TriggerInfo(TypedDict):
 
 
 @dataclass
+class PluggableActionEntry:
+    """Holder to keep track of a single action and all plugs that is currently reacting."""
+
+    action: TriggerActionType
+    variables: dict[str, Any]
+    removals: dict[PluggableAction, list[CALLBACK_TYPE]] = field(default_factory=dict)
+
+
+@dataclass
 class PluggableActionsEntry:
-    """Entry in pluggable actions."""
+    """Holder to keep track of all plugs and actions for a given trigger."""
 
     plugs: list[PluggableAction] = field(default_factory=list)
-    actions: dict[
-        object,
-        tuple[
-            TriggerActionType,
-            dict[str, Any],
-            dict[PluggableAction, list[CALLBACK_TYPE]],
-        ],
-    ] = field(default_factory=dict)
+    actions: dict[object, PluggableActionEntry] = field(default_factory=dict)
 
 
 class PluggableAction:
@@ -123,20 +125,23 @@ class PluggableAction:
         """Find all registered plugs of given trigger config."""
 
         key = tuple(sorted(trigger.items()))
-        entry = PluggableAction.async_get_registry(hass)[key]
+        reg = PluggableAction.async_get_registry(hass)
+        entries = reg[key]
 
         @callback
         def _remove() -> None:
             """Remove this action attachment, and disconnect all plugs."""
-            _, _, removals = entry.actions.pop(_remove)
-            for removal in removals.values():
+            entry = entries.actions.pop(_remove)
+            for removal in entry.removals.values():
                 for function in removal:
                     function()
+            if not entries.actions and not entries.plugs:
+                del reg[key]
 
         removals: dict[PluggableAction, list[CALLBACK_TYPE]] = {
-            plug: [plug.async_attach(action, variables)] for plug in entry.plugs
+            plug: [plug.async_attach(action, variables)] for plug in entries.plugs
         }
-        entry.actions[_remove] = (action, variables, removals)
+        entries.actions[_remove] = PluggableActionEntry(action, variables, removals)
 
         return _remove
 
@@ -145,20 +150,23 @@ class PluggableAction:
         """Register plug in the global plugs dictionary."""
 
         key = tuple(sorted(trigger.items()))
-        entry = PluggableAction.async_get_registry(hass)[key]
+        reg = PluggableAction.async_get_registry(hass)
+        entries = reg[key]
 
-        for action, variables, removals in entry.actions.values():
-            functions = removals.setdefault(self, [])
-            functions.append(self.async_attach(action, variables))
+        for entry in entries.actions.values():
+            functions = entry.removals.setdefault(self, [])
+            functions.append(self.async_attach(entry.action, entry.variables))
 
         @callback
         def _remove() -> None:
             """Remove plug from registration, and make sure no action holds on to disconnection functions."""
-            for _, _, removals in entry.actions.values():
-                removals.pop(self, None)
-            entry.plugs.remove(self)
+            for entry in entries.actions.values():
+                entry.removals.pop(self, None)
+            entries.plugs.remove(self)
+            if not entries.actions and not entries.plugs:
+                del reg[key]
 
-        entry.plugs.append(self)
+        entries.plugs.append(self)
 
         return _remove
 
