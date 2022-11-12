@@ -6,6 +6,7 @@ from typing import TypedDict
 from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.bluetooth import (
+    HaBluetoothConnector,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -63,7 +64,13 @@ async def async_connect_scanner(
     call_rpc = device.call_rpc
     source = format_mac(coordinator.mac).upper()
     new_info_callback = async_get_advertisement_callback(hass)
-    scanner = ShellyBLEScanner(hass, source, new_info_callback)
+    connector = HaBluetoothConnector(
+        # no active connections to shelly yet
+        client=None,  # type: ignore[arg-type]
+        source=source,
+        can_connect=lambda: False,
+    )
+    scanner = ShellyBLEScanner(hass, source, new_info_callback, connector, False)
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),
