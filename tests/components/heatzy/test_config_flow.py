@@ -54,7 +54,7 @@ async def test_form(hass, client):
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "heatzy"
+    assert result["title"] == "heatzy (myuser)"
     assert result["data"] == {CONF_USERNAME: "myuser", CONF_PASSWORD: "password"}
 
 
@@ -89,4 +89,4 @@ async def test_form_exception(hass, client):
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "unknown"}
