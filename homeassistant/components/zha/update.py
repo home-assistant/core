@@ -78,9 +78,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._attr_name = "Firmware"
         self._ota_channel = self.cluster_channels[CHANNEL_OTA]
+        self._attr_installed_version = self.zha_device.sw_version
         self._latest_version_firmware = None
         self._result = None
-        self._attr_installed_version = None
 
     @callback
     def _update_progress(self, details: dict[str, Any]) -> None:
