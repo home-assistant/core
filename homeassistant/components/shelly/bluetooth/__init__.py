@@ -30,7 +30,7 @@ BLE.Scanner.Subscribe(function (ev, res) {
 });
 BLE.Scanner.Start({
     duration_ms: -1,
-    active: true,
+    active: %active%,
     interval_ms: 320,
     window_ms: 30,
 });
@@ -56,6 +56,7 @@ async def _async_get_scripts_by_name(device: RpcDevice) -> dict[str, int]:
 async def async_connect_scanner(
     hass: HomeAssistant,
     coordinator: ShellyRpcCoordinator,
+    active: bool,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
@@ -75,8 +76,9 @@ async def async_connect_scanner(
 
     ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
 
+    code = BLE_CODE.replace("%active%", "true" if active else "false")
     await call_rpc("Script.Stop", {"id": ble_script_id})
-    await call_rpc("Script.PutCode", {"id": ble_script_id, "code": BLE_CODE})
+    await call_rpc("Script.PutCode", {"id": ble_script_id, "code": code})
     await call_rpc("Script.Start", {"id": ble_script_id})
 
     @hass_callback

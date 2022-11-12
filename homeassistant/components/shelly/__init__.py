@@ -252,7 +252,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
         # TODO: only connect the scanner if enabled in config options active/true/false
-        entry.async_on_unload(await async_connect_scanner(hass, shelly_entry_data.rpc))
+        entry.async_on_unload(
+            await async_connect_scanner(hass, shelly_entry_data.rpc, True)
+        )
 
     @callback
     def _async_device_online(_: Any) -> None:
