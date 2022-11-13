@@ -235,7 +235,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.3
+aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -609,7 +609,7 @@ dwdwfsapi==1.0.5
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.46
+dynalite_devices==0.1.47
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
@@ -1043,7 +1043,7 @@ logi_circle==0.2.3
 london-tube-status==0.5
 
 # homeassistant.components.luftdaten
-luftdaten==0.7.2
+luftdaten==0.7.4
 
 # homeassistant.components.lupusec
 lupupy==0.1.9
