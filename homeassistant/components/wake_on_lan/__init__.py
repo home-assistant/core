@@ -1,6 +1,9 @@
 """Support for sending Wake-On-LAN magic packets."""
+import asyncio
+from collections.abc import Coroutine
 from functools import partial
 import logging
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
@@ -52,17 +55,21 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the wake on LAN component."""
-    if not (wol_config := config.get(DOMAIN)):
-        return True
+    load_coroutines: list[Coroutine[Any, Any, None]] = []
+    if wol_config := config.get(DOMAIN):
+        for switch_config in wol_config:
+            load_coroutines.append(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.SWITCH,
+                    DOMAIN,
+                    switch_config,
+                    config,
+                )
+            )
 
-    for switch_config in wol_config:
-        discovery.load_platform(
-            hass,
-            Platform.SWITCH,
-            DOMAIN,
-            switch_config,
-            config,
-        )
+    if load_coroutines:
+        await asyncio.gather(*load_coroutines)
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
