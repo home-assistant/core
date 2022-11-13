@@ -58,22 +58,29 @@ class SonoffLANFlowHandler(ConfigFlow, domain=DOMAIN):
             password = data.get(CONF_PASSWORD)
 
             entry = await self.async_set_unique_id(username)
-            if entry:
-                if password == "token":
-                    # a special way to share a user's token
-                    await self.cloud.login(
-                        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], 1
-                    )
-                    return form(self, "user", schema, data, template={
-                        "error": "Token: " + self.cloud.token
-                    })
-
-                return form(self, "user", schema, data, error="exists")
+            if entry and password == "token":
+                # a special way to share a user's token
+                await self.cloud.login(
+                    entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], 1
+                )
+                return form(self, "user", schema, data, template={
+                    "error": "Token: " + self.cloud.token
+                })
 
             try:
                 if username and password:
                     await self.cloud.login(username, password)
+
+                if entry:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=data, unique_id=self.unique_id
+                    )
+                    # entry will reload automatically because
+                    # `entry.update_listeners` linked to `async_update_options`
+                    return self.async_abort(reason="reauth_successful")
+
                 return self.async_create_entry(title=username, data=data)
+
             except Exception as e:
                 return form(self, "user", schema, data, template={
                     "error": str(e)

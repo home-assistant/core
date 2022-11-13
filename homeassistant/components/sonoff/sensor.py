@@ -25,36 +25,24 @@ DEVICE_CLASSES = {
     "battery": SensorDeviceClass.BATTERY,
     "battery_voltage": SensorDeviceClass.VOLTAGE,
     "current": SensorDeviceClass.CURRENT,
-    "current_1": SensorDeviceClass.CURRENT,
-    "current_2": SensorDeviceClass.CURRENT,
     "humidity": SensorDeviceClass.HUMIDITY,
     "outdoor_temp": SensorDeviceClass.TEMPERATURE,
     "power": SensorDeviceClass.POWER,
-    "power_1": SensorDeviceClass.POWER,
-    "power_2": SensorDeviceClass.POWER,
     "rssi": SensorDeviceClass.SIGNAL_STRENGTH,
     "temperature": SensorDeviceClass.TEMPERATURE,
     "voltage": SensorDeviceClass.VOLTAGE,
-    "voltage_1": SensorDeviceClass.VOLTAGE,
-    "voltage_2": SensorDeviceClass.VOLTAGE,
 }
 
 UNITS = {
     "battery": PERCENTAGE,
     "battery_voltage": ELECTRIC_POTENTIAL_VOLT,
     "current": ELECTRIC_CURRENT_AMPERE,
-    "current_1": ELECTRIC_CURRENT_AMPERE,
-    "current_2": ELECTRIC_CURRENT_AMPERE,
     "humidity": PERCENTAGE,
     "outdoor_temp": TEMP_CELSIUS,
     "power": POWER_WATT,
-    "power_1": POWER_WATT,
-    "power_2": POWER_WATT,
     "rssi": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "temperature": TEMP_CELSIUS,
     "voltage": ELECTRIC_POTENTIAL_VOLT,
-    "voltage_1": ELECTRIC_POTENTIAL_VOLT,
-    "voltage_2": ELECTRIC_POTENTIAL_VOLT,
 }
 
 
@@ -76,12 +64,15 @@ class XSensor(XEntity, SensorEntity):
         if self.param and self.uid is None:
             self.uid = self.param
 
-        self._attr_device_class = DEVICE_CLASSES.get(self.uid)
+        default_class = self.uid[:-2] \
+            if self.uid.endswith(("_1", "_2", "_3", "_4")) \
+            else self.uid
+        self._attr_device_class = DEVICE_CLASSES.get(default_class)
 
-        if self.uid in UNITS:
+        if default_class in UNITS:
             # by default all sensors with units is measurement sensors
             self._attr_state_class = SensorStateClass.MEASUREMENT
-            self._attr_native_unit_of_measurement = UNITS[self.uid]
+            self._attr_native_unit_of_measurement = UNITS[default_class]
 
         XEntity.__init__(self, ewelink, device)
 
@@ -152,7 +143,7 @@ class XHumidityTH(XSensor):
     def set_state(self, params: dict = None, value: float = None):
         try:
             value = params.get("currentHumidity") or params["humidity"]
-            value = int(value)
+            value = float(value)
             # filter zero values
             # https://github.com/AlexxIT/SonoffLAN/issues/110
             if value != 0:

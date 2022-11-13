@@ -72,6 +72,6 @@ async def async_get_device_diagnostics(
 ):
     did = next(i[1] for i in device.identifiers if i[0] == DOMAIN)
     info = await async_get_config_entry_diagnostics(hass, entry)
-    info["device"] = info.pop("devices")[did]
+    info["device"] = info.pop("devices").get(did, {})
     info["device"]["deviceid"] = did
     return info

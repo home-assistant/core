@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "Re-authentication was successful"
+    },
     "error": {
       "exists": "This account is already configured",
       "template": "{error}"
@@ -20,7 +23,7 @@
         "data": {
           "mode": "Mode (auto is recommended for most users)",
           "homes": "Homes (leave unchecked for \"current\" Home)",
-          "debug": "Debug page (Configuration > System Health)"
+          "debug": "Debug page (Integration > Menu > Known issues)"
         }
       }
     }

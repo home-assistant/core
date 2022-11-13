@@ -1,0 +1,39 @@
+{
+  "config": {
+    "abort": {
+      "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+    },
+    "error": {
+      "exists": "To konto jest juz skonfigurowane",
+      "template": "{error}"
+    },
+    "step": {
+      "user": {
+        "description": "Wpisz dane konta [eWeLink](https://www.ewelink.cc/pl/)",
+        "data": {
+          "username": "Adres email lub telefon (użyj dowolnych dla trybu DIY)",
+          "password": "Hasło (pozostaw puste dla trybu DIY)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mode": "Tryb (auto jest rekomendowany dla większości użytkowników)",
+          "homes": "Domy (pozostaw nie zaznaczone dla \"obecnego\")",
+          "debug": "Strona debugowania (Integracja > Menu > Znane problemy)"
+        }
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "version": "Wersja",
+      "cloud_online": "Urządzenie chmurowe online",
+      "local_online": "Urzadzenia lokalne online",
+      "debug": "Strona debugowania"
+    }
+  }
+}

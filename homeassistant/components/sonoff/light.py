@@ -236,7 +236,7 @@ class XLightL1(XLight):
 
     _attr_color_mode = COLOR_MODE_RGB
     _attr_effect_list = [
-        "Colorful Gradient", "Colorful Breath", "DIY Gradient", "DIY Pulse",
+        "Colorful", "Colorful Gradient", "Colorful Breath", "DIY Gradient", "DIY Pulse",
         "DIY Breath", "DIY Strobe", "RGB Gradient", "DIY Gradient",
         "RGB Breath", "RGB Strobe", "Music"
     ]
@@ -254,12 +254,12 @@ class XLightL1(XLight):
                 params['colorR'], params['colorG'], params['colorB']
             )
         if 'mode' in params:
-            mode = params['mode'] - 2  # 1=Colorful, skip it
+            mode = params['mode'] - 1  # 1=Colorful, don't skip it
             self._attr_effect = self.effect_list[mode] if mode >= 0 else None
 
     def get_params(self, brightness, color_temp, rgb_color, effect) -> dict:
         if effect:
-            mode = self.effect_list.index(effect) + 2
+            mode = self.effect_list.index(effect) + 1
             return {'mode': mode, "switch": "on"}
         if brightness or rgb_color:
             # support bright and color in one command

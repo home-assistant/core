@@ -21,17 +21,19 @@ from .core.ewelink import (
     SIGNAL_ADD_ENTITIES
 )
 from .core.ewelink.camera import XCameras
-from .core.ewelink.cloud import AuthError
+from .core.ewelink.cloud import AuthError, APP
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     "binary_sensor", "button", "climate", "cover", "fan", "light", "remote",
-    "sensor", "switch"
+    "sensor", "switch", "number"
 ]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Optional(CONF_APPID): cv.string,
+        vol.Optional(CONF_APPSECRET): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DEFAULT_CLASS): cv.string,
@@ -67,6 +69,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # load optional global registry config
     if DOMAIN in config:
         XRegistry.config = conf = config[DOMAIN]
+        if CONF_APPID in conf and CONF_APPSECRET in conf:
+            APP[0] = (conf[CONF_APPID], conf[CONF_APPSECRET])
         if CONF_DEFAULT_CLASS in conf:
             core_devices.set_default_class(conf.pop(CONF_DEFAULT_CLASS))
         if CONF_SENSORS in conf:
@@ -207,6 +211,12 @@ async def internal_normal_setup(hass: HomeAssistant, entry: ConfigEntry):
 async def internal_cache_setup(
         hass: HomeAssistant, entry: ConfigEntry, devices: list = None
 ):
+    registry: XRegistry = hass.data[DOMAIN][entry.entry_id]
+
+    # this may only happen if async_setup_entry will fail
+    if registry.online:
+        await async_unload_entry(hass, entry)
+
     await asyncio.gather(*[
         hass.config_entries.async_forward_entry_setup(entry, domain)
         for domain in PLATFORMS
@@ -219,7 +229,6 @@ async def internal_cache_setup(
             # 16 devices loaded from the Cloud Server
             _LOGGER.debug(f"{len(devices)} devices loaded from Cache")
 
-    registry: XRegistry = hass.data[DOMAIN][entry.entry_id]
     if devices:
         devices = internal_unique_devices(entry.entry_id, devices)
         entities = registry.setup_devices(devices)

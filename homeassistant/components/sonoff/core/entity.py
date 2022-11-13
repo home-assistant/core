@@ -13,6 +13,8 @@ ENTITY_CATEGORIES = {
     "battery_voltage": EntityCategory.DIAGNOSTIC,
     "led": EntityCategory.CONFIG,
     "rssi": EntityCategory.DIAGNOSTIC,
+    "pulse": EntityCategory.CONFIG,
+    "pulseWidth": EntityCategory.CONFIG,
 }
 
 ICONS = {
@@ -24,6 +26,8 @@ ICONS = {
 NAMES = {
     "led": "LED",
     "rssi": "RSSI",
+    "pulse": "INCHING",
+    "pulseWidth": "INCHING Duration",
 }
 
 

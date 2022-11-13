@@ -1,5 +1,7 @@
 DOMAIN = "sonoff"
 
+CONF_APPID = "appid"
+CONF_APPSECRET = "appsecret"
 CONF_DEBUG = "debug"
 CONF_DEFAULT_CLASS = "default_class"
 CONF_DEVICEKEY = "devicekey"

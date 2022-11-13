@@ -14,6 +14,7 @@ class XDevice(TypedDict, total=False):
     name: str
     params: dict
 
+    parentDevice: Optional[str]
     brandName: Optional[str]
     productModel: Optional[str]
 

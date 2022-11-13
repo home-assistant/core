@@ -8,7 +8,7 @@ import hmac
 import json
 import logging
 import time
-from typing import List
+from typing import List, Optional
 
 from aiohttp import ClientConnectorError, WSMessage, ClientWebSocketResponse
 
@@ -41,7 +41,8 @@ DATA_ERROR = {
 }
 
 APP = [
-    ("oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq", "6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM"),
+    # ("oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq", "6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM"),
+    ("KOBxGJna5qkk3JLXw3LHLX3wSNiPjAVi", "4v0sv6X5IM2ASIBiNDj6kGmSfxo40w7n"),
     ("R8Oq3y0eSZSYdKccHlrQzT1ACCOUT9Gv", "1ve5Qk9GXfUhKAn1svnKwpAlxXkMarru")
 ]
 
@@ -123,16 +124,17 @@ class XRegistryCloud(ResponseWaiter, XRegistryBase):
 
         appid, appsecret = APP[app]
 
-        hex_dig = hmac.new(
-            appsecret.encode(), json.dumps(payload).encode(), hashlib.sha256
-        ).digest()
+        # ensure POST payload and Sign payload will be same
+        data = json.dumps(payload).encode()
+        hex_dig = hmac.new(appsecret.encode(), data, hashlib.sha256).digest()
 
         headers = {
             "Authorization": "Sign " + base64.b64encode(hex_dig).decode(),
+            "Content-Type": "application/json",
             "X-CK-Appid": appid,
         }
         r = await self.session.post(
-            self.host + "/v2/user/login", json=payload, headers=headers,
+            self.host + "/v2/user/login", data=data, headers=headers,
             timeout=30
         )
         resp = await r.json()
@@ -141,7 +143,7 @@ class XRegistryCloud(ResponseWaiter, XRegistryBase):
         if resp["error"] == 10004:
             self.region = resp["data"]["region"]
             r = await self.session.post(
-                self.host + "/v2/user/login", json=payload, headers=headers,
+                self.host + "/v2/user/login", data=data, headers=headers,
                 timeout=30
             )
             resp = await r.json()
@@ -250,9 +252,9 @@ class XRegistryCloud(ResponseWaiter, XRegistryBase):
         if self.task:
             self.task.cancel()
 
-        self.set_online(False)
+        self.set_online(None)
 
-    def set_online(self, value: bool):
+    def set_online(self, value: Optional[bool]):
         _LOGGER.debug(f"CLOUD {self.online} => {value}")
         if self.online == value:
             return
@@ -312,7 +314,7 @@ class XRegistryCloud(ResponseWaiter, XRegistryBase):
             await self.ws.send_json(payload)
 
             resp = await self.ws.receive_json()
-            if resp["error"] != 0:
+            if "error" in resp and resp["error"] != 0:
                 raise Exception(resp)
 
             return True

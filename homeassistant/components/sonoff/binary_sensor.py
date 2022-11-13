@@ -30,11 +30,17 @@ DEVICE_CLASSES = {cls.value: cls for cls in BinarySensorDeviceClass}
 
 # noinspection PyAbstractClass
 class XBinarySensor(XEntity, BinarySensorEntity):
+    default_class: str = None
+
     def __init__(self, ewelink: XRegistry, device: dict):
         XEntity.__init__(self, ewelink, device)
-        device_class = device.get("device_class")
+
+        device_class = device.get("device_class", self.default_class)
         if device_class in DEVICE_CLASSES:
             self._attr_device_class = DEVICE_CLASSES[device_class]
+
+    def set_state(self, params: dict):
+        self._attr_is_on = params[self.param] == 1
 
 
 # noinspection PyAbstractClass
@@ -53,7 +59,6 @@ class XWiFiDoor(XBinarySensor):
 # noinspection PyAbstractClass
 class XZigbeeMotion(XBinarySensor):
     params = {"motion", "online"}
-
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def set_state(self, params: dict):
@@ -63,23 +68,6 @@ class XZigbeeMotion(XBinarySensor):
             # Fix stuck in `on` state after bridge goes to unavailable
             # https://github.com/AlexxIT/SonoffLAN/pull/425
             self._attr_is_on = False
-
-
-# noinspection PyAbstractClass
-class XZigbeeDoor(XBinarySensor):
-    params = {"lock"}
-
-    _attr_device_class = BinarySensorDeviceClass.DOOR
-
-    def set_state(self, params: dict):
-        self._attr_is_on = params['lock'] == 1
-
-
-class XWater(XBinarySensor):
-    params = {"water"}
-
-    def set_state(self, params: dict):
-        self._attr_is_on = params['water'] == 1
 
 
 # noinspection PyAbstractClass

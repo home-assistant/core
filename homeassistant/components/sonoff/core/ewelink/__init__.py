@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import time
-from typing import Dict, List, Callable
+from typing import Dict, List
 
 from aiohttp import ClientSession
 
@@ -39,6 +39,8 @@ class XRegistry(XRegistryBase):
             did = device["deviceid"]
             try:
                 device.update(self.config["devices"][did])
+                if "host" in device and ":" not in device["host"]:
+                    device["host"] += ":8081"
             except Exception:
                 pass
 
@@ -56,6 +58,10 @@ class XRegistry(XRegistryBase):
                 _LOGGER.warning(f"{did} !! can't setup device", exc_info=e)
 
         return entities
+
+    @property
+    def online(self) -> bool:
+        return self.cloud.online is not None or self.local.online
 
     async def stop(self, *args):
         self.devices.clear()
@@ -215,7 +221,9 @@ class XRegistry(XRegistryBase):
             # DIY device is still connected to the ewelink account
             device.pop("devicekey")
 
-        _LOGGER.debug(f"{did} <= Local3 | %s | {msg.get('seq', '')}", params)
+        tag = "Local3" if "host" in msg else "Local0"
+
+        _LOGGER.debug(f"{did} <= {tag} | %s | {msg.get('seq', '')}", params)
 
         # msg from zeroconf ServiceStateChange.Removed
         if params.get("online") is False:
@@ -225,7 +233,8 @@ class XRegistry(XRegistryBase):
         if "sledOnline" in params:
             device["params"]["sledOnline"] = params["sledOnline"]
 
-        if device.get("host") != msg.get("host"):
+        # we can get data from device, but without host
+        if "host" in msg and device.get("host") != msg["host"]:
             # params for custom sensor
             device["host"] = params["host"] = msg["host"]
             device["localtype"] = msg["localtype"]

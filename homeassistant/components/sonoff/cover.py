@@ -111,3 +111,26 @@ class XCoverDualR3(XCover):
 
     async def async_set_cover_position(self, position: int, **kwargs):
         await self.ewelink.send(self.device, {"location": position})
+
+
+# noinspection PyAbstractClass
+class XZigbeeCover(XCover):
+    params = {"curPercent", "curtainAction"}
+
+    def set_state(self, params: dict):
+        if "curPercent" in params:
+            # reversed position: HA closed at 0, eWeLink closed at 100
+            self._attr_current_cover_position = 100 - params["curPercent"]
+            self._attr_is_closed = self._attr_current_cover_position == 0
+
+    async def async_stop_cover(self, **kwargs):
+        await self.ewelink.send(self.device, {"curtainAction": "pause"})
+
+    async def async_open_cover(self, **kwargs):
+        await self.ewelink.send(self.device, {"curtainAction": "open"})
+
+    async def async_close_cover(self, **kwargs):
+        await self.ewelink.send(self.device, {"curtainAction": "close"})
+
+    async def async_set_cover_position(self, position: int, **kwargs):
+        await self.ewelink.send(self.device, {"openPercent": 100 - position})

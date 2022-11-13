@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+    },
     "error": {
       "exists": "Esta conta já está configurada",
       "template": "{error}"
@@ -20,7 +23,7 @@
         "data": {
           "mode": "Modo (automático é recomendado para a maioria dos usuários)",
           "homes": "Casas (deixe desmarcado para Casa \"atual\")",
-          "debug": "Página de depuração (Configuração > Opções > Informações)"
+          "debug": "Página de depuração (Integração > Menus > Problemas conhecidos)"
         }
       }
     }
