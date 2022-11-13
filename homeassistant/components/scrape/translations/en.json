@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Account is already configured"
         },
+        "error": {
+            "resource_error": "Could not update rest data. Verify your configuration"
+        },
         "step": {
             "sensor": {
                 "data": {
