@@ -26,6 +26,9 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.frame import report
+from homeassistant.helpers.service_info.bluetooth import (  # noqa: F401 # pylint: disable=unused-import
+    BluetoothServiceInfo,
+)
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .const import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
