@@ -1,5 +1,6 @@
 """Test ZHA API."""
 from binascii import unhexlify
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,6 +9,7 @@ import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
@@ -50,6 +52,7 @@ from .conftest import (
     SIG_EP_PROFILE,
     SIG_EP_TYPE,
 )
+from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -61,6 +64,7 @@ def required_platform_only():
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
+            Platform.ALARM_CONTROL_PANEL,
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
@@ -83,6 +87,25 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
             }
         },
         ieee=IEEE_SWITCH_DEVICE,
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    return zha_device
+
+
+@pytest.fixture
+async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
+    """Test alarm control panel device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
     )
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -223,6 +246,58 @@ async def test_list_devices(zha_client):
         msg = await zha_client.receive_json()
         device2 = msg["result"]
         assert device == device2
+
+
+async def test_get_zha_config(zha_client):
+    """Test getting zha custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_get_zha_config_with_alarm(hass, zha_client, device_ias_ace):
+    """Test getting zha custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == CONFIG_WITH_ALARM_OPTIONS
+
+    # test that the alarm options are not in the config when we remove the device
+    device_ias_ace.gateway.device_removed(device_ias_ace.device)
+    await hass.async_block_till_done()
+    await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_update_zha_config(zha_client, zigpy_app_controller):
+    """Test updating zha custom configuration."""
+
+    configuration = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration["data"]["zha_options"]["default_light_transition"] = 10
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_client.send_json(
+            {ID: 5, TYPE: "zha/configuration/update", "data": configuration["data"]}
+        )
+        msg = await zha_client.receive_json()
+        assert msg["success"]
+
+        await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+        msg = await zha_client.receive_json()
+        configuration = msg["result"]
+        assert configuration == configuration
 
 
 async def test_device_not_found(zha_client):
