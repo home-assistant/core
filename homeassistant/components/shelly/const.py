@@ -5,6 +5,8 @@ from logging import Logger, getLogger
 import re
 from typing import Final
 
+from awesomeversion import AwesomeVersion
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
@@ -156,3 +158,5 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
+
+BLE_MIN_VERSION = AwesomeVersion("0.12.0")
