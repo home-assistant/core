@@ -102,8 +102,9 @@ def _populate_brand_integrations(
         metadata = {
             "integration_type": integration.integration_type,
         }
-        if integration.config_flow:
-            metadata["config_flow"] = integration.config_flow
+        # Always set the config_flow key to avoid breaking the frontend
+        # https://github.com/home-assistant/frontend/issues/14376
+        metadata["config_flow"] = bool(integration.config_flow)
         if integration.iot_class:
             metadata["iot_class"] = integration.iot_class
         if integration.supported_by:
