@@ -42,6 +42,10 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
+
+# 8 seconds was chosen because its soon enough
+# for most state changes to happen but not too
+# long that the BLE connection is dropped.
 DEBOUNCE_COOLDOWN = 8  # seconds
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
