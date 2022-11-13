@@ -3,7 +3,7 @@
   "name": "Airthings BLE",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
-  "requirements": ["airthings-ble==0.5.2"],
+  "requirements": ["airthings-ble==0.5.3"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@vincegio"],
   "iot_class": "local_polling",

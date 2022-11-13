@@ -300,7 +300,7 @@ aioymaps==1.2.2
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.5.2
+airthings-ble==0.5.3
 
 # homeassistant.components.airthings
 airthings_cloud==0.1.0
@@ -741,7 +741,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==4.0.1
+gcal-sync==4.0.2
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1881,7 +1881,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.20
+pysensibo==1.0.21
 
 # homeassistant.components.serial
 # homeassistant.components.zha
