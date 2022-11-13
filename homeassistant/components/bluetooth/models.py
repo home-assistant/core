@@ -150,8 +150,8 @@ class BaseHaScanner:
         }
 
 
-class BaseRemoteHaScanner(BaseHaScanner):
-    """Base class for a remote scanner."""
+class BaseHaRemoteScanner(BaseHaScanner):
+    """Base class for a Home Assistant remote BLE scanner."""
 
     def __init__(
         self,
