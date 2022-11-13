@@ -6,6 +6,11 @@ BLE_SCRIPT_NAME = "homeassistant_ble_integration"
 
 BLE_SCAN_RESULT_VERSION = 1
 
+VAR_HA_VERSION = "%ha_version%"
+VAR_EVENT_TYPE = "%event_type%"
+VAR_ACTIVE = "%active%"
+VAR_VERSION = "%version%"
+
 BLE_CODE = """
 // Home Assistant %ha_version% BLE script
 BLE.Scanner.Subscribe(function (ev, res) {
