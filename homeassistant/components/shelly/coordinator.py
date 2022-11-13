@@ -1,7 +1,7 @@
 """Coordinators for the Shelly integration."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, cast
@@ -13,7 +13,7 @@ from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -337,6 +337,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
@@ -379,6 +380,19 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         return True
 
     @callback
+    def async_subscribe_events(
+        self, event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to events."""
+
+        def _unsubscribe() -> None:
+            self._event_listeners.remove(event_callback)
+
+        self._event_listeners.append(event_callback)
+
+        return _unsubscribe
+
+    @callback
     def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
         if (
@@ -391,11 +405,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.update_sleep_period()
 
         self._last_event = self.device.event
+        events: list[dict[str, Any]] = self.device.event["events"]
 
-        for event in self.device.event["events"]:
+        for event in events:
             event_type = event.get("event")
             if event_type is None:
                 continue
+
+            for event_callback in self._event_listeners:
+                event_callback(event)
 
             if event_type == "config_changed":
                 LOGGER.info(
