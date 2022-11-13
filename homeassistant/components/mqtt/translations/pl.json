@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Opcje zaawansowane",
                     "broker": "Po\u015brednik",
-                    "certificate": "\u015acie\u017cka do pliku z niestandardowym certyfikatem CA",
-                    "client_cert": "\u015acie\u017cka do pliku certyfikatu klienta",
+                    "certificate": "Prze\u015blij plik z niestandardowym certyfikatem CA",
+                    "client_cert": "Prze\u015blij plik certyfikatu klienta",
                     "client_id": "Identyfikator klienta (pozostaw puste, aby wygenerowa\u0107 losowo)",
-                    "client_key": "\u015acie\u017cka do pliku klucza prywatnego",
+                    "client_key": "Prze\u015blij plik klucza prywatnego",
                     "discovery": "W\u0142\u0105cz wykrywanie",
                     "keepalive": "Czas pomi\u0119dzy wys\u0142aniem wiadomo\u015bci \"keep alive\"",
                     "password": "Has\u0142o",
@@ -107,7 +107,7 @@
                     "tls_insecure": "Ignoruj sprawdzanie certyfikatu brokera",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT",
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
                 "title": "Opcje brokera"
             },
             "options": {

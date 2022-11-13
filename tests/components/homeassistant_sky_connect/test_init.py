@@ -13,12 +13,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {
-    "device": "bla_device",
-    "vid": "bla_vid",
-    "pid": "bla_pid",
-    "serial_number": "bla_serial_number",
-    "manufacturer": "bla_manufacturer",
-    "description": "bla_description",
+    "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "vid": "10C4",
+    "pid": "EA60",
+    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+    "manufacturer": "Nabu Casa",
+    "description": "SkyConnect v1.0",
 }
 
 
@@ -66,6 +66,13 @@ async def test_setup_entry(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(mock_is_plugged_in.mock_calls) == 1
+
+    matcher = mock_is_plugged_in.mock_calls[0].args[1]
+    assert matcher["vid"].isupper()
+    assert matcher["pid"].isupper()
+    assert matcher["serial_number"].islower()
+    assert matcher["manufacturer"].islower()
+    assert matcher["description"].islower()
 
     # Finish setting up ZHA
     if num_entries > 0:
@@ -119,12 +126,12 @@ async def test_setup_zha(mock_zha_config_flow_setup, hass: HomeAssistant) -> Non
         "device": {
             "baudrate": 115200,
             "flow_control": "software",
-            "path": "bla_device",
+            "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "bla_description"
+    assert config_entry.title == CONFIG_ENTRY_DATA["description"]
 
 
 async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:

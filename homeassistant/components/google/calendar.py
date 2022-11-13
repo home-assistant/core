@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from gcal_sync.api import SyncEventsRequest
+from gcal_sync.api import GoogleCalendarService, ListEventsRequest, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import DateOrDatetime, Event
+from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
@@ -196,21 +197,36 @@ async def async_setup_entry(
                     entity_registry.async_remove(
                         entity_entry.entity_id,
                     )
-            request_template = SyncEventsRequest(
-                calendar_id=calendar_id,
-                search=data.get(CONF_SEARCH),
-                start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
-            )
-            sync = CalendarEventSyncManager(
-                calendar_service,
-                store=ScopedCalendarStore(store, unique_id or entity_name),
-                request_template=request_template,
-            )
-            coordinator = CalendarUpdateCoordinator(
-                hass,
-                sync,
-                data[CONF_NAME],
-            )
+            coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
+            # Prefer calendar sync down of resources when possible. However, sync does not work
+            # for search. Also free-busy calendars denormalize recurring events as individual
+            # events which is not efficient for sync
+            if (
+                search := data.get(CONF_SEARCH)
+                or calendar_item.access_role == AccessRole.FREE_BUSY_READER
+            ):
+                coordinator = CalendarQueryUpdateCoordinator(
+                    hass,
+                    calendar_service,
+                    data[CONF_NAME],
+                    calendar_id,
+                    search,
+                )
+            else:
+                request_template = SyncEventsRequest(
+                    calendar_id=calendar_id,
+                    start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
+                )
+                sync = CalendarEventSyncManager(
+                    calendar_service,
+                    store=ScopedCalendarStore(store, unique_id or entity_name),
+                    request_template=request_template,
+                )
+                coordinator = CalendarSyncUpdateCoordinator(
+                    hass,
+                    sync,
+                    data[CONF_NAME],
+                )
             entities.append(
                 GoogleCalendarEntity(
                     coordinator,
@@ -242,8 +258,8 @@ async def async_setup_entry(
         )
 
 
-class CalendarUpdateCoordinator(DataUpdateCoordinator[Timeline]):
-    """Coordinator for calendar RPC calls."""
+class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
+    """Coordinator for calendar RPC calls that use an efficient sync."""
 
     def __init__(
         self,
@@ -251,7 +267,7 @@ class CalendarUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         sync: CalendarEventSyncManager,
         name: str,
     ) -> None:
-        """Create the Calendar event device."""
+        """Create the CalendarSyncUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -271,6 +287,87 @@ class CalendarUpdateCoordinator(DataUpdateCoordinator[Timeline]):
             dt_util.DEFAULT_TIME_ZONE
         )
 
+    async def async_get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> Iterable[Event]:
+        """Get all events in a specific time frame."""
+        if not self.data:
+            raise HomeAssistantError(
+                "Unable to get events: Sync from server has not completed"
+            )
+        return self.data.overlapping(
+            dt_util.as_local(start_date),
+            dt_util.as_local(end_date),
+        )
+
+    @property
+    def upcoming(self) -> Iterable[Event] | None:
+        """Return upcoming events if any."""
+        if self.data:
+            return self.data.active_after(dt_util.now())
+        return None
+
+
+class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
+    """Coordinator for calendar RPC calls.
+
+    This sends a polling RPC, not using sync, as a workaround
+    for limitations in the calendar API for supporting search.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        calendar_service: GoogleCalendarService,
+        name: str,
+        calendar_id: str,
+        search: str | None,
+    ) -> None:
+        """Create the CalendarQueryUpdateCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=name,
+            update_interval=MIN_TIME_BETWEEN_UPDATES,
+        )
+        self.calendar_service = calendar_service
+        self.calendar_id = calendar_id
+        self._search = search
+
+    async def async_get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> Iterable[Event]:
+        """Get all events in a specific time frame."""
+        request = ListEventsRequest(
+            calendar_id=self.calendar_id,
+            start_time=start_date,
+            end_time=end_date,
+            search=self._search,
+        )
+        result_items = []
+        try:
+            result = await self.calendar_service.async_list_events(request)
+            async for result_page in result:
+                result_items.extend(result_page.items)
+        except ApiException as err:
+            self.async_set_update_error(err)
+            raise HomeAssistantError(str(err)) from err
+        return result_items
+
+    async def _async_update_data(self) -> list[Event]:
+        """Fetch data from API endpoint."""
+        request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)
+        try:
+            result = await self.calendar_service.async_list_events(request)
+        except ApiException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        return result.items
+
+    @property
+    def upcoming(self) -> Iterable[Event] | None:
+        """Return the next upcoming event if any."""
+        return self.data
+
 
 class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     """A calendar event entity."""
@@ -279,7 +376,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
     def __init__(
         self,
-        coordinator: CalendarUpdateCoordinator,
+        coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator,
         calendar_id: str,
         data: dict[str, Any],
         entity_id: str,
@@ -352,14 +449,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        if not (timeline := self.coordinator.data):
-            raise HomeAssistantError(
-                "Unable to get events: Sync from server has not completed"
-            )
-        result_items = timeline.overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
-        )
+        result_items = await self.coordinator.async_get_events(start_date, end_date)
         return [
             _get_calendar_event(event)
             for event in filter(self._event_filter, result_items)
@@ -367,14 +457,12 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
     def _apply_coordinator_update(self) -> None:
         """Copy state from the coordinator to this entity."""
-        if (timeline := self.coordinator.data) and (
-            api_event := next(
-                filter(
-                    self._event_filter,
-                    timeline.active_after(dt_util.now()),
-                ),
-                None,
-            )
+        if api_event := next(
+            filter(
+                self._event_filter,
+                self.coordinator.upcoming or [],
+            ),
+            None,
         ):
             self._event = _get_calendar_event(api_event)
             (self._event.summary, self._offset_value) = extract_offset(

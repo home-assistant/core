@@ -987,6 +987,7 @@ async def test_hardware_already_setup(hass):
     ).add_to_hass(hass)
 
     data = {
+        "name": "Yellow",
         "radio_type": "efr32",
         "port": {
             "path": "/dev/ttyAMA1",

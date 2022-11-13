@@ -71,9 +71,9 @@ from .const import (
     SUPPORTED_PROTOCOLS,
 )
 from .util import (
-    MQTT_WILL_BIRTH_SCHEMA,
     async_create_certificate_temp_files,
     get_file_path,
+    valid_birth_will,
     valid_publish_topic,
 )
 
@@ -326,7 +326,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_BIRTH_MESSAGE,
                     _birth_will("birth"),
                     "bad_birth",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["birth_enable"]:
                 options_config[CONF_BIRTH_MESSAGE] = {}
@@ -336,7 +336,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_WILL_MESSAGE,
                     _birth_will("will"),
                     "bad_will",
-                    MQTT_WILL_BIRTH_SCHEMA,
+                    valid_birth_will,
                 )
             if not user_input["will_enable"]:
                 options_config[CONF_WILL_MESSAGE] = {}

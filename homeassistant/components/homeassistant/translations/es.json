@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "La moneda {currency} ya no est\u00e1 en uso, por favor, vuelve a configurar la moneda.",
+            "title": "La moneda configurada ya no est\u00e1 en uso"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Arquitectura de CPU",

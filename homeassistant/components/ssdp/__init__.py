@@ -52,7 +52,7 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -697,7 +697,16 @@ class Server:
         udn = await self._async_get_instance_udn()
         system_info = await async_get_system_info(self.hass)
         model_name = system_info["installation_type"]
-        presentation_url = get_url(self.hass, allow_ip=True, prefer_external=False)
+        try:
+            presentation_url = get_url(self.hass, allow_ip=True, prefer_external=False)
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "Could not set up UPnP/SSDP server, as a presentation URL could"
+                " not be determined; Please configure your internal URL"
+                " in the Home Assistant general configuration"
+            )
+            return
+
         serial_number = await async_get_instance_id(self.hass)
         HassUpnpServiceDevice.DEVICE_DEFINITION = (
             HassUpnpServiceDevice.DEVICE_DEFINITION._replace(

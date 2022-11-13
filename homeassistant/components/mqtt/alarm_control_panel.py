@@ -48,7 +48,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate
+from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,8 +155,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT Alarm Control Panel platform."""
     async_add_entities([MqttAlarm(hass, config, config_entry, discovery_data)])
@@ -168,32 +168,39 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Init the MQTT Alarm Control Panel."""
         self._state: str | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
+        """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE),
+            config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
         self._command_template = MqttCommandTemplate(
-            self._config[CONF_COMMAND_TEMPLATE], entity=self
+            config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Run when new MQTT message has been received."""
             payload = self._value_template(msg.payload)
             if payload not in (
@@ -210,7 +217,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             ):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
-            self._state = payload
+            self._state = str(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -226,7 +233,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             },
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -250,6 +257,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
+        code: str | None
         if (code := self._config.get(CONF_CODE)) is None:
             return None
         if code == REMOTE_CODE or (isinstance(code, str) and re.search("^\\d+$", code)):
@@ -266,10 +274,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_DISARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_DISARM_REQUIRED]
         if code_required and not self._validate_code(code, "disarming"):
             return
-        payload = self._config[CONF_PAYLOAD_DISARM]
+        payload: str = self._config[CONF_PAYLOAD_DISARM]
         await self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
@@ -277,10 +285,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming home"):
             return
-        action = self._config[CONF_PAYLOAD_ARM_HOME]
+        action: str = self._config[CONF_PAYLOAD_ARM_HOME]
         await self._publish(code, action)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
@@ -288,10 +296,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming away"):
             return
-        action = self._config[CONF_PAYLOAD_ARM_AWAY]
+        action: str = self._config[CONF_PAYLOAD_ARM_AWAY]
         await self._publish(code, action)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
@@ -299,10 +307,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming night"):
             return
-        action = self._config[CONF_PAYLOAD_ARM_NIGHT]
+        action: str = self._config[CONF_PAYLOAD_ARM_NIGHT]
         await self._publish(code, action)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
@@ -310,10 +318,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming vacation"):
             return
-        action = self._config[CONF_PAYLOAD_ARM_VACATION]
+        action: str = self._config[CONF_PAYLOAD_ARM_VACATION]
         await self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
@@ -321,10 +329,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
         if code_required and not self._validate_code(code, "arming custom bypass"):
             return
-        action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
+        action: str = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
@@ -332,13 +340,13 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        code_required = self._config[CONF_CODE_TRIGGER_REQUIRED]
+        code_required: bool = self._config[CONF_CODE_TRIGGER_REQUIRED]
         if code_required and not self._validate_code(code, "triggering"):
             return
-        action = self._config[CONF_PAYLOAD_TRIGGER]
+        action: str = self._config[CONF_PAYLOAD_TRIGGER]
         await self._publish(code, action)
 
-    async def _publish(self, code, action):
+    async def _publish(self, code: str | None, action: str) -> None:
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
@@ -350,10 +358,10 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._config[CONF_ENCODING],
         )
 
-    def _validate_code(self, code, state):
+    def _validate_code(self, code: str | None, state: str) -> bool:
         """Validate given code."""
-        conf_code = self._config.get(CONF_CODE)
-        check = (
+        conf_code: str | None = self._config.get(CONF_CODE)
+        check = bool(
             conf_code is None
             or code == conf_code
             or (conf_code == REMOTE_CODE and code)

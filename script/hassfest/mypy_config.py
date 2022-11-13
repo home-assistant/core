@@ -46,7 +46,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": "ignore-without-code",
+    "enable_error_code": ", ".join(["ignore-without-code"]),
+    "disable_error_code": ", ".join(["annotation-unchecked"]),
     # Strict_concatenate breaks passthrough ParamSpec typing
     "strict_concatenate": "false",
 }

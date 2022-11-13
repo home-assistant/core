@@ -7,7 +7,7 @@
             "cannot_connect": "Impossibile connettersi",
             "discover_timeout": "Impossibile trovare i bridge Hue",
             "invalid_host": "Host non valido",
-            "no_bridges": "Nessun bridge di Philips Hue trovato",
+            "no_bridges": "Nessun bridge di Philips Hue rilevato",
             "not_hue_bridge": "Non \u00e8 un bridge Hue",
             "unknown": "Errore imprevisto"
         },

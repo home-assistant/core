@@ -274,7 +274,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             driver=driver,
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
-            iid_manager=driver.iid_manager,
+            iid_manager=HomeIIDManager(driver.iid_storage),
             *args,
             **kwargs,
         )
@@ -574,7 +574,7 @@ class HomeBridge(Bridge):  # type: ignore[misc]
 
     def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
-        super().__init__(driver, name, iid_manager=driver.iid_manager)
+        super().__init__(driver, name, iid_manager=HomeIIDManager(driver.iid_storage))
         self.set_info_service(
             firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
@@ -607,7 +607,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         entry_id: str,
         bridge_name: str,
         entry_title: str,
-        iid_manager: HomeIIDManager,
+        iid_storage: AccessoryIIDStorage,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -616,7 +616,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
-        self.iid_manager = iid_manager
+        self.iid_storage = iid_storage
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
