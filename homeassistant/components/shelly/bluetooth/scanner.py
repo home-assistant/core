@@ -19,7 +19,7 @@ class ShellyBLEScanner(BaseRemoteHaScanner):
 
     @callback
     def async_on_event(self, event: dict[str, Any]) -> None:
-        """Handle device update."""
+        """Process an event from the shelly and ignore if its not a ble.scan_result."""
         if event.get("event") != BLE_SCAN_RESULT_EVENT:
             return
         try:
