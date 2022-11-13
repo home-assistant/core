@@ -50,7 +50,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
-    if discovery_info is None:
+    if (switch_config := discovery_info) is None:
         async_create_issue(
             hass,
             DOMAIN,
@@ -61,8 +61,7 @@ async def async_setup_platform(
             translation_key="moved_yaml",
         )
         switch_config = config
-    else:
-        switch_config = discovery_info
+
     broadcast_address: str | None = switch_config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = switch_config.get(CONF_BROADCAST_PORT)
     host: str | None = switch_config.get(CONF_HOST)

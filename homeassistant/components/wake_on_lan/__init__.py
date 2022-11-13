@@ -5,7 +5,6 @@ import logging
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -44,16 +43,9 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-COMBINED_SCHEMA = vol.Schema(
-    {
-        vol.Optional(SWITCH_DOMAIN): vol.All(
-            cv.ensure_list, [vol.Schema(SWITCH_SCHEMA)]
-        ),
-    }
-)
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [vol.Schema(SWITCH_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -63,15 +55,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not (wol_config := config.get(DOMAIN)):
         return True
 
-    for base_config in wol_config:
-        for switch_config in base_config.get(SWITCH_DOMAIN):
-            discovery.load_platform(
-                hass,
-                Platform.SWITCH,
-                DOMAIN,
-                switch_config,
-                config,
-            )
+    for switch_config in wol_config:
+        discovery.load_platform(
+            hass,
+            Platform.SWITCH,
+            DOMAIN,
+            switch_config,
+            config,
+        )
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
