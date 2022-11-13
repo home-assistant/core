@@ -13,6 +13,8 @@ from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
     ATTR_DIRECTION,
     ATTR_PALETTE,
+    ATTR_SATURATION_MAX,
+    ATTR_SATURATION_MIN,
     ATTR_SPEED,
     ATTR_THEME,
     SERVICE_EFFECT_COLORLOOP,
@@ -1009,7 +1011,20 @@ async def test_color_light_with_temp(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 50, ATTR_SATURATION_MAX: 90},
+        blocking=True,
+    )
+    start_call = mock_effect_conductor.start.mock_calls
+    first_call = start_call[0][1]
+    assert isinstance(first_call[0], aiolifx_effects.EffectColorloop)
+    assert first_call[1][0] == bulb
+    mock_effect_conductor.start.reset_mock()
+    mock_effect_conductor.stop.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128, ATTR_SATURATION_MIN: 90},
         blocking=True,
     )
     start_call = mock_effect_conductor.start.mock_calls
