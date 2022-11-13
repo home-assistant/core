@@ -189,8 +189,12 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         mapped_destination_lon: float = sections[-1]["arrival"]["place"]["location"][
             "lng"
         ]
-        distance: float = total_transit_distance(sections)
-        duration: float = total_transit_duration(sections)
+        distance: float = sum(
+            section["travelSummary"]["length"] for section in sections
+        )
+        duration: float = sum(
+            section["travelSummary"]["duration"] for section in sections
+        )
         if self.config.units == IMPERIAL_UNITS:
             # Convert to miles.
             distance = DistanceConverter.convert(distance, LENGTH_METERS, LENGTH_MILES)
@@ -272,22 +276,6 @@ def build_hass_attribution(sections: dict) -> str | None:
     if len(relevant_attributions) > 0:
         return ",".join(relevant_attributions)
     return None
-
-
-def total_transit_distance(sections: dict) -> int:
-    """Calculate the total distance over all sections."""
-    distance = 0
-    for section in sections:
-        distance += section["travelSummary"]["length"]
-    return distance
-
-
-def total_transit_duration(sections: dict) -> int:
-    """Calculate the total duration over all sections."""
-    duration = 0
-    for section in sections:
-        duration += section["travelSummary"]["duration"]
-    return duration
 
 
 def convert_time_to_isodate(simple_time: time) -> str:
