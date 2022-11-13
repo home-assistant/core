@@ -10,9 +10,9 @@ from bluetooth_data_tools import parse_advertisement_data
 from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.core import callback
 
-_LOGGER = logging.getLogger(__name__)
+from .const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 
-BLE_SCAN_RESULT_EVENT = "ble.scan_result"
+_LOGGER = logging.getLogger(__name__)
 
 
 class ShellyBLEScanner(BaseHaRemoteScanner):
@@ -24,14 +24,19 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
         if (
             event.get("event") != BLE_SCAN_RESULT_EVENT
             or not (data := event.get("data"))
-            or len(data) != 4
+            or len(data) != 5
         ):
             return
 
-        address: str = data[0]
-        rssi: int = data[1]
-        advertisement_data_b64: str = data[2]
-        scan_response_b64: str = data[3]
+        version: int = data[0]
+        if version != BLE_SCAN_RESULT_VERSION:
+            _LOGGER.warning("Unsupported BLE scan result version: %s", version)
+            return
+
+        address: str = data[1]
+        rssi: int = data[2]
+        advertisement_data_b64: str = data[3]
+        scan_response_b64: str = data[4]
 
         try:
             parsed = parse_advertisement_data(

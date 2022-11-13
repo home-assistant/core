@@ -10,33 +10,18 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     async_register_scanner,
 )
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
 from ..coordinator import ShellyRpcCoordinator
+from .const import (
+    BLE_CODE,
+    BLE_SCAN_RESULT_EVENT,
+    BLE_SCAN_RESULT_VERSION,
+    BLE_SCRIPT_NAME,
+)
 from .scanner import ShellyBLEScanner
-
-BLE_SCRIPT_NAME = "homeassistant_ble_integration"
-
-BLE_CODE = """
-// Home Assistant BLE script v0.1.0
-BLE.Scanner.Subscribe(function (ev, res) {
-    if (ev === BLE.Scanner.SCAN_RESULT) {
-        Shelly.emitEvent("ble.scan_result", [
-            res.addr,
-            res.rssi,
-            btoa(res.advData),
-            btoa(res.scanRsp)
-        ]);
-    }
-});
-BLE.Scanner.Start({
-    duration_ms: -1,
-    active: %active%,
-    interval_ms: 320,
-    window_ms: 30,
-});
-"""
 
 
 class ShellyScript(TypedDict, total=False):
@@ -84,7 +69,12 @@ async def async_connect_scanner(
 
     ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
 
-    code = BLE_CODE.replace("%active%", "true" if active else "false")
+    code = (
+        BLE_CODE.replace("%active%", "true" if active else "false")
+        .replace("%ha_version%", HA_VERSION)
+        .replace("%event_type%", BLE_SCAN_RESULT_EVENT)
+        .replace("%version%", str(BLE_SCAN_RESULT_VERSION))
+    )
     await call_rpc("Script.Stop", {"id": ble_script_id})
     await call_rpc("Script.PutCode", {"id": ble_script_id, "code": code})
     await call_rpc("Script.Start", {"id": ble_script_id})
