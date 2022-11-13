@@ -356,7 +356,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
 
 async def test_remote_scanner(hass):
-    """Test the remote scanner base class."""
+    """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
     switchbot_device = BLEDevice(
@@ -367,8 +367,22 @@ async def test_remote_scanner(hass):
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
-        service_uuids=[],
+        service_uuids=["050a021a-0000-1000-8000-00805f9b34fb"],
+        service_data={"050a021a-0000-1000-8000-00805f9b34fb": b"\n\xff"},
         manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+    switchbot_device_2 = BLEDevice(
+        "44:44:33:11:23:45",
+        "w",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv_2 = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=["00000001-0000-1000-8000-00805f9b34fb"],
+        service_data={"00000001-0000-1000-8000-00805f9b34fb": b"\n\xff"},
+        manufacturer_data={1: b"\x01", 2: b"\x02"},
         rssi=-100,
     )
 
@@ -397,8 +411,30 @@ async def test_remote_scanner(hass):
 
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
 
-    devices = manager.async_discovered_devices(True)
-    assert devices[0].name == "wohand"
+    data = scanner.discovered_devices_and_advertisement_data
+    discovered_device, discovered_adv_data = data[switchbot_device.address]
+    assert discovered_device.address == switchbot_device.address
+    assert discovered_device.name == switchbot_device.name
+    assert (
+        discovered_adv_data.manufacturer_data == switchbot_device_adv.manufacturer_data
+    )
+    assert discovered_adv_data.service_data == switchbot_device_adv.service_data
+    assert discovered_adv_data.service_uuids == switchbot_device_adv.service_uuids
+    scanner.inject_advertisement(switchbot_device_2, switchbot_device_adv_2)
+
+    data = scanner.discovered_devices_and_advertisement_data
+    discovered_device, discovered_adv_data = data[switchbot_device.address]
+    assert discovered_device.address == switchbot_device.address
+    assert discovered_device.name == switchbot_device.name
+    assert discovered_adv_data.manufacturer_data == {1: b"\x01", 2: b"\x02"}
+    assert discovered_adv_data.service_data == {
+        "050a021a-0000-1000-8000-00805f9b34fb": b"\n\xff",
+        "00000001-0000-1000-8000-00805f9b34fb": b"\n\xff",
+    }
+    assert set(discovered_adv_data.service_uuids) == {
+        "050a021a-0000-1000-8000-00805f9b34fb",
+        "00000001-0000-1000-8000-00805f9b34fb",
+    }
 
     cancel()
 
@@ -447,7 +483,8 @@ async def test_remote_scanner_expires_connectable(hass):
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
 
     devices = scanner.discovered_devices
-    assert len(devices) == 1
+    assert len(scanner.discovered_devices) == 1
+    assert len(scanner.discovered_devices_and_advertisement_data) == 1
     assert devices[0].name == "wohand"
 
     expire_monotonic = (
@@ -466,7 +503,8 @@ async def test_remote_scanner_expires_connectable(hass):
         await hass.async_block_till_done()
 
     devices = scanner.discovered_devices
-    assert len(devices) == 0
+    assert len(scanner.discovered_devices) == 0
+    assert len(scanner.discovered_devices_and_advertisement_data) == 0
 
     cancel()
 
@@ -515,7 +553,8 @@ async def test_remote_scanner_expires_non_connectable(hass):
     scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
 
     devices = scanner.discovered_devices
-    assert len(devices) == 1
+    assert len(scanner.discovered_devices) == 1
+    assert len(scanner.discovered_devices_and_advertisement_data) == 1
     assert devices[0].name == "wohand"
 
     assert (
@@ -539,8 +578,8 @@ async def test_remote_scanner_expires_non_connectable(hass):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
-    devices = scanner.discovered_devices
-    assert len(devices) == 1
+    assert len(scanner.discovered_devices) == 1
+    assert len(scanner.discovered_devices_and_advertisement_data) == 1
 
     # The non connectable timeout is used for non connectable devices
     # which is always longer than the connectable timeout
@@ -557,7 +596,7 @@ async def test_remote_scanner_expires_non_connectable(hass):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
-    devices = scanner.discovered_devices
-    assert len(devices) == 0
+    assert len(scanner.discovered_devices) == 0
+    assert len(scanner.discovered_devices_and_advertisement_data) == 0
 
     cancel()
