@@ -14,6 +14,7 @@ from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
 from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
+from systembridgeconnector.models.notification import Notification
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
 import voluptuous as vol
 
@@ -46,11 +47,19 @@ PLATFORMS = [
 CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
+CONF_POWER_COMMAND = "command"
+CONF_TITLE = "title"
+CONF_MESSAGE = "message"
+CONF_ICON = "icon"
+CONF_IMAGE = "image"
+CONF_TIMEOUT = "timeout"
 
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+SERVICE_CONTROL_POWER = "control_power"
+SERVICE_SEND_NOTIFICATION = "send_notification"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -183,6 +192,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             KeyboardText(text=call.data[CONF_TEXT])
         )
 
+    async def handle_control_power(call: ServiceCall) -> None:
+        """Handle the control_power service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        command = call.data[CONF_POWER_COMMAND]
+        if command == "sleep":
+            await coordinator.websocket_client.power_sleep()
+        elif command == "hibernate":
+            await coordinator.websocket_client.power_hibernate()
+        elif command == "restart":
+            await coordinator.websocket_client.power_restart()
+        elif command == "shutdown":
+            await coordinator.websocket_client.power_shutdown()
+        elif command == "lock":
+            await coordinator.websocket_client.power_lock()
+        elif command == "logout":
+            await coordinator.websocket_client.power_logout()
+
+    async def handle_send_notification(call: ServiceCall) -> None:
+        """Handle the send_notification service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.send_notification(
+            Notification(title=call.data.get(CONF_TITLE),message=call.data.get(CONF_MESSAGE,None),icon=call.data.get(CONF_ICON,None),image=call.data.get(CONF_IMAGE,None),timeout=call.data.get(CONF_TIMEOUT,None))
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_PATH,
@@ -230,6 +267,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         ),
     )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CONTROL_POWER,
+        handle_control_power,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_POWER_COMMAND): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_NOTIFICATION,
+        handle_send_notification,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_TITLE): cv.string,
+                vol.Optional(CONF_MESSAGE): cv.string,
+                vol.Optional(CONF_ICON): cv.string,
+                vol.Optional(CONF_IMAGE): cv.string,
+                vol.Optional(CONF_TIMEOUT): cv.positive_int,
+            },
+        ),
+    )
+
+
 
     # Reload entry when its updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

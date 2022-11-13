@@ -70,3 +70,75 @@ send_text:
       example: "Hello world"
       selector:
         text:
+control_power:
+  name: Control Power
+  description: Sends commands to control the power state of the server.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      name: Command
+      description: "Command to send."
+      required: true
+      default: "shutdown"
+      selector:
+        select:
+          options:
+            - "sleep"
+            - "hibernate"
+            - "restart"
+            - "shutdown"
+            - "lock"
+            - "logout"
+send_notification:
+  name: Send Notification
+  description: Send notifications to the desktop.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    title:
+      name: Title
+      description: "Title of the notification."
+      required: true
+      example: "Hello world"
+      selector:
+        text:
+    message:
+      name: Message
+      description: "Message of the notification."
+      required: false
+      example: "Hello world"
+      selector:
+        text:
+    icon:
+      name: Icon
+      description: "Icon of the notification."
+      required: false
+      selector:
+        text:
+    image:
+      name: Image
+      description: "Image of the notification."
+      required: false
+      selector:
+        text:
+    timeout:
+      name: Timeout
+      description: "Timeout of the notification."
+      required: false
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 360
+
