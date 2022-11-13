@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import replace
 from datetime import datetime, timedelta
 import itertools
 import logging
@@ -442,7 +441,19 @@ class BluetoothManager:
             # route any connection attempts to the connectable path, we
             # mark the service_info as connectable so that the callbacks
             # will be called and the device can be discovered.
-            service_info = replace(service_info, connectable=True)
+            service_info = BluetoothServiceInfoBleak(
+                name=service_info.name,
+                address=service_info.address,
+                rssi=service_info.rssi,
+                manufacturer_data=service_info.manufacturer_data,
+                service_data=service_info.service_data,
+                service_uuids=service_info.service_uuids,
+                source=service_info.source,
+                device=service_info.device,
+                advertisement=service_info.advertisement,
+                connectable=True,
+                time=service_info.time,
+            )
 
         matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
