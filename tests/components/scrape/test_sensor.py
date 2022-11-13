@@ -15,14 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_RESOURCE,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -33,7 +26,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_config, return_integration_config
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 DOMAIN = "scrape"
 
