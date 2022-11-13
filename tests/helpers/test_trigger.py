@@ -1,11 +1,13 @@
 """The tests for the trigger helper."""
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.trigger import (
+    DATA_PLUGGABLE_ACTIONS,
+    PluggableAction,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -197,3 +199,58 @@ async def test_async_initialize_triggers(
 
         log_cb.reset_mock()
         unsub()
+
+
+async def test_pluggable_action(hass: HomeAssistant, calls: list[ServiceCall]):
+    """Test normal behavior of pluggable actions."""
+    update = MagicMock()
+    action = AsyncMock()
+    trigger = {"domain": "test", "device": "1"}
+    variables = {"source": "test"}
+    context = Context()
+
+    # Verify plug is inactive without triggers
+    plug = PluggableAction(update)
+    remove_plug = plug.async_register(hass, trigger)
+    assert not plug
+
+    # Verify plug remain inactive with non matching trigger
+    update.reset_mock()
+    remove_attach_extra = PluggableAction.async_attach_trigger(
+        hass, trigger | {"device": "2"}, action, {}
+    )
+    assert not plug
+    update.assert_not_called()
+
+    # Verify plug is active, and update when matching trigger attaches
+    update.reset_mock()
+    remove_attach = PluggableAction.async_attach_trigger(
+        hass, trigger, action, variables
+    )
+    assert plug
+    update.assert_called()
+
+    # Verify a non registered plug is inactive
+    remove_plug()
+    assert not plug
+
+    # Verify a plug registered to existing trigger is true
+    remove_plug = plug.async_register(hass, trigger)
+    assert plug
+
+    # Verify no actions should have been triggered so far
+    action.assert_not_called()
+
+    # Verify action is triggered
+    await plug.async_run(hass, context)
+    action.assert_called_with(variables, context)
+
+    # Verify plug goes inactive if trigger is removed
+    remove_attach()
+    assert not plug
+
+    # Verify registry is cleaned when no plugs nor triggers are attached
+    assert hass.data[DATA_PLUGGABLE_ACTIONS]
+    remove_plug()
+    remove_attach_extra()
+    assert not hass.data[DATA_PLUGGABLE_ACTIONS]

@@ -84,11 +84,15 @@ class PluggableActionsEntry:
 class PluggableAction:
     """A pluggable action handler."""
 
-    _trigger: dict[str, str]
     _entry: PluggableActionsEntry | None = None
 
     def __init__(self, update: CALLBACK_TYPE | None = None) -> None:
-        """Initialize."""
+        """Initialize a pluggable action.
+
+        :param update: callback triggered whenever triggers are attached or removed, to allow
+                       the user of the pluggable action to update it's state depending on availability
+                       of triggers.
+        """
         self._update = update
 
     def __bool__(self) -> bool:
@@ -149,7 +153,6 @@ class PluggableAction:
         key = tuple(sorted(trigger.items()))
         self._entry = reg[key]
         self._entry.plugs.add(self)
-        self.async_run_update()
 
         @callback
         def _remove() -> None:
@@ -159,17 +162,18 @@ class PluggableAction:
             if not self._entry.actions and not self._entry.plugs:
                 del reg[key]
             self._entry = None
-            self.async_run_update()
 
         return _remove
 
-    @callback
-    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
+    async def async_run(
+        self, hass: HomeAssistant, context: Context | None = None
+    ) -> None:
         """Run all triggers."""
-        if not self._entry:
-            return
+        assert self._entry
         for job, variables in self._entry.actions.values():
-            hass.async_run_hass_job(job, variables, context)
+            task = hass.async_run_hass_job(job, variables, context)
+            if task:
+                await task
 
 
 async def _async_get_trigger_platform(

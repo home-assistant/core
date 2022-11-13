@@ -160,7 +160,7 @@ class PhilipsTVMediaPlayer(
             await self._tv.setPowerState("On")
             self._state = MediaPlayerState.ON
         else:
-            self._turn_on.async_run(self.hass, self._context)
+            await self._turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
     async def async_turn_off(self) -> None:
