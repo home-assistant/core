@@ -21,7 +21,7 @@ from ..helpers import (
 )
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE: str = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
 TRIGGER_TYPE_TURN_ON = "turn_on"
 
