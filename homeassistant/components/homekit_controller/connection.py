@@ -42,7 +42,7 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
-DEBOUNCE_COOLDOWN = 3  # seconds
+DEBOUNCE_COOLDOWN = 5  # seconds
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
