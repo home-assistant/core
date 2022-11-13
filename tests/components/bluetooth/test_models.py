@@ -1,6 +1,8 @@
 """Tests for the Bluetooth integration models."""
 from __future__ import annotations
 
+from datetime import timedelta
+import time
 from unittest.mock import patch
 
 import bleak
@@ -10,11 +12,15 @@ from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth.models import (
+    CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    BaseHaRemoteScanner,
     BaseHaScanner,
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
     HaBluetoothConnector,
 )
+import homeassistant.util.dt as dt_util
 
 from . import (
     _get_manager,
@@ -22,6 +28,8 @@ from . import (
     inject_advertisement,
     inject_advertisement_with_source,
 )
+
+from tests.common import async_fire_time_changed
 
 
 class MockBleakClient(BleakClient):
@@ -344,4 +352,212 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
+    cancel()
+
+
+async def test_remote_scanner(hass):
+    """Test the remote scanner base class."""
+    manager = _get_manager()
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    devices = manager.async_discovered_devices(True)
+    assert devices[0].name == "wohand"
+
+    cancel()
+
+
+async def test_remote_scanner_expires_connectable(hass):
+    """Test the remote scanner expires stale connectable data."""
+    manager = _get_manager()
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    start_time_monotonic = time.monotonic()
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    devices = scanner.discovered_devices
+    assert len(devices) == 1
+    assert devices[0].name == "wohand"
+
+    expire_monotonic = (
+        start_time_monotonic
+        + CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        + 1
+    )
+    expire_utc = dt_util.utcnow() + timedelta(
+        seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    )
+    with patch(
+        "homeassistant.components.bluetooth.models.MONOTONIC_TIME",
+        return_value=expire_monotonic,
+    ):
+        async_fire_time_changed(hass, expire_utc)
+        await hass.async_block_till_done()
+
+    devices = scanner.discovered_devices
+    assert len(devices) == 0
+
+    cancel()
+
+
+async def test_remote_scanner_expires_non_connectable(hass):
+    """Test the remote scanner expires stale non connectable data."""
+    manager = _get_manager()
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, False)
+    scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    start_time_monotonic = time.monotonic()
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    devices = scanner.discovered_devices
+    assert len(devices) == 1
+    assert devices[0].name == "wohand"
+
+    assert (
+        FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        > CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+    )
+
+    # The connectable timeout is not used for non connectable devices
+    expire_monotonic = (
+        start_time_monotonic
+        + CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        + 1
+    )
+    expire_utc = dt_util.utcnow() + timedelta(
+        seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    )
+    with patch(
+        "homeassistant.components.bluetooth.models.MONOTONIC_TIME",
+        return_value=expire_monotonic,
+    ):
+        async_fire_time_changed(hass, expire_utc)
+        await hass.async_block_till_done()
+
+    devices = scanner.discovered_devices
+    assert len(devices) == 1
+
+    # The non connectable timeout is used for non connectable devices
+    # which is always longer than the connectable timeout
+    expire_monotonic = (
+        start_time_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    )
+    expire_utc = dt_util.utcnow() + timedelta(
+        seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    )
+    with patch(
+        "homeassistant.components.bluetooth.models.MONOTONIC_TIME",
+        return_value=expire_monotonic,
+    ):
+        async_fire_time_changed(hass, expire_utc)
+        await hass.async_block_till_done()
+
+    devices = scanner.discovered_devices
+    assert len(devices) == 0
+
     cancel()

@@ -10,7 +10,6 @@ import datetime
 from datetime import timedelta
 from enum import Enum
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
@@ -50,6 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_UUIDS: Final = "UUIDs"
 
 MANAGER: BluetoothManager | None = None
+
+MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
 @dataclass
@@ -171,10 +172,10 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._connector = connector
         self._connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
-        self._fallback_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         if connectable:
             self._details["connector"] = connector
-            self._fallback_seconds = (
+            self._expire_seconds = (
                 CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
 
@@ -187,11 +188,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
-        now = time.monotonic()
+        now = MONOTONIC_TIME()
         expired = [
             address
             for address, timestamp in self._discovered_device_timestamps.items()
-            if now - timestamp > self._fallback_seconds
+            if now - timestamp > self._expire_seconds
         ]
         for address in expired:
             del self._discovered_device_advertisement_datas[address]
@@ -224,7 +225,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         tx_power: int | None,
     ) -> None:
         """Call the registered callback."""
-        now = monotonic_time_coarse()
+        now = MONOTONIC_TIME()
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
             # Merge the new data with the old data
             # to function the same as BlueZ which
