@@ -28,16 +28,13 @@ async def async_setup_entry(
     if is_local(config_entry):
         local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
         async_add_entities(
-            RiscoLocalBinarySensor(local_data.system.id, zone_id, zone)
+            entity
             for zone_id, zone in local_data.system.zones.items()
-        )
-        async_add_entities(
-            RiscoLocalAlarmedBinarySensor(local_data.system.id, zone_id, zone)
-            for zone_id, zone in local_data.system.zones.items()
-        )
-        async_add_entities(
-            RiscoLocalArmedBinarySensor(local_data.system.id, zone_id, zone)
-            for zone_id, zone in local_data.system.zones.items()
+            for entity in (
+                RiscoLocalBinarySensor(local_data.system.id, zone_id, zone),
+                RiscoLocalAlarmedBinarySensor(local_data.system.id, zone_id, zone),
+                RiscoLocalArmedBinarySensor(local_data.system.id, zone_id, zone),
+            )
         )
     else:
         coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
