@@ -1,7 +1,6 @@
 """Test the lg_soundbar config flow."""
 from queue import Empty, Full
 from unittest.mock import DEFAULT, MagicMock, Mock, call, patch
-from uuid import NAMESPACE_OID, uuid5
 
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
@@ -323,9 +322,7 @@ async def test_form_uuid_not_provided_by_api(hass):
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_set_unique_id.mock_calls) == 1
-    assert mock_set_unique_id.call_args.args == (
-        uuid5(NAMESPACE_OID, "homeassistant.components.lg_soundbar.name"),
-    )
+    assert mock_set_unique_id.call_args.args == (DOMAIN,)
     mock_uuid_q.empty.assert_called_once()
     mock_uuid_q.put_nowait.assert_not_called()
     mock_uuid_q.get.assert_called_once()
@@ -378,8 +375,9 @@ async def test_form_both_queues_empty(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "no_uuid"
+    print("result2 " + str(result2))
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "no_data"}
     assert len(mock_setup_entry.mock_calls) == 0
     mock_uuid_q.empty.assert_called_once()
     mock_uuid_q.put_nowait.assert_not_called()

@@ -2,7 +2,6 @@
 import logging
 from queue import Empty, Full, Queue
 import socket
-import uuid
 
 import temescal
 import voluptuous as vol
@@ -52,23 +51,16 @@ def test_connect(host, port):
 
     try:
         connection = temescal.temescal(host, port=port, callback=msg_callback)
+        connection.get_info()
         connection.get_mac_info()
         if uuid_q.empty():
             connection.get_product_info()
-        connection.get_info()
         sb_name = name_q.get(timeout=10)
         sb_uuid = uuid_q.get(timeout=10)
-        details = {"name": sb_name, "uuid": sb_uuid}
-        return details
+        return {"name": sb_name, "uuid": sb_uuid}
     except Empty:
-        if sb_name is not None and sb_uuid is None:
-            oid = (
-                "homeassistant.components.lg_soundbar."
-                + sb_name.replace(" ", "_").lower()
-            )
-            sb_uuid = uuid.uuid5(uuid.NAMESPACE_OID, oid)
-            details = {"name": sb_name, "uuid": sb_uuid}
-            return details
+        if sb_name is not None:
+            return {"name": sb_name}
         return {}
     except socket.timeout as err:
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
@@ -94,15 +86,18 @@ class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except ConnectionError:
             errors["base"] = "cannot_connect"
         else:
-            if "uuid" not in details:
-                return self.async_abort(reason="no_uuid")
-            await self.async_set_unique_id(details["uuid"])
-            self._abort_if_unique_id_configured()
-            info = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: DEFAULT_PORT,
-            }
-            return self.async_create_entry(title=details["name"], data=info)
+            if len(details) != 0:
+                unique_id = DOMAIN
+                if "uuid" in details:
+                    unique_id = details["uuid"]
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                info = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: DEFAULT_PORT,
+                }
+                return self.async_create_entry(title=details["name"], data=info)
+            errors["base"] = "no_data"
 
         return self._show_form(errors)
 
