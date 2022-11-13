@@ -154,16 +154,16 @@ async def async_setup_entry(
 
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
     config = dict(entry.options)
-    template_config = vol.Schema(
-        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+    sensor_config: ConfigType = vol.Schema(
+        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
     )(config)
 
-    name: str = template_config[CONF_NAME]
+    name: str = sensor_config[CONF_NAME]
     unique_id: str = entry.entry_id
-    select: str | None = config.get(CONF_SELECT)
-    attr: str | None = config.get(CONF_ATTRIBUTE)
-    index: int = int(config[CONF_INDEX])
-    value_string: str | None = config.get(CONF_VALUE_TEMPLATE)
+    select: str | None = sensor_config.get(CONF_SELECT)
+    attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
+    index: int = int(sensor_config[CONF_INDEX])
+    value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
     value_template: Template | None = (
         Template(value_string, hass) if value_string is not None else None
@@ -174,7 +174,7 @@ async def async_setup_entry(
             ScrapeSensor(
                 hass,
                 coordinator,
-                template_config,
+                sensor_config,
                 name,
                 unique_id,
                 select,
