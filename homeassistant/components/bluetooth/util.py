@@ -36,7 +36,7 @@ async def async_load_history_from_system() -> dict[str, BluetoothServiceInfoBlea
             or history.device.name
             or history.device.address,
             address=history.device.address,
-            rssi=history.device.rssi,
+            rssi=history.advertisement_data.rssi,
             manufacturer_data=history.advertisement_data.manufacturer_data,
             service_data=history.advertisement_data.service_data,
             service_uuids=history.advertisement_data.service_uuids,
