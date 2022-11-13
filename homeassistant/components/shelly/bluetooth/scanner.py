@@ -7,7 +7,7 @@ from typing import Any
 
 from bluetooth_data_tools import parse_advertisement_data
 
-from homeassistant.components.bluetooth import BaseRemoteHaScanner
+from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 BLE_SCAN_RESULT_EVENT = "ble.scan_result"
 
 
-class ShellyBLEScanner(BaseRemoteHaScanner):
+class ShellyBLEScanner(BaseHaRemoteScanner):
     """Scanner for shelly."""
 
     @callback

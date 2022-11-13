@@ -5,13 +5,13 @@ import re
 
 from aioesphomeapi import BluetoothLEAdvertisement
 
-from homeassistant.components.bluetooth import BaseRemoteHaScanner
+from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.core import callback
 
 TWO_CHAR = re.compile("..")
 
 
-class ESPHomeScanner(BaseRemoteHaScanner):
+class ESPHomeScanner(BaseHaRemoteScanner):
     """Scanner for esphome."""
 
     @callback
