@@ -20,6 +20,10 @@ from .const import (
     BLE_SCAN_RESULT_EVENT,
     BLE_SCAN_RESULT_VERSION,
     BLE_SCRIPT_NAME,
+    VAR_ACTIVE,
+    VAR_EVENT_TYPE,
+    VAR_HA_VERSION,
+    VAR_VERSION,
 )
 from .scanner import ShellyBLEScanner
 
@@ -69,11 +73,13 @@ async def async_connect_scanner(
 
     ble_script_id = script_name_to_id[BLE_SCRIPT_NAME]
 
+    # Not using format strings here because the script
+    # code contains curly braces
     code = (
-        BLE_CODE.replace("%active%", "true" if active else "false")
-        .replace("%ha_version%", HA_VERSION)
-        .replace("%event_type%", BLE_SCAN_RESULT_EVENT)
-        .replace("%version%", str(BLE_SCAN_RESULT_VERSION))
+        BLE_CODE.replace(VAR_ACTIVE, "true" if active else "false")
+        .replace(VAR_HA_VERSION, HA_VERSION)
+        .replace(VAR_EVENT_TYPE, BLE_SCAN_RESULT_EVENT)
+        .replace(VAR_VERSION, str(BLE_SCAN_RESULT_VERSION))
     )
     await call_rpc("Script.Stop", {"id": ble_script_id})
     await call_rpc("Script.PutCode", {"id": ble_script_id, "code": code})
