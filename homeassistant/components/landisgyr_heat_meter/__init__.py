@@ -1,9 +1,11 @@
 """The Landis+Gyr Heat Meter integration."""
 from __future__ import annotations
 
-from datetime import timedelta
+import asyncio
 import logging
 
+import async_timeout
+import serial
 import ultraheat_api
 from ultraheat_api.response import HeatMeterResponse
 
@@ -11,9 +13,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, POLLING_INTERVAL, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,26 +28,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
     api = ultraheat_api.HeatMeterService(reader)
-
-    async def async_update_data() -> HeatMeterResponse:
-        """Fetch data from the API."""
-        _LOGGER.debug("Polling on %s", entry.data[CONF_DEVICE])
-        return await hass.async_add_executor_job(api.read)
-
-    # Polling is only daily to prevent battery drain.
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="ultraheat_gateway",
-        update_method=async_update_data,
-        update_interval=timedelta(days=1),
-    )
+    coordinator = UltraheatCoordinator(hass, api)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # read api without retry, to prevent battery drain
+    await coordinator.async_refresh()
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+class UltraheatCoordinator(DataUpdateCoordinator):
+    """Coordinator for getting data from the ultraheat api."""
+
+    def __init__(self, hass, api):
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="ultraheat",
+            update_interval=POLLING_INTERVAL,
+        )
+        self.api = api
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        try:
+            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
+                return await self.hass.async_add_executor_job(self.api.read)
+        except (asyncio.TimeoutError, serial.serialutil.SerialException) as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
