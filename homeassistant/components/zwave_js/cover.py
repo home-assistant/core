@@ -156,23 +156,14 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        open_value = (
+        cover_property = (
             self.get_zwave_value(COVER_OPEN_PROPERTY)
             or self.get_zwave_value(COVER_UP_PROPERTY)
             or self.get_zwave_value(COVER_ON_PROPERTY)
         )
-        if open_value:
-            # Stop the cover if it's opening
-            await self.info.node.async_set_value(open_value, False)
-
-        close_value = (
-            self.get_zwave_value(COVER_CLOSE_PROPERTY)
-            or self.get_zwave_value(COVER_DOWN_PROPERTY)
-            or self.get_zwave_value(COVER_OFF_PROPERTY)
-        )
-        if close_value:
-            # Stop the cover if it's closing
-            await self.info.node.async_set_value(close_value, False)
+        if cover_property:
+            # Stop the cover, will stop regardless of the actual direction of travel.
+            await self.info.node.async_set_value(cover_property, False)
 
 
 class ZWaveTiltCover(ZWaveCover):
