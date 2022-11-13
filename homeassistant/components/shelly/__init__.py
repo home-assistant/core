@@ -7,6 +7,7 @@ import aioshelly
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    BLE_MIN_VERSION,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -252,7 +254,11 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
         # TODO: only connect the scanner if enabled in config options active/true/false
-        if not sleep_period:
+        if (
+            not sleep_period
+            and device.shelly
+            and AwesomeVersion(device.shelly["ver"]) >= BLE_MIN_VERSION
+        ):
             entry.async_on_unload(
                 await async_connect_scanner(hass, shelly_entry_data.rpc, True)
             )
