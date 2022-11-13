@@ -48,7 +48,7 @@
             },
             "user_confirm_still": {
                 "data": {
-                    "confirmed_ok": "\u5f71\u50cf\u633a\u6e05\u6670\u3002"
+                    "confirmed_ok": "\u5f71\u50cf\u770b\u8d77\u4f86\u5f88\u6e05\u6670"
                 },
                 "description": "![\u651d\u5f71\u6a5f\u975c\u614b\u9810\u89bd]({preview_url})",
                 "title": "\u9810\u89bd"
@@ -77,7 +77,7 @@
         "step": {
             "confirm_still": {
                 "data": {
-                    "confirmed_ok": "\u5f71\u50cf\u633a\u6e05\u6670\u3002"
+                    "confirmed_ok": "\u5f71\u50cf\u770b\u8d77\u4f86\u5f88\u6e05\u6670"
                 },
                 "description": "![\u651d\u5f71\u6a5f\u975c\u614b\u9810\u89bd]({preview_url})",
                 "title": "\u9810\u89bd"
@@ -97,7 +97,7 @@
                     "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a",
                     "still_image_url": "\u975c\u614b\u5f71\u50cf URL\uff08\u4f8b\u5982 http://...\uff09",
                     "stream_source": "\u4e32\u6d41\u4f86\u6e90 URL\uff08\u4f8b\u5982 rtsp://...\uff09",
-                    "use_wallclock_as_timestamps": "\u4f7f\u7528\u639b\u9418\u4f5c\u70ba\u6642\u9593\u6233",
+                    "use_wallclock_as_timestamps": "\u4f7f\u7528\u6642\u9418\u4f5c\u70ba\u6642\u9593\u6233",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
