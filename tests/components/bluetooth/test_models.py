@@ -10,6 +10,7 @@ from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth.models import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
@@ -344,4 +345,51 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
+    cancel()
+
+
+async def test_remote_scanner(hass):
+    """Test the remote scanner base class."""
+    manager = _get_manager()
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    cancel = manager.async_register_scanner(scanner, True)
+
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    devices = manager.async_discovered_devices(True)
+    assert devices[0].name == "wohand"
+
     cancel()
