@@ -1,7 +1,6 @@
 """Homekit Controller entities."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aiohomekit.model import Accessory
@@ -18,8 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice, valid_serial_number
 from .utils import folded_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeKitEntity(Entity):
@@ -167,16 +164,7 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        accessory_available = self._accessory.available
-        services_available = self.service.available
-        _LOGGER.warning(
-            "%s: available_top_level accessory_available=%s services_available=%s final_result=%s",
-            self.name,
-            accessory_available,
-            services_available,
-            accessory_available and services_available,
-        )
-        return accessory_available and services_available
+        return self._accessory.available and self.service.available
 
     @property
     def device_info(self) -> DeviceInfo:
