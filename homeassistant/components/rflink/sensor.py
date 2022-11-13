@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    DEGREE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -71,7 +73,8 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="co2_air_quality",
         name="CO2 air quality",
-        icon="mdi:molecule-co2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="command",
@@ -159,9 +162,9 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="rain_rate",
         name="Rain rate",
-        icon="mdi:cup-water",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
         key="revision",
@@ -224,6 +227,8 @@ SENSOR_TYPES = (
         key="winddirection",
         name="Wind direction",
         icon="mdi:compass",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key="windgusts",
