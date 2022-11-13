@@ -104,6 +104,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["temperature"]["bed"]["target"]),
+            entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.temperature.nozzle.target",
@@ -112,6 +113,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["temperature"]["tool0"]["target"]),
+            entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.z-height",
