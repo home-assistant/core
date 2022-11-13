@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from copy import copy
 from http import HTTPStatus
-from unittest.mock import ANY, Mock
+from unittest.mock import Mock
 
 from pyunifiprotect.data import Version
 
 from homeassistant.components.repairs.issue_handler import (
     async_process_repairs_platforms,
+)
+from homeassistant.components.repairs.websocket_api import (
+    RepairsFlowIndexView,
+    RepairsFlowResourceView,
 )
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -40,54 +44,30 @@ async def test_ea_warning_ignore(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == "ea_warning"
 
-    url = "/api/repairs/issues/fix"
+    url = RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "data_schema": [],
-        "description_placeholders": {"version": str(version)},
-        "errors": None,
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "last_step": None,
-        "step_id": "start",
-        "type": "form",
-    }
+    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["step_id"] == "start"
 
-    url = f"/api/repairs/issues/fix/{flow_id}"
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "data_schema": [],
-        "description_placeholders": {"version": str(version)},
-        "errors": None,
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "last_step": None,
-        "step_id": "confirm",
-        "type": "form",
-    }
+    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["step_id"] == "confirm"
 
-    url = f"/api/repairs/issues/fix/{flow_id}"
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "description": None,
-        "description_placeholders": None,
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "title": "",
-        "type": "create_entry",
-        "version": 1,
-    }
+    assert data["type"] == "create_entry"
 
 
 async def test_ea_warning_fix(
@@ -113,22 +93,14 @@ async def test_ea_warning_fix(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == "ea_warning"
 
-    url = "/api/repairs/issues/fix"
+    url = RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "data_schema": [],
-        "description_placeholders": {"version": str(version)},
-        "errors": None,
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "last_step": None,
-        "step_id": "start",
-        "type": "form",
-    }
+    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["step_id"] == "start"
 
     new_nvr = copy(ufp.api.bootstrap.nvr)
     new_nvr.version = Version("2.2.6")
@@ -140,17 +112,9 @@ async def test_ea_warning_fix(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    url = f"/api/repairs/issues/fix/{flow_id}"
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    assert data == {
-        "description": None,
-        "description_placeholders": None,
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "title": "",
-        "type": "create_entry",
-        "version": 1,
-    }
+    assert data["type"] == "create_entry"
