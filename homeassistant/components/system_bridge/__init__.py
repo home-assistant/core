@@ -217,7 +217,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call.data[CONF_BRIDGE]
         ]
         await coordinator.websocket_client.send_notification(
-            Notification(title=call.data.get(CONF_TITLE),message=call.data.get(CONF_MESSAGE,None),icon=call.data.get(CONF_ICON,None),image=call.data.get(CONF_IMAGE,None),timeout=call.data.get(CONF_TIMEOUT,None))
+            Notification(
+                title=call.data.get(CONF_TITLE),
+                message=call.data.get(CONF_MESSAGE, None),
+                icon=call.data.get(CONF_ICON, None),
+                image=call.data.get(CONF_IMAGE, None),
+                timeout=call.data.get(CONF_TIMEOUT, None),
+            )
         )
 
     hass.services.async_register(
@@ -295,8 +301,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         ),
     )
-
-
 
     # Reload entry when its updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
