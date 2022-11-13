@@ -50,6 +50,7 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothCallback,
     BluetoothChange,
@@ -80,6 +81,7 @@ __all__ = [
     "async_track_unavailable",
     "async_scanner_count",
     "BaseHaScanner",
+    "BaseHaRemoteScanner",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
