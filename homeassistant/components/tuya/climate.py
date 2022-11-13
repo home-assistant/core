@@ -210,6 +210,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if tuya_mode in enum_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
+
+            if len(self._attr_hvac_modes) == 1: # Tuya modes are presets instead of hvac_modes
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
+                self._attr_preset_modes = list(enum_type.range)
         elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
             self._attr_hvac_modes = [
                 HVACMode.OFF,
@@ -264,18 +268,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
 
-        # Log unknown modes
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
-        ):
-            for tuya_mode in enum_type.range:
-                if tuya_mode not in TUYA_HVAC_TO_HA:
-                    LOGGER.warning(
-                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
-                        tuya_mode,
-                        self.device.name,
-                    )
-
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVACMode.OFF}]
@@ -283,6 +275,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             commands.append(
                 {"code": DPCode.MODE, "value": self._hvac_to_tuya[hvac_mode]}
             )
+        self._send_command(commands)
+
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        commands = [
+            {"code": DPCode.MODE, "value": preset_mode}
+        ]
         self._send_command(commands)
 
     def set_fan_mode(self, fan_mode: str) -> None:
