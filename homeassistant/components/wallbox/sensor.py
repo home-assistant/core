@@ -34,6 +34,7 @@ from .const import (
     CHARGER_CURRENT_MODE_KEY,
     CHARGER_DATA_KEY,
     CHARGER_DEPOT_PRICE_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
@@ -126,6 +127,12 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_DEPOT_PRICE_KEY,
         icon="mdi:ev-station",
         name="Depot Price",
+        precision=2,
+    ),
+    CHARGER_ENERGY_PRICE_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ENERGY_PRICE_KEY,
+        icon="mdi:ev-station",
+        name="Energy Price",
         precision=2,
     ),
     CHARGER_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
