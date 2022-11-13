@@ -60,6 +60,19 @@
                 },
                 "description": "Please enter the information for your `.knxkeys` file."
             },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Device authentication password",
+                    "user_id": "User ID",
+                    "user_password": "User password"
+                },
+                "data_description": {
+                    "device_authentication": "This is set in the 'IP' panel of the interface in ETS.",
+                    "user_id": "This is often tunnel number +1. So 'Tunnel 2' would have User-ID '3'.",
+                    "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
+                },
+                "description": "Please enter your IP secure information."
+            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Device authentication password",
@@ -77,6 +90,7 @@
                 "description": "Select how you want to configure KNX/IP Secure.",
                 "menu_options": {
                     "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
+                    "secure_manual": "Configure IP secure keys manually",
                     "secure_tunnel_manual": "Configure IP secure keys manually"
                 }
             },
@@ -85,6 +99,12 @@
                     "gateway": "KNX Tunnel Connection"
                 },
                 "description": "Please select a gateway from the list."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX Connection Type"
+                },
+                "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing."
             }
         }
     },
@@ -114,6 +134,25 @@
                     "connection_type": "KNX Connection Type"
                 },
                 "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing."
+            },
+            "init": {
+                "data": {
+                    "connection_type": "KNX Connection Type",
+                    "individual_address": "Default individual address",
+                    "local_ip": "Local IP of Home Assistant",
+                    "multicast_group": "Multicast group",
+                    "multicast_port": "Multicast port",
+                    "rate_limit": "Rate limit",
+                    "state_updater": "State updater"
+                },
+                "data_description": {
+                    "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
+                    "local_ip": "Use `0.0.0.0` for auto-discovery.",
+                    "multicast_group": "Used for routing and discovery. Default: `224.0.23.12`",
+                    "multicast_port": "Used for routing and discovery. Default: `3671`",
+                    "rate_limit": "Maximum outgoing telegrams per second.\nRecommended: 20 to 40",
+                    "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options."
+                }
             },
             "manual_tunnel": {
                 "data": {
@@ -183,7 +222,14 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "KNX Tunnel Connection"
+                    "gateway": "KNX Tunnel Connection",
+                    "host": "Host",
+                    "port": "Port",
+                    "tunneling_type": "KNX Tunneling Type"
+                },
+                "data_description": {
+                    "host": "IP address of the KNX/IP tunneling device.",
+                    "port": "Port of the KNX/IP tunneling device."
                 },
                 "description": "Please select a gateway from the list."
             }

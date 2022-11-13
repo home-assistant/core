@@ -50,6 +50,7 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothCallback,
     BluetoothChange,
@@ -80,6 +81,7 @@ __all__ = [
     "async_track_unavailable",
     "async_scanner_count",
     "BaseHaScanner",
+    "BaseHaRemoteScanner",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
@@ -425,15 +427,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    scanner = HaScanner(hass, mode, adapter, address)
+    new_info_callback = async_get_advertisement_callback(hass)
+    scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
     try:
         scanner.async_setup()
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    info_callback = async_get_advertisement_callback(hass)
-    entry.async_on_unload(scanner.async_register_callback(info_callback))
     try:
         await scanner.async_start()
     except ScannerStartError as err:

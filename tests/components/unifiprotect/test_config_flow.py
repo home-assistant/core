@@ -246,7 +246,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
     mock_config.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         mock_api.return_value = ufp_client
 
@@ -274,6 +274,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "disable_rtsp": True,
             "override_connection_host": True,
             "max_media": 1000,
+            "allow_ea": False,
         }
         await hass.config_entries.async_unload(mock_config.entry_id)
 

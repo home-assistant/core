@@ -3,16 +3,19 @@
 
 from dataclasses import replace
 from datetime import timedelta
+import time
 
+from bleak.backends.scanner import BLEDevice
 import pytest
 
-from homeassistant.components.ibeacon.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.ibeacon.const import ATTR_SOURCE, DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_HOME
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
 from . import (
     BLUECHARM_BEACON_SERVICE_INFO,
+    BLUECHARM_BEACON_SERVICE_INFO_2,
     BLUECHARM_BEACON_SERVICE_INFO_DBUS,
     TESLA_TRANSIENT,
     TESLA_TRANSIENT_BLE_DEVICE,
@@ -20,6 +23,8 @@ from . import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
+    generate_advertisement_data,
+    inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
 )
@@ -252,3 +257,65 @@ async def test_ignore_transient_devices_unless_we_see_them_a_few_times(hass):
 
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.s6da7c9389bd5452cc_cccc").state == STATE_HOME
+
+
+async def test_changing_source_attribute(hass):
+    """Test update of the source attribute."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    now = time.monotonic()
+    info = BLUECHARM_BEACON_SERVICE_INFO_2
+    device = BLEDevice(
+        address=info.address,
+        name=info.name,
+        details={},
+    )
+    advertisement_data = generate_advertisement_data(
+        local_name=info.name,
+        manufacturer_data=info.manufacturer_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+        rssi=info.rssi,
+    )
+
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        device,
+        advertisement_data,
+        now,
+        "local",
+        True,
+    )
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get(
+        "sensor.bluecharm_177999_8105_estimated_distance"
+    ).attributes
+    assert attributes[ATTR_SOURCE] == "local"
+
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        device,
+        advertisement_data,
+        now,
+        "proxy",
+        True,
+    )
+    await hass.async_block_till_done()
+    with patch_all_discovered_devices([BLUECHARM_BEACON_SERVICE_INFO_2]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL.total_seconds() * 2),
+        )
+        await hass.async_block_till_done()
+
+    attributes = hass.states.get(
+        "sensor.bluecharm_177999_8105_estimated_distance"
+    ).attributes
+    assert attributes[ATTR_SOURCE] == "proxy"
