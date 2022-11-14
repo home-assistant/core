@@ -456,7 +456,6 @@ bluetooth-auto-recovery==0.3.6
 bluetooth-data-tools==0.2.0
 
 # homeassistant.components.bluetooth
-# homeassistant.components.shelly
 bluetooth-data-tools==0.3.0
 
 # homeassistant.components.bond
