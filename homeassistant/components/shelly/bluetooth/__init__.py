@@ -1,6 +1,8 @@
 """Bluetooth support for shelly."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioshelly.ble import async_start_scanner
 from aioshelly.ble.const import (
     BLE_SCAN_RESULT_EVENT,
@@ -18,8 +20,10 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
-from ..coordinator import ShellyRpcCoordinator
 from .scanner import ShellyBLEScanner
+
+if TYPE_CHECKING:
+    from ..coordinator import ShellyRpcCoordinator
 
 
 async def async_connect_scanner(
