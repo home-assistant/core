@@ -89,9 +89,7 @@ class PluggableAction:
     def __init__(self, update: CALLBACK_TYPE | None = None) -> None:
         """Initialize a pluggable action.
 
-        :param update: callback triggered whenever triggers are attached or removed, to allow
-                       the user of the pluggable action to update it's state depending on availability
-                       of triggers.
+        :param update: callback triggered whenever triggers are attached or removed.
         """
         self._update = update
 
