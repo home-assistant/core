@@ -493,20 +493,14 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     @callback
     def _async_handle_update(self, device_: RpcDevice, update_type: UpdateType) -> None:
         """Handle device update."""
-        device = self.device
-        if not device.initialized:
-            return
-
-        if update_type == UpdateType.Disconnected:
-            self.hass.async_create_task(self._async_disconnected())
-            return
-
-        if not self.connected:
+        if update_type == UpdateType.Initialized:
             self.hass.async_create_task(self._async_connected())
-        if update_type == UpdateType.Event and (event := device.event):
-            self._async_device_event_handler(event)
+        elif update_type == UpdateType.Disconnected:
+            self.hass.async_create_task(self._async_disconnected())
         elif update_type == UpdateType.Status:
-            self.async_set_updated_data(device)
+            self.async_set_updated_data(self.device)
+        elif update_type == UpdateType.Event and (event := self.device.event):
+            self._async_device_event_handler(event)
 
     def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -523,6 +517,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self._async_handle_update)
+        if self.device.initialized:
+            # If we are already initialized, we are connected
+            self.hass.async_create_task(self._async_connected())
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
