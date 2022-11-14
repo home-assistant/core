@@ -23,7 +23,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _username: str
     _password: str
-    _flipr_id: str
+    _flipr_id: str = ""
     _possible_flipr_ids: list[str]
 
     async def async_step_user(
@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         errors = {}
-        if not self._flipr_id:
+        if self._flipr_id == "":
             try:
                 flipr_ids = await self._authenticate_and_search_flipr()
             except HTTPError:
