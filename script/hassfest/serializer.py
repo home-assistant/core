@@ -5,6 +5,7 @@ from collections.abc import Collection, Iterable, Mapping
 from typing import Any
 
 import black
+from black.mode import Mode
 
 DEFAULT_GENERATOR = "script.hassfest"
 
@@ -69,7 +70,7 @@ To update, run python3 -m {generator}
 
 {content}
 """
-    return black.format_str(content.strip(), mode=black.Mode())
+    return black.format_str(content.strip(), mode=Mode())
 
 
 def format_python_namespace(
