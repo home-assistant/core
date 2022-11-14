@@ -4,19 +4,21 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from elmax_api.http import Elmax, ElmaxLocal
+from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import ElmaxCoordinator, DummyPanel
+from .common import ElmaxCoordinator, DummyPanel, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
-    CONF_ELMAX_MODE_DIRECT_URI,
+    CONF_ELMAX_MODE_DIRECT_HOST,
+    CONF_ELMAX_MODE_DIRECT_PORT,
+    CONF_ELMAX_MODE_DIRECT_SSL,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_PIN,
     CONF_ELMAX_PASSWORD,
@@ -27,6 +29,34 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _load_elmax_panel_client(entry: ConfigEntry) -> (GenericElmax, PanelEntry):
+    # Use a null-safe getter for the mode, as this attribute has been
+    # added later than first revisions. When null, assume cloud.
+    client = None
+    mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
+    panel = None
+    if mode == CONF_ELMAX_MODE_CLOUD:
+        client = Elmax(
+            username=entry.data[CONF_ELMAX_USERNAME],
+            password=entry.data[CONF_ELMAX_PASSWORD],
+        )
+        client.set_current_panel(
+            entry.data[CONF_ELMAX_PANEL_ID], entry.data[CONF_ELMAX_PANEL_PIN]
+        )
+        # Make sure the panel is online and assigned to the current user
+        panel = await _check_cloud_panel_status(client, entry.data[CONF_ELMAX_PANEL_ID])
+    elif mode == CONF_ELMAX_MODE_DIRECT:
+        client_api_url = get_direct_api_url(host=entry.data[CONF_ELMAX_MODE_DIRECT_HOST],
+                                            port=entry.data[CONF_ELMAX_MODE_DIRECT_PORT],
+                                            ssl=entry.data[CONF_ELMAX_MODE_DIRECT_SSL])
+        client = ElmaxLocal(
+            panel_api_url=client_api_url,
+            panel_code=entry.data[CONF_ELMAX_PANEL_PIN],
+        )
+        panel = DummyPanel(panel_uri=client_api_url)
+    return client, panel
 
 
 async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
@@ -46,28 +76,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up elmax-cloud from a config entry."""
-    # Use a null-safe getter for the mode, as this attribute has been
-    # added later than first revisions. When null, assume cloud.
-    client = None
-    mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
-
-    panel = None
-    if mode == CONF_ELMAX_MODE_CLOUD:
-        client = Elmax(
-            username=entry.data[CONF_ELMAX_USERNAME],
-            password=entry.data[CONF_ELMAX_PASSWORD],
-        )
-        client.set_current_panel(
-            entry.data[CONF_ELMAX_PANEL_ID], entry.data[CONF_ELMAX_PANEL_PIN]
-        )
-        # Make sure the panel is online and assigned to the current user
-        panel = await _check_cloud_panel_status(client, entry.data[CONF_ELMAX_PANEL_ID])
-    elif mode == CONF_ELMAX_MODE_DIRECT:
-        client = ElmaxLocal(
-            panel_api_url=entry.data[CONF_ELMAX_MODE_DIRECT_URI],
-            panel_code=entry.data[CONF_ELMAX_PANEL_PIN],
-        )
-        panel = DummyPanel(panel_uri=entry.data[CONF_ELMAX_MODE_DIRECT_URI])
+    client, panel = await _load_elmax_panel_client(entry)
 
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials
@@ -95,8 +104,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass, entry):
     """Handle options and config-entry update."""
-    # TODO
-    print(entry)
+    coordinator: ElmaxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # Get a fresh/updated HTTP Client to be used with the coordinator.
+    client, panel = await _load_elmax_panel_client(entry)
+    coordinator.http_client = client
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

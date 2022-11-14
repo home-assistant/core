@@ -23,7 +23,10 @@
       "direct_setup": {
         "description": "Specify the Elmax panel connection parameters below.",
         "data": {
-          "panel_uri": "Panel API base URL",
+          "panel_api_host": "Panel API Hostname or IP",
+          "panel_api_port": "Panel API port",
+          "use_ssl": "Use SSL",
+          "follow_mdns": "Automatically update HOST/PORT via mdns",
           "panel_pin": "Panel PIN code"
         }
       },

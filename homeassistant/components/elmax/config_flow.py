@@ -27,7 +27,10 @@ from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
-    CONF_ELMAX_MODE_DIRECT_URI,
+    CONF_ELMAX_MODE_DIRECT_HOST,
+    CONF_ELMAX_MODE_DIRECT_PORT,
+    CONF_ELMAX_MODE_DIRECT_SSL,
+    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -67,7 +70,10 @@ CHOOSE_MODE_SCHEMA = vol.Schema(
 
 DIRECT_SETUP_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ELMAX_MODE_DIRECT_URI): str,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_PORT): int,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL): bool,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS): bool,
         vol.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
@@ -80,7 +86,7 @@ ZEROCONF_SETUP_SCHEMA = vol.Schema(
 
 
 def _store_panel_by_name(
-    panel: PanelEntry, username: str, panel_names: dict[str, str]
+        panel: PanelEntry, username: str, panel_names: dict[str, str]
 ) -> None:
     original_panel_name = panel.get_name_by_user(username=username)
     panel_id = panel.hash
@@ -98,22 +104,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _client: Elmax
-    _username: str
-    _password: str
+    _selected_mode: str
+    _panel_pin: str
+    _panel_id: str
+
+    # Direct API variables
+    _panel_direct_use_ssl: bool
+    _panel_direct_hostname: str
+    _panel_direct_port: int
+    _panel_direct_follow_mdns: bool
+
+    # Cloud API variables
+    _cloud_username: str
+    _cloud_password: str
+    _reauth_cloud_username: str | None
+    _reauth_cloud_panelid: str | None
+
+    # Panel selection variables
     _panels_schema: vol.Schema
     _panel_names: dict
-    _reauth_username: str | None
-    _reauth_panelid: str | None
-    _zeroconf_panel_api_uri: str
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the flow initiated by the user."""
         return await self.async_step_choose_mode(user_input=user_input)
 
     async def async_step_choose_mode(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle local vs cloud mode selection step."""
         errors: dict[str, Any] = {}
@@ -122,8 +140,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors=errors
             )
 
-        selected_mode = user_input[CONF_ELMAX_MODE]
-        if selected_mode == CONF_ELMAX_MODE_CLOUD:
+        self._selected_mode = user_input[CONF_ELMAX_MODE]
+        if self._selected_mode == CONF_ELMAX_MODE_CLOUD:
             return self.async_show_form(
                 step_id="cloud_setup", data_schema=None, errors=errors
             )
@@ -132,12 +150,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
         )
 
-    async def _test_direct_and_create_entry(self, panel_api_uri: str, panel_pin: str):
+    async def _test_direct_and_create_entry(self):
         """Test the direct connection to the Elmax panel and create and entry if successful."""
-        # Attempt the connection to make sure the pin works. Also,
-        # take the chance to retrieve the panel ID via APIs.
-        client_api_url = get_direct_api_url(panel_api_uri)
-        client = ElmaxLocal(panel_api_url=client_api_url, panel_code=panel_pin)
+        # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
+        client_api_url = get_direct_api_url(host=self._panel_direct_hostname, port=self._panel_direct_port,
+                                            ssl=self._panel_direct_use_ssl)
+        client = ElmaxLocal(panel_api_url=client_api_url, panel_code=self._panel_pin)
         await client.login()
         # Retrieve the current panel status. If this succeeds, it means the
         # setup did complete successfully.
@@ -146,10 +164,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id=status.panel_id,
             title=f"Elmax Direct ({status.panel_id})",
             data={
-                CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
-                CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
-                CONF_ELMAX_PANEL_PIN: panel_pin,
-                CONF_ELMAX_PANEL_ID: status.panel_id,
+                CONF_ELMAX_MODE: self._selected_mode,
+                CONF_ELMAX_MODE_DIRECT_HOST: self._panel_direct_hostname,
+                CONF_ELMAX_MODE_DIRECT_PORT: self._panel_direct_port,
+                CONF_ELMAX_MODE_DIRECT_SSL: self._panel_direct_use_ssl,
+                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: self._panel_direct_follow_mdns,
+                CONF_ELMAX_PANEL_PIN: self._panel_pin,
+                CONF_ELMAX_PANEL_ID: status.panel_id
             },
         )
 
@@ -162,12 +183,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=None,
             )
 
-        panel_api_uri = user_input[CONF_ELMAX_MODE_DIRECT_URI]
-        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+        self._panel_direct_hostname = user_input[CONF_ELMAX_MODE_DIRECT_HOST]
+        self._panel_direct_port = user_input[CONF_ELMAX_MODE_DIRECT_PORT]
+        self._panel_direct_use_ssl = user_input[CONF_ELMAX_MODE_DIRECT_SSL]
+        self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+
         try:
-            return await self._test_direct_and_create_entry(
-                panel_api_uri=panel_api_uri, panel_pin=panel_pin
-            )
+            return await self._test_direct_and_create_entry()
         except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
                 step_id="direct_setup",
@@ -189,11 +211,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=ZEROCONF_SETUP_SCHEMA,
                 errors=None,
             )
-        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+        self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
         try:
-            return await self._test_direct_and_create_entry(
-                panel_api_uri=self._zeroconf_panel_api_uri, panel_pin=panel_pin
-            )
+            return await self._test_direct_and_create_entry()
         except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
                 step_id="zeroconf_setup",
@@ -208,7 +228,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def _check_unique_and_create_entry(
-        self, unique_id: str, title: str, data: Mapping[str, Any]
+            self, unique_id: str, title: str, data: Mapping[str, Any]
     ) -> FlowResult:
         # Make sure this is the only Elmax integration for this specific panel id.
         await self.async_set_unique_id(unique_id)
@@ -274,13 +294,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         self._panels_schema = schema
-        self._username = username
-        self._password = password
+        self._cloud_username = username
+        self._cloud_password = password
         # If everything went OK, proceed to panel selection.
         return await self.async_step_panels(user_input=None)
 
     async def async_step_panels(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle Panel selection step."""
         errors: dict[str, Any] = {}
@@ -318,15 +338,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD,
                 CONF_ELMAX_PANEL_ID: panel_id,
                 CONF_ELMAX_PANEL_PIN: panel_pin,
-                CONF_ELMAX_USERNAME: self._username,
-                CONF_ELMAX_PASSWORD: self._password,
+                CONF_ELMAX_USERNAME: self._cloud_username,
+                CONF_ELMAX_PASSWORD: self._cloud_password,
             },
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_username = entry_data.get(CONF_ELMAX_USERNAME)
-        self._reauth_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
+        self._reauth_cloud_username = entry_data.get(CONF_ELMAX_USERNAME)
+        self._reauth_cloud_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
@@ -335,43 +355,43 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             panel_pin = user_input.get(CONF_ELMAX_PANEL_PIN)
             password = user_input.get(CONF_ELMAX_PASSWORD)
-            entry = await self.async_set_unique_id(self._reauth_panelid)
+            entry = await self.async_set_unique_id(self._reauth_cloud_panelid)
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
             try:
                 # Test login.
                 client = await self._async_login(
-                    username=self._reauth_username, password=password
+                    username=self._reauth_cloud_username, password=password
                 )
 
                 # Make sure the panel we are authenticating to is still available.
                 panels = [
                     p
                     for p in await client.list_control_panels()
-                    if p.hash == self._reauth_panelid
+                    if p.hash == self._reauth_cloud_panelid
                 ]
                 if len(panels) < 1:
                     raise NoOnlinePanelsError()
 
                 # Verify the pin is still valid.from
                 await client.get_panel_status(
-                    control_panel_id=self._reauth_panelid, pin=panel_pin
+                    control_panel_id=self._reauth_cloud_panelid, pin=panel_pin
                 )
 
                 # If it is, proceed with configuration update.
                 self.hass.config_entries.async_update_entry(
                     entry,
                     data={
-                        CONF_ELMAX_PANEL_ID: self._reauth_panelid,
+                        CONF_ELMAX_PANEL_ID: self._reauth_cloud_panelid,
                         CONF_ELMAX_PANEL_PIN: panel_pin,
-                        CONF_ELMAX_USERNAME: self._reauth_username,
+                        CONF_ELMAX_USERNAME: self._reauth_cloud_username,
                         CONF_ELMAX_PASSWORD: password,
                     },
                 )
                 await self.hass.config_entries.async_reload(entry.entry_id)
-                self._reauth_username = None
-                self._reauth_panelid = None
+                self._reauth_cloud_username = None
+                self._reauth_cloud_panelid = None
                 return self.async_abort(reason="reauth_successful")
 
             except ElmaxBadLoginError:
@@ -382,7 +402,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoOnlinePanelsError:
                 _LOGGER.warning(
                     "Panel ID %s is no longer associated to this user",
-                    self._reauth_panelid,
+                    self._reauth_cloud_panelid,
                 )
                 errors["base"] = "reauth_panel_disappeared"
             except ElmaxBadPinError:
@@ -393,9 +413,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # for the that specific panel.
         schema = vol.Schema(
             {
-                vol.Required(CONF_ELMAX_USERNAME): self._reauth_username,
+                vol.Required(CONF_ELMAX_USERNAME): self._reauth_cloud_username,
                 vol.Required(CONF_ELMAX_PASSWORD): str,
-                vol.Required(CONF_ELMAX_PANEL_ID): self._reauth_panelid,
+                vol.Required(CONF_ELMAX_PANEL_ID): self._reauth_cloud_panelid,
                 vol.Required(CONF_ELMAX_PANEL_PIN): str,
             }
         )
@@ -403,41 +423,49 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm", data_schema=schema, errors=errors
         )
 
-    async def _async_handle_entry_match(self, local_id:str, remote_id:str, base_uri:str):
+    async def _async_handle_entry_match(self, local_id: str, remote_id: str, host: str, port: int,
+                                        use_ssl: bool) -> None:
         # Look for another entry with the same PANEL_ID (local or remote).
         # If there already is a matching panel, take the change to notify the Coordinator
         # so that it uses the newly discovered IP address. This mitigates the issues
         # arising with DHCP and IP changes of the panels.
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_ELMAX_PANEL_ID] in (local_id, remote_id):
-                # If the discovery reveals an entry with different target-uri for the same PANEL_ID,
-                # it means the panel has changed it's IP and we need to update the config-data entry accordingly.
-                new_uri = get_direct_api_url(base_uri)
-                if entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD) == CONF_ELMAX_MODE_DIRECT and entry.data[CONF_ELMAX_MODE_DIRECT_URI].lstrip("https").lstrip("http") != new_uri.lstrip("https").lstrip("http"):
+                # If the discovery finds another entry with the same ID, skip the notification.
+                # However, if the discovery finds a new host for a panel that was already registered
+                # for a given host (leave PORT comparison aside as we don't want to get notified twice
+                # for HTTP and HTTPS), update the entry so that the integration "follows" the DHCP IP.
+                if entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD) == CONF_ELMAX_MODE_DIRECT \
+                        and entry.data[CONF_ELMAX_MODE_DIRECT_HOST] != host \
+                        and entry.data[CONF_ELMAX_MODE_DIRECT_SSL] == use_ssl \
+                        and entry.data.get(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, False):
                     new_data = dict()
                     new_data.update(entry.data)
-                    new_data[CONF_ELMAX_MODE_DIRECT_URI] = new_uri
+                    new_data[CONF_ELMAX_MODE_DIRECT_HOST] = host
+                    new_data[CONF_ELMAX_MODE_DIRECT_PORT] = port
                     self.hass.config_entries.async_update_entry(entry,
                                                                 unique_id=entry.unique_id,
                                                                 data=new_data)
-                # Abort the configuration, as there already is an entry for this integration.
+                # Abort the configuration, as there already is an entry for this PANEL-ID.
                 self.async_abort(reason="already_configured")
 
     async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
+            self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
         host = discovery_info.host
-        port = discovery_info.port
+        port = int(discovery_info.port)
         local_id = discovery_info.properties.get("idl")
         remote_id = discovery_info.properties.get("idr")
-        schema = "http"
-        if discovery_info.type == "_elmax-ssl._tcp.local.":
-            schema = "https"
-        client_api_url = f"{schema}://{host}:{port}"
-        await self._async_handle_entry_match(local_id, remote_id, client_api_url)
+        use_ssl = discovery_info.type == "_elmax-ssl._tcp.local."
+        await self._async_handle_entry_match(local_id, remote_id, host, port, use_ssl)
 
-        self._zeroconf_panel_api_uri = client_api_url
+        self._selected_mode = CONF_ELMAX_MODE_DIRECT
+        self._panel_direct_hostname = host
+        self._panel_direct_port = port
+        self._panel_direct_use_ssl = use_ssl
+        self._panel_direct_follow_mdns = True
+
         return self.async_show_form(
             step_id="zeroconf_setup", data_schema=ZEROCONF_SETUP_SCHEMA
         )
