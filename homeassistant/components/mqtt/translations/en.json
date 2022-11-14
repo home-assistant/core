@@ -7,7 +7,7 @@
         "error": {
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
-            "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
+            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
             "bad_client_cert_key": "Client certificate and private are no valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
@@ -81,7 +81,7 @@
         "error": {
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
-            "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
+            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
             "bad_client_cert_key": "Client certificate and private are no valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
