@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib
 import json
 import pathlib
+from types import ModuleType
 from typing import Any
 
 import attr
@@ -44,10 +45,10 @@ class Brand:
     """Represent a brand in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path, config: Config):
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Brand]:
         """Load all brands in a directory."""
         assert path.is_dir()
-        brands = {}
+        brands: dict[str, Brand] = {}
         for fil in path.iterdir():
             brand = cls(fil)
             brand.load_brand(config)
@@ -66,16 +67,19 @@ class Brand:
     @property
     def name(self) -> str | None:
         """Return name of the integration."""
+        assert self.brand is not None, "brand has not been loaded"
         return self.brand.get("name")
 
     @property
     def integrations(self) -> list[str]:
         """Return the sub integrations of this brand."""
-        return self.brand.get("integrations")
+        assert self.brand is not None, "brand has not been loaded"
+        return self.brand.get("integrations", [])
 
     @property
     def iot_standards(self) -> list[str]:
         """Return list of supported IoT standards."""
+        assert self.brand is not None, "brand has not been loaded"
         return self.brand.get("iot_standards", [])
 
     def load_brand(self, config: Config) -> None:
@@ -85,7 +89,7 @@ class Brand:
             return
 
         try:
-            brand = json.loads(self.path.read_text())
+            brand: dict[str, Any] = json.loads(self.path.read_text())
         except ValueError as err:
             config.add_error(
                 "model", f"Brand file {self.path.name} contains invalid JSON: {err}"
@@ -100,10 +104,10 @@ class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path):
+    def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
-        integrations = {}
+        integrations: dict[str, Integration] = {}
         for fil in path.iterdir():
             if fil.is_file() or fil.name == "__pycache__":
                 continue
@@ -143,51 +147,62 @@ class Integration:
     @property
     def disabled(self) -> str | None:
         """Return if integration is disabled."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("disabled")
 
     @property
     def name(self) -> str:
         """Return name of the integration."""
-        return self.manifest["name"]
+        assert self.manifest is not None, "manifest has not been loaded"
+        name: str = self.manifest["name"]
+        return name
 
     @property
-    def quality_scale(self) -> str:
+    def quality_scale(self) -> str | None:
         """Return quality scale of the integration."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("quality_scale")
 
     @property
     def config_flow(self) -> bool:
         """Return if the integration has a config flow."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("config_flow", False)
 
     @property
     def requirements(self) -> list[str]:
         """List of requirements."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("requirements", [])
 
     @property
     def dependencies(self) -> list[str]:
         """List of dependencies."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("dependencies", [])
 
     @property
     def supported_by(self) -> str:
         """Return the integration supported by this virtual integration."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("supported_by", {})
 
     @property
     def integration_type(self) -> str:
         """Get integration_type."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("integration_type", "hub")
 
     @property
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("iot_class")
 
     @property
     def iot_standards(self) -> list[str]:
         """Return the IoT standard supported by this virtual integration."""
+        assert self.manifest is not None, "manifest has not been loaded"
         return self.manifest.get("iot_standards", [])
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
@@ -206,14 +221,14 @@ class Integration:
             return
 
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest: dict[str, Any] = json.loads(manifest_path.read_text())
         except ValueError as err:
             self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
         self.manifest = manifest
 
-    def import_pkg(self, platform=None):
+    def import_pkg(self, platform: str | None = None) -> ModuleType:
         """Import the Python file."""
         pkg = f"homeassistant.components.{self.domain}"
         if platform is not None:
