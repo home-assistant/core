@@ -1,6 +1,7 @@
 """Bluetooth support for esphome."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from aioesphomeapi import APIClient
@@ -11,14 +12,8 @@ from homeassistant.components.bluetooth import (
     async_register_scanner,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    async_get_hass,
-    callback as hass_callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from ..domain_data import DomainData
 from ..entry_data import RuntimeEntryData
 from .client import ESPHomeClient
 from .scanner import ESPHomeScanner
@@ -27,18 +22,25 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @hass_callback
-def async_can_connect(source: str) -> bool:
-    """Check if a given source can make another connection."""
-    domain_data = DomainData.get(async_get_hass())
-    entry = domain_data.get_by_unique_id(source)
-    entry_data = domain_data.get_entry_data(entry)
-    _LOGGER.debug(
-        "Checking if %s can connect, available=%s, ble_connections_free=%s",
-        source,
-        entry_data.available,
-        entry_data.ble_connections_free,
-    )
-    return bool(entry_data.available and entry_data.ble_connections_free)
+def _async_can_connect_factory(
+    entry_data: RuntimeEntryData, source: str
+) -> Callable[[], bool]:
+    """Create a can_connect function for a specific RuntimeEntryData instance."""
+
+    @hass_callback
+    def _async_can_connect() -> bool:
+        """Check if a given source can make another connection."""
+        can_connect = bool(entry_data.available and entry_data.ble_connections_free)
+        _LOGGER.debug(
+            "%s: Checking can connect, available=%s, ble_connections_free=%s result=%s",
+            source,
+            entry_data.available,
+            entry_data.ble_connections_free,
+            can_connect,
+        )
+        return can_connect
+
+    return _async_can_connect
 
 
 async def async_connect_scanner(
@@ -55,7 +57,7 @@ async def async_connect_scanner(
     version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
-        "Connecting scanner for %s, version=%s, connectable=%s",
+        "%s: Connecting scanner version=%s, connectable=%s",
         source,
         version,
         connectable,
@@ -63,7 +65,7 @@ async def async_connect_scanner(
     connector = HaBluetoothConnector(
         client=ESPHomeClient,
         source=source,
-        can_connect=lambda: async_can_connect(source),
+        can_connect=_async_can_connect_factory(entry_data, source),
     )
     scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
     unload_callbacks = [

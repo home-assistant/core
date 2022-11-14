@@ -21,7 +21,6 @@ from .entity import OverkizDescriptiveEntity, OverkizDeviceClass
 class OverkizSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
-    options: list[str | OverkizCommandParam]
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
 
 
@@ -148,11 +147,6 @@ class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
             return str(state.value)
 
         return None
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

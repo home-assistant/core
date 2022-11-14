@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_BASIC,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -290,6 +291,33 @@ class P1MotionTriggerIndicatorSwitch(
     """Representation of a ZHA motion triggering configuration entity."""
 
     _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugPowerOutageMemorySwitch(
+    ZHASwitchConfigurationEntity, id_suffix="power_outage_memory"
+):
+    """Representation of a ZHA power outage memory configuration entity."""
+
+    _zcl_attribute: str = "power_outage_memory"
+    _attr_name = "Power outage memory"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001", "SML002", "SML003", "SML004"},
+)
+class HueMotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -300,6 +328,7 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -310,6 +339,7 @@ class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "disable_led"
+    _attr_name = "Disable LED"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -388,3 +418,15 @@ class InovelliRelayClickInOnOffMode(
 
     _zcl_attribute: str = "relay_click_in_on_off_mode"
     _attr_name: str = "Disable relay click in on off mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDisableDoubleTapClearNotificationsMode(
+    ZHASwitchConfigurationEntity, id_suffix="disable_clear_notifications_double_tap"
+):
+    """Inovelli disable clear notifications double tap control."""
+
+    _zcl_attribute: str = "disable_clear_notifications_double_tap"
+    _attr_name: str = "Disable config 2x tap to clear notifications"

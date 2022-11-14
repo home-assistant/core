@@ -10,7 +10,8 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
             "discovery_requires_supervisor": "Oppdagelsen krever veilederen.",
-            "not_zwave_device": "Oppdaget enhet er ikke en Z-Wave-enhet."
+            "not_zwave_device": "Oppdaget enhet er ikke en Z-Wave-enhet.",
+            "not_zwave_js_addon": "Oppdaget tillegg er ikke det offisielle Z-Wave JS tillegget."
         },
         "error": {
             "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegg. Sjekk konfigurasjonen.",

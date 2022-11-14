@@ -1,4 +1,4 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly cover platform."""
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,

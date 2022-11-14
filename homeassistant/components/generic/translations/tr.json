@@ -45,6 +45,13 @@
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 },
                 "description": "Kameraya ba\u011flanmak i\u00e7in ayarlar\u0131 girin."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Bu g\u00f6r\u00fcnt\u00fc iyi g\u00f6r\u00fcn\u00fcyor."
+                },
+                "description": "![Kamera Dura\u011fan G\u00f6r\u00fcnt\u00fc \u00d6nizlemesi]( {preview_url} )",
+                "title": "\u00d6n izleme"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Bu g\u00f6r\u00fcnt\u00fc iyi g\u00f6r\u00fcn\u00fcyor."
+                },
+                "description": "![Kamera Dura\u011fan G\u00f6r\u00fcnt\u00fc \u00d6nizlemesi]( {preview_url} )",
+                "title": "\u00d6nizleme"
+            },
             "content_type": {
                 "data": {
                     "content_type": "\u0130\u00e7erik T\u00fcr\u00fc"

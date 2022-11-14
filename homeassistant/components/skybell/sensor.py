@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
 
 from aioskybell import SkybellDevice
 from aioskybell.helpers import const as CONST
@@ -17,15 +17,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .entity import DOMAIN, SkybellEntity
 
 
 @dataclass
-class SkybellSensorEntityDescription(SensorEntityDescription):
-    """Class to describe a Skybell sensor."""
+class SkybellSensorEntityDescriptionMixIn:
+    """Mixin for Skybell sensor."""
 
-    value_fn: Callable[[SkybellDevice], Any] = lambda val: val
+    value_fn: Callable[[SkybellDevice], StateType | datetime]
+
+
+@dataclass
+class SkybellSensorEntityDescription(
+    SensorEntityDescription, SkybellSensorEntityDescriptionMixIn
+):
+    """Class to describe a Skybell sensor."""
 
 
 SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
@@ -110,6 +118,6 @@ class SkybellSensor(SkybellEntity, SensorEntity):
     entity_description: SkybellSensorEntityDescription
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)

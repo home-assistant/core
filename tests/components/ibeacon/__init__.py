@@ -58,7 +58,21 @@ BEACON_RANDOM_ADDRESS_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
-
+TESLA_TRANSIENT = BluetoothServiceInfo(
+    address="CC:CC:CC:CC:CC:CC",
+    rssi=-60,
+    name="S6da7c9389bd5452cC",
+    manufacturer_data={
+        76: b"\x02\x15t'\x8b\xda\xb6DE \x8f\x0cr\x0e\xaf\x05\x995\x00\x00[$\xc5"
+    },
+    service_data={},
+    service_uuids=[],
+    source="hci0",
+)
+TESLA_TRANSIENT_BLE_DEVICE = BLEDevice(
+    address="CC:CC:CC:CC:CC:CC",
+    name="S6da7c9389bd5452cC",
+)
 
 FEASY_BEACON_BLE_DEVICE = BLEDevice(
     address="AA:BB:CC:DD:EE:FF",

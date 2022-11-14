@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
             "email_2fa_timed_out": "Tidsavbrudd mens du ventet p\u00e5 e-postbasert tofaktorautentisering.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "wrong_account": "Oppgitt brukerlegitimasjon samsvarer ikke med denne SimpliSafe-kontoen."
         },
         "error": {

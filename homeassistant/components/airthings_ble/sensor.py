@@ -29,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
@@ -112,7 +113,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
-    is_metric = hass.config.units.is_metric
+    is_metric = hass.config.units is METRIC_SYSTEM
 
     coordinator: DataUpdateCoordinator[AirthingsDevice] = hass.data[DOMAIN][
         entry.entry_id

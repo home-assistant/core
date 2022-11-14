@@ -43,13 +43,14 @@ def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        TEMP_CELSIUS,
-        LENGTH_METERS,
-        SPEED_KILOMETERS_PER_HOUR,
-        VOLUME_LITERS,
-        MASS_GRAMS,
-        PRESSURE_PA,
-        LENGTH_MILLIMETERS,
+        accumulated_precipitation=LENGTH_MILLIMETERS,
+        conversions={},
+        length=LENGTH_METERS,
+        mass=MASS_GRAMS,
+        pressure=PRESSURE_PA,
+        temperature=TEMP_CELSIUS,
+        volume=VOLUME_LITERS,
+        wind_speed=SPEED_KILOMETERS_PER_HOUR,
     )
 
 
@@ -1347,6 +1348,22 @@ def test_is_state(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state", "available") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_is_state_attr(hass):
     """Test is_state_attr method."""
@@ -1367,10 +1384,28 @@ def test_is_state_attr(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_state_attr(hass):
     """Test state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set(
+        "test.object", "available", {"effect": "action", "mode": "on"}
+    )
     tpl = template.Template(
         """
 {% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}
@@ -1387,6 +1422,22 @@ def test_state_attr(hass):
     )
     assert tpl.async_render() is True
 
+    tpl = template.Template(
+        """
+{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("state_attr", "effect") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "action"
+
 
 def test_states_function(hass):
     """Test using states as a function."""
@@ -1396,6 +1447,22 @@ def test_states_function(hass):
 
     tpl2 = template.Template('{{ states("test.object2") }}', hass)
     assert tpl2.async_render() == "unknown"
+
+    tpl = template.Template(
+        """
+{% if "test.object" | states == "available" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("states") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "available"
 
 
 @patch(
@@ -2473,8 +2540,8 @@ async def test_integration_entities(hass):
     assert info.rate_limit is None
 
 
-async def test_entry_id(hass):
-    """Test entry_id function."""
+async def test_config_entry_id(hass):
+    """Test config_entry_id function."""
     config_entry = MockConfigEntry(domain="light", title="Some integration")
     config_entry.add_to_hass(hass)
     entity_registry = mock_registry(hass)
@@ -2482,17 +2549,19 @@ async def test_entry_id(hass):
         "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
     )
 
-    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    info = render_to_info(hass, "{{ 'sensor.fail' | config_entry_id }}")
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    info = render_to_info(hass, "{{ 56 | config_entry_id }}")
     assert_result_info(info, None)
 
-    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | config_entry_id }}")
     assert_result_info(info, None)
 
-    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    info = render_to_info(
+        hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
+    )
     assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 

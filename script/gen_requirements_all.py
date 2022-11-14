@@ -124,9 +124,8 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# Pin backoff for compatibility until most libraries have been updated
-# https://github.com/home-assistant/core/pull/70817
-backoff<2.0
+# Version 2.0 added typing, prevent accidental fallbacks
+backoff>=2.0
 
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
@@ -142,6 +141,9 @@ iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
+
+# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
+uamqp==1.6.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

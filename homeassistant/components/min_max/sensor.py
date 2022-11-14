@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -61,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_UNIQUE_ID): str,
     }
 )
 
@@ -102,11 +104,12 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, None)]
+        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
     )
 
 

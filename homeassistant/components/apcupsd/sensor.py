@@ -172,6 +172,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
+    "laststest": SensorEntityDescription(
+        key="laststest",
+        name="UPS Last Self Test",
+        icon="mdi:calendar-clock",
+    ),
     "lastxfer": SensorEntityDescription(
         key="lastxfer",
         name="UPS Last Transfer",
@@ -331,8 +336,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "selftest": SensorEntityDescription(
         key="selftest",
-        name="UPS Last Self Test",
-        icon="mdi:calendar-clock",
+        name="UPS Self Test result",
+        icon="mdi:information-outline",
     ),
     "sense": SensorEntityDescription(
         key="sense",

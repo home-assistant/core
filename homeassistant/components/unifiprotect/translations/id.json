@@ -41,6 +41,12 @@
             }
         }
     },
+    "issues": {
+        "ea_warning": {
+            "description": "Anda menggunakan UniFi Protect v{version} yang merupakan versi Early Access. Versi Early Access tidak didukung oleh Home Assistant dan dapat menyebabkan integrasi UniFi Protect rusak atau tidak berfungsi seperti yang diharapkan.",
+            "title": "UniFi Protect v{version} adalah versi Early Access"
+        }
+    },
     "options": {
         "error": {
             "invalid_mac_list": "Harus berupa daftar alamat MAC yang dipisahkan dengan koma"

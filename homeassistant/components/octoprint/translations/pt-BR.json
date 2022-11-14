@@ -18,7 +18,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 }
             },
             "user": {

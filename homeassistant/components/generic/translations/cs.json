@@ -18,6 +18,9 @@
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
                 "description": "Zadejte nastaven\u00ed pro p\u0159ipojen\u00ed ke kame\u0159e."
+            },
+            "user_confirm_still": {
+                "title": "N\u00e1hled"
             }
         }
     },
@@ -26,6 +29,9 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "confirm_still": {
+                "title": "N\u00e1hled"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Typ obsahu"

@@ -20,6 +20,7 @@ from zwave_js_server.model.notification import (
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -41,7 +42,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from .addon import AddonError, AddonManager, AddonState, get_addon_manager
+from .addon import get_addon_manager
 from .api import async_register_api
 from .const import (
     ATTR_ACKNOWLEDGED_FRAMES,
@@ -854,24 +855,24 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
     addon_state = addon_info.state
 
+    addon_config = {
+        CONF_ADDON_DEVICE: usb_path,
+        CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
+        CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
+        CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
+    }
+
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady

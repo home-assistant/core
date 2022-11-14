@@ -45,6 +45,13 @@
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "description": "Wprowad\u017a ustawienia, aby po\u0142\u0105czy\u0107 si\u0119 z kamer\u0105."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Ten obraz wygl\u0105da dobrze."
+                },
+                "description": "![Podgl\u0105d nieruchomego obrazu z kamery]({preview_url})",
+                "title": "Podgl\u0105d"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Ten obraz wygl\u0105da dobrze."
+                },
+                "description": "![Podgl\u0105d nieruchomego obrazu z kamery]({preview_url})",
+                "title": "Podgl\u0105d"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Typ zawarto\u015bci"

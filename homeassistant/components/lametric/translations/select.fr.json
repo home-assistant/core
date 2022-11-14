@@ -1,0 +1,8 @@
+{
+    "state": {
+        "lametric__brightness_mode": {
+            "auto": "Automatique",
+            "manual": "Manuel"
+        }
+    }
+}

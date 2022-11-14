@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
             "is_voltage": "Current {entity_name} voltage",
             "is_volume": "Current {entity_name} volume",
+            "is_water": "Current {entity_name} water",
             "is_weight": "Current {entity_name} weight"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
             "voltage": "{entity_name} voltage changes",
             "volume": "{entity_name} volume changes",
+            "water": "{entity_name} water changes",
             "weight": "{entity_name} weight changes"
         }
     },

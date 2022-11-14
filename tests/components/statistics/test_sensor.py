@@ -391,7 +391,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
 
 
 async def test_precision(hass: HomeAssistant):
-    """Test correct result with precision set."""
+    """Test correct results with precision set."""
     assert await async_setup_component(
         hass,
         "sensor",
@@ -431,6 +431,60 @@ async def test_precision(hass: HomeAssistant):
     state = hass.states.get("sensor.test_precision_3")
     assert state is not None
     assert state.state == str(round(mean, 3))
+
+
+async def test_percentile(hass: HomeAssistant):
+    """Test correct results for percentile characteristic."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_omitted",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_default",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                    "percentile": 50,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_min",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                    "percentile": 1,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_percentile_omitted")
+    assert state is not None
+    assert state.state == str(9.2)
+    state = hass.states.get("sensor.test_percentile_default")
+    assert state is not None
+    assert state.state == str(9.2)
+    state = hass.states.get("sensor.test_percentile_min")
+    assert state is not None
+    assert state.state == str(2.72)
 
 
 async def test_device_class(hass: HomeAssistant):
@@ -753,13 +807,11 @@ async def test_state_characteristics(hass: HomeAssistant):
         },
         {
             "source_sensor_domain": "sensor",
-            "name": "quantiles",
+            "name": "percentile",
             "value_0": STATE_UNKNOWN,
             "value_1": STATE_UNKNOWN,
-            "value_9": [
-                round(quantile, 2) for quantile in statistics.quantiles(VALUES_NUMERIC)
-            ],
-            "unit": None,
+            "value_9": 9.2,
+            "unit": "°C",
         },
         {
             "source_sensor_domain": "sensor",
@@ -767,6 +819,56 @@ async def test_state_characteristics(hass: HomeAssistant):
             "value_0": STATE_UNKNOWN,
             "value_1": STATE_UNKNOWN,
             "value_9": float(round(statistics.stdev(VALUES_NUMERIC), 2)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum",
+            "value_0": STATE_UNKNOWN,
+            "value_1": float(VALUES_NUMERIC[-1]),
+            "value_9": float(sum(VALUES_NUMERIC)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        abs(20 - 17),
+                        abs(15.2 - 20),
+                        abs(5 - 15.2),
+                        abs(3.8 - 5),
+                        abs(9.2 - 3.8),
+                        abs(6.7 - 9.2),
+                        abs(14 - 6.7),
+                        abs(6 - 14),
+                    ]
+                )
+            ),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences_nonnegative",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        20 - 17,
+                        15.2 - 0,
+                        5 - 0,
+                        3.8 - 0,
+                        9.2 - 3.8,
+                        6.7 - 0,
+                        14 - 6.7,
+                        6 - 0,
+                    ]
+                )
+            ),
             "unit": "°C",
         },
         {
@@ -1010,7 +1112,7 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
     assert state is None
 
 
-async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the recorder database."""
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
@@ -1049,7 +1151,7 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
 
-async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database_with_maxage(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the database."""
     now = dt_util.utcnow()
     mock_data = {
@@ -1109,7 +1211,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
     ) + timedelta(hours=1)
 
 
-async def test_reload(hass: HomeAssistant, recorder_mock):
+async def test_reload(recorder_mock, hass: HomeAssistant):
     """Verify we can reload statistics sensors."""
 
     await async_setup_component(

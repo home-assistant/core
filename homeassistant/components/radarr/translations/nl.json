@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
+            "unknown": "Onverwachte fout",
+            "zeroconf_failed": "API-sleutel niet gevonden. Voer het handmatig in"
         },
         "step": {
             "reauth_confirm": {
@@ -20,6 +21,14 @@
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De Radarr YAML-configuratie wordt verwijderd"
+        },
+        "removed_attributes": {
+            "title": "Wijzigingen in de Radarr-integratie"
         }
     }
 }

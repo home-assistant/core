@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "auth_failed": "Kan ikke hente APAn\u00f8kkel for program",
             "cannot_connect": "Tilkobling mislyktes",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {

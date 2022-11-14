@@ -1,0 +1,6 @@
+{
+  "domain": "bswitch",
+  "name": "BSwitch",
+  "integration_type": "virtual",
+  "supported_by": "switchbee"
+}

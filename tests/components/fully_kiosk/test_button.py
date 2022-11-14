@@ -22,31 +22,56 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_restart_browser")
     assert entry
     assert entry.unique_id == "abcdef-123456-restartApp"
-    await call_service(hass, "press", "button.amazon_fire_restart_browser")
+    assert await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_restart_browser"},
+        blocking=True,
+    )
     assert len(mock_fully_kiosk.restartApp.mock_calls) == 1
 
     entry = entity_registry.async_get("button.amazon_fire_reboot_device")
     assert entry
     assert entry.unique_id == "abcdef-123456-rebootDevice"
-    await call_service(hass, "press", "button.amazon_fire_reboot_device")
+    assert await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_reboot_device"},
+        blocking=True,
+    )
     assert len(mock_fully_kiosk.rebootDevice.mock_calls) == 1
 
     entry = entity_registry.async_get("button.amazon_fire_bring_to_foreground")
     assert entry
     assert entry.unique_id == "abcdef-123456-toForeground"
-    await call_service(hass, "press", "button.amazon_fire_bring_to_foreground")
+    assert await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_bring_to_foreground"},
+        blocking=True,
+    )
     assert len(mock_fully_kiosk.toForeground.mock_calls) == 1
 
     entry = entity_registry.async_get("button.amazon_fire_send_to_background")
     assert entry
     assert entry.unique_id == "abcdef-123456-toBackground"
-    await call_service(hass, "press", "button.amazon_fire_send_to_background")
+    assert await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_send_to_background"},
+        blocking=True,
+    )
     assert len(mock_fully_kiosk.toBackground.mock_calls) == 1
 
     entry = entity_registry.async_get("button.amazon_fire_load_start_url")
     assert entry
     assert entry.unique_id == "abcdef-123456-loadStartUrl"
-    await call_service(hass, "press", "button.amazon_fire_load_start_url")
+    assert await hass.services.async_call(
+        button.DOMAIN,
+        button.SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.amazon_fire_load_start_url"},
+        blocking=True,
+    )
     assert len(mock_fully_kiosk.loadStartUrl.mock_calls) == 1
 
     assert entry.device_id
@@ -60,10 +85,3 @@ async def test_buttons(
     assert device_entry.model == "KFDOWI"
     assert device_entry.name == "Amazon Fire"
     assert device_entry.sw_version == "1.42.5"
-
-
-def call_service(hass, service, entity_id):
-    """Call any service on entity."""
-    return hass.services.async_call(
-        button.DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )

@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from melnor_bluetooth.device import Device
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import generate_advertisement_data
 
 FAKE_ADDRESS_1 = "FAKE-ADDRESS-1"
 FAKE_ADDRESS_2 = "FAKE-ADDRESS-2"
@@ -30,7 +30,7 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(FAKE_ADDRESS_1, None),
-    advertisement=AdvertisementData(local_name=""),
+    advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
 )
@@ -46,7 +46,7 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(FAKE_ADDRESS_2, None),
-    advertisement=AdvertisementData(local_name=""),
+    advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
 )

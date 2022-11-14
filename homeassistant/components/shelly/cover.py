@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
@@ -40,7 +39,8 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up cover for device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator and coordinator.device.blocks
     blocks = [block for block in coordinator.device.blocks if block.type == "roller"]
 
     if not blocks:
@@ -56,8 +56,8 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
     cover_key_ids = get_rpc_key_ids(coordinator.device.status, "cover")
 
     if not cover_key_ids:

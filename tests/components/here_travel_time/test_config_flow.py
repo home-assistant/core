@@ -31,6 +31,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .const import (
     API_KEY,
@@ -227,10 +232,21 @@ async def test_step_destination_coordinates(
 
 
 @pytest.mark.usefixtures("valid_response")
+@pytest.mark.parametrize(
+    "unit_system, expected_unit_option",
+    [
+        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
+        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
 async def test_step_destination_entity(
-    hass: HomeAssistant, origin_step_result: data_entry_flow.FlowResult
+    hass: HomeAssistant,
+    origin_step_result: data_entry_flow.FlowResult,
+    unit_system: UnitSystem,
+    expected_unit_option: str,
 ) -> None:
     """Test the origin coordinates step."""
+    hass.config.units = unit_system
     menu_result = await hass.config_entries.flow.async_configure(
         origin_step_result["flow_id"], {"next_step_id": "destination_entity"}
     )
@@ -249,6 +265,13 @@ async def test_step_destination_entity(
         CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
         CONF_DESTINATION_ENTITY_ID: "zone.home",
         CONF_MODE: TRAVEL_MODE_CAR,
+    }
+    assert entry.options == {
+        CONF_UNIT_SYSTEM: expected_unit_option,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+        CONF_ARRIVAL_TIME: None,
+        CONF_DEPARTURE_TIME: None,
     }
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from simplepush import UnknownError, send, send_encrypted
+from simplepush import UnknownError, send
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,15 +17,19 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
     """Validate user input."""
     try:
         if CONF_PASSWORD in entry:
-            send_encrypted(
-                entry[CONF_DEVICE_KEY],
-                entry[CONF_PASSWORD],
-                entry[CONF_PASSWORD],
-                "HA test",
-                "Message delivered successfully",
+            send(
+                key=entry[CONF_DEVICE_KEY],
+                password=entry[CONF_PASSWORD],
+                salt=entry[CONF_PASSWORD],
+                title="HA test",
+                message="Message delivered successfully",
             )
         else:
-            send(entry[CONF_DEVICE_KEY], "HA test", "Message delivered successfully")
+            send(
+                key=entry[CONF_DEVICE_KEY],
+                title="HA test",
+                message="Message delivered successfully",
+            )
     except UnknownError:
         return {"base": "cannot_connect"}
 

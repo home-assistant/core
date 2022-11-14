@@ -35,6 +35,7 @@
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Z\u00f3na fut\u00e1si id\u0151k haszn\u00e1lata a RainMachine alkalmaz\u00e1sb\u00f3l",
                     "zone_run_time": "Alap\u00e9rtelmezett z\u00f3nafut\u00e1si id\u0151 (m\u00e1sodpercben)"
                 },
                 "title": "RainMachine konfigur\u00e1l\u00e1sa"

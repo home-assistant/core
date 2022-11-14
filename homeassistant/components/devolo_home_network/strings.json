@@ -8,6 +8,11 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "zeroconf_confirm": {
         "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
         "title": "Discovered devolo home network device"
@@ -19,7 +24,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "home_control": "The devolo Home Control Central Unit does not work with this integration."
+      "home_control": "The devolo Home Control Central Unit does not work with this integration.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

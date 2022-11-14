@@ -249,6 +249,8 @@ async def async_setup_entry(  # noqa: C901
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
+        name = entry_data.device_info.name if entry_data.device_info else host
+        _LOGGER.debug("%s: %s disconnected, running disconnected callbacks", name, host)
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
         entry_data.disconnect_callbacks = []
@@ -307,6 +309,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
@@ -468,6 +472,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []

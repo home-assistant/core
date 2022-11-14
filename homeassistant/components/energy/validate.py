@@ -9,13 +9,13 @@ from typing import Any
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
@@ -25,9 +25,10 @@ from .const import DOMAIN
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
-        ENERGY_WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     )
 }
 ENERGY_PRICE_UNITS = tuple(
@@ -41,9 +42,10 @@ GAS_USAGE_DEVICE_CLASSES = (
 )
 GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        ENERGY_WATT_HOUR,
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     ),
     sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
@@ -52,6 +54,20 @@ GAS_PRICE_UNITS = tuple(
 )
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
+WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
+WATER_USAGE_UNITS = {
+    sensor.SensorDeviceClass.WATER: (
+        VOLUME_CUBIC_METERS,
+        VOLUME_CUBIC_FEET,
+        VOLUME_GALLONS,
+        VOLUME_LITERS,
+    ),
+}
+WATER_PRICE_UNITS = tuple(
+    f"/{unit}" for units in WATER_USAGE_UNITS.values() for unit in units
+)
+WATER_UNIT_ERROR = "entity_unexpected_unit_water"
+WATER_PRICE_UNIT_ERROR = "entity_unexpected_unit_water_price"
 
 
 @dataclasses.dataclass
@@ -421,6 +437,57 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         source_result,
                         GAS_PRICE_UNITS,
                         GAS_PRICE_UNIT_ERROR,
+                    )
+                )
+
+            if (
+                source.get("entity_energy_price") is not None
+                or source.get("number_energy_price") is not None
+            ):
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_auto_generated_cost_entity,
+                        hass,
+                        source["stat_energy_from"],
+                        source_result,
+                    )
+                )
+
+        elif source["type"] == "water":
+            wanted_statistics_metadata.add(source["stat_energy_from"])
+            validate_calls.append(
+                functools.partial(
+                    _async_validate_usage_stat,
+                    hass,
+                    statistics_metadata,
+                    source["stat_energy_from"],
+                    WATER_USAGE_DEVICE_CLASSES,
+                    WATER_USAGE_UNITS,
+                    WATER_UNIT_ERROR,
+                    source_result,
+                )
+            )
+
+            if (stat_cost := source.get("stat_cost")) is not None:
+                wanted_statistics_metadata.add(stat_cost)
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_cost_stat,
+                        hass,
+                        statistics_metadata,
+                        stat_cost,
+                        source_result,
+                    )
+                )
+            elif source.get("entity_energy_price") is not None:
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_price_entity,
+                        hass,
+                        source["entity_energy_price"],
+                        source_result,
+                        WATER_PRICE_UNITS,
+                        WATER_PRICE_UNIT_ERROR,
                     )
                 )
 

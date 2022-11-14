@@ -23,7 +23,6 @@ from . import (
 )
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
-    API_WIFI_STATUS,
     CONF_UID,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -36,7 +35,6 @@ from .util import (
 
 ATTR_CONNECTED_CLIENTS = "connected_clients"
 
-SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
@@ -69,13 +67,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.MOISTURE,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
     ),
-    ValveControllerBinarySensorDescription(
-        key=SENSOR_KIND_AP_INFO,
-        name="Onboard AP enabled",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        api_category=API_WIFI_STATUS,
-    ),
 )
 
 
@@ -95,7 +86,7 @@ async def async_setup_entry(
                 f"{uid}_ap_enabled",
                 f"switch.guardian_valve_controller_{uid}_onboard_ap",
                 "2022.12.0",
-                remove_old_entity=False,
+                remove_old_entity=True,
             ),
         ),
     )
@@ -183,10 +174,5 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self.entity_description.key == SENSOR_KIND_AP_INFO:
-            self._attr_is_on = self.coordinator.data["station_connected"]
-            self._attr_extra_state_attributes[
-                ATTR_CONNECTED_CLIENTS
-            ] = self.coordinator.data.get("ap_clients")
-        elif self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
+        if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]

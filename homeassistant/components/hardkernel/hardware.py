@@ -27,6 +27,10 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     if not board.startswith("odroid"):
         raise HomeAssistantError
 
+    config_entries = [
+        entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
     return [
         HardwareInfo(
             board=BoardInfo(
@@ -35,6 +39,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 model=board,
                 revision=None,
             ),
+            config_entries=config_entries,
             dongle=None,
             name=BOARD_NAMES.get(board, f"Unknown hardkernel Odroid model '{board}'"),
             url=None,

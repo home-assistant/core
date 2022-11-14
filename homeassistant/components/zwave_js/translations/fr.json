@@ -10,7 +10,8 @@
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "\u00c9chec de connexion",
             "discovery_requires_supervisor": "La d\u00e9couverte n\u00e9cessite le superviseur.",
-            "not_zwave_device": "L'appareil d\u00e9couvert n'est pas un appareil Z-Wave."
+            "not_zwave_device": "L'appareil d\u00e9couvert n'est pas un appareil Z-Wave.",
+            "not_zwave_js_addon": "Le module compl\u00e9mentaire d\u00e9couvert n'est pas le module compl\u00e9mentaire officiel de Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",

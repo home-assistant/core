@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Identyfikator projektu dost\u0119pu do urz\u0105dzenia"
                 },
-                "description": "Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia Nest, kt\u00f3rego konfiguracja **wymaga op\u0142aty w wysoko\u015bci 5 dolar\u00f3w**.\n1. Przejd\u017a do [Konsoli dost\u0119pu do urz\u0105dzenia]({device_access_console_url}) i przejd\u017a przez proces p\u0142atno\u015bci.\n2. Kliknij **Utw\u00f3rz projekt**.\n3. Nadaj projektowi dost\u0119pu do urz\u0105dzenia nazw\u0119 i kliknij **Dalej**.\n4. Wprowad\u017a sw\u00f3j identyfikator klienta OAuth\n5. W\u0142\u0105cz wydarzenia, klikaj\u0105c **W\u0142\u0105cz** i **Utw\u00f3rz projekt**. \n\nPod ([wi\u0119cej informacji]({more_info_url})) wpisz sw\u00f3j identyfikator projektu dost\u0119pu do urz\u0105dzenia.\n",
+                "description": "Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia Nest, kt\u00f3rego konfiguracja **wymaga op\u0142aty w Google w wysoko\u015bci 5 dolar\u00f3w**.\n1. Przejd\u017a do [Konsoli dost\u0119pu do urz\u0105dzenia]({device_access_console_url}) i przejd\u017a przez proces p\u0142atno\u015bci.\n2. Kliknij **Utw\u00f3rz projekt**.\n3. Nadaj projektowi dost\u0119pu do urz\u0105dzenia nazw\u0119 i kliknij **Dalej**.\n4. Wprowad\u017a sw\u00f3j identyfikator klienta OAuth\n5. W\u0142\u0105cz wydarzenia, klikaj\u0105c **W\u0142\u0105cz** i **Utw\u00f3rz projekt**. \n\nPod ([wi\u0119cej informacji]({more_info_url})) wpisz sw\u00f3j identyfikator projektu dost\u0119pu do urz\u0105dzenia.\n",
                 "title": "Nest: Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia"
             },
             "device_project_upgrade": {

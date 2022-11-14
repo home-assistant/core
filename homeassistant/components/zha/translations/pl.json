@@ -212,6 +212,14 @@
                 "description": "ZHA zostanie zatrzymany. Czy chcesz kontynuowa\u0107?",
                 "title": "Zmiana konfiguracji ZHA"
             },
+            "instruct_unplug": {
+                "description": "Tw\u00f3j stary typ radia zosta\u0142 zresetowany. Je\u015bli sprz\u0119t nie jest ju\u017c potrzebny, mo\u017cesz go teraz od\u0142\u0105czy\u0107.",
+                "title": "Od\u0142\u0105cz stary typ radia"
+            },
+            "intent_migrate": {
+                "description": "Twoje stare radio zostanie zresetowane do ustawie\u0144 fabrycznych. Je\u015bli u\u017cywasz po\u0142\u0105czonego adaptera Z-Wave i Zigbee, takiego jak HUSBZB-1, zresetuje to tylko cz\u0119\u015b\u0107 Zigbee. \n\nCzy chcesz kontynuowa\u0107?",
+                "title": "Migracja do nowego typu radia"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Typ radia"
@@ -234,6 +242,14 @@
                 },
                 "description": "Twoja kopia zapasowa ma inny adres IEEE ni\u017c twoje radio. Aby sie\u0107 dzia\u0142a\u0142a prawid\u0142owo, nale\u017cy r\u00f3wnie\u017c zmieni\u0107 adres IEEE radia. \n\nTo jest trwa\u0142a operacja.",
                 "title": "Nadpisanie adresu IEEE radia"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Czy migrujesz do nowego typu radia czy ponownie konfigurujesz obecne radio?",
+                "menu_options": {
+                    "intent_migrate": "Migracja do nowego",
+                    "intent_reconfigure": "Ponowna konfiguracja"
+                },
+                "title": "Migracja czy ponowna konfiguracja"
             },
             "upload_manual_backup": {
                 "data": {

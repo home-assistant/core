@@ -765,6 +765,7 @@ class StelproFanHeater(Thermostat):
         "_TZE200_e9ba97vf",  # TV01-ZG
         "_TZE200_hue3yfsn",  # TV02-ZG
         "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
+        "_TZE200_kds0pmmv",  # MOES TRV TV02
         "_TZE200_kly8gjlz",  # TV05-ZG
         "_TZE200_lnbfnyxd",
         "_TZE200_mudxchsu",
