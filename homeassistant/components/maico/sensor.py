@@ -138,15 +138,6 @@ class MaicoSensor(CoordinatorEntity[MaicoUpdater], SensorEntity):
 
         super()._handle_coordinator_update()
 
-    # @property
-    # def extra_state_attributes(self) -> dict[str, str]:
-    #     """Return the extra state attributes of the entity."""
-    #     data = self._sensor_data
-    #     attrs = {"type": data.getType()}
-    #     if attrs["type"] == "Input":
-    #         attrs["channel"] = data.getChannel()
-
-    #     return attrs
 
     @property
     def native_value(self) -> StateType:
