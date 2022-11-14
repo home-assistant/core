@@ -171,7 +171,7 @@ CONFIG_SCHEMA_ENTRY = vol.Schema(
             cv.string, vol.In([TRANSPORT_TCP, TRANSPORT_WEBSOCKETS])
         ),
         vol.Optional(CONF_WS_PATH, default="/"): cv.string,
-        vol.Optional(CONF_WS_HEADERS, default={}): {cv.string: cv.template},
+        vol.Optional(CONF_WS_HEADERS, default={}): {cv.string: cv.string},
     }
 )
 
