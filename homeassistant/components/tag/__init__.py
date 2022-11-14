@@ -111,14 +111,17 @@ class TagProtocol(Protocol):
     """Protocol for type checking."""
 
     async def async_scan_tag(
-        self, tag_id: str, device_id: str, context: Context | None = None
+        self, tag_id: str, device_id: str | None, context: Context | None = None
     ) -> None:
         """Handle when a tag is scanned."""
 
 
 @bind_hass
 async def async_scan_tag(
-    hass: HomeAssistant, tag_id: str, device_id: str, context: Context | None = None
+    hass: HomeAssistant,
+    tag_id: str,
+    device_id: str | None,
+    context: Context | None = None,
 ) -> None:
     """Handle when a tag is scanned."""
     if DOMAIN not in hass.config.components:
