@@ -30,7 +30,6 @@ from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_sche
 from ..models import (
     MqttValueTemplate,
     PayloadSentinel,
-    PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
 )
@@ -195,7 +194,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _payloads: dict[str, str]
     _send_command_topic: str | None
     _set_fan_speed_topic: str | None
-    _state_topics: dict[str, Any]
+    _state_topics: dict[str, str | None]
     _templates: dict[
         str, Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
     ]
@@ -212,9 +211,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_is_on = False
         self._attr_fan_speed = "unknown"
 
-        self._charging: bool = False
-        self._cleaning: bool = False
-        self._docked: bool = False
+        self._charging = False
+        self._cleaning = False
+        self._docked = False
         self._error: str | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -389,9 +388,11 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
-        if self.supported_features & VacuumEntityFeature.TURN_ON == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.TURN_ON == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_ON],
@@ -404,10 +405,11 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off."""
-        if self.supported_features & VacuumEntityFeature.TURN_OFF == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.TURN_OFF == 0
+        ):
             return None
-
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_OFF],
@@ -523,8 +525,10 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        message_payload: PublishPayloadType
-        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
+        if (
+            self._send_command_topic is None
+            or self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0
+        ):
             return
         if params:
             message: dict[str, Any] = {"command": command}
@@ -532,7 +536,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             message_payload = json_dumps(message)
         else:
             message_payload = command
-        assert self._send_command_topic is not None
         await self.async_publish(
             self._send_command_topic,
             message_payload,

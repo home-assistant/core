@@ -173,7 +173,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
-    _payloads: dict[str, Any]
+    _payloads: dict[str, str | None]
 
     def __init__(
         self,
@@ -229,9 +229,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
-            raw_payload: Any = json_loads(msg.payload)
-            assert isinstance(raw_payload, dict)
-            payload: dict[str, Any] = raw_payload
+            payload: dict[str, Any] = json_loads(msg.payload)
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
             ):
@@ -242,9 +240,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._update_state_attributes(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._config.get(CONF_STATE_TOPIC) is not None:
+        if state_topic := self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {
-                "topic": self._config.get(CONF_STATE_TOPIC),
+                "topic": state_topic,
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
@@ -259,9 +257,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        if self.supported_features & VacuumEntityFeature.START == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.START == 0
+        ):
             return None
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_START],
@@ -272,9 +272,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
-        if self.supported_features & VacuumEntityFeature.PAUSE == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.PAUSE == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_PAUSE],
@@ -285,9 +287,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
-        if self.supported_features & VacuumEntityFeature.STOP == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.STOP == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_STOP],
@@ -298,11 +302,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if (self.supported_features & VacuumEntityFeature.FAN_SPEED == 0) or (
-            fan_speed not in self.fan_speed_list
+        if (
+            self._set_fan_speed_topic is None
+            or (self.supported_features & VacuumEntityFeature.FAN_SPEED == 0)
+            or (fan_speed not in self.fan_speed_list)
         ):
             return
-        assert self._set_fan_speed_topic is not None
         await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
@@ -313,9 +318,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
-        if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.RETURN_HOME == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
@@ -326,9 +333,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
@@ -339,9 +348,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
-        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
+        if (
+            self._command_topic is None
+            or self.supported_features & VacuumEntityFeature.LOCATE == 0
+        ):
             return
-        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_LOCATE],
@@ -357,8 +368,10 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        payload: str
-        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
+        if (
+            self._send_command_topic is None
+            or self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0
+        ):
             return
         if isinstance(params, dict):
             message: dict[str, Any] = {"command": command}
@@ -366,7 +379,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             payload = json_dumps(message)
         else:
             payload = command
-        assert self._send_command_topic is not None
         await self.async_publish(
             self._send_command_topic,
             payload,
