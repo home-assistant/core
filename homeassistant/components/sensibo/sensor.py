@@ -204,7 +204,56 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
 )
 
-DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES, "airq": AIRQ_SENSOR_TYPES}
+ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+    SensiboDeviceSensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="PM 2.5",
+        value_fn=lambda data: data.pm25,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="tvoc",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="TVOC",
+        value_fn=lambda data: data.tvoc,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="CO2",
+        value_fn=lambda data: data.co2,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="ethanol",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Ethanol",
+        value_fn=lambda data: data.etoh,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="iaq",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Air quality",
+        value_fn=lambda data: data.iaq,
+        extra_fn=None,
+    ),
+)
+
+DESCRIPTION_BY_MODELS = {
+    "pure": PURE_SENSOR_TYPES,
+    "airq": AIRQ_SENSOR_TYPES,
+    "elements": ELEMENT_SENSOR_TYPES,
+}
 
 
 async def async_setup_entry(
