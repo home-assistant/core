@@ -5,7 +5,7 @@ from pyopenuv.errors import InvalidApiKeyError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
@@ -49,6 +49,28 @@ async def test_options_flow(hass, config_entry):
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+
+
+async def test_step_reauth(hass, config, config_entry, setup_openuv):
+    """Test that the reauth step works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=config
+    )
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch("homeassistant.components.openuv.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries()) == 1
 
 
 async def test_step_user(hass, config, setup_openuv):

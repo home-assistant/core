@@ -7,6 +7,7 @@ from homeassistant.const import TIME_SECONDS
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "upnp"
+DOMAIN_DISCOVERIES = "discoveries"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"

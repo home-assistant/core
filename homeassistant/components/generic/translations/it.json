@@ -50,7 +50,7 @@
                 "data": {
                     "confirmed_ok": "Questa immagine sembra buona."
                 },
-                "description": "![Anteprima immagine fissa fotocamera]({preview_url})",
+                "description": "![Anteprima immagine fissa della fotocamera]({preview_url})",
                 "title": "Anteprima"
             }
         }
@@ -79,7 +79,7 @@
                 "data": {
                     "confirmed_ok": "Questa immagine sembra buona."
                 },
-                "description": "![Anteprima immagine fissa fotocamera]({preview_url})",
+                "description": "![Anteprima immagine fissa della fotocamera]({preview_url})",
                 "title": "Anteprima"
             },
             "content_type": {

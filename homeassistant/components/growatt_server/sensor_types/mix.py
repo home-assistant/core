@@ -230,7 +230,6 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         key="mix_last_update",
         name="Last Data Update",
         api_key="lastdataupdate",
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     # Values from 'dashboard_data' API call

@@ -43,8 +43,8 @@
     },
     "issues": {
         "ea_warning": {
-            "description": "Stai utilizzando {version} di UniFi Protect. Le versioni di accesso anticipato non sono supportate da Home Assistant e potrebbero causare l'interruzione dell'integrazione di UniFi Protect o non funzionare come previsto.",
-            "title": "{version} \u00e8 una versione di accesso anticipato di UniFi Protect"
+            "description": "Si sta utilizzando v{version} di UniFi Protect che \u00e8 una versione in accesso anticipato. Le versioni in accesso anticipato non sono supportate da Home Assistant e potrebbero causare l'interruzione o il mancato funzionamento dell'integrazione di UniFi Protect.",
+            "title": "UniFi Protect v{version} \u00e8 una versione in accesso anticipato"
         }
     },
     "options": {
