@@ -356,13 +356,14 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             function=self._async_reload_entry,
         )
         entry.async_on_unload(self._debounced_reload.async_cancel)
-
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
+        self._debounced_reload.async_cancel()
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
@@ -396,6 +397,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self._event_listeners.append(event_callback)
 
         return _unsubscribe
+
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Reconfigure on update."""
+        async with self._connection_lock:
+            if self.connected:
+                self._async_run_disconnected_events()
+                await self._async_run_connected_events()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
@@ -473,9 +483,18 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             if not self.connected:  # Already disconnected
                 return
             self.connected = False
-            for disconnected_callback in self._disconnected_callbacks:
-                disconnected_callback()
-            self._disconnected_callbacks.clear()
+            self._async_run_disconnected_events()
+
+    @callback
+    def _async_run_disconnected_events(self) -> None:
+        """Run disconnected events.
+
+        This is execute on disconnect or when the config entry
+        is updated.
+        """
+        for disconnected_callback in self._disconnected_callbacks:
+            disconnected_callback()
+        self._disconnected_callbacks.clear()
 
     async def _async_connected(self) -> None:
         """Handle device connected."""
@@ -483,7 +502,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             if self.connected:  # Already connected
                 return
             self.connected = True
-            await self._async_connect_ble_scanner()
+            await self._async_run_connected_events()
+
+    async def _async_run_connected_events(self) -> None:
+        """Run connected events.
+
+        This is executed on connect or when the config entry
+        is updated.
+        """
+        await self._async_connect_ble_scanner()
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
