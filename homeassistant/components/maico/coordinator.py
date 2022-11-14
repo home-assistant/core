@@ -16,7 +16,6 @@ from .maico import Maico
 
 _LOGGER = logging.getLogger(__name__)
 
-# Matches iotwatt data log interval
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
 
 

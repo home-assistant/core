@@ -56,10 +56,6 @@ async def async_setup_entry(
     def _create_entity(key: str) -> MaicoSensor:
         """Create a sensor entity."""
         created.add(key)
-        # data = coordinator.data["sensors"][key]
-        # description = ENTITY_DESCRIPTION_KEY_MAP.get(
-        #     data.getUnit(), IotaWattSensorEntityDescription("base_sensor")
-        # )
         description = MaicoSensorEntityDescription(
             "capteur maico", state_class=SensorStateClass.MEASUREMENT
         )
@@ -89,7 +85,7 @@ class MaicoSensorEntityDescription(SensorEntityDescription):
 
 
 class MaicoSensor(CoordinatorEntity[MaicoUpdater], SensorEntity):
-    """Defines a IoTaWatt Energy Sensor."""
+    """Defines a Maico Sensor."""
 
     entity_description: MaicoSensorEntityDescription
 
@@ -137,7 +133,6 @@ class MaicoSensor(CoordinatorEntity[MaicoUpdater], SensorEntity):
             return
 
         super()._handle_coordinator_update()
-
 
     @property
     def native_value(self) -> StateType:
