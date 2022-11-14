@@ -7,7 +7,6 @@ from sensor_state_data import (
     DeviceKey,
     SensorDescription,
     SensorDeviceClass,
-    SensorDeviceInfo,
     SensorUpdate,
     Units,
 )
@@ -26,8 +25,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
 
@@ -85,20 +84,6 @@ def _device_key_to_bluetooth_entity_key(
     return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
 
-def _sensor_device_info_to_hass(
-    sensor_device_info: SensorDeviceInfo,
-) -> DeviceInfo:
-    """Convert a sensor device info to a sensor device info."""
-    hass_device_info = DeviceInfo()
-    if sensor_device_info.name is not None:
-        hass_device_info[const.ATTR_NAME] = sensor_device_info.name
-    if sensor_device_info.manufacturer is not None:
-        hass_device_info[const.ATTR_MANUFACTURER] = sensor_device_info.manufacturer
-    if sensor_device_info.model is not None:
-        hass_device_info[const.ATTR_MODEL] = sensor_device_info.model
-    return hass_device_info
-
-
 def _to_sensor_key(
     description: SensorDescription,
 ) -> tuple[SensorDeviceClass, Units | None]:
@@ -112,7 +97,7 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
-            device_id: _sensor_device_info_to_hass(device_info)
+            device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
