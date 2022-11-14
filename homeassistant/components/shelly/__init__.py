@@ -256,7 +256,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         # TODO: only connect the scanner if enabled in config options active/true/false
         if (
             not sleep_period
-            and device.shelly
             and AwesomeVersion(device.version) >= BLE_MIN_VERSION
         ):
             entry.async_on_unload(
