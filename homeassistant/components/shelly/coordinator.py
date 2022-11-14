@@ -494,13 +494,13 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     @callback
     def _async_handle_update(self, device_: RpcDevice, update_type: UpdateType) -> None:
         """Handle device update."""
-        if update_type == UpdateType.Initialized:
+        if update_type is UpdateType.INITIALIZED:
             self.hass.async_create_task(self._async_connected())
-        elif update_type == UpdateType.Disconnected:
+        elif update_type is UpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
-        elif update_type == UpdateType.Status:
+        elif update_type is UpdateType.STATUS:
             self.async_set_updated_data(self.device)
-        elif update_type == UpdateType.Event and (event := self.device.event):
+        elif update_type is UpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
     def async_setup(self) -> None:
