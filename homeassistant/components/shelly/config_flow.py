@@ -22,13 +22,11 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, selector
 
 from .const import (
-    BLE_SCANNER_ACTIVE,
-    BLE_SCANNER_DISABLED,
-    BLE_SCANNER_PASSIVE,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
+    BLEScannerMode,
 )
 from .utils import (
     get_block_device_name,
@@ -46,9 +44,9 @@ HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 BLE_SCANNER_OPTIONS = [
-    selector.SelectOptionDict(value=BLE_SCANNER_DISABLED, label="Disabled"),
-    selector.SelectOptionDict(value=BLE_SCANNER_ACTIVE, label="Active"),
-    selector.SelectOptionDict(value=BLE_SCANNER_PASSIVE, label="Passive"),
+    selector.SelectOptionDict(value=BLEScannerMode.DISABLED, label="Disabled"),
+    selector.SelectOptionDict(value=BLEScannerMode.ACTIVE, label="Active"),
+    selector.SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
 ]
 
 
@@ -362,7 +360,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_BLE_SCANNER_MODE, default=BLE_SCANNER_DISABLED
+                        CONF_BLE_SCANNER_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
+                        ),
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(options=BLE_SCANNER_OPTIONS),
                     ),

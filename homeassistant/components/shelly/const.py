@@ -7,6 +7,8 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
@@ -162,6 +164,11 @@ SHELLY_GAS_MODELS = ["SHGS-1"]
 BLE_MIN_VERSION = AwesomeVersion("0.12.0")
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
-BLE_SCANNER_DISABLED = "disabled"
-BLE_SCANNER_ACTIVE = "active"
-BLE_SCANNER_PASSIVE = "passive"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    ACTIVE = "active"
+    PASSIVE = "passive"
