@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 import json
 import logging
+from os.path import basename
 from unittest.mock import patch
 
 import pytest
@@ -27,13 +28,13 @@ def mock_config_store(data=None):
 
     def mock_read(path):
         """Mock version of load."""
-        file_name = path.rpartition("/")[2]
+        file_name = basename(path)
         _LOGGER.info("Reading data from %s: %s", file_name, data.get(file_name))
         return deepcopy(data.get(file_name))
 
     def mock_write(path, data_to_write):
         """Mock version of write."""
-        file_name = path.rpartition("/")[2]
+        file_name = basename(path)
         _LOGGER.info("Writing data to %s: %s", file_name, data_to_write)
         raise_contains_mocks(data_to_write)
         # To ensure that the data can be serialized
