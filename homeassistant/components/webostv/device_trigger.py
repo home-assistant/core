@@ -7,7 +7,7 @@ from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEM
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -20,7 +20,10 @@ from .helpers import (
     async_get_device_entry_by_device_id,
     async_is_device_config_entry_not_loaded,
 )
-from .triggers.turn_on import PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE
+from .triggers.turn_on import (
+    PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
+    async_get_turn_on_trigger,
+)
 
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -52,17 +55,6 @@ async def async_validate_trigger_config(
             raise InvalidDeviceAutomationConfig(err) from err
 
     return config
-
-
-def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
-    """Return data for a turn on trigger."""
-
-    return {
-        CONF_PLATFORM: "device",
-        CONF_DEVICE_ID: device_id,
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: TURN_ON_PLATFORM_TYPE,
-    }
 
 
 async def async_get_triggers(

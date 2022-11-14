@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import (
@@ -14,7 +21,6 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
-from ..device_trigger import async_get_turn_on_trigger
 from ..helpers import (
     async_get_device_entry_by_device_id,
     async_get_device_id_from_entity_id,
@@ -35,6 +41,17 @@ TRIGGER_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
 )
+
+
+def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
+    """Return data for a turn on trigger."""
+
+    return {
+        CONF_PLATFORM: "device",
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: PLATFORM_TYPE,
+    }
 
 
 async def async_attach_trigger(
