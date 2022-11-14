@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from stdlib_list import stdlib_list
@@ -53,7 +54,7 @@ IGNORE_VIOLATIONS = {
 }
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
     # Check if we are doing format-only validation.
     if not config.requirements:
@@ -63,7 +64,7 @@ def validate(integrations: dict[str, Integration], config: Config):
 
     # check for incompatible requirements
 
-    disable_tqdm = config.specific_integrations or os.environ.get("CI", False)
+    disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
         if not integration.manifest:
@@ -87,7 +88,14 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-        pkg, sep, version = PACKAGE_REGEX.match(req).groups()
+        match = PACKAGE_REGEX.match(req)
+        if not match:
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" does not match package regex pattern',
+            )
+            continue
+        pkg, sep, version = match.groups()
 
         if integration.core and sep != "==":
             integration.add_error(
@@ -115,7 +123,7 @@ def validate_requirements_format(integration: Integration) -> bool:
     return len(integration.errors) == start_errors
 
 
-def validate_requirements(integration: Integration):
+def validate_requirements(integration: Integration) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
         return
@@ -167,7 +175,7 @@ def validate_requirements(integration: Integration):
 
 
 @cache
-def get_pipdeptree():
+def get_pipdeptree() -> dict[str, dict[str, Any]]:
     """Get pipdeptree output. Cached on first invocation.
 
     {
