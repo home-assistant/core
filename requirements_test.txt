@@ -12,7 +12,7 @@ codecov==2.1.12
 coverage==6.4.4
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==0.990
+mypy==0.991
 pre-commit==2.20.0
 pylint==2.15.5
 pipdeptree==2.3.1
