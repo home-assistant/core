@@ -461,8 +461,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         return self.device.firmware_version if self.device.initialized else ""
 
     @callback
-    def _async_handle_update(self, device: RpcDevice) -> None:
+    def _async_handle_update(self, device_: RpcDevice) -> None:
         """Handle device update."""
+        device = self.device
         if not device.initialized:
             return
         event = device.event
