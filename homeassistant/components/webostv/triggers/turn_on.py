@@ -94,7 +94,7 @@ async def async_attach_trigger(
 
         unsubs.append(
             PluggableAction.async_attach_trigger(
-                hass, turn_on_trigger, action, variables
+                hass, turn_on_trigger, action, {"trigger": variables}
             )
         )
 
