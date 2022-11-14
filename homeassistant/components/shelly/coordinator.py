@@ -403,7 +403,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Reconfigure on update."""
         async with self._connection_lock:
-            if self.device.initialized:
+            if self.connected:
                 self._async_run_disconnected_events()
                 await self._async_run_connected_events()
 
