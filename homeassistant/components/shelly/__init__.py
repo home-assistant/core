@@ -7,7 +7,6 @@ import aioshelly
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
-from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,9 +17,7 @@ from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bluetooth import async_connect_scanner
 from .const import (
-    BLE_MIN_VERSION,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -238,7 +235,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    async def _async_rpc_device_setup() -> None:
+    @callback
+    def _async_rpc_device_setup() -> None:
         """Set up a RPC based device that is online."""
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         shelly_entry_data.rpc.async_setup()
@@ -251,16 +249,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             )
             platforms = RPC_PLATFORMS
 
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
-
-        # TODO: only connect the scanner if enabled in config options active/true/false
-        if (
-            not sleep_period
-            and AwesomeVersion(device.version) >= BLE_MIN_VERSION
-        ):
-            entry.async_on_unload(
-                await async_connect_scanner(hass, shelly_entry_data.rpc, True)
-            )
+        hass.config_entries.async_setup_platforms(entry, platforms)
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -272,18 +261,19 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(device.config)
             hass.config_entries.async_update_entry(entry, data=data)
 
-        hass.async_create_task(_async_rpc_device_setup())
+        _async_rpc_device_setup()
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
-            await _async_rpc_device_setup()
         except DeviceConnectionError as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
+
+        _async_rpc_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         shelly_entry_data.device = device
@@ -294,7 +284,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        await _async_rpc_device_setup()
+        _async_rpc_device_setup()
 
     return True
 
