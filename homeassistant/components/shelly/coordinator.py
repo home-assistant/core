@@ -356,13 +356,14 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             function=self._async_reload_entry,
         )
         entry.async_on_unload(self._debounced_reload.async_cancel)
-
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
+        self._debounced_reload.async_cancel()
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
@@ -396,6 +397,12 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self._event_listeners.append(event_callback)
 
         return _unsubscribe
+
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Reload on update."""
+        await self._async_reload_entry()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
