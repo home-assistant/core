@@ -729,24 +729,31 @@ async def test_update_stream_source(hass):
 
 async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
-    stream = Stream(
-        hass,
-        "https://abcd:efgh@foo.bar",
-        {},
-        hass.data[DOMAIN][ATTR_SETTINGS],
-        dynamic_stream_settings(),
-    )
-    stream.add_provider(HLS_PROVIDER)
+    for stream_url, redacted_url in (
+        ("https://abcd:efgh@foo.bar", "https://****:****@foo.bar"),
+        (
+            "https://foo.bar/baz?user=abcd&password=efgh",
+            "https://foo.bar/baz?user=****&password=****",
+        ),
+    ):
+        stream = Stream(
+            hass,
+            stream_url,
+            {},
+            hass.data[DOMAIN][ATTR_SETTINGS],
+            dynamic_stream_settings(),
+        )
+        stream.add_provider(HLS_PROVIDER)
 
-    with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        run_worker(hass, stream, "https://abcd:efgh@foo.bar")
-        await hass.async_block_till_done()
-    assert (
-        str(err.value)
-        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
-    )
-    assert "https://abcd:efgh@foo.bar" not in caplog.text
+        with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
+            av_open.side_effect = av.error.InvalidDataError(-2, "error")
+            run_worker(hass, stream, stream_url)
+            await hass.async_block_till_done()
+        assert (
+            str(err.value)
+            == f"Error opening stream (ERRORTYPE_-2, error) {redacted_url}"
+        )
+        assert stream_url not in caplog.text
 
 
 @pytest.fixture
