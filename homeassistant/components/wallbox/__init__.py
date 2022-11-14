@@ -194,7 +194,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
-    wallbox = Wallbox(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+    wallbox = Wallbox(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        jwtTokenDrift=UPDATE_INTERVAL,
+    )
     wallbox_coordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
         wallbox,

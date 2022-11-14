@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "Die W\u00e4hrung {currency} wird nicht mehr verwendet, bitte konfiguriere die W\u00e4hrungskonfiguration neu.",
+            "title": "Die konfigurierte W\u00e4hrung ist nicht mehr in Gebrauch"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "CPU-Architektur",

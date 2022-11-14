@@ -48,14 +48,9 @@ from .const import (
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
-from .core import (
-    DOMAIN as CONF_CORE,
-    ConfigSource,
-    HomeAssistant,
-    async_get_hass,
-    callback,
-)
+from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import (
     config_per_platform,
     config_validation as cv,
@@ -208,22 +203,25 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
+    if currency in HISTORIC_CURRENCIES:
+        ir.async_create_issue(
+            hass,
+            "homeassistant",
+            "historic_currency",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="historic_currency",
+            translation_placeholders={"currency": currency},
+        )
+
+
 def _validate_currency(data: Any) -> Any:
-    hass = async_get_hass()
     try:
         return cv.currency(data)
     except vol.InInvalid:
         with suppress(vol.InInvalid):
             currency = cv.historic_currency(data)
-            ir.async_create_issue(
-                hass,
-                "homeassistant",
-                "historic_currency",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="historic_currency",
-                translation_placeholders={"currency": currency},
-            )
             return currency
         raise
 
@@ -579,6 +577,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     ):
         if key in config:
             setattr(hac, attr, config[key])
+
+    _raise_issue_if_historic_currency(hass, hass.config.currency)
 
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
