@@ -36,7 +36,7 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> tuple[Store, An
     if user_id not in data:
         data[user_id] = await store.async_load() or {}
 
-    return store, data
+    return store, data[user_id]
 
 
 def with_store(orig_func: Callable) -> Callable:
