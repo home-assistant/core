@@ -120,6 +120,7 @@ async def light_switch_options_schema(
 
 GROUP_TYPES = [
     "binary_sensor",
+    "climate",
     "cover",
     "fan",
     "light",
@@ -157,6 +158,9 @@ CONFIG_FLOW = {
         BINARY_SENSOR_CONFIG_SCHEMA,
         validate_user_input=set_group_type("binary_sensor"),
     ),
+    "climate": SchemaFlowFormStep(
+        basic_group_config_schema("climate"), set_group_type("climate")
+    ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
         validate_user_input=set_group_type("cover"),
@@ -191,6 +195,7 @@ CONFIG_FLOW = {
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
+    "climate": SchemaFlowFormStep(partial(basic_group_options_schema, "climate")),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
     "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
     "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
