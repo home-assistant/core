@@ -914,7 +914,7 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(alt) for alt in value_schemas)
+        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
         if default_description:
             alternatives = f"{alternatives}, {default_description}"
         raise vol.Invalid(
