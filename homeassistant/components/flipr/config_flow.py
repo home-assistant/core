@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         errors = {}
-        if self._flipr_id == "":
+        if not self._flipr_id:
             try:
                 flipr_ids = await self._authenticate_and_search_flipr()
             except HTTPError:
