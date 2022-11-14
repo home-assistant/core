@@ -103,11 +103,6 @@ class MaicoSensor(CoordinatorEntity[MaicoUpdater], SensorEntity):
         super().__init__(coordinator=coordinator)
 
         self._key = key
-        # data = self._sensor_data
-        # if data.getType() == "Input":
-        #     self._attr_unique_id = (
-        #         f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
-        #     )
         self.entity_description = entity_description
 
     @property
