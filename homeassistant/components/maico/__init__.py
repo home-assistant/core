@@ -8,8 +8,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import MaicoUpdater
 
-# List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
