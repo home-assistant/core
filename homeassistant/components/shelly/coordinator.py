@@ -472,6 +472,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             self.connected = False
             for disconnected_callback in self._disconnected_callbacks:
                 disconnected_callback()
+            self._disconnected_callbacks.clear()
 
     async def _async_connected(self) -> None:
         """Handle device connected."""
