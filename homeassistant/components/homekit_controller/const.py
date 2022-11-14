@@ -107,3 +107,10 @@ STARTUP_EXCEPTIONS = (
     EncryptionError,
     AccessoryDisconnectedError,
 )
+
+# 10 seconds was chosen because its soon enough
+# for most state changes to happen but not too
+# long that the BLE connection is dropped. It
+# also happens to be the same value used by
+# the update coordinator.
+DEBOUNCE_COOLDOWN = 10  # seconds
