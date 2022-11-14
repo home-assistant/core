@@ -27,19 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-# class PlaceholderHub:
-#     """Placeholder class to make tests pass.
-
-#     Remove this placeholder class and replace with things from your PyPI package.
-#     """
-
-#     def __init__(self, host: str) -> None:
-#         """Initialize."""
-#         self.host = host
-
-#     async def authenticate(self, username: str, password: str) -> bool:
-#         """Test if we can authenticate with the host."""
-#         return True
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
