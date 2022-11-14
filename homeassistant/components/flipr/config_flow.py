@@ -21,12 +21,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _username: str | None = None
-    _password: str | None = None
-    _flipr_id: str | None = None
+    _username: str
+    _password: str
+    _flipr_id: str
     _possible_flipr_ids: list[str]
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self._show_setup_form()
@@ -93,7 +95,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return flipr_ids
 
-    async def async_step_flipr_id(self, user_input=None) -> FlowResult:
+    async def async_step_flipr_id(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if not user_input:
             # Creation of a select with the proposal of flipr ids values found by API.
