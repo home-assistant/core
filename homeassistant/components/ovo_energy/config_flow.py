@@ -56,7 +56,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
-                        title=client.username,
+                        title=client.username or client.account_id or "OVO Energy",
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -96,15 +96,17 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 if authenticated:
                     entry = await self.async_set_unique_id(self.username)
-                    if entry:
-                        self.hass.config_entries.async_update_entry(
-                            entry,
-                            data={
-                                CONF_USERNAME: self.username,
-                                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            },
-                        )
-                        return self.async_abort(reason="reauth_successful")
+                    if entry is None:
+                        return self.async_abort(reason="unknown")
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            CONF_USERNAME: self.username,
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_ACCOUNT: self.account,
+                        },
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
                 errors["base"] = "authorization_error"
 

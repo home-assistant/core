@@ -6,8 +6,10 @@ import logging
 
 import aiohttp
 import async_timeout
-from ovoenergy import OVODailyUsage
+from ovoenergy.models import OVODailyUsage
+from ovoenergy.models.plan import OVOPlan
 from ovoenergy.ovoenergy import OVOEnergy
+from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -28,6 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
+class OVOCoordinatorData(BaseModel):
+    """OVO Energy data."""
+
+    daily_usage: OVODailyUsage | None = Field(None, alias="daily_usage")
+    plan: OVOPlan | None = Field(None, alias="plan")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OVO Energy from a config entry."""
 
@@ -46,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not authenticated:
         raise ConfigEntryAuthFailed
 
-    async def async_update_data() -> OVODailyUsage:
+    async def async_update_data() -> OVOCoordinatorData:
         """Fetch data from OVO Energy."""
         async with async_timeout.timeout(10):
             try:
@@ -59,7 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(exception) from exception
             if not authenticated:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
-            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
+
+            return OVOCoordinatorData(
+                daily_usage=await client.get_daily_usage(
+                    datetime.utcnow().strftime("%Y-%m")
+                ),
+                plan=await client.get_plan(),
+            )
 
     coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
@@ -117,7 +132,14 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
         """Return device information about this OVO Energy instance."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._client.account_id)},
+            identifiers={
+                (
+                    DOMAIN,
+                    self._client.account_id
+                    if self._client.account_id is not None
+                    else "unknown",
+                )
+            },
             manufacturer="OVO Energy",
             name=self._client.username,
         )
