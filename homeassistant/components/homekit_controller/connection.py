@@ -30,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
@@ -43,12 +44,7 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 
-# 10 seconds was chosen because its soon enough
-# for most state changes to happen but not too
-# long that the BLE connection is dropped. It
-# also happens to be the same value used by
-# the update coordinator.
-DEBOUNCE_COOLDOWN = 10  # seconds
+
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -256,6 +252,9 @@ class HKDevice:
 
         self.async_set_available_state(self.pairing.is_available)
 
+        # We use async_request_update to avoid multiple updates
+        # at the same time which would generate a spurious warning
+        # in the log about concurrent polling.
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_request_update, self.pairing.poll_interval
         )
