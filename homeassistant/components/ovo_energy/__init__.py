@@ -33,8 +33,8 @@ PLATFORMS = [Platform.SENSOR]
 class OVOCoordinatorData(BaseModel):
     """OVO Energy data."""
 
-    daily_usage: OVODailyUsage | None = Field(None, alias="daily_usage")
-    plan: OVOPlan | None = Field(None, alias="plan")
+    daily_usage: OVODailyUsage = Field(None, alias="daily_usage")
+    plan: OVOPlan = Field(None, alias="plan")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -69,10 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if not authenticated:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
 
+            daily_usage = await client.get_daily_usage(
+                datetime.utcnow().strftime("%Y-%m")
+            )
+            if daily_usage is None:
+                raise UpdateFailed("No daily usage data found")
+
             return OVOCoordinatorData(
-                daily_usage=await client.get_daily_usage(
-                    datetime.utcnow().strftime("%Y-%m")
-                ),
+                daily_usage=daily_usage,
                 plan=await client.get_plan(),
             )
 
