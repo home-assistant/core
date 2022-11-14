@@ -1,7 +1,6 @@
 """Models for manifest validator."""
 from __future__ import annotations
 
-import importlib
 import json
 import pathlib
 from typing import Any
@@ -212,10 +211,3 @@ class Integration:
             return
 
         self.manifest = manifest
-
-    def import_pkg(self, platform=None):
-        """Import the Python file."""
-        pkg = f"homeassistant.components.{self.domain}"
-        if platform is not None:
-            pkg += f".{platform}"
-        return importlib.import_module(pkg)
