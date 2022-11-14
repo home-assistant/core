@@ -49,7 +49,7 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
 
         if data[0] != BLE_SCAN_RESULT_VERSION:
             _LOGGER.warning("Unsupported BLE scan result version: %s", data[0])
-            return None
+            return
 
         try:
             address, rssi, parsed = parse_ble_scan_result_event(data)
