@@ -33,9 +33,10 @@ from .const import DEFAULT_TIMEOUT, DOMAIN, ELMAX_LOCAL_API_PATH
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_direct_api_url(base_uri: str) -> str:
+def get_direct_api_url(host: str, port: int, ssl: bool) -> str:
     """Return the direct API url given the base URI."""
-    return f"{base_uri.strip('/').lower()}/{ELMAX_LOCAL_API_PATH}"
+    schema = "https" if ssl else "http"
+    return f"{schema}://{host}:{port}/{ELMAX_LOCAL_API_PATH}"
 
 
 class DummyPanel(PanelEntry):
@@ -54,13 +55,13 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: Logger,
-        elmax_api_client: GenericElmax,
-        panel: PanelEntry,
-        name: str,
-        update_interval: timedelta,
+            self,
+            hass: HomeAssistant,
+            logger: Logger,
+            elmax_api_client: GenericElmax,
+            panel: PanelEntry,
+            name: str,
+            update_interval: timedelta,
     ) -> None:
         """Instantiate the object."""
         self._client = elmax_api_client
@@ -98,6 +99,11 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Return the current http client being used by this instance."""
         return self._client
 
+    @http_client.setter
+    def http_client(self, client: GenericElmax):
+        """Set the client library instance for Elmax API."""
+        self._client = client
+
     async def _async_update_data(self):
         try:
             async with async_timeout.timeout(DEFAULT_TIMEOUT):
@@ -131,10 +137,10 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
 
     def __init__(
-        self,
-        elmax_device: DeviceEndpoint,
-        panel_version: str,
-        coordinator: ElmaxCoordinator,
+            self,
+            elmax_device: DeviceEndpoint,
+            panel_version: str,
+            coordinator: ElmaxCoordinator,
     ) -> None:
         """Construct the object."""
         super().__init__(coordinator=coordinator)
