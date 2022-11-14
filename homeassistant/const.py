@@ -751,10 +751,10 @@ class UnitOfAccumulatedVolumetricFlux(StrEnum):
     """
 
     INCHES = "in"
-    """Derived from in³/in²"""
+    """Derived from accumulated in³/(in².t)"""
 
     MILLIMETERS = "mm"
-    """Derived from mm³/mm²"""
+    """Derived from accumulated mm³/(mm².t)"""
 
 
 # Precipitation units
