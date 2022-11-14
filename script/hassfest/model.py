@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib
 import json
 import pathlib
+from types import ModuleType
 from typing import Any
 
 import attr
@@ -47,7 +48,7 @@ class Brand:
     def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Brand]:
         """Load all brands in a directory."""
         assert path.is_dir()
-        brands = {}
+        brands: dict[str, Brand] = {}
         for fil in path.iterdir():
             brand = cls(fil)
             brand.load_brand(config)
@@ -106,7 +107,7 @@ class Integration:
     def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
-        integrations = {}
+        integrations: dict[str, Integration] = {}
         for fil in path.iterdir():
             if fil.is_file() or fil.name == "__pycache__":
                 continue
@@ -220,14 +221,14 @@ class Integration:
             return
 
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest: dict[str, Any] = json.loads(manifest_path.read_text())
         except ValueError as err:
             self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
         self.manifest = manifest
 
-    def import_pkg(self, platform=None):
+    def import_pkg(self, platform: str | None = None) -> ModuleType:
         """Import the Python file."""
         pkg = f"homeassistant.components.{self.domain}"
         if platform is not None:
