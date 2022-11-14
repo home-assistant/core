@@ -488,7 +488,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     def _async_run_disconnected_events(self) -> None:
         """Run disconnected events.
 
-        This is execute on disconnect or when the config entry
+        This will be executed on disconnect or when the config entry
         is updated.
         """
         for disconnected_callback in self._disconnected_callbacks:
@@ -506,7 +506,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     async def _async_run_connected_events(self) -> None:
         """Run connected events.
 
-        This is executed on connect or when the config entry
+        This will be executed on connect or when the config entry
         is updated.
         """
         await self._async_connect_ble_scanner()
