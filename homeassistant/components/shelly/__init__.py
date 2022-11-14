@@ -257,7 +257,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         if (
             not sleep_period
             and device.shelly
-            and AwesomeVersion(device.shelly["ver"]) >= BLE_MIN_VERSION
+            and AwesomeVersion(device.version) >= BLE_MIN_VERSION
         ):
             entry.async_on_unload(
                 await async_connect_scanner(hass, shelly_entry_data.rpc, True)
