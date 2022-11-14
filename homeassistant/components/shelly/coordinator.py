@@ -28,8 +28,6 @@ from .const import (
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLE_MIN_VERSION,
-    BLE_SCANNER_ACTIVE,
-    BLE_SCANNER_DISABLED,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -47,6 +45,7 @@ from .const import (
     SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
+    BLEScannerMode,
 )
 from .utils import (
     device_update_info,
@@ -515,9 +514,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
         ble_scanner_mode = self.entry.options.get(
-            CONF_BLE_SCANNER_MODE, BLE_SCANNER_DISABLED
+            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
-        if ble_scanner_mode == BLE_SCANNER_DISABLED:
+        if ble_scanner_mode == BLEScannerMode.DISABLED:
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
             LOGGER.error(
@@ -528,9 +527,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             )
             return
         self._disconnected_callbacks.append(
-            await async_connect_scanner(
-                self.hass, self, ble_scanner_mode == BLE_SCANNER_ACTIVE
-            )
+            await async_connect_scanner(self.hass, self, ble_scanner_mode)
         )
 
     @callback
