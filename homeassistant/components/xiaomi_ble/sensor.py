@@ -36,10 +36,25 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
 
 SENSOR_DESCRIPTIONS = {
-    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
-        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+    (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
+        key=str(Units.CONDUCTIVITY),
+        device_class=None,
+        native_unit_of_measurement=CONDUCTIVITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        DeviceClass.FORMALDEHYDE,
+        Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    ): SensorEntityDescription(
+        key=f"{DeviceClass.FORMALDEHYDE}_{Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER}",
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
@@ -54,25 +69,17 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
         key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_MBAR,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
-        key=str(Units.ELECTRIC_POTENTIAL_VOLT),
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (
         DeviceClass.SIGNAL_STRENGTH,
@@ -85,24 +92,24 @@ SENSOR_DESCRIPTIONS = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Used for e.g. moisture sensor on HHCCJCY01
+    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
+        key=f"{DeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Used for e.g. consumable sensor on WX08ZM
     (None, Units.PERCENTAGE): SensorEntityDescription(
         key=str(Units.PERCENTAGE),
         device_class=None,
         native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Used for e.g. conductivity sensor on HHCCJCY01
-    (None, Units.CONDUCTIVITY): SensorEntityDescription(
-        key=str(Units.CONDUCTIVITY),
-        device_class=None,
-        native_unit_of_measurement=CONDUCTIVITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Used for e.g. formaldehyde
-    (None, Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER): SensorEntityDescription(
-        key=str(Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
-        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
