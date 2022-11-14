@@ -92,8 +92,8 @@ class EntityComponent(Generic[_EntityT]):
     def entities(self) -> Iterable[_EntityT]:
         """Return an iterable that returns all entities."""
         return chain.from_iterable(
-            platform.entities.values()  # type: ignore[misc]
-            for platform in self._platforms.values()
+            platform.entities.copy().values()  # type: ignore[misc]
+            for platform in self._platforms.copy().values()
         )
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
