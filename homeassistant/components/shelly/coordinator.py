@@ -1,7 +1,7 @@
 """Coordinators for the Shelly integration."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, cast
@@ -13,7 +13,7 @@ from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -337,6 +337,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
@@ -346,10 +347,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         )
         entry.async_on_unload(self._debounced_reload.async_cancel)
 
-        entry.async_on_unload(
-            self.async_add_listener(self._async_device_updates_handler)
-        )
         self._last_event: dict[str, Any] | None = None
+        self._last_status: dict[str, Any] | None = None
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -379,23 +378,31 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         return True
 
     @callback
-    def _async_device_updates_handler(self) -> None:
-        """Handle device updates."""
-        if (
-            not self.device.initialized
-            or not self.device.event
-            or self.device.event == self._last_event
-        ):
-            return
+    def async_subscribe_events(
+        self, event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to events."""
 
+        def _unsubscribe() -> None:
+            self._event_listeners.remove(event_callback)
+
+        self._event_listeners.append(event_callback)
+
+        return _unsubscribe
+
+    @callback
+    def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
+        """Handle device events."""
         self.update_sleep_period()
+        events: list[dict[str, Any]] = event_data["events"]
 
-        self._last_event = self.device.event
-
-        for event in self.device.event["events"]:
+        for event in events:
             event_type = event.get("event")
             if event_type is None:
                 continue
+
+            for event_callback in self._event_listeners:
+                event_callback(event)
 
             if event_type == "config_changed":
                 LOGGER.info(
@@ -453,6 +460,22 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         """Firmware version of the device."""
         return self.device.firmware_version if self.device.initialized else ""
 
+    @callback
+    def _async_handle_update(self, device_: RpcDevice) -> None:
+        """Handle device update."""
+        device = self.device
+        if not device.initialized:
+            return
+        event = device.event
+        status = device.status
+
+        if event and event != self._last_event:
+            self._last_event = event
+            self._async_device_event_handler(event)
+        if status and status != self._last_status:
+            self._last_status = status
+            self.async_set_updated_data(device)
+
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = device_registry.async_get(self.hass)
@@ -467,7 +490,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
-        self.device.subscribe_updates(self.async_set_updated_data)
+        self.device.subscribe_updates(self._async_handle_update)
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
