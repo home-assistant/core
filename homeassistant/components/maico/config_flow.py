@@ -27,8 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -36,13 +34,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     hub = Maico(
-        "",
-        data["host"],
-        httpx_client.get_async_client(hass),
-        data["username"],
-        data["password"]
-        # data.get("username", "admin"),
-        # data.get("password", ""),
+        device_name="",
+        ip=data["host"],
+        websession=httpx_client.get_async_client(hass),
+        username=data["username"],
+        password=data["password"],
     )
 
     conn_status_code = await hub.connect()
