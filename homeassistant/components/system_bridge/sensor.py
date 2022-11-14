@@ -307,16 +307,17 @@ async def async_setup_entry(
             )
 
     displays = []
-    for display in coordinator.data.display.displays:
-        if hasattr(coordinator.data.display, f"{display}_name"):
-            displays.append(
-                {
-                    "key": display,
-                    "name": getattr(
-                        coordinator.data.display, f"{display}_name"
-                    ).replace("Display ", ""),
-                },
-            )
+    if coordinator.data.display.displays is not None:
+        for display in coordinator.data.display.displays:
+            if hasattr(coordinator.data.display, f"{display}_name"):
+                displays.append(
+                    {
+                        "key": display,
+                        "name": getattr(
+                            coordinator.data.display, f"{display}_name"
+                        ).replace("Display ", ""),
+                    },
+                )
     display_count = len(displays)
 
     entities.append(
