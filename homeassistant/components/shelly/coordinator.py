@@ -401,8 +401,11 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     async def _async_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
-        """Reload on update."""
-        await self._async_reload_entry()
+        """Reconfigure on update."""
+        async with self._connection_lock:
+            if self.device.initialized:
+                self._async_run_disconnected_events()
+                await self._async_run_connected_events()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
@@ -480,9 +483,14 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             if not self.connected:  # Already disconnected
                 return
             self.connected = False
-            for disconnected_callback in self._disconnected_callbacks:
-                disconnected_callback()
-            self._disconnected_callbacks.clear()
+            self._async_run_disconnected_events()
+
+    @callback
+    def _async_run_disconnected_events(self) -> None:
+        """Run disconnected events."""
+        for disconnected_callback in self._disconnected_callbacks:
+            disconnected_callback()
+        self._disconnected_callbacks.clear()
 
     async def _async_connected(self) -> None:
         """Handle device connected."""
@@ -490,7 +498,10 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             if self.connected:  # Already connected
                 return
             self.connected = True
-            await self._async_connect_ble_scanner()
+            await self._async_run_connected_events()
+
+    async def _async_run_connected_events(self) -> None:
+        await self._async_connect_ble_scanner()
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
