@@ -553,11 +553,9 @@ async def async_get_broker_settings(
             if CONF_WS_HEADERS in validated_user_input:
                 del validated_user_input[CONF_WS_HEADERS]
             return True
-        if CONF_WS_HEADERS not in validated_user_input:
-            return True
         try:
             validated_user_input[CONF_WS_HEADERS] = json.loads(
-                validated_user_input[CONF_WS_HEADERS]
+                validated_user_input.get(CONF_WS_HEADERS, "{}")
             )
             schema = vol.Schema({cv.string: cv.template})
             schema(validated_user_input[CONF_WS_HEADERS])

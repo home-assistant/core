@@ -1315,7 +1315,7 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_WS_PATH]
     assert result["data_schema"].schema[mqtt.CONF_WS_HEADERS]
 
-    # third iteration, advanced settings with client cert and key set
+    # third iteration, advanced settings with client cert and key set and bad json payload
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -1331,7 +1331,32 @@ async def test_setup_with_advanced_settings(
             mqtt.CONF_TLS_INSECURE: True,
             mqtt.CONF_TRANSPORT: "websockets",
             mqtt.CONF_WS_PATH: "/custom_path/",
-            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2" }',
+            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2"',
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "broker"
+    assert result["errors"]["base"] == "bad_ws_headers"
+
+    # fourth iteration, advanced settings with client cert and key set
+    # and correct json payload for ws_headers
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.CONF_PORT: 2345,
+            mqtt.CONF_USERNAME: "user",
+            mqtt.CONF_PASSWORD: "secret",
+            mqtt.CONF_KEEPALIVE: 30,
+            "set_ca_cert": "auto",
+            "set_client_cert": True,
+            mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
+            mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
+            mqtt.CONF_TLS_INSECURE: True,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_PATH: "/custom_path/",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2"}',
         },
     )
 
@@ -1361,6 +1386,62 @@ async def test_setup_with_advanced_settings(
         "ws_path": "/custom_path/",
         "ws_headers": {"header_1": "content_header_1", "header_2": "content_header_2"},
         "certificate": "auto",
+        "discovery": True,
+        "discovery_prefix": "homeassistant_test",
+    }
+
+
+async def test_change_websockets_transport_to_tcp(
+    hass, mock_try_connection, tmp_path, mock_ssl_context, mock_process_uploaded_file
+):
+    """Test option flow setup with websockets transport settings."""
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    config_entry.data = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+        mqtt.CONF_WS_PATH: "/some_path",
+    }
+
+    mock_try_connection.return_value = True
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "broker"
+    assert result["data_schema"].schema["transport"]
+    assert result["data_schema"].schema["ws_path"]
+    assert result["data_schema"].schema["ws_headers"]
+
+    # Change transport to tcp
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "tcp",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
+            mqtt.CONF_WS_PATH: "/some_path",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
+        },
+    )
+    assert result["type"] == "create_entry"
+
+    # Check config entry result
+    assert config_entry.data == {
+        "broker": "test-broker",
+        "port": 1234,
+        "transport": "tcp",
         "discovery": True,
         "discovery_prefix": "homeassistant_test",
     }
