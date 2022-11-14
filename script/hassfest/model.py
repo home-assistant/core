@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import pathlib
-from types import ModuleType
 from typing import Any
 
 import attr
