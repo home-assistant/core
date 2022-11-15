@@ -869,6 +869,7 @@ class TextSelectorConfig(TypedDict, total=False):
     multiline: bool
     suffix: str
     type: TextSelectorType
+    autocomplete: str
 
 
 class TextSelectorType(StrEnum):
@@ -904,6 +905,7 @@ class TextSelector(Selector):
             vol.Optional("type"): vol.All(
                 vol.Coerce(TextSelectorType), lambda val: val.value
             ),
+            vol.Optional("autocomplete"): str,
         }
     )
 
