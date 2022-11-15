@@ -87,15 +87,16 @@ class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         else:
             if len(details) != 0:
-                unique_id = DOMAIN
-                if "uuid" in details:
-                    unique_id = details["uuid"]
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
                 info = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: DEFAULT_PORT,
                 }
+                if "uuid" in details:
+                    unique_id = details["uuid"]
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                else:
+                    self._async_abort_entries_match(info)
                 return self.async_create_entry(title=details["name"], data=info)
             errors["base"] = "no_data"
 

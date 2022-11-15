@@ -321,8 +321,7 @@ async def test_form_uuid_not_provided_by_api(hass):
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_set_unique_id.mock_calls) == 1
-    assert mock_set_unique_id.call_args.args == (DOMAIN,)
+    assert len(mock_set_unique_id.mock_calls) == 0
     mock_uuid_q.empty.assert_called_once()
     mock_uuid_q.put_nowait.assert_not_called()
     mock_uuid_q.get.assert_called_once()
@@ -383,6 +382,43 @@ async def test_form_both_queues_empty(hass):
     mock_uuid_q.put_nowait.assert_not_called()
     mock_name_q.put_nowait.assert_not_called()
     mock_name_q.get.assert_called_once()
+
+
+async def test_no_uuid_host_already_configured(hass):
+    """Test we handle if the device has no UUID and the host has already been configured."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: DEFAULT_PORT,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.lg_soundbar.config_flow.temescal",
+        return_value=MagicMock(),
+    ), patch(
+        "homeassistant.components.lg_soundbar.config_flow.test_connect",
+        return_value={"name": "name"},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
 
 
 async def test_form_cannot_connect(hass):
