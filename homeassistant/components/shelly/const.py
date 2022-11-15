@@ -161,7 +161,7 @@ ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
 
-BLE_MIN_VERSION = AwesomeVersion("0.12.0")
+BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
