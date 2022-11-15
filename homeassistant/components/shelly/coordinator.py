@@ -526,7 +526,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 BLE_MIN_VERSION,
             )
             return
-        if async_ensure_ble_enabled(self.device):
+        if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting
             # the scanner since it will be disconnected anyway
             return
