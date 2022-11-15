@@ -156,7 +156,7 @@ class ComfoConnectFan(FanEntity):
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
 
-        self._ccb.comfoconnect.cmd_rmi_request(cmd)
+        self._ccb.send_cmd(cmd)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -166,6 +166,6 @@ class ComfoConnectFan(FanEntity):
         _LOGGER.debug("Changing preset mode to %s", preset_mode)
         if preset_mode == PRESET_MODE_AUTO:
             # force set it to manual first
-            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_MANUAL)
+            self._ccb.send_cmd(CMD_MODE_MANUAL)
             # now set it to auto so any previous percentage set gets undone
-            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_AUTO)
+            self._ccb.send_cmd(CMD_MODE_AUTO)
