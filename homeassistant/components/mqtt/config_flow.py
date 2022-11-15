@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Callable
-import json
 import queue
 from ssl import PROTOCOL_TLS, SSLContext, SSLError
 from types import MappingProxyType
@@ -29,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -554,12 +554,14 @@ async def async_get_broker_settings(
                 del validated_user_input[CONF_WS_HEADERS]
             return True
         try:
-            validated_user_input[CONF_WS_HEADERS] = json.loads(
+            validated_user_input[CONF_WS_HEADERS] = json_loads(
                 validated_user_input.get(CONF_WS_HEADERS, "{}")
             )
             schema = vol.Schema({cv.string: cv.template})
             schema(validated_user_input[CONF_WS_HEADERS])
-        except (json.JSONDecodeError, vol.MultipleInvalid):
+        except JSON_DECODE_EXCEPTIONS + (  # pylint: disable=wrong-exception-operation
+            vol.MultipleInvalid,
+        ):
             errors["base"] = "bad_ws_headers"
             return False
         return True
@@ -601,7 +603,7 @@ async def async_get_broker_settings(
     current_transport = current_config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
     current_ws_path = current_config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
     current_ws_headers = (
-        json.dumps(current_config.get(CONF_WS_HEADERS))
+        json_dumps(current_config.get(CONF_WS_HEADERS))
         if CONF_WS_HEADERS in current_config
         else None
     )

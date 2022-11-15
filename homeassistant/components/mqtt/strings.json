@@ -28,9 +28,9 @@
           "protocol": "MQTT protocol",
           "set_ca_cert": "Broker certificate validation",
           "set_client_cert": "Use a client certificate",
-          "transport": "MQTT Transport",
-          "ws_headers": "WebSockets headers in JSON format",
-          "ws_path": "WebSockets path"
+          "transport": "MQTT transport",
+          "ws_headers": "WebSocket headers in JSON format",
+          "ws_path": "WebSocket path"
         }
       },
       "hassio_confirm": {
@@ -53,7 +53,7 @@
       "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
       "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
       "bad_client_cert_key": "Client certificate and private are no valid pair",
-      "bad_ws_headers": "Supply a valid JSON payload",
+      "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "The client certificate and private key must be configurered together"
     }

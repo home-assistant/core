@@ -1170,7 +1170,7 @@ async def test_try_connection_with_advanced_parameters(
             mqtt.CONF_PROTOCOL: "3.1.1",
             mqtt.CONF_TRANSPORT: "websockets",
             mqtt.CONF_WS_PATH: "/path/",
-            mqtt.CONF_WS_HEADERS: '{"h1": "v1", "h2": "v2"}',
+            mqtt.CONF_WS_HEADERS: '{"h1":"v1","h2":"v2"}',
         }
         for k, v in defaults.items():
             assert get_default(result["data_schema"].schema, k) == v
@@ -1374,20 +1374,23 @@ async def test_setup_with_advanced_settings(
 
     # Check config entry result
     assert config_entry.data == {
-        "broker": "test-broker",
-        "port": 2345,
-        "username": "user",
-        "password": "secret",
-        "keepalive": 30,
-        "client_cert": "## mock client certificate file ##",
-        "client_key": "## mock key file ##",
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 2345,
+        mqtt.CONF_USERNAME: "user",
+        mqtt.CONF_PASSWORD: "secret",
+        mqtt.CONF_KEEPALIVE: 30,
+        mqtt.CONF_CLIENT_CERT: "## mock client certificate file ##",
+        mqtt.CONF_CLIENT_KEY: "## mock key file ##",
         "tls_insecure": True,
-        "transport": "websockets",
-        "ws_path": "/custom_path/",
-        "ws_headers": {"header_1": "content_header_1", "header_2": "content_header_2"},
-        "certificate": "auto",
-        "discovery": True,
-        "discovery_prefix": "homeassistant_test",
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_PATH: "/custom_path/",
+        mqtt.CONF_WS_HEADERS: {
+            "header_1": "content_header_1",
+            "header_2": "content_header_2",
+        },
+        mqtt.CONF_CERTIFICATE: "auto",
+        mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }
 
 
@@ -1439,9 +1442,9 @@ async def test_change_websockets_transport_to_tcp(
 
     # Check config entry result
     assert config_entry.data == {
-        "broker": "test-broker",
-        "port": 1234,
-        "transport": "tcp",
-        "discovery": True,
-        "discovery_prefix": "homeassistant_test",
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+        mqtt.CONF_TRANSPORT: "tcp",
+        mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }

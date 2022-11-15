@@ -12,7 +12,7 @@
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
-            "bad_ws_headers": "Supply a valid JSON payload",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
@@ -33,11 +33,11 @@
                     "set_ca_cert": "Broker certificate validation",
                     "set_client_cert": "Use a client certificate",
                     "tls_insecure": "Ignore broker certificate validation",
-                    "transport": "MQTT Transport",
+                    "transport": "MQTT transport",
                     "username": "Username",
-                    "ws_path": "WebSockets path",
-                    "ws_headers": "WebSockets headers"
-                          },
+                    "ws_path": "WebSocket path",
+                    "ws_headers": "WebSocket headers"
+                },
                 "description": "Please enter the connection information of your MQTT broker."
             },
             "hassio_confirm": {
@@ -90,7 +90,7 @@
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
-            "bad_ws_headers": "Supply a valid JSON payload",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
@@ -110,10 +110,10 @@
                     "set_ca_cert": "Broker certificate validation",
                     "set_client_cert": "Use a client certificate",
                     "tls_insecure": "Ignore broker certificate validation",
-                    "transport": "MQTT Transport",
+                    "transport": "MQTT transport",
                     "username": "Username",
-                    "ws_path": "WebSockets path",
-                    "ws_headers": "WebSockets headers"
+                    "ws_path": "WebSocket path",
+                    "ws_headers": "WebSocket headers"
                 },
                 "description": "Please enter the connection information of your MQTT broker.",
                 "title": "Broker options"

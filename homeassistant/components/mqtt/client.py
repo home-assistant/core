@@ -309,8 +309,6 @@ class MqttClientSetup:
             ws_path = config.get(CONF_WS_PATH)
             ws_headers = config.get(CONF_WS_HEADERS)
             self._client.ws_set_options(ws_path, ws_headers)
-        ws_path = config.get(CONF_WS_PATH)
-        ws_headers = config.get(CONF_WS_HEADERS)
         if certificate is not None:
             self._client.tls_set(
                 certificate,
