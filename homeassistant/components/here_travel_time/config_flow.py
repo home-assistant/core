@@ -52,6 +52,7 @@ from .const import (
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
     TRAVEL_MODE_CAR,
+    TRAVEL_MODE_PUBLIC,
     TRAVEL_MODES,
     UNITS,
 )
@@ -73,6 +74,9 @@ async def async_validate_api_key(api_key: str) -> None:
 
 def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     """Get a populated schema or default."""
+    travel_mode = data.get(CONF_MODE, TRAVEL_MODE_CAR)
+    if travel_mode == "publicTransportTimeTable":
+        travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
             vol.Optional(
