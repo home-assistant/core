@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,12 +23,14 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, selector
 
 from .const import (
+    BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
     BLEScannerMode,
 )
+from .coordinator import get_entry_data
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -353,6 +356,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
+            entry_data = get_entry_data(self.hass)[self.config_entry.entry_id]
+            if user_input[CONF_BLE_SCANNER_MODE] != BLEScannerMode.DISABLED and (
+                not entry_data.rpc
+                or AwesomeVersion(entry_data.rpc.device.version) < BLE_MIN_VERSION
+            ):
+                return self.async_abort(
+                    reason="ble_unsupported",
+                    description_placeholders={"ble_min_version": BLE_MIN_VERSION},
+                )
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
