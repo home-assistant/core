@@ -2333,7 +2333,7 @@ spotipy==2.21.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.42
+sqlalchemy==1.4.44
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
