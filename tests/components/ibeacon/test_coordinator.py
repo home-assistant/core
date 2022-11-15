@@ -1,7 +1,6 @@
 """Test the ibeacon sensors."""
 
 
-from dataclasses import replace
 from datetime import timedelta
 import time
 
@@ -19,6 +18,7 @@ from . import (
     BLUECHARM_BEACON_SERVICE_INFO_DBUS,
     TESLA_TRANSIENT,
     TESLA_TRANSIENT_BLE_DEVICE,
+    bluetooth_service_info_replace as replace,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -145,16 +145,17 @@ async def test_ignore_default_name(hass):
     assert len(hass.states.async_entity_ids()) == before_entity_count
 
 
-async def test_rotating_major_minor_and_mac(hass):
+async def test_rotating_major_minor_and_mac_with_name(hass):
     """Test the different uuid, major, minor from many addresses removes all associated entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
     entry.add_to_hass(hass)
 
-    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
+
     for i in range(100):
         service_info = BluetoothServiceInfo(
             name="BlueCharm_177999",
@@ -186,9 +187,10 @@ async def test_rotating_major_minor_and_mac_no_name(hass):
     )
     entry.add_to_hass(hass)
 
-    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
+
     for i in range(51):
         service_info = BluetoothServiceInfo(
             name=f"AA:BB:CC:DD:EE:{i:02X}",
