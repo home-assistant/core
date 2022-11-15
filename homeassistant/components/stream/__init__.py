@@ -20,7 +20,6 @@ import asyncio
 from collections.abc import Callable, Mapping
 import copy
 import logging
-import re
 import secrets
 import threading
 import time
@@ -28,6 +27,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -91,17 +91,18 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SOURCE_REDACT_PATTERN = [
-    (re.compile(r"//.*:.*@"), "//****:****@"),
-    (re.compile(r"\?auth=.*"), "?auth=****"),
-]
 
-
-def redact_credentials(data: str) -> str:
+def redact_credentials(url: str) -> str:
     """Redact credentials from string data."""
-    for (pattern, repl) in STREAM_SOURCE_REDACT_PATTERN:
-        data = pattern.sub(repl, data)
-    return data
+    yurl = URL(url)
+    if yurl.user is not None:
+        yurl = yurl.with_user("****")
+    if yurl.password is not None:
+        yurl = yurl.with_password("****")
+    redacted_query_params = dict.fromkeys(
+        {"auth", "user", "password"} & yurl.query.keys(), "****"
+    )
+    return str(yurl.update_query(redacted_query_params))
 
 
 def create_stream(
