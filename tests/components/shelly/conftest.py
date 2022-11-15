@@ -1,4 +1,6 @@
 """Test configuration for Shelly."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.block_device import BlockDevice
