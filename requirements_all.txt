@@ -749,7 +749,7 @@ geniushub-client==0.6.30
 geocachingapi==0.2.1
 
 # homeassistant.components.aprs
-geopy==2.1.0
+geopy==2.3.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.6
