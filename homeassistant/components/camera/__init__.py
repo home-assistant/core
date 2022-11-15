@@ -359,7 +359,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     async def preload_stream(_event: Event) -> None:
-        for camera in component.entities:
+        for camera in list(component.entities):
             stream_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
             if not stream_prefs.preload_stream:
                 continue
