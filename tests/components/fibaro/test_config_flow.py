@@ -366,7 +366,7 @@ async def test_reauth_auth_failure(hass):
 
 
 async def test_normalize_url_does_not_touch_valid_url():
-    """Test that a correctly entere url is not touched."""
+    """Test that a correctly entered url is not touched."""
     assert _normalize_url(TEST_URL) == TEST_URL
 
 
