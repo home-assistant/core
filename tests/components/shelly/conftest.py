@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, UpdateType
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -210,7 +210,9 @@ async def mock_rpc_device():
     with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
 
         def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0]({})
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.STATUS
+            )
 
         device = Mock(
             spec=RpcDevice,
@@ -226,3 +228,8 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
