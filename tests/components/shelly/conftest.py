@@ -194,6 +194,7 @@ async def mock_block_device():
             blocks=MOCK_BLOCKS,
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
+            version="0.10.0",
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
@@ -207,7 +208,9 @@ async def mock_block_device():
 @pytest.fixture
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
+        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    ):
 
         def update():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
@@ -219,6 +222,7 @@ async def mock_rpc_device():
             config=MOCK_CONFIG,
             event={},
             shelly=MOCK_SHELLY_RPC,
+            version="0.12.0",
             status=MOCK_STATUS_RPC,
             firmware_version="some fw string",
             initialized=True,
