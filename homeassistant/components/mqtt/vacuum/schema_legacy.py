@@ -171,6 +171,38 @@ DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY_MODERN.extend(
 )
 
 
+_COMMANDS = {
+    VacuumEntityFeature.TURN_ON: {
+        "payload": CONF_PAYLOAD_TURN_ON,
+        "status": "Cleaning",
+    },
+    VacuumEntityFeature.TURN_OFF: {
+        "payload": CONF_PAYLOAD_TURN_OFF,
+        "status": "Turning Off",
+    },
+    VacuumEntityFeature.STOP: {
+        "payload": CONF_PAYLOAD_STOP,
+        "status": "Stopping the current task",
+    },
+    VacuumEntityFeature.CLEAN_SPOT: {
+        "payload": CONF_PAYLOAD_CLEAN_SPOT,
+        "status": "Cleaning spot",
+    },
+    VacuumEntityFeature.LOCATE: {
+        "payload": CONF_PAYLOAD_LOCATE,
+        "status": "Hi, I'm over here!",
+    },
+    VacuumEntityFeature.PAUSE: {
+        "payload": CONF_PAYLOAD_START_PAUSE,
+        "status": "Pausing/Resuming cleaning...",
+    },
+    VacuumEntityFeature.RETURN_HOME: {
+        "payload": CONF_PAYLOAD_RETURN_TO_BASE,
+        "status": "Returning home...",
+    },
+}
+
+
 async def async_setup_entity_legacy(
     hass: HomeAssistant,
     config: ConfigType,
@@ -386,128 +418,59 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             battery_level=self.battery_level, charging=self._charging
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the vacuum on."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.TURN_ON == 0
-        ):
+    async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
+        """Check for a missing feature or command topic."""
+
+        if self._command_topic is None or self.supported_features & feature == 0:
             return
+
         await self.async_publish(
             self._command_topic,
-            self._payloads[CONF_PAYLOAD_TURN_ON],
+            self._payloads[_COMMANDS[feature]["payload"]],
             qos=self._qos,
             retain=self._retain,
             encoding=self._encoding,
         )
-        self._attr_status = "Cleaning"
+        self._attr_status = _COMMANDS[feature]["status"]
         self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the vacuum on."""
+        await self._async_publish_command(VacuumEntityFeature.TURN_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.TURN_OFF == 0
-        ):
-            return None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_TURN_OFF],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Turning Off"
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.TURN_OFF)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
-        if self.supported_features & VacuumEntityFeature.STOP == 0:
-            return None
-
-        assert self._command_topic is not None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_STOP],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Stopping the current task"
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.STOP)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
-            return None
-
-        assert self._command_topic is not None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Cleaning spot"
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.CLEAN_SPOT)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
-        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
-            return None
-
-        assert self._command_topic is not None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_LOCATE],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Hi, I'm over here!"
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.LOCATE)
 
     async def async_start_pause(self, **kwargs: Any) -> None:
         """Start, pause or resume the cleaning task."""
-        if self.supported_features & VacuumEntityFeature.PAUSE == 0:
-            return None
-
-        assert self._command_topic is not None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_START_PAUSE],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Pausing/Resuming cleaning..."
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.PAUSE)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
-        if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
-            return None
-
-        assert self._command_topic is not None
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
-            self._qos,
-            self._retain,
-            self._encoding,
-        )
-        self._attr_status = "Returning home..."
-        self.async_write_ha_state()
+        await self._async_publish_command(VacuumEntityFeature.RETURN_HOME)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if (
-            self.supported_features & VacuumEntityFeature.FAN_SPEED == 0
-        ) or fan_speed not in self.fan_speed_list:
+            self._set_fan_speed_topic is None
+            or (self.supported_features & VacuumEntityFeature.FAN_SPEED == 0)
+            or fan_speed not in self.fan_speed_list
+        ):
             return None
 
-        assert self._set_fan_speed_topic is not None
         await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,

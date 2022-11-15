@@ -112,6 +112,15 @@ DEFAULT_PAYLOAD_LOCATE = "locate"
 DEFAULT_PAYLOAD_START = "start"
 DEFAULT_PAYLOAD_PAUSE = "pause"
 
+_FEATURE_PAYLOADS = {
+    VacuumEntityFeature.START: CONF_PAYLOAD_START,
+    VacuumEntityFeature.STOP: CONF_PAYLOAD_STOP,
+    VacuumEntityFeature.PAUSE: CONF_PAYLOAD_PAUSE,
+    VacuumEntityFeature.CLEAN_SPOT: CONF_PAYLOAD_CLEAN_SPOT,
+    VacuumEntityFeature.LOCATE: CONF_PAYLOAD_LOCATE,
+    VacuumEntityFeature.RETURN_HOME: CONF_PAYLOAD_RETURN_TO_BASE,
+}
+
 PLATFORM_SCHEMA_STATE_MODERN = (
     MQTT_BASE_SCHEMA.extend(
         {
@@ -255,50 +264,43 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-    async def async_start(self) -> None:
-        """Start the vacuum."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.START == 0
-        ):
-            return None
+    async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
+        """Check for a missing feature or command topic."""
+        if self._command_topic is None or self.supported_features & feature == 0:
+            return
+
         await self.async_publish(
             self._command_topic,
-            self._config[CONF_PAYLOAD_START],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+            self._payloads[_FEATURE_PAYLOADS[feature]],
+            qos=self._config[CONF_QOS],
+            retain=self._config[CONF_RETAIN],
+            encoding=self._config[CONF_ENCODING],
         )
+        self.async_write_ha_state()
+
+    async def async_start(self) -> None:
+        """Start the vacuum."""
+        await self._async_publish_command(VacuumEntityFeature.START)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.PAUSE == 0
-        ):
-            return
-        await self.async_publish(
-            self._command_topic,
-            self._config[CONF_PAYLOAD_PAUSE],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self._async_publish_command(VacuumEntityFeature.PAUSE)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.STOP == 0
-        ):
-            return
-        await self.async_publish(
-            self._command_topic,
-            self._config[CONF_PAYLOAD_STOP],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self._async_publish_command(VacuumEntityFeature.STOP)
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Tell the vacuum to return to its dock."""
+        await self._async_publish_command(VacuumEntityFeature.RETURN_HOME)
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Perform a spot clean-up."""
+        await self._async_publish_command(VacuumEntityFeature.CLEAN_SPOT)
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate the vacuum (usually by playing a song)."""
+        await self._async_publish_command(VacuumEntityFeature.LOCATE)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
@@ -311,51 +313,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
-
-    async def async_return_to_base(self, **kwargs: Any) -> None:
-        """Tell the vacuum to return to its dock."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.RETURN_HOME == 0
-        ):
-            return
-        await self.async_publish(
-            self._command_topic,
-            self._config[CONF_PAYLOAD_RETURN_TO_BASE],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
-
-    async def async_clean_spot(self, **kwargs: Any) -> None:
-        """Perform a spot clean-up."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0
-        ):
-            return
-        await self.async_publish(
-            self._command_topic,
-            self._config[CONF_PAYLOAD_CLEAN_SPOT],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
-
-    async def async_locate(self, **kwargs: Any) -> None:
-        """Locate the vacuum (usually by playing a song)."""
-        if (
-            self._command_topic is None
-            or self.supported_features & VacuumEntityFeature.LOCATE == 0
-        ):
-            return
-        await self.async_publish(
-            self._command_topic,
-            self._config[CONF_PAYLOAD_LOCATE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
