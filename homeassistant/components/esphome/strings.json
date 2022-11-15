@@ -43,5 +43,11 @@
       }
     },
     "flow_title": "{name}"
+  },
+  "issues": {
+    "ble_firmware_outdated": {
+      "title": "Update firmware to 2022.11.0 or later",
+      "description": "To improve Bluetooth reliability and performance, we highly recommend re-flashing {name} to firmware to 2022.11.0 or later."
+    }
   }
 }

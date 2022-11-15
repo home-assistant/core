@@ -24,6 +24,7 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
 )
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import const
@@ -46,6 +47,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
@@ -61,6 +67,34 @@ if TYPE_CHECKING:
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
+
+STABLE_BLE_VERSION_STR = "2022.11.0"
+STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
+
+
+@callback
+def _async_check_firmware_version(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo
+) -> None:
+    """Create or delete an the ble_firmware_outdated issue."""
+    # ESPHome device_info.name is the unique_id
+    issue = f"ble_firmware_outdated-{device_info.name}"
+    if (
+        not device_info.bluetooth_proxy_version
+        or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
+    ):
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url=f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html",
+        translation_key="ble_firmware_outdated",
+        translation_placeholders={"name": device_info.name},
+    )
 
 
 async def async_setup_entry(  # noqa: C901
@@ -221,7 +255,8 @@ async def async_setup_entry(  # noqa: C901
         """Subscribe to states and list entities on successful API login."""
         nonlocal device_id
         try:
-            entry_data.device_info = await cli.device_info()
+            device_info = await cli.device_info()
+            entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
@@ -249,6 +284,8 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.warning("Error getting initial data for %s: %s", host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
+        else:
+            _async_check_firmware_version(hass, device_info)
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
