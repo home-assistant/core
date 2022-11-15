@@ -1,7 +1,6 @@
 """Test the ibeacon sensors."""
 
 
-from dataclasses import replace
 from datetime import timedelta
 import time
 
@@ -19,6 +18,7 @@ from . import (
     BLUECHARM_BEACON_SERVICE_INFO_DBUS,
     TESLA_TRANSIENT,
     TESLA_TRANSIENT_BLE_DEVICE,
+    bluetooth_service_info_replace as replace,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
