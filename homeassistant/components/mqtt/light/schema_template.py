@@ -186,10 +186,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         }
         self._value_templates = {
             key: MqttValueTemplate(
-                config[key], entity=self
+                config.get(key), entity=self
             ).async_render_with_possible_json_value
             for key in VALUE_TEMPLATES
-            if key in config
         }
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = (
@@ -233,9 +232,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            state: ReceivePayloadType = self._value_templates[CONF_STATE_TEMPLATE](
-                msg.payload
-            )
+            state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
             if state == STATE_ON:
                 self._attr_is_on = True
             elif state == STATE_OFF:

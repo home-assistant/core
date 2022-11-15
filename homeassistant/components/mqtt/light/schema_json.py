@@ -353,9 +353,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload: Any = json_loads(msg.payload)
-            assert isinstance(payload, dict)
-            values: dict[str, Any] = payload
+            values: dict[str, Any] = json_loads(msg.payload)
 
             if values["state"] == "ON":
                 self._attr_is_on = True
@@ -506,9 +504,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
-        assert self.supported_color_modes
         return (
-            self._config[CONF_COLOR_MODE] and color_mode in self.supported_color_modes
+            self.supported_color_modes is not None
+            and self._config[CONF_COLOR_MODE]
+            and color_mode in self.supported_color_modes
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901

@@ -124,11 +124,23 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
+    config_entry: ConfigEntry,
     discovery_data: dict | None = None,
 ) -> None:
     """Set up a MQTT Light."""
-    setup_entity: dict[str, Callable[..., Coroutine[Any, Any, None]]] = {
+    setup_entity: dict[
+        str,
+        Callable[
+            [
+                HomeAssistant,
+                ConfigType,
+                AddEntitiesCallback,
+                ConfigEntry,
+                DiscoveryInfoType | None,
+            ],
+            Coroutine[Any, Any, None],
+        ],
+    ] = {
         "basic": async_setup_entity_basic,
         "json": async_setup_entity_json,
         "template": async_setup_entity_template,
