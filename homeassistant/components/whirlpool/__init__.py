@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = Auth(backend_selector, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     try:
         await auth.do_auth(store=False)
-    except aiohttp.ClientError as ex:
+    except (ConnectionError, aiohttp.ClientConnectionError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():
