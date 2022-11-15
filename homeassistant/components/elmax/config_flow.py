@@ -27,10 +27,10 @@ from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
+    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
     CONF_ELMAX_MODE_DIRECT_HOST,
     CONF_ELMAX_MODE_DIRECT_PORT,
     CONF_ELMAX_MODE_DIRECT_SSL,
-    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -86,7 +86,7 @@ ZEROCONF_SETUP_SCHEMA = vol.Schema(
 
 
 def _store_panel_by_name(
-        panel: PanelEntry, username: str, panel_names: dict[str, str]
+    panel: PanelEntry, username: str, panel_names: dict[str, str]
 ) -> None:
     original_panel_name = panel.get_name_by_user(username=username)
     panel_id = panel.hash
@@ -125,13 +125,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _panel_names: dict
 
     async def async_step_user(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the flow initiated by the user."""
         return await self.async_step_choose_mode(user_input=user_input)
 
     async def async_step_choose_mode(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle local vs cloud mode selection step."""
         errors: dict[str, Any] = {}
@@ -153,8 +153,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_direct_and_create_entry(self):
         """Test the direct connection to the Elmax panel and create and entry if successful."""
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
-        client_api_url = get_direct_api_url(host=self._panel_direct_hostname, port=self._panel_direct_port,
-                                            ssl=self._panel_direct_use_ssl)
+        client_api_url = get_direct_api_url(
+            host=self._panel_direct_hostname,
+            port=self._panel_direct_port,
+            ssl=self._panel_direct_use_ssl,
+        )
         client = ElmaxLocal(panel_api_url=client_api_url, panel_code=self._panel_pin)
         await client.login()
         # Retrieve the current panel status. If this succeeds, it means the
@@ -170,7 +173,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ELMAX_MODE_DIRECT_SSL: self._panel_direct_use_ssl,
                 CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: self._panel_direct_follow_mdns,
                 CONF_ELMAX_PANEL_PIN: self._panel_pin,
-                CONF_ELMAX_PANEL_ID: status.panel_id
+                CONF_ELMAX_PANEL_ID: status.panel_id,
             },
         )
 
@@ -187,6 +190,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._panel_direct_port = user_input[CONF_ELMAX_MODE_DIRECT_PORT]
         self._panel_direct_use_ssl = user_input[CONF_ELMAX_MODE_DIRECT_SSL]
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+        self._panel_direct_follow_mdns = user_input[CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS]
 
         try:
             return await self._test_direct_and_create_entry()
@@ -228,7 +232,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def _check_unique_and_create_entry(
-            self, unique_id: str, title: str, data: Mapping[str, Any]
+        self, unique_id: str, title: str, data: Mapping[str, Any]
     ) -> FlowResult:
         # Make sure this is the only Elmax integration for this specific panel id.
         await self.async_set_unique_id(unique_id)
@@ -300,7 +304,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_panels(user_input=None)
 
     async def async_step_panels(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle Panel selection step."""
         errors: dict[str, Any] = {}
@@ -423,8 +427,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm", data_schema=schema, errors=errors
         )
 
-    async def _async_handle_entry_match(self, local_id: str, remote_id: str, host: str, port: int,
-                                        use_ssl: bool) -> None:
+    async def _async_handle_entry_match(
+        self, local_id: str, remote_id: str | None, host: str, port: int, use_ssl: bool
+    ) -> None:
         # Look for another entry with the same PANEL_ID (local or remote).
         # If there already is a matching panel, take the change to notify the Coordinator
         # so that it uses the newly discovered IP address. This mitigates the issues
@@ -435,30 +440,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # However, if the discovery finds a new host for a panel that was already registered
                 # for a given host (leave PORT comparison aside as we don't want to get notified twice
                 # for HTTP and HTTPS), update the entry so that the integration "follows" the DHCP IP.
-                if entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD) == CONF_ELMAX_MODE_DIRECT \
-                        and entry.data[CONF_ELMAX_MODE_DIRECT_HOST] != host \
-                        and entry.data[CONF_ELMAX_MODE_DIRECT_SSL] == use_ssl \
-                        and entry.data.get(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, False):
-                    new_data = dict()
+                if (
+                    entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
+                    == CONF_ELMAX_MODE_DIRECT
+                    and entry.data[CONF_ELMAX_MODE_DIRECT_HOST] != host
+                    and entry.data[CONF_ELMAX_MODE_DIRECT_SSL] == use_ssl
+                    and entry.data.get(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, False)
+                ):
+                    new_data: dict[str, Any] = {}
                     new_data.update(entry.data)
                     new_data[CONF_ELMAX_MODE_DIRECT_HOST] = host
                     new_data[CONF_ELMAX_MODE_DIRECT_PORT] = port
-                    self.hass.config_entries.async_update_entry(entry,
-                                                                unique_id=entry.unique_id,
-                                                                data=new_data)
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=entry.unique_id, data=new_data
+                    )
                 # Abort the configuration, as there already is an entry for this PANEL-ID.
                 self.async_abort(reason="already_configured")
 
     async def async_step_zeroconf(
-            self, discovery_info: ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
+        use_ssl = discovery_info.type == "_elmax-ssl._tcp.local."
+        default_port = 443 if use_ssl else 80
         host = discovery_info.host
-        port = int(discovery_info.port)
+        port = (
+            int(discovery_info.port)
+            if discovery_info.port is not None
+            else default_port
+        )
         local_id = discovery_info.properties.get("idl")
         remote_id = discovery_info.properties.get("idr")
-        use_ssl = discovery_info.type == "_elmax-ssl._tcp.local."
-        await self._async_handle_entry_match(local_id, remote_id, host, port, use_ssl)
+        if local_id is not None:
+            await self._async_handle_entry_match(
+                local_id, remote_id, host, port, use_ssl
+            )
 
         self._selected_mode = CONF_ELMAX_MODE_DIRECT
         self._panel_direct_hostname = host
