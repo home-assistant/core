@@ -5,7 +5,9 @@ from unittest.mock import MagicMock
 import aiohttp
 from plugwise.exceptions import (
     ConnectionFailedError,
-    PlugwiseException,
+    InvalidAuthentication,
+    InvalidXMLError,
+    ResponseError,
     XMLDataMissingError,
 )
 import pytest
@@ -47,10 +49,12 @@ async def test_load_unload_config_entry(
     "side_effect",
     [
         (ConnectionFailedError),
-        (PlugwiseException),
+        (InvalidAuthentication),
+        (InvalidXMLError),
+        (ResponseError),
         (XMLDataMissingError),
+        (aiohttp.ClientError),
         (asyncio.TimeoutError),
-        (aiohttp.ClientConnectionError),
     ],
 )
 async def test_config_entry_not_ready(

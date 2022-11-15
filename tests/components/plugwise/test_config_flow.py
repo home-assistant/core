@@ -4,8 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
-    InvalidSetupError,
-    PlugwiseException,
+    InvalidXMLError,
+    ResponseError,
+    XMLDataMissingError,
 )
 import pytest
 
@@ -97,9 +98,11 @@ def mock_smile():
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
     ) as smile_mock:
-        smile_mock.PlugwiseException = PlugwiseException
-        smile_mock.InvalidAuthentication = InvalidAuthentication
         smile_mock.ConnectionFailedError = ConnectionFailedError
+        smile_mock.InvalidAuthentication = InvalidAuthentication
+        smile_mock.InvalidXMLError = InvalidXMLError
+        smile_mock.ResponseError = ResponseError
+        smile_mock.XMLDataMissingError = XMLDataMissingError
         smile_mock.return_value.connect.return_value = True
         yield smile_mock.return_value
 
@@ -268,11 +271,12 @@ async def test_zercoconf_discovery_update_configuration(
 @pytest.mark.parametrize(
     "side_effect,reason",
     [
-        (InvalidAuthentication, "invalid_auth"),
-        (InvalidSetupError, "invalid_setup"),
         (ConnectionFailedError, "cannot_connect"),
-        (PlugwiseException, "cannot_connect"),
+        (InvalidAuthentication, "invalid_auth"),
+        (InvalidXMLError, "cannot_connect"),
+        (ResponseError, "cannot_connect"),
         (RuntimeError, "unknown"),
+        (XMLDataMissingError, "retry"),
     ],
 )
 async def test_flow_errors(
