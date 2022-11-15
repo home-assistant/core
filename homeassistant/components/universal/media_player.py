@@ -334,22 +334,22 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_ID)
+        return self._override_or_child_attr(ATTR_MEDIA_CONTENT_ID)
 
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_TYPE)
+        return self._override_or_child_attr(ATTR_MEDIA_CONTENT_TYPE)
 
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_DURATION)
+        return self._override_or_child_attr(ATTR_MEDIA_DURATION)
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._child_attr(ATTR_ENTITY_PICTURE)
+        return self._override_or_child_attr(ATTR_ENTITY_PICTURE)
 
     @property
     def entity_picture(self):
@@ -365,62 +365,62 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._child_attr(ATTR_MEDIA_TITLE)
+        return self._override_or_child_attr(ATTR_MEDIA_TITLE)
 
     @property
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ARTIST)
+        return self._override_or_child_attr(ATTR_MEDIA_ARTIST)
 
     @property
     def media_album_name(self):
         """Album name of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_NAME)
+        return self._override_or_child_attr(ATTR_MEDIA_ALBUM_NAME)
 
     @property
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_ARTIST)
+        return self._override_or_child_attr(ATTR_MEDIA_ALBUM_ARTIST)
 
     @property
     def media_track(self):
         """Track number of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_TRACK)
+        return self._override_or_child_attr(ATTR_MEDIA_TRACK)
 
     @property
     def media_series_title(self):
         """Return the title of the series of current playing media (TV)."""
-        return self._child_attr(ATTR_MEDIA_SERIES_TITLE)
+        return self._override_or_child_attr(ATTR_MEDIA_SERIES_TITLE)
 
     @property
     def media_season(self):
         """Season of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_SEASON)
+        return self._override_or_child_attr(ATTR_MEDIA_SEASON)
 
     @property
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_EPISODE)
+        return self._override_or_child_attr(ATTR_MEDIA_EPISODE)
 
     @property
     def media_channel(self):
         """Channel currently playing."""
-        return self._child_attr(ATTR_MEDIA_CHANNEL)
+        return self._override_or_child_attr(ATTR_MEDIA_CHANNEL)
 
     @property
     def media_playlist(self):
         """Title of Playlist currently playing."""
-        return self._child_attr(ATTR_MEDIA_PLAYLIST)
+        return self._override_or_child_attr(ATTR_MEDIA_PLAYLIST)
 
     @property
     def app_id(self):
         """ID of the current running app."""
-        return self._child_attr(ATTR_APP_ID)
+        return self._override_or_child_attr(ATTR_APP_ID)
 
     @property
     def app_name(self):
         """Name of the current running app."""
-        return self._child_attr(ATTR_APP_NAME)
+        return self._override_or_child_attr(ATTR_APP_NAME)
 
     @property
     def sound_mode(self):
@@ -521,12 +521,12 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_POSITION)
+        return self._override_or_child_attr(ATTR_MEDIA_POSITION)
 
     @property
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
-        return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
+        return self._override_or_child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
