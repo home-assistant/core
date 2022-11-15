@@ -44,7 +44,7 @@ from .const import (
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
 )
-from .device_trigger import async_get_turn_on_trigger
+from .triggers.turn_on import async_get_turn_on_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
