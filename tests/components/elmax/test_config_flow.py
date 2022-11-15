@@ -8,7 +8,10 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
-    CONF_ELMAX_MODE_DIRECT_URI,
+    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
+    CONF_ELMAX_MODE_DIRECT_HOST,
+    CONF_ELMAX_MODE_DIRECT_PORT,
+    CONF_ELMAX_MODE_DIRECT_SSL,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -19,12 +22,16 @@ from homeassistant.components.elmax.const import (
 from homeassistant.config_entries import SOURCE_REAUTH
 
 from . import (
-    MOCK_DIRECT_BASE_URI,
+    MOCK_DIRECT_FOLLOW_MDNS,
+    MOCK_DIRECT_HOST,
+    MOCK_DIRECT_PORT,
+    MOCK_DIRECT_SSL,
     MOCK_PANEL_ID,
     MOCK_PANEL_NAME,
     MOCK_PANEL_PIN,
     MOCK_PASSWORD,
     MOCK_USERNAME,
+    MOCK_WRONG_PANEL_PIN,
 )
 
 from tests.common import MockConfigEntry
@@ -57,7 +64,10 @@ async def test_direct_setup(hass):
         result = await hass.config_entries.flow.async_configure(
             set_mode_result["flow_id"],
             {
-                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
+                CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
+                CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
+                CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             },
         )
@@ -202,7 +212,10 @@ async def test_direct_connection_error(hass):
         result = await hass.config_entries.flow.async_configure(
             set_mode_result["flow_id"],
             {
-                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
+                CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
+                CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
+                CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             },
         )
@@ -227,8 +240,11 @@ async def test_direct_wrong_panel_code(hass):
         result = await hass.config_entries.flow.async_configure(
             set_mode_result["flow_id"],
             {
-                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+                CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
+                CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
+                CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
+                CONF_ELMAX_PANEL_PIN: MOCK_WRONG_PANEL_PIN,
             },
         )
         assert result["step_id"] == "direct_setup"

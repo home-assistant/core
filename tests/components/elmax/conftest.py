@@ -11,9 +11,17 @@ from httpx import Response
 import pytest
 import respx
 
-from . import MOCK_DIRECT_BASE_URI, MOCK_PANEL_ID, MOCK_PANEL_PIN
+from . import (
+    MOCK_DIRECT_HOST,
+    MOCK_DIRECT_PORT,
+    MOCK_DIRECT_SSL,
+    MOCK_PANEL_ID,
+    MOCK_PANEL_PIN,
+)
 
 from tests.common import load_fixture
+
+MOCK_DIRECT_BASE_URI = f"{'https' if MOCK_DIRECT_SSL else 'http'}://${MOCK_DIRECT_HOST}:${MOCK_DIRECT_PORT}"
 
 
 @pytest.fixture(autouse=True)
