@@ -191,7 +191,7 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
     if file_name_or_auto == "auto":
         return "auto"
     try:
-        with open(file_name_or_auto, encoding=DEFAULT_ENCODING) as certiticate_file:
-            return certiticate_file.read()
+        with open(file_name_or_auto, encoding=DEFAULT_ENCODING) as certificate_file:
+            return certificate_file.read()
     except OSError:
         return None

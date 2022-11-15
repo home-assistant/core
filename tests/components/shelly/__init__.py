@@ -1,4 +1,10 @@
 """Tests for the Shelly integration."""
+from copy import deepcopy
+from typing import Any
+from unittest.mock import Mock
+
+import pytest
+
 from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -26,3 +32,16 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return entry
+
+
+def mutate_rpc_device_status(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_rpc_device: Mock,
+    top_level_key: str,
+    key: str,
+    value: Any,
+) -> None:
+    """Mutate status for rpc device."""
+    new_status = deepcopy(mock_rpc_device.status)
+    new_status[top_level_key][key] = value
+    monkeypatch.setattr(mock_rpc_device, "status", new_status)
