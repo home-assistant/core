@@ -8,7 +8,7 @@ from datetime import timedelta
 from typing import Any, cast
 
 import aioshelly
-from aioshelly.ble import async_stop_scanner
+from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, UpdateType
@@ -526,6 +526,10 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 self.device.version,
                 BLE_MIN_VERSION,
             )
+            return
+        if await async_ensure_ble_enabled(self.device):
+            # BLE enable required a reboot, don't bother connecting
+            # the scanner since it will be disconnected anyway
             return
         self._disconnected_callbacks.append(
             await async_connect_scanner(self.hass, self, ble_scanner_mode)
