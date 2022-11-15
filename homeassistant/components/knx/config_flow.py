@@ -139,7 +139,10 @@ class KNXCommonFlow(ABC, FlowHandler):
             CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
         }
 
-        xknx = self.hass.data[DOMAIN].xknx if isinstance(self, OptionsFlow) else XKNX()
+        if isinstance(self, OptionsFlow) and (knx_module := self.hass.data.get(DOMAIN)):
+            xknx = knx_module.xknx
+        else:
+            xknx = XKNX()
         self._gatewayscanner = GatewayScanner(
             xknx, stop_on_found=0, timeout_in_seconds=2
         )
