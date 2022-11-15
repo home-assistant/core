@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from slugify import slugify
-from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -55,23 +54,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     }
 
 
-def _normalize_url(data: dict[str, Any]) -> dict[str, Any]:
+def _normalize_url(url: str) -> str:
     """Try to fix errors in the entered url.
 
     We know that the url should be in the format http://<HOST>/api/
     """
-    # normalize url and add http:// if missing
-    data[CONF_URL] = url_normalize(data[CONF_URL], default_scheme="http")
-
-    url = data[CONF_URL]
-    assert isinstance(url, str)
-
-    # auto-correction for the path info
     if url.endswith("/api"):
-        data[CONF_URL] = f"{url}/"
-    elif url.endswith("/") and not url.endswith("/api/"):
-        data[CONF_URL] = f"{url}api/"
-    return data
+        return f"{url}/"
+    if not url.endswith("/api/"):
+        return f"{url}api/" if url.endswith("/") else f"{url}/api/"
+    return url
 
 
 class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -91,7 +83,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                user_input = _normalize_url(user_input)
+                user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
                 info = await _validate_input(self.hass, user_input)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
