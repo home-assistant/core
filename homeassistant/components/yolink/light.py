@@ -39,14 +39,17 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         """Init YoLink Dimmer entity."""
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}"
-        self._attr_name = "Dimmer State"
+        self._attr_name = f"{coordinator.device.device_name} (State)"
+        self._attr_has_entity_name = True
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = state.get("state") == "open"
+        if (dimmer_is_on := state.get("state")) is not None:
+            # update _attr_is_on when device report it's state
+            self._attr_is_on = dimmer_is_on
         if (brightness := state.get("brightness")) is not None:
             self._attr_brightness = round(255 * brightness / 100)
         self.async_write_ha_state()
@@ -55,10 +58,9 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         """Toggle light state."""
         params: dict[str, Any] = {"state": state}
         if brightness is not None:
+            self._attr_brightness = brightness
             params["brightness"] = round(brightness / 255, 2) * 100
         await self.call_device_api("setState", params)
-        if brightness is not None:
-            self._attr_brightness = brightness
         self._attr_is_on = state == "open"
         self.async_write_ha_state()
 
