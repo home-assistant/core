@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import Any, cast
 
 import aioshelly
+from aioshelly.ble import async_stop_scanner
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, UpdateType
@@ -516,6 +517,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED:
+            await async_stop_scanner(self.device)
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
             LOGGER.error(
@@ -562,6 +564,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
+        await async_stop_scanner(self.device)
         await self.device.shutdown()
         await self._async_disconnected()
 
