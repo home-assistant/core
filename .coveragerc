@@ -1111,6 +1111,7 @@ omit =
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
     homeassistant/components/shelly/binary_sensor.py
+    homeassistant/components/shelly/bluetooth/scanner.py
     homeassistant/components/shelly/climate.py
     homeassistant/components/shelly/coordinator.py
     homeassistant/components/shelly/entity.py
