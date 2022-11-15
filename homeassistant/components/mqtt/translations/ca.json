@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
-                    "certificate": "Ruta a un fitxer de certificat CA personalitzat",
-                    "client_cert": "Ruta a un fitxer de certificat de client",
+                    "certificate": "Puja fitxer de certificat CA personalitzat",
+                    "client_cert": "Puja fitxer de certificat client",
                     "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
-                    "client_key": "Ruta a un fitxer de clau privada",
+                    "client_key": "Puja fitxer de clau privada",
                     "discovery": "Habilita el descobriment autom\u00e0tic",
                     "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
@@ -38,7 +38,7 @@
             },
             "hassio_confirm": {
                 "data": {
-                    "discovery": "Habilitar descobriment autom\u00e0tic"
+                    "discovery": "Activa el descobriment"
                 },
                 "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement {addon}?",
                 "title": "Broker MQTT via complement de Home Assistant"
@@ -94,10 +94,10 @@
                 "data": {
                     "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
-                    "certificate": "Puja un fitxer de certificat CA personalitzat",
-                    "client_cert": "Puja un fitxer de certificat de client",
+                    "certificate": "Puja fitxer de certificat CA personalitzat",
+                    "client_cert": "Puja fitxer de certificat client",
                     "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
-                    "client_key": "Puja un fitxer de clau privada",
+                    "client_key": "Puja fitxer de clau privada",
                     "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
                     "port": "Port",
@@ -117,7 +117,7 @@
                     "birth_qos": "QoS del missatge de naixement",
                     "birth_retain": "Retenci\u00f3 del missatge de naixement",
                     "birth_topic": "Topic del missatge de naixement",
-                    "discovery": "Activar descobriment",
+                    "discovery": "Activa el descobriment",
                     "discovery_prefix": "Prefix de descobriment",
                     "will_enable": "Activa el missatge d'\u00faltima voluntat",
                     "will_payload": "Dades (payload) del missatge d'\u00faltima voluntat",

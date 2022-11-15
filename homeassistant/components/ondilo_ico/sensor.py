@@ -50,7 +50,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ph",
         name="pH",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,

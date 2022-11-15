@@ -42,8 +42,21 @@
         }
     },
     "issues": {
+        "ea_setup_failed": {
+            "title": "Kesalahan penyiapan menggunakan versi Early Access"
+        },
         "ea_warning": {
             "description": "Anda menggunakan UniFi Protect v{version} yang merupakan versi Early Access. Versi Early Access tidak didukung oleh Home Assistant dan dapat menyebabkan integrasi UniFi Protect rusak atau tidak berfungsi seperti yang diharapkan.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "v{version} adalah versi Early Access"
+                    },
+                    "start": {
+                        "title": "v{version} adalah versi Early Access"
+                    }
+                }
+            },
             "title": "UniFi Protect v{version} adalah versi Early Access"
         }
     },

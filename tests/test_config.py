@@ -1207,13 +1207,28 @@ def test_identify_config_schema(domain, schema, expected):
     )
 
 
-def test_core_config_schema_historic_currency(hass):
+async def test_core_config_schema_historic_currency(hass):
     """Test core config schema."""
-    config_util.CORE_CONFIG_SCHEMA(
-        {
+    await config_util.async_process_ha_core_config(hass, {"currency": "LTT"})
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    assert issue
+    assert issue.translation_placeholders == {"currency": "LTT"}
+
+
+async def test_core_store_historic_currency(hass, hass_storage):
+    """Test core config store."""
+    core_data = {
+        "data": {
             "currency": "LTT",
-        }
-    )
+        },
+        "key": "core.config",
+        "version": 1,
+        "minor_version": 1,
+    }
+    hass_storage["core.config"] = dict(core_data)
+    await config_util.async_process_ha_core_config(hass, {})
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
