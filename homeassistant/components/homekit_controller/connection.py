@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -29,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
@@ -41,6 +43,8 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
+
+
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,6 +130,14 @@ class HKDevice:
         self.unreliable_serial_numbers = False
 
         self.watchable_characteristics: list[tuple[int, int]] = []
+
+        self._debounced_update = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_COOLDOWN,
+            immediate=False,
+            function=self.async_update,
+        )
 
     @property
     def entity_map(self) -> Accessories:
@@ -240,8 +252,11 @@ class HKDevice:
 
         self.async_set_available_state(self.pairing.is_available)
 
+        # We use async_request_update to avoid multiple updates
+        # at the same time which would generate a spurious warning
+        # in the log about concurrent polling.
         self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, self.pairing.poll_interval
+            self.hass, self.async_request_update, self.pairing.poll_interval
         )
 
         if transport == Transport.BLE:
@@ -630,6 +645,10 @@ class HKDevice:
     def async_update_available_state(self, *_: Any) -> None:
         """Update the available state of the device."""
         self.async_set_available_state(self.pairing.is_available)
+
+    async def async_request_update(self, now: datetime | None = None) -> None:
+        """Request an debounced update from the accessory."""
+        await self._debounced_update.async_call()
 
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
