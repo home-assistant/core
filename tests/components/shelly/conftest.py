@@ -226,3 +226,8 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
