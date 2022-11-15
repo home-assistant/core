@@ -21,11 +21,14 @@ from bleak.backends.scanner import (
     BaseBleakScanner,
 )
 from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.frame import report
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from homeassistant.helpers.service_info.bluetooth import (  # noqa: F401 # pylint: disable=unused-import
+    BluetoothServiceInfo,
+)
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .const import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -51,41 +54,6 @@ FILTER_UUIDS: Final = "UUIDs"
 MANAGER: BluetoothManager | None = None
 
 MONOTONIC_TIME: Final = monotonic_time_coarse
-
-
-@dataclass
-class BluetoothServiceInfoBleak(BluetoothServiceInfo):
-    """BluetoothServiceInfo with bleak data.
-
-    Integrations may need BLEDevice and AdvertisementData
-    to connect to the device without having bleak trigger
-    another scan to translate the address to the system's
-    internal details.
-    """
-
-    device: BLEDevice
-    advertisement: AdvertisementData
-    connectable: bool
-    time: float
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return as dict.
-
-        The dataclass asdict method is not used because
-        it will try to deepcopy pyobjc data which will fail.
-        """
-        return {
-            "name": self.name,
-            "address": self.address,
-            "rssi": self.rssi,
-            "manufacturer_data": self.manufacturer_data,
-            "service_data": self.service_data,
-            "service_uuids": self.service_uuids,
-            "source": self.source,
-            "advertisement": self.advertisement,
-            "connectable": self.connectable,
-            "time": self.time,
-        }
 
 
 class BluetoothScanningMode(Enum):
