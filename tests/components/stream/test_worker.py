@@ -734,10 +734,6 @@ test_worker_log_cases = (
         "https://foo.bar/baz?user=****&password=****",
     ),
     (
-        "https://foo.bar/baz?user=abcd&password=efgh",
-        "https://foo.bar/baz?user=****&password=****",
-    ),
-    (
         "https://foo.bar/baz?param1=abcd&param2=efgh",
         "https://foo.bar/baz?param1=abcd&param2=efgh",
     ),
