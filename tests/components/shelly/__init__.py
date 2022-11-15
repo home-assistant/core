@@ -45,3 +45,13 @@ def mutate_rpc_device_status(
     new_status = deepcopy(mock_rpc_device.status)
     new_status[top_level_key][key] = value
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
+
+
+def inject_rpc_device_event(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_rpc_device: Mock,
+    event: dict[str, dict[str, Any]],
+) -> None:
+    """Inject event for rpc device."""
+    monkeypatch.setattr(mock_rpc_device, "event", event)
+    mock_rpc_device.mock_event()

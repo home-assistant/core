@@ -252,9 +252,15 @@ async def mock_rpc_device():
                 {}, UpdateType.STATUS
             )
 
+        def event():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.EVENT
+            )
+
         device = _mock_rpc_device("0.12.0")
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
 
         yield rpc_device_mock.return_value
 
