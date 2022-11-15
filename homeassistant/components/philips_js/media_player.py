@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
-from .device_trigger import async_get_turn_on_trigger
+from .helpers import async_get_turn_on_trigger
 
 SUPPORT_PHILIPS_JS = (
     MediaPlayerEntityFeature.TURN_OFF

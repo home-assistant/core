@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import (
@@ -14,9 +14,8 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-
-TRIGGER_TYPE_TURN_ON = "turn_on"
+from .const import DOMAIN, TRIGGER_TYPE_TURN_ON
+from .helpers import async_get_turn_on_trigger
 
 TRIGGER_TYPES = {TRIGGER_TYPE_TURN_ON}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -24,17 +23,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
 )
-
-
-def async_get_turn_on_trigger(device_id: str) -> dict[str, str]:
-    """Return data for a turn on trigger."""
-
-    return {
-        CONF_PLATFORM: "device",
-        CONF_DEVICE_ID: device_id,
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: TRIGGER_TYPE_TURN_ON,
-    }
 
 
 async def async_get_triggers(

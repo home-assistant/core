@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
-from .device_trigger import async_get_turn_on_trigger
+from .helpers import async_get_turn_on_trigger
 
 
 async def async_setup_entry(
