@@ -7,6 +7,7 @@ from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -42,9 +43,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             }
 
         except RequestError as ex:
-            raise UpdateFailed("Device did not respond as expected") from ex
+            raise UpdateFailed(ex) from ex
 
         except DisabledError as ex:
-            raise UpdateFailed("API disabled, API must be enabled in the app") from ex
+            raise ConfigEntryAuthFailed(ex) from ex
 
         return data

@@ -11,6 +11,9 @@
       "discovery_confirm": {
         "title": "Confirm",
         "description": "Do you want to setup {product_type} ({serial}) at {ip_address}?"
+      },
+      "reauth_confirm": {
+        "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
       }
     },
     "abort": {
@@ -18,7 +21,8 @@
       "invalid_discovery_parameters": "Detected unsupported API version",
       "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
       "device_not_supported": "This device is not supported",
-      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+      "unknown_error": "[%key:common::config_flow::error::unknown%]",
+      "reauth_successful": "Enabeling API was successful"
     }
   }
 }

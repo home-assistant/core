@@ -1,6 +1,7 @@
 """Config flow for Homewizard."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
@@ -33,6 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the HomeWizard config flow."""
         self.config: dict[str, str | int] = {}
+        self.entry: config_entries.ConfigEntry | None = None
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by older `homewizard_energy` component."""
@@ -164,6 +166,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL: cast(str, self.config[CONF_SERIAL]),
                 CONF_IP_ADDRESS: cast(str, self.config[CONF_IP_ADDRESS]),
             },
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle re-auth if API was disabled."""
+
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
+
+        if user_input is not None:
+            assert self.entry is not None
+
+            await self._async_try_connect_and_fetch(self.entry.data[CONF_IP_ADDRESS])
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
         )
 
     @staticmethod
