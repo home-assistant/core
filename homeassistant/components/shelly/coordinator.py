@@ -409,9 +409,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
-        self.update_sleep_period()
         events: list[dict[str, Any]] = event_data["events"]
-
         for event in events:
             event_type = event.get("event")
             if event_type is None:
@@ -421,6 +419,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 event_callback(event)
 
             if event_type == "config_changed":
+                self.update_sleep_period()
                 LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
                     self.name,

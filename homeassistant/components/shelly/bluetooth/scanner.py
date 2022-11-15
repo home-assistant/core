@@ -19,10 +19,10 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
     @callback
     def async_on_event(self, event: dict[str, Any]) -> None:
         """Process an event from the shelly and ignore if its not a ble.scan_result."""
-        if event.get("event") != BLE_SCAN_RESULT_EVENT or not (
-            data := event.get("data")
-        ):
+        if event.get("event") != BLE_SCAN_RESULT_EVENT:
             return
+
+        data = event["data"]
 
         if data[0] != BLE_SCAN_RESULT_VERSION:
             _LOGGER.warning("Unsupported BLE scan result version: %s", data[0])
@@ -34,6 +34,7 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
             # Broad exception catch because we have no
             # control over the data that is coming in.
             _LOGGER.error("Failed to parse BLE event: %s", err, exc_info=True)
+            return
 
         self._async_on_advertisement(
             address,

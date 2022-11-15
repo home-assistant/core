@@ -1,4 +1,6 @@
 """Test configuration for Shelly."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.block_device import BlockDevice
@@ -222,9 +224,7 @@ def _mock_rpc_device(version: str | None = None):
 @pytest.fixture
 async def mock_pre_ble_rpc_device():
     """Mock rpc (Gen2, Websocket) device pre BLE."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
-    ):
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
 
         def update():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
@@ -240,7 +240,7 @@ async def mock_pre_ble_rpc_device():
 
 @pytest.fixture
 async def mock_rpc_device():
-    """Mock rpc (Gen2, Websocket) device with BLE."""
+    """Mock rpc (Gen2, Websocket) device with BLE support."""
     with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
         "homeassistant.components.shelly.bluetooth.async_start_scanner"
     ):
@@ -250,9 +250,15 @@ async def mock_rpc_device():
                 {}, UpdateType.STATUS
             )
 
+        def event():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.EVENT
+            )
+
         device = _mock_rpc_device("0.12.0")
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
 
         yield rpc_device_mock.return_value
 
