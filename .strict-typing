@@ -5,14 +5,10 @@
 # Strict typing is enabled by default for core files.
 # Add it here to add 'disallow_any_generics'.
 # --- Only for core file! ---
-homeassistant.exceptions
-homeassistant.core
-homeassistant.loader
-homeassistant.requirements
-homeassistant.runner
-homeassistant.setup
 homeassistant.auth.auth_store
 homeassistant.auth.providers.*
+homeassistant.core
+homeassistant.exceptions
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
 homeassistant.helpers.debounce
@@ -29,6 +25,10 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.loader
+homeassistant.requirements
+homeassistant.runner
+homeassistant.setup
 homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
@@ -79,9 +79,9 @@ homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
-homeassistant.components.cover.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
@@ -216,9 +216,9 @@ homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.radarr.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
-homeassistant.components.radarr.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*

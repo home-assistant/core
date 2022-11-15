@@ -1,4 +1,6 @@
 """Tests for Shelly button platform."""
+from __future__ import annotations
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
