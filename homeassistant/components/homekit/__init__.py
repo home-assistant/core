@@ -23,6 +23,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.device_automation.trigger import (
+    async_validate_trigger_config,
+)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.network import MDNS_TARGET_IP
@@ -906,28 +909,46 @@ class HomeKit:
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         for state in entity_states:
             self.add_bridge_accessory(state)
-        dev_reg = device_registry.async_get(self.hass)
         if self._devices:
-            valid_device_ids = []
-            for device_id in self._devices:
-                if not dev_reg.async_get(device_id):
-                    _LOGGER.warning(
-                        "HomeKit %s cannot add device %s because it is missing from the device registry",
-                        self._name,
-                        device_id,
-                    )
-                else:
-                    valid_device_ids.append(device_id)
-            for device_id, device_triggers in (
-                await device_automation.async_get_device_automations(
-                    self.hass,
-                    device_automation.DeviceAutomationType.TRIGGER,
-                    valid_device_ids,
-                )
-            ).items():
-                if device := dev_reg.async_get(device_id):
-                    self.add_bridge_triggers_accessory(device, device_triggers)
+            await self._async_add_trigger_accessories()
         return self.bridge
+
+    async def _async_add_trigger_accessories(self) -> None:
+        """Add devices with triggers to the bridge."""
+        dev_reg = device_registry.async_get(self.hass)
+        valid_device_ids = []
+        for device_id in self._devices:
+            if not dev_reg.async_get(device_id):
+                _LOGGER.warning(
+                    "HomeKit %s cannot add device %s because it is missing from the device registry",
+                    self._name,
+                    device_id,
+                )
+            else:
+                valid_device_ids.append(device_id)
+        for device_id, device_triggers in (
+            await device_automation.async_get_device_automations(
+                self.hass,
+                device_automation.DeviceAutomationType.TRIGGER,
+                valid_device_ids,
+            )
+        ).items():
+            device = dev_reg.async_get(device_id)
+            assert device is not None
+            valid_device_triggers: list[dict[str, Any]] = []
+            for trigger in device_triggers:
+                try:
+                    await async_validate_trigger_config(self.hass, trigger)
+                except vol.Invalid as ex:
+                    _LOGGER.debug(
+                        "%s: cannot add unsupported trigger %s because it requires additional inputs which are not supported by HomeKit: %s",
+                        self._name,
+                        trigger,
+                        ex,
+                    )
+                    continue
+                valid_device_triggers.append(trigger)
+            self.add_bridge_triggers_accessory(device, valid_device_triggers)
 
     async def _async_create_accessories(self) -> bool:
         """Create the accessories."""
