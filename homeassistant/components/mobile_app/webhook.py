@@ -1,4 +1,6 @@
 """Webhook handlers for mobile_app."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from functools import wraps
@@ -688,7 +690,7 @@ async def webhook_scan_tag(hass, config_entry, data):
     """Handle a fire event webhook."""
     # Importing tag via hass.components in case it is overridden
     # in a custom_components (custom_components.tag)
-    tag: TagProtocol = hass.components.tag  # pylint: disable=used-before-assignment
+    tag: TagProtocol = hass.components.tag
     await tag.async_scan_tag(
         data["tag_id"],
         config_entry.data[ATTR_DEVICE_ID],
