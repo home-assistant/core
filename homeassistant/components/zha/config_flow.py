@@ -84,6 +84,16 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     }
 )
 
+HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): str,
+        vol.Required("new_port"): dict,
+        vol.Required("new_radio_type"): str,
+        vol.Required("old_port"): dict,
+        vol.Required("old_radio_type"): str,
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -834,3 +844,77 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
         self.hass.async_create_task(
             self.hass.config_entries.async_setup(self.config_entry.entry_id)
         )
+
+    async def async_step_yellow_migration(self, data: dict[str, Any]) -> FlowResult:
+        """Yellow/SkyConnect auto migration flow. There is no user interaction."""
+
+        try:
+            migration_data = HARDWARE_MIGRATION_SCHEMA(data)
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_hardware_data")
+
+        name = migration_data["name"]
+        new_radio_type = self._parse_radio_type(migration_data["new_radio_type"])
+        old_radio_type = self._parse_radio_type(migration_data["old_radio_type"])
+
+        try:
+            new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
+                migration_data["new_port"]
+            )
+            old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
+                migration_data["old_port"]
+            )
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_hardware_data")
+
+        if (
+            self.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+            != old_device_settings[CONF_DEVICE_PATH]
+        ):
+            # ZHA is using another radio, do nothing
+            return self.async_create_entry(title="", data={})
+
+        try:
+            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+        except config_entries.OperationNotAllowed:
+            # ZHA is not running
+            pass
+
+        # Load our current network settings
+        await self._async_load_network_settings()
+        if self._backups:
+            self._chosen_backup = self._backups[0]
+
+        # Update the current settings, since we know them in advance
+        self._title = name
+        self._radio_type = new_radio_type
+        self._device_path = new_device_settings[CONF_DEVICE_PATH]
+        self._device_settings = new_device_settings
+        device_settings = self._device_settings.copy()  # type: ignore[union-attr]
+        self.context["title_placeholders"] = {CONF_NAME: name}
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                CONF_DEVICE: device_settings,
+                CONF_RADIO_TYPE: self._radio_type.name,
+            },
+            options=self.config_entry.options,
+        )
+
+        return await self.async_step_finish_yellow_migration()
+
+    async def async_step_finish_yellow_migration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Yellow/SkyConnect auto migration flow. There is no user interaction."""
+
+        if user_input is not None:
+            # Restore the backup, permanently overwriting the device IEEE address
+            if self._chosen_backup is not None:
+                await self.async_step_maybe_confirm_ezsp_restore(
+                    {OVERWRITE_COORDINATOR_IEEE: True}
+                )
+
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(step_id="finish_yellow_migration")

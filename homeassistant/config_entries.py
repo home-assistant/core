@@ -1663,7 +1663,10 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        return HANDLERS[entry.domain].async_get_options_flow(entry)
+        flow = HANDLERS[entry.domain].async_get_options_flow(entry)
+        if context and (source := context.get("source")) != SOURCE_USER:
+            flow.init_step = cast(str, source)
+        return flow
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
