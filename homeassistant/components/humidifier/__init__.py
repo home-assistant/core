@@ -137,7 +137,6 @@ class HumidifierEntity(ToggleEntity):
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
-    _attr_supported_features: HumidifierEntityFeature | int | None = None
     _attr_target_humidity: int | None = None
 
     @property
@@ -224,8 +223,3 @@ class HumidifierEntity(ToggleEntity):
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
-
-    @property
-    def supported_features(self) -> HumidifierEntityFeature | int | None:
-        """Return the list of supported features."""
-        return self._attr_supported_features

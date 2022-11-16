@@ -163,7 +163,6 @@ class SirenEntity(ToggleEntity):
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
-    _attr_supported_features: SirenEntityFeature | int | None
 
     @final
     @property
@@ -191,8 +190,3 @@ class SirenEntity(ToggleEntity):
         if hasattr(self, "entity_description"):
             return self.entity_description.available_tones
         return None
-
-    @property
-    def supported_features(self) -> SirenEntityFeature | int | None:
-        """Return the list of supported features."""
-        return self._attr_supported_features
