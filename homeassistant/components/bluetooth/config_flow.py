@@ -3,6 +3,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
+from bluetooth_adapters import (
+    ADAPTER_ADDRESS,
+    AdapterDetails,
+    adapter_human_name,
+    adapter_unique_name,
+)
 import voluptuous as vol
 
 from homeassistant.components import onboarding
@@ -11,15 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import models
-from .const import (
-    ADAPTER_ADDRESS,
-    CONF_ADAPTER,
-    CONF_DETAILS,
-    CONF_PASSIVE,
-    DOMAIN,
-    AdapterDetails,
-)
-from .util import adapter_human_name, adapter_unique_name, async_get_bluetooth_adapters
+from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
@@ -87,7 +85,8 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         configured_addresses = self._async_current_ids()
-        self._adapters = await async_get_bluetooth_adapters()
+        assert models.MANAGER is not None
+        self._adapters = await models.MANAGER.async_get_bluetooth_adapters(cached=False)
         unconfigured_adapters = [
             adapter
             for adapter, details in self._adapters.items()
