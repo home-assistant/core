@@ -49,7 +49,7 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.config_flow.CONNECT_DELAY_S", 0.01):
+    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
         yield
 
 
@@ -669,7 +669,7 @@ async def test_discovery_already_setup(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaRadioManager.detect_radio_type",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -707,7 +707,7 @@ async def test_user_flow(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaRadioManager.detect_radio_type",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(ret=False),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -1051,7 +1051,7 @@ def pick_radio(hass):
         port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
         with patch(
-            "homeassistant.components.zha.config_flow.ZhaRadioManager.detect_radio_type",
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
             mock_detect_radio_type(radio_type=radio_type),
         ):
             result = await hass.config_entries.flow.async_init(
