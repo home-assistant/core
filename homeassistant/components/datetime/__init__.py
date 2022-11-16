@@ -13,6 +13,7 @@ from homeassistant.const import FORMAT_DATETIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
+    ENTITY_SERVICE_FIELDS,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -71,6 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         {
                             vol.Optional(ATTR_DATE): cv.date,
                             vol.Optional(ATTR_TIME): cv.time,
+                            **ENTITY_SERVICE_FIELDS,
                         }
                     ),
                     cv.has_at_least_one_key(ATTR_DATE, ATTR_TIME),
@@ -78,6 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Schema(
                     {
                         vol.Required(ATTR_DATETIME): cv.datetime,
+                        **ENTITY_SERVICE_FIELDS,
                     }
                 ),
                 vol.Schema(
@@ -87,9 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             dt_util.utc_from_timestamp,
                             dt_util.as_local,
                         ),
+                        **ENTITY_SERVICE_FIELDS,
                     }
                 ),
             ),
+            cv.has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
             _split_date_time,
         ),
         _async_set_value,

@@ -1,9 +1,6 @@
 """The tests for the datetime component."""
 from datetime import date, datetime, time
 
-import pytest
-import voluptuous as vol
-
 from homeassistant.components.datetime import (
     ATTR_DATE,
     ATTR_DATETIME,
@@ -87,11 +84,6 @@ async def test_set_datetime_valid():
 
 async def test_validate():
     """Test service validation."""
-    with pytest.raises(vol.Invalid):
-        _split_date_time(
-            {ATTR_DATETIME: datetime(2020, 1, 1, 12, 0, 0), ATTR_TIMESTAMP: 12.0}
-        )
-
     assert _split_date_time({ATTR_DATETIME: datetime(2020, 1, 1, 12, 0, 0)}) == {
         ATTR_DATE: date(2020, 1, 1),
         ATTR_TIME: time(12, 0, 0),
