@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -13,7 +14,6 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     models,
 )
-from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

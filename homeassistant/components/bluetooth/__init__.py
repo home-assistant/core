@@ -352,7 +352,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_HOMEASSISTANT_STARTED,
         hass_callback(lambda event: _async_check_haos(hass)),
     )
-
     return True
 
 
