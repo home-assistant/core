@@ -2608,8 +2608,11 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(hass, two_adapters)
 async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_mock):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
-    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"):
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
+    ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
@@ -2707,22 +2710,20 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
 
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
             "hci1": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:02",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
         },
     ):
@@ -2765,9 +2766,9 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
 
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={},
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS * 2)
@@ -2778,22 +2779,20 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
 
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
             "hci1": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:02",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
         },
     ):
