@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import logging
 import os
 from typing import Any, cast, final
@@ -41,7 +41,7 @@ DATA_PROFILES = "light_profiles"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-class LightEntityFeature(IntEnum):
+class LightEntityFeature(IntFlag):
     """Supported features of the light entity."""
 
     EFFECT = 4

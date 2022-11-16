@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final
@@ -48,7 +48,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 
-class LockEntityFeature(IntEnum):
+class LockEntityFeature(IntFlag):
     """Supported features of the lock entity."""
 
     OPEN = 1
