@@ -18,6 +18,39 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: snnaplab/delete-branch-cache-action@v1.0.0
-        with:
-          ref: refs/pull/${{ github.event.inputs.pr-number || github.event.number }}/merge
+      - name: Delete caches
+        run: |
+          ref="refs/pull/${{ github.event.inputs.pr-number || github.event.number }}/merge"
+
+          page=1
+          per_page=100
+          del_count=0
+
+          while true; do
+            res=$(curl -fsS \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: token ${{ github.token }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/caches?per_page=$per_page&page=$page")
+
+            res_count=$(echo $res | jq '.actions_caches | length')
+            if [ $res_count -eq 0 ]; then break; fi
+
+            targets=$(echo $res | jq \
+              --arg ref "$ref" \
+              '.actions_caches[] | select(.ref == $ref) | del(.created_at, .size_in_bytes, .version)')
+            echo "$targets"
+
+            for id in $(echo $targets | jq '.id'); do
+              curl -fsS \
+                -X DELETE \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: token ${{ github.token }}" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/caches/$id"
+              ((del_count+=1))
+            done
+
+            if [ $res_count -lt $per_page ]; then break; fi
+            ((page+=1))
+          done
+
+          echo "Delete $del_count caches."
