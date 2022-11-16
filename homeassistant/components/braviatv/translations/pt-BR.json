@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Ocorreu um erro ao atualizar a lista de fontes. \n\n Certifique-se de que sua TV esteja ligada antes de tentar configur\u00e1-la."
+        },
         "step": {
             "user": {
                 "data": {

@@ -10,8 +10,10 @@ import os
 from typing import Any, cast
 
 from aiohttp import web
+from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
+from pyhap.service import Service
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -21,6 +23,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.device_automation.trigger import (
+    async_validate_trigger_config,
+)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.network import MDNS_TARGET_IP
@@ -74,13 +79,7 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import (
-    HomeAccessory,
-    HomeBridge,
-    HomeDriver,
-    HomeIIDManager,
-    get_accessory,
-)
+from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -139,7 +138,7 @@ STATUS_WAIT = 3
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
-    5  # number of seconds to wait for homekit to see the c# change
+    10  # number of seconds to wait for homekit to see the c# change
 )
 
 
@@ -529,6 +528,7 @@ class HomeKit:
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
+        self._reset_lock = asyncio.Lock()
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
@@ -548,7 +548,7 @@ class HomeKit:
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
-            iid_manager=HomeIIDManager(self.iid_storage),
+            iid_storage=self.iid_storage,
         )
 
         # If we do not load the mac address will be wrong
@@ -558,21 +558,24 @@ class HomeKit:
 
     async def async_reset_accessories(self, entity_ids: Iterable[str]) -> None:
         """Reset the accessory to load the latest configuration."""
-        if not self.bridge:
-            await self.async_reset_accessories_in_accessory_mode(entity_ids)
-            return
-        await self.async_reset_accessories_in_bridge_mode(entity_ids)
+        async with self._reset_lock:
+            if not self.bridge:
+                await self.async_reset_accessories_in_accessory_mode(entity_ids)
+                return
+            await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
     async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
         assert self.driver is not None
         await accessory.stop()
         # Deallocate the IIDs for the accessory
-        iid_manager = self.driver.iid_manager
-        for service in accessory.services:
-            iid_manager.remove_iid(iid_manager.remove_obj(service))
-            for char in service.characteristics:
-                iid_manager.remove_iid(iid_manager.remove_obj(char))
+        iid_manager = accessory.iid_manager
+        services: list[Service] = accessory.services
+        for service in services:
+            iid_manager.remove_obj(service)
+            characteristics: list[Characteristic] = service.characteristics
+            for char in characteristics:
+                iid_manager.remove_obj(char)
 
     async def async_reset_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
@@ -581,7 +584,6 @@ class HomeKit:
         assert self.driver is not None
 
         acc = cast(HomeAccessory, self.driver.accessory)
-        await self._async_shutdown_accessory(acc)
         if acc.entity_id not in entity_ids:
             return
         if not (state := self.hass.states.get(acc.entity_id)):
@@ -589,6 +591,7 @@ class HomeKit:
                 "The underlying entity %s disappeared during reset", acc.entity_id
             )
             return
+        await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
             self.hass.async_add_job(new_acc.run)
@@ -906,28 +909,46 @@ class HomeKit:
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         for state in entity_states:
             self.add_bridge_accessory(state)
-        dev_reg = device_registry.async_get(self.hass)
         if self._devices:
-            valid_device_ids = []
-            for device_id in self._devices:
-                if not dev_reg.async_get(device_id):
-                    _LOGGER.warning(
-                        "HomeKit %s cannot add device %s because it is missing from the device registry",
-                        self._name,
-                        device_id,
-                    )
-                else:
-                    valid_device_ids.append(device_id)
-            for device_id, device_triggers in (
-                await device_automation.async_get_device_automations(
-                    self.hass,
-                    device_automation.DeviceAutomationType.TRIGGER,
-                    valid_device_ids,
-                )
-            ).items():
-                if device := dev_reg.async_get(device_id):
-                    self.add_bridge_triggers_accessory(device, device_triggers)
+            await self._async_add_trigger_accessories()
         return self.bridge
+
+    async def _async_add_trigger_accessories(self) -> None:
+        """Add devices with triggers to the bridge."""
+        dev_reg = device_registry.async_get(self.hass)
+        valid_device_ids = []
+        for device_id in self._devices:
+            if not dev_reg.async_get(device_id):
+                _LOGGER.warning(
+                    "HomeKit %s cannot add device %s because it is missing from the device registry",
+                    self._name,
+                    device_id,
+                )
+            else:
+                valid_device_ids.append(device_id)
+        for device_id, device_triggers in (
+            await device_automation.async_get_device_automations(
+                self.hass,
+                device_automation.DeviceAutomationType.TRIGGER,
+                valid_device_ids,
+            )
+        ).items():
+            device = dev_reg.async_get(device_id)
+            assert device is not None
+            valid_device_triggers: list[dict[str, Any]] = []
+            for trigger in device_triggers:
+                try:
+                    await async_validate_trigger_config(self.hass, trigger)
+                except vol.Invalid as ex:
+                    _LOGGER.debug(
+                        "%s: cannot add unsupported trigger %s because it requires additional inputs which are not supported by HomeKit: %s",
+                        self._name,
+                        trigger,
+                        ex,
+                    )
+                    continue
+                valid_device_triggers.append(trigger)
+            self.add_bridge_triggers_accessory(device, valid_device_triggers)
 
     async def _async_create_accessories(self) -> bool:
         """Create the accessories."""

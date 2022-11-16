@@ -39,7 +39,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizAlarmDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
-    supported_features: int
+    supported_features: AlarmControlPanelEntityFeature
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
 
 
