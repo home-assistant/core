@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzBoxTemplate(coordinator, ain)
-            for ain, device in coordinator.data.templates.items()
+            for ain in coordinator.data.templates.keys()
         ]
     )
 
