@@ -47,7 +47,7 @@
   "issues": {
     "ble_firmware_outdated": {
       "title": "Update {name} with firmware to 2022.11.0 or later",
-      "description": "To improve Bluetooth reliability and performance, we highly recommend re-flashing {name} with firmware to 2022.11.0 or later."
+      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with firmware to 2022.11.0 or later."
     }
   }
 }
