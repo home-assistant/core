@@ -57,6 +57,7 @@ from .const import (
     DEFAULT_QOS,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_5,
     PROTOCOL_31,
 )
 from .models import (
@@ -272,8 +273,10 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
+        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+        elif protocol == PROTOCOL_5:
+            proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
 
@@ -403,7 +406,7 @@ class MQTT:
         """Publish a MQTT message."""
         async with self._paho_lock:
             msg_info = await self.hass.async_add_executor_job(
-                self._mqttc.publish, topic, payload, qos, retain
+                self._mqttc.publish, topic, payload, qos, retain, None
             )
             _LOGGER.debug(
                 "Transmitting%s message on %s: '%s', mid: %s",
@@ -560,6 +563,7 @@ class MQTT:
         _userdata: None,
         _flags: dict[str, Any],
         result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
@@ -677,7 +681,10 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos: tuple[Any, ...] | None = None,
+        _granted_qos_or_reason_codes: tuple[int, ...]
+        | list[mqtt.ReasonCodes]
+        | None = None,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
