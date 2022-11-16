@@ -4,9 +4,9 @@
 from unittest.mock import ANY, patch
 
 from bleak.backends.scanner import BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
 from . import generate_advertisement_data, inject_advertisement
 

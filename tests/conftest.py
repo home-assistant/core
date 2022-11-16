@@ -1040,9 +1040,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(name="mock_bluetooth_adapters")
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
-    with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ), patch(
+    with patch("platform.system", return_value="Linux"), patch(
         "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",

@@ -6,6 +6,7 @@ from unittest.mock import ANY, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
 
 from homeassistant.components import bluetooth
@@ -22,7 +23,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_PASSIVE,
-    DEFAULT_ADDRESS,
     DOMAIN,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
