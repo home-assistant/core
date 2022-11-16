@@ -32,7 +32,8 @@ SUPPORTED_PYTHON_TUPLES = [
 ]
 if REQUIRED_PYTHON_VER[0] == REQUIRED_NEXT_PYTHON_VER[0]:
     for minor in range(REQUIRED_PYTHON_VER[1] + 1, REQUIRED_NEXT_PYTHON_VER[1] + 1):
-        SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
+        if minor < 10:  # stdlib list does not support 3.10+
+            SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
 SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
