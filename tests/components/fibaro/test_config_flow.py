@@ -366,6 +366,6 @@ async def test_reauth_auth_failure(hass):
 
 
 @pytest.mark.parametrize("url_path", ["/api/", "/api", "/", ""])
-async def test_normalize_url(url_path: str):
+async def test_normalize_url(url_path):
     """Test that the url is normalized for different entered values."""
     assert _normalize_url(f"http://192.168.1.1{url_path}") == "http://192.168.1.1/api/"
