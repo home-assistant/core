@@ -2522,7 +2522,7 @@ async def test_async_ble_device_from_address(
 
 
 async def test_can_unsetup_bluetooth_single_adapter_macos(
-    hass, mock_bleak_scanner_start, enable_bluetooth, macos_adapter
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
