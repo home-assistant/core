@@ -299,7 +299,8 @@ class GrowattData:
             # however if the value is low e.g. 0.2 and drops by 0.1 it classes as a reset.
             if -(entity_description.previous_value_drop_threshold) <= diff < 0:
                 _LOGGER.debug(
-                    "Diff is negative, but only by a small amount therefore not a nightly reset, using previous value (%s) instead of api value (%s)",
+                    "Diff is negative, but only by a small amount therefore not a nightly reset, "
+                    "using previous value (%s) instead of api value (%s)",
                     previous_value,
                     api_value,
                 )
