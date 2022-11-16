@@ -17,29 +17,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from ..entity import OverkizEntity
 
-# Create standardized types to be used inside the device
-DHWP_TYPE_STANDARD = "STANDARD"
-DHWP_TYPE_MURAL = "MURAL"
-DHWP_TYPE_FLAT = "FLAT"
-DHWP_TYPE_MBL = "MBL"
-
-# Map controllable_name into standardized types
-DHWP_TYPES: dict[str, str] = {
-    "io:AtlanticDomesticHotWaterProductionIOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2_AEX_IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent": DHWP_TYPE_FLAT,
-    "io:AtlanticDomesticHotWaterProductionV2_CE_S4_IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV2_MURAL_IOComponent": DHWP_TYPE_MURAL,
-    "io:AtlanticDomesticHotWaterProductionV2_SPLIT_IOComponent": DHWP_TYPE_STANDARD,
-    "io:AtlanticDomesticHotWaterProductionV3IOComponent": DHWP_TYPE_STANDARD,
-    "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor": DHWP_TYPE_STANDARD,
-    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": DHWP_TYPE_MBL,
-    "modbuslink:DHWCumulatedElectricalEnergyConsumptionMBLSystemDeviceSensor": DHWP_TYPE_MBL,
-}
-
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
     OverkizCommandParam.STANDARD: STATE_ECO,
     OverkizCommandParam.HIGH_DEMAND: STATE_HIGH_DEMAND,
@@ -53,6 +30,16 @@ OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
 
 OPERATION_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_OPERATION_MODE.items()}
 
+DHWP_AWAY_MODES = [
+    OverkizCommandParam.ABSENCE,
+    OverkizCommandParam.AWAY,
+    OverkizCommandParam.FROSTPROTECTION,
+]
+
+DHWP_BOOST_MODES = [
+    OverkizCommandParam.BOOST,
+]
+
 
 class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     """Representation of a DomesticHotWaterProduction Water Heater."""
@@ -65,35 +52,16 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     @property
-    def _dhwp_type(self) -> str | None:
-        if self.device.controllable_name in DHWP_TYPES:
-            return DHWP_TYPES[self.device.controllable_name]
-        return None
-
-    @property
     def _is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
 
-        dwhp_type = self._dhwp_type
-        if dwhp_type is None:
-            return False
-
-        if dwhp_type == DHWP_TYPE_MURAL:
-            operating_state = self.executor.select_state(
-                OverkizState.CORE_OPERATING_MODE
+        if self.executor.has_state(OverkizState.IO_DHW_BOOST_MODE):
+            return (
+                self.executor.select_state(OverkizState.IO_DHW_BOOST_MODE)
+                == OverkizCommandParam.ON
             )
 
-            if isinstance(operating_state, dict):
-                return (
-                    cast(
-                        str,
-                        operating_state.get(OverkizCommandParam.RELAUNCH),
-                    )
-                    == OverkizCommandParam.ON
-                )
-
-            return False
-        if dwhp_type == DHWP_TYPE_STANDARD:
+        if self.executor.has_state(OverkizState.CORE_BOOST_MODE_DURATION):
             return (
                 cast(
                     float,
@@ -101,59 +69,65 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                 )
                 > 0
             )
-        if dwhp_type == DHWP_TYPE_FLAT:
-            return (
-                cast(str, self.executor.select_state(OverkizState.IO_DHW_BOOST_MODE))
-                == OverkizCommandParam.ON
-            )
+
+        operating_mode = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
+
+        if operating_mode:
+            if isinstance(operating_mode, dict):
+                if operating_mode.get(OverkizCommandParam.RELAUNCH):
+                    return (
+                        cast(
+                            str,
+                            operating_mode.get(OverkizCommandParam.RELAUNCH),
+                        )
+                        == OverkizCommandParam.ON
+                    )
+                return False
+
+            return cast(str, operating_mode) in DHWP_BOOST_MODES
+
         return False
 
     @property
     def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
 
-        dwhp_type = self._dhwp_type
-        if dwhp_type is None:
-            return None
-
-        if dwhp_type == DHWP_TYPE_MURAL:
-            operating_mode = self.executor.select_state(
-                OverkizState.CORE_OPERATING_MODE
-            )
-
-            if isinstance(operating_mode, dict):
-                return (
-                    cast(
-                        str,
-                        operating_mode.get(OverkizCommandParam.ABSENCE),
-                    )
-                    == OverkizCommandParam.ON
-                )
-            return False
-        if dwhp_type == DHWP_TYPE_STANDARD:
-            operating_mode = self.executor.select_state(
-                OverkizState.CORE_OPERATING_MODE
-            )
-
-            if isinstance(operating_mode, dict):
-                return (
-                    cast(
-                        str,
-                        operating_mode.get(OverkizCommandParam.AWAY),
-                    )
-                    == OverkizCommandParam.ON
-                )
-            return False
-        if dwhp_type == DHWP_TYPE_FLAT:
+        if self.executor.has_state(OverkizState.IO_DHW_ABSENCE_MODE):
             return (
                 self.executor.select_state(OverkizState.IO_DHW_ABSENCE_MODE)
                 == OverkizCommandParam.ON
             )
-        if dwhp_type == DHWP_TYPE_MBL:
+
+        if self.executor.has_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE):
             return (
                 self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE)
                 == OverkizCommandParam.ON
             )
+
+        operating_mode = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
+
+        if operating_mode:
+            if isinstance(operating_mode, dict):
+                if operating_mode.get(OverkizCommandParam.ABSENCE):
+                    return (
+                        cast(
+                            str,
+                            operating_mode.get(OverkizCommandParam.ABSENCE),
+                        )
+                        == OverkizCommandParam.ON
+                    )
+                if operating_mode.get(OverkizCommandParam.AWAY):
+                    return (
+                        cast(
+                            str,
+                            operating_mode.get(OverkizCommandParam.AWAY),
+                        )
+                        == OverkizCommandParam.ON
+                    )
+                return False
+
+            return cast(str, operating_mode) in DHWP_AWAY_MODES
+
         return None
 
     @property
@@ -221,11 +195,17 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             OverkizCommand.SET_TARGET_TEMPERATURE, target_temperature
         )
 
+        if self.executor.has_command(OverkizCommand.REFRESH_TARGET_TEMPERATURE):
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE
+            )
+
     @property
     def current_operation(self) -> str:
         """Return current operation ie. eco, electric, performance, ..."""
         if self._is_boost_mode_on:
             return OVERKIZ_TO_OPERATION_MODE[OverkizCommandParam.BOOST]
+
         return OVERKIZ_TO_OPERATION_MODE[
             cast(
                 str,
@@ -238,51 +218,64 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
 
-        dwhp_type = self._dhwp_type
-        if dwhp_type is None:
-            return
-
         if operation_mode == STATE_PERFORMANCE:
-            if dwhp_type in [DHWP_TYPE_MURAL, DHWP_TYPE_STANDARD]:
+            if self.executor.has_command(OverkizCommand.SET_BOOST_MODE):
                 await self.executor.async_execute_command(
-                    OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                    {
-                        OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
-                        OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
-                    },
+                    OverkizCommand.SET_BOOST_MODE, OverkizCommand.ON
                 )
-            if dwhp_type == DHWP_TYPE_STANDARD:
+
+            if self.executor.has_command(OverkizCommand.SET_BOOST_MODE_DURATION):
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_BOOST_MODE_DURATION, 7
                 )
                 await self.executor.async_execute_command(
                     OverkizCommand.REFRESH_BOOST_MODE_DURATION
                 )
-            if dwhp_type == DHWP_TYPE_FLAT:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_BOOST_MODE, OverkizCommand.ON
+
+            if self.executor.has_command(OverkizCommand.SET_CURRENT_OPERATING_MODE):
+                current_operating_mode = self.executor.select_state(
+                    OverkizState.CORE_OPERATING_MODE
                 )
+
+                if current_operating_mode and isinstance(current_operating_mode, dict):
+                    await self.executor.async_execute_command(
+                        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                        {
+                            OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
+                            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+                        },
+                    )
+
             return
+
         if self._is_boost_mode_on:
-            if dwhp_type in [DHWP_TYPE_MURAL, DHWP_TYPE_STANDARD]:
+            if self.executor.has_command(OverkizCommand.SET_BOOST_MODE):
                 await self.executor.async_execute_command(
-                    OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                    {
-                        OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
-                        OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
-                    },
+                    OverkizCommand.SET_BOOST_MODE, OverkizCommand.OFF
                 )
-            if dwhp_type == DHWP_TYPE_STANDARD:
+
+            if self.executor.has_command(OverkizCommand.SET_BOOST_MODE_DURATION):
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_BOOST_MODE_DURATION, 0
                 )
                 await self.executor.async_execute_command(
                     OverkizCommand.REFRESH_BOOST_MODE_DURATION
                 )
-            if dwhp_type == DHWP_TYPE_FLAT:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_BOOST_MODE, OverkizCommand.OFF
+
+            if self.executor.has_command(OverkizCommand.SET_CURRENT_OPERATING_MODE):
+                current_operating_mode = self.executor.select_state(
+                    OverkizState.CORE_OPERATING_MODE
                 )
+
+                if current_operating_mode and isinstance(current_operating_mode, dict):
+                    await self.executor.async_execute_command(
+                        OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                        {
+                            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+                        },
+                    )
+
         await self.executor.async_execute_command(
             OverkizCommand.SET_DHW_MODE, OPERATION_MODE_TO_OVERKIZ[operation_mode]
         )
