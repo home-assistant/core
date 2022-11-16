@@ -227,6 +227,10 @@ async def test_diagnostics_macos(
                             -127,
                             [[]],
                         ],
+                        "device": {
+                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                        },
                         "connectable": True,
                         "manufacturer_data": {
                             "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
@@ -251,6 +255,10 @@ async def test_diagnostics_macos(
                             -127,
                             [[]],
                         ],
+                        "device": {
+                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                        },
                         "connectable": True,
                         "manufacturer_data": {
                             "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}

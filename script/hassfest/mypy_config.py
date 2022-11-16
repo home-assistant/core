@@ -1,6 +1,7 @@
 """Generate mypy config."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import configparser
 import io
 import os
@@ -46,7 +47,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": "ignore-without-code",
+    "enable_error_code": ", ".join(["ignore-without-code"]),
+    "disable_error_code": ", ".join(["annotation-unchecked"]),
     # Strict_concatenate breaks passthrough ParamSpec typing
     "strict_concatenate": "false",
 }
@@ -89,18 +91,48 @@ def _strict_module_in_ignore_list(
     return None
 
 
-def generate_and_validate(config: Config) -> str:
+def _sort_within_sections(line_iter: Iterable[str]) -> Iterable[str]:
+    """
+    Sort lines within sections.
+
+    Sections are defined as anything not delimited by a blank line
+    or an octothorpe-prefixed comment line.
+    """
+    section: list[str] = []
+    for line in line_iter:
+        if line.startswith("#") or not line.strip():
+            yield from sorted(section)
+            section.clear()
+            yield line
+            continue
+        section.append(line)
+    yield from sorted(section)
+
+
+def _get_strict_typing_path(config: Config) -> Path:
+    return config.root / ".strict-typing"
+
+
+def _get_mypy_ini_path(config: Config) -> Path:
+    return config.root / "mypy.ini"
+
+
+def _generate_and_validate_strict_typing(config: Config) -> str:
+    """Validate and generate strict_typing."""
+    lines = [
+        line.strip()
+        for line in _get_strict_typing_path(config).read_text().splitlines()
+    ]
+    return "\n".join(_sort_within_sections(lines)) + "\n"
+
+
+def _generate_and_validate_mypy_config(config: Config) -> str:
     """Validate and generate mypy config."""
-
-    config_path = config.root / ".strict-typing"
-
-    with config_path.open() as fp:
-        lines = fp.readlines()
 
     # Filter empty and commented lines.
     parsed_modules: list[str] = [
         line.strip()
-        for line in lines
+        for line in config.cache["strict_typing"].splitlines()
         if line.strip() != "" and not line.startswith("#")
     ]
 
@@ -209,28 +241,36 @@ def generate_and_validate(config: Config) -> str:
     with io.StringIO() as fp:
         mypy_config.write(fp)
         fp.seek(0)
-        return HEADER + fp.read().strip()
+        return f"{HEADER}{fp.read().strip()}\n"
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
-    """Validate mypy config."""
-    config_path = config.root / "mypy.ini"
-    config.cache["mypy_config"] = content = generate_and_validate(config)
+    """Validate strict_typing and mypy config."""
+    strict_typing_content = _generate_and_validate_strict_typing(config)
+    config.cache["strict_typing"] = strict_typing_content
+
+    mypy_content = _generate_and_validate_mypy_config(config)
+    config.cache["mypy_config"] = mypy_content
 
     if any(err.plugin == "mypy_config" for err in config.errors):
         return
 
-    with open(str(config_path)) as fp:
-        if fp.read().strip() != content:
-            config.add_error(
-                "mypy_config",
-                "File mypy.ini is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if _get_strict_typing_path(config).read_text() != strict_typing_content:
+        config.add_error(
+            "mypy_config",
+            "File .strict_typing is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
+
+    if _get_mypy_ini_path(config).read_text() != mypy_content:
+        config.add_error(
+            "mypy_config",
+            "File mypy.ini is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
-    """Generate mypy config."""
-    config_path = config.root / "mypy.ini"
-    with open(str(config_path), "w") as fp:
-        fp.write(f"{config.cache['mypy_config']}\n")
+    """Generate strict_typing and mypy config."""
+    _get_mypy_ini_path(config).write_text(config.cache["mypy_config"])
+    _get_strict_typing_path(config).write_text(config.cache["strict_typing"])

@@ -160,7 +160,7 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore[override]
+    @property
     def context(self) -> Context:
         """State context."""
         if self._context is None:
@@ -172,7 +172,7 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore[override]
+    @property
     def last_changed(self) -> datetime:
         """Last changed datetime."""
         if self._last_changed is None:
@@ -187,7 +187,7 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore[override]
+    @property
     def last_updated(self) -> datetime:
         """Last updated datetime."""
         if self._last_updated is None:

@@ -4,7 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from herepy import HEREError, InvalidCredentialsError, RouteMode, RoutingApi
+from here_routing import (
+    HERERoutingApi,
+    HERERoutingError,
+    HERERoutingUnauthorizedError,
+    Place,
+    TransportMode,
+)
+from here_transit import HERETransitError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,17 +45,14 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
     IMPERIAL_UNITS,
     METRIC_UNITS,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
-    TRAFFIC_MODE_ENABLED,
-    TRAFFIC_MODES,
     TRAVEL_MODE_CAR,
-    TRAVEL_MODE_PUBLIC_TIME_TABLE,
+    TRAVEL_MODE_PUBLIC,
     TRAVEL_MODES,
     UNITS,
 )
@@ -56,26 +60,23 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_api_key(api_key: str) -> None:
+async def async_validate_api_key(api_key: str) -> None:
     """Validate the user input allows us to connect."""
-    known_working_origin = [38.9, -77.04833]
-    known_working_destination = [39.0, -77.1]
-    RoutingApi(api_key).public_transport_timetable(
-        known_working_origin,
-        known_working_destination,
-        True,
-        [
-            RouteMode[ROUTE_MODE_FASTEST],
-            RouteMode[TRAVEL_MODE_CAR],
-            RouteMode[TRAFFIC_MODE_ENABLED],
-        ],
-        arrival=None,
-        departure="now",
+    known_working_origin = Place(latitude=38.9, longitude=-77.04833)
+    known_working_destination = Place(latitude=39.0, longitude=-77.1)
+
+    await HERERoutingApi(api_key).route(
+        origin=known_working_origin,
+        destination=known_working_destination,
+        transport_mode=TransportMode.CAR,
     )
 
 
 def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     """Get a populated schema or default."""
+    travel_mode = data.get(CONF_MODE, TRAVEL_MODE_CAR)
+    if travel_mode == "publicTransportTimeTable":
+        travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
             vol.Optional(
@@ -92,7 +93,6 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
 def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     """Get the default options."""
     default = {
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
@@ -128,12 +128,10 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         if user_input:
             try:
-                await self.hass.async_add_executor_job(
-                    validate_api_key, user_input[CONF_API_KEY]
-                )
-            except InvalidCredentialsError:
+                await async_validate_api_key(user_input[CONF_API_KEY])
+            except HERERoutingUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except HEREError as error:
+            except (HERERoutingError, HERETransitError) as error:
                 _LOGGER.exception("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
             if not errors:
@@ -251,25 +249,14 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
-            if self.config_entry.data[CONF_MODE] == TRAVEL_MODE_PUBLIC_TIME_TABLE:
-                return self.async_show_menu(
-                    step_id="time_menu",
-                    menu_options=["departure_time", "arrival_time", "no_time"],
-                )
             return self.async_show_menu(
                 step_id="time_menu",
-                menu_options=["departure_time", "no_time"],
+                menu_options=["departure_time", "arrival_time", "no_time"],
             )
 
         defaults = default_options(self.hass)
         schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_TRAFFIC_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_TRAFFIC_MODE, defaults[CONF_TRAFFIC_MODE]
-                    ),
-                ): vol.In(TRAFFIC_MODES),
                 vol.Optional(
                     CONF_ROUTE_MODE,
                     default=self.config_entry.options.get(

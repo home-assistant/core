@@ -62,6 +62,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
         "hardware": [
             {
                 "board": None,
+                "config_entries": [config_entry.entry_id],
                 "dongle": {
                     "vid": "bla_vid",
                     "pid": "bla_pid",
@@ -74,6 +75,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
             },
             {
                 "board": None,
+                "config_entries": [config_entry_2.entry_id],
                 "dongle": {
                     "vid": "bla_vid_2",
                     "pid": "bla_pid_2",

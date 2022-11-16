@@ -85,7 +85,7 @@ NOT_BTHOME_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
+def make_bthome_v1_adv(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
     """Make a dummy advertisement."""
     return BluetoothServiceInfoBleak(
         name="Test Device",
@@ -104,7 +104,7 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
     )
 
 
-def make_encrypted_advertisement(
+def make_encrypted_bthome_v1_adv(
     address: str, payload: bytes
 ) -> BluetoothServiceInfoBleak:
     """Make a dummy encrypted advertisement."""
@@ -120,6 +120,25 @@ def make_encrypted_advertisement(
         service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
         source="local",
         advertisement=generate_advertisement_data(local_name="ATC 8F80A5"),
+        time=0,
+        connectable=False,
+    )
+
+
+def make_bthome_v2_adv(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
+    """Make a dummy advertisement."""
+    return BluetoothServiceInfoBleak(
+        name="Test Device",
+        address=address,
+        device=BLEDevice(address, None),
+        rssi=-56,
+        manufacturer_data={},
+        service_data={
+            "0000fcd2-0000-1000-8000-00805f9b34fb": payload,
+        },
+        service_uuids=["0000fcd2-0000-1000-8000-00805f9b34fb"],
+        source="local",
+        advertisement=generate_advertisement_data(local_name="Test Device"),
         time=0,
         connectable=False,
     )

@@ -148,7 +148,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         features = 0
 
@@ -209,6 +209,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             )
         await self.async_put_characteristics(
             {
+                CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
                 CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
                     hvac_mode
                 ],
@@ -367,7 +368,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         features = super().supported_features
 
@@ -601,7 +602,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         features = super().supported_features
 
