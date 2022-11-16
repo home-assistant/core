@@ -2609,9 +2609,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch(
         "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
-    ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ):
+    ), patch("bluetooth_adapters.systems.platform.system", return_value="Linux"):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
@@ -2620,9 +2618,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_
 
 async def test_auto_detect_bluetooth_adapters_macos(hass):
     """Test we auto detect bluetooth adapters on macos."""
-    with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
-    ):
+    with patch("bluetooth_adapters.systems.platform.system", return_value="Darwin"):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
@@ -2632,7 +2628,7 @@ async def test_auto_detect_bluetooth_adapters_macos(hass):
 async def test_no_auto_detect_bluetooth_adapters_windows(hass):
     """Test we auto detect bluetooth adapters on windows."""
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system",
+        "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -2710,7 +2706,7 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
@@ -2768,7 +2764,7 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={},
@@ -2781,7 +2777,7 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 0
 
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={

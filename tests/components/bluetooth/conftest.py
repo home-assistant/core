@@ -62,7 +62,7 @@ def macos_adapter():
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Darwin",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
+        "bluetooth_adapters.systems.platform.system", return_value="Darwin"
     ):
         yield
 
@@ -71,7 +71,7 @@ def macos_adapter():
 def windows_adapter():
     """Fixture that mocks the windows adapter."""
     with patch(
-        "homeassistant.components.bluetooth.util.platform.system",
+        "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
     ):
         yield
@@ -86,7 +86,7 @@ def no_adapter_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={},
@@ -103,7 +103,7 @@ def one_adapter_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
@@ -132,7 +132,7 @@ def two_adapters_fixture(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
@@ -168,7 +168,7 @@ def one_adapter_old_bluez(bluez_dbus_mock):
         "homeassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
