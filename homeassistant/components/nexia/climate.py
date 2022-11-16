@@ -378,7 +378,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn Aux Heat on."""
-        self._thermostat.set_emergency_heat(True)
+        await self._thermostat.set_emergency_heat(True)
         self._signal_thermostat_update()
 
     async def async_turn_off(self) -> None:

@@ -59,6 +59,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "image",

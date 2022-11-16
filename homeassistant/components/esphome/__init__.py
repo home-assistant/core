@@ -78,6 +78,9 @@ def _async_check_firmware_version(
     issue = f"ble_firmware_outdated-{device_info.name}"
     if (
         not device_info.bluetooth_proxy_version
+        # If the device has a project name its up to that project
+        # to tell them about the firmware version update so we don't notify here
+        or device_info.project_name
         or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
     ):
         async_delete_issue(hass, DOMAIN, issue)

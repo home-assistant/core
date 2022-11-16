@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import time
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
@@ -137,3 +137,21 @@ def run_information_with_session(
         session.expunge(res)
         return cast(RecorderRuns, res)
     return res
+
+
+def statistics_during_period(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    statistic_ids: list[str] | None = None,
+    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
+    units: dict[str, str] | None = None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]]
+    | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """Call statistics_during_period with defaults for simpler tests."""
+    if types is None:
+        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+    return statistics.statistics_during_period(
+        hass, start_time, end_time, statistic_ids, period, units, types
+    )
