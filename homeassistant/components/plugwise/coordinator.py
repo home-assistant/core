@@ -54,7 +54,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             data = await self.api.async_update()
         except (InvalidXMLError, ResponseError, XMLDataMissingError) as err:
             raise UpdateFailed(
-                "No or invalid XML data, or error indication received for the Plugwise Adam/Smile/Stretch"
+                "Missing or invalid XML data, or error indication received from the Plugwise Adam/Smile/Stretch"
             ) from err
         except ConnectionFailedError as err:
             raise UpdateFailed from err
