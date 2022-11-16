@@ -42,9 +42,8 @@ from .const import (
     ECO_TEMP_H,
     ECO_TEMP_L,
     ELEC_PRO_SOC,
-    GLOW,
-    PILOTEV1,
-    PILOTEV2,
+    PILOTE_V1,
+    PILOTE_V2,
 )
 
 MODE_LIST = [HVACMode.HEAT, HVACMode.OFF]
@@ -61,11 +60,11 @@ async def async_setup_entry(
     entities: list[HeatzyThermostat] = []
     for unique_id, device in coordinator.data.items():
         product_key = device.get(CONF_PRODUCT_KEY)
-        if product_key in PILOTEV1:
+        if product_key in PILOTE_V1:
             entities.append(HeatzyPiloteV1Thermostat(coordinator, unique_id))
-        elif product_key in PILOTEV2 or product_key in ELEC_PRO_SOC:
+        elif product_key in PILOTE_V2 or product_key in ELEC_PRO_SOC:
             entities.append(HeatzyPiloteV2Thermostat(coordinator, unique_id))
-        elif product_key in GLOW:
+        else:
             entities.append(Glowv1Thermostat(coordinator, unique_id))
     async_add_entities(entities)
 
@@ -189,7 +188,7 @@ class HeatzyPiloteV2Thermostat(HeatzyThermostat):
 
 
 class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
-    """Glow."""
+    """Heatzy Glow."""
 
     @property
     def supported_features(self) -> int:
