@@ -1228,8 +1228,9 @@ def _first_statistic(
         .order_by(table.start.asc())
         .limit(1)
     )
-    stats = execute_stmt_lambda_element(session, stmt)
-    return process_timestamp(stats[0].start) if stats else None
+    if stats := execute_stmt_lambda_element(session, stmt):
+        return process_timestamp(stats[0].start)  # type: ignore[no-any-return]
+    return None
 
 
 def _get_oldest_sum_statistic(
@@ -1271,8 +1272,9 @@ def _get_oldest_sum_statistic(
 
     oldest_sum: float | None = None
 
-    if not tail_only and oldest_stat is not None:
-        assert main_start_time is not None
+    # This function won't be called if tail_only is False and main_start_time is None
+    # the extra checks are added to satisfy MyPy
+    if not tail_only and main_start_time is not None and oldest_stat is not None:
         period = main_start_time.replace(minute=0, second=0, microsecond=0)
         prev_period = period - Statistics.duration
         if prev_period < oldest_stat:
@@ -1384,16 +1386,16 @@ def statistic_during_period(
 
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
-        if not metadata:
+        if not (
+            metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
+        ):
             return result
 
         metadata_id = metadata[statistic_id][0]
 
         oldest_stat = _first_statistic(session, Statistics, metadata_id)
-        if valid_statistic_id(statistic_id):
-            oldest_5_min_stat = None
-        else:
+        oldest_5_min_stat = None
+        if not valid_statistic_id(statistic_id):
             oldest_5_min_stat = _first_statistic(
                 session, StatisticsShortTerm, metadata_id
             )
