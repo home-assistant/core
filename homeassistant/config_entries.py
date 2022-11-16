@@ -1664,7 +1664,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
             raise data_entry_flow.UnknownHandler
 
         flow = HANDLERS[entry.domain].async_get_options_flow(entry)
-        if context and (source := context.get("source")) != SOURCE_USER:
+        if context and (source := context.get("source")) not in (None, SOURCE_USER):
             flow.init_step = cast(str, source)
         return flow
 
