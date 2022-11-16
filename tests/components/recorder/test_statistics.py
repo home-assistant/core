@@ -14,7 +14,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
@@ -25,7 +25,6 @@ from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
-    statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
@@ -35,7 +34,12 @@ from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, do_adhoc_statistics, wait_recording_done
+from .common import (
+    async_wait_recording_done,
+    do_adhoc_statistics,
+    statistics_during_period,
+    wait_recording_done,
+)
 
 from tests.common import get_test_home_assistant, mock_registry
 
@@ -52,22 +56,29 @@ def test_compile_hourly_statistics(hass_recorder):
     assert dict(states) == dict(hist)
 
     # Should not fail if there is nothing there yet
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
     assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+        "start": process_timestamp(zero),
+        "end": process_timestamp(zero + timedelta(minutes=5)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -76,9 +87,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "sum": None,
     }
     expected_2 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(four),
-        "end": process_timestamp_to_utc_isoformat(four + timedelta(minutes=5)),
+        "start": process_timestamp(four),
+        "end": process_timestamp(four + timedelta(minutes=5)),
         "mean": approx(20.0),
         "min": approx(20.0),
         "max": approx(20.0),
@@ -86,14 +96,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-        {**expected_2, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-        {**expected_2, "statistic_id": "sensor.test2"},
-    ]
+    expected_stats1 = [expected_1, expected_2]
+    expected_stats2 = [expected_1, expected_2]
 
     # Test statistics_during_period
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -119,32 +123,71 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
-    stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_last_short_term_statistics(
+        hass,
+        1,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
     metadata = get_metadata(hass, statistic_ids=['sensor.test1"'])
 
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], metadata=metadata)
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_latest_short_term_statistics(
+        hass,
+        ["sensor.test1"],
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+        metadata=metadata,
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        2,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(hass, 3, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        3,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        1,
+        "sensor.test3",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
     assert stats == {}
 
 
@@ -218,9 +261,8 @@ def test_compile_periodic_statistics_exception(
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(now),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
+        "start": process_timestamp(now),
+        "end": process_timestamp(now + timedelta(minutes=5)),
         "mean": None,
         "min": None,
         "max": None,
@@ -229,9 +271,8 @@ def test_compile_periodic_statistics_exception(
         "sum": None,
     }
     expected_2 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=10)),
+        "start": process_timestamp(now + timedelta(minutes=5)),
+        "end": process_timestamp(now + timedelta(minutes=10)),
         "mean": None,
         "min": None,
         "max": None,
@@ -239,17 +280,9 @@ def test_compile_periodic_statistics_exception(
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-        {**expected_2, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_2, "statistic_id": "sensor.test2"},
-    ]
-    expected_stats3 = [
-        {**expected_1, "statistic_id": "sensor.test3"},
-        {**expected_2, "statistic_id": "sensor.test3"},
-    ]
+    expected_stats1 = [expected_1, expected_2]
+    expected_stats2 = [expected_2]
+    expected_stats3 = [expected_1, expected_2]
 
     stats = statistics_during_period(hass, now, period="5minute")
     assert stats == {
@@ -286,15 +319,20 @@ def test_rename_entity(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+        "start": process_timestamp(zero),
+        "end": process_timestamp(zero + timedelta(minutes=5)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -302,15 +340,9 @@ def test_rename_entity(hass_recorder):
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-    ]
-    expected_stats99 = [
-        {**expected_1, "statistic_id": "sensor.test99"},
-    ]
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
+    expected_stats99 = [expected_1]
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
@@ -353,15 +385,20 @@ def test_rename_entity_collision(hass_recorder, caplog):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+        "start": process_timestamp(zero),
+        "end": process_timestamp(zero + timedelta(minutes=5)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -369,12 +406,8 @@ def test_rename_entity_collision(hass_recorder, caplog):
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-    ]
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
@@ -465,7 +498,7 @@ async def test_import_statistics(
 
     zero = dt_util.utcnow()
     last_reset = dt_util.parse_datetime(last_reset_str) if last_reset_str else None
-    last_reset_utc_str = dt_util.as_utc(last_reset).isoformat() if last_reset else None
+    last_reset_utc = dt_util.as_utc(last_reset) if last_reset else None
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
@@ -497,24 +530,22 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(0.0),
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -546,17 +577,22 @@ async def test_import_statistics(
             },
         )
     }
-    last_stats = get_last_statistics(hass, 1, statistic_id, True)
+    last_stats = get_last_statistics(
+        hass,
+        1,
+        statistic_id,
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert last_stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -576,9 +612,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -587,13 +622,12 @@ async def test_import_statistics(
                 "sum": approx(6.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -643,24 +677,22 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1 + timedelta(hours=1)),
                 "max": approx(1.0),
                 "mean": approx(2.0),
                 "min": approx(3.0),
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(4.0),
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -686,24 +718,22 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1 + timedelta(hours=1)),
                 "max": approx(1.0),
                 "mean": approx(2.0),
                 "min": approx(3.0),
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(4.0),
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
+                "last_reset": last_reset_utc,
                 "state": approx(1.0),
                 "sum": approx(1000 * 1000 + 3.0),
             },
@@ -947,9 +977,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week1_start.isoformat(),
-                "end": week1_end.isoformat(),
+                "start": week1_start,
+                "end": week1_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -958,9 +987,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
                 "sum": 3.0,
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week2_start.isoformat(),
-                "end": week2_end.isoformat(),
+                "start": week2_start,
+                "end": week2_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -980,9 +1008,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week1_start.isoformat(),
-                "end": week1_end.isoformat(),
+                "start": week1_start,
+                "end": week1_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -991,9 +1018,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
                 "sum": 3.0,
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week2_start.isoformat(),
-                "end": week2_end.isoformat(),
+                "start": week2_start,
+                "end": week2_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1085,9 +1111,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": sep_start.isoformat(),
-                "end": sep_end.isoformat(),
+                "start": sep_start,
+                "end": sep_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1096,9 +1121,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "sum": approx(3.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": oct_start.isoformat(),
-                "end": oct_end.isoformat(),
+                "start": oct_start,
+                "end": oct_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1122,9 +1146,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": sep_start.isoformat(),
-                "end": sep_end.isoformat(),
+                "start": sep_start,
+                "end": sep_end,
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1133,9 +1156,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "sum": approx(3.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": oct_start.isoformat(),
-                "end": oct_end.isoformat(),
+                "start": oct_start,
+                "end": oct_end,
                 "max": None,
                 "mean": None,
                 "min": None,

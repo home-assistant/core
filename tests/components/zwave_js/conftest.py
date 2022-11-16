@@ -30,6 +30,7 @@ def mock_addon_info(addon_info_side_effect):
         side_effect=addon_info_side_effect,
     ) as addon_info:
         addon_info.return_value = {
+            "hostname": None,
             "options": {},
             "state": None,
             "update_available": False,
