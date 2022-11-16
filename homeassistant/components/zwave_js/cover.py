@@ -7,9 +7,6 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_STATE_PROPERTY, TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.const.command_class.multilevel_switch import (
-    COVER_CLOSE_PROPERTY,
-    COVER_DOWN_PROPERTY,
-    COVER_OFF_PROPERTY,
     COVER_ON_PROPERTY,
     COVER_OPEN_PROPERTY,
     COVER_UP_PROPERTY,
