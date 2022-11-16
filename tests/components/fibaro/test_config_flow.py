@@ -365,21 +365,7 @@ async def test_reauth_auth_failure(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_normalize_url_does_not_touch_valid_url():
-    """Test that a correctly entered url is not touched."""
-    assert _normalize_url(TEST_URL) == TEST_URL
-
-
-async def test_normalize_url_add_missing_slash_at_the_end():
-    """Test that a / is added at the end."""
-    assert _normalize_url("http://192.168.1.1/api") == "http://192.168.1.1/api/"
-
-
-async def test_normalize_url_add_api():
-    """Test that api/ is added."""
-    assert _normalize_url("http://192.168.1.1/") == "http://192.168.1.1/api/"
-
-
-async def test_normalize_url_add_api_with_leading_slash():
-    """Test that /api/ is added."""
-    assert _normalize_url("http://192.168.1.1") == "http://192.168.1.1/api/"
+@pytest.mark.parametrize("url_path", ["/api/", "/api", "/", ""])
+async def test_normalize_url(url_path: str) -> None:
+    """Test that the url is normalized for different entered values."""
+    assert _normalize_url(f"http://192.168.1.1{url_path}") == "http://192.168.1.1/api/"
