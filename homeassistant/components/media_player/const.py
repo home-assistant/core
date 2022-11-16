@@ -1,5 +1,5 @@
 """Provides the constants needed for component."""
-from enum import IntEnum
+from enum import IntFlag
 
 from homeassistant.backports.enum import StrEnum
 
@@ -176,7 +176,7 @@ REPEAT_MODE_ONE = "one"
 REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 
 
-class MediaPlayerEntityFeature(IntEnum):
+class MediaPlayerEntityFeature(IntFlag):
     """Supported features of the media player entity."""
 
     PAUSE = 1

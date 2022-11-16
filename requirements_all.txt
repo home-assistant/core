@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.19
+aiohomekit==2.3.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -261,7 +261,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.2
+aioshelly==5.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -333,7 +333,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.1.0
+apprise==1.2.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -705,7 +705,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.2
+flipr-api==1.4.4
 
 # homeassistant.components.flux_led
 flux_led==0.28.32
@@ -749,7 +749,7 @@ geniushub-client==0.6.30
 geocachingapi==0.2.1
 
 # homeassistant.components.aprs
-geopy==2.1.0
+geopy==2.3.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.6
@@ -868,7 +868,10 @@ hdate==0.10.4
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-herepy==2.0.0
+here_routing==0.1.1
+
+# homeassistant.components.here_travel_time
+here_transit==1.0.0
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -2576,7 +2579,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.12.1
+xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
 xknx==1.2.0

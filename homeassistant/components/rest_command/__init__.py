@@ -154,7 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
 
-    for command, command_config in config[DOMAIN].items():
-        async_register_rest_command(command, command_config)
+    for name, command_config in config[DOMAIN].items():
+        async_register_rest_command(name, command_config)
 
     return True

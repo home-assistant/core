@@ -1,15 +1,18 @@
 """Coordinators for the Shelly integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, cast
 
 import aioshelly
+from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, UpdateType
+from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -18,12 +21,15 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .bluetooth import async_connect_scanner
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
+    BLE_MIN_VERSION,
+    CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -40,6 +46,7 @@ from .const import (
     SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
+    BLEScannerMode,
 )
 from .utils import (
     device_update_info,
@@ -336,7 +343,10 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         )
         self.entry = entry
         self.device = device
+        self.connected = False
 
+        self._disconnected_callbacks: list[CALLBACK_TYPE] = []
+        self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
@@ -346,16 +356,14 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             function=self._async_reload_entry,
         )
         entry.async_on_unload(self._debounced_reload.async_cancel)
-
-        self._last_event: dict[str, Any] | None = None
-        self._last_status: dict[str, Any] | None = None
-
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
+        self._debounced_reload.async_cancel()
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
@@ -390,12 +398,19 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
         return _unsubscribe
 
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Reconfigure on update."""
+        async with self._connection_lock:
+            if self.connected:
+                self._async_run_disconnected_events()
+                await self._async_run_connected_events()
+
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
-        self.update_sleep_period()
         events: list[dict[str, Any]] = event_data["events"]
-
         for event in events:
             event_type = event.get("event")
             if event_type is None:
@@ -405,6 +420,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 event_callback(event)
 
             if event_type == "config_changed":
+                self.update_sleep_period()
                 LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
                     self.name,
@@ -460,21 +476,76 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         """Firmware version of the device."""
         return self.device.firmware_version if self.device.initialized else ""
 
-    @callback
-    def _async_handle_update(self, device_: RpcDevice) -> None:
-        """Handle device update."""
-        device = self.device
-        if not device.initialized:
-            return
-        event = device.event
-        status = device.status
+    async def _async_disconnected(self) -> None:
+        """Handle device disconnected."""
+        async with self._connection_lock:
+            if not self.connected:  # Already disconnected
+                return
+            self.connected = False
+            self._async_run_disconnected_events()
 
-        if event and event != self._last_event:
-            self._last_event = event
+    @callback
+    def _async_run_disconnected_events(self) -> None:
+        """Run disconnected events.
+
+        This will be executed on disconnect or when the config entry
+        is updated.
+        """
+        for disconnected_callback in self._disconnected_callbacks:
+            disconnected_callback()
+        self._disconnected_callbacks.clear()
+
+    async def _async_connected(self) -> None:
+        """Handle device connected."""
+        async with self._connection_lock:
+            if self.connected:  # Already connected
+                return
+            self.connected = True
+            await self._async_run_connected_events()
+
+    async def _async_run_connected_events(self) -> None:
+        """Run connected events.
+
+        This will be executed on connect or when the config entry
+        is updated.
+        """
+        await self._async_connect_ble_scanner()
+
+    async def _async_connect_ble_scanner(self) -> None:
+        """Connect BLE scanner."""
+        ble_scanner_mode = self.entry.options.get(
+            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
+        )
+        if ble_scanner_mode == BLEScannerMode.DISABLED:
+            await async_stop_scanner(self.device)
+            return
+        if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
+            LOGGER.error(
+                "BLE not supported on device %s with firmware %s; upgrade to %s",
+                self.name,
+                self.device.version,
+                BLE_MIN_VERSION,
+            )
+            return
+        if await async_ensure_ble_enabled(self.device):
+            # BLE enable required a reboot, don't bother connecting
+            # the scanner since it will be disconnected anyway
+            return
+        self._disconnected_callbacks.append(
+            await async_connect_scanner(self.hass, self, ble_scanner_mode)
+        )
+
+    @callback
+    def _async_handle_update(self, device_: RpcDevice, update_type: UpdateType) -> None:
+        """Handle device update."""
+        if update_type is UpdateType.INITIALIZED:
+            self.hass.async_create_task(self._async_connected())
+        elif update_type is UpdateType.DISCONNECTED:
+            self.hass.async_create_task(self._async_disconnected())
+        elif update_type is UpdateType.STATUS:
+            self.async_set_updated_data(self.device)
+        elif update_type is UpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
-        if status and status != self._last_status:
-            self._last_status = status
-            self.async_set_updated_data(device)
 
     def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -491,10 +562,15 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self._async_handle_update)
+        if self.device.initialized:
+            # If we are already initialized, we are connected
+            self.hass.async_create_task(self._async_connected())
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
+        await async_stop_scanner(self.device)
         await self.device.shutdown()
+        await self._async_disconnected()
 
     async def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
