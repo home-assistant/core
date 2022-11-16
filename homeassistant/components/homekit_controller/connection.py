@@ -721,27 +721,7 @@ class HKDevice:
         self, characteristics: Iterable[tuple[int, int, Any]]
     ) -> None:
         """Control a HomeKit device state from Home Assistant."""
-        results = await self.pairing.put_characteristics(characteristics)
-
-        # Feed characteristics back into HA and update the current state
-        # results will only contain failures, so anythin in characteristics
-        # but not in results was applied successfully - we can just have HA
-        # reflect the change immediately.
-
-        new_entity_state = {}
-        for aid, iid, value in characteristics:
-            key = (aid, iid)
-
-            # If the key was returned by put_characteristics() then the
-            # change didn't work
-            if key in results:
-                continue
-
-            # Otherwise it was accepted and we can apply the change to
-            # our state
-            new_entity_state[key] = {"value": value}
-
-        self.process_new_events(new_entity_state)
+        await self.pairing.put_characteristics(characteristics)
 
     @property
     def unique_id(self) -> str:
