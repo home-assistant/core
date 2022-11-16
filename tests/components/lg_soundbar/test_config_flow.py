@@ -18,10 +18,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal",
-        return_value=MagicMock(),
-    ), patch(
+    with patch("homeassistant.components.lg_soundbar.config_flow.temescal"), patch(
         "homeassistant.components.lg_soundbar.config_flow.test_connect",
         return_value={"uuid": "uuid", "name": "name"},
     ), patch(
@@ -54,7 +51,7 @@ async def test_form_mac_info_response_empty(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -104,10 +101,9 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
-        return_value=MagicMock(),
+        "homeassistant.components.lg_soundbar.config_flow.Queue"
     ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -167,10 +163,9 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
-        return_value=MagicMock(),
+        "homeassistant.components.lg_soundbar.config_flow.Queue"
     ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -223,7 +218,7 @@ async def test_form_uuid_missing_from_mac_info(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -272,13 +267,11 @@ async def test_form_uuid_not_provided_by_api(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
-        return_value=MagicMock(),
+        "homeassistant.components.lg_soundbar.config_flow.Queue"
     ) as mock_q, patch(
-        "homeassistant.components.lg_soundbar.config_flow.LGSoundbarConfigFlow.async_set_unique_id",
-        return_value=MagicMock(),
+        "homeassistant.components.lg_soundbar.config_flow.LGSoundbarConfigFlow.async_set_unique_id"
     ) as mock_set_unique_id, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -340,10 +333,9 @@ async def test_form_both_queues_empty(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
-        return_value=MagicMock(),
+        "homeassistant.components.lg_soundbar.config_flow.Queue"
     ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -403,10 +395,7 @@ async def test_no_uuid_host_already_configured(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal",
-        return_value=MagicMock(),
-    ), patch(
+    with patch("homeassistant.components.lg_soundbar.config_flow.temescal"), patch(
         "homeassistant.components.lg_soundbar.config_flow.test_connect",
         return_value={"name": "name"},
     ):

@@ -46,8 +46,7 @@ def test_connect(host, port):
         if check_msg_response(response, "SPK_LIST_VIEW_INFO", "s_user_name"):
             queue_add(name_q, response["data"]["s_user_name"])
 
-    sb_name = None
-    sb_uuid = None
+    details = {}
 
     try:
         connection = temescal.temescal(host, port=port, callback=msg_callback)
@@ -55,17 +54,16 @@ def test_connect(host, port):
         connection.get_mac_info()
         if uuid_q.empty():
             connection.get_product_info()
-        sb_name = name_q.get(timeout=10)
-        sb_uuid = uuid_q.get(timeout=10)
-        return {"name": sb_name, "uuid": sb_uuid}
+        details["name"] = name_q.get(timeout=10)
+        details["uuid"] = uuid_q.get(timeout=10)
     except Empty:
-        if sb_name is not None:
-            return {"name": sb_name}
-        return {}
+        pass
     except socket.timeout as err:
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
     except OSError as err:
         raise ConnectionError(f"Cannot resolve hostname: {host}") from err
+
+    return details
 
 
 class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
