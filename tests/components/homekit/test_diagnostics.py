@@ -379,7 +379,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 7,
                                 "perms": ["pr"],
                                 "type": "52",
-                                "value": "2022.12.0",
+                                "value": ANY,
                             },
                         ],
                         "iid": 1,
