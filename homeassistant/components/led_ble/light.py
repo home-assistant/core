@@ -26,7 +26,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DEFAULT_EFFECT_SPEED, DOMAIN
 from .models import LEDBLEData
-from .util import _effect_brightness
 
 
 async def async_setup_entry(
@@ -77,7 +76,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         await self._device.async_set_effect(
             effect,
             self._device.speed or DEFAULT_EFFECT_SPEED,
-            _effect_brightness(brightness),
+            round(brightness / 255 * 100),
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
