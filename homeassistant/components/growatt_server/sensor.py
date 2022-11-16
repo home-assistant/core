@@ -255,6 +255,11 @@ class GrowattData:
                     **mix_detail,
                     **dashboard_values_for_mix,
                 }
+            _LOGGER.debug(
+                "Finished updating data for %s (%s)",
+                self.device_id,
+                self.growatt_type,
+            )
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
 
@@ -264,15 +269,20 @@ class GrowattData:
 
     def get_data(self, entity_description):
         """Get the data."""
+        _LOGGER.debug(
+            "Data request for: %s",
+            entity_description.name,
+        )
         variable = entity_description.api_key
         api_value = self.data.get(variable)
-        previous_value = self.previous_values.get(variable, None)
+        previous_value = self.previous_values.get(variable)
         return_value = api_value
 
         # If we have a 'drop threshold' specified, then check it and correct if needed
         if (
             entity_description.previous_value_drop_threshold is not None
             and previous_value is not None
+            and api_value is not None
         ):
             _LOGGER.debug(
                 "%s - Drop threshold specified (%s), checking for drop... API Value: %s, Previous Value: %s",
@@ -283,8 +293,10 @@ class GrowattData:
             )
             diff = float(api_value) - float(previous_value)
 
-            # Check if the value has dropped (negative value i.e. < 0) and it has only dropped by a small amount, if so, use the previous value
-            # Note - The energy dashboard takes care of drops within 10% of the current value, however if the value is low e.g. 0.2 and drops by 0.1 it classes as a reset.
+            # Check if the value has dropped (negative value i.e. < 0) and it has only dropped by a
+            # small amount, if so, use the previous value.
+            # Note - The energy dashboard takes care of drops within 10% of the current value,
+            # however if the value is low e.g. 0.2 and drops by 0.1 it classes as a reset.
             if -(entity_description.previous_value_drop_threshold) <= diff < 0:
                 _LOGGER.debug(
                     "Diff is negative, but only by a small amount therefore not a nightly reset, using previous value (%s) instead of api value (%s)",
