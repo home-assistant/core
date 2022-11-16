@@ -30,11 +30,6 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
     """Interface between FritzhomeTemplate and hass."""
 
     @property
-    def available(self) -> bool:
-        """Return true if FritzBox is reachable."""
-        return bool(super().available)
-
-    @property
     def entity(self) -> FritzhomeTemplate:
         """Return the template entity."""
         return self.coordinator.data.templates[self.ain]
