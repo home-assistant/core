@@ -25,7 +25,7 @@ async def async_setup_entry(
             LGDevice(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
-                config_entry.unique_id,
+                config_entry.unique_id or config_entry.entry_id,
             )
         ]
     )
