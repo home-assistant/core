@@ -8,6 +8,7 @@ from bluetooth_adapters import (
     AdapterDetails,
     adapter_human_name,
     adapter_unique_name,
+    get_adapters,
 )
 import voluptuous as vol
 
@@ -85,8 +86,9 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         configured_addresses = self._async_current_ids()
-        assert models.MANAGER is not None
-        self._adapters = await models.MANAGER.async_get_bluetooth_adapters(cached=False)
+        bluetooth_adapters = get_adapters()
+        await bluetooth_adapters.refresh()
+        self._adapters = bluetooth_adapters.adapters
         unconfigured_adapters = [
             adapter
             for adapter, details in self._adapters.items()
