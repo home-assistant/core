@@ -17,6 +17,8 @@ from homeassistant.components.hassio import (
     AddonState,
     is_hassio,
 )
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha.radio_manager import ZhaMigrationHelper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -77,6 +79,7 @@ class BaseMultiPanFlow(FlowHandler):
         # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
+        self._zha_migration_mgr: ZhaMigrationHelper | None = None
 
     @property
     @abstractmethod
@@ -86,6 +89,10 @@ class BaseMultiPanFlow(FlowHandler):
     @abstractmethod
     async def _async_serial_port_settings(self) -> SerialPortSettings:
         """Return the radio serial port settings."""
+
+    @abstractmethod
+    def _zha_name(self) -> str:
+        """Return the ZHA name."""
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -260,6 +267,32 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             **dataclasses.asdict(serial_port_settings),
         }
 
+        # Initiate ZHA migration
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
+
+        if zha_entries:
+            zha_migration_mgr = ZhaMigrationHelper(self.hass, zha_entries[0])
+            migration_data = {
+                "name": self._zha_name(),
+                "new_port": {
+                    "path": get_zigbee_socket(self.hass, addon_info),
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "new_radio_type": "efr32",
+                "old_port": {
+                    "path": serial_port_settings.device,
+                    "baudrate": int(serial_port_settings.baudrate),
+                    "flow_control": "hardware"
+                    if serial_port_settings.flow_control
+                    else None,
+                },
+                "old_radio_type": "efr32",
+            }
+            _LOGGER.debug("Starting ZHA migration with: %s", migration_data)
+            if await zha_migration_mgr.async_prepare_yellow_migration(migration_data):
+                self._zha_migration_mgr = zha_migration_mgr
+
         if new_addon_config != addon_config:
             # Copy the add-on config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
@@ -276,6 +309,10 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
+
+        # Finish ZHA migration if needed
+        if self._zha_migration_mgr:
+            await self._zha_migration_mgr.async_finish_yellow_migration()
 
         return self.async_create_entry(title="", data={})
 

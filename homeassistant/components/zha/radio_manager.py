@@ -3,23 +3,28 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import copy
 import logging
 import os
 from typing import Any
 
+import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkNotFormed
 
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
 from .core.const import (
     CONF_DATABASE,
+    CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
+    EZSP_OVERWRITE_EUI64,
     RadioType,
 )
 
@@ -35,7 +40,46 @@ AUTOPROBE_RADIOS = (
 
 CONNECT_DELAY_S = 1.0
 
+MIGRATION_RETRIES = 10
+
+HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): str,
+        vol.Required("new_port"): dict,
+        vol.Required("new_radio_type"): str,
+        vol.Required("old_port"): dict,
+        vol.Required("old_radio_type"): str,
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _allow_overwrite_ezsp_ieee(
+    backup: zigpy.backups.NetworkBackup,
+) -> zigpy.backups.NetworkBackup:
+    """Return a new backup with the flag to allow overwriting the EZSP EUI64."""
+    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+    new_stack_specific.setdefault("ezsp", {})[EZSP_OVERWRITE_EUI64] = True
+
+    return backup.replace(
+        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+    )
+
+
+def _prevent_overwrite_ezsp_ieee(
+    backup: zigpy.backups.NetworkBackup,
+) -> zigpy.backups.NetworkBackup:
+    """Return a new backup without the flag to allow overwriting the EZSP EUI64."""
+    if "ezsp" not in backup.network_info.stack_specific:
+        return backup
+
+    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+    new_stack_specific.setdefault("ezsp", {}).pop(EZSP_OVERWRITE_EUI64, None)
+
+    return backup.replace(
+        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+    )
 
 
 class ZhaRadioManager:
@@ -156,3 +200,130 @@ class ZhaRadioManager:
         """Reset the current adapter."""
         async with self._connect_zigpy_app() as app:
             await app.reset_network_info()
+
+
+class ZhaMigrationHelper:
+    """Helper class for automatic migration."""
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> None:
+        """Initialize MigrationHelper instance."""
+        self._config_entry = config_entry
+        self._hass = hass
+        self._radio_mgr = ZhaRadioManager()
+        self._radio_mgr.hass = hass
+
+    async def async_prepare_yellow_migration(self, data: dict[str, Any]) -> bool:
+        """Prepare ZHA migration."""
+        migration_data = HARDWARE_MIGRATION_SCHEMA(data)
+
+        name = migration_data["name"]
+        new_radio_type = self._radio_mgr.parse_radio_type(
+            migration_data["new_radio_type"]
+        )
+        old_radio_type = self._radio_mgr.parse_radio_type(
+            migration_data["old_radio_type"]
+        )
+
+        new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
+            migration_data["new_port"]
+        )
+        old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
+            migration_data["old_port"]
+        )
+
+        if (
+            self._config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+            != old_device_settings[CONF_DEVICE_PATH]
+        ):
+            # ZHA is using another radio, do nothing
+            return False
+
+        try:
+            await self._hass.config_entries.async_unload(self._config_entry.entry_id)
+        except config_entries.OperationNotAllowed:
+            # ZHA is not running
+            pass
+
+        # Load our current network settings
+        await self._radio_mgr.async_load_network_settings(create_backup=True)
+        self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
+
+        self._radio_mgr.radio_type = new_radio_type
+        self._radio_mgr.device_path = new_device_settings[CONF_DEVICE_PATH]
+        self._radio_mgr.device_settings = new_device_settings
+        device_settings = self._radio_mgr.device_settings.copy()  # type: ignore[union-attr]
+
+        # Update the config entry settings
+        self._hass.config_entries.async_update_entry(
+            entry=self._config_entry,
+            data={
+                CONF_DEVICE: device_settings,
+                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+            },
+            options=self._config_entry.options,
+            title=name,
+        )
+        return False
+
+    async def async_restore_backup(self):
+        """Restore backup."""
+        assert self._radio_mgr.chosen_backup is not None
+
+        if self._radio_mgr.radio_type != RadioType.ezsp:
+            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
+            return
+
+        # We have no way to partially load network settings if no network is formed
+        if self._radio_mgr.current_settings is None:
+            # Since we are going to be restoring the backup anyways, write it to the
+            # radio without overwriting the IEEE but don't take a backup with these
+            # temporary settings
+            temp_backup = _prevent_overwrite_ezsp_ieee(self._radio_mgr.chosen_backup)
+            await self._radio_mgr.restore_backup(temp_backup, create_new=False)
+            await self._radio_mgr.async_load_network_settings()
+
+            assert self._radio_mgr.current_settings is not None
+
+        if (
+            self._radio_mgr.current_settings.node_info.ieee
+            == self._radio_mgr.chosen_backup.node_info.ieee
+            or not self._radio_mgr.current_settings.network_info.metadata["ezsp"][
+                "can_write_custom_eui64"
+            ]
+        ):
+            # No point in prompting the user if the backup doesn't have a new IEEE
+            # address or if there is no way to overwrite the IEEE address a second time
+            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
+
+            return
+
+        backup = self._radio_mgr.chosen_backup
+
+        backup = _allow_overwrite_ezsp_ieee(backup)
+
+        # If the user declined to overwrite the IEEE *and* we wrote the backup to
+        # their empty radio above, restoring it again would be redundant.
+        await self._radio_mgr.restore_backup(backup)
+
+        return
+
+    async def async_finish_yellow_migration(self) -> bool:
+        """Finish ZHA migration."""
+        # Restore the backup, permanently overwriting the device IEEE address
+        for retry in range(MIGRATION_RETRIES):
+            try:
+                await self.async_restore_backup()
+                _LOGGER.debug("Restored backup after %s retries", retry)
+                return True
+            except OSError as err:
+                _LOGGER.debug(
+                    "Failed to restore backup %s, retrying in %s seconds",
+                    err,
+                    CONNECT_DELAY_S,
+                )
+
+            await asyncio.sleep(CONNECT_DELAY_S)
+
+        return False
