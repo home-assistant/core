@@ -1,4 +1,5 @@
 """The Whirlpool Appliances integration."""
+import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -10,7 +11,7 @@ from whirlpool.backendselector import BackendSelector, Brand
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_REGIONS_MAP, DOMAIN
 
@@ -31,12 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = Auth(backend_selector, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     try:
         await auth.do_auth(store=False)
-    except (ConnectionError, aiohttp.ClientConnectionError) as ex:
+    except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")
-        return False
+        raise ConfigEntryAuthFailed("Incorrect Password")
 
     appliances_manager = AppliancesManager(backend_selector, auth)
     if not await appliances_manager.fetch_appliances():
