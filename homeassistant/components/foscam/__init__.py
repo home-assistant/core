@@ -130,9 +130,10 @@ class FoscamCoordinator(DataUpdateCoordinator):
                         self._session.get_product_all_info
                     )
                 )[1]
-                data["is_asleep"] = await self.hass.async_add_executor_job(
+                ret, is_asleep = await self.hass.async_add_executor_job(
                     self._session.is_asleep
                 )
+                data["is_asleep"] = {"supported": ret == 0, "status": is_asleep}
                 return data
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

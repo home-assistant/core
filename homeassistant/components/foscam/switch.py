@@ -29,7 +29,8 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([FoscamAwakeSwitch(session, coordinator, config_entry)])
+    if coordinator.data["is_asleep"]["supported"]:
+        async_add_entities([FoscamAwakeSwitch(session, coordinator, config_entry)])
 
 
 class FoscamAwakeSwitch(FoscamCoordinatorEntity, SwitchEntity):
@@ -44,10 +45,10 @@ class FoscamAwakeSwitch(FoscamCoordinatorEntity, SwitchEntity):
         """Initialize a Foscam camera."""
         super().__init__(session, coordinator, config_entry)
 
-        self._attr_name = "Awake"
+        self._attr_name = config_entry.title + " Awake"
         self._attr_unique_id = config_entry.entry_id + "_awake_switch"
 
-        self.is_asleep = False
+        self.is_asleep = self.coordinator.data["is_asleep"]["status"]
 
     @property
     def is_on(self):
@@ -64,6 +65,8 @@ class FoscamAwakeSwitch(FoscamCoordinatorEntity, SwitchEntity):
             LOGGER.error("Error waking up '%s': %s", self._name, ret)
             return
 
+        await self.coordinator.async_request_refresh()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         LOGGER.debug("Sleep camera %s", self._name)
@@ -74,10 +77,12 @@ class FoscamAwakeSwitch(FoscamCoordinatorEntity, SwitchEntity):
             LOGGER.error("Error sleeping '%s': %s", self._name, ret)
             return
 
+        await self.coordinator.async_request_refresh()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        self.is_asleep = self.coordinator.data["is_asleep"]
+        self.is_asleep = self.coordinator.data["is_asleep"]["status"]
 
         self.async_write_ha_state()
