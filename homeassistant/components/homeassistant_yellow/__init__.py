@@ -11,8 +11,8 @@ from homeassistant.components.hassio import (
     get_os_info,
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    async_get_zigbee_socket,
     get_addon_manager,
+    get_zigbee_socket,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -45,17 +45,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await addon_manager.async_start_addon()
 
     if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
-        _LOGGER.debug("Multi pan addon in state %s, delaying yellow config entry setup")
+        _LOGGER.debug(
+            "Multi pan addon in state %s, delaying yellow config entry setup",
+            addon_info.state,
+        )
         raise ConfigEntryNotReady
 
     if addon_info.state == AddonState.NOT_INSTALLED:
         path = "/dev/ttyAMA1"
     else:
-        try:
-            path = await async_get_zigbee_socket(hass)
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise ConfigEntryNotReady from err
+        path = get_zigbee_socket(hass, addon_info)
 
     await hass.config_entries.flow.async_init(
         "zha",

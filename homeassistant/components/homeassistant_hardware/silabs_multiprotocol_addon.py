@@ -62,13 +62,11 @@ class SerialPortSettings:
     flow_control: bool
 
 
-async def async_get_zigbee_socket(hass) -> str:
+def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
     """
-    addon_manager: AddonManager = get_addon_manager(hass)
-    addon_info: AddonInfo = await addon_manager.async_get_addon_info()
     return f"socket://{addon_info.hostname}:9999"
 
 
@@ -77,10 +75,7 @@ class BaseMultiPanFlow(FlowHandler):
 
     def __init__(self) -> None:
         """Set up flow instance."""
-        # self.usb_path: str | None = None
-        self.restart_addon: bool = False
         # If we install the add-on we should uninstall it on entry remove.
-        self.integration_created_addon = False
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self._zha_options_flow: FlowResult | None = None
@@ -115,7 +110,6 @@ class BaseMultiPanFlow(FlowHandler):
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
 
-        self.integration_created_addon = True
         self.install_task = None
 
         return self.async_show_progress_done(next_step_id="configure_addon")
@@ -156,10 +150,7 @@ class BaseMultiPanFlow(FlowHandler):
         """Start Silicon Labs Multiprotocol add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            if self.restart_addon:
-                await addon_manager.async_schedule_restart_addon()
-            else:
-                await addon_manager.async_schedule_start_addon()
+            await addon_manager.async_schedule_start_addon()
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -258,12 +249,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if not user_input[CONF_ENABLE_MULTI_PAN]:
             return self.async_create_entry(title="", data={})
 
-        addon_info = await self._async_get_addon_info()
-
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_addon()
-
-        return await self.async_step_configure_addon()
+        return await self.async_step_install_addon()
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
@@ -287,7 +273,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             option_flow_data = {
                 "name": self._zha_name(),
                 "new_port": {
-                    "path": await async_get_zigbee_socket(self.hass),
+                    "path": get_zigbee_socket(self.hass, addon_info),
                     "baudrate": 115200,
                     "flow_control": "hardware",
                 },
@@ -317,15 +303,10 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 )
 
         if new_addon_config != addon_config:
-            if addon_info.state == AddonState.RUNNING:
-                self.restart_addon = True
             # Copy the add-on config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
             _LOGGER.debug("Reconfiguring addon with %s", new_addon_config)
             await self._async_set_addon_config(new_addon_config)
-
-        if addon_info.state == AddonState.RUNNING and not self.restart_addon:
-            return await self.async_step_finish_addon_setup()
 
         return await self.async_step_start_addon()
 
