@@ -117,7 +117,6 @@ class ComfoConnectBridge:
 
     def verify_connection(self):
        """Verify connection and reconnect if needed"""
-       _LOGGER.debug("Bridge connection verification: %s" % self.comfoconnect.is_connected())
        if not self.comfoconnect.is_connected():
            _LOGGER.debug("Reconnecting to bridge")
            self.connect()
