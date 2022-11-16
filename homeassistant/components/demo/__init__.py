@@ -42,6 +42,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
