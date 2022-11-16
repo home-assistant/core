@@ -113,7 +113,7 @@ async def test_option_flow_install_multi_pan_addon(
             "options": {
                 "autoflash_firmware": True,
                 "device": "/dev/ttyAMA1",
-                "baudrate": 115200,
+                "baudrate": "115200",
                 "flow_control": True,
             }
         },
@@ -189,7 +189,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
             "options": {
                 "autoflash_firmware": True,
                 "device": "/dev/ttyAMA1",
-                "baudrate": 115200,
+                "baudrate": "115200",
                 "flow_control": True,
             }
         },
@@ -319,7 +319,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
             "options": {
                 "autoflash_firmware": True,
                 "device": "/dev/ttyAMA1",
-                "baudrate": 115200,
+                "baudrate": "115200",
                 "flow_control": True,
             }
         },
