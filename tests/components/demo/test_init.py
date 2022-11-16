@@ -114,7 +114,7 @@ async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     await async_wait_recording_done(hass)
 
     statistics = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False
+        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     assert statistics[statistic_id][0]["sum"] > 2**20
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)

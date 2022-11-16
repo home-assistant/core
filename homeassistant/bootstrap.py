@@ -17,7 +17,7 @@ import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader
-from .components import http, persistent_notification
+from .components import http
 from .const import (
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
@@ -268,16 +268,31 @@ async def async_from_config_dict(
         REQUIRED_NEXT_PYTHON_HA_RELEASE
         and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
     ):
-        msg = (
-            "Support for the running Python version "
-            f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
-            "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
+        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
+        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
+        _LOGGER.warning(
+            (
+                "Support for the running Python version %s is deprecated and "
+                "will be removed in Home Assistant %s; "
+                "Please upgrade Python to %s"
+            ),
+            current_python_version,
+            REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            required_python_version,
         )
-        _LOGGER.warning(msg)
-        persistent_notification.async_create(
-            hass, msg, "Python version", "python_version"
+        issue_registry.async_create_issue(
+            hass,
+            core.DOMAIN,
+            "python_version",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            translation_key="python_version",
+            translation_placeholders={
+                "current_python_version": current_python_version,
+                "required_python_version": required_python_version,
+                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
+            },
         )
 
     return hass
@@ -404,7 +419,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.split(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
 
     # Add config entry domains
     if not hass.config.safe_mode:

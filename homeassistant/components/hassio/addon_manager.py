@@ -70,6 +70,7 @@ def api_error(
 class AddonInfo:
     """Represent the current add-on info state."""
 
+    hostname: str | None
     options: dict[str, Any]
     state: AddonState
     update_available: bool
@@ -143,6 +144,7 @@ class AddonManager:
         self._logger.debug("Add-on store info: %s", addon_store_info)
         if not addon_store_info["installed"]:
             return AddonInfo(
+                hostname=None,
                 options={},
                 state=AddonState.NOT_INSTALLED,
                 update_available=False,
@@ -152,6 +154,7 @@ class AddonManager:
         addon_info = await async_get_addon_info(self._hass, self.addon_slug)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
+            hostname=addon_info["hostname"],
             options=addon_info["options"],
             state=addon_state,
             update_available=addon_info["update_available"],

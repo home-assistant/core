@@ -1,7 +1,6 @@
 """Test the ibeacon device trackers."""
 
 
-from dataclasses import replace
 from datetime import timedelta
 import time
 from unittest.mock import patch
@@ -22,6 +21,7 @@ from . import (
     BEACON_RANDOM_ADDRESS_SERVICE_INFO,
     BLUECHARM_BEACON_SERVICE_INFO,
     BLUECHARM_BLE_DEVICE,
+    bluetooth_service_info_replace as replace,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed

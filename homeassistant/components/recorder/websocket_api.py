@@ -65,7 +65,7 @@ def _ws_get_statistic_during_period(
     start_time: dt | None,
     end_time: dt | None,
     statistic_id: str,
-    types: set[str] | None,
+    types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
@@ -101,7 +101,9 @@ def _ws_get_statistic_during_period(
             }
         ),
         vol.Optional("statistic_id"): str,
-        vol.Optional("types"): vol.All([str], vol.Coerce(set)),
+        vol.Optional("types"): vol.All(
+            [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
+        ),
         vol.Optional("units"): vol.Schema(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
@@ -210,16 +212,27 @@ def _ws_get_statistics_during_period(
     statistic_ids: list[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
-    return JSON_DUMP(
-        messages.result_message(
-            msg_id,
-            statistics_during_period(
-                hass, start_time, end_time, statistic_ids, period, units=units
-            ),
-        )
+    result = statistics_during_period(
+        hass,
+        start_time,
+        end_time,
+        statistic_ids,
+        period,
+        units,
+        types,
     )
+    for statistic_id in result:
+        for item in result[statistic_id]:
+            if (start := item.get("start")) is not None:
+                item["start"] = int(start.timestamp() * 1000)
+            if (end := item.get("end")) is not None:
+                item["end"] = int(end.timestamp() * 1000)
+            if (last_reset := item.get("last_reset")) is not None:
+                item["last_reset"] = int(last_reset.timestamp() * 1000)
+    return JSON_DUMP(messages.result_message(msg_id, result))
 
 
 async def ws_handle_get_statistics_during_period(
@@ -244,6 +257,8 @@ async def ws_handle_get_statistics_during_period(
     else:
         end_time = None
 
+    if (types := msg.get("types")) is None:
+        types = {"last_reset", "max", "mean", "min", "state", "sum"}
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -254,6 +269,7 @@ async def ws_handle_get_statistics_during_period(
             msg.get("statistic_ids"),
             msg.get("period"),
             msg.get("units"),
+            types,
         )
     )
 
@@ -276,6 +292,10 @@ async def ws_handle_get_statistics_during_period(
                 vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
                 vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
+        ),
+        vol.Optional("types"): vol.All(
+            [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
+            vol.Coerce(set),
         ),
     }
 )
