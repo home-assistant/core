@@ -1280,28 +1280,35 @@ def _get_oldest_sum_statistic(
         if prev_period < oldest_stat:
             return 0
 
-    if head_start_time is not None:
-        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
-            session, head_start_time, StatisticsShortTerm, metadata_id
+    if (
+        head_start_time is not None
+        and (
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, head_start_time, StatisticsShortTerm, metadata_id
+            )
         )
-        if oldest_sum is not None:
-            return oldest_sum
+        is not None
+    ):
+        return oldest_sum
 
     if not tail_only:
-        assert main_start_time is not None
-        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
-            session, main_start_time, Statistics, metadata_id
-        )
-        if oldest_sum is not None:
+        if (
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, main_start_time, Statistics, metadata_id
+            )
+        ) is not None:
             return oldest_sum
         return 0
 
-    if tail_start_time is not None:
-        oldest_sum = _get_oldest_sum_statistic_in_sub_period(
-            session, tail_start_time, StatisticsShortTerm, metadata_id
+    if (
+        tail_start_time is not None
+        and (
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, tail_start_time, StatisticsShortTerm, metadata_id
+            )
         )
-        if oldest_sum is not None:
-            return oldest_sum
+    ) is not None:
+        return oldest_sum
 
     return 0
 
