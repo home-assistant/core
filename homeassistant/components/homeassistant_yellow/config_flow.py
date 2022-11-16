@@ -44,7 +44,3 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             baudrate="115200",
             flow_control=True,
         )
-
-    def _zha_name(self) -> str:
-        """Return the ZHA name."""
-        return "Yellow Multi-PAN"

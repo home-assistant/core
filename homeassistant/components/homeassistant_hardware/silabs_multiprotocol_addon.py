@@ -23,7 +23,6 @@ from homeassistant.data_entry_flow import (
     FlowHandler,
     FlowManager,
     FlowResult,
-    FlowResultType,
 )
 from homeassistant.helpers.singleton import singleton
 
@@ -78,7 +77,6 @@ class BaseMultiPanFlow(FlowHandler):
         # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
-        self._zha_options_flow: FlowResult | None = None
 
     @property
     @abstractmethod
@@ -88,10 +86,6 @@ class BaseMultiPanFlow(FlowHandler):
     @abstractmethod
     async def _async_serial_port_settings(self) -> SerialPortSettings:
         """Return the radio serial port settings."""
-
-    @abstractmethod
-    def _zha_name(self) -> str:
-        """Return the ZHA name."""
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -266,42 +260,6 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             **dataclasses.asdict(serial_port_settings),
         }
 
-        # Initiate ZHA migration
-        zha_entries = self.hass.config_entries.async_entries("zha")
-
-        if zha_entries:
-            option_flow_data = {
-                "name": self._zha_name(),
-                "new_port": {
-                    "path": get_zigbee_socket(self.hass, addon_info),
-                    "baudrate": 115200,
-                    "flow_control": "hardware",
-                },
-                "new_radio_type": "efr32",
-                "old_port": {
-                    "path": serial_port_settings.device,
-                    "baudrate": int(serial_port_settings.baudrate),
-                    "flow_control": "hardware"
-                    if serial_port_settings.flow_control
-                    else None,
-                },
-                "old_radio_type": "efr32",
-            }
-            _LOGGER.debug("Starting ZHA options flow with: %s", option_flow_data)
-            self._zha_options_flow = await self.hass.config_entries.options.async_init(
-                zha_entries[0].entry_id,
-                context={"source": "yellow_migration"},
-                data=option_flow_data,
-            )
-            if self._zha_options_flow["type"] not in (
-                FlowResultType.CREATE_ENTRY,
-                FlowResultType.FORM,
-            ):
-                _LOGGER.warning(
-                    "Unexpected result from ZHA options flow: %s",
-                    self._zha_options_flow,
-                )
-
         if new_addon_config != addon_config:
             # Copy the add-on config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
@@ -318,16 +276,6 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
-
-        # Finish ZHA migration if needed
-        if (
-            self._zha_options_flow
-            and self._zha_options_flow["type"] == FlowResultType.FORM
-        ):
-            await self.hass.config_entries.options.async_configure(
-                self._zha_options_flow["flow_id"],
-                user_input={},
-            )
 
         return self.async_create_entry(title="", data={})
 

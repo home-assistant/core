@@ -76,23 +76,11 @@ ESPHOME_API_PORT = 6053
 
 CONNECT_DELAY_S = 1.0
 
-MIGRATION_RETRIES = 10
-
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
         vol.Required("port"): dict,
         vol.Required("radio_type"): str,
-    }
-)
-
-HARDWARE_MIGRATION_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): str,
-        vol.Required("new_port"): dict,
-        vol.Required("new_radio_type"): str,
-        vol.Required("old_port"): dict,
-        vol.Required("old_radio_type"): str,
     }
 )
 
@@ -376,7 +364,7 @@ class BaseZhaFlow(FlowHandler):
             errors=errors,
         )
 
-    async def _async_load_network_settings(self, create_backup: bool = False) -> None:
+    async def _async_load_network_settings(self) -> None:
         """Connect to the radio and load its current network settings."""
         async with self._connect_zigpy_app() as app:
             # Check if the stick has any settings and load them
@@ -389,9 +377,6 @@ class BaseZhaFlow(FlowHandler):
                     network_info=app.state.network_info,
                     node_info=app.state.node_info,
                 )
-
-                if create_backup:
-                    await app.backups.create_backup()
 
             # The list of backups will always exist
             self._backups = app.backups.backups.copy()
@@ -849,87 +834,3 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
         self.hass.async_create_task(
             self.hass.config_entries.async_setup(self.config_entry.entry_id)
         )
-
-    async def async_step_yellow_migration(self, data: dict[str, Any]) -> FlowResult:
-        """Yellow/SkyConnect auto migration flow. There is no user interaction."""
-
-        try:
-            migration_data = HARDWARE_MIGRATION_SCHEMA(data)
-        except vol.Invalid:
-            return self.async_abort(reason="invalid_hardware_data")
-
-        name = migration_data["name"]
-        new_radio_type = self._parse_radio_type(migration_data["new_radio_type"])
-        old_radio_type = self._parse_radio_type(migration_data["old_radio_type"])
-
-        try:
-            new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
-                migration_data["new_port"]
-            )
-            old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
-                migration_data["old_port"]
-            )
-        except vol.Invalid:
-            return self.async_abort(reason="invalid_hardware_data")
-
-        if (
-            self.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-            != old_device_settings[CONF_DEVICE_PATH]
-        ):
-            # ZHA is using another radio, do nothing
-            return self.async_create_entry(title="", data={})
-
-        try:
-            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not running
-            pass
-
-        # Load our current network settings
-        await self._async_load_network_settings(create_backup=True)
-        self._chosen_backup = self._backups[0]
-
-        # Update the current settings, since we know them in advance
-        self._title = name
-        self._radio_type = new_radio_type
-        self._device_path = new_device_settings[CONF_DEVICE_PATH]
-        self._device_settings = new_device_settings
-        device_settings = self._device_settings.copy()  # type: ignore[union-attr]
-        self.context["title_placeholders"] = {CONF_NAME: name}
-        self.hass.config_entries.async_update_entry(
-            entry=self.config_entry,
-            data={
-                CONF_DEVICE: device_settings,
-                CONF_RADIO_TYPE: self._radio_type.name,
-            },
-            options=self.config_entry.options,
-            title=name,
-        )
-
-        return await self.async_step_finish_yellow_migration()
-
-    async def async_step_finish_yellow_migration(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Yellow/SkyConnect auto migration flow. There is no user interaction."""
-
-        if user_input is not None:
-            # Restore the backup, permanently overwriting the device IEEE address
-            for retry in range(MIGRATION_RETRIES):
-                try:
-                    await self.async_step_maybe_confirm_ezsp_restore(
-                        {OVERWRITE_COORDINATOR_IEEE: True}
-                    )
-                    _LOGGER.debug("Restored backup after %s retries", retry)
-                    return self.async_create_entry(title="", data={})
-                except OSError as err:
-                    _LOGGER.debug(
-                        "Failed to restore backup %s, retrying in %s seconds",
-                        err,
-                        CONNECT_DELAY_S,
-                    )
-
-                await asyncio.sleep(CONNECT_DELAY_S)
-            return self.async_abort(reason="migration_failed")
-
-        return self.async_show_form(step_id="finish_yellow_migration")
