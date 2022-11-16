@@ -84,6 +84,20 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
 )
 
+HHCCJCY10_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="HHCCJCY10",
+    address="DC:23:4D:E5:5B:FC",
+    device=BLEDevice("00:00:00:00:00:00", None),
+    rssi=-56,
+    manufacturer_data={},
+    service_data={"0000fd50-0000-1000-8000-00805f9b34fb": b"\x0e\x00n\x014\xa4(\x00["},
+    service_uuids=["0000fd50-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+)
+
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     name="LYWSD02MMC",
     address="A4:C1:38:56:53:84",

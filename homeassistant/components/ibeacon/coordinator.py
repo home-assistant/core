@@ -62,7 +62,7 @@ def async_name(
     """Return a name for the device."""
     if service_info.address in (
         service_info.name,
-        service_info.name.replace("_", ":"),
+        service_info.name.replace("-", ":"),
     ):
         base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
     else:
@@ -396,7 +396,11 @@ class IBeaconCoordinator:
                     )
                     continue
 
-            if service_info.rssi != ibeacon_advertisement.rssi:
+            if (
+                service_info.rssi != ibeacon_advertisement.rssi
+                or service_info.source != ibeacon_advertisement.source
+            ):
+                ibeacon_advertisement.source = service_info.source
                 ibeacon_advertisement.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,

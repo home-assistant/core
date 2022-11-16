@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "T\u00e4psemad s\u00e4tted",
                     "broker": "Vahendaja",
-                    "certificate": "Tee kohandatud CA-sertifikaadifaili juurde",
-                    "client_cert": "Kliendi serdifaili tee",
+                    "certificate": "Lae \u00fcles kohandatud CA-sertifikaadi fail",
+                    "client_cert": "Lae \u00fcles kliendi sertifikaadifail",
                     "client_id": "Kliendi ID (juhuslikult genereeritud ID jaoks j\u00e4ta t\u00fchjaks)",
-                    "client_key": "Tee privaatse v\u00f5tme faili juurde",
+                    "client_key": "Lae \u00fcles privaatv\u00f5tme fail",
                     "discovery": "Luba automaatne avastamine",
                     "keepalive": "Aegumiss\u00f5numite saatmise vaheline aeg",
                     "password": "Salas\u00f5na",

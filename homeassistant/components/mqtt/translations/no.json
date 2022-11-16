@@ -20,10 +20,10 @@
                 "data": {
                     "advanced_options": "Avanserte instillinger",
                     "broker": "Megler",
-                    "certificate": "Bane til egendefinert CA-sertifikatfil",
-                    "client_cert": "Bane til en klientsertifikatfil",
+                    "certificate": "Last opp egendefinert CA-sertifikatfil",
+                    "client_cert": "Last opp klientsertifikatfil",
                     "client_id": "Klient-ID (la st\u00e5 tomt til tilfeldig generert)",
-                    "client_key": "Bane til en privat n\u00f8kkelfil",
+                    "client_key": "Last opp privat n\u00f8kkelfil",
                     "discovery": "Aktiver oppdagelse",
                     "keepalive": "Tiden mellom sending hold levende meldinger",
                     "password": "Passord",
@@ -107,7 +107,7 @@
                     "tls_insecure": "Ignorer validering av meglersertifikat",
                     "username": "Brukernavn"
                 },
-                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler.",
+                "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler.",
                 "title": "Megleralternativer"
             },
             "options": {

@@ -20,6 +20,7 @@ from .const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
+    DOMAIN_DISCOVERIES,
     LOGGER,
     ST_IGD_V1,
     ST_IGD_V2,
@@ -47,7 +48,7 @@ def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     )
 
 
-async def _async_discover_igd_devices(
+async def _async_discovered_igd_devices(
     hass: HomeAssistant,
 ) -> list[ssdp.SsdpServiceInfo]:
     """Discovery IGD devices."""
@@ -79,9 +80,19 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
     # - user(None): scan --> user({...}) --> create_entry()
 
-    def __init__(self) -> None:
-        """Initialize the UPnP/IGD config flow."""
-        self._discoveries: list[SsdpServiceInfo] | None = None
+    @property
+    def _discoveries(self) -> dict[str, SsdpServiceInfo]:
+        """Get current discoveries."""
+        domain_data: dict = self.hass.data.setdefault(DOMAIN, {})
+        return domain_data.setdefault(DOMAIN_DISCOVERIES, {})
+
+    def _add_discovery(self, discovery: SsdpServiceInfo) -> None:
+        """Add a discovery."""
+        self._discoveries[discovery.ssdp_usn] = discovery
+
+    def _remove_discovery(self, usn: str) -> SsdpServiceInfo:
+        """Remove a discovery by its USN/unique_id."""
+        return self._discoveries.pop(usn)
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
@@ -95,7 +106,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery = next(
                 iter(
                     discovery
-                    for discovery in self._discoveries
+                    for discovery in self._discoveries.values()
                     if discovery.ssdp_usn == user_input["unique_id"]
                 )
             )
@@ -103,21 +114,19 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_discovery(discovery)
 
         # Discover devices.
-        discoveries = await _async_discover_igd_devices(self.hass)
+        discoveries = await _async_discovered_igd_devices(self.hass)
 
         # Store discoveries which have not been configured.
         current_unique_ids = {
             entry.unique_id for entry in self._async_current_entries()
         }
-        self._discoveries = [
-            discovery
-            for discovery in discoveries
+        for discovery in discoveries:
             if (
                 _is_complete_discovery(discovery)
                 and _is_igd_device(discovery)
                 and discovery.ssdp_usn not in current_unique_ids
-            )
-        ]
+            ):
+                self._add_discovery(discovery)
 
         # Ensure anything to add.
         if not self._discoveries:
@@ -128,7 +137,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required("unique_id"): vol.In(
                     {
                         discovery.ssdp_usn: _friendly_name_from_discovery(discovery)
-                        for discovery in self._discoveries
+                        for discovery in self._discoveries.values()
                     }
                 ),
             }
@@ -163,12 +172,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
         host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
-            # Store mac address for older entries.
+            # Store mac address and other data for older entries.
             # The location is stored in the config entry such that when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
                 CONFIG_ENTRY_HOST: host,
+                CONFIG_ENTRY_ST: discovery_info.ssdp_st,
             },
         )
 
@@ -204,7 +214,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
-        self._discoveries = [discovery_info]
+        self._add_discovery(discovery_info)
 
         # Ensure user recognizable.
         self.context["title_placeholders"] = {
@@ -221,9 +231,26 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="ssdp_confirm")
 
-        assert self._discoveries
-        discovery = self._discoveries[0]
+        assert self.unique_id
+        discovery = self._remove_discovery(self.unique_id)
         return await self._async_create_entry_from_discovery(discovery)
+
+    async def async_step_ignore(self, user_input: dict[str, Any]) -> FlowResult:
+        """Ignore this config flow."""
+        usn = user_input["unique_id"]
+        discovery = self._remove_discovery(usn)
+        mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
+        data = {
+            CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_ST: discovery.ssdp_st,
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_MAC_ADDRESS: mac_address,
+            CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
+            CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
+        }
+
+        await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
+        return self.async_create_entry(title=user_input["title"], data=data)
 
     async def _async_create_entry_from_discovery(
         self,
@@ -243,5 +270,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
+            CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }
         return self.async_create_entry(title=title, data=data)

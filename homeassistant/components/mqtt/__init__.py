@@ -95,12 +95,12 @@ from .models import (  # noqa: F401
     ReceivePayloadType,
 )
 from .util import (
-    _VALID_QOS_SCHEMA,
     async_create_certificate_temp_files,
     get_mqtt_data,
     migrate_certificate_file_to_content,
     mqtt_config_entry_enabled,
     valid_publish_topic,
+    valid_qos_schema,
     valid_subscribe_topic,
 )
 
@@ -172,7 +172,7 @@ MQTT_PUBLISH_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
         required=True,

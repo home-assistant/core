@@ -5,7 +5,7 @@ from collections.abc import Callable
 import functools
 import logging
 import math
-from typing import Any, Generic, NamedTuple, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
@@ -54,6 +54,9 @@ from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
+
+if TYPE_CHECKING:
+    from homeassistant.components.tag import TagProtocol
 
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
@@ -133,7 +136,7 @@ async def async_setup_entry(  # noqa: C901
             if service_name == "tag_scanned" and device_id is not None:
                 # Importing tag via hass.components in case it is overridden
                 # in a custom_components (custom_components.tag)
-                tag = hass.components.tag
+                tag: TagProtocol = hass.components.tag
                 tag_id = service_data["tag_id"]
                 hass.async_create_task(tag.async_scan_tag(tag_id, device_id))
                 return
