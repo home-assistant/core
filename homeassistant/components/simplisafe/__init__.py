@@ -139,22 +139,14 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_NAME_CLEAR_NOTIFICATIONS = "clear_notifications"
 SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICES = (
-    SERVICE_NAME_CLEAR_NOTIFICATIONS,
     SERVICE_NAME_REMOVE_PIN,
     SERVICE_NAME_SET_PIN,
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
-SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-    },
 )
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
@@ -386,19 +378,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @_verify_domain_control
     @extract_system
-    async def async_clear_notifications(call: ServiceCall, system: SystemType) -> None:
-        """Clear all active notifications."""
-        _async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            "button.alarm_control_panel_clear_notifications",
-            "2022.12.0",
-        )
-        await system.async_clear_notifications()
-
-    @_verify_domain_control
-    @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
         await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
@@ -423,11 +402,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service, method, schema in (
-        (
-            SERVICE_NAME_CLEAR_NOTIFICATIONS,
-            async_clear_notifications,
-            SERVICE_CLEAR_NOTIFICATIONS_SCHEMA,
-        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (

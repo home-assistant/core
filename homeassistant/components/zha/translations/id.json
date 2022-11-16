@@ -61,7 +61,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
                 },
-                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda. Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
             },
             "pick_radio": {
@@ -207,7 +207,7 @@
                 "title": "Pilih Port Serial"
             },
             "init": {
-                "description": "ZHA akan dihentikan.  Ingin melanjutkan?",
+                "description": "ZHA akan dihentikan. Ingin melanjutkan?",
                 "title": "Konfigurasi Ulang ZHA"
             },
             "instruct_unplug": {
@@ -215,7 +215,7 @@
                 "title": "Cabut radio lama Anda"
             },
             "intent_migrate": {
-                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan.  Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
+                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan. Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
                 "title": "Migrasikan ke radio baru"
             },
             "manual_pick_radio_type": {
@@ -238,7 +238,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
                 },
-                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda. Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
             },
             "prompt_migrate_or_reconfigure": {

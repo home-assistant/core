@@ -1,29 +1,22 @@
-message:
-  name: Display a message
-  description: Display a message with an optional icon on a LaMetric device.
+chart:
+  name: Display a chart
+  description: Display a chart on a LaMetric device.
   fields:
-    device_id:
+    device_id: &device_id
       name: Device
-      description: The LaMetric device to display the message on.
+      description: The LaMetric device to display the chart on.
       required: true
       selector:
         device:
           integration: lametric
-    message:
-      name: Message
-      description: The message to display.
+    data:
+      name: Data
+      description: The list of data points in the chart
       required: true
+      example: "[1,2,3,4,5,4,3,2,1]"
       selector:
-        text:
-    icon:
-      name: Icon
-      description: >-
-        The ID number of the icon or animation to display. List of all icons
-        and their IDs can be found at: https://developer.lametric.com/icons
-      required: false
-      selector:
-        text:
-    sound:
+        object:
+    sound: &sound
       name: Sound
       description: The notification sound to play.
       required: false
@@ -126,7 +119,7 @@ message:
               value: "wind"
             - label: "Wind short"
               value: "wind_short"
-    cycles:
+    cycles: &cycles
       name: Cycles
       description: >-
         The number of times to display the message. When set to 0, the message
@@ -138,7 +131,7 @@ message:
           min: 0
           max: 10
           mode: slider
-    icon_type:
+    icon_type: &icon_type
       name: Icon type
       description: >-
         The type of icon to display, indicating the nature of the notification.
@@ -154,7 +147,7 @@ message:
               value: "info"
             - label: "Alert"
               value: "alert"
-    priority:
+    priority: &priority
       name: Priority
       description: >-
         The priority of the notification. When the device is running in
@@ -172,3 +165,27 @@ message:
               value: "warning"
             - label: "Critical"
               value: "critical"
+
+message:
+  name: Display a message
+  description: Display a message with an optional icon on a LaMetric device.
+  fields:
+    device_id: *device_id
+    message:
+      name: Message
+      description: The message to display.
+      required: true
+      selector:
+        text:
+    icon:
+      name: Icon
+      description: >-
+        The ID number of the icon or animation to display. List of all icons
+        and their IDs can be found at: https://developer.lametric.com/icons
+      required: false
+      selector:
+        text:
+    sound: *sound
+    cycles: *cycles
+    icon_type: *icon_type
+    priority: *priority

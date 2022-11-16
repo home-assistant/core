@@ -771,6 +771,56 @@ async def test_state_characteristics(hass: HomeAssistant):
         },
         {
             "source_sensor_domain": "sensor",
+            "name": "sum",
+            "value_0": STATE_UNKNOWN,
+            "value_1": float(VALUES_NUMERIC[-1]),
+            "value_9": float(sum(VALUES_NUMERIC)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        abs(20 - 17),
+                        abs(15.2 - 20),
+                        abs(5 - 15.2),
+                        abs(3.8 - 5),
+                        abs(9.2 - 3.8),
+                        abs(6.7 - 9.2),
+                        abs(14 - 6.7),
+                        abs(6 - 14),
+                    ]
+                )
+            ),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences_nonnegative",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        20 - 17,
+                        15.2 - 0,
+                        5 - 0,
+                        3.8 - 0,
+                        9.2 - 3.8,
+                        6.7 - 0,
+                        14 - 6.7,
+                        6 - 0,
+                    ]
+                )
+            ),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
             "name": "total",
             "value_0": STATE_UNKNOWN,
             "value_1": float(VALUES_NUMERIC[-1]),
@@ -1010,7 +1060,7 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
     assert state is None
 
 
-async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the recorder database."""
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
@@ -1049,7 +1099,7 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
 
-async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database_with_maxage(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the database."""
     now = dt_util.utcnow()
     mock_data = {
@@ -1109,7 +1159,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
     ) + timedelta(hours=1)
 
 
-async def test_reload(hass: HomeAssistant, recorder_mock):
+async def test_reload(recorder_mock, hass: HomeAssistant):
     """Verify we can reload statistics sensors."""
 
     await async_setup_component(

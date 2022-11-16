@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "El valor de moneda {currency} ja no s'utilitza, modifica la configuraci\u00f3 del valor de moneda.",
+            "title": "El valor de moneda configurat ja no s'utilitza"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Arquitectura de la CPU",

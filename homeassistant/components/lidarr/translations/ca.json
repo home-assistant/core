@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "max_records": "Nombre m\u00e0xim de registres a mostrar a la cua i a desitjats",
                     "upcoming_days": "Nombre dies propers a mostrar al calendari"
                 }
             }

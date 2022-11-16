@@ -19,7 +19,7 @@
                     "host": "IP-Adresse",
                     "port": "Port"
                 },
-                "description": "Konfiguriere den Insteon Hub Version 1 (vor 2014).",
+                "description": "Konfiguriere den Insteon Hub Version 1 (pr\u00e4-2014).",
                 "title": "Insteon Hub Version 1"
             },
             "hubv2": {

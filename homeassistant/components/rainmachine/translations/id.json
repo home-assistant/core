@@ -35,6 +35,7 @@
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Gunakan waktu berjalan zona dari aplikasi RainMachine",
                     "zone_run_time": "Waktu berjalan zona default (dalam detik)"
                 },
                 "title": "Konfigurasikan RainMachine"

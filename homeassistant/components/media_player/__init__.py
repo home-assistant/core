@@ -920,9 +920,7 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            await self.hass.async_add_executor_job(
-                self.toggle  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in {
@@ -940,9 +938,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            await self.hass.async_add_executor_job(
-                self.volume_up  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if (
@@ -958,9 +954,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            await self.hass.async_add_executor_job(
-                self.volume_down  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if (
@@ -973,9 +967,7 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            await self.hass.async_add_executor_job(
-                self.media_play_pause  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == MediaPlayerState.PLAYING:

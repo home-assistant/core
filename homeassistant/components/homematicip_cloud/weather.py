@@ -64,8 +64,7 @@ async def async_setup_entry(
 
     entities.append(HomematicipHomeWeather(hap))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):

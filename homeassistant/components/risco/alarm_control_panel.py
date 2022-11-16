@@ -40,7 +40,7 @@ from .const import (
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
-from .entity import RiscoEntity
+from .entity import RiscoCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
         raise NotImplementedError
 
 
-class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
+class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     """Representation of a Risco partition."""
 
     def __init__(

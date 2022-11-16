@@ -26,18 +26,18 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
 )
 from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
@@ -407,7 +407,7 @@ class Recorder(threading.Thread):
         await self.hass.async_add_executor_job(self.join)
 
     @callback
-    def _async_hass_started(self, event: Event) -> None:
+    def _async_hass_started(self, hass: HomeAssistant) -> None:
         """Notify that hass has started."""
         self._hass_started.set_result(None)
 
@@ -417,10 +417,7 @@ class Recorder(threading.Thread):
         bus = self.hass.bus
         bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
-        if self.hass.state == CoreState.running:
-            self._hass_started.set_result(None)
-            return
-        bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._async_hass_started)
+        async_at_started(self.hass, self._async_hass_started)
 
     @callback
     def async_connection_failed(self) -> None:

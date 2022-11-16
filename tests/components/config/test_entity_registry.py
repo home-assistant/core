@@ -345,7 +345,7 @@ async def test_update_entity(hass, client):
             "platform": "test_platform",
             "unique_id": "1234",
         },
-        "reload_delay": 30,
+        "require_restart": True,
     }
 
     # UPDATE ENTITY OPTION

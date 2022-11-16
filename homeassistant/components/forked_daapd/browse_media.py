@@ -172,7 +172,7 @@ async def get_owntone_content(
             result = await master.api.get_artists()  # list of artists with name, uri
         elif media_content.type == MediaType.GENRE:
             if result := await master.api.get_genres():  # returns list of genre names
-                for item in result:  # pylint: disable=not-an-iterable
+                for item in result:
                     # add generated genre uris to list of genre names
                     item["uri"] = create_owntone_uri(
                         MediaType.GENRE, cast(str, item["name"])

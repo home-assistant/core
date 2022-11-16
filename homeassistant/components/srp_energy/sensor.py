@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -83,6 +83,7 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
     def __init__(self, coordinator):
@@ -126,17 +127,6 @@ class SrpEntity(SensorEntity):
         if self.coordinator.data:
             return f"{self.coordinator.data:.2f}"
         return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if not self.coordinator.data:
-            return None
-        attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-
-        return attributes
 
     @property
     def available(self):

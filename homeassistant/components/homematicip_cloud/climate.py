@@ -51,8 +51,7 @@ async def async_setup_entry(
         if isinstance(device, AsyncHeatingGroup):
             entities.append(HomematicipHeatingGroup(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):

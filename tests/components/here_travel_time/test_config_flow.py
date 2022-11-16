@@ -31,7 +31,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .const import (
     API_KEY,
@@ -232,7 +236,7 @@ async def test_step_destination_coordinates(
     "unit_system, expected_unit_option",
     [
         (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
     ],
 )
 async def test_step_destination_entity(

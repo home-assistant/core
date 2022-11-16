@@ -6,6 +6,12 @@
       "cooling": "Cooling",
       "heating": "Heating",
       "off": "Off"
+    },
+    "plugwise__dhw_mode": {
+      "off": "Off",
+      "auto": "Auto",
+      "boost": "Boost",
+      "comfort": "Comfort"
     }
   }
 }

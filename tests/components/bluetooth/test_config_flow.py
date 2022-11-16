@@ -37,7 +37,6 @@ async def test_options_flow_disabled_not_setup(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()
@@ -341,7 +340,6 @@ async def test_options_flow_disabled_macos(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()
@@ -371,7 +369,6 @@ async def test_options_flow_enabled_linux(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()

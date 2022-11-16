@@ -1,6 +1,8 @@
 """Test configuration for Shelly."""
 from unittest.mock import AsyncMock, Mock, patch
 
+from aioshelly.block_device import BlockDevice
+from aioshelly.rpc_device import RpcDevice
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -8,13 +10,15 @@ from homeassistant.components.shelly.const import (
     REST_SENSORS_UPDATE_INTERVAL,
 )
 
+from . import MOCK_MAC
+
 from tests.common import async_capture_events, async_mock_service, mock_device_registry
 
 MOCK_SETTINGS = {
     "name": "Test name",
     "mode": "relay",
     "device": {
-        "mac": "test-mac",
+        "mac": MOCK_MAC,
         "hostname": "test-host",
         "type": "SHSW-25",
         "num_outputs": 2,
@@ -95,7 +99,7 @@ MOCK_CONFIG = {
 }
 
 MOCK_SHELLY_COAP = {
-    "mac": "test-mac",
+    "mac": MOCK_MAC,
     "auth": False,
     "fw": "20201124-092854/v1.9.0@57ac4ad8",
     "num_outputs": 2,
@@ -104,7 +108,7 @@ MOCK_SHELLY_COAP = {
 MOCK_SHELLY_RPC = {
     "name": "Test Gen2",
     "id": "shellyplus2pm-123456789abc",
-    "mac": "123456789ABC",
+    "mac": MOCK_MAC,
     "model": "SNSW-002P16EU",
     "gen": 2,
     "fw_id": "20220830-130540/0.11.0-gfa1bc37",
@@ -142,7 +146,20 @@ MOCK_STATUS_RPC = {
 @pytest.fixture(autouse=True)
 def mock_coap():
     """Mock out coap."""
-    with patch("homeassistant.components.shelly.utils.get_coap_context"):
+    with patch(
+        "homeassistant.components.shelly.utils.COAP",
+        return_value=Mock(
+            initialize=AsyncMock(),
+            close=Mock(),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ws_server():
+    """Mock out ws_server."""
+    with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
 
 
@@ -167,24 +184,18 @@ def events(hass):
 @pytest.fixture
 async def mock_block_device():
     """Mock block (Gen1, CoAP) device."""
-    with patch("homeassistant.components.shelly.utils.COAP", autospec=True), patch(
-        "aioshelly.block_device.BlockDevice.create"
-    ) as block_device_mock:
+    with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
 
         def update():
             block_device_mock.return_value.subscribe_updates.call_args[0][0]({})
 
         device = Mock(
+            spec=BlockDevice,
             blocks=MOCK_BLOCKS,
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
-            update=AsyncMock(),
-            update_status=AsyncMock(),
-            trigger_ota_update=AsyncMock(),
-            trigger_reboot=AsyncMock(),
-            initialize=AsyncMock(),
             initialized=True,
         )
         block_device_mock.return_value = device
@@ -202,17 +213,13 @@ async def mock_rpc_device():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0]({})
 
         device = Mock(
-            call_rpc=AsyncMock(),
+            spec=RpcDevice,
             config=MOCK_CONFIG,
             event={},
             shelly=MOCK_SHELLY_RPC,
             status=MOCK_STATUS_RPC,
             firmware_version="some fw string",
-            update=AsyncMock(),
-            trigger_ota_update=AsyncMock(),
-            trigger_reboot=AsyncMock(),
             initialized=True,
-            shutdown=AsyncMock(),
         )
 
         rpc_device_mock.return_value = device

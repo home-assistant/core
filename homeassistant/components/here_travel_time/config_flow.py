@@ -24,7 +24,7 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -98,7 +98,7 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
         CONF_DEPARTURE_TIME: None,
         CONF_UNIT_SYSTEM: METRIC_UNITS,
     }
-    if hass.config.units is IMPERIAL_SYSTEM:
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
         default[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
     return default
 

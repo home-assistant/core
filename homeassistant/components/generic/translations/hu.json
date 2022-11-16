@@ -50,7 +50,7 @@
                 "data": {
                     "confirmed_ok": "A k\u00e9p megfelel\u0151"
                 },
-                "description": "![Kamerak\u00e9p el\u0151n\u00e9zet] ({preview_url})",
+                "description": "![Kamerak\u00e9p el\u0151n\u00e9zet]({preview_url})",
                 "title": "El\u0151n\u00e9zet"
             }
         }
@@ -75,6 +75,13 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "A k\u00e9p megfelel\u0151"
+                },
+                "description": "![Kamerak\u00e9p el\u0151n\u00e9zet]({preview_url})",
+                "title": "El\u0151n\u00e9zet"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tartalom t\u00edpus"

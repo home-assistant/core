@@ -3,8 +3,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM as IMPERIAL,
     METRIC_SYSTEM as METRIC,
+    US_CUSTOMARY_SYSTEM as IMPERIAL,
     UnitSystem,
 )
 

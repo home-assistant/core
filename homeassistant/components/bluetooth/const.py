@@ -51,12 +51,21 @@ FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
 # to be
 # 180s Time when device is removed from stack
 # - 30s check interval
-# - 20s scanner restart time * 2
+# - 30s scanner restart time * 2
 #
-SCANNER_WATCHDOG_TIMEOUT: Final = 110
+SCANNER_WATCHDOG_TIMEOUT: Final = 90
 # How often to check if the scanner has reached
 # the SCANNER_WATCHDOG_TIMEOUT without seeing anything
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
+
+
+# When the linux kernel is configured with
+# CONFIG_FW_LOADER_USER_HELPER_FALLBACK it
+# can take up to 120s before the USB device
+# is available if the firmware files
+# are not present
+LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS = 120
+BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS = 5
 
 
 class AdapterDetails(TypedDict, total=False):
@@ -72,6 +81,3 @@ ADAPTER_ADDRESS: Final = "address"
 ADAPTER_SW_VERSION: Final = "sw_version"
 ADAPTER_HW_VERSION: Final = "hw_version"
 ADAPTER_PASSIVE_SCAN: Final = "passive_scan"
-
-
-NO_RSSI_VALUE: Final = -127

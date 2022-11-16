@@ -80,13 +80,13 @@ def config_entry_fixture(hass, config_auth, config_coordinates):
     return entry
 
 
-@pytest.fixture(name="data_grid_region", scope="session")
+@pytest.fixture(name="data_grid_region", scope="package")
 def data_grid_region_fixture():
     """Define grid region data."""
     return json.loads(load_fixture("grid_region_data.json", "watttime"))
 
 
-@pytest.fixture(name="data_realtime_emissions", scope="session")
+@pytest.fixture(name="data_realtime_emissions", scope="package")
 def data_realtime_emissions_fixture():
     """Define realtime emissions data."""
     return json.loads(load_fixture("realtime_emissions_data.json", "watttime"))

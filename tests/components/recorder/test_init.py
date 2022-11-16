@@ -92,7 +92,7 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant, tmp_path
 ):
     """Test shutdown before recorder starts is clean."""
 
@@ -124,8 +124,8 @@ async def test_shutdown_before_startup_finishes(
 
 
 async def test_canceled_before_startup_finishes(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test recorder shuts down when its startup future is canceled out from under it."""
@@ -145,7 +145,7 @@ async def test_canceled_before_startup_finishes(
     )
 
 
-async def test_shutdown_closes_connections(hass, recorder_mock):
+async def test_shutdown_closes_connections(recorder_mock, hass):
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
@@ -171,7 +171,7 @@ async def test_shutdown_closes_connections(hass, recorder_mock):
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
     """Test we can record an event when starting with not running."""
 
@@ -197,7 +197,7 @@ async def test_state_gets_saved_when_set_before_start_event(
         assert db_states[0].event_id is None
 
 
-async def test_saving_state(hass: HomeAssistant, recorder_mock):
+async def test_saving_state(recorder_mock, hass: HomeAssistant):
     """Test saving and restoring a state."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -220,7 +220,7 @@ async def test_saving_state(hass: HomeAssistant, recorder_mock):
 
 
 async def test_saving_many_states(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
@@ -248,7 +248,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    hass: HomeAssistant, recorder_mock
+    recorder_mock, hass: HomeAssistant
 ):
     """Test saving states with intermixed time changes."""
     entity_id = "test.recorder"
@@ -348,7 +348,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
 
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
-    hass, async_setup_recorder_instance, caplog
+    async_setup_recorder_instance, hass, caplog
 ):
     """Test forcing shutdown."""
     instance = await async_setup_recorder_instance(hass)
@@ -1370,8 +1370,8 @@ def test_entity_id_filter(hass_recorder):
 
 
 async def test_database_lock_and_unlock(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
@@ -1412,8 +1412,8 @@ async def test_database_lock_and_unlock(
 
 
 async def test_database_lock_and_overflow(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
@@ -1450,8 +1450,12 @@ async def test_database_lock_and_overflow(
         assert not instance.unlock_database()
 
 
-async def test_database_lock_timeout(hass, recorder_mock):
+async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
     """Test locking database timeout when recorder stopped."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     instance = get_instance(hass)
@@ -1473,7 +1477,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
             block_task.event.set()
 
 
-async def test_database_lock_without_instance(hass, recorder_mock):
+async def test_database_lock_without_instance(recorder_mock, hass):
     """Test database lock doesn't fail if instance is not initialized."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -1494,8 +1498,8 @@ async def test_in_memory_database(hass, caplog):
 
 
 async def test_database_connection_keep_alive(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test we keep alive socket based dialects."""
@@ -1514,11 +1518,16 @@ async def test_database_connection_keep_alive(
 
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    recorder_db_url: str,
 ):
     """Test we do not do keep alive for sqlite."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite, keepalive runs on other engines
+        return
+
     instance = await async_setup_recorder_instance(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await instance.async_recorder_ready.wait()
@@ -1590,7 +1599,7 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         assert first_attributes_id == last_attributes_id
 
 
-async def test_async_block_till_done(hass, async_setup_recorder_instance):
+async def test_async_block_till_done(async_setup_recorder_instance, hass):
     """Test we can block until recordering is done."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)

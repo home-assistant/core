@@ -13,8 +13,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import OpenUV
 from .const import DOMAIN
+from .coordinator import OpenUvCoordinator
 
 CONF_COORDINATES = "coordinates"
 CONF_TITLE = "title"
@@ -33,9 +33,15 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    openuv: OpenUV = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
-    return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": async_redact_data(openuv.data, TO_REDACT),
-    }
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "data": {
+                coordinator_name: coordinator.data
+                for coordinator_name, coordinator in coordinators.items()
+            },
+        },
+        TO_REDACT,
+    )

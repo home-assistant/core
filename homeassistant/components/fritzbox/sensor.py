@@ -76,7 +76,11 @@ def suitable_temperature(device: FritzhomeDevice) -> bool:
 
 def value_electric_current(device: FritzhomeDevice) -> float:
     """Return native value for electric current sensor."""
-    if isinstance(device.power, int) and isinstance(device.voltage, int):
+    if (
+        isinstance(device.power, int)
+        and isinstance(device.voltage, int)
+        and device.voltage > 0
+    ):
         return round(device.power / device.voltage, 3)
     return 0.0
 

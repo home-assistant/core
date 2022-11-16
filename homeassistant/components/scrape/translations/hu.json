@@ -36,6 +36,12 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "description": "A Scrape konfigur\u00e1l\u00e1sa YAML haszn\u00e1lat\u00e1val \u00e1tker\u00fclt az integr\u00e1ci\u00f3ba.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3 m\u00e9g 2 verzi\u00f3n kereszt\u00fcl fog m\u0171k\u00f6dni.\n\nA dokument\u00e1ci\u00f3nak megfelel\u0151en migr\u00e1lja a YAML konfigur\u00e1ci\u00f3j\u00e1t az integr\u00e1ci\u00f3s kulcsra.",
+            "title": "A Scrape YAML konfigur\u00e1ci\u00f3 \u00e1thelyez\u00e9sre ker\u00fclt"
+        }
+    },
     "options": {
         "step": {
             "init": {

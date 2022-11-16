@@ -1,7 +1,8 @@
 """Shared schema code."""
 import voluptuous as vol
 
-CONF_SCHEMA = "schema"
+from ..const import CONF_SCHEMA
+
 LEGACY = "legacy"
 STATE = "state"
 

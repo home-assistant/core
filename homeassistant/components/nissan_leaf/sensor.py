@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import LeafEntity
 from .const import (
@@ -123,7 +123,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         if ret is None:
             return None
 
-        if self.car.hass.config.units is IMPERIAL_SYSTEM or self.car.force_miles:
+        if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
             ret = DistanceConverter.convert(ret, LENGTH_KILOMETERS, LENGTH_MILES)
 
         return round(ret)
@@ -131,7 +131,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Battery range unit."""
-        if self.car.hass.config.units is IMPERIAL_SYSTEM or self.car.force_miles:
+        if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
             return LENGTH_MILES
         return LENGTH_KILOMETERS
 

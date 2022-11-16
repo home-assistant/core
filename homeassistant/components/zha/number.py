@@ -19,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_BASIC,
+    CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
     DATA_ZHA,
@@ -528,6 +530,31 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_name = "Start-up current level"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_COLOR)
+class StartUpColorTemperatureConfigurationEntity(
+    ZHANumberConfigurationEntity, id_suffix="start_up_color_temperature"
+):
+    """Representation of a ZHA startup color temperature configuration entity."""
+
+    _attr_native_min_value: float = 153
+    _attr_native_max_value: float = 500
+    _zcl_attribute: str = "start_up_color_temperature"
+    _attr_name = "Start-up color temperature"
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this ZHA startup color temperature entity."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        if self._channel:
+            self._attr_native_min_value: float = self._channel.min_mireds
+            self._attr_native_max_value: float = self._channel.max_mireds
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names="tuya_manufacturer",
     manufacturers={
@@ -557,6 +584,20 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
     _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"TexasInstruments"},
+    models={"ti.router"},
+)
+class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
+    """Representation of a ZHA TI transmit power configuration entity."""
+
+    _attr_native_min_value: float = -20
+    _attr_native_max_value: float = 20
+    _zcl_attribute: str = "transmit_power"
+    _attr_name = "Transmit power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any, cast
 
 from goodwe import Inverter, Sensor, SensorKind
@@ -35,6 +36,8 @@ from homeassistant.helpers.update_coordinator import (
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
+
+_LOGGER = logging.getLogger(__name__)
 
 # Sensor name of battery SoC
 BATTERY_SOC = "battery_soc"
@@ -209,7 +212,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._previous_value = 0
             self.coordinator.data[self._sensor.id_] = 0
             self.async_write_ha_state()
-        next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
+            _LOGGER.debug("Goodwe reset %s to 0", self.name)
+        next_midnight = dt_util.start_of_local_day(
+            dt_util.now() + timedelta(days=1, minutes=1)
+        )
         self._stop_reset = async_track_point_in_time(
             self.hass, self.async_reset, next_midnight
         )
@@ -218,7 +224,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
             next_midnight = dt_util.start_of_local_day(
-                dt_util.utcnow() + timedelta(days=1)
+                dt_util.now() + timedelta(days=1)
             )
             self._stop_reset = async_track_point_in_time(
                 self.hass, self.async_reset, next_midnight

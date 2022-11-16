@@ -1,4 +1,6 @@
 """Send instance and usage analytics."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -41,7 +43,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 async def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Return analytics preferences."""
     analytics: Analytics = hass.data[DOMAIN]
@@ -62,7 +64,7 @@ async def websocket_analytics(
 async def websocket_analytics_preferences(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Update analytics preferences."""
     preferences = msg[ATTR_PREFERENCES]

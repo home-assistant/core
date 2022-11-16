@@ -6,5 +6,6 @@
   "requirements": ["numpy==1.23.2", "pyiqvia==2022.04.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
-  "loggers": ["pyiqvia"]
+  "loggers": ["pyiqvia"],
+  "integration_type": "service"
 }

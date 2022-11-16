@@ -25,7 +25,7 @@ import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment
+from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -559,8 +559,11 @@ class Template:
 
     @callback
     def async_render_with_possible_json_value(
-        self, value, error_value=_SENTINEL, variables=None
-    ):
+        self,
+        value: Any,
+        error_value: Any = _SENTINEL,
+        variables: dict[str, Any] | None = None,
+    ) -> Any:
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -570,8 +573,7 @@ class Template:
         if self.is_static:
             return self.template
 
-        if self._compiled is None:
-            self._ensure_compiled()
+        compiled = self._compiled or self._ensure_compiled()
 
         variables = dict(variables or {})
         variables["value"] = value
@@ -580,9 +582,7 @@ class Template:
             variables["value_json"] = json_loads(value)
 
         try:
-            return _render_with_context(
-                self.template, self._compiled, **variables
-            ).strip()
+            return _render_with_context(self.template, compiled, **variables).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
@@ -1063,8 +1063,8 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
-def entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get an entry ID from an entity ID."""
+def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get an config entry ID from an entity ID."""
     entity_reg = entity_registry.async_get(hass)
     if entity := entity_reg.async_get(entity_id):
         return entity.config_entry_id
@@ -2090,8 +2090,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
-        self.globals["entry_id"] = hassfunction(entry_id)
-        self.filters["entry_id"] = pass_context(self.globals["entry_id"])
+        self.globals["config_entry_id"] = hassfunction(config_entry_id)
+        self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
 
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])
@@ -2153,9 +2153,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
+        self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
+        self.tests["is_state_attr"] = pass_eval_context(self.globals["is_state_attr"])
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
+        self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
 
