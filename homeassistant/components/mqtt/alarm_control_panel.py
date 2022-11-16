@@ -243,7 +243,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return (
             AlarmControlPanelEntityFeature.ARM_HOME
