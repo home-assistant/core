@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final
@@ -56,7 +56,7 @@ STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
 
-class WaterHeaterEntityFeature(IntEnum):
+class WaterHeaterEntityFeature(IntFlag):
     """Supported features of the fan entity."""
 
     TARGET_TEMPERATURE = 1

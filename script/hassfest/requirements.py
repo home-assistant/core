@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
+from functools import cache
 import json
 import os
 import re
@@ -31,12 +32,12 @@ SUPPORTED_PYTHON_TUPLES = [
 ]
 if REQUIRED_PYTHON_VER[0] == REQUIRED_NEXT_PYTHON_VER[0]:
     for minor in range(REQUIRED_PYTHON_VER[1] + 1, REQUIRED_NEXT_PYTHON_VER[1] + 1):
-        SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
+        if minor < 10:  # stdlib list does not support 3.10+
+            SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
 SUPPORTED_PYTHON_VERSIONS = [
     ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
 ]
 STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
-PIPDEPTREE_CACHE = None
 
 IGNORE_VIOLATIONS = {
     # Still has standard library requirements.
@@ -59,8 +60,6 @@ def validate(integrations: dict[str, Integration], config: Config):
         for integration in integrations.values():
             validate_requirements_format(integration)
         return
-
-    ensure_cache()
 
     # check for incompatible requirements
 
@@ -167,8 +166,9 @@ def validate_requirements(integration: Integration):
                 )
 
 
-def ensure_cache():
-    """Ensure we have a cache of pipdeptree.
+@cache
+def get_pipdeptree():
+    """Get pipdeptree output. Cached on first invocation.
 
     {
         "flake8-docstring": {
@@ -179,12 +179,7 @@ def ensure_cache():
         }
     }
     """
-    global PIPDEPTREE_CACHE
-
-    if PIPDEPTREE_CACHE is not None:
-        return
-
-    cache = {}
+    deptree = {}
 
     for item in json.loads(
         subprocess.run(
@@ -194,17 +189,16 @@ def ensure_cache():
             text=True,
         ).stdout
     ):
-        cache[item["package"]["key"]] = {
+        deptree[item["package"]["key"]] = {
             **item["package"],
             "dependencies": {dep["key"] for dep in item["dependencies"]},
         }
-
-    PIPDEPTREE_CACHE = cache
+    return deptree
 
 
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
-    ensure_cache()
+    deptree = get_pipdeptree()
 
     all_requirements = set()
 
@@ -218,7 +212,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
         all_requirements.add(package)
 
-        item = PIPDEPTREE_CACHE.get(package)
+        item = deptree.get(package)
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -238,9 +232,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
 
     Return True if successful.
     """
-    global PIPDEPTREE_CACHE
-
-    ensure_cache()
+    deptree = get_pipdeptree()
 
     for req in requirements:
         match = PIP_REGEX.search(req)
@@ -261,7 +253,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
 
         if normalized and "==" in requirement_arg:
             ver = requirement_arg.split("==")[-1]
-            item = PIPDEPTREE_CACHE.get(normalized)
+            item = deptree.get(normalized)
             is_installed = item and item["installed_version"] == ver
 
         if not is_installed:
@@ -287,7 +279,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         else:
             # Clear the pipdeptree cache if something got installed
             if "Successfully installed" in result.stdout:
-                PIPDEPTREE_CACHE = None
+                get_pipdeptree.cache_clear()
 
     if integration.errors:
         return False

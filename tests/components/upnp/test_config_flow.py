@@ -63,6 +63,42 @@ async def test_flow_ssdp(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
+    }
+
+
+@pytest.mark.usefixtures(
+    "ssdp_instant_discovery",
+    "mock_setup_entry",
+    "mock_get_source_ip",
+    "mock_mac_address_from_host",
+)
+async def test_flow_ssdp_ignore(hass: HomeAssistant):
+    """Test config flow: discovered + ignore through ssdp."""
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=TEST_DISCOVERY,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    # Ignore entry.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": TEST_USN, "title": TEST_FRIENDLY_NAME},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_FRIENDLY_NAME
+    assert result["data"] == {
+        CONFIG_ENTRY_ST: TEST_ST,
+        CONFIG_ENTRY_UDN: TEST_UDN,
+        CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+        CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+        CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -138,6 +174,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: None,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -382,6 +419,7 @@ async def test_flow_user(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 

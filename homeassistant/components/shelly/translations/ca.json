@@ -58,5 +58,14 @@
             "single_push": "{subtype} clicat una vegada",
             "triple": "{subtype} clicat tres vegades"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Mode d'escaneig Bluetooth"
+                }
+            }
+        }
     }
 }

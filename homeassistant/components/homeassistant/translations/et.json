@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "Valuuta {currency} ei ole enam kasutusel, seadista valuuta uuesti.",
+            "title": "Seadistatud valuutat enam ei kasutata"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Protsessori arhitektuur",

@@ -11,8 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from ..const import CONF_SCHEMA
 from ..mixins import async_setup_entry_helper, async_setup_platform_helper
-from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
+from .schema import LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
     PLATFORM_SCHEMA_LEGACY,
@@ -27,26 +28,29 @@ from .schema_state import (
 )
 
 
-def validate_mqtt_vacuum_discovery(value):
+def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
     schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
 # Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
-def validate_mqtt_vacuum(value):
+def validate_mqtt_vacuum(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema (deprecated)."""
     schemas = {LEGACY: PLATFORM_SCHEMA_LEGACY, STATE: PLATFORM_SCHEMA_STATE}
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
-def validate_mqtt_vacuum_modern(value):
+def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum modern schema."""
     schemas = {
         LEGACY: PLATFORM_SCHEMA_LEGACY_MODERN,
         STATE: PLATFORM_SCHEMA_STATE_MODERN,
     }
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
 DISCOVERY_SCHEMA = vol.All(
@@ -96,8 +100,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT vacuum."""
     setup_entity = {

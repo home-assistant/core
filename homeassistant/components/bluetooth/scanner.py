@@ -125,6 +125,7 @@ class HaScanner(BaseHaScanner):
         mode: BluetoothScanningMode,
         adapter: str,
         address: str,
+        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
     ) -> None:
         """Init bluetooth discovery."""
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
@@ -135,7 +136,7 @@ class HaScanner(BaseHaScanner):
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
+        self._new_info_callback = new_info_callback
         self.name = adapter_human_name(adapter, address)
 
     @property
@@ -169,22 +170,6 @@ class HaScanner(BaseHaScanner):
         }
 
     @hass_callback
-    def async_register_callback(
-        self, callback: Callable[[BluetoothServiceInfoBleak], None]
-    ) -> CALLBACK_TYPE:
-        """Register a callback.
-
-        Currently this is used to feed the callbacks into the
-        central manager.
-        """
-
-        def _remove() -> None:
-            self._callbacks.remove(callback)
-
-        self._callbacks.append(callback)
-        return _remove
-
-    @hass_callback
     def _async_detection_callback(
         self,
         device: BLEDevice,
@@ -206,21 +191,21 @@ class HaScanner(BaseHaScanner):
             # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
-        service_info = BluetoothServiceInfoBleak(
-            name=advertisement_data.local_name or device.name or device.address,
-            address=device.address,
-            rssi=device.rssi,
-            manufacturer_data=advertisement_data.manufacturer_data,
-            service_data=advertisement_data.service_data,
-            service_uuids=advertisement_data.service_uuids,
-            source=self.source,
-            device=device,
-            advertisement=advertisement_data,
-            connectable=True,
-            time=callback_time,
+        self._new_info_callback(
+            BluetoothServiceInfoBleak(
+                name=advertisement_data.local_name or device.name or device.address,
+                address=device.address,
+                rssi=advertisement_data.rssi,
+                manufacturer_data=advertisement_data.manufacturer_data,
+                service_data=advertisement_data.service_data,
+                service_uuids=advertisement_data.service_uuids,
+                source=self.source,
+                device=device,
+                advertisement=advertisement_data,
+                connectable=True,
+                time=callback_time,
+            )
         )
-        for callback in self._callbacks:
-            callback(service_info)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""

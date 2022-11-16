@@ -19,7 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 
 @respx.mock
@@ -400,3 +404,33 @@ async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.json_date_time").state == "07:11:08 PM"
     assert hass.states.get("sensor.json_time").state == "07:11:39 PM"
     assert hass.states.get("binary_sensor.binary_sensor").state == "on"
+
+
+async def test_empty_config(hass: HomeAssistant) -> None:
+    """Test setup with empty configuration.
+
+    For example (with rest.yaml an empty file):
+        rest: !include rest.yaml
+    """
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {}},
+    )
+    assert_setup_component(0, DOMAIN)
+
+
+async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
+    """Test configuration via packages."""
+    packages = {
+        "pack_dict": {"rest": {}},
+        "pack_11": {"rest": {"resource": "http://url1"}},
+        "pack_list": {"rest": [{"resource": "http://url2"}]},
+    }
+    config = {hass_config.CONF_CORE: {hass_config.CONF_PACKAGES: packages}}
+    await hass_config.merge_packages_config(hass, config, packages)
+
+    assert len(config) == 2
+    assert len(config["rest"]) == 2
+    assert config["rest"][0]["resource"] == "http://url1"
+    assert config["rest"][1]["resource"] == "http://url2"
