@@ -102,7 +102,6 @@ async def test_option_flow_install_multi_pan_addon(
     assert result["step_id"] == "configure_addon"
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
-    addon_info.return_value["hostname"] = "blah"
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"

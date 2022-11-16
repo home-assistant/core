@@ -2,8 +2,8 @@
   "options": {
     "step": {
       "addon_not_installed": {
-        "title": "Enable multiprotocol support on the Home Assistant Yellow Zigbee + Matter radio",
-        "description": "When multiprotocol support is enabled, the Home Assistant Yellow's radio can be used for both Zigbee and Matter at the same time. If the radio is already used by the ZHA Zigbee integration, ZHA will be reconfigured to use the multiprotocol firmware.\n\nNote: This is an experimental feature.",
+        "title": "Enable multiprotocol support on the IEEE 802.15.4 radio",
+        "description": "When multiprotocol support is enabled, the Home Assistant Yellow's IEEE 802.15.4 radio can be used for both Zigbee and Thread (used by Matter) at the same time. If the radio is already used by the ZHA Zigbee integration, ZHA will be reconfigured to use the multiprotocol firmware.\n\nNote: This is an experimental feature.",
         "data": {
           "enable_multi_pan": "Enable multiprotocol support"
         }

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import zha
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -52,6 +53,9 @@ async def test_setup_entry(
 
     assert len(hass.config_entries.flow.async_progress_by_handler("zha")) == num_flows
     assert len(hass.config_entries.async_entries("zha")) == num_entries
+
+    # Test unloading the config entry
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
@@ -189,3 +193,55 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(mock_get_os_info.mock_calls) == 1
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_addon_info_fails(
+    hass: HomeAssistant, addon_store_info
+) -> None:
+    """Test setup of a config entry when fetching addon info fails."""
+    mock_integration(hass, MockModule("hassio"))
+    addon_store_info.side_effect = HassioAPIError("Boom")
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homeassistant_yellow.get_os_info",
+        return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_addon_not_running(
+    hass: HomeAssistant, addon_installed, start_addon
+) -> None:
+    """Test the addon is started if it is not running."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homeassistant_yellow.get_os_info",
+        return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        start_addon.assert_called_once()
