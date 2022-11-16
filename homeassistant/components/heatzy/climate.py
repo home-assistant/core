@@ -46,9 +46,6 @@ from .const import (
     PILOTE_V2,
 )
 
-MODE_LIST = [HVACMode.HEAT, HVACMode.OFF]
-PRESET_LIST = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -72,8 +69,8 @@ async def async_setup_entry(
 class HeatzyThermostat(CoordinatorEntity[HeatzyDataUpdateCoordinator], ClimateEntity):
     """Heatzy climate."""
 
-    _attr_hvac_modes = MODE_LIST
-    _attr_preset_modes = PRESET_LIST
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_has_entity_name = True
