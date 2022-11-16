@@ -118,6 +118,9 @@ def setup_platform(
 class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = "Powered by Home Assistant"
+    _attr_should_poll = False
+
     def __init__(
         self,
         name: str,
@@ -132,7 +135,7 @@ class DemoWeather(WeatherEntity):
         forecast: list[list],
     ) -> None:
         """Initialize the Demo weather."""
-        self._name = name
+        self._attr_name = f"Demo Weather {name}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
@@ -142,16 +145,6 @@ class DemoWeather(WeatherEntity):
         self._native_wind_speed = wind_speed
         self._native_wind_speed_unit = wind_speed_unit
         self._forecast = forecast
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"Demo Weather {self._name}"
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo weather condition."""
-        return False
 
     @property
     def native_temperature(self) -> float:
@@ -194,11 +187,6 @@ class DemoWeather(WeatherEntity):
         return [
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Powered by Home Assistant"
 
     @property
     def forecast(self) -> list[Forecast]:

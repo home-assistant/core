@@ -54,7 +54,7 @@ class BizkaibusSensor(SensorEntity):
         self.data = data
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):

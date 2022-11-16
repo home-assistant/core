@@ -1,13 +1,24 @@
 {
   "title": "Demo",
   "issues": {
+    "bad_psu": {
+      "title": "The power supply is not stable",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The power supply needs to be replaced",
+            "description": "Press SUBMIT to confirm the power supply has been replaced"
+          }
+        }
+      }
+    },
     "out_of_blinker_fluid": {
       "title": "The blinker fluid is empty and needs to be refilled",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "Blinker fluid needs to be refilled",
-            "description": "Press OK when blinker fluid has been refilled"
+            "description": "Press SUBMIT when blinker fluid has been refilled"
           }
         }
       }

@@ -121,7 +121,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     """Implementation of the base Aurora Entity."""
 
-    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

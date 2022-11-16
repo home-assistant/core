@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -9,6 +10,13 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "L\u00fctfen {username} i\u00e7in \u015fifrenizi g\u00fcncelleyin",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
             "user": {
                 "data": {
                     "import_plugins": "Varl\u0131klar\u0131 fibaro eklentilerinden i\u00e7e aktar\u0131ls\u0131n m\u0131?",

@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -435,7 +435,7 @@ async def test_deprecated_methods(
     "native_min_value, state_min_value, native_step, state_step",
     [
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             TEMP_FAHRENHEIT,
             TEMP_FAHRENHEIT,
             100,
@@ -450,7 +450,7 @@ async def test_deprecated_methods(
             3,
         ),
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
             38,

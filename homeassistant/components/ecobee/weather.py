@@ -188,7 +188,7 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)

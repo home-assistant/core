@@ -14,6 +14,7 @@
             "invalid_serial": "Port s\u00e8rie inv\u00e0lid",
             "invalid_subscribe_topic": "Topic de subscripci\u00f3 inv\u00e0lid",
             "invalid_version": "Versi\u00f3 de MySensors inv\u00e0lida",
+            "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
             "not_a_number": "Introdueix un n\u00famero",
             "port_out_of_range": "El n\u00famero de port ha d'estar entre 1 i 65535",
             "same_topic": "Els topics de publicaci\u00f3 i subscripci\u00f3 son els mateixos",
@@ -67,6 +68,14 @@
                     "version": "Versi\u00f3 de MySensors"
                 },
                 "description": "Configuraci\u00f3 de passarel\u00b7la Ethernet"
+            },
+            "select_gateway_type": {
+                "description": "Selecciona la passarel\u00b7la (gateway) a configurar.",
+                "menu_options": {
+                    "gw_mqtt": "Configura passarel\u00b7la (gateway) MQTT",
+                    "gw_serial": "Configura passarel\u00b7la (gateway) s\u00e8rie",
+                    "gw_tcp": "Configura passarel\u00b7la (gateway) TCP"
+                }
             },
             "user": {
                 "data": {

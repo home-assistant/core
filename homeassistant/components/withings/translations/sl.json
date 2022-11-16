@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
-            "missing_configuration": "Integracija Withings ni konfigurirana. Prosimo, upo\u0161tevajte dokumentacijo."
+            "missing_configuration": "Komponenta Netatmo ni konfigurirana. Prosimo, upo\u0161tevajte dokumentacijo."
         },
         "create_entry": {
             "default": "Uspe\u0161no overjen z Withings."

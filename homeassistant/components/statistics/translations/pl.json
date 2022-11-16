@@ -1,0 +1,12 @@
+{
+    "issues": {
+        "deprecation_warning_characteristic": {
+            "description": "Parametr konfiguracyjny `state_characteristic` integracji Statystyk stanie si\u0119 obowi\u0105zkowy. \n\nProsz\u0119 doda\u0107 `state_characteristic: \"{characteristic}\" do konfiguracji sensora \"{entity}\", aby zachowa\u0107 bie\u017c\u0105ce zachowanie. \n\nPrzeczytaj dokumentacj\u0119 integracji Statystyk, aby uzyska\u0107 wi\u0119cej informacji: https://www.home-assistant.io/integrations/statistics/",
+            "title": "Obowi\u0105zkowe \"state_characteristic\" przyj\u0119ty dla encji Statystyk"
+        },
+        "deprecation_warning_size": {
+            "description": "Parametr konfiguracyjny `sampling_size` integracji Statystyk do tej pory mia\u0142 domy\u015bln\u0105 warto\u015b\u0107 20, kt\u00f3ra teraz si\u0119 zmieni. \n\nSprawd\u017a konfiguracj\u0119 sensora \"{entity}\" i dodaj odpowiednie granice, np. \"sampling_size: 20\", aby zachowa\u0107 bie\u017c\u0105ce zachowanie. Konfiguracja integracji Statystyk stanie si\u0119 bardziej elastyczna w wersji 2022.12.0 i zaakceptuje albo \"sampling_size\" lub \"max_age\" lub oba te ustawienia. Powy\u017csze ostrze\u017cenie przygotowuje twoj\u0105 konfiguracj\u0119 na t\u0119, w przeciwnym razie, prze\u0142omow\u0105 zmian\u0119. \n\nPrzeczytaj dokumentacj\u0119 integracji Statystyk, aby uzyska\u0107 wi\u0119cej informacji: https://www.home-assistant.io/integrations/statistics/",
+            "title": "Niejawny 'sampling_size' przyj\u0119ty dla encji Statystyk"
+        }
+    }
+}

@@ -1,7 +1,6 @@
 """Support for MySensors binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES,
     BinarySensorDeviceClass,
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 

@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Tekan KIRIM untuk mengonfirmasi bahwa catu daya telah diganti",
+                        "title": "Catu daya perlu diganti"
+                    }
+                }
+            },
+            "title": "Catu daya tidak stabil"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Tekan Oke saat cairan blinker telah diisi ulang",
+                        "description": "Tekan KIRIM saat cairan blinker telah diisi ulang",
                         "title": "Cairan blinker perlu diisi ulang"
                     }
                 }

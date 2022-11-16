@@ -21,7 +21,7 @@
             },
             "discovery_confirm": {
                 "description": "Vuoi aggiungere il nodo ESPHome `{name}` a Home Assistant?",
-                "title": "Trovato nodo ESPHome"
+                "title": "Rilevato nodo ESPHome"
             },
             "encryption_key": {
                 "data": {

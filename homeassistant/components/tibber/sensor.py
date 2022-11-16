@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 from datetime import timedelta
 import logging
 from random import randrange
+from typing import Any
 
 import aiohttp
+import tibber
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -31,7 +34,7 @@ from homeassistant.const import (
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -296,7 +299,9 @@ async def async_setup_entry(
 class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
 
-    def __init__(self, *args, tibber_home, **kwargs):
+    def __init__(
+        self, *args: Any, tibber_home: tibber.TibberHome, **kwargs: Any
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(*args, **kwargs)
         self._tibber_home = tibber_home
@@ -305,11 +310,11 @@ class TibberSensor(SensorEntity):
             self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
             )
-        self._device_name = None
-        self._model = None
+        self._device_name: None | str = None
+        self._model: None | str = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         device_info = DeviceInfo(
             identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
@@ -324,10 +329,10 @@ class TibberSensor(SensorEntity):
 class TibberSensorElPrice(TibberSensor):
     """Representation of a Tibber sensor for el price."""
 
-    def __init__(self, tibber_home):
+    def __init__(self, tibber_home: tibber.TibberHome) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
-        self._last_updated = None
+        self._last_updated: datetime.datetime | None = None
         self._spread_load_constant = randrange(5000)
 
         self._attr_available = False
@@ -350,7 +355,7 @@ class TibberSensorElPrice(TibberSensor):
 
         self._device_name = self._home_name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         now = dt_util.now()
         if (
@@ -380,7 +385,7 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_native_unit_of_measurement = self._tibber_home.price_unit
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def _fetch_data(self):
+    async def _fetch_data(self) -> None:
         _LOGGER.debug("Fetching data")
         try:
             await self._tibber_home.update_info_and_price_info()
@@ -401,10 +406,10 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
 
     def __init__(
         self,
-        tibber_home,
+        tibber_home: tibber.TibberHome,
         coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
         self.entity_description = entity_description
@@ -419,7 +424,7 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         self._device_name = self._home_name
 
     @property
-    def native_value(self):
+    def native_value(self) -> Any:
         """Return the value of the sensor."""
         return getattr(self._tibber_home, self.entity_description.key)
 
@@ -429,11 +434,11 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
 
     def __init__(
         self,
-        tibber_home,
+        tibber_home: tibber.TibberHome,
         description: SensorEntityDescription,
-        initial_state,
+        initial_state: float,
         coordinator: TibberRtDataCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
         self.entity_description = description
@@ -448,7 +453,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             self._attr_native_unit_of_measurement = tibber_home.currency
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 
@@ -486,12 +491,17 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
 class TibberRtDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber realtime data."""
 
-    def __init__(self, async_add_entities, tibber_home, hass):
+    def __init__(
+        self,
+        async_add_entities: AddEntitiesCallback,
+        tibber_home: tibber.TibberHome,
+        hass: HomeAssistant,
+    ) -> None:
         """Initialize the data handler."""
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._added_sensors = set()
+        self._added_sensors: set[str] = set()
         super().__init__(
             hass,
             _LOGGER,
@@ -506,12 +516,12 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
-    def _handle_ha_stop(self, _event) -> None:
+    def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
         self._async_remove_device_updates_handler()
 
     @callback
-    def _add_sensors(self):
+    def _add_sensors(self) -> None:
         """Add sensor."""
         if not (live_measurement := self.get_live_measurement()):
             return
@@ -534,7 +544,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
         if new_entities:
             self._async_add_entities(new_entities)
 
-    def get_live_measurement(self):
+    def get_live_measurement(self) -> Any:
         """Get live measurement data."""
         if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
@@ -545,7 +555,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
 class TibberDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber data and insert statistics."""
 
-    def __init__(self, hass, tibber_connection):
+    def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
@@ -555,20 +565,24 @@ class TibberDataCoordinator(DataUpdateCoordinator):
         )
         self._tibber_connection = tibber_connection
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update data via API."""
         await self._tibber_connection.fetch_consumption_data_active_homes()
+        await self._tibber_connection.fetch_production_data_active_homes()
         await self._insert_statistics()
 
-    async def _insert_statistics(self):
+    async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            if not home.hourly_consumption_data:
-                continue
-            for sensor_type in (
-                "consumption",
-                "totalCost",
-            ):
+            sensors = []
+            if home.hourly_consumption_data:
+                sensors.append(("consumption", False, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("totalCost", False, home.currency))
+            if home.hourly_production_data:
+                sensors.append(("production", True, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("profit", True, home.currency))
+
+            for sensor_type, is_production, unit in sensors:
                 statistic_id = (
                     f"{TIBBER_DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
@@ -581,20 +595,27 @@ class TibberDataCoordinator(DataUpdateCoordinator):
 
                 if not last_stats:
                     # First time we insert 5 years of data (if available)
-                    hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
+                    hourly_data = await home.get_historic_data(
+                        5 * 365 * 24, production=is_production
+                    )
 
                     _sum = 0
                     last_stats_time = None
                 else:
-                    # hourly_consumption_data contains the last 30 days
-                    # of consumption data.
+                    # hourly_consumption/production_data contains the last 30 days
+                    # of consumption/production data.
                     # We update the statistics with the last 30 days
                     # of data to handle corrections in the data.
-                    hourly_consumption_data = home.hourly_consumption_data
+                    hourly_data = (
+                        home.hourly_production_data
+                        if is_production
+                        else home.hourly_consumption_data
+                    )
 
-                    start = dt_util.parse_datetime(
-                        hourly_consumption_data[0]["from"]
-                    ) - timedelta(hours=1)
+                    from_time = dt_util.parse_datetime(hourly_data[0]["from"])
+                    if from_time is None:
+                        continue
+                    start = from_time - timedelta(hours=1)
                     stat = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
                         self.hass,
@@ -609,28 +630,26 @@ class TibberDataCoordinator(DataUpdateCoordinator):
 
                 statistics = []
 
-                for data in hourly_consumption_data:
+                for data in hourly_data:
                     if data.get(sensor_type) is None:
                         continue
 
-                    start = dt_util.parse_datetime(data["from"])
-                    if last_stats_time is not None and start <= last_stats_time:
+                    from_time = dt_util.parse_datetime(data["from"])
+                    if from_time is None or (
+                        last_stats_time is not None and from_time <= last_stats_time
+                    ):
                         continue
 
                     _sum += data[sensor_type]
 
                     statistics.append(
                         StatisticData(
-                            start=start,
+                            start=from_time,
                             state=data[sensor_type],
                             sum=_sum,
                         )
                     )
 
-                if sensor_type == "consumption":
-                    unit = ENERGY_KILO_WATT_HOUR
-                else:
-                    unit = home.currency
                 metadata = StatisticMetaData(
                     has_mean=False,
                     has_sum=True,

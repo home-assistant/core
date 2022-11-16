@@ -6,10 +6,7 @@ from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
 from homeassistant.components import zone as zone_comp
-from homeassistant.components.device_tracker import (
-    SOURCE_TYPE_BLUETOOTH_LE,
-    SOURCE_TYPE_GPS,
-)
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.util import decorator, slugify
 
@@ -84,9 +81,9 @@ def _parse_see_args(message, subscribe_topic):
         kwargs["attributes"]["battery_status"] = message["bs"]
     if "t" in message:
         if message["t"] in ("c", "u"):
-            kwargs["source_type"] = SOURCE_TYPE_GPS
+            kwargs["source_type"] = SourceType.GPS
         if message["t"] == "b":
-            kwargs["source_type"] = SOURCE_TYPE_BLUETOOTH_LE
+            kwargs["source_type"] = SourceType.BLUETOOTH_LE
 
     return dev_id, kwargs
 

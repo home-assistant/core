@@ -1,4 +1,6 @@
 """Webhook handlers for mobile_app."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from functools import wraps
@@ -27,7 +29,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_CLASSES,
     STATE_CLASSES as SENSOSR_STATE_CLASSES,
 )
-from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,

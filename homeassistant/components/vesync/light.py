@@ -1,5 +1,6 @@
 """Support for VeSync bulbs and wall dimmers."""
 import logging
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -66,7 +67,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Get light brightness."""
         # get value from pyvesync library api,
         result = self.device.brightness
@@ -83,7 +84,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         # convert percent brightness to ha expected range
         return round((max(1, brightness_value) / 100) * 255)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
@@ -140,10 +141,12 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Get device white temperature."""
         # get value from pyvesync library api,
         result = self.device.color_temp_pct
@@ -168,13 +171,3 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         )
         # ensure value between minimum and maximum Mireds
         return max(self.min_mireds, min(color_temp_value, self.max_mireds))
-
-    @property
-    def min_mireds(self):
-        """Set device coldest white temperature."""
-        return 154  # 154 Mireds ( 1,000,000 divided by 6500 Kelvin = 154 Mireds)
-
-    @property
-    def max_mireds(self):
-        """Set device warmest white temperature."""
-        return 370  # 370 Mireds  ( 1,000,000 divided by 2700 Kelvin = 370 Mireds)

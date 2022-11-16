@@ -458,7 +458,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
+        self._manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
         self._abort_if_manufacturer_is_not_samsung()
 
         # Set defaults, in case they cannot be extracted from device_info

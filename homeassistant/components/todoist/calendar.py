@@ -296,6 +296,7 @@ class TodoistProjectEntity(CalendarEntity):
         )
         self._cal_data = {}
         self._name = data[CONF_NAME]
+        self._attr_unique_id = data.get(CONF_ID)
 
     @property
     def event(self) -> CalendarEvent:
@@ -307,7 +308,7 @@ class TodoistProjectEntity(CalendarEntity):
         """Return the name of the entity."""
         return self._name
 
-    def update(self):
+    def update(self) -> None:
         """Update all Todoist Calendars."""
         self.data.update()
         # Set Todoist-specific data that can't easily be grabbed

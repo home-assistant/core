@@ -388,7 +388,7 @@ class SmappeeSensor(SensorEntity):
             sw_version=self._service_location.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Smappee and update the state."""
         await self._smappee_base.async_update()
 

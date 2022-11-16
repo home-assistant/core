@@ -29,9 +29,7 @@ def simplepush_setup_fixture():
 @pytest.fixture(autouse=True)
 def mock_api_request():
     """Patch simplepush api request."""
-    with patch("homeassistant.components.simplepush.config_flow.send"), patch(
-        "homeassistant.components.simplepush.config_flow.send_encrypted"
-    ):
+    with patch("homeassistant.components.simplepush.config_flow.send"):
         yield
 
 
@@ -129,16 +127,3 @@ async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test an import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "simplepush"
-    assert result["data"] == MOCK_CONFIG

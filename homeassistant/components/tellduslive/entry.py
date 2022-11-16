@@ -25,6 +25,8 @@ ATTR_LAST_UPDATED = "time_last_updated"
 class TelldusLiveEntity(Entity):
     """Base class for all Telldus Live entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, client, device_id):
         """Initialize the entity."""
         self._id = device_id
@@ -65,11 +67,6 @@ class TelldusLiveEntity(Entity):
     def _state(self):
         """Return the state of the device."""
         return self.device.state
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def assumed_state(self):

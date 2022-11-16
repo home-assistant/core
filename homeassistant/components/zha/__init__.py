@@ -35,6 +35,7 @@ from .core.const import (
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
+    ZHA_DEVICES_LOADED_EVENT,
     RadioType,
 )
 from .core.discovery import GROUP_PROBE
@@ -75,7 +76,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
-    hass.data[DATA_ZHA] = {}
+    hass.data[DATA_ZHA] = {ZHA_DEVICES_LOADED_EVENT: asyncio.Event()}
 
     if DOMAIN in config:
         conf = config[DOMAIN]
@@ -109,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
+    hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].set()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -141,6 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload ZHA config entry."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     await zha_gateway.shutdown()
+    hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].clear()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)

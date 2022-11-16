@@ -5,7 +5,7 @@
   "driver.parameter.pollfreq": "30",
   "ups.beeper.status": "disabled",
   "input.voltage.nominal": "120",
-  "device.serial": "000000000000",
+  "device.serial": "000000000000  ",
   "ups.timer.shutdown": "-60",
   "input.voltage": "122.0",
   "ups.status": "OL",

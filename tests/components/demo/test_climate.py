@@ -3,7 +3,7 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,

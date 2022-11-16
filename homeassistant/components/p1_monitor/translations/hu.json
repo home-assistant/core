@@ -9,6 +9,9 @@
                     "host": "C\u00edm",
                     "name": "Elnevez\u00e9s"
                 },
+                "data_description": {
+                    "host": "A P1 Monitor rendszer\u00e9nek IP-c\u00edme vagy hostneve."
+                },
                 "description": "\u00c1ll\u00edtsa be a P1 monitort az Otthoni asszisztenssel val\u00f3 integr\u00e1ci\u00f3hoz."
             }
         }

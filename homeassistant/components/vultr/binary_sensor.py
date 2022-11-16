@@ -111,7 +111,7 @@ class VultrBinarySensor(BinarySensorEntity):
             ATTR_VCPUS: self.data.get("vcpu_count"),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

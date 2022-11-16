@@ -154,8 +154,7 @@ async def async_setup_entry(
             for key in coordinator.data["sensors"]
             if key not in created
         ]
-        if entities:
-            async_add_entities(entities)
+        async_add_entities(entities)
 
     coordinator.async_add_listener(new_data_received)
 

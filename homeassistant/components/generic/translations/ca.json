@@ -45,6 +45,13 @@
                     "verify_ssl": "Verifica el certificat SSL"
                 },
                 "description": "Introdueix la configuraci\u00f3 de connexi\u00f3 amb la c\u00e0mera."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "La imatge es veu b\u00e9."
+                },
+                "description": "![Vista pr\u00e8via de la imatge de la c\u00e0mera]({preview_url})",
+                "title": "Vista pr\u00e8via"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "La imatge es veu b\u00e9."
+                },
+                "description": "![Vista pr\u00e8via de la imatge de la c\u00e0mera]({preview_url})",
+                "title": "Vista pr\u00e8via"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipus de contingut"

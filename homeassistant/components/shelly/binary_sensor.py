@@ -25,6 +25,7 @@ from .entity import (
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -143,19 +144,6 @@ REST_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "fwupdate": RestBinarySensorDescription(
-        key="fwupdate",
-        name="Firmware Update",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        value=lambda status, _: status["update"]["has_update"],
-        entity_registry_enabled_default=False,
-        extra_state_attributes=lambda status: {
-            "latest_stable_version": status["update"]["new_version"],
-            "installed_version": status["update"]["old_version"],
-            "beta_version": status["update"].get("beta_version", ""),
-        },
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 }
 
 RPC_SENSORS: Final = {
@@ -173,19 +161,6 @@ RPC_SENSORS: Final = {
         name="Cloud",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "fwupdate": RpcBinarySensorDescription(
-        key="sys",
-        sub_key="available_updates",
-        name="Firmware Update",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_registry_enabled_default=False,
-        extra_state_attributes=lambda status, shelly: {
-            "latest_stable_version": status.get("stable", {"version": ""})["version"],
-            "installed_version": shelly["ver"],
-            "beta_version": status.get("beta", {"version": ""})["version"],
-        },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "overtemp": RpcBinarySensorDescription(
@@ -235,9 +210,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
-        )
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_SENSORS,
+                RpcSleepingBinarySensor,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
+            )
+        return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
@@ -312,6 +297,20 @@ class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensor
     def is_on(self) -> bool:
         """Return true if sensor state is on."""
         if self.block is not None:
+            return bool(self.attribute_value)
+
+        return self.last_state == STATE_ON
+
+
+class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
+    """Represent a RPC sleeping binary sensor entity."""
+
+    entity_description: RpcBinarySensorDescription
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if RPC sensor state is on."""
+        if self.coordinator.device.initialized:
             return bool(self.attribute_value)
 
         return self.last_state == STATE_ON

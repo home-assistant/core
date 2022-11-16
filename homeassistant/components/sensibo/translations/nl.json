@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-sleutel"
+                },
+                "data_description": {
+                    "api_key": "Volg de documentatie om een nieuwe API-sleutel te verkrijgen."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API-sleutel"
+                },
+                "data_description": {
+                    "api_key": "Volg de documentatie om een API-sleutel te verkrijgen."
                 }
             }
         }

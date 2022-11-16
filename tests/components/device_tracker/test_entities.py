@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
     DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers import device_registry as dr
@@ -37,7 +37,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     entity_id = "device_tracker.test_ad_de_ef_be_ed_fe"
     entity_state = hass.states.get(entity_id)
     assert entity_state.attributes == {
-        ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+        ATTR_SOURCE_TYPE: SourceType.ROUTER,
         ATTR_BATTERY_LEVEL: 100,
         ATTR_IP: "0.0.0.0",
         ATTR_MAC: "ad:de:ef:be:ed:fe",

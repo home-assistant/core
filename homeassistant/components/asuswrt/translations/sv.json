@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Kunde inte ansluta",
+            "invalid_host": "Ogiltigt v\u00e4rdnamn eller IP-adress",
             "pwd_and_ssh": "Ange endast l\u00f6senord eller SSH-nyckelfil",
             "pwd_or_ssh": "V\u00e4nligen ange l\u00f6senord eller SSH-nyckelfil",
             "ssh_not_file": "SSH-nyckelfil hittades inte",
@@ -14,6 +15,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "V\u00e4rd",
                     "mode": "L\u00e4ge",
                     "name": "Namn",
                     "password": "L\u00f6senord",

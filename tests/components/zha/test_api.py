@@ -1,12 +1,15 @@
 """Test ZHA API."""
 from binascii import unhexlify
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
+import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
@@ -33,6 +36,7 @@ from homeassistant.components.zha.core.const import (
     CLUSTER_TYPE_IN,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -48,6 +52,7 @@ from .conftest import (
     SIG_EP_PROFILE,
     SIG_EP_TYPE,
 )
+from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -59,6 +64,7 @@ def required_platform_only():
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
+            Platform.ALARM_CONTROL_PANEL,
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
@@ -81,6 +87,25 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
             }
         },
         ieee=IEEE_SWITCH_DEVICE,
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    return zha_device
+
+
+@pytest.fixture
+async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
+    """Test alarm control panel device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
     )
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -221,6 +246,58 @@ async def test_list_devices(zha_client):
         msg = await zha_client.receive_json()
         device2 = msg["result"]
         assert device == device2
+
+
+async def test_get_zha_config(zha_client):
+    """Test getting zha custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_get_zha_config_with_alarm(hass, zha_client, device_ias_ace):
+    """Test getting zha custom configuration."""
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == CONFIG_WITH_ALARM_OPTIONS
+
+    # test that the alarm options are not in the config when we remove the device
+    device_ias_ace.gateway.device_removed(device_ias_ace.device)
+    await hass.async_block_till_done()
+    await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+
+    msg = await zha_client.receive_json()
+
+    configuration = msg["result"]
+    assert configuration == BASE_CUSTOM_CONFIGURATION
+
+
+async def test_update_zha_config(zha_client, zigpy_app_controller):
+    """Test updating zha custom configuration."""
+
+    configuration = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration["data"]["zha_options"]["default_light_transition"] = 10
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ):
+        await zha_client.send_json(
+            {ID: 5, TYPE: "zha/configuration/update", "data": configuration["data"]}
+        )
+        msg = await zha_client.receive_json()
+        assert msg["success"]
+
+        await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+        msg = await zha_client.receive_json()
+        configuration = msg["result"]
+        assert configuration == configuration
 
 
 async def test_device_not_found(zha_client):
@@ -620,3 +697,121 @@ async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_key.call_count == 0
+
+
+async def test_get_network_settings(app_controller, zha_client):
+    """Test current network settings are returned."""
+
+    await app_controller.backups.create_backup()
+
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/settings"})
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "radio_type" in msg["result"]
+    assert "network_info" in msg["result"]["settings"]
+
+
+async def test_list_network_backups(app_controller, zha_client):
+    """Test backups are serialized."""
+
+    await app_controller.backups.create_backup()
+
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/backups/list"})
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "network_info" in msg["result"][0]
+
+
+async def test_create_network_backup(app_controller, zha_client):
+    """Test creating backup."""
+
+    assert not app_controller.backups.backups
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/backups/create"})
+    msg = await zha_client.receive_json()
+    assert len(app_controller.backups.backups) == 1
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "backup" in msg["result"] and "is_complete" in msg["result"]
+
+
+async def test_restore_network_backup_success(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    p.assert_called_once_with(backup)
+    assert "ezsp" not in backup.network_info.stack_specific
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+async def test_restore_network_backup_force_write_eui64(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+                "ezsp_force_write_eui64": True,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    # EUI64 will be overwritten
+    p.assert_called_once_with(
+        backup.replace(
+            network_info=backup.network_info.replace(
+                stack_specific={"ezsp": {EZSP_OVERWRITE_EUI64: True}}
+            )
+        )
+    )
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+@patch("zigpy.backups.NetworkBackup.from_dict", new=lambda v: v)
+async def test_restore_network_backup_failure(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    with patch.object(
+        app_controller.backups,
+        "restore_backup",
+        new=AsyncMock(side_effect=ValueError("Restore failed")),
+    ) as p:
+        await zha_client.send_json(
+            {ID: 6, TYPE: f"{DOMAIN}/network/backups/restore", "backup": "a backup"}
+        )
+        msg = await zha_client.receive_json()
+
+    p.assert_called_once_with("a backup")
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT

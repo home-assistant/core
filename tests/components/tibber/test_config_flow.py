@@ -15,7 +15,7 @@ def tibber_setup_fixture():
         yield
 
 
-async def test_show_config_form(hass, recorder_mock):
+async def test_show_config_form(recorder_mock, hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -25,7 +25,7 @@ async def test_show_config_form(hass, recorder_mock):
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass, recorder_mock):
+async def test_create_entry(recorder_mock, hass):
     """Test create entry from user input."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
@@ -49,7 +49,7 @@ async def test_create_entry(hass, recorder_mock):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass, recorder_mock, config_entry):
+async def test_flow_entry_already_exists(recorder_mock, hass, config_entry):
     """Test user input for config_entry that already exists."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",

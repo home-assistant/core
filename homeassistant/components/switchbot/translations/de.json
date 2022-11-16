@@ -9,6 +9,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "password": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "F\u00fcr das Ger\u00e4t {name} ist ein Kennwort erforderlich."
+            },
             "user": {
                 "data": {
                     "address": "Ger\u00e4teadresse",

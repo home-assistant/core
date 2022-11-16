@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "reauth_unsuccessful": "Autentikasi ulang tidak berhasil, hapus integrasi dan siapkan kembali.",
             "unsupported_firmware": "Perangkat menggunakan versi firmware yang tidak didukung."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Ingin menyiapkan {model} di {host}?\n\nPerangkat bertenaga baterai yang dilindungi kata sandi harus dibangunkan sebelum melanjutkan penyiapan.\nPerangkat bertenaga baterai yang tidak dilindungi kata sandi akan ditambahkan ketika perangkat bangun. Anda dapat membangunkan perangkat secara manual menggunakan tombol di atasnya sekarang juga atau menunggu pembaruan data berikutnya dari perangkat."
             },
             "credentials": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"

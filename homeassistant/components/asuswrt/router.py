@@ -8,7 +8,7 @@ from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt, Device as WrtDevice
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,

@@ -26,7 +26,7 @@
     },
     "issues": {
         "removed_yaml": {
-            "description": "La configurazione di Steam tramite YAML \u00e8 stata rimossa. \n\n La tua configurazione YAML esistente non viene utilizzata da Home Assistant. \n\nRimuovere la configurazione YAML dal file configuration.yaml e riavviare Home Assistant per risolvere questo problema.",
+            "description": "La configurazione di Steam tramite YAML \u00e8 stata rimossa. \n\n La tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
             "title": "La configurazione YAML di Steam \u00e8 stata rimossa"
         }
     },

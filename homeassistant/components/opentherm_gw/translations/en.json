@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect",
-            "id_exists": "Gateway id already exists"
+            "id_exists": "Gateway id already exists",
+            "timeout_connect": "Timeout establishing connection"
         },
         "step": {
             "init": {

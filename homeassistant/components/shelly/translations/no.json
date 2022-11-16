@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket",
+            "reauth_unsuccessful": "Re-autentisering mislyktes. Fjern integrasjonen og konfigurer den p\u00e5 nytt.",
             "unsupported_firmware": "Enheten bruker en ikke-st\u00f8ttet firmwareversjon."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Vil du konfigurere {model} p\u00e5 {host} ? \n\n Batteridrevne enheter som er passordbeskyttet, m\u00e5 vekkes f\u00f8r du fortsetter med konfigurasjonen.\n Batteridrevne enheter som ikke er passordbeskyttet, blir lagt til n\u00e5r enheten v\u00e5kner, du kan n\u00e5 vekke enheten manuelt med en knapp p\u00e5 den eller vente p\u00e5 neste dataoppdatering fra enheten."
             },
             "credentials": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"

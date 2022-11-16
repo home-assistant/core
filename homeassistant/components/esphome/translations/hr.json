@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Lozinka"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

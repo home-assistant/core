@@ -14,6 +14,7 @@
             "invalid_serial": "Ge\u00e7ersiz seri ba\u011flant\u0131 noktas\u0131",
             "invalid_subscribe_topic": "Ge\u00e7ersiz abone konusu",
             "invalid_version": "Ge\u00e7ersiz MySensors s\u00fcr\u00fcm\u00fc",
+            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
             "not_a_number": "L\u00fctfen bir numara giriniz",
             "port_out_of_range": "Port numaras\u0131 en az 1, en fazla 65535 olmal\u0131d\u0131r",
             "same_topic": "Abone olma ve yay\u0131nlama konular\u0131 ayn\u0131",
@@ -67,6 +68,14 @@
                     "version": "MySensors s\u00fcr\u00fcm\u00fc"
                 },
                 "description": "Ethernet a\u011f ge\u00e7idi kurulumu"
+            },
+            "select_gateway_type": {
+                "description": "Hangi a\u011f ge\u00e7idinin yap\u0131land\u0131r\u0131laca\u011f\u0131n\u0131 se\u00e7in.",
+                "menu_options": {
+                    "gw_mqtt": "Bir MQTT a\u011f ge\u00e7idini yap\u0131land\u0131r\u0131n",
+                    "gw_serial": "Bir seri a\u011f ge\u00e7idi yap\u0131land\u0131r\u0131n",
+                    "gw_tcp": "Bir TCP a\u011f ge\u00e7idi yap\u0131land\u0131r\u0131n"
+                }
             },
             "user": {
                 "data": {

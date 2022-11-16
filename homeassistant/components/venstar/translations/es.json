@@ -14,7 +14,7 @@
                     "password": "Contrase\u00f1a",
                     "pin": "C\u00f3digo PIN",
                     "ssl": "Utiliza un certificado SSL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con el termostato Venstar"
             }
