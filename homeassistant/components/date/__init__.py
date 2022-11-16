@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import FORMAT_DATE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -31,6 +31,11 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_set_value(entity: DateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to set a new date."""
+    return await entity.async_set_value(service_call.data[ATTR_DATE])
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Date entities."""
     component = hass.data[DOMAIN] = EntityComponent[DateEntity](
@@ -39,14 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        vol.Schema(
-            {
-                vol.Required(ATTR_DATE): cv.date,
-            },
-            extra=vol.ALLOW_EXTRA,
-        ),
-        "async_set_value",
+        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, _async_set_value
     )
 
     return True
