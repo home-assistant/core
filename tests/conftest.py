@@ -1040,17 +1040,20 @@ async def mock_enable_bluetooth(
 @pytest.fixture(name="mock_bluetooth_adapters")
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
-    with patch("platform.system", return_value="Linux"), patch(
+    with patch(
+        "bluetooth_adapters.systems.platform.system", return_value="Linux"
+    ), patch(
         "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
         },
     ):

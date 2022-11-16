@@ -177,7 +177,7 @@ class BluetoothManager:
         self, cached: bool = True
     ) -> dict[str, AdapterDetails]:
         """Get bluetooth adapters."""
-        if not cached or not self._adapters:
+        if not cached:
             await self._bluetooth_adapters.refresh()
             self._adapters = self._bluetooth_adapters.adapters
         return self._adapters

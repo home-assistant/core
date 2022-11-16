@@ -88,8 +88,10 @@ def no_adapter_fixture(bluez_dbus_mock):
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={},
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {},
     ):
         yield
 
@@ -105,18 +107,15 @@ def one_adapter_fixture(bluez_dbus_mock):
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                },
-                "org.bluez.AdvertisementMonitorManager1": {
-                    "SupportedMonitorTypes": ["or_patterns"],
-                    "SupportedFeatures": [],
-                },
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": True,
+                "sw_version": "homeassistant",
             },
         },
     ):
@@ -134,25 +133,21 @@ def two_adapters_fixture(bluez_dbus_mock):
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
             "hci1": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:02",
-                    "Name": "BlueZ 4.63",
-                    "Modalias": "usbid:1234",
-                },
-                "org.bluez.AdvertisementMonitorManager1": {
-                    "SupportedMonitorTypes": ["or_patterns"],
-                    "SupportedFeatures": [],
-                },
+                "address": "00:00:00:00:00:02",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": True,
+                "sw_version": "homeassistant",
             },
         },
     ):
@@ -170,13 +165,15 @@ def one_adapter_old_bluez(bluez_dbus_mock):
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={
+        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
+    ), patch(
+        "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
+        {
             "hci0": {
-                "org.bluez.Adapter1": {
-                    "Address": "00:00:00:00:00:01",
-                    "Name": "BlueZ 4.43",
-                }
+                "address": "00:00:00:00:00:01",
+                "hw_version": "usb:v1D6Bp0246d053F",
+                "passive_scan": False,
+                "sw_version": "homeassistant",
             },
         },
     ):
