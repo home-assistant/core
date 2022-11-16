@@ -74,6 +74,8 @@ class Touchline(ClimateEntity):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
         self._name = None
+        self._controller_id = None
+        self._device_id = None
         self._current_temperature = None
         self._target_temperature = None
         self._current_operation_mode = None
@@ -83,6 +85,8 @@ class Touchline(ClimateEntity):
         """Update thermostat attributes."""
         self.unit.update()
         self._name = self.unit.get_name()
+        self._controller_id = self.unit.get_controller_id()
+        self._device_id = self.unit.get_device_id()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
@@ -93,6 +97,11 @@ class Touchline(ClimateEntity):
     def name(self):
         """Return the name of the climate device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._controller_id + self._device_id
 
     @property
     def current_temperature(self):
