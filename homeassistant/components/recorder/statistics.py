@@ -53,13 +53,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import (
-    StatisticData,
-    StatisticMetaData,
-    StatisticResult,
-    process_timestamp,
-    process_timestamp_to_utc_isoformat,
-)
+from .models import StatisticData, StatisticMetaData, StatisticResult, process_timestamp
 from .util import (
     execute,
     execute_stmt_lambda_element,
@@ -947,6 +941,7 @@ def _reduce_statistics(
     same_period: Callable[[datetime, datetime], bool],
     period_start_end: Callable[[datetime], tuple[datetime, datetime]],
     period: timedelta,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -963,19 +958,24 @@ def _reduce_statistics(
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
                 # The previous statistic was the last entry of the period
-                result[statistic_id].append(
-                    {
-                        "statistic_id": statistic_id,
-                        "start": start.isoformat(),
-                        "end": end.isoformat(),
-                        "mean": mean(mean_values) if mean_values else None,
-                        "min": min(min_values) if min_values else None,
-                        "max": max(max_values) if max_values else None,
-                        "last_reset": prev_stat.get("last_reset"),
-                        "state": prev_stat.get("state"),
-                        "sum": prev_stat["sum"],
-                    }
-                )
+                row: dict[str, Any] = {
+                    "start": start,
+                    "end": end,
+                }
+                if "mean" in types:
+                    row["mean"] = mean(mean_values) if mean_values else None
+                if "min" in types:
+                    row["min"] = min(min_values) if min_values else None
+                if "max" in types:
+                    row["max"] = max(max_values) if max_values else None
+                if "last_reset" in types:
+                    row["last_reset"] = prev_stat.get("last_reset")
+                if "state" in types:
+                    row["state"] = prev_stat.get("state")
+                if "sum" in types:
+                    row["sum"] = prev_stat["sum"]
+                result[statistic_id].append(row)
+
                 max_values = []
                 mean_values = []
                 min_values = []
@@ -1007,11 +1007,12 @@ def day_start_end(time: datetime) -> tuple[datetime, datetime]:
 
 
 def _reduce_statistics_per_day(
-    stats: dict[str, list[dict[str, Any]]]
+    stats: dict[str, list[dict[str, Any]]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily statistics."""
 
-    return _reduce_statistics(stats, same_day, day_start_end, timedelta(days=1))
+    return _reduce_statistics(stats, same_day, day_start_end, timedelta(days=1), types)
 
 
 def same_week(time1: datetime, time2: datetime) -> bool:
@@ -1037,10 +1038,13 @@ def week_start_end(time: datetime) -> tuple[datetime, datetime]:
 
 def _reduce_statistics_per_week(
     stats: dict[str, list[dict[str, Any]]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to weekly statistics."""
 
-    return _reduce_statistics(stats, same_week, week_start_end, timedelta(days=7))
+    return _reduce_statistics(
+        stats, same_week, week_start_end, timedelta(days=7), types
+    )
 
 
 def same_month(time1: datetime, time2: datetime) -> bool:
@@ -1063,53 +1067,47 @@ def month_start_end(time: datetime) -> tuple[datetime, datetime]:
 
 def _reduce_statistics_per_month(
     stats: dict[str, list[dict[str, Any]]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to monthly statistics."""
 
-    return _reduce_statistics(stats, same_month, month_start_end, timedelta(days=31))
+    return _reduce_statistics(
+        stats, same_month, month_start_end, timedelta(days=31), types
+    )
 
 
 def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
+    table: type[Statistics | StatisticsShortTerm],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
-    stmt = lambda_stmt(
-        lambda: select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
-    )
+
+    columns = [table.metadata_id, table.start]
+    if "last_reset" in types:
+        columns.append(table.last_reset)
+    if "max" in types:
+        columns.append(table.max)
+    if "mean" in types:
+        columns.append(table.mean)
+    if "min" in types:
+        columns.append(table.min)
+    if "state" in types:
+        columns.append(table.state)
+    if "sum" in types:
+        columns.append(table.sum)
+
+    stmt = lambda_stmt(lambda: select(columns).filter(table.start >= start_time))
     if end_time is not None:
-        stmt += lambda q: q.filter(Statistics.start < end_time)
+        stmt += lambda q: q.filter(table.start < end_time)
     if metadata_ids:
-        stmt += lambda q: q.filter(Statistics.metadata_id.in_(metadata_ids))
-    stmt += lambda q: q.order_by(Statistics.metadata_id, Statistics.start)
-    return stmt
-
-
-def _statistics_during_period_stmt_short_term(
-    start_time: datetime,
-    end_time: datetime | None,
-    metadata_ids: list[int] | None,
-) -> StatementLambdaElement:
-    """Prepare a database query for short term statistics during a given period.
-
-    This prepares a lambda_stmt query, so we don't insert the parameters yet.
-    """
-    stmt = lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM).filter(
-            StatisticsShortTerm.start >= start_time
-        )
-    )
-    if end_time is not None:
-        stmt += lambda q: q.filter(StatisticsShortTerm.start < end_time)
-    if metadata_ids:
-        stmt += lambda q: q.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-    stmt += lambda q: q.order_by(
-        StatisticsShortTerm.metadata_id, StatisticsShortTerm.start
-    )
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
+    stmt += lambda q: q.order_by(table.metadata_id, table.start)
     return stmt
 
 
@@ -1119,7 +1117,7 @@ def _get_max_mean_min_statistic_in_sub_period(
     start_time: datetime | None,
     end_time: datetime | None,
     table: type[Statistics | StatisticsShortTerm],
-    types: set[str],
+    types: set[Literal["max", "mean", "min", "change"]],
     metadata_id: int,
 ) -> None:
     """Return max, mean and min during the period."""
@@ -1160,7 +1158,7 @@ def _get_max_mean_min_statistic(
     tail_end_time: datetime | None,
     tail_only: bool,
     metadata_id: int,
-    types: set[str],
+    types: set[Literal["max", "mean", "min", "change"]],
 ) -> dict[str, float | None]:
     """Return max, mean and min during the period.
 
@@ -1216,11 +1214,29 @@ def _get_max_mean_min_statistic(
     return result
 
 
+def _first_statistic(
+    session: Session,
+    table: type[Statistics | StatisticsShortTerm],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the data of the oldest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start.asc())
+        .limit(1)
+    )
+    if stats := execute_stmt_lambda_element(session, stmt):
+        return process_timestamp(stats[0].start)  # type: ignore[no-any-return]
+    return None
+
+
 def _get_oldest_sum_statistic(
     session: Session,
     head_start_time: datetime | None,
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
+    oldest_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1231,10 +1247,10 @@ def _get_oldest_sum_statistic(
         start_time: datetime | None,
         table: type[Statistics | StatisticsShortTerm],
         metadata_id: int,
-    ) -> tuple[float | None, datetime | None]:
+    ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(table.sum, table.start)
+            lambda: select(table.sum)
             .filter(table.metadata_id == metadata_id)
             .filter(table.sum.is_not(None))
             .order_by(table.start.asc())
@@ -1248,49 +1264,49 @@ def _get_oldest_sum_statistic(
             else:
                 period = start_time.replace(minute=0, second=0, microsecond=0)
             prev_period = period - table.duration
-            stmt += lambda q: q.filter(table.start == prev_period)
+            stmt += lambda q: q.filter(table.start >= prev_period)
         stats = execute_stmt_lambda_element(session, stmt)
-        return (
-            (stats[0].sum, process_timestamp(stats[0].start)) if stats else (None, None)
-        )
+        return stats[0].sum if stats else None
 
-    oldest_start: datetime | None
     oldest_sum: float | None = None
 
-    if head_start_time is not None:
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
-            session, head_start_time, StatisticsShortTerm, metadata_id
+    # This function won't be called if tail_only is False and main_start_time is None
+    # the extra checks are added to satisfy MyPy
+    if not tail_only and main_start_time is not None and oldest_stat is not None:
+        period = main_start_time.replace(minute=0, second=0, microsecond=0)
+        prev_period = period - Statistics.duration
+        if prev_period < oldest_stat:
+            return 0
+
+    if (
+        head_start_time is not None
+        and (
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, head_start_time, StatisticsShortTerm, metadata_id
+            )
         )
-        if (
-            oldest_start is not None
-            and oldest_start < head_start_time
-            and oldest_sum is not None
-        ):
-            return oldest_sum
+        is not None
+    ):
+        return oldest_sum
 
     if not tail_only:
-        assert main_start_time is not None
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
-            session, main_start_time, Statistics, metadata_id
-        )
         if (
-            oldest_start is not None
-            and oldest_start < main_start_time
-            and oldest_sum is not None
-        ):
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, main_start_time, Statistics, metadata_id
+            )
+        ) is not None:
             return oldest_sum
         return 0
 
-    if tail_start_time is not None:
-        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
-            session, tail_start_time, StatisticsShortTerm, metadata_id
+    if (
+        tail_start_time is not None
+        and (
+            oldest_sum := _get_oldest_sum_statistic_in_sub_period(
+                session, tail_start_time, StatisticsShortTerm, metadata_id
+            )
         )
-        if (
-            oldest_start is not None
-            and oldest_start < tail_start_time
-            and oldest_sum is not None
-        ):
-            return oldest_sum
+    ) is not None:
+        return oldest_sum
 
     return 0
 
@@ -1362,7 +1378,7 @@ def statistic_during_period(
     start_time: datetime | None,
     end_time: datetime | None,
     statistic_id: str,
-    types: set[str] | None,
+    types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str] | None,
 ) -> dict[str, Any]:
     """Return a statistic data point for the UTC period start_time - end_time."""
@@ -1373,51 +1389,79 @@ def statistic_during_period(
 
     result: dict[str, Any] = {}
 
-    # To calculate the summary, data from the statistics (hourly) and short_term_statistics
-    # (5 minute) tables is combined
-    # - The short term statistics table is used for the head and tail of the period,
-    #   if the period it doesn't start or end on a full hour
-    # - The statistics table is used for the remainder of the time
-    now = dt_util.utcnow()
-    if end_time is not None and end_time > now:
-        end_time = now
-
-    tail_only = (
-        start_time is not None
-        and end_time is not None
-        and end_time - start_time < timedelta(hours=1)
-    )
-
-    # Calculate the head period
-    head_start_time: datetime | None = None
-    head_end_time: datetime | None = None
-    if not tail_only and start_time is not None and start_time.minute:
-        head_start_time = start_time
-        head_end_time = start_time.replace(
-            minute=0, second=0, microsecond=0
-        ) + timedelta(hours=1)
-
-    # Calculate the tail period
-    tail_start_time: datetime | None = None
-    tail_end_time: datetime | None = None
-    if end_time is None:
-        tail_start_time = now.replace(minute=0, second=0, microsecond=0)
-    elif end_time.minute:
-        tail_start_time = (
-            start_time
-            if tail_only
-            else end_time.replace(minute=0, second=0, microsecond=0)
-        )
-        tail_end_time = end_time
-
-    # Calculate the main period
-    main_start_time: datetime | None = None
-    main_end_time: datetime | None = None
-    if not tail_only:
-        main_start_time = start_time if head_end_time is None else head_end_time
-        main_end_time = end_time if tail_start_time is None else tail_start_time
-
     with session_scope(hass=hass) as session:
+        # Fetch metadata for the given statistic_id
+        if not (
+            metadata := get_metadata_with_session(session, statistic_ids=[statistic_id])
+        ):
+            return result
+
+        metadata_id = metadata[statistic_id][0]
+
+        oldest_stat = _first_statistic(session, Statistics, metadata_id)
+        oldest_5_min_stat = None
+        if not valid_statistic_id(statistic_id):
+            oldest_5_min_stat = _first_statistic(
+                session, StatisticsShortTerm, metadata_id
+            )
+
+        # To calculate the summary, data from the statistics (hourly) and
+        # short_term_statistics (5 minute) tables is combined
+        # - The short term statistics table is used for the head and tail of the period,
+        #   if the period it doesn't start or end on a full hour
+        # - The statistics table is used for the remainder of the time
+        now = dt_util.utcnow()
+        if end_time is not None and end_time > now:
+            end_time = now
+
+        tail_only = (
+            start_time is not None
+            and end_time is not None
+            and end_time - start_time < timedelta(hours=1)
+        )
+
+        # Calculate the head period
+        head_start_time: datetime | None = None
+        head_end_time: datetime | None = None
+        if (
+            not tail_only
+            and oldest_stat is not None
+            and oldest_5_min_stat is not None
+            and oldest_5_min_stat - oldest_stat < timedelta(hours=1)
+            and (start_time is None or start_time < oldest_5_min_stat)
+        ):
+            # To improve accuracy of averaged for statistics which were added within
+            # recorder's retention period.
+            head_start_time = oldest_5_min_stat
+            head_end_time = oldest_5_min_stat.replace(
+                minute=0, second=0, microsecond=0
+            ) + timedelta(hours=1)
+        elif not tail_only and start_time is not None and start_time.minute:
+            head_start_time = start_time
+            head_end_time = start_time.replace(
+                minute=0, second=0, microsecond=0
+            ) + timedelta(hours=1)
+
+        # Calculate the tail period
+        tail_start_time: datetime | None = None
+        tail_end_time: datetime | None = None
+        if end_time is None:
+            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif end_time.minute:
+            tail_start_time = (
+                start_time
+                if tail_only
+                else end_time.replace(minute=0, second=0, microsecond=0)
+            )
+            tail_end_time = end_time
+
+        # Calculate the main period
+        main_start_time: datetime | None = None
+        main_end_time: datetime | None = None
+        if not tail_only:
+            main_start_time = start_time if head_end_time is None else head_end_time
+            main_end_time = end_time if tail_start_time is None else tail_start_time
+
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if not metadata:
@@ -1449,6 +1493,7 @@ def statistic_during_period(
                     head_start_time,
                     main_start_time,
                     tail_start_time,
+                    oldest_stat,
                     tail_only,
                     metadata_id,
                 )
@@ -1487,11 +1532,11 @@ def statistic_during_period(
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
-    end_time: datetime | None = None,
-    statistic_ids: list[str] | None = None,
-    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
-    start_time_as_datetime: bool = False,
-    units: dict[str, str] | None = None,
+    end_time: datetime | None,
+    statistic_ids: list[str] | None,
+    period: Literal["5minute", "day", "hour", "week", "month"],
+    units: dict[str, str] | None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -1509,14 +1554,12 @@ def statistics_during_period(
         if statistic_ids is not None:
             metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
 
-        if period == "5minute":
-            table = StatisticsShortTerm
-            stmt = _statistics_during_period_stmt_short_term(
-                start_time, end_time, metadata_ids
-            )
-        else:
-            table = Statistics
-            stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids)
+        table: type[Statistics | StatisticsShortTerm] = (
+            Statistics if period != "5minute" else StatisticsShortTerm
+        )
+        stmt = _statistics_during_period_stmt(
+            start_time, end_time, metadata_ids, table, types
+        )
         stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
@@ -1532,8 +1575,8 @@ def statistics_during_period(
                 True,
                 table,
                 start_time,
-                start_time_as_datetime,
                 units,
+                types,
             )
 
         result = _sorted_statistics_to_dict(
@@ -1545,17 +1588,17 @@ def statistics_during_period(
             True,
             table,
             start_time,
-            True,
             units,
+            types,
         )
 
         if period == "day":
-            return _reduce_statistics_per_day(result)
+            return _reduce_statistics_per_day(result, types)
 
         if period == "week":
-            return _reduce_statistics_per_week(result)
+            return _reduce_statistics_per_week(result, types)
 
-        return _reduce_statistics_per_month(result)
+        return _reduce_statistics_per_month(result, types)
 
 
 def _get_last_statistics_stmt(
@@ -1590,6 +1633,7 @@ def _get_last_statistics(
     statistic_id: str,
     convert_units: bool,
     table: type[Statistics | StatisticsShortTerm],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
@@ -1618,26 +1662,34 @@ def _get_last_statistics(
             convert_units,
             table,
             None,
-            False,
             None,
+            types,
         )
 
 
 def get_last_statistics(
-    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+    hass: HomeAssistant,
+    number_of_stats: int,
+    statistic_id: str,
+    convert_units: bool,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     return _get_last_statistics(
-        hass, number_of_stats, statistic_id, convert_units, Statistics
+        hass, number_of_stats, statistic_id, convert_units, Statistics, types
     )
 
 
 def get_last_short_term_statistics(
-    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+    hass: HomeAssistant,
+    number_of_stats: int,
+    statistic_id: str,
+    convert_units: bool,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats short term statistics for a statistic_id."""
     return _get_last_statistics(
-        hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm
+        hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm, types
     )
 
 
@@ -1673,6 +1725,7 @@ def _latest_short_term_statistics_stmt(
 def get_latest_short_term_statistics(
     hass: HomeAssistant,
     statistic_ids: list[str],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for a list of statistic_ids."""
@@ -1702,8 +1755,8 @@ def get_latest_short_term_statistics(
             False,
             StatisticsShortTerm,
             None,
-            False,
             None,
+            types,
         )
 
 
@@ -1712,31 +1765,38 @@ def _statistics_at_time(
     metadata_ids: set[int],
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> list | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    # Fetch metadata for the given (or all) statistic_ids
-    if table == StatisticsShortTerm:
-        base_query = QUERY_STATISTICS_SHORT_TERM
-    else:
-        base_query = QUERY_STATISTICS
+    columns = [table.metadata_id, table.start]
+    if "last_reset" in types:
+        columns.append(table.last_reset)
+    if "max" in types:
+        columns.append(table.max)
+    if "mean" in types:
+        columns.append(table.mean)
+    if "min" in types:
+        columns.append(table.min)
+    if "state" in types:
+        columns.append(table.state)
+    if "sum" in types:
+        columns.append(table.sum)
 
-    query = session.query(*base_query)
+    stmt = lambda_stmt(lambda: select(columns))
 
     most_recent_statistic_ids = (
-        session.query(
-            func.max(table.id).label("max_id"),
-        )
+        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
         .filter(table.start < start_time)
         .filter(table.metadata_id.in_(metadata_ids))
+        .group_by(table.metadata_id)
+        .subquery()
     )
-    most_recent_statistic_ids = most_recent_statistic_ids.group_by(table.metadata_id)
-    most_recent_statistic_ids = most_recent_statistic_ids.subquery()
-    query = query.join(
+
+    stmt += lambda q: q.join(
         most_recent_statistic_ids,
         table.id == most_recent_statistic_ids.c.max_id,
     )
-
-    return execute(query)
+    return execute_stmt_lambda_element(session, stmt)
 
 
 def _sorted_statistics_to_dict(
@@ -1748,8 +1808,8 @@ def _sorted_statistics_to_dict(
     convert_units: bool,
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime | None,
-    start_time_as_datetime: bool,
     units: dict[str, str] | None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
@@ -1775,7 +1835,9 @@ def _sorted_statistics_to_dict(
     # Fetch last known statistics for the needed metadata IDs
     if need_stat_at_start_time:
         assert start_time  # Can not be None if need_stat_at_start_time is not empty
-        tmp = _statistics_at_time(session, need_stat_at_start_time, table, start_time)
+        tmp = _statistics_at_time(
+            session, need_stat_at_start_time, table, start_time, types
+        )
         if tmp:
             for stat in tmp:
                 stats_at_start_time[stat.metadata_id] = (stat,)
@@ -1794,21 +1856,24 @@ def _sorted_statistics_to_dict(
         for db_state in chain(stats_at_start_time.get(meta_id, ()), group):
             start = process_timestamp(db_state.start)
             end = start + table.duration
-            ent_results.append(
-                {
-                    "statistic_id": statistic_id,
-                    "start": start if start_time_as_datetime else start.isoformat(),
-                    "end": end.isoformat(),
-                    "mean": convert(db_state.mean),
-                    "min": convert(db_state.min),
-                    "max": convert(db_state.max),
-                    "last_reset": process_timestamp_to_utc_isoformat(
-                        db_state.last_reset
-                    ),
-                    "state": convert(db_state.state),
-                    "sum": convert(db_state.sum),
-                }
-            )
+            row = {
+                "start": start,
+                "end": end,
+            }
+            if "mean" in types:
+                row["mean"] = convert(db_state.mean)
+            if "min" in types:
+                row["min"] = convert(db_state.min)
+            if "max" in types:
+                row["max"] = convert(db_state.max)
+            if "last_reset" in types:
+                row["last_reset"] = process_timestamp(db_state.last_reset)
+            if "state" in types:
+                row["state"] = convert(db_state.state)
+            if "sum" in types:
+                row["sum"] = convert(db_state.sum)
+
+            ent_results.append(row)
 
     # Filter out the empty lists if some states had 0 results.
     return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}

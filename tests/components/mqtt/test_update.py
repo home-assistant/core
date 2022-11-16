@@ -203,8 +203,9 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
         hass,
         state_topic,
         '{"installed_version":"1.9.0","latest_version":"1.9.0",'
-        '"title":"Test Update Title","release_url":"https://example.com/release",'
-        '"release_summary":"Test release summary"}',
+        '"title":"Test Update 1 Title","release_url":"https://example.com/release1",'
+        '"release_summary":"Test release summary 1",'
+        '"entity_picture": "https://example.com/icon1.png"}',
     )
 
     await hass.async_block_till_done()
@@ -213,14 +214,16 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
-    assert state.attributes.get("release_summary") == "Test release summary"
-    assert state.attributes.get("release_url") == "https://example.com/release"
-    assert state.attributes.get("title") == "Test Update Title"
+    assert state.attributes.get("release_summary") == "Test release summary 1"
+    assert state.attributes.get("release_url") == "https://example.com/release1"
+    assert state.attributes.get("title") == "Test Update 1 Title"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon1.png"
 
     async_fire_mqtt_message(
         hass,
         state_topic,
-        '{"installed_version":"1.9.0","latest_version":"2.0.0","title":"Test Update Title"}',
+        '{"installed_version":"1.9.0","latest_version":"2.0.0",'
+        '"title":"Test Update 2 Title","entity_picture":"https://example.com/icon2.png"}',
     )
 
     await hass.async_block_till_done()
@@ -229,6 +232,7 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ON
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "2.0.0"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon2.png"
 
 
 async def test_json_state_message_with_template(hass, mqtt_mock_entry_with_yaml_config):

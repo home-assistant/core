@@ -26,10 +26,15 @@ async def setup_script(hass, script_config, stub_blueprint_populate):  # noqa: F
         },
     ),
 )
-async def test_delete_script(hass, hass_client):
+async def test_delete_script(hass, hass_client, hass_config_store):
     """Test deleting a script."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == [
+        "script.one",
+        "script.two",
+    ]
 
     ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 2
@@ -37,27 +42,19 @@ async def test_delete_script(hass, hass_client):
     client = await hass_client()
 
     orig_data = {"one": {}, "two": {}}
+    hass_config_store["scripts.yaml"] = orig_data
 
-    def mock_read(path):
-        """Mock reading data."""
-        return orig_data
+    resp = await client.delete("/api/config/script/config/two")
+    await hass.async_block_till_done()
 
-    written = []
-
-    def mock_write(path, data):
-        """Mock writing data."""
-        written.append(data)
-
-    with patch("homeassistant.components.config._read", mock_read), patch(
-        "homeassistant.components.config._write", mock_write
-    ):
-        resp = await client.delete("/api/config/script/config/two")
+    assert sorted(hass.states.async_entity_ids("script")) == [
+        "script.one",
+    ]
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    assert len(written) == 1
-    assert written[0] == {"one": {}}
+    assert hass_config_store["scripts.yaml"] == {"one": {}}
 
     assert len(ent_reg.entities) == 1

@@ -661,7 +661,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type="int",
+                    return_type=["AlarmControlPanelEntityFeature", "int"],
                 ),
                 TypeHintMatch(
                     function_name="alarm_disarm",
@@ -803,7 +803,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type="int",
+                    return_type=["CameraEntityFeature", "int"],
                 ),
                 TypeHintMatch(
                     function_name="is_recording",
@@ -1055,7 +1055,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type="int",
+                    return_type=["ClimateEntityFeature", "int"],
                 ),
                 TypeHintMatch(
                     function_name="min_temp",

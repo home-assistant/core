@@ -6,5 +6,6 @@
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "iot_class": "local_polling",
-  "loggers": ["deluge_client"]
+  "loggers": ["deluge_client"],
+  "integration_type": "service"
 }

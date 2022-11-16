@@ -88,7 +88,7 @@ def discovery_info_side_effect_fixture():
 def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_get_addon_discovery_info",
+        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
         side_effect=discovery_info_side_effect,
         return_value=discovery_info,
     ) as get_addon_discovery_info:

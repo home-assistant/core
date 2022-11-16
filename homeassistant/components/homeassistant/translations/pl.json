@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "historic_currency": {
+            "description": "Waluta {currency} nie jest ju\u017c u\u017cywana. Zmie\u0144 konfiguracj\u0119 waluty.",
+            "title": "Skonfigurowana waluta nie jest ju\u017c u\u017cywana"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "Architektura procesora",

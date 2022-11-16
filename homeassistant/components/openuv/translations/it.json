@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_api_key": "Chiave API non valida"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Inserisci nuovamente la chiave API per {latitude}, {longitude}.",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "api_key": "Chiave API",

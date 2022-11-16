@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 import math
@@ -41,7 +41,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
-class FanEntityFeature(IntEnum):
+class FanEntityFeature(IntFlag):
     """Supported features of the fan entity."""
 
     SET_SPEED = 1
