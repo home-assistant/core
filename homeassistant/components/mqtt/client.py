@@ -561,8 +561,8 @@ class MQTT:
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
-        _flags: dict[str, Any],
-        result_code: int,
+        _flags: dict[str, int],
+        result_code: int | mqtt.ReasonCodes,
         properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
