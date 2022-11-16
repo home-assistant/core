@@ -17,7 +17,6 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     get_metadata,
     list_statistic_ids,
-    statistics_during_period,
 )
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -29,6 +28,7 @@ from .common import (
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
+    statistics_during_period,
 )
 
 from tests.common import async_fire_time_changed
@@ -167,15 +167,36 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(10),
                 "min": approx(10),
                 "max": approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+            }
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+            "types": ["mean"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
+                "mean": approx(10),
             }
         ]
     }
@@ -895,9 +916,8 @@ async def test_statistics_during_period_unit_conversion(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -924,9 +944,8 @@ async def test_statistics_during_period_unit_conversion(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(converted_value),
                 "min": approx(converted_value),
                 "max": approx(converted_value),
@@ -989,9 +1008,8 @@ async def test_sum_statistics_during_period_unit_conversion(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": None,
                 "min": None,
                 "max": None,
@@ -1018,9 +1036,8 @@ async def test_sum_statistics_during_period_unit_conversion(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": None,
                 "min": None,
                 "max": None,
@@ -1150,9 +1167,8 @@ async def test_statistics_during_period_in_the_past(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": stats_start.isoformat(),
-                "end": (stats_start + timedelta(minutes=5)).isoformat(),
+                "start": int(stats_start.timestamp() * 1000),
+                "end": int((stats_start + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(10),
                 "min": approx(10),
                 "max": approx(10),
@@ -1178,9 +1194,8 @@ async def test_statistics_during_period_in_the_past(
     assert response["result"] == {
         "sensor.test": [
             {
-                "statistic_id": "sensor.test",
-                "start": start_of_day.isoformat(),
-                "end": (start_of_day + timedelta(days=1)).isoformat(),
+                "start": int(start_of_day.timestamp() * 1000),
+                "end": int((start_of_day + timedelta(days=1)).timestamp() * 1000),
                 "mean": approx(10),
                 "min": approx(10),
                 "max": approx(10),
@@ -1468,9 +1483,8 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
     expected_response = {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -1481,9 +1495,8 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         ],
         "sensor.test2": [
             {
-                "statistic_id": "sensor.test2",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(value * 2),
                 "min": approx(value * 2),
                 "max": approx(value * 2),
@@ -1494,9 +1507,8 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         ],
         "sensor.test3": [
             {
-                "statistic_id": "sensor.test3",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "start": int(now.timestamp() * 1000),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "mean": approx(value * 3),
                 "min": approx(value * 3),
                 "max": approx(value * 3),
@@ -1638,14 +1650,13 @@ async def test_update_statistics_metadata(
     assert response["result"] == {
         "sensor.test": [
             {
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "last_reset": None,
                 "max": 10.0,
                 "mean": 10.0,
                 "min": 10.0,
-                "start": now.isoformat(),
+                "start": int(now.timestamp() * 1000),
                 "state": None,
-                "statistic_id": "sensor.test",
                 "sum": None,
             }
         ],
@@ -1700,14 +1711,13 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == {
         "sensor.test": [
             {
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "last_reset": None,
                 "max": 10.0,
                 "mean": 10.0,
                 "min": 10.0,
-                "start": now.isoformat(),
+                "start": int(now.timestamp() * 1000),
                 "state": None,
-                "statistic_id": "sensor.test",
                 "sum": None,
             }
         ],
@@ -1756,14 +1766,13 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == {
         "sensor.test": [
             {
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "last_reset": None,
                 "max": 10000.0,
                 "mean": 10000.0,
                 "min": 10000.0,
-                "start": now.isoformat(),
+                "start": int(now.timestamp() * 1000),
                 "state": None,
-                "statistic_id": "sensor.test",
                 "sum": None,
             }
         ],
@@ -1796,14 +1805,13 @@ async def test_change_statistics_unit_errors(
     expected_statistics = {
         "sensor.test": [
             {
-                "end": (now + timedelta(minutes=5)).isoformat(),
+                "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
                 "last_reset": None,
                 "max": 10.0,
                 "mean": 10.0,
                 "min": 10.0,
-                "start": now.isoformat(),
+                "start": int(now.timestamp() * 1000),
                 "state": None,
-                "statistic_id": "sensor.test",
                 "sum": None,
             }
         ],
@@ -2292,9 +2300,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": (period1 + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2303,9 +2310,8 @@ async def test_import_statistics(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2341,13 +2347,18 @@ async def test_import_statistics(
             },
         )
     }
-    last_stats = get_last_statistics(hass, 1, statistic_id, True)
+    last_stats = get_last_statistics(
+        hass,
+        1,
+        statistic_id,
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert last_stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2383,9 +2394,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2394,9 +2404,8 @@ async def test_import_statistics(
                 "sum": approx(6.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2435,9 +2444,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": approx(1.0),
                 "mean": approx(2.0),
                 "min": approx(3.0),
@@ -2446,9 +2454,8 @@ async def test_import_statistics(
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2519,9 +2526,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2530,9 +2536,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2588,9 +2593,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": approx(None),
                 "mean": approx(None),
                 "min": approx(None),
@@ -2599,9 +2603,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2631,9 +2634,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": approx(None),
                 "mean": approx(None),
                 "min": approx(None),
@@ -2642,9 +2644,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2715,9 +2716,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2726,9 +2726,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2784,9 +2783,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": approx(None),
                 "mean": approx(None),
                 "min": approx(None),
@@ -2795,9 +2793,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2827,9 +2824,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": approx(None),
                 "mean": approx(None),
                 "min": approx(None),
@@ -2838,9 +2834,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2926,9 +2921,8 @@ async def test_adjust_sum_statistics_errors(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": period1,
+                "end": period1 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2937,9 +2931,8 @@ async def test_adjust_sum_statistics_errors(
                 "sum": approx(2.0 * factor),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": period2,
+                "end": period2 + timedelta(hours=1),
                 "max": None,
                 "mean": None,
                 "min": None,
