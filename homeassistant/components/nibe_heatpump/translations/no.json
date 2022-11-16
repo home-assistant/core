@@ -6,11 +6,11 @@
         "error": {
             "address": "Ugyldig ekstern adresse er angitt. Adressen m\u00e5 v\u00e6re en IP-adresse eller et vertsnavn som kan l\u00f8ses.",
             "address_in_use": "Den valgte lytteporten er allerede i bruk p\u00e5 dette systemet.",
-            "model": "Den valgte modellen ser ikke ut til \u00e5 st\u00f8tte modbus40",
-            "read": "Feil ved leseforesp\u00f8rsel fra pumpe. Bekreft din \"Ekstern leseport\" eller \"Ekstern IP-adresse\".",
+            "model": "Den valgte modellen ser ikke ut til \u00e5 st\u00f8tte MODBUS40",
+            "read": "Feil ved leseforesp\u00f8rsel fra pumpe. Bekreft din \"Ekstern leseport\" eller \"Ekstern adresse\".",
             "unknown": "Uventet feil",
-            "url": "Den spesifiserte nettadressen er ikke en godt utformet og st\u00f8ttet nettadresse",
-            "write": "Feil ved skriveforesp\u00f8rsel til pumpen. Bekreft din \"Ekstern skriveport\" eller \"Ekstern IP-adresse\"."
+            "url": "Den angitte URL-en er ikke godt utformet eller st\u00f8ttet",
+            "write": "Feil ved skriveforesp\u00f8rsel til pumpen. Bekreft din \"Ekstern skriveport\" eller \"Ekstern adresse\"."
         },
         "step": {
             "modbus": {
@@ -53,7 +53,7 @@
                     "remote_read_port": "Porten NibeGW-enheten lytter etter leseforesp\u00f8rsler p\u00e5.",
                     "remote_write_port": "Porten NibeGW-enheten lytter etter skriveforesp\u00f8rsler p\u00e5."
                 },
-                "description": "Velg tilkoblingsmetoden til pumpen din. Generelt krever pumper i F-serien et Nibe GW-tilpasset tilbeh\u00f8r, mens en pumpe i S-serien har Modbus-st\u00f8tte innebygd.",
+                "description": "Velg tilkoblingsmetoden til pumpen din. Generelt krever pumper i F-serien et NibeGW-tilpasset tilbeh\u00f8r, mens en pumpe i S-serien har Modbus-st\u00f8tte innebygd.",
                 "menu_options": {
                     "modbus": "Modbus",
                     "nibegw": "NibeGW"
