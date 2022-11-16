@@ -739,6 +739,9 @@ gTTS==2.2.4
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
 
+# homeassistant.components.google_assistant
+gassist-text==0.0.3
+
 # homeassistant.components.google
 gcal-sync==4.0.2
 

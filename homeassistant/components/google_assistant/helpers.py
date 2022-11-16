@@ -8,9 +8,12 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import pprint
+from typing import Any
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
+from gassist_text import TextAssistant
+from google.oauth2 import service_account
 from yarl import URL
 
 from homeassistant.components import webhook
@@ -45,6 +48,7 @@ from .error import SmartHomeError
 
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
+ASSISTANT_SDK_SCOPE = "https://www.googleapis.com/auth/assistant-sdk-prototype"
 LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
 LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 
@@ -725,3 +729,15 @@ def async_get_entities(
             entities.append(entity)
 
     return entities
+
+
+async def async_send_text_command(service_account_info: dict[str, Any], command: str):
+    """Send a command as a text query to Google Assistant."""
+    # Add token_uri if missing. Credentials requires it but config doesn't
+    if "token_uri" not in service_account_info:
+        service_account_info["token_uri"] = "https://oauth2.googleapis.com/token"
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info, scopes=[ASSISTANT_SDK_SCOPE]
+    )
+    with TextAssistant(credentials) as assistant:
+        assistant.assist(command)

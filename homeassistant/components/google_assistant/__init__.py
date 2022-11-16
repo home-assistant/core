@@ -8,7 +8,11 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
@@ -32,6 +36,7 @@ from .const import (  # noqa: F401
     SOURCE_CLOUD,
 )
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
+from .helpers import async_send_text_command
 from .http import GoogleAssistantView, GoogleConfig
 
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
@@ -92,6 +97,16 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
 
 CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
+)
+
+SERVICE_SEND_TEXT_COMMAND = "send_text_command"
+SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
+SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
+    {
+        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
+            str, vol.Length(min=1)
+        ),
+    },
 )
 
 
@@ -159,10 +174,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await google_config.async_sync_entities(agent_user_id)
 
-    # Register service only if key is provided
+    async def send_text_command_service_handler(call: ServiceCall) -> None:
+        """Handle request send text command calls."""
+        command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
+        await async_send_text_command(config[CONF_SERVICE_ACCOUNT], command)
+
+    # Register services only if key is provided
     if CONF_SERVICE_ACCOUNT in config:
         hass.services.async_register(
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
+        )
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SEND_TEXT_COMMAND,
+            send_text_command_service_handler,
+            schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
+        )
+        # set up notify platform, no entry support for notify platform yet,
+        # have to use discovery to load platform.
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass,
+                Platform.NOTIFY,
+                DOMAIN,
+                {CONF_NAME: DOMAIN},
+                hass.data[DOMAIN][DATA_CONFIG],
+            )
         )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

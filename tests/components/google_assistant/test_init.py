@@ -1,5 +1,6 @@
 """The tests for google-assistant init."""
 from http import HTTPStatus
+from unittest.mock import patch
 
 from homeassistant.components import google_assistant as ga
 from homeassistant.core import Context, HomeAssistant
@@ -69,3 +70,21 @@ async def test_request_sync_service(aioclient_mock, hass):
     )
 
     assert aioclient_mock.call_count == 2  # token + request
+
+
+async def test_send_text_command_service(hass):
+    """Test send_text_command calls TextAssistant."""
+    await async_setup_component(hass, ga.DOMAIN, {ga.DOMAIN: DUMMY_CONFIG})
+    await hass.async_block_till_done()
+
+    command = "turn on home assistant unsupported device"
+    with patch(
+        "homeassistant.components.google_assistant.helpers.TextAssistant.assist"
+    ) as mock_assist_call:
+        await hass.services.async_call(
+            ga.DOMAIN,
+            ga.SERVICE_SEND_TEXT_COMMAND,
+            {ga.SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND: command},
+            blocking=True,
+        )
+    mock_assist_call.assert_called_once_with(command)
