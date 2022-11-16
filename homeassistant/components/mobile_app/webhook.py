@@ -1,4 +1,6 @@
 """Webhook handlers for mobile_app."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from functools import wraps

@@ -2,6 +2,8 @@
 import statistics
 from unittest.mock import patch
 
+from pytest import LogCaptureFixture
+
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -14,12 +16,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
+VALUES_ERROR = [17, "string", 15.3]
 COUNT = len(VALUES)
 MIN_VALUE = min(VALUES)
 MAX_VALUE = max(VALUES)
@@ -433,3 +437,32 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.second_test")
+
+
+async def test_sensor_incorrect_state(
+    hass: HomeAssistant, caplog: LogCaptureFixture
+) -> None:
+    """Test the min sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_failure",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_failure")
+
+    assert state.state == "15.3"
+    assert "Unable to store state. Only numerical states are supported" in caplog.text

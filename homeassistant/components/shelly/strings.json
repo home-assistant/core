@@ -58,5 +58,18 @@
       "double_push": "{subtype} double push",
       "long_push": "{subtype} long push"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
+        "data": {
+          "ble_scanner_mode": "Bluetooth scanner mode"
+        }
+      }
+    },
+    "abort": {
+      "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
+    }
   }
 }

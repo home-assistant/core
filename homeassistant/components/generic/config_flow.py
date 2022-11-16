@@ -16,7 +16,11 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.camera import CAMERA_IMAGE_TIMEOUT, _async_get_image
+from homeassistant.components.camera import (
+    CAMERA_IMAGE_TIMEOUT,
+    DynamicStreamSettings,
+    _async_get_image,
+)
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -246,7 +250,13 @@ async def async_test_stream(
             url = url.with_user(username).with_password(password)
             stream_source = str(url)
     try:
-        stream = create_stream(hass, stream_source, stream_options, "test_stream")
+        stream = create_stream(
+            hass,
+            stream_source,
+            stream_options,
+            DynamicStreamSettings(),
+            "test_stream",
+        )
         hls_provider = stream.add_provider(HLS_PROVIDER)
         await stream.start()
         if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
