@@ -333,7 +333,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.1.0
+apprise==1.2.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -450,7 +450,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.7.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.6
+bluetooth-auto-recovery==0.4.0
 
 # homeassistant.components.led_ble
 bluetooth-data-tools==0.2.0
@@ -555,7 +555,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.74.0
+dbus-fast==1.74.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -705,7 +705,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.2
+flipr-api==1.4.4
 
 # homeassistant.components.flux_led
 flux_led==0.28.32
@@ -868,7 +868,10 @@ hdate==0.10.4
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-herepy==2.0.0
+here_routing==0.1.1
+
+# homeassistant.components.here_travel_time
+here_transit==1.0.0
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
