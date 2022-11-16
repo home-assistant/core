@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class LockSwitchEntity(CoordinatorEntity[HeatzyDataUpdateCoordinator], SwitchEntity):
-    """Lock Switch."""
+    """Switch to lock any manipulation of control panel."""
 
     entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
