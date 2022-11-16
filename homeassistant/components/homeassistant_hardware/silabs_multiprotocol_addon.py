@@ -284,26 +284,28 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         zha_entries = self.hass.config_entries.async_entries("zha")
 
         if zha_entries:
+            option_flow_data = {
+                "name": self._zha_name(),
+                "new_port": {
+                    "path": await async_get_zigbee_socket(self.hass),
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "new_radio_type": "efr32",
+                "old_port": {
+                    "path": serial_port_settings.device,
+                    "baudrate": int(serial_port_settings.baudrate),
+                    "flow_control": "hardware"
+                    if serial_port_settings.flow_control
+                    else None,
+                },
+                "old_radio_type": "efr32",
+            }
+            _LOGGER.debug("Starting ZHA options flow with: %s", option_flow_data)
             self._zha_options_flow = await self.hass.config_entries.options.async_init(
                 zha_entries[0].entry_id,
                 context={"source": "yellow_migration"},
-                data={
-                    "name": self._zha_name(),
-                    "new_port": {
-                        "path": await async_get_zigbee_socket(self.hass),
-                        "baudrate": 115200,
-                        "flow_control": "hardware",
-                    },
-                    "new_radio_type": "efr32",
-                    "old_port": {
-                        "path": serial_port_settings.device,
-                        "baudrate": int(serial_port_settings.baudrate),
-                        "flow_control": "hardware"
-                        if serial_port_settings.flow_control
-                        else None,
-                    },
-                    "old_radio_type": "efr32",
-                },
+                data=option_flow_data,
             )
             if self._zha_options_flow["type"] not in (
                 FlowResultType.CREATE_ENTRY,
