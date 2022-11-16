@@ -3,7 +3,7 @@
         "flow_title": "{name}",
         "step": {
             "user": {
-                "title": "Register your heatzy account.",
+                "title": "Enter your Heatzy account credentials.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
