@@ -1042,11 +1042,7 @@ def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
-    ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh"
-    ), patch(
+    ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
         {
             "hci0": {

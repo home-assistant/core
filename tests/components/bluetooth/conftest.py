@@ -1,6 +1,6 @@
 """Tests for the bluetooth component."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -43,16 +43,6 @@ def mock_operating_system_90():
         yield
 
 
-@pytest.fixture(name="bluez_dbus_mock")
-def bluez_dbus_mock():
-    """Fixture that mocks out the bluez dbus calls."""
-    # Must patch directly since this is loaded on demand only
-    with patch(
-        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
-    ):
-        yield
-
-
 @pytest.fixture(name="macos_adapter")
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
@@ -78,7 +68,7 @@ def windows_adapter():
 
 
 @pytest.fixture(name="no_adapters")
-def no_adapter_fixture(bluez_dbus_mock):
+def no_adapter_fixture():
     """Fixture that mocks no adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -97,7 +87,7 @@ def no_adapter_fixture(bluez_dbus_mock):
 
 
 @pytest.fixture(name="one_adapter")
-def one_adapter_fixture(bluez_dbus_mock):
+def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -123,7 +113,7 @@ def one_adapter_fixture(bluez_dbus_mock):
 
 
 @pytest.fixture(name="two_adapters")
-def two_adapters_fixture(bluez_dbus_mock):
+def two_adapters_fixture():
     """Fixture that mocks two adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -155,7 +145,7 @@ def two_adapters_fixture(bluez_dbus_mock):
 
 
 @pytest.fixture(name="one_adapter_old_bluez")
-def one_adapter_old_bluez(bluez_dbus_mock):
+def one_adapter_old_bluez():
     """Fixture that mocks two adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
