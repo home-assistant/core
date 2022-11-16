@@ -77,7 +77,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         features = 0
         set_req = self.gateway.const.SetReq
