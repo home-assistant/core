@@ -15,7 +15,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
         return {**config, "baudrate": 115200}
 
     mock_connect_app = MagicMock()
-    mock_connect_app.__aenter__.return_value.backups.backups = []
+    mock_connect_app.__aenter__.return_value.backups.backups = [MagicMock()]
 
     with patch(
         "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe

@@ -76,6 +76,8 @@ ESPHOME_API_PORT = 6053
 
 CONNECT_DELAY_S = 1.0
 
+MIGRATION_RETRIES = 10
+
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
@@ -374,7 +376,7 @@ class BaseZhaFlow(FlowHandler):
             errors=errors,
         )
 
-    async def _async_load_network_settings(self) -> None:
+    async def _async_load_network_settings(self, create_backup: bool = False) -> None:
         """Connect to the radio and load its current network settings."""
         async with self._connect_zigpy_app() as app:
             # Check if the stick has any settings and load them
@@ -387,6 +389,9 @@ class BaseZhaFlow(FlowHandler):
                     network_info=app.state.network_info,
                     node_info=app.state.node_info,
                 )
+
+                if create_backup:
+                    await app.backups.create_backup()
 
             # The list of backups will always exist
             self._backups = app.backups.backups.copy()
@@ -881,9 +886,8 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
             pass
 
         # Load our current network settings
-        await self._async_load_network_settings()
-        if self._backups:
-            self._chosen_backup = self._backups[0]
+        await self._async_load_network_settings(create_backup=True)
+        self._chosen_backup = self._backups[0]
 
         # Update the current settings, since we know them in advance
         self._title = name
@@ -899,6 +903,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
                 CONF_RADIO_TYPE: self._radio_type.name,
             },
             options=self.config_entry.options,
+            title=name,
         )
 
         return await self.async_step_finish_yellow_migration()
@@ -910,11 +915,21 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
 
         if user_input is not None:
             # Restore the backup, permanently overwriting the device IEEE address
-            if self._chosen_backup is not None:
-                await self.async_step_maybe_confirm_ezsp_restore(
-                    {OVERWRITE_COORDINATOR_IEEE: True}
-                )
+            for retry in range(MIGRATION_RETRIES):
+                try:
+                    await self.async_step_maybe_confirm_ezsp_restore(
+                        {OVERWRITE_COORDINATOR_IEEE: True}
+                    )
+                    _LOGGER.debug("Restored backup after %s retries", retry)
+                    return self.async_create_entry(title="", data={})
+                except OSError as err:
+                    _LOGGER.debug(
+                        "Failed to restore backup %s, retrying in %s seconds",
+                        err,
+                        CONNECT_DELAY_S,
+                    )
 
-            return self.async_create_entry(title="", data={})
+                await asyncio.sleep(CONNECT_DELAY_S)
+            return self.async_abort(reason="migration_failed")
 
         return self.async_show_form(step_id="finish_yellow_migration")
