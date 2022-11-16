@@ -187,35 +187,6 @@ class AugustData(AugustSubscriberMixin):
             # will recover automatically when it comes back online.
             asyncio.create_task(self._async_initial_sync())
 
-    @callback
-    def _async_trigger_ble_lock_discovery(self):
-        """Update keys for the yalexs-ble integration if available."""
-        for lock in list(self.locks):
-            device_id = lock.device_id
-            lock_detail = self.get_device_detail(device_id)
-            if not lock_detail.offline_key:
-                continue
-            assert isinstance(lock_detail, LockDetail)
-            discovery_info = {
-                "name": lock_detail.device_name,
-                "address": lock_detail.mac_address,
-                "serial": lock_detail.serial_number,
-                "key": lock_detail.offline_key,
-                "slot": lock_detail.offline_slot,
-            }
-            _LOGGER.debug(
-                "Trigger discovery of BLE lock: %s (%s)",
-                lock_detail.device_name,
-                lock_detail.serial_number,
-            )
-            self._hass.async_create_task(
-                self._hass.config_entries.flow.async_init(
-                    "yalexs_ble",
-                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                    data=discovery_info,
-                )
-            )
-
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""
         # We don't care if this fails because we only want to wake
