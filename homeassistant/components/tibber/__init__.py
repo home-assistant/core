@@ -44,12 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websession=async_get_clientsession(hass),
         time_zone=dt_util.DEFAULT_TIME_ZONE,
     )
-    hass.data[DOMAIN] = tibber_connection
-
-    async def _close(event: Event) -> None:
-        await tibber_connection.rt_disconnect()
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
@@ -64,6 +58,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except tibber.InvalidLogin as exp:
         _LOGGER.error("Failed to login. %s", exp)
         return False
+
+    async def _close(event: Event) -> None:
+        await tibber_connection.rt_disconnect()
+
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
+
+    hass.data[DOMAIN] = tibber_connection
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
