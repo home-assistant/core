@@ -178,7 +178,7 @@ def webhook_response(
     *,
     registration: Mapping[str, Any],
     status: HTTPStatus = HTTPStatus.OK,
-    headers: Mapping[str, Any] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)
