@@ -43,9 +43,7 @@ class LockSwitchEntity(CoordinatorEntity[HeatzyDataUpdateCoordinator], SwitchEnt
         """Initialize switch."""
         super().__init__(coordinator)
         self._attr_unique_id = unique_id
-        self._attr_name = "Lock switch {}".format(
-            coordinator.data[unique_id][CONF_ALIAS]
-        )
+        self._attr_name = f"Lock switch {coordinator.data[unique_id][CONF_ALIAS]}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=DOMAIN,
