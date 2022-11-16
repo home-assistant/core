@@ -495,11 +495,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     ) -> tuple[int, ...]:
         # If there's a brightness topic set, we don't want to scale the
         # RGBxx values given using the brightness.
+        brightness: int
         if self._config[CONF_BRIGHTNESS]:
             brightness = 255
         else:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        scaled_rgb: tuple[int, ...] = tuple(round(i / 255 * brightness) for i in rgbxx)
+        scaled_rgb = tuple(round(i / 255 * brightness) for i in rgbxx)
         return scaled_rgb
 
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
