@@ -13,7 +13,7 @@ from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
+    """Set up the FRITZ!SmartHome template from ConfigEntry."""
     coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
         entry.entry_id
     ][CONF_COORDINATOR]
