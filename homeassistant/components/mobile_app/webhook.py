@@ -7,14 +7,13 @@ from functools import wraps
 from http import HTTPStatus
 import logging
 import secrets
-from typing import TYPE_CHECKING
 
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import camera, cloud, notify as hass_notify
+from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -113,10 +112,6 @@ from .helpers import (
     supports_encryption,
     webhook_response,
 )
-
-if TYPE_CHECKING:
-    from homeassistant.components.tag import TagProtocol
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -688,10 +683,8 @@ async def webhook_get_config(hass, config_entry, data):
 @validate_schema({vol.Required("tag_id"): cv.string})
 async def webhook_scan_tag(hass, config_entry, data):
     """Handle a fire event webhook."""
-    # Importing tag via hass.components in case it is overridden
-    # in a custom_components (custom_components.tag)
-    tag: TagProtocol = hass.components.tag
     await tag.async_scan_tag(
+        hass,
         data["tag_id"],
         config_entry.data[ATTR_DEVICE_ID],
         registration_context(config_entry.data),
