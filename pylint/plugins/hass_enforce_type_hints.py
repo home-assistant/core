@@ -1285,6 +1285,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["list[str]", None],
                 ),
                 TypeHintMatch(
+                    function_name="supported_features",
+                    return_type=["FanEntityFeature", "int"],
+                ),
+                TypeHintMatch(
                     function_name="set_percentage",
                     arg_types={1: "int"},
                     return_type=None,
