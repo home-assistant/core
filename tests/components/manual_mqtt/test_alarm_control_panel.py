@@ -10,11 +10,15 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -67,8 +71,10 @@ async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_with_yaml_
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_no_pending(
@@ -110,8 +116,10 @@ async def test_no_pending(
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_no_pending_when_code_not_req(
@@ -154,8 +162,10 @@ async def test_no_pending_when_code_not_req(
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_with_pending(
@@ -221,8 +231,10 @@ async def test_with_pending(
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_with_invalid_code(
@@ -264,8 +276,10 @@ async def test_with_invalid_code(
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_with_template_code(
@@ -308,8 +322,10 @@ async def test_with_template_code(
     "service,expected_state",
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
         (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_with_specific_pending(
@@ -1258,8 +1274,10 @@ async def test_disarm_with_template_code(hass, mqtt_mock_entry_with_yaml_config)
     "config,expected_state",
     [
         ("payload_arm_away", STATE_ALARM_ARMED_AWAY),
+        ("payload_arm_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS),
         ("payload_arm_home", STATE_ALARM_ARMED_HOME),
         ("payload_arm_night", STATE_ALARM_ARMED_NIGHT),
+        ("payload_arm_vacation", STATE_ALARM_ARMED_VACATION),
     ],
 )
 async def test_arm_via_command_topic(
