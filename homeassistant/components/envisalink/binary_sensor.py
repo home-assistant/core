@@ -58,6 +58,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
         self._zone_number = zone_number
+        self._attr_unique_id = "envisalink-binary-sensor-" + str(zone_number)
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
