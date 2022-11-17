@@ -341,7 +341,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cls, config_entry: config_entries.ConfigEntry
     ) -> bool:
         """Return options flow support for this handler."""
-        return config_entry.data.get("gen") == 2
+        return config_entry.data.get("gen") == 2 and not config_entry.data.get(
+            CONF_SLEEP_PERIOD
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
