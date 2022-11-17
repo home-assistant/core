@@ -327,6 +327,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "1118431-*",
     },
     {
+        "domain": "powerwall",
+        "hostname": "1232100-*",
+    },
+    {
         "domain": "prusalink",
         "macaddress": "109C70*",
     },
