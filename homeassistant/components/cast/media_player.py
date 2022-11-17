@@ -899,7 +899,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return self._chromecast.app_display_name if self._chromecast else None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         support = (
             MediaPlayerEntityFeature.PLAY_MEDIA

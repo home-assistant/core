@@ -453,9 +453,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported."""
-        flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
+        flags: MediaPlayerEntityFeature | int = (
+            self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
+        )
 
         if SERVICE_TURN_ON in self._cmds:
             flags |= MediaPlayerEntityFeature.TURN_ON

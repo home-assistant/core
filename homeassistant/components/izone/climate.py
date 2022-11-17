@@ -445,7 +445,6 @@ class ZoneDevice(ClimateEntity):
         self._zone = zone
         self._name = zone.name.title()
 
-        self._attr_supported_features = 0
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
                 HVACMode.OFF: Zone.Mode.CLOSE,
@@ -518,7 +517,7 @@ class ZoneDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error(0)
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         if self._zone.mode == Zone.Mode.AUTO:
             return self._attr_supported_features
