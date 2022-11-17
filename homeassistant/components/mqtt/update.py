@@ -253,7 +253,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature | int:
         """Return the list of supported features."""
         support = 0
 
