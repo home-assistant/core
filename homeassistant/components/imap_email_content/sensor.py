@@ -31,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERVER = "server"
 CONF_SENDERS = "senders"
 CONF_FOLDER = "folder"
+CONF_FORCE_HTML = "force_html"
 
 ATTR_FROM = "from"
 ATTR_BODY = "body"
@@ -49,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_FORCE_HTML, default=False): cv.boolean,
     }
 )
 
@@ -67,6 +69,7 @@ def setup_platform(
         config[CONF_PORT],
         config[CONF_FOLDER],
         config[CONF_VERIFY_SSL],
+        config[CONF_FORCE_HTML],
     )
 
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
@@ -77,6 +80,7 @@ def setup_platform(
         config.get(CONF_NAME) or config[CONF_USERNAME],
         config[CONF_SENDERS],
         value_template,
+        config[CONF_FORCE_HTML],
     )
 
     if sensor.connected:
@@ -86,7 +90,7 @@ def setup_platform(
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port, folder, verify_ssl):
+    def __init__(self, user, password, server, port, folder, verify_ssl, force_html):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
@@ -97,6 +101,7 @@ class EmailReader:
         self._last_id = None
         self._unread_ids = deque([])
         self.connection = None
+        self._force_html = force_html
 
     def connect(self):
         """Login and setup the connection."""
@@ -162,7 +167,9 @@ class EmailReader:
 class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
-    def __init__(self, hass, email_reader, name, allowed_senders, value_template):
+    def __init__(
+        self, hass, email_reader, name, allowed_senders, value_template, force_html
+    ):
         """Initialize the sensor."""
         self.hass = hass
         self._email_reader = email_reader
@@ -173,6 +180,7 @@ class EmailContentSensor(SensorEntity):
         self._message = None
         self._state_attributes = None
         self.connected = self._email_reader.connect()
+        self._force_html = force_html
 
     @property
     def name(self):
@@ -195,7 +203,7 @@ class EmailContentSensor(SensorEntity):
             ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
             ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
             ATTR_DATE: email_message["Date"],
-            ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
+            ATTR_BODY: EmailContentSensor.get_msg_text(self, email_message),
         }
         return self._value_template.render(variables, parse_result=False)
 
@@ -217,29 +225,31 @@ class EmailContentSensor(SensorEntity):
         header = email.header.make_header(decoded_header)
         return str(header)
 
-    @staticmethod
-    def get_msg_text(email_message):
+    def get_msg_text(self, email_message):
         """
         Get the message text from the email.
 
-        Will look for text/plain or use text/html if not found.
+        Default will look for text/plain or use text/html if not found. Force html option set to true will only return html.
         """
         message_text = None
         message_html = None
         message_untyped_text = None
 
         for part in email_message.walk():
-            if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
-                if message_text is None:
-                    message_text = part.get_payload()
-            elif part.get_content_type() == "text/html":
-                if message_html is None:
-                    message_html = part.get_payload()
-            elif (
-                part.get_content_type().startswith("text")
-                and message_untyped_text is None
-            ):
-                message_untyped_text = part.get_payload()
+            if self._force_html:
+                message_html = part.get_payload()
+            else:
+                if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
+                    if message_text is None:
+                        message_text = part.get_payload()
+                elif part.get_content_type() == "text/html":
+                    if message_html is None:
+                        message_html = part.get_payload()
+                elif (
+                    part.get_content_type().startswith("text")
+                    and message_untyped_text is None
+                ):
+                    message_untyped_text = part.get_payload()
 
         if message_text is not None:
             return message_text
@@ -272,5 +282,5 @@ class EmailContentSensor(SensorEntity):
                 ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
                 ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
                 ATTR_DATE: email_message["Date"],
-                ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
+                ATTR_BODY: EmailContentSensor.get_msg_text(self, email_message),
             }
