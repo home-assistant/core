@@ -1520,7 +1520,7 @@ def async_track_utc_time_change(
         localized_now = dt_util.as_local(now) if local else now
         return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
-        ) + timedelta(microseconds=microseconds)
+        ).replace(microsecond=microseconds)
 
     time_listener: CALLBACK_TYPE | None = None
 
