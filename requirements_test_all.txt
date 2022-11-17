@@ -143,7 +143,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.4.3
+aioesphomeapi==11.5.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -436,7 +436,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.74.1
+dbus-fast==1.75.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3

@@ -26,7 +26,7 @@ from .helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
-from .setup import async_process_deps_reqs, async_setup_component
+from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
 
@@ -1313,6 +1313,22 @@ class ConfigEntries:
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data to save."""
         return {"entries": [entry.as_dict() for entry in self._entries.values()]}
+
+    async def async_wait_component(self, entry: ConfigEntry) -> bool:
+        """Wait for an entry's component to load and return if the entry is loaded.
+
+        This is primarily intended for existing config entries which are loaded at
+        startup, awaiting this function will block until the component and all its
+        config entries are loaded.
+        Config entries which are created after Home Assistant is started can't be waited
+        for, the function will just return if the config entry is loaded or not.
+        """
+        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_event.wait()
+        # The component was not loaded.
+        if entry.domain not in self.hass.config.components:
+            return False
+        return entry.state == ConfigEntryState.LOADED
 
 
 async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
