@@ -562,7 +562,7 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         _flags: dict[str, int],
-        result_code: int | mqtt.ReasonCodes,
+        result_code: int,
         properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
@@ -681,12 +681,13 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos_or_reason_codes: tuple[int, ...]
-        | list[mqtt.ReasonCodes]
-        | None = None,
-        properties: mqtt.Properties | None = None,
+        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
+        _properties_reason: mqtt.ReasonCodes | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
+        # The callback signature for on_unsubscribe is different from on_subscribe
+        # see https://github.com/eclipse/paho.mqtt.python/issues/687
+        # properties and reasoncodes are not used in Home Assistant
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
@@ -702,7 +703,11 @@ class MQTT:
                 self._pending_operations[mid] = asyncio.Event()
 
     def _mqtt_on_disconnect(
-        self, _mqttc: mqtt.Client, _userdata: None, result_code: int
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """Disconnected callback."""
         self.connected = False
