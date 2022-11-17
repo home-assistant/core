@@ -61,13 +61,15 @@ class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
         being migrated.
         """
         return {
-            "name": "Test",
-            "port": {
-                "path": "/dev/ttyTEST123",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST123",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
         }
 
     def _zha_name(self) -> str:

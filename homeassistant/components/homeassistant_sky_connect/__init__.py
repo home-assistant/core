@@ -1,12 +1,27 @@
 """The Home Assistant Sky Connect integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components import usb
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonManager,
+    AddonState,
+)
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    get_addon_manager,
+    get_zigbee_socket,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+from .util import get_usb_service_info
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -24,19 +39,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The USB dongle is not plugged in
         raise ConfigEntryNotReady
 
-    usb_info = usb.UsbServiceInfo(
-        device=entry.data["device"],
-        vid=entry.data["vid"],
-        pid=entry.data["pid"],
-        serial_number=entry.data["serial_number"],
-        manufacturer=entry.data["manufacturer"],
-        description=entry.data["description"],
-    )
+    addon_manager: AddonManager = get_addon_manager(hass)
+    try:
+        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
+    except AddonError as err:
+        _LOGGER.error(err)
+        raise ConfigEntryNotReady from err
 
+    # Start the addon if it's not started
+    if addon_info.state == AddonState.NOT_RUNNING:
+        await addon_manager.async_start_addon()
+
+    if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
+        _LOGGER.debug(
+            "Multi pan addon in state %s, delaying yellow config entry setup",
+            addon_info.state,
+        )
+        raise ConfigEntryNotReady
+
+    if addon_info.state == AddonState.NOT_INSTALLED:
+        usb_info = get_usb_service_info(entry)
+        await hass.config_entries.flow.async_init(
+            "zha",
+            context={"source": "usb"},
+            data=usb_info,
+        )
+        return True
+
+    hw_discovery_data = {
+        "name": "Sky Connect Multi-PAN",
+        "port": {
+            "path": get_zigbee_socket(hass, addon_info),
+            "baudrate": 115200,
+            "flow_control": "hardware",
+        },
+        "radio_type": "efr32",
+    }
     await hass.config_entries.flow.async_init(
         "zha",
-        context={"source": "usb"},
-        data=usb_info,
+        context={"source": "hardware"},
+        data=hw_discovery_data,
     )
 
     return True

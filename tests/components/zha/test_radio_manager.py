@@ -11,6 +11,7 @@ from zigpy.config import CONF_DEVICE_PATH
 import zigpy.types
 
 from homeassistant import config_entries
+from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
 from homeassistant.components.zha.core.const import DOMAIN, RadioType
 from homeassistant.core import HomeAssistant
@@ -125,13 +126,15 @@ async def test_migrate_matching_port(
             "radio_type": "efr32",
         },
         "old_discovery_info": {
-            "name": "Test",
-            "port": {
-                "path": "/dev/ttyTEST123",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST123",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
         },
     }
 
@@ -150,6 +153,104 @@ async def test_migrate_matching_port(
     assert config_entry.title == "Test Updated"
 
     await migration_helper.async_finish_migration()
+
+
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+    mock_detect_radio_type(),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migrate_matching_port_usb(
+    hass: HomeAssistant,
+    mock_connect_zigpy_app,
+) -> None:
+    """Test automatic migration."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        domain=DOMAIN,
+        options={},
+        title="Test",
+        version=3,
+    )
+    config_entry.add_to_hass(hass)
+
+    migration_data = {
+        "new_discovery_info": {
+            "name": "Test Updated",
+            "port": {
+                "path": "socket://some/virtual_port",
+                "baudrate": 115200,
+                "flow_control": "hardware",
+            },
+            "radio_type": "efr32",
+        },
+        "old_discovery_info": {
+            "usb": UsbServiceInfo("/dev/ttyTEST123", "blah", "blah", None, None, None)
+        },
+    }
+
+    migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
+    assert await migration_helper.async_initiate_migration(migration_data)
+
+    # Check the ZHA config entry data is updated
+    assert config_entry.data == {
+        "device": {
+            "path": "socket://some/virtual_port",
+            "baudrate": 115200,
+            "flow_control": "hardware",
+        },
+        "radio_type": "ezsp",
+    }
+    assert config_entry.title == "Test Updated"
+
+    await migration_helper.async_finish_migration()
+
+
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+    mock_detect_radio_type(ret=False),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migrate_matching_port_usb_detect_fails(
+    hass: HomeAssistant,
+    mock_connect_zigpy_app,
+) -> None:
+    """Test automatic migration."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        domain=DOMAIN,
+        options={},
+        title="Test",
+        version=3,
+    )
+    config_entry.add_to_hass(hass)
+
+    migration_data = {
+        "new_discovery_info": {
+            "name": "Test Updated",
+            "port": {
+                "path": "socket://some/virtual_port",
+                "baudrate": 115200,
+                "flow_control": "hardware",
+            },
+            "radio_type": "efr32",
+        },
+        "old_discovery_info": {
+            "usb": UsbServiceInfo("/dev/ttyTEST123", "blah", "blah", None, None, None)
+        },
+    }
+
+    migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
+    assert not await migration_helper.async_initiate_migration(migration_data)
+
+    # Check the ZHA config entry data is not updated
+    assert config_entry.data == {
+        "device": {"path": "/dev/ttyTEST123"},
+        "radio_type": "ezsp",
+    }
+    assert config_entry.title == "Test"
 
 
 async def test_migrate_matching_port_config_entry_not_loaded(
@@ -178,13 +279,15 @@ async def test_migrate_matching_port_config_entry_not_loaded(
             "radio_type": "efr32",
         },
         "old_discovery_info": {
-            "name": "Test",
-            "port": {
-                "path": "/dev/ttyTEST123",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST123",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
         },
     }
 
@@ -236,13 +339,15 @@ async def test_migrate_matching_port_retry(
             "radio_type": "efr32",
         },
         "old_discovery_info": {
-            "name": "Test",
-            "port": {
-                "path": "/dev/ttyTEST123",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST123",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
         },
     }
 
@@ -290,13 +395,15 @@ async def test_migrate_non_matching_port(
             "radio_type": "efr32",
         },
         "old_discovery_info": {
-            "name": "Test",
-            "port": {
-                "path": "/dev/ttyTEST456",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST456",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
         },
     }
 
