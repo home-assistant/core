@@ -191,8 +191,6 @@ class WaterHeaterEntity(Entity):
     @property
     def capability_attributes(self) -> Mapping[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
-
         data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
@@ -202,7 +200,7 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -238,12 +236,10 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        supported_features = self.supported_features or 0
-
-        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
 
-        if supported_features & WaterHeaterEntityFeature.AWAY_MODE:
+        if self.supported_features & WaterHeaterEntityFeature.AWAY_MODE:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
