@@ -115,7 +115,7 @@ class SensorDeviceClass(StrEnum):
     ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
     """Accumulated precipitation.
 
-    Unit of measurement: `UnitOfAccumulatedVolumetricFlux` enum
+    Unit of measurement:
     - SI / metric: `mm`
     - USCS / imperial: `in`
     """
