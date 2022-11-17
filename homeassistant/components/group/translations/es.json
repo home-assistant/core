@@ -66,9 +66,9 @@
                     "cover": "Grupo de persianas/cortinas",
                     "fan": "Grupo de ventiladores",
                     "light": "Grupo de luces",
-                    "lock": "Bloquear el grupo",
+                    "lock": "Grupo de cerraduras",
                     "media_player": "Grupo de reproductores multimedia",
-                    "switch": "Grupo de conmutadores"
+                    "switch": "Grupo de interruptores"
                 },
                 "title": "A\u00f1adir grupo"
             }

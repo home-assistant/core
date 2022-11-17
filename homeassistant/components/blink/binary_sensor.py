@@ -69,7 +69,7 @@ class BlinkBinarySensor(BinarySensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update sensor state."""
         self.data.refresh()
         state = self._camera.attributes[self.entity_description.key]

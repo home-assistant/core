@@ -37,7 +37,7 @@
                     "camera_audio": "C\u00e1maras que admiten audio",
                     "camera_copy": "C\u00e1maras compatibles con transmisiones H.264 nativas"
                 },
-                "description": "Verifica todas las c\u00e1maras que admitan transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
+                "description": "Marca todas las c\u00e1maras que admitan transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
                 "title": "Configuraci\u00f3n de C\u00e1mara"
             },
             "exclude": {

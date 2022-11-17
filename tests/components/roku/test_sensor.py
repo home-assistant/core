@@ -14,8 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
+from . import UPNP_SERIAL
+
 from tests.common import MockConfigEntry
-from tests.components.roku import UPNP_SERIAL
 
 
 async def test_roku_sensors(

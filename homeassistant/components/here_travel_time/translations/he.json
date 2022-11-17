@@ -10,7 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "\u05de\u05e4\u05ea\u05d7 API"
+                    "api_key": "\u05de\u05e4\u05ea\u05d7 API",
+                    "name": "\u05e9\u05dd"
                 }
             }
         }

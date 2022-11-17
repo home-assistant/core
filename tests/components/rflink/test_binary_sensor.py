@@ -19,8 +19,9 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, State, callback
 import homeassistant.util.dt as dt_util
 
+from .test_init import mock_rflink
+
 from tests.common import async_fire_time_changed, mock_restore_cache
-from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = "binary_sensor"
 

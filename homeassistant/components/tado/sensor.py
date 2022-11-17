@@ -82,8 +82,7 @@ async def async_setup_entry(
             ]
         )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class TadoHomeSensor(TadoHomeEntity, SensorEntity):
@@ -102,7 +101,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._state_attributes = None
         self._tado_weather_data = self._tado.data["weather"]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(
@@ -211,7 +210,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         self._state_attributes = None
         self._tado_zone_data = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(

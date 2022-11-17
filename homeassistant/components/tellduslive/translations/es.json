@@ -12,7 +12,7 @@
         "step": {
             "auth": {
                 "description": "Para vincular tu cuenta de Telldus Live:\n1. Pulsa el siguiente enlace\n2. Inicia sesi\u00f3n en Telldus Live\n3. Autoriza **{app_name}** (pulsa en **Yes**).\n4. Vuelve atr\u00e1s y pulsa **ENVIAR**.\n\n[Enlace a la cuenta TelldusLive]({auth_url})",
-                "title": "Autenticaci\u00f3n contra TelldusLive"
+                "title": "Autenticar contra TelldusLive"
             },
             "user": {
                 "data": {

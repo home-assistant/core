@@ -7,7 +7,7 @@
             "selected_option": "Opci\u00f3n de {entity_name} seleccionada actualmente"
         },
         "trigger_type": {
-            "current_option_changed": "Opci\u00f3n de {entity_name} cambiada"
+            "current_option_changed": "Una opci\u00f3n de {entity_name} cambi\u00f3"
         }
     },
     "title": "Seleccionar"

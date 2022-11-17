@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Seadme juurdep\u00e4\u00e4su projekti ID"
                 },
-                "description": "Loo Nest Device Accessi projekt, mille seadistamiseks on vaja 5 USA dollari suurust tasu**.\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}) ja maksevoo kaudu.\n1. Vajuta **Loo projekt**\n1. Anna oma seadmele juurdep\u00e4\u00e4su projektile nimi ja kl\u00f5psa nuppu **Next**.\n1. Sisesta oma OAuth Kliendi ID\n1. Luba s\u00fcndmused, kl\u00f5psates nuppu **Luba** ja **Loo projekt**.\n\nSisesta allpool seadme accessi projekti ID ([lisateave]({more_info_url})).\n",
+                "description": "Loo Nest Device Accessi projekt, mille seadistamiseks on vaja 5 USA dollari suurust tasu**.\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}) ja maksevoo kaudu.\n1. Vajuta **Loo projekt**\n1. Anna oma seadmele juurdep\u00e4\u00e4su projektile nimi ja kl\u00f5psa nuppu **Next**.\n1. Sisesta oma OAuth Kliendi ID\n1. Luba s\u00fcndmused, kl\u00f5psates nuppu **Luba** ja **Loo projekt**.\n\nSisesta allpool seadme accessi projekti ID ([lisateave]({more_info_url})).",
                 "title": "Nest: seadmele juurdep\u00e4\u00e4su projekti loomine"
             },
             "device_project_upgrade": {

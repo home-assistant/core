@@ -7,9 +7,9 @@ from devolo_plc_api.device import Device
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
     SourceType,
 )
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import FREQUENCY_GIGAHERTZ, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
@@ -55,8 +55,7 @@ async def async_setup_entry(
                 )
             )
             tracked.add(station[MAC_ADDRESS])
-            if new_entities:
-                async_add_entities(new_entities)
+            async_add_entities(new_entities)
 
     @callback
     def restore_entities() -> None:
@@ -82,8 +81,7 @@ async def async_setup_entry(
                 )
                 tracked.add(mac_address)
 
-        if missing:
-            async_add_entities(missing)
+        async_add_entities(missing)
 
     if device.device and "wifi1" in device.device.features:
         restore_entities()

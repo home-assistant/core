@@ -10,6 +10,7 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OPEN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
@@ -24,9 +25,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def supported(event: rfxtrxmod.RFXtrxEvent):
+def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
     """Return whether an event supports cover."""
-    return event.device.known_to_be_rollershutter
+    return bool(event.device.known_to_be_rollershutter)
 
 
 async def async_setup_entry(
@@ -40,8 +41,8 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
-    ):
+        entity_info: dict[str, Any],
+    ) -> list[Entity]:
         return [
             RfxtrxCover(
                 event.device,
@@ -144,7 +145,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
         assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
@@ -154,7 +155,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             self._attr_is_closed = True
 
     @callback
-    def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return

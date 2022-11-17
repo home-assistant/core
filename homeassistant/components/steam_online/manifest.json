@@ -4,8 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/steam_online",
   "requirements": ["steamodd==4.21"],
-  "dependencies": ["repairs"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
-  "loggers": ["steam"]
+  "loggers": ["steam"],
+  "integration_type": "service"
 }

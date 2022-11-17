@@ -11,12 +11,10 @@ import voluptuous as vol
 
 from homeassistant import const, util
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    AsyncSeeCallback,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
+    AsyncSeeCallback,
     SourceType,
 )
 from homeassistant.core import HomeAssistant

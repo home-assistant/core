@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Cihaz Eri\u015fim Projesi Kimli\u011fi"
                 },
-                "description": "Kurmak i\u00e7n **5 ABD dolar\u0131 \u00fccret** gerektiren bir Nest Cihaz Eri\u015fimi projesi olu\u015fturun.\n 1. [Cihaz Eri\u015fim Konsolu]( {device_access_console_url} )'e gidin ve \u00f6deme ak\u0131\u015f\u0131ndan ge\u00e7in.\n 1. **Proje olu\u015ftur**'a t\u0131klay\u0131n\n 1. Cihaz Eri\u015fimi projenize bir ad verin ve **\u0130leri**'ye t\u0131klay\u0131n.\n 1. OAuth M\u00fc\u015fteri Kimli\u011finizi girin\n 1. **Etkinle\u015ftir** ve **Proje olu\u015ftur**'a t\u0131klayarak etkinlikleri etkinle\u015ftirin. \n\n Cihaz Eri\u015fim Projesi Kimli\u011finizi a\u015fa\u011f\u0131ya girin ([daha fazla bilgi]( {more_info_url} )).\n",
+                "description": "Kurulum i\u00e7in **Google'a 5 ABD dolar\u0131 tutar\u0131nda bir \u00fccret \u00f6denmesini gerektiren** bir Nest Cihaz Eri\u015fimi projesi olu\u015fturun.\n 1. [Cihaz Eri\u015fim Konsolu]( {device_access_console_url} )'e gidin ve \u00f6deme ak\u0131\u015f\u0131ndan ge\u00e7in.\n 1. **Proje olu\u015ftur**'a t\u0131klay\u0131n\n 1. Cihaz Eri\u015fimi projenize bir ad verin ve **\u0130leri**'ye t\u0131klay\u0131n.\n 1. OAuth M\u00fc\u015fteri Kimli\u011finizi girin\n 1. **Etkinle\u015ftir** ve **Proje olu\u015ftur**'a t\u0131klayarak etkinlikleri etkinle\u015ftirin. \n\n Cihaz Eri\u015fim Projesi Kimli\u011finizi a\u015fa\u011f\u0131ya girin ([daha fazla bilgi]( {more_info_url} )).\n",
                 "title": "Yuva: Bir Cihaz Eri\u015fim Projesi Olu\u015fturun"
             },
             "device_project_upgrade": {

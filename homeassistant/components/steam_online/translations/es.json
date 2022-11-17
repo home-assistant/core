@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -20,13 +20,13 @@
                     "account": "ID de la cuenta de Steam",
                     "api_key": "Clave API"
                 },
-                "description": "Utiliza {account_id_url} para encontrar el ID de tu cuenta de Steam"
+                "description": "Usa {account_id_url} para encontrar el ID de tu cuenta de Steam"
             }
         }
     },
     "issues": {
         "removed_yaml": {
-            "description": "Se elimin\u00f3 la configuraci\u00f3n de Steam usando YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "description": "Se ha eliminado la configuraci\u00f3n de Steam usando YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
             "title": "Se ha eliminado la configuraci\u00f3n YAML de Steam"
         }
     },

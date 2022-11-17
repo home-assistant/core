@@ -2,40 +2,31 @@
 import logging
 
 import gammu  # pylint: disable=import-error
-import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
+from homeassistant.const import CONF_TARGET
 
-from .const import DOMAIN, GATEWAY, SMS_GATEWAY
+from .const import CONF_UNICODE, DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
-)
 
-
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
     if discovery_info is None:
-        number = config[CONF_RECIPIENT]
-    else:
-        number = discovery_info[CONF_RECIPIENT]
+        return None
 
-    return SMSNotificationService(hass, number)
+    return SMSNotificationService(hass)
 
 
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, hass, number):
+    def __init__(self, hass):
         """Initialize the service."""
 
         self.hass = hass
-        self.number = number
 
     async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
@@ -46,10 +37,22 @@ class SMSNotificationService(BaseNotificationService):
 
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
-        targets = kwargs.get(CONF_TARGET, [self.number])
+        targets = kwargs.get(CONF_TARGET)
+        if targets is None:
+            _LOGGER.error("No target number specified, cannot send message")
+            return
+
+        extended_data = kwargs.get(ATTR_DATA)
+        _LOGGER.debug("Extended data:%s", extended_data)
+
+        if extended_data is None:
+            is_unicode = True
+        else:
+            is_unicode = extended_data.get(CONF_UNICODE, True)
+
         smsinfo = {
             "Class": -1,
-            "Unicode": True,
+            "Unicode": is_unicode,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:

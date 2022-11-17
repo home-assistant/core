@@ -29,7 +29,13 @@
                 "data": {
                     "host": "Alamat IP"
                 },
-                "description": "API Awair Local harus diaktifkan dengan mengikuti langkah-langkah berikut: {url}"
+                "description": "Ikuti [petunjuk ini]( {url} ) untuk mengaktifkan API Lokal Awair. \n\n Klik kirim setelah selesai."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Perangkat",
+                    "host": "Alamat IP"
+                }
             },
             "reauth": {
                 "data": {

@@ -53,6 +53,9 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
     volume_level: float
 
 
+# mypy: disallow-any-generics
+
+
 def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:
@@ -99,7 +102,7 @@ def process_turn_on_params(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up siren devices."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[SirenEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -138,13 +141,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[SirenEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[SirenEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -160,6 +163,7 @@ class SirenEntity(ToggleEntity):
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
+    _attr_supported_features: SirenEntityFeature | int = 0
 
     @final
     @property
@@ -187,3 +191,8 @@ class SirenEntity(ToggleEntity):
         if hasattr(self, "entity_description"):
             return self.entity_description.available_tones
         return None
+
+    @property
+    def supported_features(self) -> SirenEntityFeature | int:
+        """Return the list of supported features."""
+        return self._attr_supported_features

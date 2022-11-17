@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 
 # Platforms
 DOMAIN: Final = "crownstone"
+PROJECT_NAME: Final = "home-assistant-core"
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 # Listeners

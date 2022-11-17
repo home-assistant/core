@@ -71,6 +71,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -126,6 +127,7 @@ EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -137,22 +139,14 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_NAME_CLEAR_NOTIFICATIONS = "clear_notifications"
 SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICES = (
-    SERVICE_NAME_CLEAR_NOTIFICATIONS,
     SERVICE_NAME_REMOVE_PIN,
     SERVICE_NAME_SET_PIN,
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
-SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-    },
 )
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
@@ -258,6 +252,45 @@ def _async_get_system_for_service_call(
 
 
 @callback
+def _async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
+    )
+
+
+@callback
 def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemType
 ) -> None:
@@ -345,12 +378,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @_verify_domain_control
     @extract_system
-    async def async_clear_notifications(call: ServiceCall, system: SystemType) -> None:
-        """Clear all active notifications."""
-        await system.async_clear_notifications()
-
-    @_verify_domain_control
-    @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
         await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
@@ -375,11 +402,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service, method, schema in (
-        (
-            SERVICE_NAME_CLEAR_NOTIFICATIONS,
-            async_clear_notifications,
-            SERVICE_CLEAR_NOTIFICATIONS_SCHEMA,
-        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
@@ -839,9 +861,7 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity when new data comes from the REST API."""
-        raise NotImplementedError()
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
-        raise NotImplementedError()

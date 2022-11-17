@@ -74,7 +74,9 @@ class AbodeCamera(AbodeDevice, Camera):
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
-                self._response = requests.get(self._device.image_url, stream=True)
+                self._response = requests.get(
+                    self._device.image_url, stream=True, timeout=10
+                )
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:

@@ -2,23 +2,23 @@
     "config": {
         "abort": {
             "already_configured": "A conta j\u00e1 foi configurada",
-            "already_configured_account": "A conta j\u00e1 est\u00e1 configurada",
-            "already_configured_device": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_configured_account": "A conta j\u00e1 foi configurada",
+            "already_configured_device": "Dispositivo j\u00e1 est\u00e1 configurado",
             "no_devices_found": "Nenhum dispositivo encontrado na rede",
             "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
-            "unreachable": "Falhou ao conectar"
+            "unreachable": "Falha ao conectar"
         },
         "error": {
             "invalid_access_token": "Token de acesso inv\u00e1lido",
             "unknown": "Erro inesperado",
-            "unreachable": "Falhou ao conectar"
+            "unreachable": "Falha ao conectar"
         },
         "flow_title": "{model} ({device_id})",
         "step": {
             "cloud": {
                 "data": {
                     "access_token": "Token de acesso",
-                    "email": "E-mail"
+                    "email": "Email"
                 },
                 "description": "Voc\u00ea deve se registrar para um token de acesso de desenvolvedor Awair em: {url}"
             },
@@ -29,7 +29,13 @@
                 "data": {
                     "host": "Endere\u00e7o IP"
                 },
-                "description": "Awair Local API deve ser ativada seguindo estas etapas: {url}"
+                "description": "Siga [estas instru\u00e7\u00f5es]({url}) sobre como ativar a API local Awair. \n\n Clique em enviar quando terminar."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Dispositivo",
+                    "host": "Endere\u00e7o IP"
+                }
             },
             "reauth": {
                 "data": {
@@ -41,7 +47,7 @@
             "reauth_confirm": {
                 "data": {
                     "access_token": "Token de acesso",
-                    "email": "E-mail"
+                    "email": "Email"
                 },
                 "description": "Insira novamente seu token de acesso de desenvolvedor Awair."
             },

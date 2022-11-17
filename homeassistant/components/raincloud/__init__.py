@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -26,8 +25,6 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
 
 CONF_WATERING_TIME = "watering_minutes"
 
@@ -140,6 +137,8 @@ class RainCloudHub:
 class RainCloudEntity(Entity):
     """Entity class for RainCloud devices."""
 
+    _attr_attribution = "Data provided by Melnor Aquatimer.com"
+
     def __init__(self, data, sensor_type):
         """Initialize the RainCloud entity."""
         self.data = data
@@ -167,7 +166,7 @@ class RainCloudEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
+        return {"identifier": self.data.serial}
 
     @property
     def icon(self):

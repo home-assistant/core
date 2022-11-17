@@ -22,8 +22,8 @@
             "closing": "{entity_name} cerr\u00e1ndose",
             "opened": "{entity_name} abierto",
             "opening": "{entity_name} abri\u00e9ndose",
-            "position": "{entity_name} cambi\u00f3 de posici\u00f3n",
-            "tilt_position": "{entity_name} cambi\u00f3 de posici\u00f3n de inclinaci\u00f3n"
+            "position": "La posici\u00f3n de {entity_name} cambia",
+            "tilt_position": "La posici\u00f3n de inclinaci\u00f3n de {entity_name} cambia"
         }
     },
     "state": {

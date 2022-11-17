@@ -74,12 +74,12 @@ class ONVIFDevice:
         return self.config_entry.data[CONF_PORT]
 
     @property
-    def username(self) -> int:
+    def username(self) -> str:
         """Return the username of this device."""
         return self.config_entry.data[CONF_USERNAME]
 
     @property
-    def password(self) -> int:
+    def password(self) -> str:
         """Return the password of this device."""
         return self.config_entry.data[CONF_PASSWORD]
 

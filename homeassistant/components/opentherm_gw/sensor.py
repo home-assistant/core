@@ -86,6 +86,8 @@ async def async_setup_entry(
 class OpenThermSensor(SensorEntity):
     """Representation of an OpenTherm Gateway sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(
@@ -104,14 +106,14 @@ class OpenThermSensor(SensorEntity):
         self._friendly_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
         _LOGGER.debug("Added OpenTherm Gateway sensor %s", self._friendly_name)
         self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates from the component."""
         _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._friendly_name)
         self._unsub_updates()
@@ -170,11 +172,6 @@ class OpenThermSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state."""
-        return False
 
 
 class DeprecatedOpenThermSensor(OpenThermSensor):

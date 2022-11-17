@@ -36,6 +36,12 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "description": "Die Konfiguration von Scrape mit YAML wurde in den Integrationsschl\u00fcssel verschoben. \n\nDeine vorhandene YAML-Konfiguration funktioniert f\u00fcr zwei weitere Versionen.\n\nMigriere deine YAML-Konfiguration gem\u00e4\u00df der Dokumentation zum Integrationsschl\u00fcssel.",
+            "title": "Die Scrape-YAML-Konfiguration wurde verschoben"
+        }
+    },
     "options": {
         "step": {
             "init": {

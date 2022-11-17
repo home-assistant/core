@@ -1,8 +1,12 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
@@ -93,7 +97,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         return self.unique_id
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._unit.temperature_unit == "celsius":
             return TEMP_CELSIUS
@@ -134,20 +138,20 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         """Return the list of available fan modes."""
         return FAN_MODES
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
             self._unit = await self._unit.set_thermostat(temp)
             self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
         self._unit = await self._unit.set_fan_speed(fan_mode)
         self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id, hvac_mode)
 
@@ -157,13 +161,13 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
             self._unit = await self._unit.set_mode(HA_STATE_TO_CM[hvac_mode])
             await self.async_turn_on()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         self._unit = await self._unit.turn_on()
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         self._unit = await self._unit.turn_off()

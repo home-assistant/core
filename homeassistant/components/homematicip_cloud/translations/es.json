@@ -6,10 +6,10 @@
             "unknown": "Error inesperado"
         },
         "error": {
-            "invalid_sgtin_or_pin": "SGTIN o C\u00f3digo PIN no v\u00e1lido, int\u00e9ntalo de nuevo.",
+            "invalid_sgtin_or_pin": "SGTIN o C\u00f3digo PIN no v\u00e1lido, por favor, int\u00e9ntalo de nuevo.",
             "press_the_button": "Por favor, pulsa el bot\u00f3n azul",
-            "register_failed": "No se pudo registrar, por favor int\u00e9ntalo de nuevo.",
-            "timeout_button": "Se agot\u00f3 el tiempo de espera para presionar el bot\u00f3n azul. Vuelve a intentarlo."
+            "register_failed": "No se pudo registrar, por favor, int\u00e9ntalo de nuevo.",
+            "timeout_button": "Se agot\u00f3 el tiempo de espera para presionar el bot\u00f3n azul, por favor, int\u00e9ntalo de nuevo."
         },
         "step": {
             "init": {

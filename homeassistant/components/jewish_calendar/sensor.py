@@ -89,6 +89,11 @@ TIME_SENSORS = (
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
+        key="midday",
+        name="Chatzot Hayom",
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
         key="big_mincha",
         name="Mincha Gedola",
         icon="mdi:calendar-clock",

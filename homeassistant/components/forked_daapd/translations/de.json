@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "not_forked_daapd": "Das Ger\u00e4t ist kein Forked-Daapd-Server."
+            "not_forked_daapd": "Das Ger\u00e4t ist kein Owntone-Server."
         },
         "error": {
-            "forbidden": "Verbindung kann nicht hergestellt werden. Bitte \u00fcberpr\u00fcfe deine forked-daapd-Netzwerkberechtigungen.",
+            "forbidden": "Verbindung kann nicht hergestellt werden. Bitte \u00fcberpr\u00fcfe deine Owntone-Netzwerkberechtigungen.",
             "unknown_error": "Unerwarteter Fehler",
-            "websocket_not_enabled": "Forked-Daapd-Server-Websocket nicht aktiviert.",
+            "websocket_not_enabled": "Owntone Server Websocket nicht aktiviert.",
             "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte Host und Port pr\u00fcfen.",
             "wrong_password": "Ung\u00fcltiges Passwort",
-            "wrong_server_type": "F\u00fcr die forked-daapd Integration ist ein forked-daapd Server mit der Version >= 27.0 erforderlich."
+            "wrong_server_type": "Die Owntone-Integration erfordert einen Owntone-Server mit Version >= 27.0."
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "API-Passwort (leer lassen, wenn kein Passwort vorhanden ist)",
                     "port": "API Port"
                 },
-                "title": "Forked-Daapd-Ger\u00e4t einrichten"
+                "title": "Owntone Ger\u00e4t einrichten"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Sekunden bis zur Pause vor und nach der TTS",
                     "tts_volume": "TTS-Lautst\u00e4rke (Float im Bereich [0,1])"
                 },
-                "description": "Lege verschiedene Optionen f\u00fcr die Forked-Daapd-Integration fest.",
-                "title": "Konfigurieren der Forked-Daapd-Optionen"
+                "description": "Lege verschiedene Optionen f\u00fcr die Owntone-Integration fest.",
+                "title": "Konfigurieren der Owntone Optionen"
             }
         }
     }

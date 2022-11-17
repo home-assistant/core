@@ -100,7 +100,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
-        return self.speaker.available and self.speaker.power_source
+        return self.speaker.available and self.speaker.power_source is not None
 
 
 class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):

@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "connection_upgrade": "No se pudo conectar con la impresora. Int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
+            "connection_upgrade": "No se pudo conectar con la impresora. Por favor, int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
         },
         "flow_title": "{name}",
         "step": {

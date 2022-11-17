@@ -36,7 +36,7 @@
                 "data": {
                     "authentication": "Autenticaci\u00f3n",
                     "framerate": "Velocidad de fotogramas (Hz)",
-                    "limit_refetch_to_url_change": "Limitar recuperaci\u00f3n al cambio de URL",
+                    "limit_refetch_to_url_change": "Limitar la reobtenci\u00f3n de cambios de URL",
                     "password": "Contrase\u00f1a",
                     "rtsp_transport": "Protocolo de transporte RTSP",
                     "still_image_url": "URL de la imagen fija (p. ej., http://...)",
@@ -45,6 +45,13 @@
                     "verify_ssl": "Verificar el certificado SSL"
                 },
                 "description": "Introduce los ajustes para conectarte a la c\u00e1mara."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Esta imagen se ve bien."
+                },
+                "description": "![Vista previa de imagen fija de c\u00e1mara]({preview_url})",
+                "title": "Vista previa"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Esta imagen se ve bien."
+                },
+                "description": "![Vista previa de imagen fija de c\u00e1mara]({preview_url})",
+                "title": "Vista previa"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipos de contenido"
@@ -78,7 +92,7 @@
                 "data": {
                     "authentication": "Autenticaci\u00f3n",
                     "framerate": "Velocidad de fotogramas (Hz)",
-                    "limit_refetch_to_url_change": "Limitar recuperaci\u00f3n al cambio de URL",
+                    "limit_refetch_to_url_change": "Limitar la reobtenci\u00f3n de cambios de URL",
                     "password": "Contrase\u00f1a",
                     "rtsp_transport": "Protocolo de transporte RTSP",
                     "still_image_url": "URL de la imagen fija (p. ej., http://...)",

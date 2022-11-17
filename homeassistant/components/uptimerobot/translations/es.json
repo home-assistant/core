@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "reauth_failed_existing": "No se pudo actualizar la entrada de configuraci\u00f3n, eliminq la integraci\u00f3n y vuelve a configurarla.",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_failed_existing": "No se pudo actualizar la entrada de configuraci\u00f3n, por favor, elimina la integraci\u00f3n y vuelve a configurarla.",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "unknown": "Error inesperado"
         },
         "error": {

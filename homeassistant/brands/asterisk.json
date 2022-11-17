@@ -1,0 +1,5 @@
+{
+  "domain": "asterisk",
+  "name": "Asterisk",
+  "integrations": ["asterisk_cdr", "asterisk_mbox"]
+}

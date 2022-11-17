@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, bunun yerine \"homeassistant.update_entity\" hizmetini bir hedef Speedtest entity_id ile kullanacak \u015fekilde g\u00fcncelleyin. Ard\u0131ndan, bu sorunu \u00e7\u00f6z\u00fcld\u00fc olarak i\u015faretlemek i\u00e7in a\u015fa\u011f\u0131daki G\u00d6NDER'i t\u0131klay\u0131n.",
+                        "title": "Speedtest hizmeti kald\u0131r\u0131l\u0131yor"
+                    }
+                }
+            },
+            "title": "Speedtest hizmeti kald\u0131r\u0131l\u0131yor"
+        }
+    },
     "options": {
         "step": {
             "init": {

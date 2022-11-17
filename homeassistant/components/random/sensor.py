@@ -87,7 +87,7 @@ class RandomSensor(SensorEntity):
         """Return the attributes of the sensor."""
         return {ATTR_MAXIMUM: self._maximum, ATTR_MINIMUM: self._minimum}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get a new number and updates the states."""
 
         self._state = randrange(self._minimum, self._maximum + 1)

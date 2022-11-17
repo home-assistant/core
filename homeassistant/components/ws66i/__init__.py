@@ -6,7 +6,7 @@ import logging
 from pyws66i import WS66i, get_ws66i
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -16,7 +16,7 @@ from .models import SourceRep, Ws66iData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 @callback

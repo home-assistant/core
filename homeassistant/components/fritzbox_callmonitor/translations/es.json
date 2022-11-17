@@ -27,7 +27,7 @@
     },
     "options": {
         "error": {
-            "malformed_prefixes": "Los prefijos tienen un formato incorrecto, por favor, verifica el formato."
+            "malformed_prefixes": "Los prefijos tienen un formato incorrecto, por favor, comprueba su formato."
         },
         "step": {
             "init": {

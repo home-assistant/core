@@ -5,7 +5,7 @@
             "unknown": "Error inesperado"
         },
         "error": {
-            "empty": "No hay resultado en la b\u00fasqueda de la ciudad: por favor, verifica el campo de la ciudad"
+            "empty": "No hay resultado en la b\u00fasqueda de la ciudad: por favor, comprueba el campo de la ciudad"
         },
         "step": {
             "cities": {

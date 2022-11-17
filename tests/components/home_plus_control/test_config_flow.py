@@ -12,12 +12,9 @@ from homeassistant.components.home_plus_control.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
+
 from tests.common import MockConfigEntry
-from tests.components.home_plus_control.conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    SUBSCRIPTION_KEY,
-)
 
 
 async def test_full_flow(

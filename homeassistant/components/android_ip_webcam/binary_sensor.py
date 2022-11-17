@@ -57,4 +57,4 @@ class IPWebcamBinarySensor(AndroidIPCamBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return if motion is detected."""
-        return self.cam.export_sensor(MOTION_ACTIVE)[0] == 1.0
+        return self.cam.get_sensor_value(MOTION_ACTIVE) == 1.0

@@ -29,7 +29,7 @@
                     "events": "Lista de eventos separados por comas."
                 },
                 "data_description": {
-                    "events": "A\u00f1ade un nombre de evento separado por comas para cada evento que desees rastrear. Despu\u00e9s de introducirlos aqu\u00ed, usa la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. \n\nEjemplo: alguien_puls\u00f3_el_bot\u00f3n, movimiento"
+                    "events": "A\u00f1ade un nombre de evento separado por comas para cada evento que desees rastrear. Despu\u00e9s de introducirlos aqu\u00ed, usa la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. \n\nEjemplo: somebody_pressed_the_button, motion"
                 }
             }
         }

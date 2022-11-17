@@ -6,10 +6,13 @@ from dataclasses import dataclass
 
 from miio import Device
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.number import (
+    DOMAIN as PLATFORM_DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -23,11 +26,13 @@ from .const import (
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
+    FEATURE_FLAGS_AIRFRESH_VA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -54,12 +59,15 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE_RMA1,
+    MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
@@ -130,7 +138,7 @@ NUMBER_TYPES = {
         key=ATTR_MOTOR_SPEED,
         name="Motor speed",
         icon="mdi:fast-forward-outline",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=200,
         native_max_value=2000,
         native_step=10,
@@ -214,7 +222,7 @@ NUMBER_TYPES = {
         key=ATTR_FAVORITE_RPM,
         name="Favorite motor speed",
         icon="mdi:star-cog",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=300,
         native_max_value=2200,
         native_step=10,
@@ -226,6 +234,7 @@ NUMBER_TYPES = {
 MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_VA4: FEATURE_FLAGS_AIRFRESH_VA4,
     MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
@@ -236,6 +245,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4_LITE_RMA1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
+    MODEL_AIRPURIFIER_4_LITE_RMB1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,

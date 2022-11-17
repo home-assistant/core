@@ -8,6 +8,7 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,7 +35,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -180,13 +181,14 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    name = config.get(CONF_NAME)
-    unique_id = config.get(CONF_UNIQUE_ID)
-    entity_id = config.get(CONF_ENTITY_ID)
+    name: str | None = config.get(CONF_NAME)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    entity_id: str = config[CONF_ENTITY_ID]
 
+    filter_configs: list[dict[str, Any]] = config[CONF_FILTERS]
     filters = [
         FILTERS[_filter.pop(CONF_FILTER_NAME)](entity=entity_id, **_filter)
-        for _filter in config[CONF_FILTERS]
+        for _filter in filter_configs
     ]
 
     async_add_entities([SensorFilter(name, unique_id, entity_id, filters)])
@@ -195,30 +197,41 @@ async def async_setup_platform(
 class SensorFilter(SensorEntity):
     """Representation of a Filter Sensor."""
 
-    def __init__(self, name, unique_id, entity_id, filters):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        name: str | None,
+        unique_id: str | None,
+        entity_id: str,
+        filters: list[Filter],
+    ) -> None:
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self._attr_unique_id = unique_id
         self._entity = entity_id
-        self._unit_of_measurement = None
-        self._state = None
+        self._attr_native_unit_of_measurement = None
+        self._state: str | None = None
         self._filters = filters
-        self._icon = None
-        self._device_class = None
+        self._attr_icon = None
+        self._attr_device_class = None
         self._attr_state_class = None
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
 
     @callback
-    def _update_filter_sensor_state_event(self, event):
+    def _update_filter_sensor_state_event(self, event: Event) -> None:
         """Handle device state changes."""
         _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data.get("new_state"))
 
     @callback
-    def _update_filter_sensor_state(self, new_state, update_ha=True):
+    def _update_filter_sensor_state(
+        self, new_state: State | None, update_ha: bool = True
+    ) -> None:
         """Process device state changes."""
         if new_state is None:
             _LOGGER.warning(
-                "While updating filter %s, the new_state is None", self._name
+                "While updating filter %s, the new_state is None", self.name
             )
             self._state = None
             self.async_write_ha_state()
@@ -254,14 +267,14 @@ class SensorFilter(SensorEntity):
 
         self._state = temp_state.state
 
-        if self._icon is None:
-            self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+        if self._attr_icon is None:
+            self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
 
         if (
-            self._device_class is None
+            self._attr_device_class is None
             and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
         ):
-            self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+            self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if (
             self._attr_state_class is None
@@ -269,15 +282,15 @@ class SensorFilter(SensorEntity):
         ):
             self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
-        if self._unit_of_measurement is None:
-            self._unit_of_measurement = new_state.attributes.get(
+        if self._attr_native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             )
 
         if update_ha:
             self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         if "recorder" in self.hass.config.components:
@@ -348,42 +361,12 @@ class SensorFilter(SensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> datetime | str | None:
         """Return the state of the sensor."""
-        if self._device_class == SensorDeviceClass.TIMESTAMP:
+        if self._state is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
             return datetime.fromisoformat(self._state)
 
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ENTITY_ID: self._entity}
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return self._device_class
 
 
 class FilterState:
