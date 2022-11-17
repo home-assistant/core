@@ -21,11 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 QUEUE_TIMEOUT = 10
 
 
-def queue_timeout() -> float:
-    """Return the queue timeout value."""
-    return QUEUE_TIMEOUT
-
-
 def test_connect(host, port):
     """LG Soundbar config flow test_connect."""
     uuid_q = Queue(maxsize=1)
@@ -61,8 +56,8 @@ def test_connect(host, port):
         connection.get_mac_info()
         if uuid_q.empty():
             connection.get_product_info()
-        details["name"] = name_q.get(timeout=queue_timeout())
-        details["uuid"] = uuid_q.get(timeout=queue_timeout())
+        details["name"] = name_q.get(timeout=QUEUE_TIMEOUT)
+        details["uuid"] = uuid_q.get(timeout=QUEUE_TIMEOUT)
     except Empty:
         pass
     except socket.timeout as err:
