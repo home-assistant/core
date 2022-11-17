@@ -20,9 +20,11 @@ from homeassistant.components.bluetooth import (
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_PASSIVE,
     DEFAULT_ADDRESS,
     DOMAIN,
+    LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -2733,6 +2735,81 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
                 hass, dt_util.utcnow() + timedelta(seconds=wait_sec)
             )
             await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
+
+
+async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
+    hass, mock_bleak_scanner_start, one_adapter
+):
+    """Test we can discover new usb adapters with a firmware fallback delay."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_scan_request_callback(_hass, _callback):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.usb.async_register_scan_request_callback",
+        _async_register_scan_request_callback,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    saved_callback()
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={},
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS * 2)
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 0
+
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+            "hci1": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:02",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(
+                seconds=LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS
+                + (BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS * 2)
+            ),
+        )
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 

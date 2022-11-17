@@ -186,6 +186,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     _attr_media_content_type = MediaType.MOVIE
+    _attr_supported_features = YOUTUBE_PLAYER_SUPPORT
 
     def __init__(
         self, name: str, youtube_id: str, media_title: str, duration: int
@@ -222,11 +223,6 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     def app_name(self) -> str:
         """Return the current running application."""
         return "YouTube"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return YOUTUBE_PLAYER_SUPPORT
 
     @property
     def media_position(self) -> int | None:
@@ -271,6 +267,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     _attr_media_content_type = MediaType.MUSIC
+    _attr_supported_features = MUSIC_PLAYER_SUPPORT
 
     tracks = [
         ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
@@ -347,11 +344,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Return current repeat mode."""
         return self._repeat
 
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return MUSIC_PLAYER_SUPPORT
-
     def media_previous_track(self) -> None:
         """Send previous track command."""
         if self._cur_track > 0:
@@ -395,6 +387,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     _attr_media_content_type = MediaType.TVSHOW
+    _attr_supported_features = NETFLIX_PLAYER_SUPPORT
 
     def __init__(self) -> None:
         """Initialize the demo device."""
@@ -453,11 +446,6 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def source_list(self) -> list[str]:
         """List of available sources."""
         return self._source_list
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return NETFLIX_PLAYER_SUPPORT
 
     def media_previous_track(self) -> None:
         """Send previous track command."""

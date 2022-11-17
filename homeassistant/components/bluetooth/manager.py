@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import replace
 from datetime import datetime, timedelta
 import itertools
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
@@ -22,6 +20,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import AdvertisementTracker
 from .const import (
@@ -69,7 +68,7 @@ APPLE_START_BYTES_WANTED: Final = {
     APPLE_DEVICE_ID_START_BYTE,
 }
 
-MONOTONIC_TIME: Final = time.monotonic
+MONOTONIC_TIME: Final = monotonic_time_coarse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +126,7 @@ class BluetoothManager:
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+        self._sources: set[str] = set()
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -379,6 +379,7 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
+            and old_service_info.source in self._sources
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
             )
@@ -398,6 +399,7 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
+                        and old_connectable_service_info.source in self._sources
                         and self._prefer_previous_adv_from_different_source(
                             old_connectable_service_info, service_info
                         )
@@ -439,7 +441,19 @@ class BluetoothManager:
             # route any connection attempts to the connectable path, we
             # mark the service_info as connectable so that the callbacks
             # will be called and the device can be discovered.
-            service_info = replace(service_info, connectable=True)
+            service_info = BluetoothServiceInfoBleak(
+                name=service_info.name,
+                address=service_info.address,
+                rssi=service_info.rssi,
+                manufacturer_data=service_info.manufacturer_data,
+                service_data=service_info.service_data,
+                service_uuids=service_info.service_uuids,
+                source=service_info.source,
+                device=service_info.device,
+                advertisement=service_info.advertisement,
+                connectable=True,
+                time=service_info.time,
+            )
 
         matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
@@ -597,8 +611,10 @@ class BluetoothManager:
         def _unregister_scanner() -> None:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
+            self._sources.remove(scanner.source)
 
         scanners.append(scanner)
+        self._sources.add(scanner.source)
         return _unregister_scanner
 
     @hass_callback

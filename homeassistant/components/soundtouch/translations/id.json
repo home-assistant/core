@@ -13,7 +13,7 @@
                 }
             },
             "zeroconf_confirm": {
-                "description": "Anda akan menambahkan perangkat SoundTouch bernama  `{name}` ke Home Assistant.",
+                "description": "Anda akan menambahkan perangkat SoundTouch bernama `{name}` ke Home Assistant.",
                 "title": "Konfirmasi penambahan perangkat Bose SoundTouch"
             }
         }

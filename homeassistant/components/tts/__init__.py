@@ -240,7 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Register the service description
         service_desc = {
-            CONF_NAME: f"Say an TTS message with {p_type}",
+            CONF_NAME: f"Say a TTS message with {p_type}",
             CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
             CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }

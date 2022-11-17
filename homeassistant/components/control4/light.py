@@ -192,7 +192,7 @@ class Control4Light(Control4Entity, LightEntity):
         return None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature | int:
         """Flag supported features."""
         if self._is_dimmer:
             return LightEntityFeature.TRANSITION

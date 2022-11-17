@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.homekit.accessories import HomeDriver, HomeIIDManager
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
 
@@ -39,7 +39,7 @@ def run_driver(hass, loop, iid_storage):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
             loop=loop,
         )
@@ -63,7 +63,7 @@ def hk_driver(hass, loop, iid_storage):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
             loop=loop,
         )
@@ -91,7 +91,7 @@ def mock_hap(hass, loop, iid_storage, mock_zeroconf):
             entry_id="",
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
-            iid_manager=HomeIIDManager(iid_storage),
+            iid_storage=iid_storage,
             address="127.0.0.1",
             loop=loop,
         )

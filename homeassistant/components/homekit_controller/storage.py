@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypedDict
+from typing import Any
+
+from aiohomekit.characteristic_cache import Pairing, StorageLayout
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -14,19 +16,6 @@ ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-
-
-class Pairing(TypedDict):
-    """A versioned map of entity metadata as presented by aiohomekit."""
-
-    config_num: int
-    accessories: list[Any]
-
-
-class StorageLayout(TypedDict):
-    """Cached pairing metadata needed by aiohomekit."""
-
-    pairings: dict[str, Pairing]
 
 
 class EntityMapStorage:
@@ -67,11 +56,17 @@ class EntityMapStorage:
 
     @callback
     def async_create_or_update_map(
-        self, homekit_id: str, config_num: int, accessories: list[Any]
+        self,
+        homekit_id: str,
+        config_num: int,
+        accessories: list[Any],
+        broadcast_key: str | None = None,
     ) -> Pairing:
         """Create a new pairing cache."""
         _LOGGER.debug("Creating or updating entity map for %s", homekit_id)
-        data = Pairing(config_num=config_num, accessories=accessories)
+        data = Pairing(
+            config_num=config_num, accessories=accessories, broadcast_key=broadcast_key
+        )
         self.storage_data[homekit_id] = data
         self._async_schedule_save()
         return data
