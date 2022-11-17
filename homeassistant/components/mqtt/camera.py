@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING
+from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -45,20 +45,6 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-
-# Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9
-# use CONF_IMAGE_ENCODING instead, support for the work-a-round will be removed with Home Assistant 2022.11
-def repair_legacy_encoding(config: ConfigType) -> ConfigType:
-    """Check incorrect deprecated config of image encoding."""
-    if config[CONF_ENCODING] == "b64":
-        config[CONF_IMAGE_ENCODING] = "b64"
-        config[CONF_ENCODING] = DEFAULT_ENCODING
-        _LOGGER.warning(
-            "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
-        )
-    return config
-
-
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -69,14 +55,12 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 
 PLATFORM_SCHEMA_MODERN = vol.All(
     PLATFORM_SCHEMA_BASE.schema,
-    repair_legacy_encoding,
 )
 
 # Configuring MQTT Camera under the camera platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_BASE.schema),
     warn_for_legacy_schema(camera.DOMAIN),
-    repair_legacy_encoding,
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
