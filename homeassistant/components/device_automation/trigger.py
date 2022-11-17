@@ -82,7 +82,7 @@ async def async_validate_trigger_config(
         if not device_config_entry:
             raise InvalidDeviceAutomationConfig
 
-        if not await hass.config_entries.async_wait_entry(device_config_entry):
+        if not await hass.config_entries.async_wait_component(device_config_entry):
             return config
 
         return await platform.async_validate_trigger_config(hass, config)

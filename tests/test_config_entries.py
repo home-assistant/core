@@ -3463,8 +3463,8 @@ async def test_get_active_flows(hass):
     assert active_user_flow is None
 
 
-async def test_async_wait_entry_dynamic(hass: HomeAssistant):
-    """Test async_wait_entry for a config entry which is dynamically loaded."""
+async def test_async_wait_component_dynamic(hass: HomeAssistant):
+    """Test async_wait_component for a config entry which is dynamically loaded."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(return_value=True)
@@ -3474,17 +3474,17 @@ async def test_async_wait_entry_dynamic(hass: HomeAssistant):
     entry.add_to_hass(hass)
 
     # The config entry is not loaded, and is also not scheduled to load
-    assert await hass.config_entries.async_wait_entry(entry) is False
+    assert await hass.config_entries.async_wait_component(entry) is False
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # The config entry is loaded
-    assert await hass.config_entries.async_wait_entry(entry) is True
+    assert await hass.config_entries.async_wait_component(entry) is True
 
 
-async def test_async_wait_entry_startup(hass: HomeAssistant):
-    """Test async_wait_entry for a config entry which is loaded at startup."""
+async def test_async_wait_component_startup(hass: HomeAssistant):
+    """Test async_wait_component for a config entry which is loaded at startup."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
     setup_stall = asyncio.Event()
@@ -3505,7 +3505,7 @@ async def test_async_wait_entry_startup(hass: HomeAssistant):
     entry.add_to_hass(hass)
 
     # The config entry is not loaded, and is also not scheduled to load
-    assert await hass.config_entries.async_wait_entry(entry) is False
+    assert await hass.config_entries.async_wait_component(entry) is False
 
     # Mark the component as scheduled to be loaded
     async_set_domains_to_be_loaded(hass, {"test"})
@@ -3521,7 +3521,7 @@ async def test_async_wait_entry_startup(hass: HomeAssistant):
     setup_stall.set()
 
     # The component is scheduled to load, this will block until the config entry is loaded
-    assert await hass.config_entries.async_wait_entry(entry) is True
+    assert await hass.config_entries.async_wait_component(entry) is True
 
     # The component has been loaded
     assert "test" in hass.config.components

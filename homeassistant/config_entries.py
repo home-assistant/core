@@ -1314,7 +1314,7 @@ class ConfigEntries:
         """Return data to save."""
         return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
-    async def async_wait_entry(self, entry: ConfigEntry) -> bool:
+    async def async_wait_component(self, entry: ConfigEntry) -> bool:
         """Wait for an entry's component to load and return if the entry is loaded.
 
         This is primarily intended for existing config entries which are loaded at
