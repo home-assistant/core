@@ -1,7 +1,7 @@
 """Support for the QNAP QSW binary sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 
 from aioqsw.const import (
@@ -37,6 +37,7 @@ class QswBinarySensorEntityDescription(
 
     attributes: dict[str, list[str]] | None = None
     qsw_type: QswEntityType | None = None
+    sep_key: str = "_"
 
 
 BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
@@ -99,9 +100,12 @@ async def async_setup_entry(
                 QSD_LACP_PORTS
             ].items():
                 if description.subkey in port_values:
-                    entities.append(
-                        QswBinarySensor(coordinator, description, entry, port_id)
+                    _desc = replace(
+                        description,
+                        sep_key=f"_lacp_port_{port_id}_",
+                        name=f"LACP Port {port_id} {description.name}",
                     )
+                    entities.append(QswBinarySensor(coordinator, _desc, entry, port_id))
 
     for description in PORT_BINARY_SENSOR_TYPES:
         if (
@@ -112,9 +116,12 @@ async def async_setup_entry(
                 QSD_PORTS
             ].items():
                 if description.subkey in port_values:
-                    entities.append(
-                        QswBinarySensor(coordinator, description, entry, port_id)
+                    _desc = replace(
+                        description,
+                        sep_key=f"_port_{port_id}_",
+                        name=f"Port {port_id} {description.name}",
                     )
+                    entities.append(QswBinarySensor(coordinator, _desc, entry, port_id))
 
     async_add_entities(entities)
 
@@ -133,19 +140,9 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
-        if type_id is not None:
-            if description.qsw_type == QswEntityType.LACP_PORT:
-                entity_str = f" LACP Port {type_id} "
-            else:
-                entity_str = f" Port {type_id} "
-        else:
-            entity_str = " "
 
-        self._attr_name = f"{self.product}{entity_str}{description.name}"
-        entity_str = entity_str.lower().replace(" ", "_")
-        self._attr_unique_id = (
-            f"{entry.unique_id}_{description.key}{entity_str}{description.subkey}"
-        )
+        self._attr_name = f"{self.product} {description.name}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}{description.sep_key}{description.subkey}"
         self.entity_description = description
         self._async_update_attrs()
 
