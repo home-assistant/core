@@ -60,7 +60,6 @@ class DemoLock(LockEntity):
     ) -> None:
         """Initialize the lock."""
         self._attr_name = name
-        self._attr_supported_features = 0
         if openable:
             self._attr_supported_features = LockEntityFeature.OPEN
         self._state = state
