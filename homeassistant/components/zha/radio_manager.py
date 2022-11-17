@@ -201,6 +201,55 @@ class ZhaRadioManager:
         async with self._connect_zigpy_app() as app:
             await app.reset_network_info()
 
+    async def async_restore_backup_step_1(self) -> bool:
+        """Prepare restoring backup.
+
+        Returns True if async_restore_backup_step_2 should be called.
+        """
+        assert self.chosen_backup is not None
+
+        if self.radio_type != RadioType.ezsp:
+            await self.restore_backup(self.chosen_backup)
+            return False
+
+        # We have no way to partially load network settings if no network is formed
+        if self.current_settings is None:
+            # Since we are going to be restoring the backup anyways, write it to the
+            # radio without overwriting the IEEE but don't take a backup with these
+            # temporary settings
+            temp_backup = _prevent_overwrite_ezsp_ieee(self.chosen_backup)
+            await self.restore_backup(temp_backup, create_new=False)
+            await self.async_load_network_settings()
+
+            assert self.current_settings is not None
+
+        if (
+            self.current_settings.node_info.ieee == self.chosen_backup.node_info.ieee
+            or not self.current_settings.network_info.metadata["ezsp"][
+                "can_write_custom_eui64"
+            ]
+        ):
+            # No point in prompting the user if the backup doesn't have a new IEEE
+            # address or if there is no way to overwrite the IEEE address a second time
+            await self.restore_backup(self.chosen_backup)
+
+            return False
+
+        return True
+
+    async def async_restore_backup_step_2(self, overwrite_ieee: bool) -> None:
+        """Restore backup and optionally overwrite IEEE."""
+        assert self.chosen_backup is not None
+
+        backup = self.chosen_backup
+
+        if overwrite_ieee:
+            backup = _allow_overwrite_ezsp_ieee(backup)
+
+        # If the user declined to overwrite the IEEE *and* we wrote the backup to
+        # their empty radio above, restoring it again would be redundant.
+        await self.restore_backup(backup)
+
 
 class ZhaMigrationHelper:
     """Helper class for automatic migration."""
@@ -267,54 +316,13 @@ class ZhaMigrationHelper:
         )
         return False
 
-    async def async_restore_backup(self):
-        """Restore backup."""
-        assert self._radio_mgr.chosen_backup is not None
-
-        if self._radio_mgr.radio_type != RadioType.ezsp:
-            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
-            return
-
-        # We have no way to partially load network settings if no network is formed
-        if self._radio_mgr.current_settings is None:
-            # Since we are going to be restoring the backup anyways, write it to the
-            # radio without overwriting the IEEE but don't take a backup with these
-            # temporary settings
-            temp_backup = _prevent_overwrite_ezsp_ieee(self._radio_mgr.chosen_backup)
-            await self._radio_mgr.restore_backup(temp_backup, create_new=False)
-            await self._radio_mgr.async_load_network_settings()
-
-            assert self._radio_mgr.current_settings is not None
-
-        if (
-            self._radio_mgr.current_settings.node_info.ieee
-            == self._radio_mgr.chosen_backup.node_info.ieee
-            or not self._radio_mgr.current_settings.network_info.metadata["ezsp"][
-                "can_write_custom_eui64"
-            ]
-        ):
-            # No point in prompting the user if the backup doesn't have a new IEEE
-            # address or if there is no way to overwrite the IEEE address a second time
-            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
-
-            return
-
-        backup = self._radio_mgr.chosen_backup
-
-        backup = _allow_overwrite_ezsp_ieee(backup)
-
-        # If the user declined to overwrite the IEEE *and* we wrote the backup to
-        # their empty radio above, restoring it again would be redundant.
-        await self._radio_mgr.restore_backup(backup)
-
-        return
-
     async def async_finish_yellow_migration(self) -> bool:
         """Finish ZHA migration."""
         # Restore the backup, permanently overwriting the device IEEE address
         for retry in range(MIGRATION_RETRIES):
             try:
-                await self.async_restore_backup()
+                if await self._radio_mgr.async_restore_backup_step_1():
+                    await self._radio_mgr.async_restore_backup_step_2(True)
                 _LOGGER.debug("Restored backup after %s retries", retry)
                 return True
             except OSError as err:
