@@ -388,6 +388,14 @@ def async_fire_time_changed(
         utc_datetime = date_util.utcnow()
     else:
         utc_datetime = date_util.as_utc(datetime_)
+
+    if utc_datetime.microsecond < 500000:
+        # Allow up to 500000 microseconds to be added to the time
+        # to handle update_coordinator's and
+        # async_track_time_interval's
+        # staggering to avoid thundering herd.
+        utc_datetime = utc_datetime.replace(microsecond=500000)
+
     timestamp = date_util.utc_to_timestamp(utc_datetime)
 
     for task in list(hass.loop._scheduled):
