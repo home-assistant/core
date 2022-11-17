@@ -2510,24 +2510,36 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="WaterHeaterEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="precision",
+                    function_name="current_operation",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_away_mode_on",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="max_temp",
                     return_type="float",
                 ),
                 TypeHintMatch(
-                    function_name="temperature_unit",
-                    return_type="str",
-                ),
-                TypeHintMatch(
-                    function_name="current_operation",
-                    return_type=["str", None],
+                    function_name="min_temp",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="operation_list",
                     return_type=["list[str]", None],
                 ),
                 TypeHintMatch(
-                    function_name="current_temperature",
-                    return_type=["float", None],
+                    function_name="precision",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type=["WaterHeaterEntityFeature", "int"],
                 ),
                 TypeHintMatch(
                     function_name="target_temperature",
@@ -2542,8 +2554,8 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["float", None],
                 ),
                 TypeHintMatch(
-                    function_name="is_away_mode_on",
-                    return_type=["bool", None],
+                    function_name="temperature_unit",
+                    return_type="str",
                 ),
                 TypeHintMatch(
                     function_name="set_temperature",
@@ -2566,14 +2578,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="turn_away_mode_off",
                     return_type=None,
                     has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="min_temp",
-                    return_type="float",
-                ),
-                TypeHintMatch(
-                    function_name="max_temp",
-                    return_type="float",
                 ),
             ],
         ),
