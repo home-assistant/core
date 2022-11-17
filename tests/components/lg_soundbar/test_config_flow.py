@@ -1,12 +1,39 @@
 """Test the lg_soundbar config flow."""
-from queue import Empty, Full
-from unittest.mock import DEFAULT, MagicMock, Mock, call, patch
+import socket
+from typing import Optional
+from unittest.mock import DEFAULT, patch
 
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
+
+
+def setup_mock_temescal(mock_temescal, mac_info_dev=None, product_info=None, info=None):
+    """Set up a mock of the temescal object to craft our expected responses."""
+    tmock = mock_temescal.temescal
+    instance = tmock.return_value
+
+    def create_temescal_response(msg: str, data: Optional[dict] = None):
+        response = {"msg": msg}
+        if data is not None:
+            response["data"] = data
+        return response
+
+    def temescal_side_effect(addr, port, callback):
+        instance.get_mac_info.side_effect = lambda: callback(
+            create_temescal_response(msg="MAC_INFO_DEV", data=mac_info_dev)
+        )
+        instance.get_product_info.side_effect = lambda: callback(
+            create_temescal_response(msg="PRODUCT_INFO", data=product_info)
+        )
+        instance.get_info.side_effect = lambda: callback(
+            create_temescal_response(msg="SPK_LIST_VIEW_INFO", data=info)
+        )
+        return DEFAULT
+
+    tmock.side_effect = temescal_side_effect
 
 
 async def test_form(hass):
@@ -18,12 +45,16 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.lg_soundbar.config_flow.temescal"), patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
-        return_value={"uuid": "uuid", "name": "name"},
-    ), patch(
+    with patch(
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
+    ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            mac_info_dev={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -55,19 +86,11 @@ async def test_form_mac_info_response_empty(hass):
     ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            product_info = {"msg": "PRODUCT_INFO", "data": {"s_uuid": "uuid"}}
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
-
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            mac_info_dev={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -97,35 +120,20 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_uuid_q = MagicMock()
-    mock_name_q = MagicMock()
-
     with patch(
+        "homeassistant.components.lg_soundbar.config_flow.queue_timeout",
+        return_value=0.1,
+    ), patch(
         "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue"
-    ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        mock_q.side_effect = [mock_uuid_q, mock_name_q]
-        mock_uuid_q.put_nowait.side_effect = ["uuid", Full]
-        mock_uuid_q.empty.return_value = True
-        mock_uuid_q.get.return_value = "uuid"
-        mock_name_q.get.return_value = "name"
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            mac_info = {"msg": "MAC_INFO_DEV", "data": {"s_uuid": "uuid"}}
-            instance.get_mac_info.side_effect = lambda: callback(mac_info)
-            product_info = {"msg": "PRODUCT_INFO", "data": {"s_uuid": "uuid"}}
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            mac_info_dev={"s_uuid": "uuid"},
+            product_info={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -142,9 +150,6 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_uuid_q.empty.assert_called_once()
-    mock_uuid_q.put_nowait.has_calls([call("uuid"), call("uuid")])
-    mock_uuid_q.get.assert_called_once()
 
 
 async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
@@ -159,34 +164,20 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_uuid_q = MagicMock()
-    mock_name_q = MagicMock()
-
     with patch(
+        "homeassistant.components.lg_soundbar.config_flow.queue_timeout",
+        return_value=0.1,
+    ), patch(
         "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue"
-    ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        mock_q.side_effect = [mock_uuid_q, mock_name_q]
-        mock_uuid_q.empty.return_value = False
-        mock_uuid_q.get.return_value = "uuid"
-        mock_name_q.get.return_value = "name"
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            mac_info = {"msg": "MAC_INFO_DEV", "data": {"s_uuid": "uuid"}}
-            instance.get_mac_info.side_effect = lambda: callback(mac_info)
-            product_info = {"msg": "PRODUCT_INFO", "data": {"s_uuid": "uuid"}}
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            mac_info_dev={"s_uuid": "uuid"},
+            product_info={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -203,9 +194,6 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_uuid_q.empty.assert_called_once()
-    mock_uuid_q.put_nowait.assert_called_once()
-    mock_uuid_q.get.assert_called_once()
 
 
 async def test_form_uuid_missing_from_mac_info(hass):
@@ -222,20 +210,11 @@ async def test_form_uuid_missing_from_mac_info(hass):
     ) as mock_temescal, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            mac_info = {"msg": "MAC_INFO_DEV"}
-            instance.get_mac_info.side_effect = lambda: callback(mac_info)
-            product_info = {"msg": "PRODUCT_INFO", "data": {"s_uuid": "uuid"}}
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            product_info={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -263,41 +242,19 @@ async def test_form_uuid_not_provided_by_api(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_uuid_q = MagicMock()
-    mock_name_q = MagicMock()
-
     with patch(
+        "homeassistant.components.lg_soundbar.config_flow.queue_timeout",
+        return_value=0.1,
+    ), patch(
         "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue"
-    ) as mock_q, patch(
-        "homeassistant.components.lg_soundbar.config_flow.LGSoundbarConfigFlow.async_set_unique_id"
-    ) as mock_set_unique_id, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        mock_q.side_effect = [mock_uuid_q, mock_name_q]
-        mock_uuid_q.empty.return_value = True
-        mock_uuid_q.get.side_effect = Empty
-        mock_name_q.get.return_value = "name"
-
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            mac_info = {"msg": "MAC_INFO_DEV"}
-            instance.get_mac_info.side_effect = lambda: callback(mac_info)
-            product_info = {
-                "msg": "PRODUCT_INFO",
-                "data": {"i_model_no": "8", "i_model_type": 0},
-            }
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
-
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            product_info={"i_model_no": "8", "i_model_type": 0},
+            info={"s_user_name": "name"},
+        )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -306,18 +263,16 @@ async def test_form_uuid_not_provided_by_api(hass):
         )
         await hass.async_block_till_done()
 
-    print("result2 == [%s]", result2)
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert (
+        "unique_id" not in result2["context"] or result2["context"]["unique_id"] is None
+    )
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_set_unique_id.mock_calls) == 0
-    mock_uuid_q.empty.assert_called_once()
-    mock_uuid_q.put_nowait.assert_not_called()
-    mock_uuid_q.get.assert_called_once()
 
 
 async def test_form_both_queues_empty(hass):
@@ -329,34 +284,15 @@ async def test_form_both_queues_empty(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_uuid_q = MagicMock()
-    mock_name_q = MagicMock()
-
     with patch(
+        "homeassistant.components.lg_soundbar.config_flow.queue_timeout",
+        return_value=0.1,
+    ), patch(
         "homeassistant.components.lg_soundbar.config_flow.temescal"
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue"
-    ) as mock_q, patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        mock_q.side_effect = [mock_uuid_q, mock_name_q]
-        mock_uuid_q.empty.return_value = True
-        mock_name_q.get.side_effect = Empty()
-
-        tmock = mock_temescal.temescal
-        tmock.return_value = Mock()
-        instance = tmock.return_value
-
-        def temescal_side_effect(addr, port, callback):
-            mac_info = {"msg": "MAC_INFO_DEV"}
-            instance.get_mac_info.side_effect = lambda: callback(mac_info)
-            product_info = {"msg": "PRODUCT_INFO"}
-            instance.get_product_info.side_effect = lambda: callback(product_info)
-            info = {"msg": "SPK_LIST_VIEW_INFO"}
-            instance.get_info.side_effect = lambda: callback(info)
-            return DEFAULT
-
-        tmock.side_effect = temescal_side_effect
+        setup_mock_temescal(mock_temescal=mock_temescal)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -366,14 +302,9 @@ async def test_form_both_queues_empty(hass):
         )
         await hass.async_block_till_done()
 
-    print("result2 " + str(result2))
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "no_data"}
     assert len(mock_setup_entry.mock_calls) == 0
-    mock_uuid_q.empty.assert_called_once()
-    mock_uuid_q.put_nowait.assert_not_called()
-    mock_name_q.put_nowait.assert_not_called()
-    mock_name_q.get.assert_called_once()
 
 
 async def test_no_uuid_host_already_configured(hass):
@@ -395,10 +326,13 @@ async def test_no_uuid_host_already_configured(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.lg_soundbar.config_flow.temescal"), patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
-        return_value={"name": "name"},
-    ):
+    with patch(
+        "homeassistant.components.lg_soundbar.config_flow.queue_timeout",
+        return_value=0.1,
+    ), patch(
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
+    ) as mock_temescal:
+        setup_mock_temescal(mock_temescal=mock_temescal, info={"s_user_name": "name"})
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -410,16 +344,37 @@ async def test_no_uuid_host_already_configured(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+async def test_form_socket_timeout(hass):
+    """Test we handle socket.timeout error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
-        side_effect=ConnectionError,
-    ):
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
+    ) as mock_temescal:
+        mock_temescal.temescal.side_effect = socket.timeout
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_OSError(hass):
+    """Test we handle OSError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
+    ) as mock_temescal:
+        mock_temescal.temescal.side_effect = OSError
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -448,9 +403,14 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
-        return_value={"uuid": "uuid", "name": "name"},
-    ):
+        "homeassistant.components.lg_soundbar.config_flow.temescal"
+    ) as mock_temescal:
+        setup_mock_temescal(
+            mock_temescal=mock_temescal,
+            mac_info_dev={"s_uuid": "uuid"},
+            info={"s_user_name": "name"},
+        )
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
