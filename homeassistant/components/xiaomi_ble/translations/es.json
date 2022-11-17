@@ -7,7 +7,7 @@
             "expected_24_characters": "Se esperaba una clave de enlace hexadecimal de 24 caracteres.",
             "expected_32_characters": "Se esperaba una clave de enlace hexadecimal de 32 caracteres.",
             "no_devices_found": "No se encontraron dispositivos en la red",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "decryption_failed": "La clave de enlace proporcionada no funcion\u00f3, los datos del sensor no se pudieron descifrar. Por favor, compru\u00e9balo e int\u00e9ntalo de nuevo.",

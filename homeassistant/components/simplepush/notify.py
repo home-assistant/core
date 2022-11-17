@@ -4,15 +4,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from simplepush import BadRequest, UnknownError, send, send_encrypted
+from simplepush import BadRequest, UnknownError, send
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -71,16 +71,16 @@ class SimplePushNotificationService(BaseNotificationService):
 
         try:
             if self._password:
-                send_encrypted(
-                    self._device_key,
-                    self._password,
-                    self._salt,
-                    title,
-                    message,
+                send(
+                    key=self._device_key,
+                    password=self._password,
+                    salt=self._salt,
+                    title=title,
+                    message=message,
                     event=event,
                 )
             else:
-                send(self._device_key, title, message, event=event)
+                send(key=self._device_key, title=title, message=message, event=event)
 
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")

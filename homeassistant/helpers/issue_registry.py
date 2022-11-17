@@ -303,7 +303,6 @@ def async_create_issue(
         AwesomeVersion(
             breaks_in_ha_version,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
-            find_first_match=False,
         )
 
     issue_registry = async_get(hass)

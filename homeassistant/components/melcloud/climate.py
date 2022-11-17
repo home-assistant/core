@@ -14,11 +14,11 @@ from pymelcloud.atw_device import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -105,7 +105,7 @@ class MelCloudClimate(ClimateEntity):
         self.api = device
         self._base_device = self.api.device
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self.api.async_update()
 
@@ -257,7 +257,7 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
-    async def async_set_swing_mode(self, swing_mode) -> None:
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
 
@@ -362,7 +362,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._zone.target_temperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
             kwargs.get("temperature", self.target_temperature)

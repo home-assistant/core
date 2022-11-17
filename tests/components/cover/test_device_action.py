@@ -2,17 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.cover import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
-)
+from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
@@ -48,21 +38,21 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, []),
-        (False, SUPPORT_CLOSE_TILT, 0, ["close_tilt"]),
-        (False, SUPPORT_CLOSE, 0, ["close"]),
-        (False, SUPPORT_OPEN_TILT, 0, ["open_tilt"]),
-        (False, SUPPORT_OPEN, 0, ["open"]),
-        (False, SUPPORT_SET_POSITION, 0, ["set_position"]),
-        (False, SUPPORT_SET_TILT_POSITION, 0, ["set_tilt_position"]),
-        (False, SUPPORT_STOP, 0, ["stop"]),
+        (False, CoverEntityFeature.CLOSE_TILT, 0, ["close_tilt"]),
+        (False, CoverEntityFeature.CLOSE, 0, ["close"]),
+        (False, CoverEntityFeature.OPEN_TILT, 0, ["open_tilt"]),
+        (False, CoverEntityFeature.OPEN, 0, ["open"]),
+        (False, CoverEntityFeature.SET_POSITION, 0, ["set_position"]),
+        (False, CoverEntityFeature.SET_TILT_POSITION, 0, ["set_tilt_position"]),
+        (False, CoverEntityFeature.STOP, 0, ["stop"]),
         (True, 0, 0, []),
-        (True, 0, SUPPORT_CLOSE_TILT, ["close_tilt"]),
-        (True, 0, SUPPORT_CLOSE, ["close"]),
-        (True, 0, SUPPORT_OPEN_TILT, ["open_tilt"]),
-        (True, 0, SUPPORT_OPEN, ["open"]),
-        (True, 0, SUPPORT_SET_POSITION, ["set_position"]),
-        (True, 0, SUPPORT_SET_TILT_POSITION, ["set_tilt_position"]),
-        (True, 0, SUPPORT_STOP, ["stop"]),
+        (True, 0, CoverEntityFeature.CLOSE_TILT, ["close_tilt"]),
+        (True, 0, CoverEntityFeature.CLOSE, ["close"]),
+        (True, 0, CoverEntityFeature.OPEN_TILT, ["open_tilt"]),
+        (True, 0, CoverEntityFeature.OPEN, ["open"]),
+        (True, 0, CoverEntityFeature.SET_POSITION, ["set_position"]),
+        (True, 0, CoverEntityFeature.SET_TILT_POSITION, ["set_tilt_position"]),
+        (True, 0, CoverEntityFeature.STOP, ["stop"]),
     ],
 )
 async def test_get_actions(
@@ -141,7 +131,7 @@ async def test_get_actions_hidden_auxiliary(
         device_id=device_entry.id,
         entity_category=entity_category,
         hidden_by=hidden_by,
-        supported_features=SUPPORT_CLOSE,
+        supported_features=CoverEntityFeature.CLOSE,
     )
     expected_actions = []
     expected_actions += [
@@ -172,15 +162,17 @@ async def test_get_action_capabilities(
             is_on=True,
             unique_id="unique_set_pos_cover",
             current_cover_position=50,
-            supported_features=SUPPORT_OPEN
-            | SUPPORT_CLOSE
-            | SUPPORT_STOP
-            | SUPPORT_OPEN_TILT
-            | SUPPORT_CLOSE_TILT
-            | SUPPORT_STOP_TILT,
+            supported_features=CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
         ),
     )
     ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -191,9 +183,6 @@ async def test_get_action_capabilities(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -215,6 +204,8 @@ async def test_get_action_capabilities_set_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -225,9 +216,6 @@ async def test_get_action_capabilities_set_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -264,6 +252,8 @@ async def test_get_action_capabilities_set_tilt_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[3]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -274,9 +264,6 @@ async def test_get_action_capabilities_set_tilt_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [

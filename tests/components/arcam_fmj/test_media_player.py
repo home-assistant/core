@@ -5,12 +5,12 @@ from unittest.mock import ANY, PropertyMock, patch
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
-    MEDIA_TYPE_MUSIC,
     SERVICE_SELECT_SOURCE,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -226,8 +226,8 @@ async def test_set_volume_level(player, state, volume, call):
 @pytest.mark.parametrize(
     "source, media_content_type",
     [
-        (SourceCodes.DAB, MEDIA_TYPE_MUSIC),
-        (SourceCodes.FM, MEDIA_TYPE_MUSIC),
+        (SourceCodes.DAB, MediaType.MUSIC),
+        (SourceCodes.FM, MediaType.MUSIC),
         (SourceCodes.PVR, None),
         (None, None),
     ],

@@ -35,8 +35,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi Google Kalender di configuration.yaml dalam proses penghapusan di Home Assistant 2022.9.\n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Google Kalender dalam proses penghapusan"
+            "description": "Proses konfigurasi Integrasi Google Kalender di configuration.yaml dalam proses penghapusan di Home Assistant 2022.9.\n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Google Kalender dalam proses penghapusan"
         },
         "removed_track_new_yaml": {
             "description": "Anda telah menonaktifkan pelacakan entitas untuk Google Kalender di configuration.yaml, yang kini tidak lagi didukung. Anda harus secara manual mengubah Opsi Sistem integrasi di antarmuka untuk menonaktifkan entitas yang baru ditemukan di masa datang. Hapus pengaturan track_new dari configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",

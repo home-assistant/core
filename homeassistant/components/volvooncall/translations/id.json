@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Akun sudah dikonfigurasi"
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
@@ -14,6 +15,7 @@
                     "password": "Kata Sandi",
                     "region": "Wilayah",
                     "scandinavian_miles": "Gunakan Mil Skandinavia",
+                    "unit_system": "Sistem Unit",
                     "username": "Nama Pengguna"
                 }
             }
@@ -21,7 +23,7 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi platform Volvo On Call  lewat YAML dalam proses penghapusan di versi mendatang Home Assistant.\n\nKonfigurasi yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "description": "Proses konfigurasi platform Volvo On Call lewat YAML dalam proses penghapusan di versi mendatang Home Assistant.\n\nKonfigurasi yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
             "title": "Konfigurasi YAML Volvo On Call dalam proses penghapusan"
         }
     }

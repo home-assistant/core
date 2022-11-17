@@ -3,23 +3,10 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
-from aiounifi.events import (
-    ACCESS_POINT_UPGRADED,
-    GATEWAY_UPGRADED,
-    SWITCH_UPGRADED,
-    WIRED_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_ROAM,
-    WIRELESS_CLIENT_ROAMRADIO,
-    WIRELESS_GUEST_CONNECTED,
-    WIRELESS_GUEST_ROAM,
-    WIRELESS_GUEST_ROAMRADIO,
-)
+from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.models.event import EventKey
 
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import SourceType
+from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,16 +48,14 @@ CLIENT_STATIC_ATTRIBUTES = [
 
 CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
 
-DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
-
-WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
+WIRED_CONNECTION = (EventKey.WIRED_CLIENT_CONNECTED,)
 WIRELESS_CONNECTION = (
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_ROAM,
-    WIRELESS_CLIENT_ROAMRADIO,
-    WIRELESS_GUEST_CONNECTED,
-    WIRELESS_GUEST_ROAM,
-    WIRELESS_GUEST_ROAMRADIO,
+    EventKey.WIRELESS_CLIENT_CONNECTED,
+    EventKey.WIRELESS_CLIENT_ROAM,
+    EventKey.WIRELESS_CLIENT_ROAMRADIO,
+    EventKey.WIRELESS_GUEST_CONNECTED,
+    EventKey.WIRELESS_GUEST_ROAM,
+    EventKey.WIRELESS_GUEST_ROAMRADIO,
 )
 
 
@@ -125,8 +110,7 @@ def add_client_entities(controller, async_add_entities, clients):
 
         trackers.append(UniFiClientTracker(client, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 @callback
@@ -141,8 +125,7 @@ def add_device_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         trackers.append(UniFiDeviceTracker(device, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 class UniFiClientTracker(UniFiClientBase, ScannerEntity):
@@ -234,8 +217,8 @@ class UniFiClientTracker(UniFiClientBase, ScannerEntity):
             and not self._only_listen_to_data_source
         ):
 
-            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
-                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
+            if (self.is_wired and self.client.event.key in WIRED_CONNECTION) or (
+                not self.is_wired and self.client.event.key in WIRELESS_CONNECTION
             ):
                 self._is_connected = True
                 self.schedule_update = False

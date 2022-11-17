@@ -1,0 +1,1 @@
+"""Ecowitt tests."""

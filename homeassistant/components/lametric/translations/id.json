@@ -7,7 +7,10 @@
             "link_local_address": "Tautan alamat lokal tidak didukung",
             "missing_configuration": "Integrasi LaMetric tidak dikonfigurasi. Silakan ikuti dokumentasi.",
             "no_devices": "Pengguna yang diotorisasi tidak memiliki perangkat LaMetric",
-            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})"
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "reauth_device_not_found": "Perangkat yang Anda coba autentikasi ulang tidak ditemukan di akun LaMetric ini",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -44,7 +47,7 @@
     "issues": {
         "manual_migration": {
             "description": "Integrasi LaMetric telah dimodernisasi: kini integrasinya dikonfigurasi dan disiapkan melalui antarmuka pengguna dan komunikasi menjadi lokal.\n\nSayangnya, tidak ada jalur migrasi otomatis yang mungkin dan oleh sebab itu Anda harus mengatur ulang integrasi LaMetric dengan Home Assistant. Baca dokumentasi integrasi LaMetric Home Assistant tentang cara persiapannya.\n\nHapus konfigurasi YAML LaMetric yang lama dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Migrasi manual diperlukan untuk LaMetric"
+            "title": "Migrasi manual diperlukan untuk Integrasi LaMetric"
         }
     }
 }

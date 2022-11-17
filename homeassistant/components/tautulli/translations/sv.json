@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
             "reauth_successful": "\u00c5terautentisering lyckades",
             "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
         },

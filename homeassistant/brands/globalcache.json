@@ -1,0 +1,5 @@
+{
+  "domain": "globalcache",
+  "name": "Global Caché",
+  "integrations": ["gc100", "itach"]
+}

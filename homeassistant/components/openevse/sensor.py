@@ -118,7 +118,7 @@ class OpenEVSESensor(SensorEntity):
         self.entity_description = description
         self.charger = charger
 
-    def update(self):
+    def update(self) -> None:
         """Get the monitored data from the charger."""
         try:
             sensor_type = self.entity_description.key

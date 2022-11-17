@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import cover
+from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -74,15 +74,20 @@ from .test_common import (
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
-    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
-    cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
+    mqtt.DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[cover.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -96,17 +101,18 @@ async def test_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -134,19 +140,20 @@ async def test_opening_and_closing_state_via_custom_state_payload(
     """Test the controlling opening and closing state via a custom payload."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "state_opening": "34",
-                "state_closing": "--43",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "state_opening": "34",
+                    "state_closing": "--43",
+                }
             }
         },
     )
@@ -179,18 +186,19 @@ async def test_open_closed_state_from_position_optimistic(
     """Test the state after setting the position using optimistic mode."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "position-topic",
-                "set_position_topic": "set-position-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "optimistic": True,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "position-topic",
+                    "set_position_topic": "set-position-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "optimistic": True,
+                }
             }
         },
     )
@@ -227,19 +235,20 @@ async def test_position_via_position_topic(hass, mqtt_mock_entry_with_yaml_confi
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -265,20 +274,21 @@ async def test_state_via_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "value_template": "\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "value_template": "\
                 {% if (value | multiply(0.01) | int) == 0  %}\
                   closed\
                 {% else %}\
                   open\
                 {% endif %}",
+                }
             }
         },
     )
@@ -303,20 +313,21 @@ async def test_state_via_template_and_entity_id(hass, mqtt_mock_entry_with_yaml_
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "value_template": '\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "value_template": '\
                 {% if value == "open" or value == "closed"  %}\
                   {{ value }}\
                 {% else %}\
                   {{ states(entity_id) }}\
                 {% endif %}',
+                }
             }
         },
     )
@@ -345,15 +356,16 @@ async def test_state_via_template_with_json_value(
     """Test the controlling state via topic with JSON value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "value_template": "{{ value_json.Var1 }}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "value_template": "{{ value_json.Var1 }}",
+                }
             }
         },
     )
@@ -387,20 +399,21 @@ async def test_position_via_template_and_entity_id(
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "position_template": '\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "position_template": '\
                 {% if state_attr(entity_id, "current_position") == None %}\
                   {{ value }}\
                 {% else %}\
                   {{ state_attr(entity_id, "current_position") + value | int }}\
                 {% endif %}',
+                }
             }
         },
     )
@@ -442,8 +455,8 @@ async def test_optimistic_flag(
     """Test assumed_state is set correctly."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
-        {cover.DOMAIN: {**config, "platform": "mqtt", "name": "test", "qos": 0}},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {cover.DOMAIN: {**config, "name": "test", "qos": 0}}},
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -460,13 +473,14 @@ async def test_optimistic_state_change(hass, mqtt_mock_entry_with_yaml_config):
     """Test changing state optimistically."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "qos": 0,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                }
             }
         },
     )
@@ -519,15 +533,16 @@ async def test_optimistic_state_change_with_position(
     """Test changing state optimistically."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "optimistic": True,
-                "command_topic": "command-topic",
-                "position_topic": "position-topic",
-                "qos": 0,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "optimistic": True,
+                    "command_topic": "command-topic",
+                    "position_topic": "position-topic",
+                    "qos": 0,
+                }
             }
         },
     )
@@ -583,14 +598,15 @@ async def test_send_open_cover_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test the sending of open_cover."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 2,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 2,
+                }
             }
         },
     )
@@ -613,14 +629,15 @@ async def test_send_close_cover_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test the sending of close_cover."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 2,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 2,
+                }
             }
         },
     )
@@ -643,14 +660,15 @@ async def test_send_stop__cover_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test the sending of stop_cover."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 2,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 2,
+                }
             }
         },
     )
@@ -673,18 +691,19 @@ async def test_current_cover_position(hass, mqtt_mock_entry_with_yaml_config):
     """Test the current cover position."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -725,18 +744,19 @@ async def test_current_cover_position_inverted(hass, mqtt_mock_entry_with_yaml_c
     """Test the current cover position."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "position_open": 0,
-                "position_closed": 100,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "position_open": 0,
+                    "position_closed": 100,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -784,44 +804,45 @@ async def test_current_cover_position_inverted(hass, mqtt_mock_entry_with_yaml_c
     assert hass.states.get("cover.test").state == STATE_CLOSED
 
 
-async def test_optimistic_position(hass, mqtt_mock_entry_no_yaml_config):
+async def test_optimistic_position(hass, caplog):
     """Test optimistic position is not supported."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
-    state = hass.states.get("cover.test")
-    assert state is None
+    assert (
+        "Invalid config for [mqtt]: 'set_position_topic' must be set together with 'position_topic'"
+        in caplog.text
+    )
 
 
 async def test_position_update(hass, mqtt_mock_entry_with_yaml_config):
     """Test cover position update from received MQTT message."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -853,20 +874,21 @@ async def test_set_position_templated(
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "set_position_topic": "set-position-topic",
-                "set_position_template": pos_template,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "set_position_topic": "set-position-topic",
+                    "set_position_template": pos_template,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -891,17 +913,17 @@ async def test_set_position_templated_and_attributes(
     """Test setting cover position via template and using entities attributes."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "set_position_topic": "set-position-topic",
-                "set_position_template": '\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "set_position_topic": "set-position-topic",
+                    "set_position_template": '\
                 {% if position > 99 %}\
                   {% if state_attr(entity_id, "current_position") == None %}\
                     {{ 5 }}\
@@ -911,9 +933,10 @@ async def test_set_position_templated_and_attributes(
                 {% else %}\
                   {{ 42 }}\
                 {% endif %}',
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -934,22 +957,23 @@ async def test_set_tilt_templated(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting cover tilt position via template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "tilt_command_topic": "tilt-command-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "set_position_topic": "set-position-topic",
-                "set_position_template": "{{position-1}}",
-                "tilt_command_template": "{{tilt_position+1}}",
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "set_position_topic": "set-position-topic",
+                    "set_position_template": "{{position-1}}",
+                    "tilt_command_template": "{{tilt_position+1}}",
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -974,26 +998,27 @@ async def test_set_tilt_templated_and_attributes(
     """Test setting cover tilt position via template and using entities attributes."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "tilt_command_topic": "tilt-command-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "set_position_topic": "set-position-topic",
-                "set_position_template": "{{position-1}}",
-                "tilt_command_template": "{"
-                '"entity_id": "{{ entity_id }}",'
-                '"value": {{ value }},'
-                '"tilt_position": {{ tilt_position }}'
-                "}",
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "get-position-topic",
+                    "command_topic": "command-topic",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "set_position_topic": "set-position-topic",
+                    "set_position_template": "{{position-1}}",
+                    "tilt_command_template": "{"
+                    '"entity_id": "{{ entity_id }}",'
+                    '"value": {{ value }},'
+                    '"tilt_position": {{ tilt_position }}'
+                    "}",
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -1061,17 +1086,18 @@ async def test_set_position_untemplated(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "position-topic",
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "position-topic",
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -1094,19 +1120,20 @@ async def test_set_position_untemplated_custom_percentage_range(
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "position-topic",
-                "position_open": 0,
-                "position_closed": 100,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "position_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "position-topic",
+                    "position_open": 0,
+                    "position_closed": 100,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -1127,17 +1154,18 @@ async def test_no_command_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test with no command topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command",
-                "tilt_status_topic": "tilt-status",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command",
+                    "tilt_status_topic": "tilt-status",
+                }
             }
         },
     )
@@ -1151,16 +1179,17 @@ async def test_no_payload_close(hass, mqtt_mock_entry_with_yaml_config):
     """Test with no close payload."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": None,
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": None,
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -1174,16 +1203,17 @@ async def test_no_payload_open(hass, mqtt_mock_entry_with_yaml_config):
     """Test with no open payload."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": None,
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": None,
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                }
             }
         },
     )
@@ -1197,16 +1227,17 @@ async def test_no_payload_stop(hass, mqtt_mock_entry_with_yaml_config):
     """Test with no stop payload."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": None,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": None,
+                }
             }
         },
     )
@@ -1220,18 +1251,19 @@ async def test_with_command_topic_and_tilt(hass, mqtt_mock_entry_with_yaml_confi
     """Test with command topic and tilt config."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "command_topic": "test",
-                "platform": "mqtt",
-                "name": "test",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command",
-                "tilt_status_topic": "tilt-status",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "command_topic": "test",
+                    "name": "test",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command",
+                    "tilt_status_topic": "tilt-status",
+                }
             }
         },
     )
@@ -1245,19 +1277,20 @@ async def test_tilt_defaults(hass, mqtt_mock_entry_with_yaml_config):
     """Test the defaults."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command",
-                "tilt_status_topic": "tilt-status",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command",
+                    "tilt_status_topic": "tilt-status",
+                }
             }
         },
     )
@@ -1273,19 +1306,20 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock_entry_with_yaml_conf
     """Test tilt defaults on close/open."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                }
             }
         },
     )
@@ -1356,21 +1390,22 @@ async def test_tilt_given_value(hass, mqtt_mock_entry_with_yaml_config):
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_opened_value": 80,
-                "tilt_closed_value": 25,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_opened_value": 80,
+                    "tilt_closed_value": 25,
+                }
             }
         },
     )
@@ -1445,22 +1480,23 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock_entry_with_yaml_confi
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_opened_value": 80,
-                "tilt_closed_value": 25,
-                "tilt_optimistic": True,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_opened_value": 80,
+                    "tilt_closed_value": 25,
+                    "tilt_optimistic": True,
+                }
             }
         },
     )
@@ -1522,24 +1558,25 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock_entry_with_yaml_co
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_opened_value": 25,
-                "tilt_closed_value": 0,
-                "tilt_min": 0,
-                "tilt_max": 50,
-                "tilt_optimistic": True,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_opened_value": 25,
+                    "tilt_closed_value": 0,
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                    "tilt_optimistic": True,
+                }
             }
         },
     )
@@ -1599,19 +1636,20 @@ async def test_tilt_via_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test tilt by updating status via MQTT."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                }
             }
         },
     )
@@ -1637,22 +1675,23 @@ async def test_tilt_via_topic_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test tilt by updating status via MQTT and template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_status_template": "{{ (value | multiply(0.01)) | int }}",
-                "tilt_opened_value": 400,
-                "tilt_closed_value": 125,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_status_template": "{{ (value | multiply(0.01)) | int }}",
+                    "tilt_opened_value": 400,
+                    "tilt_closed_value": 125,
+                }
             }
         },
     )
@@ -1680,22 +1719,23 @@ async def test_tilt_via_topic_template_json_value(
     """Test tilt by updating status via MQTT and template with JSON value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_status_template": "{{ value_json.Var1 }}",
-                "tilt_opened_value": 400,
-                "tilt_closed_value": 125,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_status_template": "{{ value_json.Var1 }}",
+                    "tilt_opened_value": 400,
+                    "tilt_closed_value": 125,
+                }
             }
         },
     )
@@ -1727,21 +1767,22 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock_entry_with_yaml_conf
     """Test tilt status via MQTT with altered tilt range."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_min": 0,
-                "tilt_max": 50,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                }
             }
         },
     )
@@ -1776,21 +1817,22 @@ async def test_tilt_status_out_of_range_warning(
     """Test tilt status via MQTT tilt out of range warning message."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_min": 0,
-                "tilt_max": 50,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                }
             }
         },
     )
@@ -1810,21 +1852,22 @@ async def test_tilt_status_not_numeric_warning(
     """Test tilt status via MQTT tilt not numeric warning message."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_min": 0,
-                "tilt_max": 50,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                }
             }
         },
     )
@@ -1842,21 +1885,22 @@ async def test_tilt_via_topic_altered_range_inverted(
     """Test tilt status via MQTT with altered tilt range and inverted tilt position."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_min": 50,
-                "tilt_max": 0,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_min": 50,
+                    "tilt_max": 0,
+                }
             }
         },
     )
@@ -1891,24 +1935,25 @@ async def test_tilt_via_topic_template_altered_range(
     """Test tilt status via MQTT and template with altered tilt range."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_status_template": "{{ (value | multiply(0.01)) | int }}",
-                "tilt_opened_value": 400,
-                "tilt_closed_value": 125,
-                "tilt_min": 0,
-                "tilt_max": 50,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_status_template": "{{ (value | multiply(0.01)) | int }}",
+                    "tilt_opened_value": 400,
+                    "tilt_closed_value": 125,
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                }
             }
         },
     )
@@ -1941,19 +1986,20 @@ async def test_tilt_position(hass, mqtt_mock_entry_with_yaml_config):
     """Test tilt via method invocation."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                }
             }
         },
     )
@@ -1976,20 +2022,21 @@ async def test_tilt_position_templated(hass, mqtt_mock_entry_with_yaml_config):
     """Test tilt position via template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_command_template": "{{100-32}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_command_template": "{{100-32}}",
+                }
             }
         },
     )
@@ -2012,23 +2059,24 @@ async def test_tilt_position_altered_range(hass, mqtt_mock_entry_with_yaml_confi
     """Test tilt via method invocation with altered range."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "payload_open": "OPEN",
-                "payload_close": "CLOSE",
-                "payload_stop": "STOP",
-                "tilt_command_topic": "tilt-command-topic",
-                "tilt_status_topic": "tilt-status-topic",
-                "tilt_opened_value": 400,
-                "tilt_closed_value": 125,
-                "tilt_min": 0,
-                "tilt_max": 50,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
+                    "payload_stop": "STOP",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "tilt_status_topic": "tilt-status-topic",
+                    "tilt_opened_value": 400,
+                    "tilt_closed_value": 125,
+                    "tilt_min": 0,
+                    "tilt_max": 50,
+                }
             }
         },
     )
@@ -2425,13 +2473,14 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of a valid device class."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "device_class": "garage",
-                "state_topic": "test-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "device_class": "garage",
+                    "state_topic": "test-topic",
+                }
             }
         },
     )
@@ -2442,25 +2491,22 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("device_class") == "garage"
 
 
-async def test_invalid_device_class(hass, mqtt_mock_entry_no_yaml_config):
+async def test_invalid_device_class(hass, caplog):
     """Test the setting of an invalid device class."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "device_class": "abc123",
-                "state_topic": "test-topic",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "device_class": "abc123",
+                    "state_topic": "test-topic",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
-    state = hass.states.get("cover.test")
-    assert state is None
+    assert "Invalid config for [mqtt]: expected CoverDeviceClass" in caplog.text
 
 
 async def test_setting_attribute_via_mqtt_json_message(
@@ -2497,7 +2543,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, cover.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        cover.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
@@ -2505,35 +2555,43 @@ async def test_update_with_json_attrs_bad_json(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test attributes get extracted from a JSON result."""
-    await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, cover.DOMAIN, DEFAULT_CONFIG
+    await help_test_update_with_json_attrs_bad_json(
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        cover.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, cover.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        cover.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique_id option only creates one cover per id."""
     config = {
-        cover.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "state_topic": "test-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "state_topic": "test-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-        ]
+        mqtt.DOMAIN: {
+            cover.DOMAIN: [
+                {
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+                {
+                    "name": "Test 2",
+                    "state_topic": "test-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+            ]
+        }
     }
     await help_test_unique_id(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, config
@@ -2645,19 +2703,20 @@ async def test_state_and_position_topics_state_not_set_via_position_topic(
     """Test state is not set via position topic when both state and position topics are set."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "position_topic": "get-position-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "state_open": "OPEN",
-                "state_closed": "CLOSE",
-                "command_topic": "command-topic",
-                "qos": 0,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "position_topic": "get-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "state_open": "OPEN",
+                    "state_closed": "CLOSE",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                }
             }
         },
     )
@@ -2705,20 +2764,21 @@ async def test_set_state_via_position_using_stopped_state(
     """Test the controlling state via position topic using stopped state."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "position_topic": "get-position-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "state_open": "OPEN",
-                "state_closed": "CLOSE",
-                "state_stopped": "STOPPED",
-                "command_topic": "command-topic",
-                "qos": 0,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "position_topic": "get-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "state_open": "OPEN",
+                    "state_closed": "CLOSE",
+                    "state_stopped": "STOPPED",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                }
             }
         },
     )
@@ -2761,16 +2821,17 @@ async def test_position_via_position_topic_template(
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": "{{ (value | multiply(0.01)) | int }}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": "{{ (value | multiply(0.01)) | int }}",
+                }
             }
         },
     )
@@ -2798,16 +2859,17 @@ async def test_position_via_position_topic_template_json_value(
     """Test position by updating status via position template with a JSON value."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": "{{ value_json.Var1 }}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": "{{ value_json.Var1 }}",
+                }
             }
         },
     )
@@ -2839,21 +2901,22 @@ async def test_position_template_with_entity_id(hass, mqtt_mock_entry_with_yaml_
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": '\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": '\
                 {% if state_attr(entity_id, "current_position") != None %}\
                     {{ value | int + state_attr(entity_id, "current_position") }} \
                 {% else %} \
                     {{ value }} \
                 {% endif %}',
+                }
             }
         },
     )
@@ -2881,16 +2944,17 @@ async def test_position_via_position_topic_template_return_json(
     """Test position by updating status via position template and returning json."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": '{{ {"position" : value} | tojson }}',
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": '{{ {"position" : value} | tojson }}',
+                }
             }
         },
     )
@@ -2911,16 +2975,17 @@ async def test_position_via_position_topic_template_return_json_warning(
     """Test position by updating status via position template returning json without position attribute."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": '{{ {"pos" : value} | tojson }}',
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": '{{ {"pos" : value} | tojson }}',
+                }
             }
         },
     )
@@ -2941,17 +3006,18 @@ async def test_position_and_tilt_via_position_topic_template_return_json(
     """Test position and tilt by updating the position via position template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": '\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": '\
                 {{ {"position" : value, "tilt_position" : (value | int / 2)| int } | tojson }}',
+                }
             }
         },
     )
@@ -2984,27 +3050,28 @@ async def test_position_via_position_topic_template_all_variables(
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "tilt_command_topic": "tilt-command-topic",
-                "position_open": 99,
-                "position_closed": 1,
-                "tilt_min": 11,
-                "tilt_max": 22,
-                "position_template": "\
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "position_open": 99,
+                    "position_closed": 1,
+                    "tilt_min": 11,
+                    "tilt_max": 22,
+                    "position_template": "\
                 {% if value | int < tilt_max %}\
                     {{ tilt_min }}\
                 {% endif %}\
                 {% if value | int > position_closed %}\
                     {{ position_open }}\
                 {% endif %}",
+                }
             }
         },
     )
@@ -3031,20 +3098,21 @@ async def test_set_state_via_stopped_state_no_position_topic(
     """Test the controlling state via stopped state when no position topic."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "state_open": "OPEN",
-                "state_closed": "CLOSE",
-                "state_stopped": "STOPPED",
-                "state_opening": "OPENING",
-                "state_closing": "CLOSING",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "optimistic": False,
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "state_open": "OPEN",
+                    "state_closed": "CLOSE",
+                    "state_stopped": "STOPPED",
+                    "state_opening": "OPENING",
+                    "state_closing": "CLOSING",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                    "optimistic": False,
+                }
             }
         },
     )
@@ -3083,16 +3151,17 @@ async def test_position_via_position_topic_template_return_invalid_json(
     """Test position by updating status via position template and returning invalid json."""
     assert await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "get-position-topic",
-                "position_template": '{{ {"position" : invalid_json} }}',
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "position_topic": "get-position-topic",
+                    "position_template": '{{ {"position" : invalid_json} }}',
+                }
             }
         },
     )
@@ -3104,74 +3173,65 @@ async def test_position_via_position_topic_template_return_invalid_json(
     assert ("Payload '{'position': Undefined}' is not numeric") in caplog.text
 
 
-async def test_set_position_topic_without_get_position_topic_error(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
-):
+async def test_set_position_topic_without_get_position_topic_error(hass, caplog):
     """Test error when set_position_topic is used without position_topic."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "value_template": "{{100-62}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "set_position_topic": "set-position-topic",
+                    "value_template": "{{100-62}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
     ) in caplog.text
 
 
 async def test_value_template_without_state_topic_error(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
+    hass,
+    caplog,
 ):
     """Test error when value_template is used and state_topic is missing."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "value_template": "{{100-62}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "value_template": "{{100-62}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_VALUE_TEMPLATE}' must be set together with '{CONF_STATE_TOPIC}'."
     ) in caplog.text
 
 
-async def test_position_template_without_position_topic_error(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
-):
+async def test_position_template_without_position_topic_error(hass, caplog):
     """Test error when position_template is used and position_topic is missing."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "position_template": "{{100-52}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "position_template": "{{100-52}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
         in caplog.text
@@ -3179,74 +3239,65 @@ async def test_position_template_without_position_topic_error(
 
 
 async def test_set_position_template_without_set_position_topic(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
+    hass,
+    caplog,
 ):
     """Test error when set_position_template is used and set_position_topic is missing."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "set_position_template": "{{100-42}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "set_position_template": "{{100-42}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
         in caplog.text
     )
 
 
-async def test_tilt_command_template_without_tilt_command_topic(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
-):
+async def test_tilt_command_template_without_tilt_command_topic(hass, caplog):
     """Test error when tilt_command_template is used and tilt_command_topic is missing."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "tilt_command_template": "{{100-32}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "tilt_command_template": "{{100-32}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
         in caplog.text
     )
 
 
-async def test_tilt_status_template_without_tilt_status_topic_topic(
-    hass, caplog, mqtt_mock_entry_no_yaml_config
-):
+async def test_tilt_status_template_without_tilt_status_topic_topic(hass, caplog):
     """Test error when tilt_status_template is used and tilt_status_topic is missing."""
-    assert await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        cover.DOMAIN,
+        mqtt.DOMAIN,
         {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "tilt_status_template": "{{100-22}}",
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "tilt_status_template": "{{100-22}}",
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
     assert (
         f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
         in caplog.text
@@ -3291,8 +3342,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG[domain]
-    config["position_topic"] = "some-position-topic"
+    config = DEFAULT_CONFIG
+    config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -3311,16 +3362,18 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -3348,7 +3401,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         cover.DOMAIN,
-        DEFAULT_CONFIG[cover.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][cover.DOMAIN],
         topic,
         value,
         attribute,
@@ -3360,17 +3413,27 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = cover.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = cover.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None

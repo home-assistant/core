@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from numato_gpio import NumatoGpioError
 
@@ -88,7 +89,7 @@ class NumatoGpioSwitch(SwitchEntity):
         """Return true if port is turned on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the port on."""
         try:
             self._api.write_output(
@@ -104,7 +105,7 @@ class NumatoGpioSwitch(SwitchEntity):
                 err,
             )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the port off."""
         try:
             self._api.write_output(

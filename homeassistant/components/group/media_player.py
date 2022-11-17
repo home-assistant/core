@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,8 +38,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -104,12 +103,12 @@ class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
     _attr_available: bool = False
+    _attr_should_poll = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
         self._state: str | None = None
-        self._supported_features: int = 0
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -211,16 +210,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def state(self) -> str | None:
         """Return the state of the media group."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a media group."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -408,13 +397,13 @@ class MediaPlayerGroup(MediaPlayerEntity):
             # Set as unknown if all members are unknown or unavailable
             self._state = None
         else:
-            off_values = (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+            off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
             if states.count(states[0]) == len(states):
                 self._state = states[0]
             elif any(state for state in states if state not in off_values):
-                self._state = STATE_ON
+                self._state = MediaPlayerState.ON
             else:
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
 
         supported_features = 0
         if self._features[KEY_CLEAR_PLAYLIST]:
@@ -447,5 +436,5 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 | MediaPlayerEntityFeature.VOLUME_STEP
             )
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self.async_write_ha_state()

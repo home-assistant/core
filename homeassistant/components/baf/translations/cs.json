@@ -8,6 +8,9 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavit {name} - {model} ({ip_address})?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP adresa"

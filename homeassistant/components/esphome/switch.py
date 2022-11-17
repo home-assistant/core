@@ -36,7 +36,7 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""

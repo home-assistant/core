@@ -4,10 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -125,7 +126,6 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._target_temp_device: FibaroDevice | None = None
         self._op_mode_device: FibaroDevice | None = None
         self._fan_mode_device: FibaroDevice | None = None
-        self._attr_supported_features = 0
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device)

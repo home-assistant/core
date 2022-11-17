@@ -34,7 +34,8 @@ class HardwareInfo:
 
     name: str | None
     board: BoardInfo | None
-    dongles: list[USBInfo] | None
+    config_entries: list[str] | None
+    dongle: USBInfo | None
     url: str | None
 
 
@@ -42,5 +43,5 @@ class HardwareProtocol(Protocol):
     """Define the format of hardware platforms."""
 
     @callback
-    def async_info(self, hass: HomeAssistant) -> HardwareInfo:
+    def async_info(self, hass: HomeAssistant) -> list[HardwareInfo]:
         """Return info."""

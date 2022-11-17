@@ -27,7 +27,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -80,6 +84,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -497,8 +502,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
         ) from connect_ex
-    except FibaroAuthFailed:
-        return False
+    except FibaroAuthFailed as auth_ex:
+        raise ConfigEntryAuthFailed from auth_ex
 
     data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
@@ -646,8 +651,14 @@ class FibaroDevice(Entity):
                 attr[ATTR_BATTERY_LEVEL] = int(
                     self.fibaro_device.properties.batteryLevel
                 )
-            if "fibaroAlarmArm" in self.fibaro_device.interfaces:
-                attr[ATTR_ARMED] = bool(self.fibaro_device.properties.armed)
+            if "armed" in self.fibaro_device.properties:
+                armed = self.fibaro_device.properties.armed
+                if isinstance(armed, bool):
+                    attr[ATTR_ARMED] = armed
+                elif isinstance(armed, str) and armed.lower() in ("true", "false"):
+                    attr[ATTR_ARMED] = armed.lower() == "true"
+                else:
+                    attr[ATTR_ARMED] = None
         except (ValueError, KeyError):
             pass
 

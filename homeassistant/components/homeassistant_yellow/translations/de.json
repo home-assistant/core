@@ -1,0 +1,40 @@
+{
+    "options": {
+        "abort": {
+            "addon_info_failed": "Silicon Labs Multiprotokoll-Zusatzinformationen konnten nicht abgerufen werden.",
+            "addon_install_failed": "Die Installation des Silicon Labs Multiprotokoll-Add-Ons ist fehlgeschlagen.",
+            "addon_set_config_failed": "Die Silicon Labs Multiprotokoll-Konfiguration konnte nicht eingestellt werden.",
+            "addon_start_failed": "Das Silicon Labs Multiprotokoll-Add-On konnte nicht gestartet werden.",
+            "not_hassio": "Die Hardwareoptionen k\u00f6nnen nur auf HassOS-Installationen konfiguriert werden."
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "progress": {
+            "install_addon": "Bitte warte, bis die Installation des Silicon Labs Multiprotokoll-Add-ons abgeschlossen ist. Dies kann einige Minuten dauern.",
+            "start_addon": "Bitte warte, bis der Start des Silicon Labs Multiprotokoll-Add-Ons abgeschlossen ist. Dies kann einige Sekunden dauern."
+        },
+        "step": {
+            "addon_installed_other_device": {
+                "title": "Die Multiprotokollunterst\u00fctzung ist bereits f\u00fcr ein anderes Ger\u00e4t aktiviert"
+            },
+            "addon_not_installed": {
+                "data": {
+                    "enable_multi_pan": "Multiprotokollunterst\u00fctzung aktivieren"
+                },
+                "description": "Wenn die Multiprotokoll-Unterst\u00fctzung aktiviert ist, kann das IEEE 802.15.4-Funkger\u00e4t des Home Assistant Yellow sowohl f\u00fcr Zigbee als auch f\u00fcr Thread (von Matter verwendet) gleichzeitig verwendet werden. Hinweis: Dies ist eine experimentelle Funktion.",
+                "title": "Aktiviere die Multiprotokollunterst\u00fctzung auf dem IEEE 802.15.4-Funkger\u00e4t"
+            },
+            "install_addon": {
+                "title": "Die Installation des Silicon Labs Multiprotokoll-Add-Ons hat begonnen"
+            },
+            "show_revert_guide": {
+                "description": "Wenn du zu einer reinen Zigbee-Firmware wechseln m\u00f6chtest, f\u00fchre bitte die folgenden manuellen Schritte aus:\n\n  * Entferne das Silicon Labs Multiprotokoll-Add-On\n\n  * Flashe die reine Zigbee-Firmware, folge der Anleitung unter https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually.\n\n  * Rekonfiguriere ZHA, um die Einstellungen auf das neu geflashte Funkger\u00e4t zu migrieren.",
+                "title": "Multiprotokoll-Unterst\u00fctzung ist f\u00fcr dieses Ger\u00e4t aktiviert"
+            },
+            "start_addon": {
+                "title": "Das Silicon Labs Multiprotokoll-Add-on wird gestartet."
+            }
+        }
+    }
+}

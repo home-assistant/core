@@ -62,24 +62,29 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
         "hardware": [
             {
                 "board": None,
-                "dongles": [
-                    {
-                        "vid": "bla_vid",
-                        "pid": "bla_pid",
-                        "serial_number": "bla_serial_number",
-                        "manufacturer": "bla_manufacturer",
-                        "description": "bla_description",
-                    },
-                    {
-                        "vid": "bla_vid_2",
-                        "pid": "bla_pid_2",
-                        "serial_number": "bla_serial_number_2",
-                        "manufacturer": "bla_manufacturer_2",
-                        "description": "bla_description_2",
-                    },
-                ],
+                "config_entries": [config_entry.entry_id],
+                "dongle": {
+                    "vid": "bla_vid",
+                    "pid": "bla_pid",
+                    "serial_number": "bla_serial_number",
+                    "manufacturer": "bla_manufacturer",
+                    "description": "bla_description",
+                },
                 "name": "Home Assistant Sky Connect",
                 "url": None,
-            }
+            },
+            {
+                "board": None,
+                "config_entries": [config_entry_2.entry_id],
+                "dongle": {
+                    "vid": "bla_vid_2",
+                    "pid": "bla_pid_2",
+                    "serial_number": "bla_serial_number_2",
+                    "manufacturer": "bla_manufacturer_2",
+                    "description": "bla_description_2",
+                },
+                "name": "Home Assistant Sky Connect",
+                "url": None,
+            },
         ]
     }

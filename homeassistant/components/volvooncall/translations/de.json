@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto ist bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
@@ -14,6 +15,7 @@
                     "password": "Passwort",
                     "region": "Region",
                     "scandinavian_miles": "Skandinavische Meilen verwenden",
+                    "unit_system": "Einheitensystem",
                     "username": "Benutzername"
                 }
             }

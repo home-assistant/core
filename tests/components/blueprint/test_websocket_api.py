@@ -8,13 +8,26 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
 
 
+@pytest.fixture
+def automation_config():
+    """Automation config."""
+    return {}
+
+
+@pytest.fixture
+def script_config():
+    """Script config."""
+    return {}
+
+
 @pytest.fixture(autouse=True)
-async def setup_bp(hass):
+async def setup_bp(hass, automation_config, script_config):
     """Fixture to set up the blueprint component."""
     assert await async_setup_component(hass, "blueprint", {})
 
-    # Trigger registration of automation blueprints
-    await async_setup_component(hass, "automation", {})
+    # Trigger registration of automation and script blueprints
+    await async_setup_component(hass, "automation", automation_config)
+    await async_setup_component(hass, "script", script_config)
 
 
 async def test_list_blueprints(hass, hass_ws_client):
@@ -251,3 +264,89 @@ async def test_delete_non_exist_file_blueprint(hass, aioclient_mock, hass_ws_cli
 
     assert msg["id"] == 9
     assert not msg["success"]
+
+
+@pytest.mark.parametrize(
+    "automation_config",
+    (
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                        "a_number": 5,
+                    },
+                }
+            }
+        },
+    ),
+)
+async def test_delete_blueprint_in_use_by_automation(
+    hass, aioclient_mock, hass_ws_client
+):
+    """Test deleting a blueprint which is in use."""
+
+    with patch("pathlib.Path.unlink", return_value=Mock()) as unlink_mock:
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "blueprint/delete",
+                "path": "test_event_service.yaml",
+                "domain": "automation",
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert not unlink_mock.mock_calls
+        assert msg["id"] == 9
+        assert not msg["success"]
+        assert msg["error"] == {
+            "code": "unknown_error",
+            "message": "Blueprint in use",
+        }
+
+
+@pytest.mark.parametrize(
+    "script_config",
+    (
+        {
+            "script": {
+                "test_script": {
+                    "use_blueprint": {
+                        "path": "test_service.yaml",
+                        "input": {
+                            "service_to_call": "test.automation",
+                        },
+                    }
+                }
+            }
+        },
+    ),
+)
+async def test_delete_blueprint_in_use_by_script(hass, aioclient_mock, hass_ws_client):
+    """Test deleting a blueprint which is in use."""
+
+    with patch("pathlib.Path.unlink", return_value=Mock()) as unlink_mock:
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "blueprint/delete",
+                "path": "test_service.yaml",
+                "domain": "script",
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert not unlink_mock.mock_calls
+        assert msg["id"] == 9
+        assert not msg["success"]
+        assert msg["error"] == {
+            "code": "unknown_error",
+            "message": "Blueprint in use",
+        }

@@ -17,6 +17,9 @@
                 },
                 "description": "S\u00e9lectionner un adaptateur Bluetooth \u00e0 configurer"
             },
+            "single_adapter": {
+                "description": "Voulez-vous configurer l\u2019adaptateur Bluetooth {name}\u00a0?"
+            },
             "user": {
                 "data": {
                     "address": "Appareil"

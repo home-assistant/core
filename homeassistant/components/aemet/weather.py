@@ -84,8 +84,7 @@ async def async_setup_entry(
         unique_id = f"{config_entry.unique_id} {mode}"
         entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
 
-    if entities:
-        async_add_entities(entities, False)
+    async_add_entities(entities, False)
 
 
 class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):

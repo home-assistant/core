@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     SERVICE_TURN_OFF,
 )
+from homeassistant.helpers import entity_registry as er
 
 
 async def mock_rflink(
@@ -476,3 +477,40 @@ async def test_default_keepalive(hass, monkeypatch, caplog):
         == DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
     )  # no keepalive config will default it
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
+
+
+async def test_unique_id(hass, monkeypatch):
+    """Validate the device unique_id."""
+
+    DOMAIN = "sensor"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "my_humidity_device_unique_id": {
+                    "name": "humidity_device",
+                    "sensor_type": "humidity",
+                    "aliases": ["test_alias_02_0"],
+                },
+                "my_temperature_device_unique_id": {
+                    "name": "temperature_device",
+                    "sensor_type": "temperature",
+                    "aliases": ["test_alias_02_0"],
+                },
+            },
+        },
+    }
+
+    registry = er.async_get(hass)
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    humidity_entry = registry.async_get("sensor.humidity_device")
+    assert humidity_entry
+    assert humidity_entry.unique_id == "my_humidity_device_unique_id"
+
+    temperature_entry = registry.async_get("sensor.temperature_device")
+    assert temperature_entry
+    assert temperature_entry.unique_id == "my_temperature_device_unique_id"

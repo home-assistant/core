@@ -6,11 +6,9 @@ import logging
 
 import speedtest
 
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,7 +19,6 @@ from .const import (
     DEFAULT_SERVER,
     DOMAIN,
     PLATFORMS,
-    SPEED_TEST_SERVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload SpeedTest Entry from config_entry."""
-    hass.services.async_remove(DOMAIN, SPEED_TEST_SERVICE)
-
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
@@ -141,30 +136,6 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             await self.hass.async_add_executor_job(self.initialize)
         except speedtest.SpeedtestException as err:
             raise ConfigEntryNotReady from err
-
-        async def request_update(call: ServiceCall) -> None:
-            """Request update."""
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_service",
-                breaks_in_ha_version="2022.11.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_service",
-            )
-
-            _LOGGER.warning(
-                (
-                    'The "%s" service is deprecated and will be removed in "2022.11.0"; '
-                    'use the "homeassistant.update_entity" service and pass it a target Speedtest entity_id'
-                ),
-                SPEED_TEST_SERVICE,
-            )
-            await self.async_request_refresh()
-
-        self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(options_updated_listener)

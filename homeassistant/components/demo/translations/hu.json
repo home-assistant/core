@@ -15,7 +15,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Nyomja meg az OK gombot, ha a villog\u00f3 folyad\u00e9kot felt\u00f6lt\u00f6tt\u00e9k.",
+                        "description": "Nyomja meg az OK gombot, ha a folyad\u00e9kot felt\u00f6lt\u00f6tt\u00e9k.",
                         "title": "A villog\u00f3 folyad\u00e9kot fel kell t\u00f6lteni"
                     }
                 }

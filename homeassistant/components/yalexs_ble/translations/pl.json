@@ -24,7 +24,7 @@
                     "key": "Klucz offline (32-bajtowy ci\u0105g szesnastkowy)",
                     "slot": "Slot klucza offline (liczba ca\u0142kowita od 0 do 255)"
                 },
-                "description": "Sprawd\u017a dokumentacj\u0119 na {docs_url}, aby dowiedzie\u0107 si\u0119, jak znale\u017a\u0107 klucz offline."
+                "description": "Sprawd\u017a dokumentacj\u0119, aby dowiedzie\u0107 si\u0119, jak znale\u017a\u0107 klucz offline."
             }
         }
     }

@@ -3,12 +3,9 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
@@ -36,8 +33,8 @@ from .util import TEST_SITE_UUID
 FIRST_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
 SECOND_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
-FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_0"
-SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_1"
+FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.name_0"
+SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.name_1"
 
 CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
 TEST_RISCO_TO_HA = {
@@ -72,7 +69,9 @@ FULL_CUSTOM_MAPPING = {
 }
 
 EXPECTED_FEATURES = (
-    SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+    AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
 )
 
 
@@ -113,7 +112,11 @@ def two_part_local_alarm():
     with patch.object(
         partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
     ), patch.object(
+        partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
+    ), patch.object(
         partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+    ), patch.object(
+        partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
     ), patch(
         "homeassistant.components.risco.RiscoLocal.zones",
         new_callable=PropertyMock(return_value={}),
@@ -290,7 +293,8 @@ async def test_cloud_sets_full_custom_mapping(
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_CLOUD_ENTITY_ID)
     assert (
-        entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     await _test_cloud_service_call(
@@ -475,6 +479,9 @@ async def test_local_setup(hass, two_part_local_alarm, setup_risco_local):
     device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1_local")})
     assert device is not None
     assert device.manufacturer == "Risco"
+    with patch("homeassistant.components.risco.RiscoLocal.disconnect") as mock_close:
+        await hass.config_entries.async_unload(setup_risco_local.entry_id)
+        mock_close.assert_awaited_once()
 
 
 async def _check_local_state(
@@ -662,7 +669,8 @@ async def test_local_sets_full_custom_mapping(
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_LOCAL_ENTITY_ID)
     assert (
-        entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     await _test_local_service_call(

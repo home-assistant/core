@@ -46,7 +46,8 @@ async def async_validate_trigger_config(
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
-            async_get_client_wrapper_by_device_entry(hass, device)
+            if DOMAIN in hass.data:
+                async_get_client_wrapper_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 

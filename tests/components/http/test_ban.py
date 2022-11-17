@@ -198,7 +198,17 @@ async def test_access_from_supervisor_ip(
 
     manager: IpBanManager = app[KEY_BAN_MANAGER]
 
-    assert await async_setup_component(hass, "hassio", {"hassio": {}})
+    with patch(
+        "homeassistant.components.hassio.HassIO.get_resolution_info",
+        return_value={
+            "unsupported": [],
+            "unhealthy": [],
+            "suggestions": [],
+            "issues": [],
+            "checks": [],
+        },
+    ):
+        assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
     m_open = mock_open()
 

@@ -6,7 +6,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.nam import init_integration
+from . import init_integration
 
 
 async def test_button(hass):

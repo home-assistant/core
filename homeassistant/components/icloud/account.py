@@ -15,8 +15,8 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -47,8 +47,6 @@ from .const import (
     DEVICE_STATUS_SET,
     DOMAIN,
 )
-
-ATTRIBUTION = "Data provided by Apple iCloud"
 
 # entity attributes
 ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"
@@ -232,16 +230,7 @@ class IcloudAccount:
 
     def _require_reauth(self):
         """Require the user to log in again."""
-        self.hass.add_job(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data={
-                    **self._config_entry.data,
-                    "unique_id": self._config_entry.unique_id,
-                },
-            )
-        )
+        self.hass.add_job(self._config_entry.async_start_reauth, self.hass)
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
@@ -377,6 +366,8 @@ class IcloudAccount:
 class IcloudDevice:
     """Representation of a iCloud device."""
 
+    _attr_attribution = "Data provided by Apple iCloud"
+
     def __init__(self, account: IcloudAccount, device: AppleDevice, status) -> None:
         """Initialize the iCloud device."""
         self._account = account
@@ -394,7 +385,6 @@ class IcloudDevice:
         self._location = None
 
         self._attrs = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
             ATTR_DEVICE_NAME: self._device_model,
             ATTR_DEVICE_STATUS: None,

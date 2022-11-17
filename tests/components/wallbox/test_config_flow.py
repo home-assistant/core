@@ -18,7 +18,7 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import (
+from . import (
     authorisation_response,
     authorisation_response_unauthorised,
     entry,

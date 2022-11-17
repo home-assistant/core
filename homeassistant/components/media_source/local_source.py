@@ -5,14 +5,14 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -109,12 +109,12 @@ class LocalSource(MediaSource):
             base = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier="",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_type=None,
                 title=self.name,
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_DIRECTORY,
+                children_media_class=MediaClass.DIRECTORY,
             )
 
             base.children = [
@@ -158,10 +158,10 @@ class LocalSource(MediaSource):
 
         title = path.name
 
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         if mime_type:
             media_class = MEDIA_CLASS_MAP.get(
-                mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+                mime_type.split("/")[0], MediaClass.DIRECTORY
             )
 
         media = BrowseMediaSource(
@@ -324,7 +324,7 @@ class UploadMediaView(http.HomeAssistantView):
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_remove_media(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Remove media."""
     try:

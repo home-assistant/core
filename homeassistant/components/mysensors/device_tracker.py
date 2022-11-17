@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import AsyncSeeCallback
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
+from .. import mysensors
 from .const import ATTR_GATEWAY_ID, DevId, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 

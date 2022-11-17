@@ -1,3 +1,3 @@
-"""Constants for the BThome Bluetooth integration."""
+"""Constants for the BTHome Bluetooth integration."""
 
 DOMAIN = "bthome"

@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Chiave API non valida",
+            "no_site": "Nessun sito fornito",
+            "unknown_error": "Errore imprevisto"
+        },
         "step": {
             "site": {
                 "data": {
