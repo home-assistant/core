@@ -1582,6 +1582,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["bool", None],
                 ),
                 TypeHintMatch(
+                    function_name="supported_features",
+                    return_type=["LockEntityFeature", "int"],
+                ),
+                TypeHintMatch(
                     function_name="lock",
                     kwargs_type="Any",
                     return_type=None,
