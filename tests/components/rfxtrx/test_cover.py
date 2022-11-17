@@ -7,8 +7,9 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_one_cover(hass, rfxtrx):

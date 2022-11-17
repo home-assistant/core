@@ -5,10 +5,6 @@ from functools import partial
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_AT,
@@ -23,10 +19,9 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_change,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
@@ -45,11 +40,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     entities: dict[str, CALLBACK_TYPE] = {}
     removes = []
     job = HassJob(action)

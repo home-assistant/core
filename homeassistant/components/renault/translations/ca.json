@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Contrasenya"
                 },
-                "description": "Actualitza la contrasenya de l'usuari {username}",
+                "description": "Si us plau, actualitza la contrasenya de {username}",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {

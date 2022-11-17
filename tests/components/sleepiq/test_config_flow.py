@@ -9,7 +9,7 @@ from homeassistant.components.sleepiq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.components.sleepiq.conftest import SLEEPIQ_CONFIG, setup_platform
+from .conftest import SLEEPIQ_CONFIG, setup_platform
 
 
 async def test_import(hass: HomeAssistant) -> None:

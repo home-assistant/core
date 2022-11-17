@@ -39,7 +39,13 @@
   "neighbors": [6, 7, 45, 67],
   "interviewAttempts": 1,
   "endpoints": [
-    { "nodeId": 4, "index": 0, "installerIcon": 4608, "userIcon": 4608 }
+    {
+      "nodeId": 4,
+      "index": 0,
+      "installerIcon": 4608,
+      "userIcon": 4608,
+      "commandClasses": []
+    }
   ],
   "values": [
     {

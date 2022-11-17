@@ -39,7 +39,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MMC_T201_1"
+    assert result2["title"] == "Baby Thermometer 6FC1 (MMC-T201-1)"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "00:81:F9:DD:6F:C1"
 
@@ -65,7 +65,7 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "LYWSD02MMC"
+    assert result2["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "A4:C1:38:56:53:84"
 
@@ -123,7 +123,7 @@ async def test_async_step_bluetooth_during_onboarding(hass):
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "MMC_T201_1"
+    assert result["title"] == "Baby Thermometer 6FC1 (MMC-T201-1)"
     assert result["data"] == {}
     assert result["result"].unique_id == "00:81:F9:DD:6F:C1"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -148,7 +148,7 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption(hass):
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
 
@@ -180,7 +180,7 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key(has
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
 
@@ -214,7 +214,7 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key_len
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
 
@@ -238,7 +238,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -272,7 +272,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -306,7 +306,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key_length(
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -370,7 +370,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "58:2D:34:35:93:21"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "LYWSDCGQ"
+    assert result2["title"] == "Temperature/Humidity Sensor 9321 (LYWSDCGQ)"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "58:2D:34:35:93:21"
 
@@ -405,7 +405,7 @@ async def test_async_step_user_short_payload(hass):
             result["flow_id"], user_input={}
         )
     assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "LYWSD02MMC"
+    assert result3["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
     assert result3["data"] == {}
     assert result3["result"].unique_id == "A4:C1:38:56:53:84"
 
@@ -453,7 +453,7 @@ async def test_async_step_user_short_payload_then_full(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "LYWSD02MMC"
+    assert result2["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
     assert result2["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
 
 
@@ -486,7 +486,7 @@ async def test_async_step_user_with_found_devices_v4_encryption(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -532,7 +532,7 @@ async def test_async_step_user_with_found_devices_v4_encryption_wrong_key(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -580,7 +580,7 @@ async def test_async_step_user_with_found_devices_v4_encryption_wrong_key_length
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "JTYJGD03MI"
+    assert result2["title"] == "Thermometer 9CBC (JTYJGD03MI)"
     assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
 
@@ -613,7 +613,7 @@ async def test_async_step_user_with_found_devices_legacy_encryption(hass):
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
 
@@ -658,7 +658,7 @@ async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key(
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
 
@@ -703,9 +703,39 @@ async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key_le
             user_input={"bindkey": "b853075158487ca39a5b5ea9"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "YLKG07YL"
+    assert result2["title"] == "Dimmer Switch 988B (YLKG07YL/YLKG08YL)"
     assert result2["data"] == {"bindkey": "b853075158487ca39a5b5ea9"}
     assert result2["result"].unique_id == "F8:24:41:C5:98:8B"
+
+
+async def test_async_step_user_device_added_between_steps(hass):
+    """Test the device gets added via another flow between steps."""
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        return_value=[LYWSDCGQ_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="58:2D:34:35:93:21",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "58:2D:34:35:93:21"},
+        )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(hass):
@@ -792,7 +822,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "00:81:F9:DD:6F:C1"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MMC_T201_1"
+    assert result2["title"] == "Baby Thermometer 6FC1 (MMC-T201-1)"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "00:81:F9:DD:6F:C1"
 

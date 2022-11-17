@@ -89,7 +89,7 @@ class WorxLandroidSensor(SensorEntity):
             return PERCENTAGE
         return None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor data from the mower."""
         connection_error = False
 

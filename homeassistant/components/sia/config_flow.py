@@ -105,7 +105,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -117,7 +119,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_handle_data_and_route(user_input)
 
     async def async_step_add_account(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the additional accounts steps."""
         errors: dict[str, str] | None = None
@@ -179,7 +181,9 @@ class SIAOptionsFlowHandler(config_entries.OptionsFlow):
         self.hub: SIAHub | None = None
         self.accounts_todo: list = []
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the SIA options."""
         self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
         assert self.hub is not None
@@ -187,7 +191,9 @@ class SIAOptionsFlowHandler(config_entries.OptionsFlow):
         self.accounts_todo = [a.account_id for a in self.hub.sia_accounts]
         return await self.async_step_options()
 
-    async def async_step_options(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Create the options step for a account."""
         errors: dict[str, str] | None = None
         if user_input is not None:

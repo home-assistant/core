@@ -6,5 +6,6 @@
   "requirements": ["PyTurboJPEG==1.6.7"],
   "after_dependencies": ["media_player"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "entity"
 }

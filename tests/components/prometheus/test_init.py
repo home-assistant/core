@@ -22,16 +22,14 @@ from homeassistant.components import (
     sensor,
     switch,
 )
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
 )
-from homeassistant.components.humidifier.const import ATTR_AVAILABLE_MODES
+from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -520,7 +518,10 @@ async def test_renaming_entity_name(
         ATTR_FRIENDLY_NAME: "HeatPump Renamed",
     }
     set_state_with_entry(
-        hass, data["climate_1"], CURRENT_HVAC_HEAT, data["climate_1_attributes"]
+        hass,
+        data["climate_1"],
+        climate.HVACAction.HEATING,
+        data["climate_1_attributes"],
     )
 
     await hass.async_block_till_done()
@@ -971,9 +972,11 @@ async def climate_fixture(hass, registry):
     climate_1_attributes = {
         ATTR_TEMPERATURE: 20,
         ATTR_CURRENT_TEMPERATURE: 25,
-        ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+        ATTR_HVAC_ACTION: climate.HVACAction.HEATING,
     }
-    set_state_with_entry(hass, climate_1, CURRENT_HVAC_HEAT, climate_1_attributes)
+    set_state_with_entry(
+        hass, climate_1, climate.HVACAction.HEATING, climate_1_attributes
+    )
     data["climate_1"] = climate_1
     data["climate_1_attributes"] = climate_1_attributes
 
@@ -990,9 +993,11 @@ async def climate_fixture(hass, registry):
         ATTR_CURRENT_TEMPERATURE: 22,
         ATTR_TARGET_TEMP_LOW: 21,
         ATTR_TARGET_TEMP_HIGH: 24,
-        ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+        ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
     }
-    set_state_with_entry(hass, climate_2, CURRENT_HVAC_HEAT, climate_2_attributes)
+    set_state_with_entry(
+        hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
+    )
     data["climate_2"] = climate_2
     data["climate_2_attributes"] = climate_2_attributes
 

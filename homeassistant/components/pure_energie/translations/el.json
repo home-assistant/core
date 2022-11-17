@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "\u039a\u03b5\u03bd\u03c4\u03c1\u03b9\u03ba\u03cc\u03c2 \u03c5\u03c0\u03bf\u03bb\u03bf\u03b3\u03b9\u03c3\u03c4\u03ae\u03c2"
+                },
+                "data_description": {
+                    "host": "\u0397 \u03b4\u03b9\u03b5\u03cd\u03b8\u03c5\u03bd\u03c3\u03b7 IP \u03ae \u03c4\u03bf \u03cc\u03bd\u03bf\u03bc\u03b1 \u03ba\u03b5\u03bd\u03c4\u03c1\u03b9\u03ba\u03bf\u03cd \u03c5\u03c0\u03bf\u03bb\u03bf\u03b3\u03b9\u03c3\u03c4\u03ae \u03c4\u03bf\u03c5 Pure Energie Meter \u03c3\u03b1\u03c2."
                 }
             },
             "zeroconf_confirm": {

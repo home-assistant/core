@@ -44,6 +44,8 @@
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
             "button_4": "Vierte Taste",
+            "clock_wise": "Drehung im Uhrzeigersinn",
+            "counter_clock_wise": "Drehung gegen den Uhrzeigersinn",
             "dim_down": "Dimmer runter",
             "dim_up": "Dimmer hoch",
             "double_buttons_1_3": "Erste und dritte Taste",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Beide \"{subtype}\" losgelassen",
-            "initial_press": "Taste \"{subtype}\" anfangs gedr\u00fcckt",
-            "long_release": "Taste \"{subtype}\" nach langem Dr\u00fccken losgelassen",
-            "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
-            "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
-            "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
+            "initial_press": "\"{subtype}\" anfangs gedr\u00fcckt",
+            "long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
+            "remote_button_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
+            "remote_button_short_press": "\"{subtype}\" gedr\u00fcckt",
+            "remote_button_short_release": "\"{subtype}\" losgelassen",
             "remote_double_button_long_press": "Beide \"{subtype}\" nach langem Dr\u00fccken losgelassen",
             "remote_double_button_short_press": "Beide \"{subtype}\" losgelassen",
-            "repeat": "Taste \"{subtype}\" gedr\u00fcckt gehalten",
-            "short_release": "Taste \"{subtype}\" nach kurzem Dr\u00fccken losgelassen"
+            "repeat": "\"{subtype}\" gedr\u00fcckt gehalten",
+            "short_release": "\"{subtype}\" nach kurzem Dr\u00fccken losgelassen",
+            "start": "\"{subtype}\" wurde anf\u00e4nglich gedr\u00fcckt"
         }
     },
     "options": {

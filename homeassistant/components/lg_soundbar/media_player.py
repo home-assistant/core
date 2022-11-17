@@ -6,9 +6,10 @@ import temescal
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +35,7 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
+    _attr_state = MediaPlayerState.ON
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -65,11 +67,11 @@ class LGDevice(MediaPlayerEntity):
         self._treble = 0
         self._device = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""
         await self.hass.async_add_executor_job(self._connect)
 
-    def _connect(self):
+    def _connect(self) -> None:
         """Perform the actual devices setup."""
         self._device = temescal.temescal(
             self._host, port=self._port, callback=self.handle_event
@@ -126,7 +128,7 @@ class LGDevice(MediaPlayerEntity):
 
         self.schedule_update_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Trigger updates from the device."""
         self._device.get_eq()
         self._device.get_info()
@@ -144,11 +146,6 @@ class LGDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return STATE_ON
 
     @property
     def sound_mode(self):
@@ -182,19 +179,19 @@ class LGDevice(MediaPlayerEntity):
                 sources.append(temescal.functions[function])
         return sorted(sources)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = volume * self._volume_max
         self._device.set_volume(int(volume))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._device.set_mute(mute)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._device.set_func(temescal.functions.index(source))
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self._device.set_eq(temescal.equalisers.index(sound_mode))

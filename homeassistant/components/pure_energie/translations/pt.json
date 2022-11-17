@@ -4,6 +4,9 @@
             "user": {
                 "data": {
                     "host": "Servidor"
+                },
+                "data_description": {
+                    "host": "O endere\u00e7o IP ou nome de host do seu Medidor Pure Energie."
                 }
             }
         }

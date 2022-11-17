@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, UPDATE_TOPIC
+from . import DOMAIN, UPDATE_TOPIC, AquaLogicProcessor
 
 
 @dataclass
@@ -120,7 +120,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    processor = hass.data[DOMAIN]
+    processor: AquaLogicProcessor = hass.data[DOMAIN]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     entities = [
@@ -138,13 +138,17 @@ class AquaLogicSensor(SensorEntity):
     entity_description: AquaLogicSensorEntityDescription
     _attr_should_poll = False
 
-    def __init__(self, processor, description: AquaLogicSensorEntityDescription):
+    def __init__(
+        self,
+        processor: AquaLogicProcessor,
+        description: AquaLogicSensorEntityDescription,
+    ) -> None:
         """Initialize sensor."""
         self.entity_description = description
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -153,7 +157,7 @@ class AquaLogicSensor(SensorEntity):
         )
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update callback."""
         if (panel := self._processor.panel) is not None:
             if panel.is_metric:

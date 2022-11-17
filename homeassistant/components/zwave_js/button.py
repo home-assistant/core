@@ -9,11 +9,11 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN, LOGGER
-from .helpers import get_device_id, get_valueless_base_unique_id
+from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
 
@@ -47,21 +47,18 @@ class ZWaveNodePingButton(ButtonEntity):
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
 
     def __init__(self, driver: Driver, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
         self.node = node
-        name: str = (
-            node.name or node.device_config.description or f"Node {node.node_id}"
-        )
+
         # Entity class attributes
-        self._attr_name = f"{name}: Ping"
+        self._attr_name = "Ping"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.ping"
-        # device is precreated in main handler
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, node)},
-        )
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""

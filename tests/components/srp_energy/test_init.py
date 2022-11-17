@@ -2,7 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.components import srp_energy
 
-from tests.components.srp_energy import init_integration
+from . import init_integration
 
 
 async def test_setup_entry(hass):

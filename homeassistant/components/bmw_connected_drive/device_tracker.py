@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,10 +53,10 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         super().__init__(coordinator, vehicle)
 
         self._attr_unique_id = vehicle.vin
-        self._attr_name = vehicle.name
+        self._attr_name = None
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         return {**self._attrs, ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 

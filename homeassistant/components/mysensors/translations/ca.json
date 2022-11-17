@@ -70,6 +70,7 @@
                 "description": "Configuraci\u00f3 de passarel\u00b7la Ethernet"
             },
             "select_gateway_type": {
+                "description": "Selecciona la passarel\u00b7la (gateway) a configurar.",
                 "menu_options": {
                     "gw_mqtt": "Configura passarel\u00b7la (gateway) MQTT",
                     "gw_serial": "Configura passarel\u00b7la (gateway) s\u00e8rie",

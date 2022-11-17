@@ -38,10 +38,10 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -138,6 +138,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windspeed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -169,20 +170,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windgust",
         name="Wind gust",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="irradiance",
@@ -194,8 +197,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="precipitation_forecast_average",
         name="Precipitation forecast average",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_total",
@@ -463,30 +466,35 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windspeed_1d",
         name="Wind speed 1d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="windspeed_2d",
         name="Wind speed 2d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="windspeed_3d",
         name="Wind speed 3d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="windspeed_4d",
         name="Wind speed 4d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(
         key="windspeed_5d",
         name="Wind speed 5d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     SensorEntityDescription(

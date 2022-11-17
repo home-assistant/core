@@ -18,6 +18,9 @@ CACHE_TIMEOUT = 3600
 _LOGGER = logging.getLogger(__name__)
 
 CURRENT_VERSION = AwesomeVersion(HA_VERSION)
+CURRENT_PLAIN_VERSION = AwesomeVersion(
+    CURRENT_VERSION.string.removesuffix(f"{CURRENT_VERSION.modifier}")
+)
 
 
 @callback
@@ -35,7 +38,7 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
     for service in services:
         if (
             service["service"] == domain
-            and CURRENT_VERSION >= service["min_version"]
+            and CURRENT_PLAIN_VERSION >= service["min_version"]
             and (
                 service.get("accepts_new_authorizations", True)
                 or (

@@ -5,6 +5,7 @@ import asyncio
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
@@ -34,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     run_future = device.async_run()
 
     try:
-        await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
+        async with async_timeout.timeout(RUN_TIMEOUT):
+            await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex

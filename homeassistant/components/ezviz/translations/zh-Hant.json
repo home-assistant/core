@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "ezviz_cloud_account_missing": "\u627e\u4e0d\u5230 Ezviz \u96f2\u5e33\u865f\u3002\u8acb\u91cd\u65b0\u8a2d\u5b9a Ezviz \u96f2\u5e33\u865f",
+            "ezviz_cloud_account_missing": "\u627e\u4e0d\u5230 EZVIZ \u96f2\u5e33\u865f\u3002\u8acb\u91cd\u65b0\u8a2d\u5b9a EZVIZ \u96f2\u5e33\u865f",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8f38\u5165 IP \u70ba {ip_address} \u7684 Ezviz \u651d\u5f71\u6a5f {serial} RTSP \u6191\u8b49",
-                "title": "\u81ea\u52d5\u641c\u7d22\u5230\u7684 Ezviz \u651d\u5f71\u6a5f"
+                "description": "\u8f38\u5165 IP \u70ba {ip_address} \u7684 EZVIZ \u651d\u5f71\u6a5f {serial} RTSP \u6191\u8b49",
+                "title": "\u81ea\u52d5\u641c\u7d22\u5230\u7684 EZVIZ \u651d\u5f71\u6a5f"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "\u7db2\u5740",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "title": "\u9023\u7dda\u81f3 Ezviz \u87a2\u77f3\u96f2"
+                "title": "\u9023\u7dda\u81f3 EZVIZ \u87a2\u77f3\u96f2"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u624b\u52d5\u6307\u5b9a\u5340\u57df URL",
-                "title": "\u9023\u7dda\u81f3\u81ea\u8a02 Ezviz URL"
+                "title": "\u9023\u7dda\u81f3\u81ea\u8a02 EZVIZ URL"
             }
         }
     },

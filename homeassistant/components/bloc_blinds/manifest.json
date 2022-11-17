@@ -1,0 +1,6 @@
+{
+  "domain": "bloc_blinds",
+  "name": "Bloc Blinds",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

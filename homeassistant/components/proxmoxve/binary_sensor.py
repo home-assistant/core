@@ -93,7 +93,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         return data["status"] == "running"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return sensor availability."""
 
         return super().available and self.coordinator.data is not None

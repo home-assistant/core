@@ -18,6 +18,7 @@ from .util import (
     FIRMWARE_CONDITION_MOCK,
     FIRMWARE_INFO_MOCK,
     FIRMWARE_UPDATE_CHECK_MOCK,
+    LACP_INFO_MOCK,
     PORTS_STATISTICS_MOCK,
     PORTS_STATUS_MOCK,
     SYSTEM_BOARD_MOCK,
@@ -46,6 +47,9 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
         return_value=FIRMWARE_UPDATE_CHECK_MOCK,
     ) as mock_firmware_update_check, patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
+        return_value=LACP_INFO_MOCK,
+    ) as mock_lacp_info, patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
         return_value=PORTS_STATISTICS_MOCK,
     ) as mock_ports_statistics, patch(
@@ -73,6 +77,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_firmware_condition.assert_called_once()
         mock_firmware_info.assert_called_once()
         mock_firmware_update_check.assert_called_once()
+        mock_lacp_info.assert_called_once()
         mock_ports_statistics.assert_called_once()
         mock_ports_status.assert_called_once()
         mock_system_board.assert_called_once()
@@ -84,6 +89,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_firmware_condition.reset_mock()
         mock_firmware_info.reset_mock()
         mock_firmware_update_check.reset_mock()
+        mock_lacp_info.reset_mock()
         mock_ports_statistics.reset_mock()
         mock_ports_status.reset_mock()
         mock_system_board.reset_mock()

@@ -9,6 +9,20 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Heslo",
+                    "pin": "PIN k\u00f3d",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Hostitel",
+                    "pin": "PIN k\u00f3d",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Heslo",

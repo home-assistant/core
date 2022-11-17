@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8"
+                },
+                "data_description": {
+                    "host": "Pure Energie Meter\u306e\u3001IP\u30a2\u30c9\u30ec\u30b9\u307e\u305f\u306f\u30db\u30b9\u30c8\u540d\u3002"
                 }
             },
             "zeroconf_confirm": {

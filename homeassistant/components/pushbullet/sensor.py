@@ -1,10 +1,6 @@
 """Pushbullet platform for sensor component."""
 from __future__ import annotations
 
-import logging
-import threading
-
-from pushbullet import InvalidKeyError, Listener, PushBullet
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -12,18 +8,25 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .api import PushBulletNotificationProvider
+from .const import DATA_UPDATED, DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="application_name",
         name="Application name",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="body",
@@ -32,26 +35,32 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="notification_id",
         name="Notification ID",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="notification_tag",
         name="Notification tag",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="package_name",
         name="Package name",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="receiver_email",
         name="Receiver email",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sender_email",
         name="Sender email",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="source_device_iden",
         name="Sender device ID",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="title",
@@ -60,6 +69,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="type",
         name="Type",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -75,94 +85,88 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Pushbullet Sensor platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.2.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    try:
-        pushbullet = PushBullet(config.get(CONF_API_KEY))
-    except InvalidKeyError:
-        _LOGGER.error("Wrong API key for Pushbullet supplied")
-        return
 
-    pbprovider = PushBulletNotificationProvider(pushbullet)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Pushbullet sensors from config entry."""
 
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN][entry.entry_id]
+
     entities = [
-        PushBulletNotificationSensor(pbprovider, description)
+        PushBulletNotificationSensor(entry.data[CONF_NAME], pb_provider, description)
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
     ]
-    add_entities(entities)
+
+    async_add_entities(entities)
 
 
 class PushBulletNotificationSensor(SensorEntity):
     """Representation of a Pushbullet Sensor."""
 
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        pb,  # pylint: disable=invalid-name
+        name: str,
+        pb_provider: PushBulletNotificationProvider,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Pushbullet sensor."""
         self.entity_description = description
-        self.pushbullet = pb
+        self.pb_provider = pb_provider
+        self._attr_unique_id = (
+            f"{pb_provider.pushbullet.user_info['iden']}-{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, pb_provider.pushbullet.user_info["iden"])},
+            name=name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
-        self._attr_name = f"Pushbullet {description.key}"
-
-    def update(self):
+    @callback
+    def async_update_callback(self) -> None:
         """Fetch the latest data from the sensor.
 
         This will fetch the 'sensor reading' into self._state but also all
         attributes into self._state_attributes.
         """
         try:
-            self._attr_native_value = self.pushbullet.data[self.entity_description.key]
-            self._attr_extra_state_attributes = self.pushbullet.data
+            self._attr_native_value = self.pb_provider.data[self.entity_description.key]
+            self._attr_extra_state_attributes = self.pb_provider.data
         except (KeyError, TypeError):
             pass
+        self.async_write_ha_state()
 
-
-class PushBulletNotificationProvider:
-    """Provider for an account, leading to one or more sensors."""
-
-    def __init__(self, pushbullet):
-        """Start to retrieve pushes from the given Pushbullet instance."""
-
-        self.pushbullet = pushbullet
-        self._data = None
-        self.listener = None
-        self.thread = threading.Thread(target=self.retrieve_pushes)
-        self.thread.daemon = True
-        self.thread.start()
-
-    def on_push(self, data):
-        """Update the current data.
-
-        Currently only monitors pushes but might be extended to monitor
-        different kinds of Pushbullet events.
-        """
-        if data["type"] == "push":
-            self._data = data["push"]
-
-    @property
-    def data(self):
-        """Return the current data stored in the provider."""
-        return self._data
-
-    def retrieve_pushes(self):
-        """Retrieve_pushes.
-
-        Spawn a new Listener and links it to self.on_push.
-        """
-
-        self.listener = Listener(account=self.pushbullet, on_push=self.on_push)
-        _LOGGER.debug("Getting pushes")
-        try:
-            self.listener.run_forever()
-        finally:
-            self.listener.close()
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self.async_update_callback
+            )
+        )

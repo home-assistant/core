@@ -3,13 +3,12 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from xiaomi_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
+from xiaomi_ble import DeviceClass, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
@@ -20,9 +19,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONDUCTIVITY,
     ELECTRIC_POTENTIAL_VOLT,
@@ -33,16 +29,33 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
-    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
-        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+    (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
+        key=str(Units.CONDUCTIVITY),
+        device_class=None,
+        native_unit_of_measurement=CONDUCTIVITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        DeviceClass.FORMALDEHYDE,
+        Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    ): SensorEntityDescription(
+        key=f"{DeviceClass.FORMALDEHYDE}_{Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER}",
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
@@ -57,22 +70,16 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (DeviceClass.MOISTURE, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
         key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_MBAR,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
-        device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
-        key=str(Units.ELECTRIC_POTENTIAL_VOLT),
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -84,49 +91,29 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Used for e.g. moisture sensor on HHCCJCY01
+    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
+        key=f"{DeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Used for e.g. consumable sensor on WX08ZM
     (None, Units.PERCENTAGE): SensorEntityDescription(
         key=str(Units.PERCENTAGE),
         device_class=None,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Used for e.g. conductivity sensor on HHCCJCY01
-    (None, Units.CONDUCTIVITY): SensorEntityDescription(
-        key=str(Units.CONDUCTIVITY),
-        device_class=None,
-        native_unit_of_measurement=CONDUCTIVITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    # Used for e.g. formaldehyde
-    (None, Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER): SensorEntityDescription(
-        key=str(Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
-        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 }
-
-
-def _device_key_to_bluetooth_entity_key(
-    device_key: DeviceKey,
-) -> PassiveBluetoothEntityKey:
-    """Convert a device key to an entity key."""
-    return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
-
-
-def _sensor_device_info_to_hass(
-    sensor_device_info: SensorDeviceInfo,
-) -> DeviceInfo:
-    """Convert a sensor device info to a sensor device info."""
-    hass_device_info = DeviceInfo({})
-    if sensor_device_info.name is not None:
-        hass_device_info[ATTR_NAME] = sensor_device_info.name
-    if sensor_device_info.manufacturer is not None:
-        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info.manufacturer
-    if sensor_device_info.model is not None:
-        hass_device_info[ATTR_MODEL] = sensor_device_info.model
-    return hass_device_info
 
 
 def sensor_update_to_bluetooth_data_update(
@@ -135,22 +122,22 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
-            device_id: _sensor_device_info_to_hass(device_info)
+            device_id: sensor_device_info_to_hass_device_info(device_info)
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            _device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
+            device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
             if description.native_unit_of_measurement
         },
         entity_data={
-            _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
-            _device_key_to_bluetooth_entity_key(device_key): sensor_values.name
+            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
     )

@@ -38,7 +38,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008"],
         DEV_SIG_ENTITIES: [
-            "button.adurolight_adurolight_ncc_identifybutton",
+            "button.adurolight_adurolight_ncc_identify",
             "sensor.adurolight_adurolight_ncc_rssi",
             "sensor.adurolight_adurolight_ncc_lqi",
         ],
@@ -46,7 +46,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.adurolight_adurolight_ncc_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.adurolight_adurolight_ncc_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -76,7 +76,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["5:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.bosch_isw_zpr1_wp13_identifybutton",
+            "button.bosch_isw_zpr1_wp13_identify",
             "sensor.bosch_isw_zpr1_wp13_battery",
             "sensor.bosch_isw_zpr1_wp13_temperature",
             "binary_sensor.bosch_isw_zpr1_wp13_iaszone",
@@ -92,7 +92,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-5-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.bosch_isw_zpr1_wp13_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.bosch_isw_zpr1_wp13_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-5-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -132,7 +132,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3130_identifybutton",
+            "button.centralite_3130_identify",
             "sensor.centralite_3130_battery",
             "sensor.centralite_3130_rssi",
             "sensor.centralite_3130_lqi",
@@ -141,7 +141,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3130_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3130_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -176,15 +176,15 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3210_l_identifybutton",
-            "sensor.centralite_3210_l_electricalmeasurement",
-            "sensor.centralite_3210_l_electricalmeasurementapparentpower",
-            "sensor.centralite_3210_l_electricalmeasurementrmscurrent",
-            "sensor.centralite_3210_l_electricalmeasurementrmsvoltage",
-            "sensor.centralite_3210_l_electricalmeasurementfrequency",
-            "sensor.centralite_3210_l_electricalmeasurementpowerfactor",
-            "sensor.centralite_3210_l_smartenergymetering",
-            "sensor.centralite_3210_l_smartenergysummation",
+            "button.centralite_3210_l_identify",
+            "sensor.centralite_3210_l_active_power",
+            "sensor.centralite_3210_l_apparent_power",
+            "sensor.centralite_3210_l_rms_current",
+            "sensor.centralite_3210_l_rms_voltage",
+            "sensor.centralite_3210_l_ac_frequency",
+            "sensor.centralite_3210_l_power_factor",
+            "sensor.centralite_3210_l_instantaneous_demand",
+            "sensor.centralite_3210_l_summation_delivered",
             "switch.centralite_3210_l_switch",
             "sensor.centralite_3210_l_rssi",
             "sensor.centralite_3210_l_lqi",
@@ -198,47 +198,47 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3210_l_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3210_l_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -268,7 +268,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3310_s_identifybutton",
+            "button.centralite_3310_s_identify",
             "sensor.centralite_3310_s_battery",
             "sensor.centralite_3310_s_temperature",
             "sensor.centralite_3310_s_humidity",
@@ -279,7 +279,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3310_s_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3310_s_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -331,7 +331,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3315_s_identifybutton",
+            "button.centralite_3315_s_identify",
             "sensor.centralite_3315_s_battery",
             "sensor.centralite_3315_s_temperature",
             "binary_sensor.centralite_3315_s_iaszone",
@@ -347,7 +347,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3315_s_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3315_s_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -394,7 +394,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3320_l_identifybutton",
+            "button.centralite_3320_l_identify",
             "sensor.centralite_3320_l_battery",
             "sensor.centralite_3320_l_temperature",
             "binary_sensor.centralite_3320_l_iaszone",
@@ -410,7 +410,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3320_l_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3320_l_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -457,7 +457,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_3326_l_identifybutton",
+            "button.centralite_3326_l_identify",
             "sensor.centralite_3326_l_battery",
             "sensor.centralite_3326_l_temperature",
             "binary_sensor.centralite_3326_l_iaszone",
@@ -473,7 +473,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_3326_l_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_3326_l_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -520,7 +520,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.centralite_motion_sensor_a_identifybutton",
+            "button.centralite_motion_sensor_a_identify",
             "sensor.centralite_motion_sensor_a_battery",
             "sensor.centralite_motion_sensor_a_temperature",
             "binary_sensor.centralite_motion_sensor_a_iaszone",
@@ -537,7 +537,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.centralite_motion_sensor_a_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_motion_sensor_a_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -589,9 +589,9 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["4:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.climaxtechnology_psmp5_00_00_02_02tc_identifybutton",
-            "sensor.climaxtechnology_psmp5_00_00_02_02tc_smartenergymetering",
-            "sensor.climaxtechnology_psmp5_00_00_02_02tc_smartenergysummation",
+            "button.climaxtechnology_psmp5_00_00_02_02tc_identify",
+            "sensor.climaxtechnology_psmp5_00_00_02_02tc_instantaneous_demand",
+            "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered",
             "switch.climaxtechnology_psmp5_00_00_02_02tc_switch",
             "sensor.climaxtechnology_psmp5_00_00_02_02tc_rssi",
             "sensor.climaxtechnology_psmp5_00_00_02_02tc_lqi",
@@ -605,17 +605,17 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_psmp5_00_00_02_02tc_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_psmp5_00_00_02_02tc_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -645,14 +645,14 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.climaxtechnology_sd8sc_00_00_03_12tc_identifybutton",
+            "button.climaxtechnology_sd8sc_00_00_03_12tc_identify",
             "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_rssi",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_lqi",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaulttoneselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultsirenlevelselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobelevelselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobeselect",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe",
             "siren.climaxtechnology_sd8sc_00_00_03_12tc_siren",
         ],
         DEV_SIG_ENT_MAP: {
@@ -664,7 +664,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_sd8sc_00_00_03_12tc_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_sd8sc_00_00_03_12tc_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -679,22 +679,22 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -719,7 +719,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.climaxtechnology_ws15_00_00_03_03tc_identifybutton",
+            "button.climaxtechnology_ws15_00_00_03_03tc_identify",
             "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_iaszone",
             "sensor.climaxtechnology_ws15_00_00_03_03tc_rssi",
             "sensor.climaxtechnology_ws15_00_00_03_03tc_lqi",
@@ -733,7 +733,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_ws15_00_00_03_03tc_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_ws15_00_00_03_03tc_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -770,7 +770,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.feibit_inc_co_fb56_zcw08ku1_1_identifybutton",
+            "button.feibit_inc_co_fb56_zcw08ku1_1_identify",
             "light.feibit_inc_co_fb56_zcw08ku1_1_light",
             "sensor.feibit_inc_co_fb56_zcw08ku1_1_rssi",
             "sensor.feibit_inc_co_fb56_zcw08ku1_1_lqi",
@@ -784,7 +784,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-11-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.feibit_inc_co_fb56_zcw08ku1_1_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.feibit_inc_co_fb56_zcw08ku1_1_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-11-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -814,15 +814,15 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.heiman_smokesensor_em_identifybutton",
+            "button.heiman_smokesensor_em_identify",
             "sensor.heiman_smokesensor_em_battery",
             "binary_sensor.heiman_smokesensor_em_iaszone",
             "sensor.heiman_smokesensor_em_rssi",
             "sensor.heiman_smokesensor_em_lqi",
-            "select.heiman_smokesensor_em_defaulttoneselect",
-            "select.heiman_smokesensor_em_defaultsirenlevelselect",
-            "select.heiman_smokesensor_em_defaultstrobelevelselect",
-            "select.heiman_smokesensor_em_defaultstrobeselect",
+            "select.heiman_smokesensor_em_default_siren_tone",
+            "select.heiman_smokesensor_em_default_siren_level",
+            "select.heiman_smokesensor_em_default_strobe_level",
+            "select.heiman_smokesensor_em_default_strobe",
             "siren.heiman_smokesensor_em_siren",
         ],
         DEV_SIG_ENT_MAP: {
@@ -834,7 +834,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.heiman_smokesensor_em_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.heiman_smokesensor_em_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -854,22 +854,22 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -894,7 +894,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.heiman_co_v16_identifybutton",
+            "button.heiman_co_v16_identify",
             "binary_sensor.heiman_co_v16_iaszone",
             "sensor.heiman_co_v16_rssi",
             "sensor.heiman_co_v16_lqi",
@@ -908,7 +908,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.heiman_co_v16_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.heiman_co_v16_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -938,36 +938,36 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.heiman_warningdevice_identifybutton",
+            "button.heiman_warningdevice_identify",
             "binary_sensor.heiman_warningdevice_iaszone",
             "sensor.heiman_warningdevice_rssi",
             "sensor.heiman_warningdevice_lqi",
-            "select.heiman_warningdevice_defaulttoneselect",
-            "select.heiman_warningdevice_defaultsirenlevelselect",
-            "select.heiman_warningdevice_defaultstrobelevelselect",
-            "select.heiman_warningdevice_defaultstrobeselect",
+            "select.heiman_warningdevice_default_siren_tone",
+            "select.heiman_warningdevice_default_siren_level",
+            "select.heiman_warningdevice_default_strobe_level",
+            "select.heiman_warningdevice_default_strobe",
             "siren.heiman_warningdevice_siren",
         ],
         DEV_SIG_ENT_MAP: {
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -982,7 +982,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.heiman_warningdevice_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.heiman_warningdevice_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1012,7 +1012,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["6:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.hivehome_com_mot003_identifybutton",
+            "button.hivehome_com_mot003_identify",
             "sensor.hivehome_com_mot003_battery",
             "sensor.hivehome_com_mot003_illuminance",
             "sensor.hivehome_com_mot003_temperature",
@@ -1029,7 +1029,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-6-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.hivehome_com_mot003_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.hivehome_com_mot003_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-6-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -1081,7 +1081,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identifybutton",
+            "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identify",
             "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_light",
             "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_rssi",
             "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_lqi",
@@ -1095,7 +1095,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1125,7 +1125,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identifybutton",
+            "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_light",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_rssi",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_lqi",
@@ -1139,7 +1139,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1169,7 +1169,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identifybutton",
+            "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_light",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_rssi",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_lqi",
@@ -1183,7 +1183,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1213,7 +1213,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identifybutton",
+            "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_light",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_rssi",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_lqi",
@@ -1227,7 +1227,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1257,7 +1257,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identifybutton",
+            "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_light",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_rssi",
             "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_lqi",
@@ -1271,7 +1271,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1301,7 +1301,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_control_outlet_identifybutton",
+            "button.ikea_of_sweden_tradfri_control_outlet_identify",
             "switch.ikea_of_sweden_tradfri_control_outlet_switch",
             "sensor.ikea_of_sweden_tradfri_control_outlet_rssi",
             "sensor.ikea_of_sweden_tradfri_control_outlet_lqi",
@@ -1315,7 +1315,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_control_outlet_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_control_outlet_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1345,7 +1345,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_motion_sensor_identifybutton",
+            "button.ikea_of_sweden_tradfri_motion_sensor_identify",
             "sensor.ikea_of_sweden_tradfri_motion_sensor_battery",
             "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_motion",
             "sensor.ikea_of_sweden_tradfri_motion_sensor_rssi",
@@ -1355,7 +1355,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_motion_sensor_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_motion_sensor_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -1395,7 +1395,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0102"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_on_off_switch_identifybutton",
+            "button.ikea_of_sweden_tradfri_on_off_switch_identify",
             "sensor.ikea_of_sweden_tradfri_on_off_switch_battery",
             "sensor.ikea_of_sweden_tradfri_on_off_switch_rssi",
             "sensor.ikea_of_sweden_tradfri_on_off_switch_lqi",
@@ -1404,7 +1404,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_on_off_switch_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_on_off_switch_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -1439,7 +1439,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_remote_control_identifybutton",
+            "button.ikea_of_sweden_tradfri_remote_control_identify",
             "sensor.ikea_of_sweden_tradfri_remote_control_battery",
             "sensor.ikea_of_sweden_tradfri_remote_control_rssi",
             "sensor.ikea_of_sweden_tradfri_remote_control_lqi",
@@ -1448,7 +1448,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_remote_control_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_remote_control_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -1490,7 +1490,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_signal_repeater_identifybutton",
+            "button.ikea_of_sweden_tradfri_signal_repeater_identify",
             "sensor.ikea_of_sweden_tradfri_signal_repeater_rssi",
             "sensor.ikea_of_sweden_tradfri_signal_repeater_lqi",
         ],
@@ -1498,7 +1498,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_signal_repeater_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_signal_repeater_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1528,7 +1528,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ikea_of_sweden_tradfri_wireless_dimmer_identifybutton",
+            "button.ikea_of_sweden_tradfri_wireless_dimmer_identify",
             "sensor.ikea_of_sweden_tradfri_wireless_dimmer_battery",
             "sensor.ikea_of_sweden_tradfri_wireless_dimmer_rssi",
             "sensor.ikea_of_sweden_tradfri_wireless_dimmer_lqi",
@@ -1537,7 +1537,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_wireless_dimmer_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_wireless_dimmer_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -1579,9 +1579,9 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006", "2:0x0008"],
         DEV_SIG_ENTITIES: [
-            "button.jasco_products_45852_identifybutton",
-            "sensor.jasco_products_45852_smartenergymetering",
-            "sensor.jasco_products_45852_smartenergysummation",
+            "button.jasco_products_45852_identify",
+            "sensor.jasco_products_45852_instantaneous_demand",
+            "sensor.jasco_products_45852_summation_delivered",
             "light.jasco_products_45852_light",
             "sensor.jasco_products_45852_rssi",
             "sensor.jasco_products_45852_lqi",
@@ -1595,17 +1595,17 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45852_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45852_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1642,10 +1642,10 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006"],
         DEV_SIG_ENTITIES: [
-            "button.jasco_products_45856_identifybutton",
+            "button.jasco_products_45856_identify",
             "light.jasco_products_45856_light",
-            "sensor.jasco_products_45856_smartenergymetering",
-            "sensor.jasco_products_45856_smartenergysummation",
+            "sensor.jasco_products_45856_instantaneous_demand",
+            "sensor.jasco_products_45856_summation_delivered",
             "sensor.jasco_products_45856_rssi",
             "sensor.jasco_products_45856_lqi",
         ],
@@ -1658,17 +1658,17 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45856_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45856_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1705,10 +1705,10 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006", "2:0x0008"],
         DEV_SIG_ENTITIES: [
-            "button.jasco_products_45857_identifybutton",
+            "button.jasco_products_45857_identify",
             "light.jasco_products_45857_light",
-            "sensor.jasco_products_45857_smartenergymetering",
-            "sensor.jasco_products_45857_smartenergysummation",
+            "sensor.jasco_products_45857_instantaneous_demand",
+            "sensor.jasco_products_45857_summation_delivered",
             "sensor.jasco_products_45857_rssi",
             "sensor.jasco_products_45857_lqi",
         ],
@@ -1721,17 +1721,17 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45857_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45857_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1761,7 +1761,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.keen_home_inc_sv02_610_mp_1_3_identifybutton",
+            "button.keen_home_inc_sv02_610_mp_1_3_identify",
             "sensor.keen_home_inc_sv02_610_mp_1_3_battery",
             "sensor.keen_home_inc_sv02_610_mp_1_3_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_temperature",
@@ -1773,7 +1773,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_610_mp_1_3_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_610_mp_1_3_identify",
             },
             ("cover", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["level", "on_off"],
@@ -1823,7 +1823,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.keen_home_inc_sv02_612_mp_1_2_identifybutton",
+            "button.keen_home_inc_sv02_612_mp_1_2_identify",
             "sensor.keen_home_inc_sv02_612_mp_1_2_battery",
             "sensor.keen_home_inc_sv02_612_mp_1_2_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_temperature",
@@ -1835,7 +1835,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_612_mp_1_2_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_612_mp_1_2_identify",
             },
             ("cover", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["level", "on_off"],
@@ -1885,7 +1885,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.keen_home_inc_sv02_612_mp_1_3_identifybutton",
+            "button.keen_home_inc_sv02_612_mp_1_3_identify",
             "sensor.keen_home_inc_sv02_612_mp_1_3_battery",
             "sensor.keen_home_inc_sv02_612_mp_1_3_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_temperature",
@@ -1897,7 +1897,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_612_mp_1_3_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.keen_home_inc_sv02_612_mp_1_3_identify",
             },
             ("cover", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["level", "on_off"],
@@ -1947,7 +1947,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.king_of_fans_inc_hbuniversalcfremote_identifybutton",
+            "button.king_of_fans_inc_hbuniversalcfremote_identify",
             "light.king_of_fans_inc_hbuniversalcfremote_light",
             "fan.king_of_fans_inc_hbuniversalcfremote_fan",
             "sensor.king_of_fans_inc_hbuniversalcfremote_rssi",
@@ -1962,7 +1962,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.king_of_fans_inc_hbuniversalcfremote_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.king_of_fans_inc_hbuniversalcfremote_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1997,7 +1997,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0300"],
         DEV_SIG_ENTITIES: [
-            "button.lds_zbt_cctswitch_d0001_identifybutton",
+            "button.lds_zbt_cctswitch_d0001_identify",
             "sensor.lds_zbt_cctswitch_d0001_battery",
             "sensor.lds_zbt_cctswitch_d0001_rssi",
             "sensor.lds_zbt_cctswitch_d0001_lqi",
@@ -2006,7 +2006,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lds_zbt_cctswitch_d0001_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lds_zbt_cctswitch_d0001_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -2041,7 +2041,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ledvance_a19_rgbw_identifybutton",
+            "button.ledvance_a19_rgbw_identify",
             "light.ledvance_a19_rgbw_light",
             "sensor.ledvance_a19_rgbw_rssi",
             "sensor.ledvance_a19_rgbw_lqi",
@@ -2055,7 +2055,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ledvance_a19_rgbw_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ledvance_a19_rgbw_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2085,7 +2085,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ledvance_flex_rgbw_identifybutton",
+            "button.ledvance_flex_rgbw_identify",
             "light.ledvance_flex_rgbw_light",
             "sensor.ledvance_flex_rgbw_rssi",
             "sensor.ledvance_flex_rgbw_lqi",
@@ -2099,7 +2099,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ledvance_flex_rgbw_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ledvance_flex_rgbw_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2129,7 +2129,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ledvance_plug_identifybutton",
+            "button.ledvance_plug_identify",
             "switch.ledvance_plug_switch",
             "sensor.ledvance_plug_rssi",
             "sensor.ledvance_plug_lqi",
@@ -2143,7 +2143,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ledvance_plug_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ledvance_plug_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2173,7 +2173,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.ledvance_rt_rgbw_identifybutton",
+            "button.ledvance_rt_rgbw_identify",
             "light.ledvance_rt_rgbw_light",
             "sensor.ledvance_rt_rgbw_rssi",
             "sensor.ledvance_rt_rgbw_lqi",
@@ -2187,7 +2187,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ledvance_rt_rgbw_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.ledvance_rt_rgbw_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2238,20 +2238,20 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_plug_maus01_identifybutton",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurement",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurementapparentpower",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurementrmscurrent",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurementrmsvoltage",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurementfrequency",
-            "sensor.lumi_lumi_plug_maus01_electricalmeasurementpowerfactor",
+            "button.lumi_lumi_plug_maus01_identify",
+            "sensor.lumi_lumi_plug_maus01_active_power",
+            "sensor.lumi_lumi_plug_maus01_apparent_power",
+            "sensor.lumi_lumi_plug_maus01_rms_current",
+            "sensor.lumi_lumi_plug_maus01_rms_voltage",
+            "sensor.lumi_lumi_plug_maus01_ac_frequency",
+            "sensor.lumi_lumi_plug_maus01_power_factor",
             "sensor.lumi_lumi_plug_maus01_analoginput",
             "sensor.lumi_lumi_plug_maus01_analoginput_2",
             "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
             "switch.lumi_lumi_plug_maus01_switch",
             "sensor.lumi_lumi_plug_maus01_rssi",
             "sensor.lumi_lumi_plug_maus01_lqi",
-            "sensor.lumi_lumi_plug_maus01_devicetemperature",
+            "sensor.lumi_lumi_plug_maus01_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -2262,42 +2262,42 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CHANNELS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_devicetemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_plug_maus01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_plug_maus01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2349,18 +2349,18 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_relay_c2acn01_identifybutton",
+            "button.lumi_lumi_relay_c2acn01_identify",
             "light.lumi_lumi_relay_c2acn01_light",
             "light.lumi_lumi_relay_c2acn01_light_2",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurement",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementapparentpower",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementrmscurrent",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementrmsvoltage",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementfrequency",
-            "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementpowerfactor",
+            "sensor.lumi_lumi_relay_c2acn01_active_power",
+            "sensor.lumi_lumi_relay_c2acn01_apparent_power",
+            "sensor.lumi_lumi_relay_c2acn01_rms_current",
+            "sensor.lumi_lumi_relay_c2acn01_rms_voltage",
+            "sensor.lumi_lumi_relay_c2acn01_ac_frequency",
+            "sensor.lumi_lumi_relay_c2acn01_power_factor",
             "sensor.lumi_lumi_relay_c2acn01_rssi",
             "sensor.lumi_lumi_relay_c2acn01_lqi",
-            "sensor.lumi_lumi_relay_c2acn01_devicetemperature",
+            "sensor.lumi_lumi_relay_c2acn01_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -2371,42 +2371,42 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CHANNELS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_devicetemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_relay_c2acn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_relay_c2acn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2455,7 +2455,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b186acn01_identifybutton",
+            "button.lumi_lumi_remote_b186acn01_identify",
             "sensor.lumi_lumi_remote_b186acn01_battery",
             "sensor.lumi_lumi_remote_b186acn01_rssi",
             "sensor.lumi_lumi_remote_b186acn01_lqi",
@@ -2464,7 +2464,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b186acn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b186acn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -2513,7 +2513,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b286acn01_identifybutton",
+            "button.lumi_lumi_remote_b286acn01_identify",
             "sensor.lumi_lumi_remote_b286acn01_battery",
             "sensor.lumi_lumi_remote_b286acn01_rssi",
             "sensor.lumi_lumi_remote_b286acn01_lqi",
@@ -2522,7 +2522,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286acn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286acn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -2592,7 +2592,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b286opcn01_identifybutton",
+            "button.lumi_lumi_remote_b286opcn01_identify",
             "sensor.lumi_lumi_remote_b286opcn01_rssi",
             "sensor.lumi_lumi_remote_b286opcn01_lqi",
         ],
@@ -2600,7 +2600,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286opcn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286opcn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2665,7 +2665,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b486opcn01_identifybutton",
+            "button.lumi_lumi_remote_b486opcn01_identify",
             "sensor.lumi_lumi_remote_b486opcn01_rssi",
             "sensor.lumi_lumi_remote_b486opcn01_lqi",
         ],
@@ -2673,7 +2673,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b486opcn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b486opcn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2703,7 +2703,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b686opcn01_identifybutton",
+            "button.lumi_lumi_remote_b686opcn01_identify",
             "sensor.lumi_lumi_remote_b686opcn01_rssi",
             "sensor.lumi_lumi_remote_b686opcn01_lqi",
         ],
@@ -2711,7 +2711,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2776,7 +2776,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_remote_b686opcn01_identifybutton",
+            "button.lumi_lumi_remote_b686opcn01_identify",
             "sensor.lumi_lumi_remote_b686opcn01_rssi",
             "sensor.lumi_lumi_remote_b686opcn01_lqi",
         ],
@@ -2784,7 +2784,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2946,7 +2946,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sen_ill_mgl01_identifybutton",
+            "button.lumi_lumi_sen_ill_mgl01_identify",
             "sensor.lumi_lumi_sen_ill_mgl01_illuminance",
             "sensor.lumi_lumi_sen_ill_mgl01_rssi",
             "sensor.lumi_lumi_sen_ill_mgl01_lqi",
@@ -2955,7 +2955,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sen_ill_mgl01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sen_ill_mgl01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1024"): {
                 DEV_SIG_CHANNELS: ["illuminance"],
@@ -3004,7 +3004,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_86sw1_identifybutton",
+            "button.lumi_lumi_sensor_86sw1_identify",
             "sensor.lumi_lumi_sensor_86sw1_battery",
             "sensor.lumi_lumi_sensor_86sw1_rssi",
             "sensor.lumi_lumi_sensor_86sw1_lqi",
@@ -3013,7 +3013,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_86sw1_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_86sw1_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3062,7 +3062,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_cube_aqgl01_identifybutton",
+            "button.lumi_lumi_sensor_cube_aqgl01_identify",
             "sensor.lumi_lumi_sensor_cube_aqgl01_battery",
             "sensor.lumi_lumi_sensor_cube_aqgl01_rssi",
             "sensor.lumi_lumi_sensor_cube_aqgl01_lqi",
@@ -3071,7 +3071,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_cube_aqgl01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_cube_aqgl01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3120,7 +3120,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_ht_identifybutton",
+            "button.lumi_lumi_sensor_ht_identify",
             "sensor.lumi_lumi_sensor_ht_battery",
             "sensor.lumi_lumi_sensor_ht_temperature",
             "sensor.lumi_lumi_sensor_ht_humidity",
@@ -3131,7 +3131,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_ht_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_ht_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3176,7 +3176,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_magnet_identifybutton",
+            "button.lumi_lumi_sensor_magnet_identify",
             "sensor.lumi_lumi_sensor_magnet_battery",
             "binary_sensor.lumi_lumi_sensor_magnet_opening",
             "sensor.lumi_lumi_sensor_magnet_rssi",
@@ -3186,7 +3186,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_magnet_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_magnet_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3226,7 +3226,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_magnet_aq2_identifybutton",
+            "button.lumi_lumi_sensor_magnet_aq2_identify",
             "sensor.lumi_lumi_sensor_magnet_aq2_battery",
             "binary_sensor.lumi_lumi_sensor_magnet_aq2_opening",
             "sensor.lumi_lumi_sensor_magnet_aq2_rssi",
@@ -3236,7 +3236,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_magnet_aq2_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_magnet_aq2_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3276,7 +3276,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_motion_aq2_identifybutton",
+            "button.lumi_lumi_sensor_motion_aq2_identify",
             "sensor.lumi_lumi_sensor_motion_aq2_battery",
             "sensor.lumi_lumi_sensor_motion_aq2_illuminance",
             "binary_sensor.lumi_lumi_sensor_motion_aq2_occupancy",
@@ -3298,7 +3298,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_motion_aq2_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_motion_aq2_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3338,7 +3338,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_smoke_identifybutton",
+            "button.lumi_lumi_sensor_smoke_identify",
             "sensor.lumi_lumi_sensor_smoke_battery",
             "binary_sensor.lumi_lumi_sensor_smoke_iaszone",
             "sensor.lumi_lumi_sensor_smoke_rssi",
@@ -3353,7 +3353,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_smoke_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_smoke_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3388,7 +3388,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_switch_identifybutton",
+            "button.lumi_lumi_sensor_switch_identify",
             "sensor.lumi_lumi_sensor_switch_battery",
             "sensor.lumi_lumi_sensor_switch_rssi",
             "sensor.lumi_lumi_sensor_switch_lqi",
@@ -3397,7 +3397,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_switch_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_switch_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3508,12 +3508,12 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_sensor_wleak_aq1_identifybutton",
+            "button.lumi_lumi_sensor_wleak_aq1_identify",
             "sensor.lumi_lumi_sensor_wleak_aq1_battery",
             "binary_sensor.lumi_lumi_sensor_wleak_aq1_iaszone",
             "sensor.lumi_lumi_sensor_wleak_aq1_rssi",
             "sensor.lumi_lumi_sensor_wleak_aq1_lqi",
-            "sensor.lumi_lumi_sensor_wleak_aq1_devicetemperature",
+            "sensor.lumi_lumi_sensor_wleak_aq1_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3524,12 +3524,12 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CHANNELS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_devicetemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_wleak_aq1_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_wleak_aq1_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3571,7 +3571,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0019", "2:0x0005"],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_vibration_aq1_identifybutton",
+            "button.lumi_lumi_vibration_aq1_identify",
             "sensor.lumi_lumi_vibration_aq1_battery",
             "binary_sensor.lumi_lumi_vibration_aq1_iaszone",
             "lock.lumi_lumi_vibration_aq1_doorlock",
@@ -3587,7 +3587,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_vibration_aq1_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_vibration_aq1_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3627,7 +3627,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.lumi_lumi_weather_identifybutton",
+            "button.lumi_lumi_weather_identify",
             "sensor.lumi_lumi_weather_battery",
             "sensor.lumi_lumi_weather_pressure",
             "sensor.lumi_lumi_weather_temperature",
@@ -3639,7 +3639,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_weather_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_weather_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3689,7 +3689,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.nyce_3010_identifybutton",
+            "button.nyce_3010_identify",
             "sensor.nyce_3010_battery",
             "binary_sensor.nyce_3010_iaszone",
             "sensor.nyce_3010_rssi",
@@ -3704,7 +3704,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.nyce_3010_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.nyce_3010_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3739,7 +3739,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.nyce_3014_identifybutton",
+            "button.nyce_3014_identify",
             "sensor.nyce_3014_battery",
             "binary_sensor.nyce_3014_iaszone",
             "sensor.nyce_3014_rssi",
@@ -3754,7 +3754,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.nyce_3014_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.nyce_3014_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3832,7 +3832,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["3:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.osram_lightify_a19_rgbw_identifybutton",
+            "button.osram_lightify_a19_rgbw_identify",
             "light.osram_lightify_a19_rgbw_light",
             "sensor.osram_lightify_a19_rgbw_rssi",
             "sensor.osram_lightify_a19_rgbw_lqi",
@@ -3846,7 +3846,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-3-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_a19_rgbw_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_a19_rgbw_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -3876,7 +3876,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.osram_lightify_dimming_switch_identifybutton",
+            "button.osram_lightify_dimming_switch_identify",
             "sensor.osram_lightify_dimming_switch_battery",
             "sensor.osram_lightify_dimming_switch_rssi",
             "sensor.osram_lightify_dimming_switch_lqi",
@@ -3885,7 +3885,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_dimming_switch_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_dimming_switch_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -3920,7 +3920,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["3:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.osram_lightify_flex_rgbw_identifybutton",
+            "button.osram_lightify_flex_rgbw_identify",
             "light.osram_lightify_flex_rgbw_light",
             "sensor.osram_lightify_flex_rgbw_rssi",
             "sensor.osram_lightify_flex_rgbw_lqi",
@@ -3934,7 +3934,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-3-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_flex_rgbw_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_flex_rgbw_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -3964,14 +3964,14 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["3:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.osram_lightify_rt_tunable_white_identifybutton",
+            "button.osram_lightify_rt_tunable_white_identify",
             "light.osram_lightify_rt_tunable_white_light",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurement",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurementapparentpower",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurementrmscurrent",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurementrmsvoltage",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurementfrequency",
-            "sensor.osram_lightify_rt_tunable_white_electricalmeasurementpowerfactor",
+            "sensor.osram_lightify_rt_tunable_white_active_power",
+            "sensor.osram_lightify_rt_tunable_white_apparent_power",
+            "sensor.osram_lightify_rt_tunable_white_rms_current",
+            "sensor.osram_lightify_rt_tunable_white_rms_voltage",
+            "sensor.osram_lightify_rt_tunable_white_ac_frequency",
+            "sensor.osram_lightify_rt_tunable_white_power_factor",
             "sensor.osram_lightify_rt_tunable_white_rssi",
             "sensor.osram_lightify_rt_tunable_white_lqi",
         ],
@@ -3984,37 +3984,37 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-3-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_rt_tunable_white_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.osram_lightify_rt_tunable_white_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4044,13 +4044,13 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["3:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.osram_plug_01_identifybutton",
-            "sensor.osram_plug_01_electricalmeasurement",
-            "sensor.osram_plug_01_electricalmeasurementapparentpower",
-            "sensor.osram_plug_01_electricalmeasurementrmscurrent",
-            "sensor.osram_plug_01_electricalmeasurementrmsvoltage",
-            "sensor.osram_plug_01_electricalmeasurementfrequency",
-            "sensor.osram_plug_01_electricalmeasurementpowerfactor",
+            "button.osram_plug_01_identify",
+            "sensor.osram_plug_01_active_power",
+            "sensor.osram_plug_01_apparent_power",
+            "sensor.osram_plug_01_rms_current",
+            "sensor.osram_plug_01_rms_voltage",
+            "sensor.osram_plug_01_ac_frequency",
+            "sensor.osram_plug_01_power_factor",
             "switch.osram_plug_01_switch",
             "sensor.osram_plug_01_rssi",
             "sensor.osram_plug_01_lqi",
@@ -4064,37 +4064,37 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-3-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.osram_plug_01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.osram_plug_01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4230,7 +4230,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0006", "1:0x0008", "2:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.philips_rwl020_identifybutton",
+            "button.philips_rwl020_identify",
             "sensor.philips_rwl020_battery",
             "binary_sensor.philips_rwl020_binaryinput",
             "sensor.philips_rwl020_rssi",
@@ -4255,7 +4255,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-2-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.philips_rwl020_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.philips_rwl020_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-2-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4280,7 +4280,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.samjin_button_identifybutton",
+            "button.samjin_button_identify",
             "sensor.samjin_button_battery",
             "sensor.samjin_button_temperature",
             "binary_sensor.samjin_button_iaszone",
@@ -4296,7 +4296,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.samjin_button_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.samjin_button_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4336,7 +4336,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.samjin_multi_identifybutton",
+            "button.samjin_multi_identify",
             "sensor.samjin_multi_battery",
             "sensor.samjin_multi_temperature",
             "binary_sensor.samjin_multi_iaszone",
@@ -4352,7 +4352,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.samjin_multi_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.samjin_multi_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4392,7 +4392,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.samjin_water_identifybutton",
+            "button.samjin_water_identify",
             "sensor.samjin_water_battery",
             "sensor.samjin_water_temperature",
             "binary_sensor.samjin_water_iaszone",
@@ -4408,7 +4408,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.samjin_water_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.samjin_water_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4448,13 +4448,13 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0005", "1:0x0006", "1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.securifi_ltd_unk_model_identifybutton",
-            "sensor.securifi_ltd_unk_model_electricalmeasurement",
-            "sensor.securifi_ltd_unk_model_electricalmeasurementapparentpower",
-            "sensor.securifi_ltd_unk_model_electricalmeasurementrmscurrent",
-            "sensor.securifi_ltd_unk_model_electricalmeasurementrmsvoltage",
-            "sensor.securifi_ltd_unk_model_electricalmeasurementfrequency",
-            "sensor.securifi_ltd_unk_model_electricalmeasurementpowerfactor",
+            "button.securifi_ltd_unk_model_identify",
+            "sensor.securifi_ltd_unk_model_active_power",
+            "sensor.securifi_ltd_unk_model_apparent_power",
+            "sensor.securifi_ltd_unk_model_rms_current",
+            "sensor.securifi_ltd_unk_model_rms_voltage",
+            "sensor.securifi_ltd_unk_model_ac_frequency",
+            "sensor.securifi_ltd_unk_model_power_factor",
             "switch.securifi_ltd_unk_model_switch",
             "sensor.securifi_ltd_unk_model_rssi",
             "sensor.securifi_ltd_unk_model_lqi",
@@ -4463,37 +4463,37 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.securifi_ltd_unk_model_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.securifi_ltd_unk_model_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4528,7 +4528,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sercomm_corp_sz_dws04n_sf_identifybutton",
+            "button.sercomm_corp_sz_dws04n_sf_identify",
             "sensor.sercomm_corp_sz_dws04n_sf_battery",
             "sensor.sercomm_corp_sz_dws04n_sf_temperature",
             "binary_sensor.sercomm_corp_sz_dws04n_sf_iaszone",
@@ -4544,7 +4544,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_dws04n_sf_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_dws04n_sf_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4591,15 +4591,15 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006"],
         DEV_SIG_ENTITIES: [
-            "button.sercomm_corp_sz_esw01_identifybutton",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurement",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurementapparentpower",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurementrmscurrent",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurementrmsvoltage",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurementfrequency",
-            "sensor.sercomm_corp_sz_esw01_electricalmeasurementpowerfactor",
-            "sensor.sercomm_corp_sz_esw01_smartenergymetering",
-            "sensor.sercomm_corp_sz_esw01_smartenergysummation",
+            "button.sercomm_corp_sz_esw01_identify",
+            "sensor.sercomm_corp_sz_esw01_active_power",
+            "sensor.sercomm_corp_sz_esw01_apparent_power",
+            "sensor.sercomm_corp_sz_esw01_rms_current",
+            "sensor.sercomm_corp_sz_esw01_rms_voltage",
+            "sensor.sercomm_corp_sz_esw01_ac_frequency",
+            "sensor.sercomm_corp_sz_esw01_power_factor",
+            "sensor.sercomm_corp_sz_esw01_instantaneous_demand",
+            "sensor.sercomm_corp_sz_esw01_summation_delivered",
             "light.sercomm_corp_sz_esw01_light",
             "sensor.sercomm_corp_sz_esw01_rssi",
             "sensor.sercomm_corp_sz_esw01_lqi",
@@ -4613,47 +4613,47 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_esw01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_esw01_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4683,7 +4683,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sercomm_corp_sz_pir04_identifybutton",
+            "button.sercomm_corp_sz_pir04_identify",
             "sensor.sercomm_corp_sz_pir04_battery",
             "sensor.sercomm_corp_sz_pir04_illuminance",
             "sensor.sercomm_corp_sz_pir04_temperature",
@@ -4700,7 +4700,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_pir04_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sercomm_corp_sz_pir04_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -4745,13 +4745,13 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sinope_technologies_rm3250zb_identifybutton",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurement",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurementapparentpower",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurementrmscurrent",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurementrmsvoltage",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurementfrequency",
-            "sensor.sinope_technologies_rm3250zb_electricalmeasurementpowerfactor",
+            "button.sinope_technologies_rm3250zb_identify",
+            "sensor.sinope_technologies_rm3250zb_active_power",
+            "sensor.sinope_technologies_rm3250zb_apparent_power",
+            "sensor.sinope_technologies_rm3250zb_rms_current",
+            "sensor.sinope_technologies_rm3250zb_rms_voltage",
+            "sensor.sinope_technologies_rm3250zb_ac_frequency",
+            "sensor.sinope_technologies_rm3250zb_power_factor",
             "switch.sinope_technologies_rm3250zb_switch",
             "sensor.sinope_technologies_rm3250zb_rssi",
             "sensor.sinope_technologies_rm3250zb_lqi",
@@ -4760,37 +4760,37 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_rm3250zb_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_rm3250zb_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4832,15 +4832,15 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sinope_technologies_th1123zb_identifybutton",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurement",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurementapparentpower",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurementrmscurrent",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurementrmsvoltage",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurementfrequency",
-            "sensor.sinope_technologies_th1123zb_electricalmeasurementpowerfactor",
+            "button.sinope_technologies_th1123zb_identify",
+            "sensor.sinope_technologies_th1123zb_active_power",
+            "sensor.sinope_technologies_th1123zb_apparent_power",
+            "sensor.sinope_technologies_th1123zb_rms_current",
+            "sensor.sinope_technologies_th1123zb_rms_voltage",
+            "sensor.sinope_technologies_th1123zb_ac_frequency",
+            "sensor.sinope_technologies_th1123zb_power_factor",
             "sensor.sinope_technologies_th1123zb_temperature",
-            "sensor.sinope_technologies_th1123zb_sinopehvacaction",
+            "sensor.sinope_technologies_th1123zb_hvac_action",
             "climate.sinope_technologies_th1123zb_thermostat",
             "sensor.sinope_technologies_th1123zb_rssi",
             "sensor.sinope_technologies_th1123zb_lqi",
@@ -4849,7 +4849,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1123zb_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1123zb_identify",
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
@@ -4859,32 +4859,32 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],
@@ -4904,7 +4904,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_sinopehvacaction",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_hvac_action",
             },
         },
     },
@@ -4931,15 +4931,15 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sinope_technologies_th1124zb_identifybutton",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurement",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurementapparentpower",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurementrmscurrent",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurementrmsvoltage",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurementfrequency",
-            "sensor.sinope_technologies_th1124zb_electricalmeasurementpowerfactor",
+            "button.sinope_technologies_th1124zb_identify",
+            "sensor.sinope_technologies_th1124zb_active_power",
+            "sensor.sinope_technologies_th1124zb_apparent_power",
+            "sensor.sinope_technologies_th1124zb_rms_current",
+            "sensor.sinope_technologies_th1124zb_rms_voltage",
+            "sensor.sinope_technologies_th1124zb_ac_frequency",
+            "sensor.sinope_technologies_th1124zb_power_factor",
             "sensor.sinope_technologies_th1124zb_temperature",
-            "sensor.sinope_technologies_th1124zb_sinopehvacaction",
+            "sensor.sinope_technologies_th1124zb_hvac_action",
             "climate.sinope_technologies_th1124zb_thermostat",
             "sensor.sinope_technologies_th1124zb_rssi",
             "sensor.sinope_technologies_th1124zb_lqi",
@@ -4948,7 +4948,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1124zb_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1124zb_identify",
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
@@ -4958,32 +4958,32 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],
@@ -5003,7 +5003,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_sinopehvacaction",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_hvac_action",
             },
         },
     },
@@ -5023,13 +5023,13 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.smartthings_outletv4_identifybutton",
-            "sensor.smartthings_outletv4_electricalmeasurement",
-            "sensor.smartthings_outletv4_electricalmeasurementapparentpower",
-            "sensor.smartthings_outletv4_electricalmeasurementrmscurrent",
-            "sensor.smartthings_outletv4_electricalmeasurementrmsvoltage",
-            "sensor.smartthings_outletv4_electricalmeasurementfrequency",
-            "sensor.smartthings_outletv4_electricalmeasurementpowerfactor",
+            "button.smartthings_outletv4_identify",
+            "sensor.smartthings_outletv4_active_power",
+            "sensor.smartthings_outletv4_apparent_power",
+            "sensor.smartthings_outletv4_rms_current",
+            "sensor.smartthings_outletv4_rms_voltage",
+            "sensor.smartthings_outletv4_ac_frequency",
+            "sensor.smartthings_outletv4_power_factor",
             "binary_sensor.smartthings_outletv4_binaryinput",
             "switch.smartthings_outletv4_switch",
             "sensor.smartthings_outletv4_rssi",
@@ -5044,37 +5044,37 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.smartthings_outletv4_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.smartthings_outletv4_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurement",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_active_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurementapparentpower",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurementrmscurrent",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_current",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurementrmsvoltage",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_rms_voltage",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurementfrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_electricalmeasurementpowerfactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5109,7 +5109,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.smartthings_tagv4_identifybutton",
+            "button.smartthings_tagv4_identify",
             "device_tracker.smartthings_tagv4_devicescanner",
             "binary_sensor.smartthings_tagv4_binaryinput",
             "sensor.smartthings_tagv4_rssi",
@@ -5129,7 +5129,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.smartthings_tagv4_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.smartthings_tagv4_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5159,7 +5159,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.third_reality_inc_3rss007z_identifybutton",
+            "button.third_reality_inc_3rss007z_identify",
             "switch.third_reality_inc_3rss007z_switch",
             "sensor.third_reality_inc_3rss007z_rssi",
             "sensor.third_reality_inc_3rss007z_lqi",
@@ -5168,7 +5168,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.third_reality_inc_3rss007z_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.third_reality_inc_3rss007z_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5203,7 +5203,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.third_reality_inc_3rss008z_identifybutton",
+            "button.third_reality_inc_3rss008z_identify",
             "sensor.third_reality_inc_3rss008z_battery",
             "switch.third_reality_inc_3rss008z_switch",
             "sensor.third_reality_inc_3rss008z_rssi",
@@ -5213,7 +5213,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.third_reality_inc_3rss008z_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.third_reality_inc_3rss008z_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -5253,7 +5253,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.visonic_mct_340_e_identifybutton",
+            "button.visonic_mct_340_e_identify",
             "sensor.visonic_mct_340_e_battery",
             "sensor.visonic_mct_340_e_temperature",
             "binary_sensor.visonic_mct_340_e_iaszone",
@@ -5269,7 +5269,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.visonic_mct_340_e_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.visonic_mct_340_e_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -5309,9 +5309,9 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.zen_within_zen_01_identifybutton",
+            "button.zen_within_zen_01_identify",
             "sensor.zen_within_zen_01_battery",
-            "sensor.zen_within_zen_01_thermostathvacaction",
+            "sensor.zen_within_zen_01_hvac_action",
             "climate.zen_within_zen_01_zenwithinthermostat",
             "sensor.zen_within_zen_01_rssi",
             "sensor.zen_within_zen_01_lqi",
@@ -5320,7 +5320,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.zen_within_zen_01_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.zen_within_zen_01_identify",
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["thermostat", "fan"],
@@ -5345,7 +5345,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
-                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_thermostathvacaction",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_hvac_action",
             },
         },
     },
@@ -5442,7 +5442,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.netvox_z308e3ed_identifybutton",
+            "button.netvox_z308e3ed_identify",
             "sensor.netvox_z308e3ed_battery",
             "binary_sensor.netvox_z308e3ed_iaszone",
             "sensor.netvox_z308e3ed_rssi",
@@ -5457,7 +5457,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.netvox_z308e3ed_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.netvox_z308e3ed_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
@@ -5492,33 +5492,33 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sengled_e11_g13_identifybutton",
-            "light.sengled_e11_g13_light",
-            "sensor.sengled_e11_g13_smartenergymetering",
-            "sensor.sengled_e11_g13_smartenergysummation",
+            "button.sengled_e11_g13_identify",
+            "light.sengled_e11_g13_mintransitionlight",
+            "sensor.sengled_e11_g13_instantaneous_demand",
+            "sensor.sengled_e11_g13_summation_delivered",
             "sensor.sengled_e11_g13_rssi",
             "sensor.sengled_e11_g13_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sengled_e11_g13_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sengled_e11_g13_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5548,33 +5548,33 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sengled_e12_n14_identifybutton",
-            "light.sengled_e12_n14_light",
-            "sensor.sengled_e12_n14_smartenergymetering",
-            "sensor.sengled_e12_n14_smartenergysummation",
+            "button.sengled_e12_n14_identify",
+            "light.sengled_e12_n14_mintransitionlight",
+            "sensor.sengled_e12_n14_instantaneous_demand",
+            "sensor.sengled_e12_n14_summation_delivered",
             "sensor.sengled_e12_n14_rssi",
             "sensor.sengled_e12_n14_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sengled_e12_n14_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sengled_e12_n14_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5604,33 +5604,33 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
-            "button.sengled_z01_a19nae26_identifybutton",
-            "light.sengled_z01_a19nae26_light",
-            "sensor.sengled_z01_a19nae26_smartenergymetering",
-            "sensor.sengled_z01_a19nae26_smartenergysummation",
+            "button.sengled_z01_a19nae26_identify",
+            "light.sengled_z01_a19nae26_mintransitionlight",
+            "sensor.sengled_z01_a19nae26_instantaneous_demand",
+            "sensor.sengled_z01_a19nae26_summation_delivered",
             "sensor.sengled_z01_a19nae26_rssi",
             "sensor.sengled_z01_a19nae26_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.sengled_z01_a19nae26_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.sengled_z01_a19nae26_identify",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_smartenergymetering",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_instantaneous_demand",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_smartenergysummation",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_summation_delivered",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -5660,7 +5660,7 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
-            "button.unk_manufacturer_unk_model_identifybutton",
+            "button.unk_manufacturer_unk_model_identify",
             "cover.unk_manufacturer_unk_model_shade",
             "sensor.unk_manufacturer_unk_model_rssi",
             "sensor.unk_manufacturer_unk_model_lqi",
@@ -5669,7 +5669,7 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.unk_manufacturer_unk_model_identifybutton",
+                DEV_SIG_ENT_MAP_ID: "button.unk_manufacturer_unk_model_identify",
             },
             ("cover", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["level", "on_off", "shade"],
@@ -5962,7 +5962,7 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: [],
         DEV_SIG_ENTITIES: [
             "sensor.efektalab_ru_efekta_pws_battery",
-            "sensor.efektalab_ru_efekta_pws_soilmoisture",
+            "sensor.efektalab_ru_efekta_pws_soil_moisture",
             "sensor.efektalab_ru_efekta_pws_temperature",
             "sensor.efektalab_ru_efekta_pws_rssi",
             "sensor.efektalab_ru_efekta_pws_lqi",
@@ -5976,7 +5976,7 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-1032"): {
                 DEV_SIG_CHANNELS: ["soil_moisture"],
                 DEV_SIG_ENT_MAP_CLASS: "SoilMoisture",
-                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_soilmoisture",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_soil_moisture",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],

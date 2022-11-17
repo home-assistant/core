@@ -38,6 +38,7 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
 class NestCamera(Camera):
     """Representation of a Nest Camera."""
 
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, structure, device):
@@ -74,11 +75,6 @@ class NestCamera(Camera):
             model="Camera",
             name=self.device.name_long,
         )
-
-    @property
-    def should_poll(self):
-        """Nest camera should poll periodically."""
-        return True
 
     @property
     def is_recording(self):
@@ -142,7 +138,7 @@ class NestCamera(Camera):
             url = self.device.snapshot_url
 
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error("Error getting camera image: %s", error)
                 return None

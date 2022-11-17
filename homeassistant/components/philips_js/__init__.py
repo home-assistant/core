@@ -2,15 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
-from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs import AutenticationFailure, ConnectionFailure, PhilipsTV
 from haphilipsjs.typing import SystemType
 
-from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -21,7 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.trigger import TriggerActionType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
@@ -84,14 +84,16 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[Any, tuple[HassJob, dict[str, Any]]] = {}
+        self._actions: dict[
+            Any, tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]]
+        ] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
+    def async_attach(self, action: TriggerActionType, variables: dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback
@@ -167,7 +169,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _notify_task(self):
         while self._notify_wanted:
-            res = await self.api.notifyChange(130)
+            try:
+                res = await self.api.notifyChange(130)
+            except (ConnectionFailure, AutenticationFailure):
+                res = None
+
             if res:
                 self.async_set_updated_data(None)
             elif res is None:
@@ -201,3 +207,5 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._async_notify_schedule()
         except ConnectionFailure:
             pass
+        except AutenticationFailure as exception:
+            raise UpdateFailed(str(exception)) from exception

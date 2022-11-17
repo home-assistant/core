@@ -1,22 +1,23 @@
 """Arcam media player."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -88,11 +89,11 @@ class ArcamFmj(MediaPlayerEntity):
         self._attr_entity_registry_enabled_default = state.zn == 1
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def device_info(self):
@@ -107,7 +108,7 @@ class ArcamFmj(MediaPlayerEntity):
             name=self._device_name,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
         await self._state.start()
         await self._state.update()
@@ -139,17 +140,17 @@ class ArcamFmj(MediaPlayerEntity):
             async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STOPPED, _stopped)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Force update of state."""
         _LOGGER.debug("Update state %s", self.name)
         await self._state.update()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._state.set_mute(mute)
         self.async_write_ha_state()
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select a specific source."""
         try:
             value = SourceCodes[source]
@@ -160,7 +161,7 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_source(value)
         self.async_write_ha_state()
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a specific source."""
         try:
             await self._state.set_decode_mode(sound_mode)
@@ -170,22 +171,22 @@ class ArcamFmj(MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._state.set_volume(round(volume * 99.0))
         self.async_write_ha_state()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._state.inc_volume()
         self.async_write_ha_state()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume up for media player."""
         await self._state.dec_volume()
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self._state.get_power() is not None:
             _LOGGER.debug("Turning on device using connection")
@@ -194,11 +195,15 @@ class ArcamFmj(MediaPlayerEntity):
             _LOGGER.debug("Firing event to turn on device")
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._state.set_power(False)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id not in (None, "root"):
             raise BrowseError(
@@ -210,9 +215,9 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             BrowseMedia(
                 title=preset.name,
-                media_class=MEDIA_CLASS_MUSIC,
+                media_class=MediaClass.MUSIC,
                 media_content_id=f"preset:{preset.index}",
-                media_content_type=MEDIA_TYPE_MUSIC,
+                media_content_type=MediaType.MUSIC,
                 can_play=True,
                 can_expand=False,
             )
@@ -221,7 +226,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Arcam FMJ Receiver",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,
@@ -231,7 +236,9 @@ class ArcamFmj(MediaPlayerEntity):
 
         return root
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
 
         if media_id.startswith("preset:"):
@@ -282,13 +289,13 @@ class ArcamFmj(MediaPlayerEntity):
         return value / 99.0
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         elif source == SourceCodes.FM:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         else:
             value = None
         return value

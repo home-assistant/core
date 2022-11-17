@@ -18,6 +18,13 @@
                 "description": "Kata sandi yang Anda masukkan sebelumnya untuk {username} tidak lagi berfungsi. Perbarui kata sandi Anda untuk tetap menggunakan integrasi ini.",
                 "title": "Autentikasi Ulang Integrasi"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Kata sandi yang Anda masukkan sebelumnya untuk {username} tidak lagi berfungsi. Perbarui kata sandi Anda untuk tetap menggunakan integrasi ini.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Perangkat tepercaya"
