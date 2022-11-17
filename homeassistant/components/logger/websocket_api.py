@@ -52,9 +52,7 @@ async def handle_integration_log_info(
         vol.Required("type"): "logger/integration_log_level",
         vol.Required("integration"): str,
         vol.Required("level"): vol.In(LOGSEVERITY),
-        vol.Required("persistence"): vol.In(
-            [LogPersistance.NONE, LogPersistance.ONCE, LogPersistance.PERMANENT]
-        ),
+        vol.Required("persistence"): vol.Coerce(LogPersistance),
     }
 )
 @websocket_api.async_response
@@ -86,9 +84,7 @@ async def handle_integration_log_level(
         vol.Required("type"): "logger/log_level",
         vol.Required("module"): str,
         vol.Required("level"): vol.In(LOGSEVERITY),
-        vol.Required("persistence"): vol.In(
-            [LogPersistance.NONE, LogPersistance.ONCE, LogPersistance.PERMANENT]
-        ),
+        vol.Required("persistence"): vol.Coerce(LogPersistance),
     }
 )
 @websocket_api.async_response
