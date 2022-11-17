@@ -93,7 +93,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = 0
 
         # Determine main switch DPCode
         self._switch_dpcode = self.find_dpcode(
