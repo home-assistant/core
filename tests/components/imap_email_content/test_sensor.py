@@ -42,6 +42,7 @@ async def test_allowed_sender(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -78,6 +79,7 @@ async def test_multi_part_with_text(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -105,6 +107,7 @@ async def test_multi_part_only_html(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -135,6 +138,7 @@ async def test_multi_part_only_other_text(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -171,6 +175,7 @@ async def test_multiple_emails(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -200,6 +205,7 @@ async def test_sender_not_allowed(hass):
         "test_emails_sensor",
         ["other@test.com"],
         None,
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
@@ -222,9 +228,44 @@ async def test_template(hass):
         "test_emails_sensor",
         ["sender@test.com"],
         Template("{{ subject }} from {{ from }} with message {{ body }}", hass),
+        False,
     )
 
     sensor.entity_id = "sensor.emailtest"
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
     assert sensor.state == "Test from sender@test.com with message Test Message"
+
+
+async def test_force_html(hass):
+    """Test multi part emails."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Link"
+    msg["From"] = "sender@test.com"
+
+    text = "Test Message"
+    html = "<html><head></head><body>Test Message</body></html>"
+
+    textPart = MIMEText(text, "plain")
+    htmlPart = MIMEText(html, "html")
+
+    msg.attach(textPart)
+    msg.attach(htmlPart)
+
+    sensor = imap_email_content.EmailContentSensor(
+        hass,
+        FakeEMailReader(deque([msg])),
+        "test_emails_sensor",
+        ["sender@test.com"],
+        None,
+        True,
+    )
+
+    sensor.entity_id = "sensor.emailtest"
+    sensor.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+    assert sensor.state == "Link"
+    assert (
+        sensor.extra_state_attributes["body"]
+        == "<html><head></head><body>Test Message</body></html>"
+    )
