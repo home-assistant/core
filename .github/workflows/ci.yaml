@@ -558,6 +558,10 @@ jobs:
       - base
     permissions:
       actions: write
+    # Limit to 'dev' branch until permissions issue is resolved
+    # https://github.com/home-assistant/core/pull/80898
+    # https://github.com/home-assistant/core/pull/82254
+    if: github.ref == 'refs/heads/dev'
     steps:
       - name: Cleanup
         run: |
