@@ -1,25 +1,28 @@
 """Diagnostics support for Tibber."""
 from __future__ import annotations
 
+from typing import Any
+
 import tibber
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
 
 from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    diagnostics_data = {}
 
-    tibber_connection: tibber.Tibber = hass.data.get(DOMAIN)
+    # If the ConfigEntry is not ready there is no DOMAIN data available,
+    # it can occur either if it has never been started
+    # or connection to the Tibber API failed
+    tibber_connection: tibber.Tibber | None = hass.data.get(DOMAIN, None)
 
-    diagnostics_data["api_connection"] = True if tibber_connection else False
-
-    homes = {}
+    homes: dict[str, Any] = {}
     if tibber_connection:
         for home in tibber_connection.get_homes(only_active=False):
             homes[home.home_id] = {
@@ -30,6 +33,5 @@ async def async_get_config_entry_diagnostics(
                 "country": home.country,
             }
 
-    diagnostics_data["homes"] = homes
-
-    return diagnostics_data
+    # indicate in the diag data if the Tibber connection was established
+    return {"tibber_connection": bool(tibber_connection), "homes": homes}

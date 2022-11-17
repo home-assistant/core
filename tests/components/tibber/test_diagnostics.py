@@ -23,7 +23,7 @@ async def test_entry_diagnostics_after_failure(
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "api_connection": False,
+        "tibber_connection": False,
         "homes": {},
     }
 
@@ -41,7 +41,7 @@ async def test_entry_diagnostics(recorder_mock, hass, hass_client, config_entry)
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "api_connection": True,
+        "tibber_connection": True,
         "homes": {},
     }
 
@@ -60,7 +60,7 @@ async def test_entry_diagnostics_with_homes(
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "api_connection": True,
+        "tibber_connection": True,
         "homes": {
             "home_id": {
                 "last_data_timestamp": "2016-01-01T12:48:57",

@@ -1,7 +1,6 @@
 """Test common."""
 import datetime as dt
 from unittest.mock import AsyncMock, MagicMock
-import pytest
 
 CONSUMPTION_DATA_1 = [
     {
@@ -55,7 +54,7 @@ def mock_get_homes(only_active=True):
     def get_historic_data(n_data, resolution="HOURLY", production=False):
         return PRODUCTION_DATA_1 if production else CONSUMPTION_DATA_1
 
-    tibber_home.get_historic_data.side_effect = get_historic_data
+    tibber_home.get_historic_data.side_effect = AsyncMock(side_effect=get_historic_data)
 
     return [tibber_home]
 
