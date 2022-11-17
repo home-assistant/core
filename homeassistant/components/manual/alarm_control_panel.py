@@ -10,7 +10,11 @@ from typing import Any
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    ATTR_NEXT_STATE,
+    ATTR_PREVIOUS_STATE,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.const import (
     CONF_ARMING_TIME,
     CONF_CODE,
@@ -67,9 +71,6 @@ SUPPORTED_ARMING_STATES = [
     for state in SUPPORTED_STATES
     if state not in (STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 ]
-
-ATTR_PREVIOUS_STATE = "previous_state"
-ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(config):

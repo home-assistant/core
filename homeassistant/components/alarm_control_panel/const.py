@@ -9,6 +9,9 @@ DOMAIN: Final = "alarm_control_panel"
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
 
+ATTR_PREVIOUS_STATE: Final = "previous_state"
+ATTR_NEXT_STATE: Final = "next_state"
+
 
 class CodeFormat(StrEnum):
     """Code formats for the Alarm Control Panel."""
