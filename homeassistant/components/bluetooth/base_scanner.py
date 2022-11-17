@@ -3,12 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from typing import Any, Final
 
-from bleak.backends.client import BaseBleakClient
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
@@ -22,17 +20,9 @@ from .const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
+from .models import HaBluetoothConnector
 
 MONOTONIC_TIME: Final = monotonic_time_coarse
-
-
-@dataclass
-class HaBluetoothConnector:
-    """Data for how to connect a BLEDevice from a given scanner."""
-
-    client: type[BaseBleakClient]
-    source: str
-    can_connect: Callable[[], bool]
 
 
 class BaseHaScanner:
