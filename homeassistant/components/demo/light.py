@@ -129,7 +129,6 @@ class DemoLight(LightEntity):
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._effect = effect
         self._effect_list = effect_list
-        self._attr_supported_features = 0
         self._hs_color = hs_color
         self._attr_name = name
         self._rgbw_color = rgbw_color
