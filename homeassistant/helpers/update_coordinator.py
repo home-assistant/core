@@ -20,7 +20,6 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .event import RANDOM_MICROSECOND_MAX, RANDOM_MICROSECOND_MIN
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -65,7 +64,9 @@ class DataUpdateCoordinator(Generic[_T]):
 
         # Pick a random microsecond to stagger the refreshes
         # and avoid a thundering herd.
-        self._microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
+        self._microsecond = randint(
+            event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX
+        )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._job = HassJob(self._handle_refresh_interval)
