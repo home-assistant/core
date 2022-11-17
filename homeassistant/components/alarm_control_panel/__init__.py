@@ -30,6 +30,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (  # noqa: F401
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
+    ATTR_NEXT_STATE,
+    ATTR_PREVIOUS_STATE,
     DOMAIN,
     FORMAT_NUMBER,
     FORMAT_TEXT,
