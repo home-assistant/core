@@ -445,7 +445,6 @@ class ZoneDevice(ClimateEntity):
         self._zone = zone
         self._name = zone.name.title()
 
-        self._attr_supported_features = 0
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
                 HVACMode.OFF: Zone.Mode.CLOSE,
