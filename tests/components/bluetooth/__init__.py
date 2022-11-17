@@ -5,6 +5,7 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
@@ -31,6 +32,7 @@ __all__ = (
     "patch_all_discovered_devices",
     "patch_discovered_devices",
     "generate_advertisement_data",
+    "MockBleakClient",
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
@@ -192,3 +194,29 @@ async def _async_setup_with_adapter(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     return entry
+
+
+class MockBleakClient(BleakClient):
+    """Mock bleak client."""
+
+    def __init__(self, *args, **kwargs):
+        """Mock init."""
+        super().__init__(*args, **kwargs)
+        self._device_path = "/dev/test"
+
+    @property
+    def is_connected(self) -> bool:
+        """Mock connected."""
+        return True
+
+    async def connect(self, *args, **kwargs):
+        """Mock connect."""
+        return True
+
+    async def disconnect(self, *args, **kwargs):
+        """Mock disconnect."""
+        pass
+
+    async def get_services(self, *args, **kwargs):
+        """Mock get_services."""
+        return []

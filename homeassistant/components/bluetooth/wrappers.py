@@ -18,6 +18,7 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
+from .models import HaBluetoothConnector
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
@@ -29,15 +30,6 @@ class _HaWrappedBleakBackend:
 
     device: BLEDevice
     client: type[BaseBleakClient]
-
-
-@dataclass
-class HaBluetoothConnector:
-    """Data for how to connect a BLEDevice from a given scanner."""
-
-    client: type[BaseBleakClient]
-    source: str
-    can_connect: Callable[[], bool]
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):
