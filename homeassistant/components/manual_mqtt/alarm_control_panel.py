@@ -130,6 +130,7 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
                 vol.Exclusive(CONF_CODE, "code validation"): cv.string,
                 vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
+                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
                     cv.time_period, cv.positive_timedelta
                 ),
@@ -165,7 +166,6 @@ PLATFORM_SCHEMA = vol.Schema(
                 ),
                 vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
                 vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
                 vol.Optional(
                     CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY
                 ): cv.string,
@@ -203,11 +203,11 @@ def setup_platform(
                 config[CONF_NAME],
                 config.get(CONF_CODE),
                 config.get(CONF_CODE_TEMPLATE),
+                config.get(CONF_CODE_ARM_REQUIRED),
                 config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
                 config.get(mqtt.CONF_STATE_TOPIC),
                 config.get(mqtt.CONF_COMMAND_TOPIC),
                 config.get(mqtt.CONF_QOS),
-                config.get(CONF_CODE_ARM_REQUIRED),
                 config.get(CONF_PAYLOAD_DISARM),
                 config.get(CONF_PAYLOAD_ARM_HOME),
                 config.get(CONF_PAYLOAD_ARM_AWAY),
@@ -247,11 +247,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         name,
         code,
         code_template,
+        code_arm_required,
         disarm_after_trigger,
         state_topic,
         command_topic,
         qos,
-        code_arm_required,
         payload_disarm,
         payload_arm_home,
         payload_arm_away,
@@ -269,6 +269,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             self._code.hass = hass
         else:
             self._code = code or None
+        self._attr_code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
@@ -288,7 +289,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
-        self._attr_code_arm_required = code_arm_required
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
@@ -457,7 +457,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             alarm_code = self._code
         else:
             alarm_code = self._code.async_render(
-                from_state=self._state, to_state=state, parse_result=False
+                parse_result=False, from_state=self._state, to_state=state
             )
         check = not alarm_code or code == alarm_code
         if not check:
