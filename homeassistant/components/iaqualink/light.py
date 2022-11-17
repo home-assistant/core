@@ -100,7 +100,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return {self.color_mode}
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature | int:
         """Return the list of features supported by the light."""
         if self.dev.supports_effect:
             return LightEntityFeature.EFFECT
