@@ -26,6 +26,7 @@ FORMAT_NUMBER: Final = "number"
 class AlarmControlPanelEntityFeature(IntFlag):
     """Supported features of the alarm control panel entity."""
 
+    NONE = 0
     ARM_HOME = 1
     ARM_AWAY = 2
     ARM_NIGHT = 4

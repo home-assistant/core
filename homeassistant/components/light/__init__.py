@@ -44,6 +44,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 class LightEntityFeature(IntFlag):
     """Supported features of the light entity."""
 
+    NONE = 0
     EFFECT = 4
     FLASH = 8
     TRANSITION = 32

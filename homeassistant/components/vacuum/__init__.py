@@ -77,6 +77,7 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
+    NONE = 0
     TURN_ON = 1
     TURN_OFF = 2
     PAUSE = 4

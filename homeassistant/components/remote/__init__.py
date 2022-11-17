@@ -64,6 +64,7 @@ DEFAULT_HOLD_SECS = 0
 class RemoteEntityFeature(IntFlag):
     """Supported features of the remote entity."""
 
+    NONE = 0
     LEARN_COMMAND = 1
     DELETE_COMMAND = 2
     ACTIVITY = 4

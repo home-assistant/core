@@ -10,6 +10,7 @@ DOMAIN: Final = "update"
 class UpdateEntityFeature(IntFlag):
     """Supported features of the update entity."""
 
+    NONE = 0
     INSTALL = 1
     SPECIFIC_VERSION = 2
     PROGRESS = 4

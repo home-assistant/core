@@ -15,6 +15,7 @@ ATTR_VOLUME_LEVEL: Final = "volume_level"
 class SirenEntityFeature(IntFlag):
     """Supported features of the siren entity."""
 
+    NONE = 0
     TURN_ON = 1
     TURN_OFF = 2
     TONES = 4
