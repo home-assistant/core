@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant

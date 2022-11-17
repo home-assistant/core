@@ -91,7 +91,7 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "title": "La configuration YAML pour Nest est en cours de suppression"
+            "title": "La configuration YAML pour Nest sera bient\u00f4t supprim\u00e9e"
         }
     }
 }

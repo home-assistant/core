@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "no_adapters": "Bluetooth adapt\u00f6r\u00fc bulunamad\u0131"
+            "no_adapters": "Yap\u0131land\u0131r\u0131lmam\u0131\u015f Bluetooth adapt\u00f6r\u00fc bulunamad\u0131"
         },
         "flow_title": "{name}",
         "step": {
@@ -29,12 +29,20 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Bluetooth g\u00fcvenilirli\u011fini ve performans\u0131n\u0131 art\u0131rmak i\u00e7in Home Assistant \u0130\u015fletim Sisteminin 9.0 veya sonraki bir s\u00fcr\u00fcm\u00fcne g\u00fcncellemenizi \u00f6nemle tavsiye ederiz.",
+            "title": "Home Assistant \u0130\u015fletim Sistemi 9.0 veya \u00fczeri g\u00fcncelleme"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Tarama i\u00e7in kullan\u0131lacak Bluetooth Adapt\u00f6r\u00fc"
-                }
+                    "adapter": "Tarama i\u00e7in kullan\u0131lacak Bluetooth Adapt\u00f6r\u00fc",
+                    "passive": "Pasif tarama"
+                },
+                "description": "Pasif dinleme, BlueZ 5.63 veya daha yenisini ve deneysel \u00f6zelliklerin etkinle\u015ftirilmesini gerektirir."
             }
         }
     }

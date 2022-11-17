@@ -12,13 +12,13 @@ from maxcube.device import (
     MAX_DEVICE_MODE_VACATION,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -60,8 +60,7 @@ def setup_platform(
             if device.is_thermostat() or device.is_wallthermostat():
                 devices.append(MaxCubeClimate(handler, device))
 
-    if devices:
-        add_entities(devices)
+    add_entities(devices)
 
 
 class MaxCubeClimate(ClimateEntity):

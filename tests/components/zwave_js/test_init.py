@@ -1,21 +1,26 @@
 """Test the Z-Wave JS init module."""
+import asyncio
 from copy import deepcopy
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
@@ -242,6 +247,61 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     )
 
 
+async def test_existing_node_reinterview(
+    hass: HomeAssistant,
+    client: Client,
+    multisensor_6_state: dict,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test we handle a node re-interview firing a node ready event."""
+    dev_reg = dr.async_get(hass)
+    node = multisensor_6
+    assert client.driver is not None
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id_ext = (
+        f"{air_temperature_device_id}-{node.manufacturer_id}:"
+        f"{node.product_type}:{node.product_id}"
+    )
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state  # entity and device added
+    assert state.state != STATE_UNAVAILABLE
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.12"
+
+    node_state = deepcopy(multisensor_6_state)
+    node_state["firmwareVersion"] = "1.13"
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.13"
+
+
 async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
     """Test we handle a non-ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
@@ -290,10 +350,10 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert not device.area_id
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
 
-    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Motion detection"
 
     dev_reg.async_update_device(
         device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
@@ -608,6 +668,7 @@ async def test_update_addon(
     backup_calls,
     update_addon_side_effect,
     create_backup_side_effect,
+    version_state,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -618,7 +679,9 @@ async def test_update_addon(
     addon_info.return_value["update_available"] = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -637,6 +700,47 @@ async def test_update_addon(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert create_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
+
+
+async def test_issue_registry(hass, client, version_state):
+    """Test issue registry."""
+    device = "/test"
+    network_key = "abc123"
+
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": False,
+            "usb_path": device,
+            "network_key": network_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_reg = ir.async_get(hass)
+    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+
+    async def connect():
+        await asyncio.sleep(0)
+        client.connected = True
+
+    client.connect = AsyncMock(side_effect=connect)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
 
 
 @pytest.mark.parametrize(
@@ -1122,10 +1226,10 @@ async def test_node_model_change(hass, zp3111, client, integration):
 
     dev_id = device.id
 
-    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Motion detection"
 
     # Customize device and entity names/ids
     dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
@@ -1210,7 +1314,7 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
     er_reg = er.async_get(hass)
 
     # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    sensor_cover_entity = "sensor.4_in_1_sensor_cover_status"
     er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -1228,9 +1332,7 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
     assert state.state != STATE_UNAVAILABLE
 
     # check for expected entities
-    binary_cover_entity = (
-        "binary_sensor.4_in_1_sensor_home_security_tampering_product_cover_removed"
-    )
+    binary_cover_entity = "binary_sensor.4_in_1_sensor_tampering_product_cover_removed"
     state = hass.states.get(binary_cover_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE

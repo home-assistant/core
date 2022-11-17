@@ -15,19 +15,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_OPENING,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -89,7 +80,7 @@ async def async_setup_platform(
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
-    _attr_media_content_type: str = MEDIA_TYPE_MUSIC
+    _attr_media_content_type: str = MediaType.MUSIC
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -132,14 +123,14 @@ class AFSAPIDevice(MediaPlayerEntity):
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
                 self._attr_state = {
-                    PlayState.PLAYING: STATE_PLAYING,
-                    PlayState.PAUSED: STATE_PAUSED,
-                    PlayState.STOPPED: STATE_IDLE,
-                    PlayState.LOADING: STATE_OPENING,
-                    None: STATE_IDLE,
+                    PlayState.PLAYING: MediaPlayerState.PLAYING,
+                    PlayState.PAUSED: MediaPlayerState.PAUSED,
+                    PlayState.STOPPED: MediaPlayerState.IDLE,
+                    PlayState.LOADING: MediaPlayerState.BUFFERING,
+                    None: MediaPlayerState.IDLE,
                 }.get(status)
             else:
-                self._attr_state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
             if self._attr_available:
                 _LOGGER.warning(
@@ -186,7 +177,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._attr_state != STATE_OFF:
+        if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
@@ -251,7 +242,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self._attr_state == STATE_PLAYING:
+        if self._attr_state == MediaPlayerState.PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()

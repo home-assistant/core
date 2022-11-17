@@ -14,10 +14,10 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -57,9 +57,9 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_RAINRATE: SensorEntityDescription(
         key=SENSOR_TYPE_RAINRATE,
         name="Rain rate",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:water",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SENSOR_TYPE_RAINTOTAL: SensorEntityDescription(
         key=SENSOR_TYPE_RAINTOTAL,
@@ -76,12 +76,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_WINDAVERAGE,
         name="Wind average",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WINDGUST: SensorEntityDescription(
         key=SENSOR_TYPE_WINDGUST,
         name="Wind gust",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_UV: SensorEntityDescription(

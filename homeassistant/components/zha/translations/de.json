@@ -61,7 +61,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Dauerhaftes Ersetzen der IEEE-Funkadresse"
                 },
-                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t.  Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
+                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t. Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
                 "title": "Funk-IEEE-Adresse \u00fcberschreiben"
             },
             "pick_radio": {
@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Ausgabeeffekt f\u00fcr alle LEDs",
+            "issue_individual_led_effect": "Ausgabeeffekt f\u00fcr einzelne LED",
             "squawk": "Kreischen",
             "warn": "Warnen"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA wird gestoppt. M\u00f6chtest du fortfahren?",
                 "title": "ZHA rekonfigurieren"
             },
+            "instruct_unplug": {
+                "description": "Dein altes Funkger\u00e4t wurde zur\u00fcckgesetzt. Wenn die Hardware nicht mehr ben\u00f6tigt wird, kannst du es jetzt ausstecken.",
+                "title": "Stecke dein altes Funkger\u00e4t aus"
+            },
+            "intent_migrate": {
+                "description": "Dein altes Funkger\u00e4t wird auf die Werkseinstellungen zur\u00fcckgesetzt. Wenn du einen kombinierten Z-Wave- und Zigbee-Adapter wie den HUSBZB-1 verwendest, wird nur der Zigbee-Teil zur\u00fcckgesetzt.\n\nM\u00f6chtest du fortfahren?",
+                "title": "Umstellung auf ein neues Funkger\u00e4t"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Funktyp"
@@ -230,8 +240,16 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Dauerhaftes Ersetzen der IEEE-Funkadresse"
                 },
-                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t.  Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
+                "description": "Dein Backup hat eine andere IEEE-Adresse als dein Funkger\u00e4t. Damit dein Netzwerk ordnungsgem\u00e4\u00df funktioniert, sollte auch die IEEE-Adresse deines Funkger\u00e4ts ge\u00e4ndert werden.\n\nDies ist ein permanenter Vorgang.",
                 "title": "Funk-IEEE-Adresse \u00fcberschreiben"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Stellst du auf ein neues Funkger\u00e4t um oder konfigurierst du das aktuelle Funkger\u00e4t neu?",
+                "menu_options": {
+                    "intent_migrate": "Umstellung auf ein neues Funkger\u00e4t",
+                    "intent_reconfigure": "Das aktuelle Funkger\u00e4t neu konfigurieren"
+                },
+                "title": "Migrieren oder neu konfigurieren"
             },
             "upload_manual_backup": {
                 "data": {

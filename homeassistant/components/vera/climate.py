@@ -5,10 +5,11 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

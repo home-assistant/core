@@ -2,11 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntryState
 
-from tests.components.advantage_air import (
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, add_mock_config
 
 
 async def test_async_setup_entry(hass, aioclient_mock):

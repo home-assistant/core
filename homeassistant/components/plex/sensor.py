@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
-    DOMAIN as PLEX_DOMAIN,
+    DOMAIN,
     NAME_FORMAT,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -57,7 +57,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    plexserver = hass.data[DOMAIN][SERVERS][server_id]
     sensors = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
@@ -118,7 +118,7 @@ class PlexSensor(SensorEntity):
             return None
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self._server.machine_identifier)},
+            identifiers={(DOMAIN, self._server.machine_identifier)},
             manufacturer="Plex",
             model="Plex Media Server",
             name=self._server.friendly_name,
@@ -209,7 +209,7 @@ class PlexLibrarySectionSensor(SensorEntity):
             return None
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self.server_id)},
+            identifiers={(DOMAIN, self.server_id)},
             manufacturer="Plex",
             model="Plex Media Server",
             name=self.server_name,

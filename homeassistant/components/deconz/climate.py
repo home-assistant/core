@@ -11,8 +11,8 @@ from pydeconz.models.sensor.thermostat import (
     ThermostatPreset,
 )
 
-from homeassistant.components.climate import DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -22,7 +22,9 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -170,6 +172,21 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
                 id=self._device.resource_id,
                 mode=HVAC_MODE_TO_DECONZ[hvac_mode],
             )
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return current hvac operation ie. heat, cool.
+
+        Preset 'BOOST' is interpreted as 'state_on'.
+        """
+        if self._device.mode == ThermostatMode.OFF:
+            return HVACAction.OFF
+
+        if self._device.state_on or self._device.preset == ThermostatPreset.BOOST:
+            if self._device.mode == ThermostatMode.COOL:
+                return HVACAction.COOLING
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     # Preset control
 

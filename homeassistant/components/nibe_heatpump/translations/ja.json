@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "\u30ea\u30e2\u30fc\u30c8IP\u30a2\u30c9\u30ec\u30b9",
+                    "listening_port": "\u30ed\u30fc\u30ab\u30eb\u30ea\u30b9\u30cb\u30f3\u30b0\u30dd\u30fc\u30c8",
+                    "remote_read_port": "\u30ea\u30e2\u30fc\u30c8\u8aad\u307f\u53d6\u308a\u30dd\u30fc\u30c8",
+                    "remote_write_port": "\u30ea\u30e2\u30fc\u30c8\u66f8\u304d\u8fbc\u307f\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    }
+}

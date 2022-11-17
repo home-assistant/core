@@ -12,16 +12,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -137,13 +130,13 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         self._group.set_callback(None)
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         return {
-            "idle": STATE_IDLE,
-            "playing": STATE_PLAYING,
-            "unknown": STATE_UNKNOWN,
-        }.get(self._group.stream_status, STATE_UNKNOWN)
+            "idle": MediaPlayerState.IDLE,
+            "playing": MediaPlayerState.PLAYING,
+            "unknown": None,
+        }.get(self._group.stream_status)
 
     @property
     def unique_id(self):
@@ -271,11 +264,11 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return list(self._client.group.streams_by_name().keys())
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the player."""
         if self._client.connected:
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def extra_state_attributes(self):

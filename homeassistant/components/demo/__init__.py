@@ -260,14 +260,14 @@ async def _insert_sum_statistics(
     start: datetime.datetime,
     end: datetime.datetime,
     max_diff: float,
-):
+) -> None:
     statistics: list[StatisticData] = []
     now = start
     sum_ = 0.0
     statistic_id = metadata["statistic_id"]
 
     last_stats = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, False
+        get_last_statistics, hass, 1, statistic_id, False, {"sum"}
     )
     if statistic_id in last_stats:
         sum_ = last_stats[statistic_id][0]["sum"] or 0

@@ -13,8 +13,8 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import (
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
     ReceivePayloadType,
 )
@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_BAUD_RATE,
@@ -220,7 +221,7 @@ async def _get_gateway(
             protocol_version=version,
         )
     gateway.event_callback = event_callback
-    gateway.metric = hass.config.units.is_metric
+    gateway.metric = hass.config.units is METRIC_SYSTEM
 
     if persistence:
         await gateway.start_persistence()

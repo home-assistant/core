@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Effetto di emissione per tutti i LED",
+            "issue_individual_led_effect": "Effetto di emissione per i singoli LED",
             "squawk": "Strillare",
             "warn": "Avvertire"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA verr\u00e0 interrotto. Vuoi continuare?",
                 "title": "Riconfigura ZHA"
             },
+            "instruct_unplug": {
+                "description": "La tua vecchia radio \u00e8 stata ripristinata. Se l'hardware non \u00e8 pi\u00f9 necessario, ora \u00e8 possibile scollegarlo.",
+                "title": "Scollega la tua vecchia radio"
+            },
+            "intent_migrate": {
+                "description": "La tua vecchia radio verr\u00e0 ripristinata alle impostazioni di fabbrica. Se stai usando un adattatore combinato Z-Wave e Zigbee come HUSBZB-1, questo ripristiner\u00e0 solo la parte Zigbee. \n\nVuoi continuare?",
+                "title": "Migra a una nuova radio"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Tipo di radio"
@@ -232,6 +242,14 @@
                 },
                 "description": "Il tuo backup ha un indirizzo IEEE diverso dalla tua radio. Affinch\u00e9 la rete funzioni correttamente, \u00e8 necessario modificare anche l'indirizzo IEEE della radio. \n\nQuesta \u00e8 un'operazione permanente.",
                 "title": "Sovrascrivi indirizzo IEEE radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Stai migrando a una nuova radio o riconfigurando la radio attuale?",
+                "menu_options": {
+                    "intent_migrate": "Migra a una nuova radio",
+                    "intent_reconfigure": "Riconfigura la radio attuale"
+                },
+                "title": "Migrare o riconfigurare"
             },
             "upload_manual_backup": {
                 "data": {

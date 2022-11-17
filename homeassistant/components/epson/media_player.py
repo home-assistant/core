@@ -31,9 +31,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -134,7 +134,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Projector status: %s", power_state)
         self._attr_available = True
         if power_state == EPSON_CODES[POWER]:
-            self._attr_state = STATE_ON
+            self._attr_state = MediaPlayerState.ON
             if await self.set_unique_id():
                 return
             self._attr_source_list = list(DEFAULT_SOURCES.values())
@@ -148,21 +148,21 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 except ValueError:
                     self._attr_volume_level = None
         elif power_state == BUSY:
-            self._attr_state = STATE_ON
+            self._attr_state = MediaPlayerState.ON
         else:
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
 
     async def async_turn_on(self) -> None:
         """Turn on epson."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self._projector.send_command(TURN_ON)
-            self._attr_state = STATE_ON
+            self._attr_state = MediaPlayerState.ON
 
     async def async_turn_off(self) -> None:
         """Turn off epson."""
-        if self.state == STATE_ON:
+        if self.state == MediaPlayerState.ON:
             await self._projector.send_command(TURN_OFF)
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
 
     async def select_cmode(self, cmode: str) -> None:
         """Set color mode in Epson."""

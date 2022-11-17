@@ -1,6 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
+from datetime import time
 from typing import Any
 
 from pylitterbot import LitterRobot
@@ -22,9 +23,10 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .entity import LitterRobotControlEntity, async_update_unique_id
+from .entity import LitterRobotEntity, async_update_unique_id
 from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
@@ -70,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotCleaner(LitterRobotControlEntity[LitterRobot], StateVacuumEntity):
+class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (
@@ -95,24 +97,41 @@ class LitterRobotCleaner(LitterRobotControlEntity[LitterRobot], StateVacuumEntit
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the cleaner on, starting a clean cycle."""
-        await self.perform_action_and_refresh(self.robot.set_power_status, True)
+        await self.robot.set_power_status(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the unit off, stopping any cleaning in progress as is."""
-        await self.perform_action_and_refresh(self.robot.set_power_status, False)
+        await self.robot.set_power_status(False)
 
     async def async_start(self) -> None:
         """Start a clean cycle."""
-        await self.perform_action_and_refresh(self.robot.start_cleaning)
+        await self.robot.start_cleaning()
 
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
     ) -> None:
         """Set the sleep mode."""
-        await self.perform_action_and_refresh(
-            self.robot.set_sleep_mode,
-            enabled,
-            self.parse_time_at_default_timezone(start_time),
+        await self.robot.set_sleep_mode(
+            enabled, self.parse_time_at_default_timezone(start_time)
+        )
+
+    @staticmethod
+    def parse_time_at_default_timezone(time_str: str | None) -> time | None:
+        """Parse a time string and add default timezone."""
+        if time_str is None:
+            return None
+
+        if (parsed_time := dt_util.parse_time(time_str)) is None:  # pragma: no cover
+            return None
+
+        return (
+            dt_util.start_of_local_day()
+            .replace(
+                hour=parsed_time.hour,
+                minute=parsed_time.minute,
+                second=parsed_time.second,
+            )
+            .timetz()
         )
 
     @property

@@ -8,12 +8,12 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.thermostats import Thermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

@@ -17,11 +17,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.media_source import (
@@ -226,7 +222,9 @@ async def test_browse_media_root_multiple_consoles(
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+    with patch(
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+    ) as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -289,7 +287,9 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+    with patch(
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+    ) as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -679,7 +679,7 @@ async def test_browse_media_event(
 
     assert browse.identifier == "test_id:event:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_VIDEO
+    assert browse.media_class == MediaClass.VIDEO
 
 
 async def test_browse_media_eventthumb(
@@ -710,24 +710,23 @@ async def test_browse_media_eventthumb(
 
     assert browse.identifier == "test_id:eventthumb:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_IMAGE
+    assert browse.media_class == MediaClass.IMAGE
 
 
 @freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_day(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test browsing day selector level media."""
 
     start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    end = datetime.fromisoformat("2022-09-15 03:00:00-07:00")
     ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    base_id = (
-        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}"
-    )
+    base_id = f"test_id:browse:{doorbell.id}:all:range:{end.year}:{end.month}"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -735,7 +734,7 @@ async def test_browse_media_day(
 
     assert (
         browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')}"
+        == f"UnifiProtect > {doorbell.name} > All Events > {end.strftime('%B %Y')}"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 14

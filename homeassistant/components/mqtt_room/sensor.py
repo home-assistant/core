@@ -133,9 +133,7 @@ class MQTTRoomSensor(SensorEntity):
                     ):
                         update_state(**device)
 
-        return await mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, 1
-        )
+        await mqtt.async_subscribe(self.hass, self._state_topic, message_received, 1)
 
     @property
     def name(self):

@@ -11,6 +11,7 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
@@ -28,7 +29,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -299,12 +299,6 @@ class AlexaEntity:
         See also DisplayCategory.
         """
         raise NotImplementedError
-
-    def get_interface(self, capability) -> AlexaCapability:
-        """Return the given AlexaInterface.
-
-        Raises _UnsupportedInterface.
-        """
 
     def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.

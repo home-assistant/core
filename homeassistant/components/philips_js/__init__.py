@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs import AutenticationFailure, ConnectionFailure, PhilipsTV
 from haphilipsjs.typing import SystemType
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.trigger import TriggerActionType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
@@ -169,7 +169,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _notify_task(self):
         while self._notify_wanted:
-            res = await self.api.notifyChange(130)
+            try:
+                res = await self.api.notifyChange(130)
+            except (ConnectionFailure, AutenticationFailure):
+                res = None
+
             if res:
                 self.async_set_updated_data(None)
             elif res is None:
@@ -203,3 +207,5 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._async_notify_schedule()
         except ConnectionFailure:
             pass
+        except AutenticationFailure as exception:
+            raise UpdateFailed(str(exception)) from exception

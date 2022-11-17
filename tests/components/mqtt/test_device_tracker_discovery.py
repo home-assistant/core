@@ -1,13 +1,11 @@
 """The tests for the  MQTT device_tracker platform."""
 
-import copy
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.setup import async_setup_component
 
@@ -26,11 +24,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[device_tracker.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -66,7 +59,7 @@ async def test_discover_device_tracker(hass, mqtt_mock_entry_no_yaml_config, cap
 
     assert state is not None
     assert state.name == "test"
-    assert ("device_tracker", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("device_tracker", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -363,11 +356,12 @@ async def test_setting_device_tracker_location_via_mqtt_message(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
-        '{ "name": "test", "state_topic": "test-topic" }',
+        '{ "name": "test", "state_topic": "test-topic", "source_type": "router" }',
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.test")
+    assert state.attributes["source_type"] == "router"
 
     assert state.state == STATE_UNKNOWN
 
@@ -393,6 +387,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.test")
+    assert state.attributes["source_type"] == "gps"
 
     assert state.state == STATE_UNKNOWN
 
@@ -402,23 +397,25 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5}',
+        '{"latitude":32.87336,"longitude": -117.22743, "gps_accuracy":1.5, "source_type": "router"}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
     assert state.attributes["longitude"] == -117.22743
     assert state.attributes["gps_accuracy"] == 1.5
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
     assert state.state == STATE_HOME
 
     async_fire_mqtt_message(
         hass,
         "attributes-topic",
-        '{"latitude":50.1,"longitude": -2.1, "gps_accuracy":1.5}',
+        '{"latitude":50.1,"longitude": -2.1}',
     )
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 50.1
     assert state.attributes["longitude"] == -2.1
-    assert state.attributes["gps_accuracy"] == 1.5
+    assert state.attributes["gps_accuracy"] == 0
     assert state.state == STATE_NOT_HOME
 
     async_fire_mqtt_message(hass, "attributes-topic", '{"longitude": -117.22743}')
@@ -440,7 +437,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         device_tracker.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         None,
     )
 
@@ -451,8 +448,10 @@ async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
     topic = "/location/jan"
 
-    config = {"name": dev_id, "state_topic": topic}
+    config = {
+        mqtt.DOMAIN: {device_tracker.DOMAIN: {"name": dev_id, "state_topic": topic}}
+    }
 
-    await help_test_setup_manual_entity_from_yaml(hass, device_tracker.DOMAIN, config)
+    await help_test_setup_manual_entity_from_yaml(hass, config)
 
     assert hass.states.get(entity_id) is not None

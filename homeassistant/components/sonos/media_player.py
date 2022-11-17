@@ -18,28 +18,21 @@ import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ENQUEUE,
+    BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.components.media_player.const import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_ENQUEUE,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
-    REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
-    REPEAT_MODE_ONE,
-)
-from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
@@ -74,9 +67,9 @@ UNJOIN_SERVICE_TIMEOUT = 0.1
 VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
-    REPEAT_MODE_OFF: False,
-    REPEAT_MODE_ALL: True,
-    REPEAT_MODE_ONE: "ONE",
+    RepeatMode.OFF: False,
+    RepeatMode.ALL: True,
+    RepeatMode.ONE: "ONE",
 }
 
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
@@ -211,7 +204,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
     )
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the media player entity."""
@@ -259,7 +252,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return hash(self.unique_id)
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """Return the state of the entity."""
         if self.media.playback_status in (
             "PAUSED_PLAYBACK",
@@ -268,14 +261,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             # Sonos can consider itself "paused" but without having media loaded
             # (happens if playing Spotify and via Spotify app you pick another device to play on)
             if self.media.title is None:
-                return STATE_IDLE
-            return STATE_PAUSED
+                return MediaPlayerState.IDLE
+            return MediaPlayerState.PAUSED
         if self.media.playback_status in (
             SONOS_STATE_PLAYING,
             SONOS_STATE_TRANSITIONING,
         ):
-            return STATE_PLAYING
-        return STATE_IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
@@ -397,7 +390,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         ]
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    def set_repeat(self, repeat: str) -> None:
+    def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         sonos_shuffle = PLAY_MODES[self.media.play_mode][0]
         sonos_repeat = REPEAT_TO_SONOS[repeat]
@@ -445,7 +438,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_uri(uri, title=favorite.title)
         else:
             soco.clear_queue()
-            soco.add_to_queue(favorite.reference)
+            soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
             soco.play_from_queue(0)
 
     @property
@@ -521,7 +514,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if media_source.is_media_source_id(media_id):
             is_radio = media_id.startswith("media-source://radio_browser/")
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             media_id = (
                 run_coroutine_threadsafe(
                     media_source.async_resolve_media(
@@ -588,23 +581,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     media_id, timeout=LONG_SERVICE_TIMEOUT
                 )
                 soco.play_from_queue(0)
-        elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+        elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
 
             if enqueue == MediaPlayerEnqueue.ADD:
-                soco.add_uri_to_queue(media_id)
+                soco.add_uri_to_queue(media_id, timeout=LONG_SERVICE_TIMEOUT)
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = soco.add_uri_to_queue(media_id, position=pos)
+                new_pos = soco.add_uri_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_uri(media_id, force_radio=is_radio)
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
                 item = media_browser.get_media(self.media.library, media_id, media_type)
                 soco.play_uri(item.get_uri())
@@ -616,7 +611,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
             else:
                 soco.clear_queue()
-                soco.add_to_queue(playlist)
+                soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = media_browser.get_media(self.media.library, media_id, media_type)
@@ -700,7 +695,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
         if (
-            media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
+            media_content_type in {MediaType.ALBUM, MediaType.ARTIST}
             and media_content_id
         ):
             item = await self.hass.async_add_executor_job(

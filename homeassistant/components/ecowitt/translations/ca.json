@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "path": "Cam\u00ed amb testimoni de seguretat",
-                    "port": "Escoltant el port"
+                    "port": "Port d'escolta"
                 },
                 "description": "Est\u00e0s segur que vols configurar Ecowitt?"
             }

@@ -65,9 +65,20 @@ async def config_entry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-async def config_entry(config_entry_data: dict[str, Any]) -> MockConfigEntry:
+def config_entry_options() -> dict[str, Any] | None:
+    """Fixture to set initial config entry options."""
+    return None
+
+
+@pytest.fixture
+async def config_entry(
+    config_entry_data: dict[str, Any],
+    config_entry_options: dict[str, Any] | None,
+) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
-    return MockConfigEntry(domain=DOMAIN, data=config_entry_data)
+    return MockConfigEntry(
+        domain=DOMAIN, data=config_entry_data, options=config_entry_options
+    )
 
 
 @pytest.fixture

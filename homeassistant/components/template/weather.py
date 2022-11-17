@@ -30,11 +30,11 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temp_util,
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
 )
 
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
@@ -87,11 +87,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(temp_util.VALID_UNITS),
-        vol.Optional(CONF_PRESSURE_UNIT): vol.In(pressure_util.VALID_UNITS),
-        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(speed_util.VALID_UNITS),
-        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(distance_util.VALID_UNITS),
-        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(distance_util.VALID_UNITS),
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
     }
 )
 

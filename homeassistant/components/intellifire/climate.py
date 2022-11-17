@@ -7,8 +7,8 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.climate.const import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant

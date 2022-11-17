@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import pathlib
 import shutil
@@ -35,6 +36,7 @@ from .const import (
 )
 from .errors import (
     BlueprintException,
+    BlueprintInUse,
     FailedToLoad,
     FileAlreadyExists,
     InvalidBlueprint,
@@ -49,7 +51,7 @@ class Blueprint:
 
     def __init__(
         self,
-        data: dict,
+        data: dict[str, Any],
         *,
         path: str | None = None,
         expected_domain: str | None = None,
@@ -183,11 +185,13 @@ class DomainBlueprints:
         hass: HomeAssistant,
         domain: str,
         logger: logging.Logger,
+        blueprint_in_use: Callable[[HomeAssistant, str], bool],
     ) -> None:
         """Initialize a domain blueprints instance."""
         self.hass = hass
         self.domain = domain
         self.logger = logger
+        self._blueprint_in_use = blueprint_in_use
         self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
 
@@ -198,10 +202,10 @@ class DomainBlueprints:
         """Return the blueprint folder."""
         return pathlib.Path(self.hass.config.path(BLUEPRINT_FOLDER, self.domain))
 
-    @callback
-    def async_reset_cache(self) -> None:
+    async def async_reset_cache(self) -> None:
         """Reset the blueprint cache."""
-        self._blueprints = {}
+        async with self._load_lock:
+            self._blueprints = {}
 
     def _load_blueprint(self, blueprint_path) -> Blueprint:
         """Load a blueprint."""
@@ -302,6 +306,8 @@ class DomainBlueprints:
 
     async def async_remove_blueprint(self, blueprint_path: str) -> None:
         """Remove a blueprint file."""
+        if self._blueprint_in_use(self.hass, blueprint_path):
+            raise BlueprintInUse(self.domain, blueprint_path)
         path = self.blueprint_folder / blueprint_path
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None
@@ -333,6 +339,10 @@ class DomainBlueprints:
 
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""
+        if self._blueprints:
+            # If we have already loaded some blueprint the blueprint folder must exist
+            return
+
         integration = await loader.async_get_integration(self.hass, self.domain)
 
         def populate():

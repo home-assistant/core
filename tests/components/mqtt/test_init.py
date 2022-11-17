@@ -29,11 +29,13 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .test_common import (
     help_test_entry_reload_with_new_config,
+    help_test_reload_with_config,
     help_test_setup_manual_entity_from_yaml,
 )
 
@@ -1485,9 +1487,17 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
-    config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    config = {
+        mqtt.DOMAIN: {
+            "light": {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "test-topic",
+            }
+        }
+    }
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(hass, config)
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
@@ -1497,9 +1507,9 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
-    config = {"name": "test"}
+    config = {mqtt.DOMAIN: {"light": {"name": "test"}}}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(hass, config)
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
@@ -1509,8 +1519,8 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
-    config = []
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    config = {mqtt.DOMAIN: {"light": []}}
+    await help_test_setup_manual_entity_from_yaml(hass, config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
@@ -1768,14 +1778,14 @@ async def test_delayed_birth_message(
     await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
-        return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
-        wraps=hass.data["mqtt"],
+        return_value=hass.data["mqtt"].client,
+        spec_set=hass.data["mqtt"].client,
+        wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
 
-    hass.data["mqtt"] = mqtt_component_mock
-    mqtt_mock = hass.data["mqtt"]
+    hass.data["mqtt"].client = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"].client
     mqtt_mock.reset_mock()
 
     async def wait_birth(topic, payload, qos):
@@ -1930,6 +1940,7 @@ async def test_update_incomplete_entry(
     # Config entry data should now be updated
     assert entry.data == {
         "port": 1234,
+        "discovery_prefix": "homeassistant",
         "broker": "yaml_broker",
     }
     # Warnings about broker deprecated, but not about other keys with default values
@@ -2797,7 +2808,11 @@ async def test_publish_or_subscribe_without_valid_config_entry(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_reload_entry_with_new_config(hass, tmp_path):
     """Test reloading the config entry with a new yaml config."""
-    config_old = [{"name": "test_old1", "command_topic": "test-topic_old"}]
+    # Test deprecated YAML configuration under the platform key
+    # Scheduled to be removed in HA core 2022.12
+    config_old = {
+        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
+    }
     config_yaml_new = {
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
@@ -2812,7 +2827,7 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
             }
         ],
     }
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config_old)
+    await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
 
     await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
@@ -2824,7 +2839,9 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
     """Test disabling and enabling the config entry."""
-    config_old = [{"name": "test_old1", "command_topic": "test-topic_old"}]
+    config_old = {
+        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
+    }
     config_yaml_new = {
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
@@ -2839,7 +2856,7 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
             }
         ],
     }
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config_old)
+    await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -2929,7 +2946,9 @@ async def test_setup_manual_items_with_unique_ids(
     hass, tmp_path, caplog, config, unique
 ):
     """Test setup manual items is generating unique id's."""
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    await help_test_setup_manual_entity_from_yaml(
+        hass, {mqtt.DOMAIN: {"light": config}}
+    )
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
@@ -2951,7 +2970,7 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     mqtt_config_entry_data = {
         mqtt.CONF_BROKER: "mock-broker",
         mqtt.CONF_BIRTH_MESSAGE: {},
-        mqtt.client.CONF_PROTOCOL: mqtt.const.PROTOCOL_311,
+        "old_option": "old_value",
     }
 
     entry = MockConfigEntry(
@@ -2967,6 +2986,70 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     assert mqtt.client.CONF_PROTOCOL not in entry.data
     assert (
         "The following unsupported configuration options were removed from the "
-        "MQTT config entry: {'protocol'}. Add them to configuration.yaml if they "
-        "are needed"
+        "MQTT config entry: {'old_option'}"
     ) in caplog.text
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+async def test_link_config_entry(hass, tmp_path, caplog):
+    """Test manual and dynamically setup entities are linked to the config entry."""
+    config_manual = {
+        "mqtt": {
+            "light": [
+                {
+                    "name": "test_manual",
+                    "unique_id": "test_manual_unique_id123",
+                    "command_topic": "test-topic_manual",
+                }
+            ]
+        }
+    }
+    config_discovery = {
+        "name": "test_discovery",
+        "unique_id": "test_discovery_unique456",
+        "command_topic": "test-topic_discovery",
+    }
+
+    # set up manual item
+    await help_test_setup_manual_entity_from_yaml(hass, config_manual)
+
+    # set up item through discovery
+    async_fire_mqtt_message(
+        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_manual") is not None
+    assert hass.states.get("light.test_discovery") is not None
+    entity_names = ["test_manual", "test_discovery"]
+
+    # Check if both entities were linked to the MQTT config entry
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_platforms = async_get_platforms(hass, mqtt.DOMAIN)
+
+    def _check_entities():
+        entities = []
+        for mqtt_platform in mqtt_platforms:
+            assert mqtt_platform.config_entry is mqtt_config_entry
+            entities += (entity for entity in mqtt_platform.entities.values())
+
+        for entity in entities:
+            assert entity.name in entity_names
+        return len(entities)
+
+    assert _check_entities() == 2
+
+    # reload entry and assert again
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_manual)
+    # manual set up item should remain
+    assert _check_entities() == 1
+    # set up item through discovery
+    async_fire_mqtt_message(
+        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+    )
+    await hass.async_block_till_done()
+    assert _check_entities() == 2
+
+    # reload manual configured items and assert again
+    await help_test_reload_with_config(hass, caplog, tmp_path, config_manual)
+    assert _check_entities() == 2

@@ -3,15 +3,16 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -124,7 +125,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         self._attr_name = self._client.name
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE

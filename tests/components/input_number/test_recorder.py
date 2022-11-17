@@ -22,7 +22,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    hass: HomeAssistant, recorder_mock, enable_custom_integrations: None
+    recorder_mock, hass: HomeAssistant, enable_custom_integrations: None
 ):
     """Test attributes to be excluded."""
     assert await async_setup_component(

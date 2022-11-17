@@ -175,7 +175,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init
             None if disable_stream else rtsp_url
         )
-        self._attr_supported_features: int = (
+        self._attr_supported_features = (
             CameraEntityFeature.STREAM if self._stream_source else 0
         )
 

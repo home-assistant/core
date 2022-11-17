@@ -5,11 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import person
-from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE,
-    SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
-)
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
 from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -208,9 +204,7 @@ async def test_setup_two_trackers(hass, hass_admin_user):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    hass.states.async_set(
-        DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER}
-    )
+    hass.states.async_set(DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SourceType.ROUTER})
     await hass.async_block_till_done()
 
     state = hass.states.get("person.tracked_person")
@@ -229,12 +223,12 @@ async def test_setup_two_trackers(hass, hass_admin_user):
             ATTR_LATITUDE: 12.123456,
             ATTR_LONGITUDE: 13.123456,
             ATTR_GPS_ACCURACY: 12,
-            ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS,
+            ATTR_SOURCE_TYPE: SourceType.GPS,
         },
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        DEVICE_TRACKER, "not_home", {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER}
+        DEVICE_TRACKER, "not_home", {ATTR_SOURCE_TYPE: SourceType.ROUTER}
     )
     await hass.async_block_till_done()
 
@@ -247,22 +241,16 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
-    hass.states.async_set(
-        DEVICE_TRACKER_2, "zone1", {ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS}
-    )
+    hass.states.async_set(DEVICE_TRACKER_2, "zone1", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
 
     state = hass.states.get("person.tracked_person")
     assert state.state == "zone1"
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
 
-    hass.states.async_set(
-        DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER}
-    )
+    hass.states.async_set(DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SourceType.ROUTER})
     await hass.async_block_till_done()
-    hass.states.async_set(
-        DEVICE_TRACKER_2, "zone2", {ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS}
-    )
+    hass.states.async_set(DEVICE_TRACKER_2, "zone2", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()
 
     state = hass.states.get("person.tracked_person")

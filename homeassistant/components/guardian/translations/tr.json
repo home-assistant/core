@@ -23,12 +23,23 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, bunun yerine \" {alternate_service} {alternate_target} hizmetini kullanacak \u015fekilde g\u00fcncelleyin. Ard\u0131ndan, bu sorunu \u00e7\u00f6z\u00fcld\u00fc olarak i\u015faretlemek i\u00e7in a\u015fa\u011f\u0131daki G\u00d6NDER'i t\u0131klay\u0131n.",
-                        "title": "{deprecated_service} hizmeti kald\u0131r\u0131l\u0131yor"
+                        "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, bunun yerine \" {alternate_service} {alternate_target} hizmetini kullanacak \u015fekilde g\u00fcncelleyin.",
+                        "title": "{deprecated_service} hizmeti kald\u0131r\u0131lacak"
                     }
                 }
             },
-            "title": "{deprecated_service} hizmeti kald\u0131r\u0131l\u0131yor"
+            "title": "{deprecated_service} hizmeti kald\u0131r\u0131lacak"
+        },
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Bunun yerine ` {replacement_entity_id} ` kullanmak i\u00e7in bu varl\u0131\u011f\u0131 kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131 g\u00fcncelleyin.",
+                        "title": "{old_entity_id} varl\u0131\u011f\u0131 kald\u0131r\u0131lacak"
+                    }
+                }
+            },
+            "title": "{old_entity_id} varl\u0131\u011f\u0131 kald\u0131r\u0131lacak"
         }
     }
 }

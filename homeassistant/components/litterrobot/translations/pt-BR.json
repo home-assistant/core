@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Os atributos da entidade de v\u00e1cuo agora est\u00e3o dispon\u00edveis como sensores de diagn\u00f3stico. \n\n Ajuste quaisquer automa\u00e7\u00f5es ou scripts que voc\u00ea possa ter que usem esses atributos.",
+            "title": "Os atributos do Litter-Robot agora s\u00e3o seus pr\u00f3prios sensores"
+        }
     }
 }

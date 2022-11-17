@@ -37,20 +37,25 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = "initial"
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_INITIAL): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
 }
 
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_INITIAL): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-}
-
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.Any(UPDATE_FIELDS, None))},
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.Any(
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_INITIAL): cv.boolean,
+                    vol.Optional(CONF_ICON): cv.icon,
+                },
+                None,
+            )
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -62,12 +67,11 @@ STORAGE_VERSION = 1
 class InputBooleanStorageCollection(collection.StorageCollection):
     """Input boolean collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -76,8 +80,8 @@ class InputBooleanStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: data[CONF_ID]} | update_data
 
 
 @bind_hass
@@ -88,7 +92,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input boolean."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputBoolean](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -118,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:

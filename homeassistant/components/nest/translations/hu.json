@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Eszk\u00f6z-hozz\u00e1f\u00e9r\u00e9s Projekt azonos\u00edt\u00f3"
                 },
-                "description": "Hozzon l\u00e9tre egy Nest Device Access projektet, amelynek **be\u00e1ll\u00edt\u00e1sa 5 USD d\u00edjat** ig\u00e9nyel.\n1. Menjen a [Device Access Console]({device_access_console_url}) oldalra, \u00e9s a fizet\u00e9si folyamaton kereszt\u00fcl.\n1. Kattintson a **Projekt l\u00e9trehoz\u00e1sa** gombra.\n1. Adjon nevet a Device Access projektnek, \u00e9s kattintson a **K\u00f6vetkez\u0151** gombra.\n1. Adja meg az OAuth \u00fcgyf\u00e9l azonos\u00edt\u00f3j\u00e1t\n1. Enged\u00e9lyezze az esem\u00e9nyeket a **Enable** \u00e9s a **Create project** gombra kattintva.\n\nAdja meg a Device Access projekt azonos\u00edt\u00f3j\u00e1t az al\u00e1bbiakban ([more info]({more_info_url})).\n",
+                "description": "Hozzon l\u00e9tre egy Nest Device Access projektet, amelynek be\u00e1ll\u00edt\u00e1sa **5 USD d\u00edjat** ig\u00e9nyel.\n1. L\u00e1togasson el a [Device Access Console]({device_access_console_url}) oldalra, \u00e9s a fizet\u00e9si folyamaton menjen kereszt\u00fcl.\n1. Kattintson a **Projekt l\u00e9trehoz\u00e1sa** gombra.\n1. Adjon nevet a projektnek, \u00e9s kattintson a **K\u00f6vetkez\u0151** gombra.\n1. Adja meg az OAuth \u00fcgyf\u00e9l azonos\u00edt\u00f3j\u00e1t (Client ID)\n1. Enged\u00e9lyezze az esem\u00e9nyeket a **Enable** \u00e9s a **Create project** gombra kattintva.\n\nAdja meg a Device Access projekt azonos\u00edt\u00f3j\u00e1t az al\u00e1bbiakban ([more info]({more_info_url})).\n",
                 "title": "Nest: Hozzon l\u00e9tre egy eszk\u00f6z-hozz\u00e1f\u00e9r\u00e9si projektet"
             },
             "device_project_upgrade": {

@@ -109,6 +109,7 @@
             "on": "A carregar"
         },
         "carbon_monoxide": {
+            "off": "Limpo",
             "on": "Detectado"
         },
         "cold": {

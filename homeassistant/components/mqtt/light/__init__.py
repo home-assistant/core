@@ -1,8 +1,8 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ..mixins import (
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -40,34 +39,37 @@ from .schema_template import (
 )
 
 
-def validate_mqtt_light_discovery(value):
+def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema for."""
     schemas = {
         "basic": DISCOVERY_SCHEMA_BASIC,
         "json": DISCOVERY_SCHEMA_JSON,
         "template": DISCOVERY_SCHEMA_TEMPLATE,
     }
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
-def validate_mqtt_light(value):
+def validate_mqtt_light(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema."""
     schemas = {
         "basic": PLATFORM_SCHEMA_BASIC,
         "json": PLATFORM_SCHEMA_JSON,
         "template": PLATFORM_SCHEMA_TEMPLATE,
     }
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
-def validate_mqtt_light_modern(value):
+def validate_mqtt_light_modern(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema."""
     schemas = {
         "basic": PLATFORM_SCHEMA_MODERN_BASIC,
         "json": PLATFORM_SCHEMA_MODERN_JSON,
         "template": PLATFORM_SCHEMA_MODERN_TEMPLATE,
     }
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
 DISCOVERY_SCHEMA = vol.All(
@@ -111,9 +113,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT lights configured under the light platform key (deprecated)."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, light.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -124,11 +123,11 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
+    config_entry: ConfigEntry,
     discovery_data: dict | None = None,
 ) -> None:
     """Set up a MQTT Light."""
-    setup_entity: dict[str, Callable] = {
+    setup_entity = {
         "basic": async_setup_entity_basic,
         "json": async_setup_entity_json,
         "template": async_setup_entity_template,

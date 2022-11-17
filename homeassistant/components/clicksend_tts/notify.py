@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
@@ -23,20 +24,27 @@ HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
-CONF_CALLER = "caller"
 
+MALE_VOICE = "male"
+FEMALE_VOICE = "female"
+
+DEFAULT_NAME = "clicksend_tts"
 DEFAULT_LANGUAGE = "en-us"
-DEFAULT_VOICE = "female"
+DEFAULT_VOICE = FEMALE_VOICE
 TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Required(CONF_RECIPIENT): vol.All(
+            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        ),
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CALLER): cv.string,
+        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(
+            [MALE_VOICE, FEMALE_VOICE]
+        ),
     }
 )
 
@@ -60,9 +68,6 @@ class ClicksendNotificationService(BaseNotificationService):
         self.recipient = config[CONF_RECIPIENT]
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
-        self.caller = config.get(CONF_CALLER)
-        if self.caller is None:
-            self.caller = self.recipient
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
@@ -70,7 +75,6 @@ class ClicksendNotificationService(BaseNotificationService):
             "messages": [
                 {
                     "source": "hass.notify",
-                    "from": self.caller,
                     "to": self.recipient,
                     "body": message,
                     "lang": self.language,

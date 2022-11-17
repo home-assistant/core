@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "home_control": "devolo Ev Kontrol Merkezi Birimi bu entegrasyonla \u00e7al\u0131\u015fmaz."
+            "home_control": "devolo Ev Kontrol Merkezi Birimi bu entegrasyonla \u00e7al\u0131\u015fmaz.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP Adresi"

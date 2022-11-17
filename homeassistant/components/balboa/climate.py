@@ -4,12 +4,12 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

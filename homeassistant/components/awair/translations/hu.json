@@ -56,7 +56,7 @@
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
                     "email": "E-mail"
                 },
-                "description": "Regisztr\u00e1lnia kell az Awair fejleszt\u0151i hozz\u00e1f\u00e9r\u00e9si tokenj\u00e9hez a k\u00f6vetkez\u0151 c\u00edmen: https://developer.getawair.com/onboard/login",
+                "description": "V\u00e1lassza a helyi lehet\u0151s\u00e9get a legjobb \u00e9lm\u00e9ny \u00e9rdek\u00e9ben. Csak akkor haszn\u00e1lja a felh\u0151t, ha az eszk\u00f6z nem ugyanahhoz a h\u00e1l\u00f3zathoz csatlakozik, mint a Home Assistant, vagy ha r\u00e9gebbi eszk\u00f6zzel rendelkezik.",
                 "menu_options": {
                     "cloud": "Felh\u0151n kereszt\u00fcli csatlakoz\u00e1s",
                     "local": "Lok\u00e1lis csatlakoz\u00e1s (aj\u00e1nlott)"

@@ -4,9 +4,9 @@ from homeassistant.components.device_tracker import (
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
+    SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,

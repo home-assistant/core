@@ -28,6 +28,10 @@
                     "password": "Has\u0142o",
                     "pin": "Kod PIN",
                     "username": "Nazwa u\u017cytkownika"
+                },
+                "menu_options": {
+                    "cloud": "Chmura Risco (zalecane)",
+                    "local": "Lokalny Panel Risco (zaawansowane)"
                 }
             }
         }

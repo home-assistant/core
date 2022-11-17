@@ -1,6 +1,10 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
+from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
+
+USER_AGENT = {APPLICATION_NAME: HA_VERSION}
+
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"
@@ -123,5 +127,5 @@ ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 # This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
 # your own (https://github.com/zwave-js/firmware-updates/).
 API_KEY_FIRMWARE_UPDATE_SERVICE = (
-    "55eea74f055bef2ad893348112df6a38980600aaf82d2b02011297fc7ba495f830ca2b70"
+    "2e39d98fc56386389fbb35e5a98fa1b44b9fdd8f971460303587cff408430d4cfcde6134"
 )

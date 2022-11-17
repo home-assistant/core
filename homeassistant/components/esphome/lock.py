@@ -38,7 +38,7 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
         return self._static_info.assumed_state
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LockEntityFeature | int:
         """Flag supported features."""
         return LockEntityFeature.OPEN if self._static_info.supports_open else 0
 
@@ -49,25 +49,25 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
             return self._static_info.code_format
         return None
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._state.state == LockState.LOCKED
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._state.state == LockState.LOCKING
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._state.state == LockState.UNLOCKING
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""

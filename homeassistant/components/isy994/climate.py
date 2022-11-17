@@ -16,14 +16,14 @@ from pyisy.constants import (
 )
 from pyisy.nodes import Node
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

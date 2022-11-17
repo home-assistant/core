@@ -8,15 +8,14 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -70,6 +69,7 @@ async def async_setup_platform(
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
@@ -130,9 +130,9 @@ class RussoundZoneDevice(MediaPlayerEntity):
         """Return the state of the device."""
         status = self._zone_var("status", "OFF")
         if status == "ON":
-            return STATE_ON
+            return MediaPlayerState.ON
         if status == "OFF":
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
     @property
     def source(self):
@@ -143,11 +143,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
     def source_list(self):
         """Return a list of available input sources."""
         return [x[1] for x in self._sources]
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_title(self):
