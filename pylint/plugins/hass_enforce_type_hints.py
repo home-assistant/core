@@ -1785,6 +1785,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["list[str]", None],
                 ),
                 TypeHintMatch(
+                    function_name="supported_features",
+                    return_type=["MediaPlayerEntityFeature", "int"],
+                ),
+                TypeHintMatch(
                     function_name="turn_on",
                     return_type=None,
                     has_async_counterpart=True,

@@ -107,7 +107,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return XBOX_STATE_MAP[status.power_state]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
             return (
