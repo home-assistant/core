@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Ponovna provjera autenti\u010dnosti je uspje\u0161na"
+        }
+    }
+}

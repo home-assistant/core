@@ -39,6 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_URL_ENERGY,
+    CONF_URL_PUBLIC_WEATHER,
     CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
@@ -702,6 +703,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._device_name = f"{self._area_name}"
         self._attr_name = f"{description.name}"
         self._show_on_map = area.show_on_map
+        self._config_url = CONF_URL_PUBLIC_WEATHER
         self._attr_unique_id = (
             f"{self._device_name.replace(' ', '-')}-{description.key}"
         )

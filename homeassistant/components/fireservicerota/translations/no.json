@@ -17,6 +17,12 @@
                 },
                 "description": "Autentiseringstokener ble ugyldige, logg inn for \u00e5 gjenskape dem."
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Autentiseringstokener ble ugyldige, logg p\u00e5 for \u00e5 gjenskape dem."
+            },
             "user": {
                 "data": {
                     "password": "Passord",

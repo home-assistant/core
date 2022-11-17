@@ -60,17 +60,21 @@ TEST_EVENT = {
 }
 
 
+@pytest.fixture(
+    autouse=True, scope="module", params=["reader", "owner", "freeBusyReader"]
+)
+def calendar_access_role(request) -> str:
+    """Fixture to exercise access roles in tests."""
+    return request.param
+
+
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    hass,
     test_api_calendar,
     mock_calendars_list,
-    config_entry,
 ):
-    """Fixture that pulls in the default fixtures for tests in this file."""
+    """Fixture that sets up the default API responses during integration setup."""
     mock_calendars_list({"items": [test_api_calendar]})
-    config_entry.add_to_hass(hass)
-    return
 
 
 def get_events_url(entity: str, start: str, end: str) -> str:
@@ -305,15 +309,12 @@ async def test_missing_summary(hass, mock_events_list_items, component_setup):
 async def test_update_error(
     hass,
     component_setup,
-    mock_calendars_list,
     mock_events_list,
-    test_api_calendar,
     aioclient_mock,
 ):
     """Test that the calendar update handles a server error."""
 
     now = dt_util.now()
-    mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list(
         {
             "items": [
@@ -520,7 +521,6 @@ async def test_opaque_event(
 async def test_scan_calendar_error(
     hass,
     component_setup,
-    test_api_calendar,
     mock_calendars_list,
     config_entry,
 ):
@@ -724,12 +724,15 @@ async def test_invalid_unique_id_cleanup(
 
 
 @pytest.mark.parametrize(
-    "time_zone,event_order",
+    "time_zone,event_order,calendar_access_role",
+    # This only tests the reader role to force testing against the local
+    # database filtering based on start/end time. (free busy reader would
+    # just use the API response which this test is not exercising)
     [
-        ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
-        ("America/Regina", ["One", "Two", "All Day Event"]),
-        ("UTC", ["One", "All Day Event", "Two"]),
-        ("Asia/Tokyo", ["All Day Event", "One", "Two"]),
+        ("America/Los_Angeles", ["One", "Two", "All Day Event"], "reader"),
+        ("America/Regina", ["One", "Two", "All Day Event"], "reader"),
+        ("UTC", ["One", "All Day Event", "Two"], "reader"),
+        ("Asia/Tokyo", ["All Day Event", "One", "Two"], "reader"),
     ],
 )
 async def test_all_day_iter_order(

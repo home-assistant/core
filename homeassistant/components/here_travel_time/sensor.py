@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HereTravelTimeDataUpdateCoordinator
 from .const import (
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
@@ -42,6 +41,7 @@ from .const import (
     ICONS,
     IMPERIAL_UNITS,
 )
+from .coordinator import HERERoutingDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -101,7 +101,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         unique_id_prefix: str,
         name: str,
         sensor_description: SensorEntityDescription,
-        coordinator: HereTravelTimeDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -146,7 +146,7 @@ class OriginSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HereTravelTimeDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
@@ -174,7 +174,7 @@ class DestinationSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HereTravelTimeDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
@@ -202,7 +202,7 @@ class DistanceSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HereTravelTimeDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(

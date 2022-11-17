@@ -47,12 +47,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    get_device_uptime,
-    is_rpc_device_externally_powered,
-    temperature_unit,
-)
+from .utils import get_device_entry_gen, get_device_uptime
 
 
 @dataclass
@@ -84,7 +79,7 @@ SENSORS: Final = {
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
         name="Device Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -145,7 +140,7 @@ SENSORS: Final = {
         key="emeter|powerFactor",
         name="Power Factor",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: abs(round(value * 100, 1)),
+        value=lambda value: round(value * 100, 1),
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -226,7 +221,7 @@ SENSORS: Final = {
     ("sensor", "temp"): BlockSensorDescription(
         key="sensor|temp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -235,7 +230,7 @@ SENSORS: Final = {
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
         name="Temperature",
-        unit_fn=temperature_unit,
+        native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -407,7 +402,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -505,8 +499,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if unit_fn := description.unit_fn:
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
 
     @property
     def native_value(self) -> StateType:
@@ -553,10 +545,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry, sensors)
 
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        if block and (unit_fn := description.unit_fn):
-            self._attr_native_unit_of_measurement = unit_fn(block.info(attribute))
-
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
@@ -564,6 +552,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.block is not None:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit
 
 
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
@@ -578,3 +574,11 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.coordinator.device.initialized:
+            return self.entity_description.native_unit_of_measurement
+
+        return self.last_unit

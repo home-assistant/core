@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from enum import Enum
 import functools
@@ -12,14 +12,17 @@ from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
+import async_timeout
+
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from .data_entry_flow import FlowResult
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry, storage
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
@@ -660,26 +663,34 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
-        flow_context = {
-            "source": SOURCE_REAUTH,
-            "entry_id": self.entry_id,
-            "title_placeholders": {"name": self.title},
-            "unique_id": self.unique_id,
-        }
-
-        if context:
-            flow_context.update(context)
-
-        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
-            if flow["context"] == flow_context:
-                return
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 self.domain,
-                context=flow_context,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
                 data=self.data | (data or {}),
             )
+        )
+
+    @callback
+    def async_get_active_flows(
+        self, hass: HomeAssistant, sources: set[str]
+    ) -> Generator[FlowResult, None, None]:
+        """Get any active flows of certain sources for this entry."""
+        return (
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
+            if flow["context"].get("source") in sources
+            and flow["context"].get("entry_id") == self.entry_id
         )
 
     @callback
@@ -1237,6 +1248,36 @@ class ConfigEntries:
 
         await entry.async_setup(self.hass, integration=integration)
         return True
+
+    async def async_wait_for_states(
+        self, entry: ConfigEntry, states: set[ConfigEntryState], timeout: float = 60.0
+    ) -> ConfigEntryState:
+        """Wait for the setup of an entry to reach one of the supplied states state.
+
+        Returns the state the entry reached or raises asyncio.TimeoutError if the
+        entry did not reach one of the supplied states within the timeout.
+        """
+        state_reached_future: asyncio.Future[ConfigEntryState] = asyncio.Future()
+
+        @callback
+        def _async_entry_changed(
+            change: ConfigEntryChange, event_entry: ConfigEntry
+        ) -> None:
+            if (
+                event_entry is entry
+                and change is ConfigEntryChange.UPDATED
+                and entry.state in states
+            ):
+                state_reached_future.set_result(entry.state)
+
+        unsub = async_dispatcher_connect(
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
+        )
+        try:
+            async with async_timeout.timeout(timeout):
+                return await state_reached_future
+        finally:
+            unsub()
 
     async def async_unload_platforms(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]

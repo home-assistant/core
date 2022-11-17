@@ -7,10 +7,20 @@ from typing import Final
 from aioqsw.const import (
     QSD_FAN1_SPEED,
     QSD_FAN2_SPEED,
+    QSD_LINK,
+    QSD_PORT_NUM,
+    QSD_PORTS_STATISTICS,
+    QSD_PORTS_STATUS,
+    QSD_RX_ERRORS,
+    QSD_RX_OCTETS,
+    QSD_RX_SPEED,
+    QSD_SYSTEM_BOARD,
     QSD_SYSTEM_SENSOR,
     QSD_SYSTEM_TIME,
     QSD_TEMP,
     QSD_TEMP_MAX,
+    QSD_TX_OCTETS,
+    QSD_TX_SPEED,
     QSD_UPTIME,
 )
 
@@ -21,7 +31,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TIME_SECONDS
+from homeassistant.const import (
+    DATA_BYTES,
+    DATA_RATE_BYTES_PER_SECOND,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,6 +72,44 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     ),
     QswSensorEntityDescription(
         attributes={
+            ATTR_MAX: [QSD_SYSTEM_BOARD, QSD_PORT_NUM],
+        },
+        entity_registry_enabled_default=False,
+        icon="mdi:ethernet",
+        key=QSD_PORTS_STATUS,
+        name="Ports",
+        state_class=SensorStateClass.MEASUREMENT,
+        subkey=QSD_LINK,
+    ),
+    QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        icon="mdi:download-network",
+        key=QSD_PORTS_STATISTICS,
+        name="RX",
+        native_unit_of_measurement=DATA_BYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        subkey=QSD_RX_OCTETS,
+    ),
+    QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        icon="mdi:close-network",
+        key=QSD_PORTS_STATISTICS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="RX Errors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        subkey=QSD_RX_ERRORS,
+    ),
+    QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        icon="mdi:download-network",
+        key=QSD_PORTS_STATISTICS,
+        name="RX Speed",
+        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        subkey=QSD_RX_SPEED,
+    ),
+    QswSensorEntityDescription(
+        attributes={
             ATTR_MAX: [QSD_SYSTEM_SENSOR, QSD_TEMP_MAX],
         },
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -65,6 +118,24 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TEMP,
+    ),
+    QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        icon="mdi:upload-network",
+        key=QSD_PORTS_STATISTICS,
+        name="TX",
+        native_unit_of_measurement=DATA_BYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        subkey=QSD_TX_OCTETS,
+    ),
+    QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        icon="mdi:upload-network",
+        key=QSD_PORTS_STATISTICS,
+        name="TX Speed",
+        native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        subkey=QSD_TX_SPEED,
     ),
     QswSensorEntityDescription(
         icon="mdi:timer-outline",
@@ -116,7 +187,8 @@ class QswSensor(QswSensorEntity, SensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
-        self._attr_native_value = self.get_device_value(
+        value = self.get_device_value(
             self.entity_description.key, self.entity_description.subkey
         )
+        self._attr_native_value = value
         super()._async_update_attrs()
