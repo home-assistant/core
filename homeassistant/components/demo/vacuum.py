@@ -106,10 +106,12 @@ class DemoVacuum(VacuumEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name: str, supported_features: int) -> None:
+    def __init__(
+        self, name: str, supported_features: VacuumEntityFeature | int
+    ) -> None:
         """Initialize the vacuum."""
         self._attr_name = name
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self._state = False
         self._status = "Charging"
         self._fan_speed = FAN_SPEEDS[1]
@@ -145,11 +147,6 @@ class DemoVacuum(VacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
@@ -251,20 +248,15 @@ class StateDemoVacuum(StateVacuumEntity):
     """Representation of a demo vacuum supporting states."""
 
     _attr_should_poll = False
+    _attr_supported_features = SUPPORT_STATE_SERVICES
 
     def __init__(self, name: str) -> None:
         """Initialize the vacuum."""
         self._attr_name = name
-        self._supported_features = SUPPORT_STATE_SERVICES
         self._state = STATE_DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
         self._battery_level = 100
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def state(self) -> str:

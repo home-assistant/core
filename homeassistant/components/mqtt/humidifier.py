@@ -271,8 +271,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._attr_available_modes = []
         if self._attr_available_modes:
             self._attr_supported_features = HumidifierEntityFeature.MODES
-        else:
-            self._attr_supported_features = 0
 
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None

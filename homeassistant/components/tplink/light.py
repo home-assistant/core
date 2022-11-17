@@ -312,7 +312,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     device: SmartLightStrip
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature | int:
         """Flag supported features."""
         return super().supported_features | LightEntityFeature.EFFECT
 

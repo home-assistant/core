@@ -95,7 +95,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return oscillating == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature | int:
         """Flag supported features."""
         features = 0
 

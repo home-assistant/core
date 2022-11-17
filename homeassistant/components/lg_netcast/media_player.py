@@ -197,7 +197,7 @@ class LgTVDevice(MediaPlayerEntity):
         return self._program_name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._on_action_script:
             return SUPPORT_LGTV | MediaPlayerEntityFeature.TURN_ON

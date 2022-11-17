@@ -137,7 +137,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._current_source = None
         self._source_list: dict = {}
 
-        self._supported_features: int = 0
+        self._supported_features: MediaPlayerEntityFeature | int = 0
         self._update_states()
 
     async def async_added_to_hass(self) -> None:
@@ -314,7 +314,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.connect()
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported."""
         if self._wrapper.turn_on:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON

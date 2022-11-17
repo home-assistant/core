@@ -82,7 +82,7 @@ class BondFan(BondEntity, FanEntity):
         self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature | int:
         """Flag supported features."""
         features = 0
         if self._device.supports_speed():

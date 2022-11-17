@@ -256,9 +256,9 @@ def prepare_parameters(
     arrival: str | None = None
     departure: str | None = None
     if config.arrival is not None:
-        arrival = convert_time_to_isodate(config.arrival)
+        arrival = next_datetime(config.arrival).isoformat()
     if config.departure is not None:
-        departure = convert_time_to_isodate(config.departure)
+        departure = next_datetime(config.departure).isoformat()
 
     return (origin, destination, arrival, departure)
 
@@ -278,12 +278,12 @@ def build_hass_attribution(sections: dict) -> str | None:
     return None
 
 
-def convert_time_to_isodate(simple_time: time) -> str:
+def next_datetime(simple_time: time) -> datetime:
     """Take a time like 08:00:00 and combine it with the current date."""
     combined = datetime.combine(dt.start_of_local_day(), simple_time)
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
-    return combined.isoformat()
+    return combined
 
 
 class InvalidCoordinatesException(Exception):
