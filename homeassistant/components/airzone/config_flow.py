@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
@@ -94,6 +94,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "DHCP discovery detected Airzone WebServer: %s", self._discovered_mac
         )
+
+        options = ConnectionOptions(self._discovered_ip)
+        airzone = AirzoneLocalApi(
+            aiohttp_client.async_get_clientsession(self.hass), options
+        )
+        try:
+            await airzone.get_version()
+        except AirzoneError as err:
+            raise AbortFlow("cannot_connect") from err
 
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
