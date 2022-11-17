@@ -256,7 +256,7 @@ class ZhaRadioManager:
         await self.restore_backup(backup)
 
 
-class ZhaMigrationHelper:
+class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the

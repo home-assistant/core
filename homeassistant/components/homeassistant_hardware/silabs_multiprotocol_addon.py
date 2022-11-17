@@ -18,7 +18,7 @@ from homeassistant.components.hassio import (
     is_hassio,
 )
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-from homeassistant.components.zha.radio_manager import ZhaMigrationHelper
+from homeassistant.components.zha.radio_manager import ZhaMultiPANMigrationHelper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -79,7 +79,7 @@ class BaseMultiPanFlow(FlowHandler):
         # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
-        self._zha_migration_mgr: ZhaMigrationHelper | None = None
+        self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
 
     @property
     @abstractmethod
@@ -279,7 +279,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
 
         if zha_entries:
-            zha_migration_mgr = ZhaMigrationHelper(self.hass, zha_entries[0])
+            zha_migration_mgr = ZhaMultiPANMigrationHelper(self.hass, zha_entries[0])
             migration_data = {
                 "new_discovery_info": {
                     "name": self._zha_name(),

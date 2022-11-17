@@ -643,7 +643,7 @@ async def test_option_flow_addon_info_fails(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_initiate_migration",
+    "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_initiate_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
@@ -705,7 +705,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_finish_migration",
+    "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_finish_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
