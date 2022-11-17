@@ -116,11 +116,7 @@ class DecoraWifiLight(LightEntity):
         """Return supported features."""
         if self._switch.canSetLevel:
             return LightEntityFeature.TRANSITION
-<<<<<<< HEAD
         return LightEntityFeature(0)
-=======
-        return LightEntityFeature.NONE
->>>>>>> 6c6b694288 (Adjust decora_wifi)
 
     @property
     def name(self):
