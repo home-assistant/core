@@ -1513,14 +1513,14 @@ def async_track_utc_time_change(
     # Avoid aligning all time trackers to the same second
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
-    microseconds = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
+    microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
 
     def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
         localized_now = dt_util.as_local(now) if local else now
         return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
-        ).replace(microsecond=microseconds)
+        ).replace(microsecond=microsecond)
 
     time_listener: CALLBACK_TYPE | None = None
 
