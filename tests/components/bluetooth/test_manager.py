@@ -1,7 +1,7 @@
 """Tests for the Bluetooth integration manager."""
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from bleak.backends.scanner import BLEDevice
 from bluetooth_adapters import AdvertisementHistory
@@ -275,8 +275,8 @@ async def test_restore_history_from_dbus(hass, one_adapter):
     }
 
     with patch(
-        "bluetooth_adapters.BlueZDBusObjects",
-        return_value=MagicMock(load=AsyncMock(), history=history),
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()

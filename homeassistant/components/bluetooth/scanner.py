@@ -16,6 +16,7 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from bluetooth_adapters import DEFAULT_ADDRESS, adapter_human_name
 from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -25,14 +26,13 @@ from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
 from .const import (
-    DEFAULT_ADDRESS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
 from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBleak
-from .util import adapter_human_name, async_reset_adapter
+from .util import async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = monotonic_time_coarse
