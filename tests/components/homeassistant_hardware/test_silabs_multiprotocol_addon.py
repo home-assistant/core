@@ -54,6 +54,22 @@ class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
             flow_control=True,
         )
 
+    async def _async_zha_physical_discovery(self) -> dict[str, Any]:
+        """Return ZHA discovery data when multiprotocol FW is not used.
+
+        Passed to ZHA do determine if the ZHA config entry is connected to the radio
+        being migrated.
+        """
+        return {
+            "name": "Test",
+            "port": {
+                "path": "/dev/ttyTEST123",
+                "baudrate": 115200,
+                "flow_control": "hardware",
+            },
+            "radio_type": "efr32",
+        }
+
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return "Test Multi-PAN"

@@ -42,13 +42,18 @@ CONNECT_DELAY_S = 1.0
 
 MIGRATION_RETRIES = 10
 
-HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
-        vol.Required("new_port"): dict,
-        vol.Required("new_radio_type"): str,
-        vol.Required("old_port"): dict,
-        vol.Required("old_radio_type"): str,
+        vol.Required("port"): dict,
+        vol.Required("radio_type"): str,
+    }
+)
+
+HARDWARE_MIGRATION_SCHEMA = vol.Schema(
+    {
+        vol.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
+        vol.Required("old_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
     }
 )
 
@@ -267,19 +272,19 @@ class ZhaMigrationHelper:
         """Prepare ZHA migration."""
         migration_data = HARDWARE_MIGRATION_SCHEMA(data)
 
-        name = migration_data["name"]
+        name = migration_data["new_discovery_info"]["name"]
         new_radio_type = self._radio_mgr.parse_radio_type(
-            migration_data["new_radio_type"]
+            migration_data["new_discovery_info"]["radio_type"]
         )
         old_radio_type = self._radio_mgr.parse_radio_type(
-            migration_data["old_radio_type"]
+            migration_data["old_discovery_info"]["radio_type"]
         )
 
         new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
-            migration_data["new_port"]
+            migration_data["new_discovery_info"]["port"]
         )
         old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
-            migration_data["old_port"]
+            migration_data["old_discovery_info"]["port"]
         )
 
         if (

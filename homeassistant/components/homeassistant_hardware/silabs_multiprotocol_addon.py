@@ -91,6 +91,14 @@ class BaseMultiPanFlow(FlowHandler):
         """Return the radio serial port settings."""
 
     @abstractmethod
+    async def _async_zha_physical_discovery(self) -> dict[str, Any]:
+        """Return ZHA discovery data when multiprotocol FW is not used.
+
+        Passed to ZHA do determine if the ZHA config entry is connected to the radio
+        being migrated.
+        """
+
+    @abstractmethod
     def _zha_name(self) -> str:
         """Return the ZHA name."""
 
@@ -273,21 +281,16 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if zha_entries:
             zha_migration_mgr = ZhaMigrationHelper(self.hass, zha_entries[0])
             migration_data = {
-                "name": self._zha_name(),
-                "new_port": {
-                    "path": get_zigbee_socket(self.hass, addon_info),
-                    "baudrate": 115200,
-                    "flow_control": "hardware",
+                "new_discovery_info": {
+                    "name": self._zha_name(),
+                    "port": {
+                        "path": get_zigbee_socket(self.hass, addon_info),
+                        "baudrate": 115200,
+                        "flow_control": "hardware",
+                    },
+                    "radio_type": "efr32",
                 },
-                "new_radio_type": "efr32",
-                "old_port": {
-                    "path": serial_port_settings.device,
-                    "baudrate": int(serial_port_settings.baudrate),
-                    "flow_control": "hardware"
-                    if serial_port_settings.flow_control
-                    else None,
-                },
-                "old_radio_type": "efr32",
+                "old_discovery_info": await self._async_zha_physical_discovery(),
             }
             _LOGGER.debug("Starting ZHA migration with: %s", migration_data)
             if await zha_migration_mgr.async_prepare_yellow_migration(migration_data):

@@ -26,7 +26,7 @@ from .core.const import (
     DOMAIN,
     RadioType,
 )
-from .radio_manager import ZhaRadioManager
+from .radio_manager import HARDWARE_DISCOVERY_SCHEMA, ZhaRadioManager
 
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
@@ -51,14 +51,6 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 DEFAULT_ZHA_ZEROCONF_PORT = 6638
 ESPHOME_API_PORT = 6053
-
-HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): str,
-        vol.Required("port"): dict,
-        vol.Required("radio_type"): str,
-    }
-)
 
 
 def _format_backup_choice(
