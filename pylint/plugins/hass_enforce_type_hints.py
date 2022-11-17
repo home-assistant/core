@@ -2052,16 +2052,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="RemoteEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="supported_features",
-                    return_type="int",
+                    function_name="activity_list",
+                    return_type=["list[str]", None],
                 ),
                 TypeHintMatch(
                     function_name="current_activity",
                     return_type=["str", None],
                 ),
                 TypeHintMatch(
-                    function_name="activity_list",
-                    return_type=["list[str]", None],
+                    function_name="supported_features",
+                    return_type=["RemoteEntityFeature", "int"],
                 ),
                 TypeHintMatch(
                     function_name="send_command",
