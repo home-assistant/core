@@ -319,7 +319,7 @@ class ZhaMigrationHelper:
             options=self._config_entry.options,
             title=name,
         )
-        return False
+        return True
 
     async def async_finish_yellow_migration(self) -> bool:
         """Finish ZHA migration."""
