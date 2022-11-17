@@ -1,6 +1,7 @@
 """Test common."""
 import datetime as dt
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+import pytest
 
 CONSUMPTION_DATA_1 = [
     {
@@ -41,7 +42,7 @@ PRODUCTION_DATA_1 = [
 
 def mock_get_homes(only_active=True):
     """Return a list of mocked Tibber homes."""
-    tibber_home = AsyncMock()
+    tibber_home = MagicMock()
     tibber_home.name = "Name"
     tibber_home.home_id = "home_id"
     tibber_home.currency = "NOK"
@@ -57,3 +58,33 @@ def mock_get_homes(only_active=True):
     tibber_home.get_historic_data.side_effect = get_historic_data
 
     return [tibber_home]
+
+
+def mock_connection_with_home(access_token, websession, time_zone):
+    """Returns a mocked Tibber object with mocked home data"""
+    tibber_connection = AsyncMock()
+
+    tibber_connection.name = "Mocked Name"
+    tibber_connection.access_token = access_token
+    tibber_connection.websession = websession
+    tibber_connection.time_zone = time_zone
+
+    tibber_connection.update_info = AsyncMock(return_value=None)
+    tibber_connection.get_homes = mock_get_homes
+    return tibber_connection
+
+
+def mock_connection(access_token, websession, time_zone):
+    """Returns a mocked Tibber object"""
+    tibber_connection = AsyncMock()
+
+    tibber_connection.name = "Mocked Name"
+    tibber_connection.access_token = access_token
+    tibber_connection.websession = websession
+    tibber_connection.time_zone = time_zone
+
+    tibber_connection.update_info = AsyncMock(return_value=None)
+
+    tibber_connection.get_homes = MagicMock(return_value=[])
+
+    return tibber_connection
