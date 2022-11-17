@@ -136,7 +136,7 @@ async def test_media_browse(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
         MediaPlayerEntityFeature.BROWSE_MEDIA,
     ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
@@ -179,7 +179,7 @@ async def test_media_browse(hass, hass_ws_client):
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
-        "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
         MediaPlayerEntityFeature.BROWSE_MEDIA,
     ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
@@ -210,7 +210,7 @@ async def test_group_members_available_when_off(hass):
 
     # Fake group support for DemoYoutubePlayer
     with patch(
-        "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
         MediaPlayerEntityFeature.GROUPING | MediaPlayerEntityFeature.TURN_OFF,
     ):
         await hass.services.async_call(
