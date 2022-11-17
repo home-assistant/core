@@ -30,20 +30,20 @@ async def test_qnap_qsw_create_sensors(
     assert state.state == "22"
 
     state = hass.states.get("sensor.qsw_m408_4c_rx")
-    assert state.state == "0.02"
+    assert state.state == "22200"
 
     state = hass.states.get("sensor.qsw_m408_4c_rx_speed")
-    assert state.state == "0.0"
+    assert state.state == "0"
 
     state = hass.states.get("sensor.qsw_m408_4c_temperature")
     assert state.state == "31"
     assert state.attributes.get(ATTR_MAX) == 85
 
     state = hass.states.get("sensor.qsw_m408_4c_tx")
-    assert state.state == "0.01"
+    assert state.state == "11100"
 
     state = hass.states.get("sensor.qsw_m408_4c_tx_speed")
-    assert state.state == "0.0"
+    assert state.state == "0"
 
     state = hass.states.get("sensor.qsw_m408_4c_uptime")
     assert state.state == "91"
