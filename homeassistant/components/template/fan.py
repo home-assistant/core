@@ -147,7 +147,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_mode_template = config.get(CONF_PRESET_MODE_TEMPLATE)
         self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
         self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
-        self._attr_supported_features = 0
 
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
