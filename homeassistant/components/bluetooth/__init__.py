@@ -20,6 +20,7 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
@@ -41,6 +42,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
+from .base_scanner import BaseHaRemoteScanner, BaseHaScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -55,18 +57,13 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
-    BaseHaRemoteScanner,
-    BaseHaScanner,
     BluetoothCallback,
     BluetoothChange,
     BluetoothScanningMode,
-    BluetoothServiceInfo,
-    BluetoothServiceInfoBleak,
-    HaBleakScannerWrapper,
-    HaBluetoothConnector,
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, ScannerStartError
+from .wrappers import HaBleakScannerWrapper, HaBluetoothConnector
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
