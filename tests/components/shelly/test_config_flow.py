@@ -1,4 +1,6 @@
 """Test the Shelly config flow."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import (
@@ -924,6 +926,27 @@ async def test_options_flow_enabled_gen_2(hass, mock_rpc_device, hass_ws_client)
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_disabled_sleepy_gen_2(
+    hass, mock_rpc_device, hass_ws_client
+):
+    """Test options are disabled for sleepy gen2 devices."""
+    await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass, 2, sleep_period=10)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+            "domain": "shelly",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
 
 
