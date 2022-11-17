@@ -109,7 +109,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Initialize a Media Group entity."""
         self._name = name
         self._state: str | None = None
-        self._attr_supported_features = 0
         self._attr_unique_id = unique_id
 
         self._entities = entities

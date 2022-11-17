@@ -110,7 +110,6 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
-        self._attr_supported_features = 0
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
