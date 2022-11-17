@@ -41,7 +41,7 @@ jobs:
             echo "$targets"
 
             for id in $(echo $targets | jq '.id'); do
-              curl -fsS \
+              curl -sS --fail-with-body \
                 -X DELETE \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: token ${{ github.token }}" \
