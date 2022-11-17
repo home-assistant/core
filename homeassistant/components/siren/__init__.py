@@ -64,9 +64,8 @@ def process_turn_on_params(
 
     Filters out unsupported params and validates the rest.
     """
-    supported_features = siren.supported_features or 0
 
-    if not supported_features & SirenEntityFeature.TONES:
+    if not siren.supported_features & SirenEntityFeature.TONES:
         params.pop(ATTR_TONE, None)
     elif (tone := params.get(ATTR_TONE)) is not None:
         # Raise an exception if the specified tone isn't available
@@ -92,9 +91,9 @@ def process_turn_on_params(
                 key for key, value in siren.available_tones.items() if value == tone
             )
 
-    if not supported_features & SirenEntityFeature.DURATION:
+    if not siren.supported_features & SirenEntityFeature.DURATION:
         params.pop(ATTR_DURATION, None)
-    if not supported_features & SirenEntityFeature.VOLUME_SET:
+    if not siren.supported_features & SirenEntityFeature.VOLUME_SET:
         params.pop(ATTR_VOLUME_LEVEL, None)
 
     return params
@@ -169,10 +168,8 @@ class SirenEntity(ToggleEntity):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
-
         if (
-            supported_features & SirenEntityFeature.TONES
+            self.supported_features & SirenEntityFeature.TONES
             and self.available_tones is not None
         ):
             return {ATTR_AVAILABLE_TONES: self.available_tones}
