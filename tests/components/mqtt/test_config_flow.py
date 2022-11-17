@@ -194,6 +194,45 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
+async def test_user_v5_connection_works(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
+    """Test we can finish a config flow."""
+    mock_try_connection.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"broker": "127.0.0.1", "advanced_options": True}
+    )
+
+    assert result["step_id"] == "broker"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "another-broker",
+            mqtt.CONF_PORT: 2345,
+            mqtt.CONF_PROTOCOL: "5",
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["result"].data == {
+        "broker": "another-broker",
+        "discovery": True,
+        "discovery_prefix": "homeassistant",
+        "port": 2345,
+        "protocol": "5",
+    }
+    # Check we tried the connection
+    assert len(mock_try_connection.mock_calls) == 1
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 1
+
+
 async def test_user_connection_fails(
     hass, mock_try_connection_time_out, mock_finish_setup
 ):
