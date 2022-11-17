@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
@@ -27,9 +27,6 @@ from .mixins import (
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .subscription import EntitySubscription
 from .util import get_mqtt_data, valid_subscribe_topic
-
-if TYPE_CHECKING:
-    from homeassistant.components.tag import TagProtocol
 
 LOG_NAME = "Tag"
 
@@ -139,10 +136,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             if not tag_id:  # No output from template, ignore
                 return
 
-            # Importing tag via hass.components in case it is overridden
-            # in a custom_components (custom_components.tag)
-            tag: TagProtocol = self.hass.components.tag
-            await tag.async_scan_tag(tag_id, self.device_id)
+            await tag.async_scan_tag(self.hass, tag_id, self.device_id)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

@@ -1,4 +1,6 @@
 """Support for MQTT Template lights."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -16,6 +18,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -23,9 +26,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -107,8 +112,12 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
 
 
 async def async_setup_entity_template(
-    hass, config, async_add_entities, config_entry, discovery_data
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a MQTT Template light."""
     async_add_entities([MqttLightTemplate(hass, config, config_entry, discovery_data)])
 
