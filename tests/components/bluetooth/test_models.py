@@ -11,15 +11,17 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 import pytest
 
-from homeassistant.components.bluetooth.models import (
-    CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
     BaseHaScanner,
-    HaBleakClientWrapper,
     HaBleakScannerWrapper,
     HaBluetoothConnector,
 )
+from homeassistant.components.bluetooth.const import (
+    CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
+from homeassistant.components.bluetooth.wrappers import HaBleakClientWrapper
 import homeassistant.util.dt as dt_util
 
 from . import (

@@ -17,7 +17,7 @@ from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
-from .models import MANAGER
+from . import models
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
@@ -67,8 +67,8 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     @classmethod
     async def discover(cls, timeout: float = 5.0, **kwargs: Any) -> list[BLEDevice]:
         """Discover devices."""
-        assert MANAGER is not None
-        return list(MANAGER.async_discovered_devices(True))
+        assert models.MANAGER is not None
+        return list(models.MANAGER.async_discovered_devices(True))
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
@@ -105,8 +105,8 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        assert MANAGER is not None
-        return list(MANAGER.async_discovered_devices(True))
+        assert models.MANAGER is not None
+        return list(models.MANAGER.async_discovered_devices(True))
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
@@ -125,9 +125,9 @@ class HaBleakScannerWrapper(BaseBleakScanner):
             return
         self._cancel_callback()
         super().register_detection_callback(self._advertisement_data_callback)
-        assert MANAGER is not None
+        assert models.MANAGER is not None
         assert self._callback is not None
-        self._detection_cancel = MANAGER.async_register_bleak_callback(
+        self._detection_cancel = models.MANAGER.async_register_bleak_callback(
             self._callback, self._mapped_filters
         )
 
@@ -195,7 +195,7 @@ class HaBleakClientWrapper(BleakClient):
             or not self.__ble_device
             or not self._async_get_backend_for_ble_device(self.__ble_device)
         ):
-            assert MANAGER is not None
+            assert models.MANAGER is not None
             wrapped_backend = (
                 self._async_get_backend() or self._async_get_fallback_backend()
             )
@@ -207,7 +207,7 @@ class HaBleakClientWrapper(BleakClient):
                 self.__ble_device,
                 disconnected_callback=self.__disconnected_callback,
                 timeout=self.__timeout,
-                hass=MANAGER.hass,
+                hass=models.MANAGER.hass,
             )
         return await super().connect(**kwargs)
 
@@ -234,9 +234,9 @@ class HaBleakClientWrapper(BleakClient):
     @hass_callback
     def _async_get_backend(self) -> _HaWrappedBleakBackend | None:
         """Get the bleak backend for the given address."""
-        assert MANAGER is not None
+        assert models.MANAGER is not None
         address = self.__address
-        ble_device = MANAGER.async_ble_device_from_address(address, True)
+        ble_device = models.MANAGER.async_ble_device_from_address(address, True)
         if ble_device is None:
             raise BleakError(f"No device found for address {address}")
 
@@ -255,12 +255,10 @@ class HaBleakClientWrapper(BleakClient):
         # We need to try all backends to find one that can
         # connect to the device.
         #
-        assert MANAGER is not None
+        assert models.MANAGER is not None
         address = self.__address
-        device_advertisement_datas = (
-            MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
-                address, True
-            )
+        device_advertisement_datas = models.MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
+            address, True
         )
         for device_advertisement_data in sorted(
             device_advertisement_datas,

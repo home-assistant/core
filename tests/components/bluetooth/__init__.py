@@ -11,6 +11,8 @@ from bluetooth_adapters import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth import (
     DOMAIN,
     SOURCE_LOCAL,
+    BluetoothServiceInfo,
+    BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
     models,
 )
@@ -94,7 +96,7 @@ def inject_advertisement_with_time_and_source_connectable(
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time and connectable status."""
     async_get_advertisement_callback(hass)(
-        models.BluetoothServiceInfoBleak(
+        BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
             address=device.address,
             rssi=adv.rssi,
@@ -111,7 +113,7 @@ def inject_advertisement_with_time_and_source_connectable(
 
 
 def inject_bluetooth_service_info_bleak(
-    hass: HomeAssistant, info: models.BluetoothServiceInfoBleak
+    hass: HomeAssistant, info: BluetoothServiceInfoBleak
 ) -> None:
     """Inject an advertisement into the manager with connectable status."""
     advertisement_data = generate_advertisement_data(
@@ -137,7 +139,7 @@ def inject_bluetooth_service_info_bleak(
 
 
 def inject_bluetooth_service_info(
-    hass: HomeAssistant, info: models.BluetoothServiceInfo
+    hass: HomeAssistant, info: BluetoothServiceInfo
 ) -> None:
     """Inject a BluetoothServiceInfo into the manager."""
     advertisement_data = generate_advertisement_data(  # type: ignore[no-untyped-call]
