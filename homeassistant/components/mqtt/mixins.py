@@ -240,6 +240,7 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
         """Return a validator."""
         nonlocal warned
 
+        # Logged error and repair can be removed from HA 2023.6
         if domain in warned:
             return config
 
