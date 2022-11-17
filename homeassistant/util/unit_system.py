@@ -249,6 +249,8 @@ METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=UnitOfLength.MILLIMETERS,
     conversions={
+        # Convert non-metric accumulated precipitation
+        ("accumulated_precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -279,6 +281,8 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=UnitOfLength.INCHES,
     conversions={
+        # Convert non-USCS accumulated precipitation
+        ("accumulated_precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
