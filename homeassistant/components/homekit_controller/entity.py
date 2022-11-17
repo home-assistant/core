@@ -175,6 +175,10 @@ class HomeKitEntity(Entity):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
 
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self._accessory.async_request_update()
+
 
 class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""

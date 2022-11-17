@@ -47,7 +47,7 @@
       "bad_will": "Invalid will topic",
       "bad_discovery_prefix": "Invalid discovery prefix",
       "bad_certificate": "The CA certificate is invalid",
-      "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
+      "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
       "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
       "bad_client_cert_key": "Client certificate and private are no valid pair",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

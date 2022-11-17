@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from . import init_integration
+from . import init_integration, mutate_rpc_device_status
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
@@ -374,7 +374,7 @@ async def test_rpc_device_switch_type_lights_mode(hass, mock_rpc_device, monkeyp
     )
     assert hass.states.get("light.test_switch_0").state == STATE_ON
 
-    monkeypatch.setitem(mock_rpc_device.status["switch:0"], "output", False)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "output", False)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,

@@ -114,7 +114,7 @@ class PhilipsTVMediaPlayer(
         await self.coordinator.async_request_refresh()
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supports = self._supports
         if self._turn_on or (self._tv.on and self._tv.powerstate is not None):

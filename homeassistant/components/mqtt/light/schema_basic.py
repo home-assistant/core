@@ -1,6 +1,9 @@
 """Support for MQTT lights."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -25,6 +28,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     valid_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -33,9 +37,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -52,10 +58,14 @@ from ..const import (
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import (
+    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PayloadSentinel,
+    PublishPayloadType,
     ReceiveMessage,
+    ReceivePayloadType,
+    TemplateVarsType,
 )
 from ..util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -243,8 +253,12 @@ PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
 
 
 async def async_setup_entity_basic(
-    hass, config, async_add_entities, config_entry, discovery_data=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a MQTT Light."""
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
@@ -254,32 +268,41 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
+    _topic: dict[str, str | None]
+    _payload: dict[str, str]
+    _command_templates: dict[
+        str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
+    ]
+    _value_templates: dict[
+        str, Callable[[ReceivePayloadType, ReceivePayloadType], ReceivePayloadType]
+    ]
+    _optimistic: bool
+    _optimistic_brightness: bool
+    _optimistic_color_mode: bool
+    _optimistic_color_temp: bool
+    _optimistic_effect: bool
+    _optimistic_hs_color: bool
+    _optimistic_rgb_color: bool
+    _optimistic_rgbw_color: bool
+    _optimistic_rgbww_color: bool
+    _optimistic_xy_color: bool
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize MQTT light."""
-        self._topic = None
-        self._payload = None
-        self._command_templates = None
-        self._value_templates = None
-        self._optimistic = False
-        self._optimistic_brightness = False
-        self._optimistic_color_mode = False
-        self._optimistic_color_temp = False
-        self._optimistic_effect = False
-        self._optimistic_hs_color = False
-        self._optimistic_rgb_color = False
-        self._optimistic_rgbw_color = False
-        self._optimistic_rgbww_color = False
-        self._optimistic_xy_color = False
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_BASIC
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
@@ -288,7 +311,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
             config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
 
-        topic = {
+        topic: dict[str, str | None] = {
             key: config.get(key)
             for key in (
                 CONF_BRIGHTNESS_COMMAND_TOPIC,
@@ -316,32 +339,19 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._topic = topic
         self._payload = {"on": config[CONF_PAYLOAD_ON], "off": config[CONF_PAYLOAD_OFF]}
 
-        value_templates = {}
-        for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = None
-        if CONF_VALUE_TEMPLATE in config:
-            value_templates = {
-                key: config.get(CONF_VALUE_TEMPLATE) for key in VALUE_TEMPLATE_KEYS
-            }
-        for key in VALUE_TEMPLATE_KEYS & config.keys():
-            value_templates[key] = config[key]
         self._value_templates = {
             key: MqttValueTemplate(
-                template, entity=self
+                config.get(key), entity=self
             ).async_render_with_possible_json_value
-            for key, template in value_templates.items()
+            for key in VALUE_TEMPLATE_KEYS
         }
 
-        command_templates = {}
-        for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = None
-        for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            command_templates[key] = MqttCommandTemplate(
-                config[key], entity=self
-            ).async_render
-        self._command_templates = command_templates
+        self._command_templates = {
+            key: MqttCommandTemplate(config.get(key), entity=self).async_render
+            for key in COMMAND_TEMPLATE_KEYS
+        }
 
-        optimistic = config[CONF_OPTIMISTIC]
+        optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic_color_mode = (
             optimistic or topic[CONF_COLOR_MODE_STATE_TOPIC] is None
         )
@@ -368,7 +378,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._optimistic_effect = optimistic or topic[CONF_EFFECT_STATE_TOPIC] is None
         self._optimistic_hs_color = optimistic or topic[CONF_HS_STATE_TOPIC] is None
         self._optimistic_xy_color = optimistic or topic[CONF_XY_STATE_TOPIC] is None
-        supported_color_modes = set()
+        supported_color_modes: set[ColorMode] = set()
         if topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
             supported_color_modes.add(ColorMode.COLOR_TEMP)
             self._attr_color_mode = ColorMode.COLOR_TEMP
@@ -413,13 +423,14 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _is_optimistic(self, attribute: str) -> bool:
         """Return True if the attribute is optimistically updated."""
-        return getattr(self, f"_optimistic_{attribute}")
+        attr: bool = getattr(self, f"_optimistic_{attribute}")
+        return attr
 
-    def _prepare_subscribe_topics(self):  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
         """(Re)Subscribe to topics."""
-        topics = {}
+        topics: dict[str, dict[str, Any]] = {}
 
-        def add_topic(topic, msg_callback):
+        def add_topic(topic: str, msg_callback: MessageCallbackType) -> None:
             """Add a topic."""
             if self._topic[topic] is not None:
                 topics[topic] = {
@@ -431,9 +442,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg):
+        def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
+                msg.payload, PayloadSentinel.NONE
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
@@ -473,7 +486,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
 
-        def _rgbx_received(msg, template, color_mode, convert_color):
+        def _rgbx_received(
+            msg: ReceiveMessage,
+            template: str,
+            color_mode: ColorMode,
+            convert_color: Callable[..., tuple[int, ...]],
+        ) -> tuple[int, ...] | None:
             """Handle new MQTT messages for RGBW and RGBWW."""
             payload = self._value_templates[template](
                 msg.payload, PayloadSentinel.DEFAULT
@@ -483,7 +501,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "Ignoring empty %s message from '%s'", color_mode, msg.topic
                 )
                 return None
-            color = tuple(int(val) for val in payload.split(","))
+            color = tuple(int(val) for val in str(payload).split(","))
             if self._optimistic_color_mode:
                 self._attr_color_mode = color_mode
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
@@ -494,21 +512,21 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def rgb_received(msg):
+        def rgb_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGB."""
             rgb = _rgbx_received(
                 msg, CONF_RGB_VALUE_TEMPLATE, ColorMode.RGB, lambda *x: x
             )
-            if not rgb:
+            if rgb is None:
                 return
-            self._attr_rgb_color = rgb
+            self._attr_rgb_color = cast(tuple[int, int, int], rgb)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def rgbw_received(msg):
+        def rgbw_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBW."""
             rgbw = _rgbx_received(
                 msg,
@@ -516,16 +534,16 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 ColorMode.RGBW,
                 color_util.color_rgbw_to_rgb,
             )
-            if not rgbw:
+            if rgbw is None:
                 return
-            self._attr_rgbw_color = rgbw
+            self._attr_rgbw_color = cast(tuple[int, int, int, int], rgbw)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBW_STATE_TOPIC, rgbw_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def rgbww_received(msg):
+        def rgbww_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBWW."""
             rgbww = _rgbx_received(
                 msg,
@@ -533,9 +551,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 ColorMode.RGBWW,
                 color_util.color_rgbww_to_rgb,
             )
-            if not rgbww:
+            if rgbww is None:
                 return
-            self._attr_rgbww_color = rgbww
+            self._attr_rgbww_color = cast(tuple[int, int, int, int, int], rgbww)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBWW_STATE_TOPIC, rgbww_received)
@@ -551,7 +569,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty color mode message from '%s'", msg.topic)
                 return
 
-            self._attr_color_mode = payload
+            self._attr_color_mode = str(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_COLOR_MODE_STATE_TOPIC, color_mode_received)
@@ -585,7 +603,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty effect message from '%s'", msg.topic)
                 return
 
-            self._attr_effect = payload
+            self._attr_effect = str(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
@@ -601,13 +619,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
                 return
             try:
-                hs_color = cast(
-                    tuple[float, float],
-                    tuple(float(val) for val in payload.split(",", 2)),
-                )
+                hs_color = tuple(float(val) for val in str(payload).split(",", 2))
                 if self._optimistic_color_mode:
                     self._attr_color_mode = ColorMode.HS
-                self._attr_hs_color = hs_color
+                self._attr_hs_color = cast(tuple[float, float], hs_color)
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
@@ -625,12 +640,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
                 return
 
-            xy_color = cast(
-                tuple[float, float], tuple(float(val) for val in payload.split(",", 2))
-            )
+            xy_color = tuple(float(val) for val in str(payload).split(",", 2))
             if self._optimistic_color_mode:
                 self._attr_color_mode = ColorMode.XY
-            self._attr_xy_color = xy_color
+            self._attr_xy_color = cast(tuple[float, float], xy_color)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
@@ -639,12 +652,14 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.hass, self._sub_state, topics
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
         last_state = await self.async_get_last_state()
 
-        def restore_state(attribute, condition_attribute=None):
+        def restore_state(
+            attribute: str, condition_attribute: str | None = None
+        ) -> None:
             """Restore a state attribute."""
             if condition_attribute is None:
                 condition_attribute = attribute
@@ -671,25 +686,28 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
-    async def async_turn_on(self, **kwargs):  # noqa: C901
+    async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.
         """
         should_update = False
-        on_command_type = self._config[CONF_ON_COMMAND_TYPE]
+        on_command_type: str = self._config[CONF_ON_COMMAND_TYPE]
 
-        async def publish(topic, payload):
+        async def publish(topic: str, payload: PublishPayloadType) -> None:
             """Publish an MQTT message."""
             await self.async_publish(
-                self._topic[topic],
+                str(self._topic[topic]),
                 payload,
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
                 self._config[CONF_ENCODING],
             )
 
-        def scale_rgbx(color, brightness=None):
+        def scale_rgbx(
+            color: tuple[int, ...],
+            brightness: int | None = None,
+        ) -> tuple[int, ...]:
             """Scale RGBx for brightness."""
             if brightness is None:
                 # If there's a brightness topic set, we don't want to scale the RGBx
@@ -697,23 +715,30 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+                    brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 255
             return tuple(int(channel * brightness / 255) for channel in color)
 
-        def render_rgbx(color, template, color_mode):
+        def render_rgbx(
+            color: tuple[int, ...],
+            template: str,
+            color_mode: ColorMode,
+        ) -> PublishPayloadType:
             """Render RGBx payload."""
-            if tpl := self._command_templates[template]:
-                keys = ["red", "green", "blue"]
-                if color_mode == ColorMode.RGBW:
-                    keys.append("white")
-                elif color_mode == ColorMode.RGBWW:
-                    keys.extend(["cold_white", "warm_white"])
-                rgb_color_str = tpl(variables=zip(keys, color))
-            else:
-                rgb_color_str = ",".join(str(channel) for channel in color)
-            return rgb_color_str
+            rgb_color_str = ",".join(str(channel) for channel in color)
+            keys = ["red", "green", "blue"]
+            if color_mode == ColorMode.RGBW:
+                keys.append("white")
+            elif color_mode == ColorMode.RGBWW:
+                keys.extend(["cold_white", "warm_white"])
+            variables = dict(zip(keys, color))
+            return self._command_templates[template](rgb_color_str, variables)
 
-        def set_optimistic(attribute, value, color_mode=None, condition_attribute=None):
+        def set_optimistic(
+            attribute: str,
+            value: Any,
+            color_mode: ColorMode | None = None,
+            condition_attribute: str | None = None,
+        ) -> bool:
             """Optimistically update a state attribute."""
             if condition_attribute is None:
                 condition_attribute = attribute
@@ -739,12 +764,13 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         ):
             kwargs[ATTR_BRIGHTNESS] = self.brightness or 255
 
-        hs_color = kwargs.get(ATTR_HS_COLOR)
+        hs_color: str | None = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
             await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
+        rgb: tuple[int, int, int] | None
         if (rgb := kwargs.get(ATTR_RGB_COLOR)) and self._topic[
             CONF_RGB_COMMAND_TOPIC
         ] is not None:
@@ -753,6 +779,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_RGB_COLOR, rgb, ColorMode.RGB)
 
+        rgbw: tuple[int, int, int, int] | None
         if (rgbw := kwargs.get(ATTR_RGBW_COLOR)) and self._topic[
             CONF_RGBW_COMMAND_TOPIC
         ] is not None:
@@ -761,6 +788,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
             should_update |= set_optimistic(ATTR_RGBW_COLOR, rgbw, ColorMode.RGBW)
 
+        rgbww: tuple[int, int, int, int, int] | None
         if (rgbww := kwargs.get(ATTR_RGBWW_COLOR)) and self._topic[
             CONF_RGBWW_COMMAND_TOPIC
         ] is not None:
@@ -769,6 +797,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
             should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, ColorMode.RGBWW)
 
+        xy_color: tuple[float, float] | None
         if (xy_color := kwargs.get(ATTR_XY_COLOR)) and self._topic[
             CONF_XY_COMMAND_TOPIC
         ] is not None:
@@ -779,16 +808,16 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             ATTR_BRIGHTNESS in kwargs
             and self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None
         ):
-            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / 255
-            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
+            brightness_normalized: float = kwargs[ATTR_BRIGHTNESS] / 255
+            brightness_scale: int = self._config[CONF_BRIGHTNESS_SCALE]
             device_brightness = min(
                 round(brightness_normalized * brightness_scale), brightness_scale
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
-            if tpl := self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]:
-                device_brightness = tpl(variables={"value": device_brightness})
-            await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness)
+            command_tpl = self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
+            device_brightness_payload = command_tpl(device_brightness, None)
+            await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness_payload)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
             ATTR_BRIGHTNESS in kwargs
@@ -796,8 +825,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
             rgb_color = self.rgb_color or (255,) * 3
-            rgb = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
+            rgb_scaled = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
+            rgb_s = render_rgbx(rgb_scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -806,8 +835,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_RGBW_COMMAND_TOPIC] is not None
         ):
             rgbw_color = self.rgbw_color or (255,) * 4
-            rgbw = scale_rgbx(rgbw_color, kwargs[ATTR_BRIGHTNESS])
-            rgbw_s = render_rgbx(rgbw, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
+            rgbw_b = scale_rgbx(rgbw_color, kwargs[ATTR_BRIGHTNESS])
+            rgbw_s = render_rgbx(rgbw_b, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -816,34 +845,35 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_RGBWW_COMMAND_TOPIC] is not None
         ):
             rgbww_color = self.rgbww_color or (255,) * 5
-            rgbww = scale_rgbx(rgbww_color, kwargs[ATTR_BRIGHTNESS])
-            rgbww_s = render_rgbx(rgbww, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
+            rgbww_b = scale_rgbx(rgbww_color, kwargs[ATTR_BRIGHTNESS])
+            rgbww_s = render_rgbx(rgbww_b, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         if (
             ATTR_COLOR_TEMP in kwargs
             and self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None
         ):
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
-            if tpl := self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]:
-                color_temp = tpl(variables={"value": color_temp})
-
+            ct_command_tpl = self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
+            color_temp = ct_command_tpl(int(kwargs[ATTR_COLOR_TEMP]), None)
             await publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
             should_update |= set_optimistic(
                 ATTR_COLOR_TEMP, kwargs[ATTR_COLOR_TEMP], ColorMode.COLOR_TEMP
             )
 
-        if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
-            effect = kwargs[ATTR_EFFECT]
-            if effect in self._config.get(CONF_EFFECT_LIST):
-                if tpl := self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]:
-                    effect = tpl(variables={"value": effect})
+        if (
+            ATTR_EFFECT in kwargs
+            and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None
+            and CONF_EFFECT_LIST in self._config
+        ):
+            if kwargs[ATTR_EFFECT] in self._config[CONF_EFFECT_LIST]:
+                eff_command_tpl = self._command_templates[CONF_EFFECT_COMMAND_TEMPLATE]
+                effect = eff_command_tpl(kwargs[ATTR_EFFECT], None)
                 await publish(CONF_EFFECT_COMMAND_TOPIC, effect)
                 should_update |= set_optimistic(ATTR_EFFECT, kwargs[ATTR_EFFECT])
 
         if ATTR_WHITE in kwargs and self._topic[CONF_WHITE_COMMAND_TOPIC] is not None:
             percent_white = float(kwargs[ATTR_WHITE]) / 255
-            white_scale = self._config[CONF_WHITE_SCALE]
+            white_scale: int = self._config[CONF_WHITE_SCALE]
             device_white_value = min(round(percent_white * white_scale), white_scale)
             await publish(CONF_WHITE_COMMAND_TOPIC, device_white_value)
             should_update |= set_optimistic(
@@ -864,13 +894,13 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 
         This method is a coroutine.
         """
         await self.async_publish(
-            self._topic[CONF_COMMAND_TOPIC],
+            str(self._topic[CONF_COMMAND_TOPIC]),
             self._payload["off"],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],

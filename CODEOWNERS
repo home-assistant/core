@@ -481,6 +481,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
 /tests/components/homeassistant_alerts/ @home-assistant/core
+/homeassistant/components/homeassistant_hardware/ @home-assistant/core
+/tests/components/homeassistant_hardware/ @home-assistant/core
 /homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
@@ -1013,8 +1015,8 @@ build.json @home-assistant/supervisor
 /tests/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
 /homeassistant/components/shell_command/ @home-assistant/core
 /tests/components/shell_command/ @home-assistant/core
-/homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74
-/tests/components/shelly/ @balloob @bieniu @thecode @chemelli74
+/homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74 @bdraco
+/tests/components/shelly/ @balloob @bieniu @thecode @chemelli74 @bdraco
 /homeassistant/components/shodan/ @fabaff
 /homeassistant/components/sia/ @eavanvalkenburg
 /tests/components/sia/ @eavanvalkenburg

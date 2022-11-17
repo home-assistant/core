@@ -109,10 +109,3 @@ class DemoLock(LockEntity):
         """Open the door latch."""
         self._state = STATE_UNLOCKED
         self.async_write_ha_state()
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._openable:
-            return LockEntityFeature.OPEN
-        return 0

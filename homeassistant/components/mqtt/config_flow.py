@@ -482,8 +482,8 @@ async def async_get_broker_settings(
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certiticate_file:
-                certificate = certiticate_file.read_text(encoding=DEFAULT_ENCODING)
+            with process_uploaded_file(hass, certificate_id) as certificate_file:
+                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
 
         # Return to form for file upload CA cert or client cert and key
         if (
@@ -499,8 +499,8 @@ async def async_get_broker_settings(
         if client_certificate_id:
             with process_uploaded_file(
                 hass, client_certificate_id
-            ) as client_certiticate_file:
-                client_certificate = client_certiticate_file.read_text(
+            ) as client_certificate_file:
+                client_certificate = client_certificate_file.read_text(
                     encoding=DEFAULT_ENCODING
                 )
         if client_key_id:
@@ -704,10 +704,10 @@ def try_connection(
 
 def check_certicate_chain() -> str | None:
     """Check the MQTT certificates."""
-    if client_certiticate := get_file_path(CONF_CLIENT_CERT):
+    if client_certificate := get_file_path(CONF_CLIENT_CERT):
         try:
-            with open(client_certiticate, "rb") as client_certiticate_file:
-                load_pem_x509_certificate(client_certiticate_file.read())
+            with open(client_certificate, "rb") as client_certificate_file:
+                load_pem_x509_certificate(client_certificate_file.read())
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
@@ -719,9 +719,9 @@ def check_certicate_chain() -> str | None:
             return "bad_client_key"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS)
-    if client_certiticate and private_key:
+    if client_certificate and private_key:
         try:
-            context.load_cert_chain(client_certiticate, private_key)
+            context.load_cert_chain(client_certificate, private_key)
         except SSLError:
             return "bad_client_cert_key"
     # try to load the custom CA file

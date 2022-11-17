@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final
@@ -56,7 +56,7 @@ STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
 
-class WaterHeaterEntityFeature(IntEnum):
+class WaterHeaterEntityFeature(IntFlag):
     """Supported features of the fan entity."""
 
     TARGET_TEMPERATURE = 1
@@ -167,7 +167,7 @@ class WaterHeaterEntity(Entity):
     _attr_operation_list: list[str] | None = None
     _attr_precision: float
     _attr_state: None = None
-    _attr_supported_features: int
+    _attr_supported_features: WaterHeaterEntityFeature | int = 0
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
@@ -340,6 +340,11 @@ class WaterHeaterEntity(Entity):
         return TemperatureConverter.convert(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
+
+    @property
+    def supported_features(self) -> WaterHeaterEntityFeature | int:
+        """Return the list of supported features."""
+        return self._attr_supported_features
 
 
 async def async_service_away_mode(

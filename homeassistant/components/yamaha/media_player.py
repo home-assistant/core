@@ -311,7 +311,7 @@ class YamahaDevice(MediaPlayerEntity):
         return f"{self.receiver.ctrl_url}:{self._zone}"
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = SUPPORT_YAMAHA
 
