@@ -32,7 +32,6 @@ CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
 DATA_MQTT = "mqtt"
-MQTT_DATA_DEVICE_TRACKER_LEGACY = "mqtt_device_tracker_legacy"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"

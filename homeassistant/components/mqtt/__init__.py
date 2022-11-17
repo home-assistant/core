@@ -192,7 +192,7 @@ async def _async_setup_discovery(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Start the MQTT protocol service."""
+    """Set up the MQTT protocol service."""
     mqtt_data = get_mqtt_data(hass, True)
 
     conf: ConfigType | None = config.get(DOMAIN)
@@ -464,9 +464,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
-            # Reload the legacy yaml platform
-            await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
-
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
             tasks = [
