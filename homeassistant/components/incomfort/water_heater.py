@@ -89,11 +89,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return 0
-
-    @property
     def current_operation(self) -> str:
         """Return the current operation mode."""
         if self._heater.is_failed:
