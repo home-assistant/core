@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, TypeVar, final
@@ -86,7 +86,7 @@ DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 # mypy: disallow-any-generics
 
 
-class CoverEntityFeature(IntEnum):
+class CoverEntityFeature(IntFlag):
     """Supported features of the cover entity."""
 
     OPEN = 1
@@ -232,6 +232,7 @@ class CoverEntity(Entity):
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
+    _attr_supported_features: CoverEntityFeature | int | None
 
     _cover_is_last_toggle_direction_open = True
 
@@ -291,7 +292,7 @@ class CoverEntity(Entity):
         return data
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature | int:
         """Flag supported features."""
         if self._attr_supported_features is not None:
             return self._attr_supported_features

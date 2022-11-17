@@ -103,7 +103,7 @@ aio_georss_gdacs==0.7
 aioairq==0.2.4
 
 # homeassistant.components.airzone
-aioairzone==0.4.8
+aioairzone==0.5.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -299,7 +299,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.1.0
+apprise==1.2.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -364,12 +364,10 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.7.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.6
-
-# homeassistant.components.led_ble
-bluetooth-data-tools==0.2.0
+bluetooth-auto-recovery==0.4.0
 
 # homeassistant.components.bluetooth
+# homeassistant.components.led_ble
 bluetooth-data-tools==0.3.0
 
 # homeassistant.components.bond
@@ -435,7 +433,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.74.0
+dbus-fast==1.74.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -527,7 +525,7 @@ fivem-api==0.1.2
 fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
-flipr-api==1.4.2
+flipr-api==1.4.4
 
 # homeassistant.components.flux_led
 flux_led==0.28.32

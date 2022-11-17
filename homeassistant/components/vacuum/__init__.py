@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final
@@ -74,7 +74,7 @@ STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 
-class VacuumEntityFeature(IntEnum):
+class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
     TURN_ON = 1
@@ -180,10 +180,10 @@ class _BaseVacuum(Entity):
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_supported_features: int
+    _attr_supported_features: VacuumEntityFeature | int = 0
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> VacuumEntityFeature | int:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
