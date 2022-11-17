@@ -640,3 +640,147 @@ async def test_option_flow_addon_info_fails(
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "addon_info_failed"
+
+
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_prepare_yellow_migration",
+    side_effect=Exception("Boom!"),
+)
+async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
+    mock_prepare_yellow_migration,
+    hass: HomeAssistant,
+    addon_store_info,
+    addon_info,
+    install_addon,
+    set_addon_options,
+    start_addon,
+) -> None:
+    """Test installing the multi pan addon."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=TEST_DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+
+    zha_config_entry = MockConfigEntry(
+        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        domain=ZHA_DOMAIN,
+        options={},
+        title="Test",
+    )
+    zha_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "addon_not_installed"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "enable_multi_pan": True,
+        },
+    )
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
+    install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "zha_migration_failed"
+    set_addon_options.assert_not_called()
+
+
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_finish_yellow_migration",
+    side_effect=Exception("Boom!"),
+)
+async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
+    mock_prepare_yellow_migration,
+    hass: HomeAssistant,
+    addon_store_info,
+    addon_info,
+    install_addon,
+    set_addon_options,
+    start_addon,
+) -> None:
+    """Test installing the multi pan addon."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=TEST_DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+
+    zha_config_entry = MockConfigEntry(
+        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        domain=ZHA_DOMAIN,
+        options={},
+        title="Test",
+    )
+    zha_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "addon_not_installed"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "enable_multi_pan": True,
+        },
+    )
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
+    install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    set_addon_options.assert_called_once_with(
+        hass,
+        "core_silabs_multiprotocol",
+        {
+            "options": {
+                "autoflash_firmware": True,
+                "device": "/dev/ttyTEST123",
+                "baudrate": "115200",
+                "flow_control": True,
+            }
+        },
+    )
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_addon_setup"
+    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "zha_migration_failed"
