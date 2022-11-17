@@ -70,7 +70,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature | int:
         """Flag supported features."""
         supported_features = 0
         if self.current_cover_position is not None:
