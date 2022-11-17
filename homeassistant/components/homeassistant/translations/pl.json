@@ -3,6 +3,10 @@
         "historic_currency": {
             "description": "Waluta {currency} nie jest ju\u017c u\u017cywana. Zmie\u0144 konfiguracj\u0119 waluty.",
             "title": "Skonfigurowana waluta nie jest ju\u017c u\u017cywana"
+        },
+        "python_version": {
+            "description": "Obs\u0142uga uruchamiania Home Assistanta w obecnie u\u017cywanej wersji Pythona {current_python_version} jest przestarza\u0142a i zostanie usuni\u0119ta w Home Assistant {breaks_in_ha_version}. Zaktualizuj Pythona do wersji {required_python_version}, aby zapobiec awarii Home Assistanta.",
+            "title": "Obs\u0142uga Pythona w wersji {current_python_version} zostanie usuni\u0119ta"
         }
     },
     "system_health": {
