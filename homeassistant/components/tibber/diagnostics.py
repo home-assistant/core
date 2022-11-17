@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     # If the ConfigEntry is not ready there is no DOMAIN data available,
     # it can occur either if it has never been started
     # or connection to the Tibber API failed
-    tibber_connection: tibber.Tibber | None = hass.data.get(DOMAIN, None)
+    tibber_connection: tibber.Tibber | None = hass.data.get(DOMAIN)
 
     homes: dict[str, Any] = {}
     if tibber_connection:
