@@ -54,9 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     if addon_info.state == AddonState.NOT_INSTALLED:
-        hw_disovery_data = ZHA_HW_DISCOVERY_DATA
+        hw_discovery_data = ZHA_HW_DISCOVERY_DATA
     else:
-        hw_disovery_data = {
+        hw_discovery_data = {
             "name": "Yellow Multi-PAN",
             "port": {
                 "path": get_zigbee_socket(hass, addon_info),
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.flow.async_init(
         "zha",
         context={"source": "hardware"},
-        data=hw_disovery_data,
+        data=hw_discovery_data,
     )
 
     return True
