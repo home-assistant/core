@@ -80,7 +80,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         ]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported."""
         features = 0
 
