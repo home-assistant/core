@@ -1,7 +1,6 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import functools
 from typing import Any
 
@@ -128,19 +127,7 @@ async def _async_setup_entity(
     discovery_data: dict | None = None,
 ) -> None:
     """Set up a MQTT Light."""
-    setup_entity: dict[
-        str,
-        Callable[
-            [
-                HomeAssistant,
-                ConfigType,
-                AddEntitiesCallback,
-                ConfigEntry,
-                DiscoveryInfoType | None,
-            ],
-            Coroutine[Any, Any, None],
-        ],
-    ] = {
+    setup_entity = {
         "basic": async_setup_entity_basic,
         "json": async_setup_entity_json,
         "template": async_setup_entity_template,

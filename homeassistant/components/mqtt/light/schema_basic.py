@@ -257,7 +257,7 @@ async def async_setup_entity_basic(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
+    discovery_data: DiscoveryInfoType | None,
 ) -> None:
     """Set up a MQTT Light."""
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
