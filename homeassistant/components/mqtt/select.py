@@ -32,7 +32,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import (
@@ -70,28 +69,10 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
 
 # Configuring MQTT Select under the select platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
     warn_for_legacy_schema(select.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT select configured under the select platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        select.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(

@@ -2735,7 +2735,7 @@ async def test_one_deprecation_warning_per_platform(
     await mqtt_mock_entry_with_yaml_config()
     count = 0
     for record in caplog.records:
-        if record.levelname == "WARNING" and (
+        if record.levelname == "ERROR" and (
             f"Manually configured MQTT {platform}(s) found under platform key '{platform}'"
             in record.message
         ):
@@ -2817,15 +2817,6 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
         },
-        # Test deprecated YAML configuration under the platform key
-        # Scheduled to be removed in HA core 2022.12
-        "light": [
-            {
-                "platform": "mqtt",
-                "name": "test_new_legacy",
-                "command_topic": "test-topic_new",
-            }
-        ],
     }
     await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
@@ -2833,7 +2824,6 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
     await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
     assert hass.states.get("light.test_old1") is None
     assert hass.states.get("light.test_new_modern") is not None
-    assert hass.states.get("light.test_new_legacy") is not None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
@@ -2846,15 +2836,6 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
         },
-        # Test deprecated YAML configuration under the platform key
-        # Scheduled to be removed in HA core 2022.12
-        "light": [
-            {
-                "platform": "mqtt",
-                "name": "test_new_legacy",
-                "command_topic": "test-topic_new",
-            }
-        ],
     }
     await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
@@ -2883,12 +2864,6 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
 
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-        # Assert that the discovery was still received
-        # but kipped the setup
-        assert (
-            "MQTT integration is disabled, skipping setup of manually configured MQTT light"
-            in caplog.text
-        )
 
         assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
         assert hass.states.get("light.test_old1") is None
@@ -2903,7 +2878,6 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
 
         assert hass.states.get("light.test_old1") is None
         assert hass.states.get("light.test_new_modern") is not None
-        assert hass.states.get("light.test_new_legacy") is not None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
