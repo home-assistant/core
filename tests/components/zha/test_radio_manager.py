@@ -131,7 +131,7 @@ async def test_migrate_matching_port(
     }
 
     migration_helper = radio_manager.ZhaMigrationHelper(hass, config_entry)
-    assert await migration_helper.async_prepare_yellow_migration(migration_data)
+    assert await migration_helper.async_initiate_migration(migration_data)
 
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
@@ -144,7 +144,7 @@ async def test_migrate_matching_port(
     }
     assert config_entry.title == "Test Updated"
 
-    assert await migration_helper.async_finish_yellow_migration()
+    assert await migration_helper.async_finish_migration()
 
 
 async def test_migrate_matching_port_config_entry_not_loaded(
@@ -184,7 +184,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
     }
 
     migration_helper = radio_manager.ZhaMigrationHelper(hass, config_entry)
-    assert await migration_helper.async_prepare_yellow_migration(migration_data)
+    assert await migration_helper.async_initiate_migration(migration_data)
 
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
@@ -197,7 +197,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
     }
     assert config_entry.title == "Test Updated"
 
-    assert await migration_helper.async_finish_yellow_migration()
+    assert await migration_helper.async_finish_migration()
 
 
 @patch(
@@ -242,7 +242,7 @@ async def test_migrate_matching_port_retry(
     }
 
     migration_helper = radio_manager.ZhaMigrationHelper(hass, config_entry)
-    assert await migration_helper.async_prepare_yellow_migration(migration_data)
+    assert await migration_helper.async_initiate_migration(migration_data)
 
     # Check the ZHA config entry data is updated
     assert config_entry.data == {
@@ -255,7 +255,7 @@ async def test_migrate_matching_port_retry(
     }
     assert config_entry.title == "Test Updated"
 
-    assert not await migration_helper.async_finish_yellow_migration()
+    assert not await migration_helper.async_finish_migration()
     assert mock_restore_backup_step_1.call_count == 10
 
 
@@ -295,7 +295,7 @@ async def test_migrate_non_matching_port(
     }
 
     migration_helper = radio_manager.ZhaMigrationHelper(hass, config_entry)
-    assert not await migration_helper.async_prepare_yellow_migration(migration_data)
+    assert not await migration_helper.async_initiate_migration(migration_data)
 
     # Check the ZHA config entry data is not updated
     assert config_entry.data == {

@@ -294,9 +294,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             }
             _LOGGER.debug("Starting ZHA migration with: %s", migration_data)
             try:
-                if await zha_migration_mgr.async_prepare_yellow_migration(
-                    migration_data
-                ):
+                if await zha_migration_mgr.async_initiate_migration(migration_data):
                     self._zha_migration_mgr = zha_migration_mgr
             except Exception as err:
                 _LOGGER.exception("Unexpected exception during ZHA migration")
@@ -322,7 +320,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
             try:
-                await self._zha_migration_mgr.async_finish_yellow_migration()
+                await self._zha_migration_mgr.async_finish_migration()
             except Exception as err:
                 _LOGGER.exception("Unexpected exception during ZHA migration")
                 raise AbortFlow("zha_migration_failed") from err

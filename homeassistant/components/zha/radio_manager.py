@@ -257,7 +257,12 @@ class ZhaRadioManager:
 
 
 class ZhaMigrationHelper:
-    """Helper class for automatic migration."""
+    """Helper class for automatic migration when upgrading the firmware of a radio.
+
+    This class is currently only intended to be used when changing the firmware on the
+    radio used in the Home Assistant Sky Connect USB stick and the Home Asssistant Yellow
+    from Zigbee only firmware to firmware supporting both Zigbee and Thread.
+    """
 
     def __init__(
         self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
@@ -268,8 +273,17 @@ class ZhaMigrationHelper:
         self._radio_mgr = ZhaRadioManager()
         self._radio_mgr.hass = hass
 
-    async def async_prepare_yellow_migration(self, data: dict[str, Any]) -> bool:
-        """Prepare ZHA migration."""
+    async def async_initiate_migration(self, data: dict[str, Any]) -> bool:
+        """Initiate ZHA migration.
+
+        The passed data should contain:
+        - Discovery data identifying the device being firmware updated
+        - Discovery data for connecting to the device after the firmware update is
+          completed.
+
+        Returns True if async_finish_migration should be called after the firmware
+        update is completed.
+        """
         migration_data = HARDWARE_MIGRATION_SCHEMA(data)
 
         name = migration_data["new_discovery_info"]["name"]
@@ -321,8 +335,11 @@ class ZhaMigrationHelper:
         )
         return True
 
-    async def async_finish_yellow_migration(self) -> bool:
-        """Finish ZHA migration."""
+    async def async_finish_migration(self) -> bool:
+        """Finish ZHA migration.
+
+        Returns True migration succeeded.
+        """
         # Restore the backup, permanently overwriting the device IEEE address
         for retry in range(MIGRATION_RETRIES):
             try:

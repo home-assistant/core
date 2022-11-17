@@ -1,4 +1,4 @@
-"""Test the Home Assistant Yellow config flow."""
+"""Test the Home Assistant Hardware silabs multiprotocol addon manager."""
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -21,7 +21,7 @@ TEST_DOMAIN = "test"
 
 
 class TestConfigFlow(ConfigFlow, domain=TEST_DOMAIN):
-    """Handle a config flow for Home Assistant Yellow."""
+    """Handle a config flow for the silabs multiprotocol add-on."""
 
     VERSION = 1
 
@@ -38,11 +38,11 @@ class TestConfigFlow(ConfigFlow, domain=TEST_DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return self.async_create_entry(title="Home Assistant Yellow", data={})
+        return self.async_create_entry(title="Test HW", data={})
 
 
 class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
-    """Handle an option flow for Home Assistant Yellow."""
+    """Handle an option flow for the silabs multiprotocol add-on."""
 
     async def _async_serial_port_settings(
         self,
@@ -101,7 +101,7 @@ async def test_option_flow_install_multi_pan_addon(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -169,7 +169,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -255,7 +255,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -270,7 +270,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
         },
         domain=ZHA_DOMAIN,
         options={},
-        title="Yellow",
+        title="Test HW",
     )
     zha_config_entry.add_to_hass(hass)
 
@@ -344,7 +344,7 @@ async def test_option_flow_non_hassio(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -366,7 +366,7 @@ async def test_option_flow_addon_installed_other_device(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -397,7 +397,7 @@ async def test_option_flow_addon_installed_same_device(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -426,7 +426,7 @@ async def test_option_flow_do_not_install_multi_pan_addon(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -464,7 +464,7 @@ async def test_option_flow_install_multi_pan_addon_install_fails(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -513,7 +513,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -583,7 +583,7 @@ async def test_option_flow_install_multi_pan_addon_set_options_fails(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -629,7 +629,7 @@ async def test_option_flow_addon_info_fails(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -643,11 +643,11 @@ async def test_option_flow_addon_info_fails(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_prepare_yellow_migration",
+    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_initiate_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
-    mock_prepare_yellow_migration,
+    mock_initiate_migration,
     hass: HomeAssistant,
     addon_store_info,
     addon_info,
@@ -663,7 +663,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
@@ -705,11 +705,11 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_finish_yellow_migration",
+    "homeassistant.components.zha.radio_manager.ZhaMigrationHelper.async_finish_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
-    mock_prepare_yellow_migration,
+    mock_finish_migration,
     hass: HomeAssistant,
     addon_store_info,
     addon_info,
@@ -725,7 +725,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
         data={},
         domain=TEST_DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="Test HW",
     )
     config_entry.add_to_hass(hass)
 
