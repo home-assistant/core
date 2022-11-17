@@ -293,8 +293,14 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 "old_discovery_info": await self._async_zha_physical_discovery(),
             }
             _LOGGER.debug("Starting ZHA migration with: %s", migration_data)
-            if await zha_migration_mgr.async_prepare_yellow_migration(migration_data):
-                self._zha_migration_mgr = zha_migration_mgr
+            try:
+                if await zha_migration_mgr.async_prepare_yellow_migration(
+                    migration_data
+                ):
+                    self._zha_migration_mgr = zha_migration_mgr
+            except Exception as err:
+                _LOGGER.exception("Unexpected exception during ZHA migration")
+                raise AbortFlow("zha_migration_failed") from err
 
         if new_addon_config != addon_config:
             # Copy the add-on config to keep the objects separate.
@@ -315,7 +321,11 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
 
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
-            await self._zha_migration_mgr.async_finish_yellow_migration()
+            try:
+                await self._zha_migration_mgr.async_finish_yellow_migration()
+            except Exception as err:
+                _LOGGER.exception("Unexpected exception during ZHA migration")
+                raise AbortFlow("zha_migration_failed") from err
 
         return self.async_create_entry(title="", data={})
 
