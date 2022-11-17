@@ -171,7 +171,6 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
-    _attr_supported_features: int
 
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
@@ -207,7 +206,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self._attr_extra_state_attributes = {}
 
-        _supported_features: int = SUPPORTED_BASE
+        _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None

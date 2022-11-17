@@ -478,7 +478,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported at this moment.
 
         Supported features may change as the device enters different states.

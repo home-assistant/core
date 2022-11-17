@@ -43,6 +43,7 @@
     },
     "issues": {
         "ea_setup_failed": {
+            "description": "Anda menggunakan v{version} dari UniFi Protect yang merupakan versi Early Access. Terjadi kesalahan yang tidak dapat dipulihkan saat mencoba memuat integrasi. Silakan [turunkan ke versi stabil](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) dari UniFi Protect untuk terus menggunakan integrasi.\n\nKesalahan: {error}",
             "title": "Kesalahan penyiapan menggunakan versi Early Access"
         },
         "ea_warning": {
@@ -50,9 +51,11 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
+                        "description": "Yakin ingin menjalankan versi UniFi Protect yang tidak didukung? Ini dapat menyebabkan integrasi Home Assistant Anda rusak.",
                         "title": "v{version} adalah versi Early Access"
                     },
                     "start": {
+                        "description": "Anda menggunakan v{version} UniFi Protect yang merupakan versi Early Access. [Versi Early Access tidak didukung oleh Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) dan disarankan untuk kembali ke rilis stabil sesegera mungkin.\n\nDengan mengirimkan formulir ini, Anda seharusnya telah [menurunkan versi UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) atau Anda setuju untuk menjalankan versi UniFi Protect yang tidak didukung.",
                         "title": "v{version} adalah versi Early Access"
                     }
                 }
@@ -68,6 +71,7 @@
             "init": {
                 "data": {
                     "all_updates": "Metrik waktu nyata (PERINGATAN: Meningkatkan penggunaan CPU)",
+                    "allow_ea": "Izinkan versi Early Access UniFi Protect (PERINGATAN: Akan menandai integrasi Anda sebagai tidak didukung)",
                     "disable_rtsp": "Nonaktifkan aliran RTSP",
                     "ignored_devices": "Daftar alamat MAC perangkat yang dipisahkan koma untuk diabaikan",
                     "max_media": "Jumlah maksimum peristiwa yang akan dimuat untuk Browser Media (meningkatkan penggunaan RAM)",
