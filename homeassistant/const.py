@@ -744,7 +744,7 @@ class UnitOfVolumetricFlux(StrEnum):
 
 
 class UnitOfIntegratedVolumetricFlux(StrEnum):
-    """Integrated volumetric flux, commonly used for accumulated precipitation.
+    """Integrated volumetric flux, commonly used for precipitation depth.
 
     The derivation of these units is a volume of rain amassing in a container
     with constant cross section
