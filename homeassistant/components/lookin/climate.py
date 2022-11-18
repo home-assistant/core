@@ -7,8 +7,7 @@ from typing import Any, Final, cast
 from aiolookin import Climate, MeteoSensor
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
@@ -16,6 +15,7 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     SWING_BOTH,
     SWING_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -93,7 +93,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
 
     _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features: int = (
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE

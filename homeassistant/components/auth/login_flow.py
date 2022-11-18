@@ -193,7 +193,6 @@ class LoginFlowBaseView(HomeAssistantView):
         self,
         request: web.Request,
         client_id: str,
-        redirect_uri: str,
         result: data_entry_flow.FlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
@@ -214,10 +213,13 @@ class LoginFlowBaseView(HomeAssistantView):
 
         hass: HomeAssistant = request.app["hass"]
 
-        if not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri):
+        if not await indieauth.verify_redirect_uri(
+            hass, client_id, result["context"]["redirect_uri"]
+        ):
             return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
 
         result.pop("data")
+        result.pop("context")
 
         result_obj: Credentials = result.pop("result")
 
@@ -238,7 +240,7 @@ class LoginFlowBaseView(HomeAssistantView):
 
 
 class LoginFlowIndexView(LoginFlowBaseView):
-    """View to create a config flow."""
+    """View to create a login flow."""
 
     url = "/auth/login_flow"
     name = "api:auth:login_flow"
@@ -278,6 +280,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 context={
                     "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
                     "credential_only": data.get("type") == "link_user",
+                    "redirect_uri": redirect_uri,
                 },
             )
         except data_entry_flow.UnknownHandler:
@@ -287,9 +290,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 "Handler does not support init", HTTPStatus.BAD_REQUEST
             )
 
-        return await self._async_flow_result_to_response(
-            request, client_id, redirect_uri, result
-        )
+        return await self._async_flow_result_to_response(request, client_id, result)
 
 
 class LoginFlowResourceView(LoginFlowBaseView):
@@ -304,7 +305,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
 
     @RequestDataValidator(
         vol.Schema(
-            {vol.Required("client_id"): str, vol.Required("redirect_uri"): str},
+            {vol.Required("client_id"): str},
             extra=vol.ALLOW_EXTRA,
         )
     )
@@ -314,7 +315,6 @@ class LoginFlowResourceView(LoginFlowBaseView):
     ) -> web.Response:
         """Handle progressing a login flow request."""
         client_id: str = data.pop("client_id")
-        redirect_uri: str = data.pop("redirect_uri")
 
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
@@ -330,9 +330,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
         except vol.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
-        return await self._async_flow_result_to_response(
-            request, client_id, redirect_uri, result
-        )
+        return await self._async_flow_result_to_response(request, client_id, result)
 
     async def delete(self, request: web.Request, flow_id: str) -> web.Response:
         """Cancel a flow in progress."""

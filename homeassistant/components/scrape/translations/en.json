@@ -36,6 +36,12 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "description": "Configuring Scrape using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation.",
+            "title": "The Scrape YAML configuration has been moved"
+        }
+    },
     "options": {
         "step": {
             "init": {

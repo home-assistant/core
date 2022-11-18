@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Ikuti [petunjuk]({more_info_url}) untuk mengonfigurasi Konsol Cloud:\n\n1. Buka [Layar persetujuan OAuth]({oauth_consent_url}) dan konfigurasikan\n1. Buka [Kredentsial]({oauth_creds_url}) dan klik **Buat Kredensial**.\n1. Dari daftar pilihan, pilih **ID klien OAuth**.\n1. Pilih **Aplikasi Web** untuk Jenis Aplikasi.\n1. Tambahkan '{redirect_url}' di bawah *URI pengarahan ulang yand diotorisasi*."
+        "description": "Ikuti [petunjuk]({more_info_url}) untuk mengonfigurasi Konsol Cloud:\n\n1. Buka [Layar persetujuan OAuth]({oauth_consent_url}) dan konfigurasikan\n1. Buka [Kredentsial]({oauth_creds_url}) dan klik **Buat Kredensial**.\n1. Dari daftar pilihan, pilih **ID klien OAuth**.\n1. Pilih **Aplikasi Web** untuk Jenis Aplikasi.\n1. Tambahkan `{redirect_url}` di bawah *URI pengarahan ulang yand diotorisasi*."
     },
     "config": {
         "abort": {
@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "ID Proyek Akses Perangkat"
                 },
-                "description": "Buat proyek Akses Perangkat Nest yang **membutuhkan biaya USD5** untuk menyiapkannya.\n1. Buka [Konsol Akses Perangkat]({device_access_console_url}), dan ikuti alur pembayaran.\n1. Klik **Buat proyek**\n1. Beri nama proyek Akses Perangkat Anda dan klik **Berikutnya**.\n1. Masukkan ID Klien OAuth Anda\n1. Aktifkan acara dengan mengklik **Aktifkan** dan **Buat proyek**. \n\n Masukkan ID Proyek Akses Perangkat Anda di bawah ini ([more info]({more_info_url})).\n",
+                "description": "Buat proyek Akses Perangkat Nest yang **membutuhkan biaya USD5 untuk Google** untuk menyiapkannya.\n1. Buka [Konsol Akses Perangkat]({device_access_console_url}), dan ikuti alur pembayaran.\n1. Klik **Buat proyek**\n1. Beri nama proyek Akses Perangkat Anda dan klik **Berikutnya**.\n1. Masukkan ID Klien OAuth Anda\n1. Aktifkan acara dengan mengklik **Aktifkan** dan **Buat proyek**. \n\n Masukkan ID Proyek Akses Perangkat Anda di bawah ini ([more info]({more_info_url})).\n",
                 "title": "Nest: Buat Proyek Akses Perangkat"
             },
             "device_project_upgrade": {
@@ -99,8 +99,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi Nest di configuration.yaml sedang dihapus di Home Assistant 2022.10. \n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Nest dalam proses penghapusan"
+            "description": "Proses konfigurasi Integrasi Nest di configuration.yaml sedang dihapus di Home Assistant 2022.10. \n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Nest dalam proses penghapusan"
         },
         "removed_app_auth": {
             "description": "Untuk meningkatkan keamanan dan mengurangi risiko phishing, Google telah menghentikan metode autentikasi yang digunakan oleh Home Assistant.\n\n**Tindakan berikut diperlukan untuk diselesaikan** ([info lebih lanjut]({more_info_url}))\n\n1. Kunjungi halaman integrasi\n1. Klik Konfigurasi Ulang pada integrasi Nest.\n1. Home Assistant akan memandu Anda melalui langkah-langkah untuk meningkatkan ke Autentikasi Web.\n\nLihat [instruksi integrasi]({documentation_url}) Nest untuk informasi pemecahan masalah.",

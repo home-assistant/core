@@ -73,7 +73,7 @@ def setup_platform(
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self.name)

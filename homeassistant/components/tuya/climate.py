@@ -6,13 +6,14 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -133,7 +134,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
-        self._attr_supported_features = 0
         self.entity_description = description
 
         super().__init__(device, device_manager)

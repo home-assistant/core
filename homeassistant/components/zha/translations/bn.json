@@ -1,0 +1,54 @@
+{
+    "config": {
+        "step": {
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "\u09b0\u09c7\u09a1\u09bf\u0993\u09b0 \u09a7\u09b0\u09a8"
+                },
+                "description": "\u0986\u09aa\u09a8\u09be\u09b0 Zigbee \u09b0\u09c7\u09a1\u09bf\u0993 \u09aa\u09cd\u09b0\u0995\u09be\u09b0 \u099a\u09af\u09bc\u09a8 \u0995\u09b0\u09c1\u09a8",
+                "title": "\u09b0\u09c7\u09a1\u09bf\u0993\u09b0 \u09a7\u09b0\u09a8"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "\u09aa\u09cb\u09b0\u09cd\u099f\u09c7\u09b0 \u0997\u09a4\u09bf",
+                    "flow_control": "\u09a4\u09a5\u09cd\u09af \u09aa\u09cd\u09b0\u09ac\u09be\u09b9 \u09a8\u09bf\u09af\u09bc\u09a8\u09cd\u09a4\u09cd\u09b0\u09a3",
+                    "path": "\u09b8\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09b2 \u09a1\u09bf\u09ad\u09be\u0987\u09b8 \u09aa\u09a5"
+                },
+                "description": "\u09b8\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09b2 \u09aa\u09cb\u09b0\u09cd\u099f \u09b8\u09c7\u099f\u09bf\u0982\u09b8 \u09b2\u09bf\u0996\u09c1\u09a8",
+                "title": "\u09b8\u09bf\u09b0\u09bf\u09af\u09bc\u09be\u09b2 \u09aa\u09cb\u09b0\u09cd\u099f \u09b8\u09c7\u099f\u09bf\u0982\u09b8"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "\u09b8\u09cd\u09a5\u09be\u09af\u09bc\u09c0\u09ad\u09be\u09ac\u09c7 \u09b0\u09c7\u09a1\u09bf\u0993 IEEE \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09aa\u09cd\u09b0\u09a4\u09bf\u09b8\u09cd\u09a5\u09be\u09aa\u09a8 \u0995\u09b0\u09c1\u09a8"
+                },
+                "title": "\u09b0\u09c7\u09a1\u09bf\u0993 IEEE \u09a0\u09bf\u0995\u09be\u09a8\u09be \u0993\u09ad\u09be\u09b0\u09b0\u09be\u0987\u099f \u0995\u09b0\u09c1\u09a8"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "\u098f\u0995\u099f\u09bf \u09ab\u09be\u0987\u09b2 \u0986\u09aa\u09b2\u09cb\u09a1 \u0995\u09b0\u09c1\u09a8"
+                },
+                "title": "\u098f\u0995\u099f\u09bf \u09ae\u09cd\u09af\u09be\u09a8\u09c1\u09af\u09bc\u09be\u09b2 \u09ac\u09cd\u09af\u09be\u0995\u0986\u09aa \u0986\u09aa\u09b2\u09cb\u09a1 \u0995\u09b0\u09c1\u09a8"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "ZHA \u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c7 \u09a6\u09c7\u0993\u09af\u09bc\u09be \u09b9\u09ac\u09c7\u0964  \u0986\u09aa\u09a8\u09bf \u0995\u09bf \u099a\u09be\u09b2\u09bf\u09af\u09bc\u09c7 \u09af\u09c7\u09a4\u09c7 \u099a\u09be\u09a8?",
+                "title": "ZHA \u09aa\u09c1\u09a8\u09b0\u09be\u09af\u09bc \u0995\u09a8\u09ab\u09bf\u0997\u09be\u09b0 \u0995\u09b0\u09c1\u09a8"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "\u09b0\u09c7\u09a1\u09bf\u0993 \u09aa\u09cd\u09b0\u0995\u09be\u09b0"
+                },
+                "description": "\u0986\u09aa\u09a8\u09be\u09b0 \u099c\u09bf\u0997\u09ac\u09bf \u09b0\u09c7\u09a1\u09bf\u0993 \u099f\u09be\u0987\u09aa \u099a\u09af\u09bc\u09a8 \u0995\u09b0\u09c1\u09a8",
+                "title": "\u09b0\u09c7\u09a1\u09bf\u0993 \u09aa\u09cd\u09b0\u0995\u09be\u09b0"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "\u09aa\u09cb\u09b0\u09cd\u099f \u0997\u09a4\u09bf"
+                }
+            }
+        }
+    }
+}

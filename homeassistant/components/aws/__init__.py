@@ -51,7 +51,7 @@ DEFAULT_CREDENTIAL = [
     {CONF_NAME: "default", CONF_PROFILE_NAME: "default", CONF_VALIDATE: False}
 ]
 
-SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
+SUPPORTED_SERVICES = ["lambda", "sns", "sqs", "events"]
 
 NOTIFY_PLATFORM_SCHEMA = vol.Schema(
     {

@@ -24,7 +24,7 @@
                     "key": "Offline kulcs (32 b\u00e1jtos hexa karakterl\u00e1nc)",
                     "slot": "Offline kulcshely (eg\u00e9sz sz\u00e1m 0 \u00e9s 255 k\u00f6z\u00f6tt)"
                 },
-                "description": "Tekintse meg a {docs_url} c\u00edmen tal\u00e1lhat\u00f3 dokument\u00e1ci\u00f3t, hogy hogyan szerezze meg az offline kulcsot."
+                "description": "Az offline kulcs megtal\u00e1l\u00e1s\u00e1nak m\u00f3dja a dokument\u00e1ci\u00f3ban tal\u00e1lhat\u00f3."
             }
         }
     }

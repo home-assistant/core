@@ -61,7 +61,7 @@ def with_store(orig_func: Callable) -> Callable:
 async def websocket_set_user_data(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     store: Store,
     data: dict[str, Any],
 ) -> None:
@@ -82,7 +82,7 @@ async def websocket_set_user_data(
 async def websocket_get_user_data(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     store: Store,
     data: dict[str, Any],
 ) -> None:

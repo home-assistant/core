@@ -10,7 +10,7 @@ from homeassistant.components.heos.const import (
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -27,19 +27,13 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_URL,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -77,7 +71,7 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.25
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "1"
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert ATTR_MEDIA_DURATION not in state.attributes
     assert ATTR_MEDIA_POSITION not in state.attributes
     assert state.attributes[ATTR_MEDIA_TITLE] == "Song"
@@ -92,11 +86,11 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_PLAY
-        | SUPPORT_PAUSE
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
+        == MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | media_player.BASE_SUPPORTED_FEATURES
     )
     assert ATTR_INPUT_SOURCE not in state.attributes
@@ -611,7 +605,7 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -634,7 +628,7 @@ async def test_play_media_music(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -708,7 +702,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
         },
         blocking=True,
@@ -723,7 +717,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
             ATTR_MEDIA_ENQUEUE: True,
         },
@@ -737,7 +731,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: "Invalid",
         },
         blocking=True,

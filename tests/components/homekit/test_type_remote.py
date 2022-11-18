@@ -16,7 +16,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,7 +36,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         None,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -57,7 +57,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -81,7 +81,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -93,7 +93,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
         },
@@ -160,7 +160,7 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Amazon TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "Amazon TV"],
         },
@@ -176,7 +176,7 @@ async def test_activity_remote_bad_names(hass, hk_driver, events, caplog):
         entity_id,
         None,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "Apple TV",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
         },
@@ -197,7 +197,7 @@ async def test_activity_remote_bad_names(hass, hk_driver, events, caplog):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY: "[[[--Special--]]]",
             ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
         },

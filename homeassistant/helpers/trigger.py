@@ -2,15 +2,27 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_ENABLED,
+    CONF_ID,
+    CONF_PLATFORM,
+    CONF_VARIABLES,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    callback,
+    is_callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -43,6 +55,7 @@ class TriggerData(TypedDict):
 
     id: str
     idx: str
+    alias: str | None
 
 
 class TriggerInfo(TypedDict):
@@ -94,20 +107,51 @@ async def async_validate_trigger_config(
 def _trigger_action_wrapper(
     hass: HomeAssistant, action: Callable, conf: ConfigType
 ) -> Callable:
-    """Wrap trigger action with extra vars if configured."""
+    """Wrap trigger action with extra vars if configured.
+
+    If action is a coroutine function, a coroutine function will be returned.
+    If action is a callback, a callback will be returned.
+    """
     if CONF_VARIABLES not in conf:
         return action
 
-    @functools.wraps(action)
-    async def with_vars(
-        run_variables: dict[str, Any], context: Context | None = None
-    ) -> None:
-        """Wrap action with extra vars."""
-        trigger_variables = conf[CONF_VARIABLES]
-        run_variables.update(trigger_variables.async_render(hass, run_variables))
-        await action(run_variables, context)
+    # Check for partials to properly determine if coroutine function
+    check_func = action
+    while isinstance(check_func, functools.partial):
+        check_func = check_func.func
 
-    return with_vars
+    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
+    if asyncio.iscoroutinefunction(check_func):
+        async_action = cast(Callable[..., Coroutine[Any, Any, None]], action)
+
+        @functools.wraps(async_action)
+        async def async_with_vars(
+            run_variables: dict[str, Any], context: Context | None = None
+        ) -> None:
+            """Wrap action with extra vars."""
+            trigger_variables = conf[CONF_VARIABLES]
+            run_variables.update(trigger_variables.async_render(hass, run_variables))
+            await action(run_variables, context)
+
+        wrapper_func = async_with_vars
+
+    else:
+
+        @functools.wraps(action)
+        async def with_vars(
+            run_variables: dict[str, Any], context: Context | None = None
+        ) -> None:
+            """Wrap action with extra vars."""
+            trigger_variables = conf[CONF_VARIABLES]
+            run_variables.update(trigger_variables.async_render(hass, run_variables))
+            action(run_variables, context)
+
+        if is_callback(check_func):
+            with_vars = callback(with_vars)
+
+        wrapper_func = with_vars
+
+    return wrapper_func
 
 
 async def async_initialize_triggers(
@@ -130,7 +174,8 @@ async def async_initialize_triggers(
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"
-        trigger_data = TriggerData(id=trigger_id, idx=trigger_idx)
+        trigger_alias = conf.get(CONF_ALIAS)
+        trigger_data = TriggerData(id=trigger_id, idx=trigger_idx, alias=trigger_alias)
         info = TriggerInfo(
             domain=domain,
             name=name,

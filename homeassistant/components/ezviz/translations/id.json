@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Akun sudah dikonfigurasi",
-            "ezviz_cloud_account_missing": "Akun cloud Ezviz tidak tersedia. Konfigurasi ulang akun cloud Ezviz",
+            "ezviz_cloud_account_missing": "Akun cloud EZVIZ tidak tersedia. Konfigurasi ulang akun cloud EZVIZ",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
-                "description": "Masukkan kredensial RTSP untuk kamera Ezviz {serial} dengan IP {ip_address}",
-                "title": "Kamera Ezviz yang ditemukan"
+                "description": "Masukkan kredensial RTSP untuk kamera EZVIZ {serial} dengan IP {ip_address}",
+                "title": "Kamera EZVIZ yang ditemukan"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Nama Pengguna"
                 },
-                "title": "Hubungkan ke Ezviz Cloud"
+                "title": "Hubungkan ke EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Nama Pengguna"
                 },
                 "description": "Tentukan URL wilayah Anda secara manual",
-                "title": "Hubungkan ke URL Ezviz khusus"
+                "title": "Hubungkan ke URL EZVIZ khusus"
             }
         }
     },

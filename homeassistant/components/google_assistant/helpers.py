@@ -11,6 +11,7 @@ import pprint
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -610,12 +611,8 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": self.hass.http.server_port,
+                "httpPort": URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
-                # Below can be removed in HA 2022.9
-                "httpSSL": self.hass.config.api.use_ssl,
-                "baseUrl": get_url(self.hass, prefer_external=True),
-                "proxyDeviceId": agent_user_id,
             }
 
         # Add trait sync attributes

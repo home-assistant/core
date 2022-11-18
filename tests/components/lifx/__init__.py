@@ -22,10 +22,13 @@ DEFAULT_ENTRY_TITLE = LABEL
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
+        for k, v in kwargs.items():
+            if k != "callb":
+                setattr(self, k, v)
 
 
 class MockFailingLifxCommand:
@@ -50,15 +53,23 @@ class MockFailingLifxCommand:
 class MockLifxCommand:
     """Mock a lifx command."""
 
+    def __name__(self):
+        """Return name."""
+        return "mock_lifx_command"
+
     def __init__(self, bulb, **kwargs):
         """Init command."""
         self.bulb = bulb
         self.calls = []
+        self.msg_kwargs = kwargs
+        for k, v in kwargs.items():
+            if k != "callb":
+                setattr(self.bulb, k, v)
 
     def __call__(self, *args, **kwargs):
         """Call command."""
         if callb := kwargs.get("callb"):
-            callb(self.bulb, MockMessage())
+            callb(self.bulb, MockMessage(**self.msg_kwargs))
         self.calls.append([args, kwargs])
 
     def reset_mock(self):
@@ -80,6 +91,7 @@ def _mocked_bulb() -> Light:
     bulb.set_power = MockLifxCommand(bulb)
     bulb.set_color = MockLifxCommand(bulb)
     bulb.get_hostfirmware = MockLifxCommand(bulb)
+    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=100)
     bulb.get_version = MockLifxCommand(bulb)
     bulb.set_waveform_optional = MockLifxCommand(bulb)
     bulb.product = 1  # LIFX Original 1000
@@ -108,12 +120,58 @@ def _mocked_brightness_bulb() -> Light:
     return bulb
 
 
+def _mocked_clean_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.get_hev_cycle = MockLifxCommand(bulb)
+    bulb.set_hev_cycle = MockLifxCommand(bulb)
+    bulb.get_hev_configuration = MockLifxCommand(bulb)
+    bulb.get_last_hev_cycle_result = MockLifxCommand(bulb)
+    bulb.hev_cycle_configuration = {"duration": 7200, "indication": False}
+    bulb.hev_cycle = {
+        "duration": 7200,
+        "remaining": 30,
+        "last_power": False,
+    }
+    bulb.last_hev_cycle_result = 0
+    bulb.product = 90
+    return bulb
+
+
+def _mocked_infrared_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 29  # LIFX A19 Night Vision
+    bulb.infrared_brightness = 65535
+    bulb.set_infrared = MockLifxCommand(bulb)
+    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
+    return bulb
+
+
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
+    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
     bulb.get_color_zones = MockLifxCommand(bulb)
     bulb.set_color_zones = MockLifxCommand(bulb)
-    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.get_multizone_effect = MockLifxCommand(bulb)
+    bulb.set_multizone_effect = MockLifxCommand(bulb)
+    bulb.get_extended_color_zones = MockLifxCommand(bulb)
+    bulb.set_extended_color_zones = MockLifxCommand(bulb)
+    return bulb
+
+
+def _mocked_tile() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 55  # LIFX Tile
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
+    return bulb
+
+
+def _mocked_bulb_old_firmware() -> Light:
+    bulb = _mocked_bulb()
+    bulb.host_firmware_version = "2.77"
     return bulb
 
 

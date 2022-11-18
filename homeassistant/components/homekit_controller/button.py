@@ -16,6 +16,7 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,12 +64,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit buttons."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
-        entities = []
+        entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
@@ -77,6 +78,11 @@ async def async_setup_entry(
             entities.append(entity_type(conn, info, char))
         else:
             return False
+
+        for entity in entities:
+            conn.async_migrate_unique_id(
+                entity.old_unique_id, entity.unique_id, Platform.BUTTON
+            )
 
         async_add_entities(entities, True)
         return True

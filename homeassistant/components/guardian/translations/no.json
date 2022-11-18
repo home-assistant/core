@@ -23,12 +23,23 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten til i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `. Klikk deretter SEND nedenfor for \u00e5 merke dette problemet som l\u00f8st.",
-                        "title": "{deprecated_service} -tjenesten blir fjernet"
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten for i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `.",
+                        "title": "{deprecated_service} -tjenesten vil bli fjernet"
                     }
                 }
             },
-            "title": "{deprecated_service} -tjenesten blir fjernet"
+            "title": "{deprecated_service} -tjenesten vil bli fjernet"
+        },
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne enheten til i stedet \u00e5 bruke ` {replacement_entity_id} `.",
+                        "title": "{old_entity_id} vil bli fjernet"
+                    }
+                }
+            },
+            "title": "{old_entity_id} vil bli fjernet"
         }
     }
 }

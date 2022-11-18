@@ -8,8 +8,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
+from .conftest import get_states_response_for_uid
+
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.conftest import get_states_response_for_uid
 
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W"
 

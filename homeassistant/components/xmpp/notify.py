@@ -159,6 +159,9 @@ async def async_send_message(  # noqa: C901
 
         async def start(self, event):
             """Start the communication and sends the message."""
+            if room:
+                _LOGGER.debug("Joining room %s", room)
+                await self.plugin["xep_0045"].join_muc_wait(room, sender, seconds=0)
             # Sending image and message independently from each other
             if data:
                 await self.send_file(timeout=timeout)
@@ -173,9 +176,6 @@ async def async_send_message(  # noqa: C901
             Send XMPP file message using OOB (XEP_0066) and
             HTTP Upload (XEP_0363)
             """
-            if room:
-                self.plugin["xep_0045"].join_muc(room, sender)
-
             try:
                 # Uploading with XEP_0363
                 _LOGGER.debug("Timeout set to %ss", timeout)
@@ -335,8 +335,7 @@ async def async_send_message(  # noqa: C901
             """Send a text only message to a room or a recipient."""
             try:
                 if room:
-                    _LOGGER.debug("Joining room %s", room)
-                    self.plugin["xep_0045"].join_muc(room, sender)
+                    _LOGGER.debug("Sending message to room %s", room)
                     self.send_message(mto=room, mbody=message, mtype="groupchat")
                 else:
                     for recipient in recipients:

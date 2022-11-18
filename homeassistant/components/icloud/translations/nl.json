@@ -18,6 +18,13 @@
                 "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken.",
                 "title": "Integratie herauthenticeren"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Je eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update je wachtwoord om deze integratie te blijven gebruiken.",
+                "title": "Integratie herauthenticeren"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrouwd apparaat"

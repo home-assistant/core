@@ -18,10 +18,14 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import Helper, remove_device, setup_test_accessories_with_controller
+from .common import (
+    Helper,
+    remove_device,
+    setup_test_accessories_with_controller,
+    setup_test_component,
+)
 
 from tests.common import async_fire_time_changed
-from tests.components.homekit_controller.common import setup_test_component
 
 ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
@@ -119,6 +123,7 @@ async def test_offline_device_raises(hass, controller):
             nonlocal is_connected
             if not is_connected:
                 raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_connected
@@ -173,6 +178,7 @@ async def test_ble_device_only_checks_is_available(hass, controller):
             nonlocal is_available
             if not is_available:
                 raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_available

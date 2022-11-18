@@ -14,8 +14,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, async_register, async_unregister
 
-# mypy: allow-untyped-defs
-
 DEPENDENCIES = ("webhook",)
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(

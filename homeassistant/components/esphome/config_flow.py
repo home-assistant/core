@@ -331,6 +331,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.disconnect(force=True)
 
         self._name = self._device_info.name
+        await self.async_set_unique_id(self._name, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return None
 

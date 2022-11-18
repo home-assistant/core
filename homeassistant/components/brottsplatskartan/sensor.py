@@ -87,15 +87,15 @@ class BrottsplatskartanSensor(SensorEntity):
 
     _attr_attribution = brottsplatskartan.ATTRIBUTION
 
-    def __init__(self, bpk, name):
+    def __init__(self, bpk: brottsplatskartan.BrottsplatsKartan, name: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
 
-        incident_counts = defaultdict(int)
+        incident_counts: defaultdict[str, int] = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
@@ -103,8 +103,8 @@ class BrottsplatskartanSensor(SensorEntity):
             return
 
         for incident in incidents:
-            incident_type = incident.get("title_type")
-            incident_counts[incident_type] += 1
+            if (incident_type := incident.get("title_type")) is not None:
+                incident_counts[incident_type] += 1
 
         self._attr_extra_state_attributes = incident_counts
         self._attr_native_value = len(incidents)

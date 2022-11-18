@@ -5,7 +5,7 @@
             "already_configured_account": "Kontoen er allerede konfigurert",
             "already_configured_device": "Enheten er allerede konfigurert",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "unreachable": "Tilkobling mislyktes"
         },
         "error": {
@@ -29,7 +29,7 @@
                 "data": {
                     "host": "IP adresse"
                 },
-                "description": "Awair Local API m\u00e5 aktiveres ved \u00e5 f\u00f8lge disse trinnene: {url}"
+                "description": "F\u00f8lg [disse instruksjonene]( {url} ) om hvordan du aktiverer Awair Local API. \n\n Klikk p\u00e5 send n\u00e5r du er ferdig."
             },
             "local_pick": {
                 "data": {

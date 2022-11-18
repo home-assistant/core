@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten for i stedet \u00e5 bruke `homeassistant.update_entity`-tjenesten med en m\u00e5l Speedtest-entity_id. Klikk deretter SEND nedenfor for \u00e5 merke dette problemet som l\u00f8st.",
+                        "title": "Speedtest-tjenesten fjernes"
+                    }
+                }
+            },
+            "title": "Speedtest-tjenesten blir fjernet"
+        }
+    },
     "options": {
         "step": {
             "init": {

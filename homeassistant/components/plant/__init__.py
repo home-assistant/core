@@ -111,7 +111,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -129,6 +129,8 @@ class Plant(Entity):
     It also checks the measurements against
     configurable min and max values.
     """
+
+    _attr_should_poll = False
 
     READINGS = {
         READING_BATTERY: {
@@ -322,11 +324,6 @@ class Plant(Entity):
                 )
 
         _LOGGER.debug("Initializing from database completed")
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

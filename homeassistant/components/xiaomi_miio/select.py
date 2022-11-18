@@ -40,12 +40,15 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRHUMIDIFIER_V1,
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_PROH,
@@ -71,7 +74,6 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options_map: dict = field(default_factory=dict)
     set_method: str = ""
     set_method_error_message: str = ""
-    options: tuple = ()
 
 
 class AttributeEnumMapping(NamedTuple):
@@ -87,6 +89,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
     ],
     MODEL_AIRFRESH_VA2: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)
+    ],
+    MODEL_AIRFRESH_VA4: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)
     ],
     MODEL_AIRHUMIDIFIER_CA1: [
@@ -105,6 +110,12 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_3H: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_4: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_4_PRO: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_M1: [
@@ -138,7 +149,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
         device_class="xiaomi_miio__display_orientation",
-        options=("forward", "left", "right"),
+        options=["forward", "left", "right"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -149,7 +160,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
-        options=("bright", "dim", "off"),
+        options=["bright", "dim", "off"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -160,7 +171,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
         device_class="xiaomi_miio__ptc_level",
-        options=("low", "medium", "high"),
+        options=["low", "medium", "high"],
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -208,7 +219,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
-        self._attr_options = list(description.options)
         self.entity_description = description
 
 

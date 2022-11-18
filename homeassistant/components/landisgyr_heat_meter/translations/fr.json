@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "S\u00e9lectionner un appareil"
+                }
+            }
+        }
+    }
+}

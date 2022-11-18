@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DOMAIN
+from . import DOMAIN
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -48,8 +48,6 @@ async def async_setup_entry(
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    _attr_attribution = ATTRIBUTION
-
     def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__(config_entry_id, device)
@@ -62,7 +60,7 @@ class RingCam(RingEntityMixin, Camera):
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -70,7 +68,7 @@ class RingCam(RingEntityMixin, Camera):
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -146,7 +144,7 @@ class RingCam(RingEntityMixin, Camera):
         finally:
             await stream.close()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
         if self._last_event is None:
             return

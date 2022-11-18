@@ -451,7 +451,7 @@ async def test_send_with_no_energy(hass, aioclient_mock):
     assert "energy" not in postdata
 
 
-async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_no_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
@@ -473,7 +473,7 @@ async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
     assert not postdata["energy"]["configured"]
 
 
-async def test_send_with_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)

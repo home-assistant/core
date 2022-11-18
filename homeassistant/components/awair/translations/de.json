@@ -29,7 +29,7 @@
                 "data": {
                     "host": "IP-Adresse"
                 },
-                "description": "Befolge [diese Anweisungen]({url}), um die Awair Local API zu aktivieren. \n\nKlicke abschlie\u00dfend auf Senden."
+                "description": "Befolge [diese Anweisungen]({url}), um die Awair Local API zu aktivieren. \n\nDr\u00fccke abschlie\u00dfend auf Senden."
             },
             "local_pick": {
                 "data": {
