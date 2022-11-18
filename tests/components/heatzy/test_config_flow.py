@@ -20,7 +20,7 @@ MOCK_CONFIG = {
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.heatzy.HeatzyClient", autospec=True
+        "homeassistant.components.heatzy.config_flow.HeatzyClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.async_get_devices.return_value = [
