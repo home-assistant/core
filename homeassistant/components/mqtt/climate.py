@@ -53,7 +53,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import (
@@ -309,9 +308,8 @@ PLATFORM_SCHEMA_MODERN = vol.All(
 )
 
 # Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    valid_preset_mode_configuration,
     warn_for_legacy_schema(climate.DOMAIN),
 )
 
@@ -332,23 +330,6 @@ DISCOVERY_SCHEMA = vol.All(
     cv.removed(CONF_HOLD_LIST),
     valid_preset_mode_configuration,
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT climate configured under the fan platform key (deprecated)."""
-    # The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        climate.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -475,7 +456,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 config.get(key), entity=self
             ).async_render
 
-        support: int = 0
+        support: ClimateEntityFeature | int = 0
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
         ):

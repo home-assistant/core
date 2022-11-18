@@ -551,6 +551,74 @@ jobs:
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
           pip install -e .
 
+  cleanup-cache:
+    name: Cleanup old pip caches
+    runs-on: ubuntu-20.04
+    needs:
+      - base
+    permissions:
+      actions: write
+    # Limit to 'dev' branch until permissions issue is resolved
+    # https://github.com/home-assistant/core/pull/80898
+    # https://github.com/home-assistant/core/pull/82254
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - name: Cleanup
+        run: |
+          sort="last_accessed_at"
+          page=1
+          per_page=100
+          del_count=0
+          index=0
+
+          all_versions=($(echo $ALL_PYTHON_VERSIONS | tr -d \',[]))
+
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-keep-cache') }}" == "true" ]]
+          then
+            index=1
+            echo "Keep one entry per Python version"
+          fi
+
+          while true; do
+            res=$(curl -fsS \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: token ${{ github.token }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/caches?sort=$sort&per_page=$per_page&page=$page")
+
+            res_count=$(echo $res | jq '.actions_caches | length')
+            if [ $res_count -eq 0 ]; then break; fi
+
+            echo "Check ref: ${{ github.ref }}"
+            for version in ${all_versions[@]}; do
+              key="${{ runner.os }}-$version.+-pip"
+              echo "Check key regex: $key"
+
+              # Select all cache keys which match the ref and key regex
+              # Keep the first entry for 'ref/heads/dev'
+              targets=$(echo $res | jq \
+                --arg ref "${{ github.ref }}" --arg key "$key" --arg index $index \
+                '[.actions_caches[] | select(.ref == $ref) | select(.key | test($key))][$index | fromjson:][] | del(.created_at, .size_in_bytes, .version)')
+
+              if [ $(echo $targets | jq -s 'length') -eq 0 ]; then continue; fi
+              echo "$targets"
+
+              for id in $(echo $targets | jq '.id'); do
+                curl -fsS \
+                  -X DELETE \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "Authorization: token ${{ github.token }}" \
+                  "https://api.github.com/repos/${{ github.repository }}/actions/caches/$id"
+                ((del_count += 1))
+              done
+            done
+
+            if [ $res_count -lt $per_page ]; then break; fi
+            ((page += 1))
+          done
+
+          echo "Deleted $del_count caches."
+
   hassfest:
     name: Check hassfest
     runs-on: ubuntu-20.04

@@ -284,7 +284,7 @@ class EmbyDevice(MediaPlayerEntity):
         return self.device.media_album_artist
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature | int:
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY

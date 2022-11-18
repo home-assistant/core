@@ -10,6 +10,16 @@ from typing import TYPE_CHECKING, cast
 
 import async_timeout
 from awesomeversion import AwesomeVersion
+from bluetooth_adapters import (
+    ADAPTER_ADDRESS,
+    ADAPTER_HW_VERSION,
+    ADAPTER_SW_VERSION,
+    DEFAULT_ADDRESS,
+    AdapterDetails,
+    adapter_human_name,
+    adapter_unique_name,
+    get_adapters,
+)
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
@@ -32,20 +42,15 @@ from homeassistant.loader import async_get_bluetooth
 
 from . import models
 from .const import (
-    ADAPTER_ADDRESS,
-    ADAPTER_HW_VERSION,
-    ADAPTER_SW_VERSION,
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
     DATA_MANAGER,
-    DEFAULT_ADDRESS,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
-    AdapterDetails,
 )
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
@@ -62,7 +67,6 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, ScannerStartError
-from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -288,13 +292,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
-    manager = BluetoothManager(hass, integration_matcher)
+    bluetooth_adapters = get_adapters()
+    manager = BluetoothManager(hass, integration_matcher, bluetooth_adapters)
     await manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
     adapters = await manager.async_get_bluetooth_adapters()
 
-    async_migrate_entries(hass, adapters)
+    async_migrate_entries(hass, adapters, bluetooth_adapters.default_adapter)
     await async_discover_adapters(hass, adapters)
 
     async def _async_rediscover_adapters() -> None:
@@ -347,17 +352,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_HOMEASSISTANT_STARTED,
         hass_callback(lambda event: _async_check_haos(hass)),
     )
-
     return True
 
 
 @hass_callback
 def async_migrate_entries(
-    hass: HomeAssistant, adapters: dict[str, AdapterDetails]
+    hass: HomeAssistant, adapters: dict[str, AdapterDetails], default_adapter: str
 ) -> None:
     """Migrate config entries to support multiple."""
     current_entries = hass.config_entries.async_entries(DOMAIN)
-    default_adapter = async_default_adapter()
 
     for entry in current_entries:
         if entry.unique_id:

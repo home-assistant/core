@@ -57,6 +57,7 @@ from .const import (
     DEFAULT_QOS,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_5,
     PROTOCOL_31,
 )
 from .models import (
@@ -272,8 +273,10 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
+        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+        elif protocol == PROTOCOL_5:
+            proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
 
@@ -558,8 +561,9 @@ class MQTT:
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
-        _flags: dict[str, Any],
+        _flags: dict[str, int],
         result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
@@ -677,9 +681,13 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos: tuple[Any, ...] | None = None,
+        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
+        _properties_reason: mqtt.ReasonCodes | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
+        # The callback signature for on_unsubscribe is different from on_subscribe
+        # see https://github.com/eclipse/paho.mqtt.python/issues/687
+        # properties and reasoncodes are not used in Home Assistant
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
@@ -695,7 +703,11 @@ class MQTT:
                 self._pending_operations[mid] = asyncio.Event()
 
     def _mqtt_on_disconnect(
-        self, _mqttc: mqtt.Client, _userdata: None, result_code: int
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """Disconnected callback."""
         self.connected = False
