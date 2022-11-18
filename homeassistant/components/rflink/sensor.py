@@ -182,7 +182,7 @@ SENSOR_TYPES = (
         key="total_rain",
         name="Total rain",
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
     ),
     SensorEntityDescription(
