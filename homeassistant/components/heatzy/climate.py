@@ -24,7 +24,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HeatzyDataUpdateCoordinator
 from .const import (
     CFT_TEMP_H,
     CFT_TEMP_L,
@@ -45,6 +44,7 @@ from .const import (
     PILOTE_V1,
     PILOTE_V2,
 )
+from .coordinator import HeatzyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +111,10 @@ class HeatzyThermostat(CoordinatorEntity[HeatzyDataUpdateCoordinator], ClimateEn
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.async_set_preset_mode(PRESET_NONE)
+
+    @property
+    def _conf_attr(self):
+        return self.coordinator.data[self.unique_id].get(CONF_ATTR, {})
 
 
 class HeatzyPiloteV1Thermostat(HeatzyThermostat):
