@@ -112,8 +112,10 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             self._attr_available = True
             self._result = result
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
+                self._result = result.bits
                 self._attr_is_on = bool(result.bits[0] & 1)
             else:
+                self._result = result.registers
                 self._attr_is_on = bool(result.registers[0] & 1)
 
         self.async_write_ha_state()
@@ -132,8 +134,7 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = False
-        self._result_inx = int(idx / 8)
-        self._result_bit = 2 ** (idx % 8)
+        self._result_inx = idx
         super().__init__(coordinator)
 
     async def async_added_to_hass(self) -> None:
@@ -148,5 +149,5 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
         if result:
-            self._attr_is_on = result.bits[self._result_inx] & self._result_bit
+            self._attr_is_on = bool(result[self._result_inx] & 1)
         super()._handle_coordinator_update()
