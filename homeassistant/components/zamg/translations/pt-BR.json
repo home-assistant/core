@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
-            "cannot_connect": "Falhou ao conectar"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar"
+            "cannot_connect": "Falha ao conectar"
         },
         "flow_title": "{name}",
         "step": {

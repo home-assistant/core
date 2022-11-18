@@ -93,7 +93,7 @@
             "broker": {
                 "data": {
                     "advanced_options": "Op\u00e7\u00f5es avan\u00e7adas",
-                    "broker": "Broker",
+                    "broker": "Endere\u00e7o do Broker",
                     "certificate": "Carregar arquivo de certificado de CA personalizado",
                     "client_cert": "Carregar arquivo de certificado do cliente",
                     "client_id": "ID do cliente (deixe em branco para um gerado aleatoriamente)",
@@ -107,7 +107,7 @@
                     "tls_insecure": "Ignorar a valida\u00e7\u00e3o do certificado do corretor",
                     "username": "Usu\u00e1rio"
                 },
-                "description": "Insira as informa\u00e7\u00f5es de conex\u00e3o do seu broker MQTT.",
+                "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT.",
                 "title": "Op\u00e7\u00f5es do broker"
             },
             "options": {
