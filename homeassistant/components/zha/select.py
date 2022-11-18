@@ -476,3 +476,34 @@ class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
     _select_attr = "switch_type"
     _enum = InovelliSwitchType
     _attr_name: str = "Switch type"
+
+
+class AqaraFeedingMode(types.enum8):
+    """Feeding mode."""
+
+    Manual = 0x00
+    Schedule = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
+    """Representation of an Aqara pet feeder mode configuration entity."""
+
+    _select_attr = "feeding_mode"
+    _enum = AqaraFeedingMode
+    _attr_name = "Mode"
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZCLEnumSelectEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZCLEnumSelectEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)

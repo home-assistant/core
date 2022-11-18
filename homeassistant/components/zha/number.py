@@ -834,3 +834,57 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
     _attr_name: str = "Default all LED off intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
+    """Aqara pet feeder serving size configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 10
+    _zcl_attribute: str = "serving_size"
+    _attr_name: str = "Serving size"
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZHANumberConfigurationEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZHANumberConfigurationEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionWeight(
+    ZHANumberConfigurationEntity, id_suffix="portion_weight"
+):
+    """Aqara pet feeder portion weight configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "portion_weight"
+    _attr_name: str = "Portion weight"
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZHANumberConfigurationEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZHANumberConfigurationEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)

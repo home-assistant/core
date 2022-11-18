@@ -121,6 +121,10 @@ class OppleRemote(ZigbeeChannel):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
             }
+        elif self.cluster.endpoint.model == "aqara.feeder.acn001":
+            self.ZCL_INIT_ATTRS = {
+                "feeder_attr": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""

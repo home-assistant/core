@@ -5,6 +5,8 @@ import functools
 import numbers
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from zigpy import types
+
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -837,3 +839,46 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _unit = TIME_MINUTES
+
+
+class AqaraFeedingSource(types.enum8):
+    """Aqara pet feeder feeding source."""
+
+    Manual = 0x01
+    Remote = 0x02
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="feeding_source"):
+    """Sensor that displays the last feeding source of pet feeder."""
+
+    SENSOR_ATTR = "feeding_source"
+    _attr_name: str = "Last feeding source"
+
+    def formatter(self, value: int) -> int | float | None:
+        """Numeric pass-through formatter."""
+        return AqaraFeedingSource(value).name
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="feeding_size"):
+    """Sensor that displays the last feeding size of the pet feeder."""
+
+    SENSOR_ATTR = "feeding_size"
+    _attr_name: str = "Last feeding size"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionsPerDay(Sensor, id_suffix="portions_per_day"):
+    """Sensor that displays the portions per day of the pet feeder."""
+
+    SENSOR_ATTR = "portions_per_day"
+    _attr_name: str = "Portions per day"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederWeightPerDay(Sensor, id_suffix="weight_per_day"):
+    """Sensor that displays the weight of the food dispensed per day."""
+
+    SENSOR_ATTR = "weight_per_day"
+    _attr_name: str = "Weight per day"

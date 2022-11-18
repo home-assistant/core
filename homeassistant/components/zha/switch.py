@@ -430,3 +430,51 @@ class InovelliDisableDoubleTapClearNotificationsMode(
 
     _zcl_attribute: str = "disable_clear_notifications_double_tap"
     _attr_name: str = "Disable config 2x tap to clear notifications"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLEDIndicator(
+    ZHASwitchConfigurationEntity, id_suffix="led_indicator"
+):
+    """Representation of a LED indicator configuration entity."""
+
+    _zcl_attribute: str = "led_indicator"
+    _attr_name = "Disable LED indicator"
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of a child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)
