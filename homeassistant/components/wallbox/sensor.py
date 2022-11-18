@@ -128,12 +128,16 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:ev-station",
         name="Depot Price",
         precision=2,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_ENERGY_PRICE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ENERGY_PRICE_KEY,
         icon="mdi:ev-station",
         name="Energy Price",
         precision=2,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
         key=CHARGER_STATUS_DESCRIPTION_KEY,
