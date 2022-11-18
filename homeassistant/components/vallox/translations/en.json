@@ -18,5 +18,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "description": "Update any automations or scripts that use this service to instead use corresponding entity. Then, click SUBMIT below to mark this issue as resolved.",
+            "title": "The {deprecated_service} service is being removed"
+        }
     }
 }

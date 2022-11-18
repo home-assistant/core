@@ -25,7 +25,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
     entity_description: ValloxNumberEntityDescription
     _attr_has_entity_name = True
-    _attr_entity_category: EntityCategory | None = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

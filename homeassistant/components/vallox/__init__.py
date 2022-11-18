@@ -20,9 +20,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -206,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    service_handler = ValloxServiceHandler(client, coordinator)
+    service_handler = ValloxServiceHandler(client, coordinator, hass)
     for vallox_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
             DOMAIN,
@@ -244,11 +245,15 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(
-        self, client: Vallox, coordinator: DataUpdateCoordinator[ValloxState]
+        self,
+        client: Vallox,
+        coordinator: DataUpdateCoordinator[ValloxState],
+        hass: HomeAssistant,
     ) -> None:
         """Initialize the proxy."""
         self._client = client
         self._coordinator = coordinator
+        self._hass = hass
 
     async def async_set_profile_fan_speed_home(
         self, fan_speed: int = DEFAULT_FAN_SPEED_HOME
@@ -310,10 +315,10 @@ class ValloxServiceHandler:
             _LOGGER.error("Service not implemented: %s", service_details.method)
             return
 
-        _LOGGER.warning(
-            "The %s.%s service is deprecated and will be removed in a future release. Please migrate to the corresponding number entity",
-            DOMAIN,
-            call.service,
+        _async_log_deprecated_service_call(
+            self._hass,
+            call,
+            "2023.01.0",
         )
 
         result = await getattr(self, service_details.method)(**params)
@@ -341,3 +346,35 @@ class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
             sw_version=self.coordinator.data.sw_version,
             configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
         )
+
+
+@callback
+def _async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    _LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use corresponding entity instead'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+    )
