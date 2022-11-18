@@ -479,7 +479,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             message["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_FLASH in kwargs:
-            flash: str | None = kwargs.get(ATTR_FLASH)
+            flash: str = kwargs[ATTR_FLASH]
 
             if flash == FLASH_LONG:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
