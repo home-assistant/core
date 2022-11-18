@@ -112,14 +112,6 @@ class SensorDeviceClass(StrEnum):
     """
 
     # Numerical device classes, these should be aligned with NumberDeviceClass
-    ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
-    """Accumulated precipitation.
-
-    Unit of measurement:
-    - SI / metric: `mm`
-    - USCS / imperial: `in`
-    """
-
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
@@ -262,6 +254,14 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    PRECIPITATION_DEPTH = "precipitation_depth"
+    """Precipitation depth.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
+    """
+
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
@@ -400,9 +400,9 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 # Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
 # `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
-    SensorDeviceClass.ACCUMULATED_PRECIPITATION: DistanceConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.PRECIPITATION_DEPTH: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,

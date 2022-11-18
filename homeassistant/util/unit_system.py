@@ -249,8 +249,6 @@ METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=UnitOfLength.MILLIMETERS,
     conversions={
-        # Convert non-metric accumulated precipitation
-        ("accumulated_precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -258,6 +256,8 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        # Convert non-metric precipitation depth
+        ("precipitation_depth", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -281,8 +281,6 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=UnitOfLength.INCHES,
     conversions={
-        # Convert non-USCS accumulated precipitation
-        ("accumulated_precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
@@ -290,6 +288,8 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
+        # Convert non-USCS precipitation depth
+        ("precipitation_depth", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS speeds except knots to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,

@@ -57,14 +57,6 @@ class NumberDeviceClass(StrEnum):
 
     # NumberDeviceClass should be aligned with SensorDeviceClass
 
-    ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
-    """Accumulated precipitation.
-
-    Unit of measurement:
-    - SI / metric: `mm`
-    - USCS / imperial: `in`
-    """
-
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
@@ -205,6 +197,14 @@ class NumberDeviceClass(StrEnum):
     """Power.
 
     Unit of measurement: `W`, `kW`
+    """
+
+    PRECIPITATION_DEPTH = "precipitation_depth"
+    """Precipitation depth.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
     """
 
     PRECIPITATION_INTENSITY = "precipitation_intensity"

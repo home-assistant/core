@@ -30,7 +30,6 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
-CONF_ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
 CONF_APPARENT_POWER = "apparent_power"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
@@ -52,6 +51,7 @@ CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
+CONF_PRECIPITATION_DEPTH = "precipitation_depth"
 CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
@@ -68,9 +68,6 @@ CONF_WEIGHT = "weight"
 CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
-    SensorDeviceClass.ACCUMULATED_PRECIPITATION: [
-        {CONF_TYPE: CONF_ACCUMULATED_PRECIPITATION}
-    ],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
@@ -92,6 +89,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
+    SensorDeviceClass.PRECIPITATION_DEPTH: [{CONF_TYPE: CONF_PRECIPITATION_DEPTH}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
     ],
