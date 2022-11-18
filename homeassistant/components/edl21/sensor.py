@@ -49,6 +49,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL_SECONDS, default=MIN_TIME_BETWEEN_UPDATES
+        ): cv.positive_int,
     },
 )
 
