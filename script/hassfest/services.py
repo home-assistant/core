@@ -96,7 +96,4 @@ def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_services(integration)

@@ -66,9 +66,6 @@ def validate(integrations: dict[str, Integration], config: Config):
     disable_tqdm = config.specific_integrations or os.environ.get("CI", False)
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
-        if not integration.manifest:
-            continue
-
         validate_requirements(integration)
 
 

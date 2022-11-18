@@ -262,10 +262,6 @@ def gather_requirements_from_manifests(
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
-            errors.append(f"The manifest for integration {domain} is invalid.")
-            continue
-
         if integration.disabled:
             continue
 
