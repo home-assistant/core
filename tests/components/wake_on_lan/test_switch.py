@@ -18,7 +18,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_mock_service
 
 
-async def test_valid_hostname(hass: HomeAssistant) -> None:
+async def test_valid_hostname(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
     """Test with valid hostname."""
     assert await async_setup_component(
         hass,
@@ -164,7 +166,9 @@ async def test_broadcast_config_port(
         mock_send_magic_packet.assert_called_with(mac, port=port)
 
 
-async def test_off_script(hass: HomeAssistant) -> None:
+async def test_off_script(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
     """Test with turn off script."""
 
     assert await async_setup_component(
@@ -212,7 +216,9 @@ async def test_off_script(hass: HomeAssistant) -> None:
         assert len(calls) == 1
 
 
-async def test_no_hostname_state(hass: HomeAssistant) -> None:
+async def test_no_hostname_state(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
     """Test that the state updates if we do not pass in a hostname."""
 
     assert await async_setup_component(

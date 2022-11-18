@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_send_magic_packet() -> AsyncMock:
     """Mock magic packet."""
     with patch("wakeonlan.send_magic_packet") as mock_send:
