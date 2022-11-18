@@ -70,14 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if not authenticated:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
 
-            daily_usage = await client.get_daily_usage(
-                datetime.utcnow().strftime("%Y-%m")
-            )
-            if daily_usage is None:
-                raise UpdateFailed("No daily usage data found")
-
             return OVOCoordinatorData(
-                daily_usage=daily_usage,
+                daily_usage=await client.get_daily_usage(
+                    datetime.utcnow().strftime("%Y-%m")
+                ),
                 plan=await client.get_plan(),
             )
 
