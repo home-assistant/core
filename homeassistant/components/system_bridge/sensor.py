@@ -68,8 +68,8 @@ def cpu_power_per_cpu(
     cpu: int,
 ) -> float | None:
     """Return CPU power per CPU."""
-    if hasattr(data.cpu, f"power_per_cpu_{cpu}"):
-        return round(getattr(data.cpu, f"power_per_cpu_{cpu}"), 2)
+    if (value := getattr(data.cpu, f"power_per_cpu_{cpu}", None)) is not None:
+        return round(value, 2)
     return None
 
 
