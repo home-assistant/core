@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -845,21 +845,7 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving
     _attr_native_max_value: float = 10
     _zcl_attribute: str = "serving_size"
     _attr_name: str = "Serving size"
-
-    @classmethod
-    def create_entity(
-        cls: type[_ZHANumberConfigurationEntitySelfT],
-        unique_id: str,
-        zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
-        **kwargs: Any,
-    ) -> _ZHANumberConfigurationEntitySelfT | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-
-        return cls(unique_id, zha_device, channels, **kwargs)
+    _attr_mode: NumberMode = NumberMode.BOX
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -873,18 +859,4 @@ class AqaraPetFeederPortionWeight(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "portion_weight"
     _attr_name: str = "Portion weight"
-
-    @classmethod
-    def create_entity(
-        cls: type[_ZHANumberConfigurationEntitySelfT],
-        unique_id: str,
-        zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
-        **kwargs: Any,
-    ) -> _ZHANumberConfigurationEntitySelfT | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-
-        return cls(unique_id, zha_device, channels, **kwargs)
+    _attr_mode: NumberMode = NumberMode.BOX

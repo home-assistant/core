@@ -845,8 +845,8 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
 class AqaraFeedingSource(types.enum8):
     """Aqara pet feeder feeding source."""
 
-    Manual = 0x01
-    Remote = 0x02
+    Feeder = 0x01
+    HomeAssistant = 0x02
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})

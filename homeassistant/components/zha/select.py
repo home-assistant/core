@@ -492,18 +492,3 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _select_attr = "feeding_mode"
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
-
-    @classmethod
-    def create_entity(
-        cls: type[_ZCLEnumSelectEntitySelfT],
-        unique_id: str,
-        zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
-        **kwargs: Any,
-    ) -> _ZCLEnumSelectEntitySelfT | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-
-        return cls(unique_id, zha_device, channels, **kwargs)

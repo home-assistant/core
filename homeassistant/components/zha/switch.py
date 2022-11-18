@@ -445,21 +445,6 @@ class AqaraPetFeederLEDIndicator(
     _attr_name = "LED indicator"
     _force_inverted = True
 
-    @classmethod
-    def create_entity(
-        cls: type[_ZHASwitchConfigurationEntitySelfT],
-        unique_id: str,
-        zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
-        **kwargs: Any,
-    ) -> _ZHASwitchConfigurationEntitySelfT | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-
-        return cls(unique_id, zha_device, channels, **kwargs)
-
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
@@ -467,18 +452,3 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_loc
 
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
-
-    @classmethod
-    def create_entity(
-        cls: type[_ZHASwitchConfigurationEntitySelfT],
-        unique_id: str,
-        zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
-        **kwargs: Any,
-    ) -> _ZHASwitchConfigurationEntitySelfT | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-
-        return cls(unique_id, zha_device, channels, **kwargs)
