@@ -195,7 +195,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or CONF_STATE_TEMPLATE not in self._config
         )
 
-        color_modes: set[ColorMode] = {ColorMode.ONOFF}
+        color_modes = {ColorMode.ONOFF}
         if CONF_BRIGHTNESS_TEMPLATE in config:
             color_modes.add(ColorMode.BRIGHTNESS)
         if CONF_COLOR_TEMP_TEMPLATE in config:
@@ -210,6 +210,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         self._fixed_color_mode = None
         if self.supported_color_modes and len(self.supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(self.supported_color_modes))
+            self._attr_color_mode = self._fixed_color_mode
 
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
         if config.get(CONF_EFFECT_LIST) is not None:
@@ -280,11 +281,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if CONF_EFFECT_TEMPLATE in self._config:
                 effect = str(self._value_templates[CONF_EFFECT_TEMPLATE](msg.payload))
-
                 if (
-                    CONF_EFFECT_LIST in self._config
-                    and effect in self._config[CONF_EFFECT_LIST]
-                ):
+                    effect_list := self._config[CONF_EFFECT_LIST]
+                ) and effect in effect_list:
                     self._attr_effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
