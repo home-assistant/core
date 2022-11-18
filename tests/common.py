@@ -380,16 +380,55 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+def async_fire_time_changed_exact(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changed event."""
+    """Fire a time changed event at an exact microsecond.
+
+    Consider that its not possible to actually achieve an exact microsecond
+    in production as the event loop is not precise enough. If your code
+    relies on this level of precision, consider a different approach
+    as this is only for testing.
+    """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
     else:
         utc_datetime = date_util.as_utc(datetime_)
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+) -> None:
+    """Fire a time changed event.
+
+    This function will ensure microseconds at at least 500000
+    to account for the synchronization repeating listeners.
+
+    If you need to fire an exact microsecond, use async_fire_time_changed_exact.
+    """
+    if datetime_ is None:
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+
+    if utc_datetime.microsecond < 500000:
+        # Allow up to 500000 microseconds to be added to the time
+        # to handle update_coordinator's and
+        # async_track_time_interval's
+        # staggering to avoid thundering herd.
+        utc_datetime = utc_datetime.replace(microsecond=500000)
+
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def _async_fire_time_changed(
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+) -> None:
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue

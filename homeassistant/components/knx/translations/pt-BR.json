@@ -110,9 +110,9 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "Falhou ao conectar",
+            "cannot_connect": "Falha ao conectar",
             "file_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
-            "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n'\u00e1rea.linha.dispositivo'",
+            "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n '\u00e1rea.linha.dispositivo'",
             "invalid_ip_address": "Endere\u00e7o IPv4 inv\u00e1lido.",
             "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "no_router_discovered": "Nenhum roteador KNXnet/IP foi descoberto na rede.",
@@ -156,19 +156,19 @@
             },
             "manual_tunnel": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "local_ip": "IP local do Home Assistant",
                     "port": "Porta",
                     "route_back": "Rota de volta / modo NAT",
                     "tunneling_type": "Tipo de t\u00fanel KNX"
                 },
                 "data_description": {
-                    "host": "Endere\u00e7o IP do dispositivo de encapsulamento KNX/IP.",
+                    "host": "Endere\u00e7o IP do dispositivo de tunelamento KNX/IP.",
                     "local_ip": "Deixe em branco para usar a descoberta autom\u00e1tica.",
-                    "port": "Porta do dispositivo de encapsulamento KNX/IP.",
+                    "port": "Porta do dispositivo de tunelamento KNX/IP.",
                     "route_back": "Ative se o servidor de encapsulamento KNXnet/IP estiver atr\u00e1s do NAT. Aplica-se apenas a conex\u00f5es UDP."
                 },
-                "description": "Insira as informa\u00e7\u00f5es de conex\u00e3o do seu dispositivo de encapsulamento."
+                "description": "Por favor, digite as informa\u00e7\u00f5es de conex\u00e3o do seu dispositivo de tunelamento."
             },
             "options_init": {
                 "menu_options": {
@@ -184,7 +184,7 @@
                     "multicast_port": "Porta multicast"
                 },
                 "data_description": {
-                    "individual_address": "Endere\u00e7o KNX a ser utilizado pelo Home Assistant, por ex. `0.0.4`",
+                    "individual_address": "Endere\u00e7o KNX a ser usado pelo Home Assistant, por exemplo, `0.0.4`",
                     "local_ip": "Deixe em branco para usar a descoberta autom\u00e1tica."
                 },
                 "description": "Por favor, configure as op\u00e7\u00f5es de roteamento."
@@ -195,7 +195,7 @@
                     "knxkeys_password": "A senha para descriptografar o arquivo `.knxkeys`"
                 },
                 "data_description": {
-                    "knxkeys_filename": "Espera-se que o arquivo seja encontrado em seu diret\u00f3rio de configura\u00e7\u00e3o em `.storage/knx/`.\nNo sistema operacional Home Assistant seria `/config/.storage/knx/`\nExemplo: `my_project.knxkeys`",
+                    "knxkeys_filename": "Espera-se que o arquivo seja encontrado em seu diret\u00f3rio de configura\u00e7\u00e3o em `.storage/knx/`.\n No sistema operacional Home Assistant seria `/config/.storage/knx/`\n Exemplo: `my_project.knxkeys`",
                     "knxkeys_password": "Isso foi definido ao exportar o arquivo do ETS."
                 },
                 "description": "Por favor, insira as informa\u00e7\u00f5es para o seu arquivo `.knxkeys`."
@@ -222,7 +222,7 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "Conex\u00e3o do KNX Tunnel",
+                    "gateway": "Conex\u00e3o do t\u00fanel KNX",
                     "host": "Nome do host",
                     "port": "Porta",
                     "tunneling_type": "Tipo de t\u00fanel KNX"
