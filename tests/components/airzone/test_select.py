@@ -75,7 +75,7 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    HVAC_MOCK = {
+    put_hvac_sleep = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
@@ -98,7 +98,7 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK,
+        return_value=put_hvac_sleep,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -121,7 +121,7 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
 
     # Cold Angle
 
-    HVAC_MOCK = {
+    put_hvac_cold_angle = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
@@ -133,7 +133,7 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK,
+        return_value=put_hvac_cold_angle,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -150,7 +150,7 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
 
     # Heat Angle
 
-    HVAC_MOCK_2 = {
+    put_hvac_heat_angle = {
         API_DATA: [
             {
                 API_SYSTEM_ID: 1,
@@ -161,7 +161,7 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
     }
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
-        return_value=HVAC_MOCK_2,
+        return_value=put_hvac_heat_angle,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
