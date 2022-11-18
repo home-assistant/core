@@ -38,6 +38,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
+    UnitOfMass,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -849,10 +850,10 @@ class AqaraFeedingSource(types.enum8):
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="feeding_source"):
+class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="last_feeding_source"):
     """Sensor that displays the last feeding source of pet feeder."""
 
-    SENSOR_ATTR = "feeding_source"
+    SENSOR_ATTR = "last_feeding_source"
     _attr_name: str = "Last feeding source"
 
     def formatter(self, value: int) -> int | float | None:
@@ -861,24 +862,25 @@ class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="feeding_source"):
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="feeding_size"):
+class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="last_feeding_size"):
     """Sensor that displays the last feeding size of the pet feeder."""
 
-    SENSOR_ATTR = "feeding_size"
+    SENSOR_ATTR = "last_feeding_size"
     _attr_name: str = "Last feeding size"
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederPortionsPerDay(Sensor, id_suffix="portions_per_day"):
-    """Sensor that displays the portions per day of the pet feeder."""
+class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
+    """Sensor that displays the number of portions dispensed by the pet feeder."""
 
-    SENSOR_ATTR = "portions_per_day"
-    _attr_name: str = "Portions per day"
+    SENSOR_ATTR = "portions_dispensed"
+    _attr_name: str = "Portions dispensed"
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
-class AqaraPetFeederWeightPerDay(Sensor, id_suffix="weight_per_day"):
-    """Sensor that displays the weight of the food dispensed per day."""
+class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
+    """Sensor that displays the weight weight dispensed by the pet feeder."""
 
-    SENSOR_ATTR = "weight_per_day"
-    _attr_name: str = "Weight per day"
+    SENSOR_ATTR = "weight_dispensed"
+    _attr_name: str = "Weight dispensed"
+    _unit = UnitOfMass.GRAMS

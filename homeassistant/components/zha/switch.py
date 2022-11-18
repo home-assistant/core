@@ -174,7 +174,8 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute: str
-    _zcl_inverter_attribute: str = ""
+    _zcl_inverter_attribute: str | None = None
+    _force_inverted: bool = False
 
     @classmethod
     def create_entity(
@@ -226,18 +227,23 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
+    def is_inverted(self) -> bool:
+        """Return True if the switch is inverted."""
+        if self._zcl_inverter_attribute:
+            return bool(self._channel.cluster.get(self._zcl_inverter_attribute))
+        return self._force_inverted
+
+    @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
         val = bool(self._channel.cluster.get(self._zcl_attribute))
-        invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
-        return (not val) if invert else val
+        return (not val) if self.is_inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
         try:
-            invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
             result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: not state if invert else state}
+                {self._zcl_attribute: not state if self.is_inverted else state}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -263,10 +269,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
             value = await self._channel.get_attribute_value(
                 self._zcl_attribute, from_cache=False
             )
-            invert = await self._channel.get_attribute_value(
-                self._zcl_inverter_attribute, from_cache=False
-            )
-            _LOGGER.debug("read value=%s, inverter=%s", value, bool(invert))
+            _LOGGER.debug("read value=%s, inverter=%s", value, self.is_inverted)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -434,12 +437,13 @@ class InovelliDisableDoubleTapClearNotificationsMode(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederLEDIndicator(
-    ZHASwitchConfigurationEntity, id_suffix="led_indicator"
+    ZHASwitchConfigurationEntity, id_suffix="disable_led_indicator"
 ):
     """Representation of a LED indicator configuration entity."""
 
-    _zcl_attribute: str = "led_indicator"
-    _attr_name = "Disable LED indicator"
+    _zcl_attribute: str = "disable_led_indicator"
+    _attr_name = "LED indicator"
+    _force_inverted = True
 
     @classmethod
     def create_entity(

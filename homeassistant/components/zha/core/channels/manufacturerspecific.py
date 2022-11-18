@@ -123,7 +123,14 @@ class OppleRemote(ZigbeeChannel):
             }
         elif self.cluster.endpoint.model == "aqara.feeder.acn001":
             self.ZCL_INIT_ATTRS = {
-                "feeder_attr": True,
+                "portions_dispensed": True,
+                "weight_dispensed": True,
+                "error_detected": True,
+                "disable_led_indicator": True,
+                "child_lock": True,
+                "feeding_mode": True,
+                "serving_size": True,
+                "portion_weight": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
