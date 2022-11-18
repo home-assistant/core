@@ -941,11 +941,19 @@ async def async_api_set_thermostat_mode(
     """Process a set thermostat mode request."""
     entity = directive.entity
     mode = directive.payload["thermostatMode"]
+    custom_mode = mode.get("customName", None)
     mode = mode if isinstance(mode, str) else mode["value"]
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
+    ha_preset = next(
+        (
+            k
+            for k, v in API_THERMOSTAT_PRESETS.items()
+            if v == (mode if mode != "CUSTOM" else custom_mode)
+        ),
+        None,
+    )
 
     if ha_preset:
         presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
