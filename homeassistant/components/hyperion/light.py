@@ -52,8 +52,8 @@ CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
 
 # As we want to preserve brightness control for effects (e.g. to reduce the
-# brightness for V4L), we need to persist the effect that is in flight, so
-# subsequent calls to turn_on will know the keep the effect enabled.
+# brightness), we need to persist the effect that is in flight, so
+# subsequent calls to turn_on will know to keep the effect enabled.
 # Unfortunately the Home Assistant UI does not easily expose a way to remove a
 # selected effect (there is no 'No Effect' option by default). Instead, we
 # create a new fake effect ("Solid") that is always selected by default for
@@ -70,7 +70,6 @@ DEFAULT_EFFECT_LIST: list[str] = []
 
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
-ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_entry(
@@ -144,11 +143,6 @@ class HyperionLight(LightEntity):
         self._effect: str = KEY_EFFECT_SOLID
 
         self._static_effect_list: list[str] = [KEY_EFFECT_SOLID]
-        if self._support_external_effects:
-            self._static_effect_list += [
-                const.KEY_COMPONENTID_TO_NAME[component]
-                for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES
-            ]
         self._effect_list: list[str] = self._static_effect_list[:]
 
         self._client_callbacks: Mapping[str, Callable[[dict[str, Any]], None]] = {
@@ -191,12 +185,6 @@ class HyperionLight(LightEntity):
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
-            if (
-                self.effect in const.KEY_COMPONENTID_FROM_NAME
-                and const.KEY_COMPONENTID_FROM_NAME[self.effect]
-                in const.KEY_COMPONENTID_EXTERNAL_SOURCES
-            ):
-                return ICON_EXTERNAL_SOURCE
             if self.effect != KEY_EFFECT_SOLID:
                 return ICON_EFFECT
         return ICON_LIGHTBULB
@@ -277,46 +265,8 @@ class HyperionLight(LightEntity):
                 ):
                     return
 
-        # == Set an external source
-        if (
-            effect
-            and self._support_external_effects
-            and (
-                effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
-                or effect in const.KEY_COMPONENTID_FROM_NAME
-            )
-        ):
-            if effect in const.KEY_COMPONENTID_FROM_NAME:
-                component = const.KEY_COMPONENTID_FROM_NAME[effect]
-            else:
-                _LOGGER.warning(
-                    "Use of Hyperion effect '%s' is deprecated and will be removed "
-                    "in a future release. Please use '%s' instead",
-                    effect,
-                    const.KEY_COMPONENTID_TO_NAME[effect],
-                )
-                component = effect
-
-            # Clear any color/effect.
-            if not await self._client.async_send_clear(
-                **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
-            ):
-                return
-
-            # Turn off all external sources, except the intended.
-            for key in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                if not await self._client.async_send_set_component(
-                    **{
-                        const.KEY_COMPONENTSTATE: {
-                            const.KEY_COMPONENT: key,
-                            const.KEY_STATE: component == key,
-                        }
-                    }
-                ):
-                    return
-
         # == Set an effect
-        elif effect and effect != KEY_EFFECT_SOLID:
+        if effect and effect != KEY_EFFECT_SOLID:
             # This call should not be necessary, but without it there is no priorities-update issued:
             # https://github.com/hyperion-project/hyperion.ng/issues/992
             if not await self._client.async_send_clear(
@@ -332,6 +282,7 @@ class HyperionLight(LightEntity):
                 }
             ):
                 return
+
         # == Set a color
         else:
             if not await self._client.async_send_set_color(
@@ -388,23 +339,14 @@ class HyperionLight(LightEntity):
         """Update Hyperion priorities."""
         priority = self._get_priority_entry_that_dictates_state()
         if priority:
-            componentid = priority.get(const.KEY_COMPONENTID)
-            if (
-                self._support_external_effects
-                and componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES
-                and componentid in const.KEY_COMPONENTID_TO_NAME
-            ):
-                self._set_internal_state(
-                    rgb_color=DEFAULT_COLOR,
-                    effect=const.KEY_COMPONENTID_TO_NAME[componentid],
-                )
-            elif componentid == const.KEY_COMPONENTID_EFFECT:
+            component_id = priority.get(const.KEY_COMPONENTID)
+            if component_id == const.KEY_COMPONENTID_EFFECT:
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
                 self._set_internal_state(
                     rgb_color=DEFAULT_COLOR, effect=priority[const.KEY_OWNER]
                 )
-            elif componentid == const.KEY_COMPONENTID_COLOR:
+            elif component_id == const.KEY_COMPONENTID_COLOR:
                 self._set_internal_state(
                     rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
                     effect=KEY_EFFECT_SOLID,
@@ -470,11 +412,6 @@ class HyperionLight(LightEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)
-
-    @property
-    def _support_external_effects(self) -> bool:
-        """Whether or not to support setting external effects from the light entity."""
-        return True
 
     def _get_priority_entry_that_dictates_state(self) -> dict[str, Any] | None:
         """Get the relevant Hyperion priority entry to consider."""
