@@ -97,12 +97,14 @@ class PluggableAction:
         """Return if we have something attached."""
         return bool(self._entry and self._entry.actions)
 
+    @callback
     def async_run_update(self) -> None:
         """Run update function if one exists."""
         if self._update:
             self._update()
 
     @staticmethod
+    @callback
     def async_get_registry(hass: HomeAssistant) -> dict[tuple, PluggableActionsEntry]:
         """Return the pluggable actions registry."""
         if data := hass.data.get(DATA_PLUGGABLE_ACTIONS):
@@ -112,6 +114,7 @@ class PluggableAction:
         return data
 
     @staticmethod
+    @callback
     def async_attach_trigger(
         hass: HomeAssistant,
         trigger: dict[str, str],
