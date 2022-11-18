@@ -120,7 +120,7 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
     @property
     @abstractmethod
     def entity(self) -> FritzhomeEntityBase:
-        """Return device object from coordinator."""
+        """Return entity object from coordinator."""
 
     @property
     def device_info(self) -> DeviceInfo:
