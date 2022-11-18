@@ -120,7 +120,7 @@ async def async_start(  # noqa: C901
             _LOGGER.warning("Integration %s is not supported", component)
             return
 
-        json_payload: DiscoveryInfoType
+        json_payload: DiscoveryInfoType = {}
         if payload:
             try:
                 json_payload = json_loads(payload)
