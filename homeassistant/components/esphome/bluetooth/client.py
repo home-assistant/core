@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -261,9 +262,11 @@ class ESPHomeClient(BaseBleakClient):
                 _on_bluetooth_connection_state,
                 timeout=timeout,
             )
-        except (asyncio.TimeoutError, TimeoutAPIError):
-            await connected_future
+        except Exception:
+            with contextlib.suppress(BleakError):
+                await connected_future
             raise
+        await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
         return True
