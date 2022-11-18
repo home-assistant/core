@@ -84,6 +84,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Load platforms
     discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SELECT, DOMAIN, {}, config)
 
     return True
 
