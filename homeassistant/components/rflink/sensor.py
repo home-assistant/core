@@ -181,7 +181,7 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="total_rain",
         name="Total rain",
-        icon="mdi:cup-water",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
     ),
