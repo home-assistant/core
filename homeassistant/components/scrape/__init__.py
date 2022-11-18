@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
     Platform,
 )
@@ -44,7 +43,8 @@ COMBINED_SCHEMA = vol.Schema(
         vol.Optional(SENSOR_DOMAIN): vol.All(
             cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
         ),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -86,23 +86,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
-    rest_config = {
-        **dict(entry.options),
-        CONF_SCAN_INTERVAL: int(entry.options[CONF_SCAN_INTERVAL]),
-        CONF_TIMEOUT: int(entry.options[CONF_TIMEOUT]),
-    }
+    rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(entry.options))
     rest = create_rest_data_from_config(hass, rest_config)
 
     coordinator = ScrapeCoordinator(
         hass,
         rest,
-        timedelta(seconds=int(entry.options[CONF_SCAN_INTERVAL])),
+        DEFAULT_SCAN_INTERVAL,
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -114,8 +109,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not hass.data[DOMAIN]:
             del hass.data[DOMAIN]
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

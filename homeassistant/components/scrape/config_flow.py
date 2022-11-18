@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
-    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
@@ -41,7 +40,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
-    SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -58,18 +56,15 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import (
-    CONF_INDEX,
-    CONF_SELECT,
-    DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-)
+from . import COMBINED_SCHEMA
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 
 RESOURCE_SETUP = {
     vol.Required(CONF_RESOURCE): TextSelector(
         TextSelectorConfig(type=TextSelectorType.URL)
+    ),
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
+        SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
     ),
     vol.Optional(CONF_AUTHENTICATION): SelectSelector(
         SelectSelectorConfig(
@@ -77,29 +72,23 @@ RESOURCE_SETUP = {
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
-    vol.Optional(CONF_HEADERS): ObjectSelector(),
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
-        SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
-    ),
     vol.Optional(CONF_USERNAME): TextSelector(),
     vol.Optional(CONF_PASSWORD): TextSelector(
         TextSelectorConfig(type=TextSelectorType.PASSWORD)
     ),
+    vol.Optional(CONF_HEADERS): ObjectSelector(),
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): BooleanSelector(),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
-        NumberSelectorConfig(min=15, step=15, mode=NumberSelectorMode.BOX)
-    ),
 }
 
 SENSOR_SETUP_OPT = {
-    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
+    vol.Required(CONF_SELECT): TextSelector(),
     vol.Optional(CONF_INDEX, default=0): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
-    vol.Required(CONF_SELECT): TextSelector(),
+    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
@@ -127,25 +116,21 @@ SENSOR_SETUP = {
 }
 
 
-def return_sensor_step(user_input: dict[str, Any]) -> str:
-    """Return sensor step."""
-    return "sensor"
-
-
 def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate rest setup."""
     hass = async_get_hass()
-    rest_config = {
-        **dict(user_input),
-        CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-        CONF_TIMEOUT: int(user_input[CONF_TIMEOUT]),
-    }
+    rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
     try:
         rest = create_rest_data_from_config(hass, rest_config)
         asyncio.run_coroutine_threadsafe(rest.async_update(), hass.loop)
     except Exception as err:
         raise SchemaFlowError("resource_error") from err
     return user_input
+
+
+def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate sensor setup."""
+    return {"sensors": [user_input]}
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
@@ -155,13 +140,13 @@ DATA_SCHEMA_SENSOR_OPT = vol.Schema(SENSOR_SETUP_OPT)
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_RESOURCE,
-        next_step=return_sensor_step,
+        next_step=lambda _: "sensor",
         validate_user_input=validate_rest_setup,
     ),
-    "sensor": SchemaFlowFormStep(DATA_SCHEMA_SENSOR),
-}
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA_SENSOR_OPT),
+    "sensor": SchemaFlowFormStep(
+        schema=DATA_SCHEMA_SENSOR,
+        validate_user_input=validate_sensor_setup,
+    ),
 }
 
 
@@ -169,17 +154,12 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Scrape."""
 
     config_flow = CONFIG_FLOW
-    options_flow = OPTIONS_FLOW
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return options[CONF_NAME]
+        return options[CONF_RESOURCE]
 
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Check for duplicate records."""
         data: dict[str, Any] = dict(options)
         self._async_abort_entries_match(data)
-
-
-class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
-    """Handle a config flow for Scrape."""
