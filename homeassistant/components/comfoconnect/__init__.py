@@ -115,15 +115,11 @@ class ComfoConnectBridge:
         _LOGGER.debug("Disconnecting from bridge")
         self.comfoconnect.disconnect()
 
-    def verify_connection(self):
-       """Verify connection and reconnect if needed"""
+    def send_cmd(self, cmd):
+       """Send cmd to bridge"""
        if not self.comfoconnect.is_connected():
            _LOGGER.debug("Reconnecting to bridge")
            self.connect()
-
-    def send_cmd(self, cmd):
-       """Send cmd to bridge"""
-       self.verify_connection()
        self.comfoconnect.cmd_rmi_request(cmd)
 
     def sensor_callback(self, var, value):
