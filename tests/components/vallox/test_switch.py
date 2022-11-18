@@ -18,8 +18,8 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_switch_entities(
-    entity_id, metric_key, value, mock_entry: MockConfigEntry, hass: HomeAssistant
-):
+    entity_id: str, metric_key: str, value: int, mock_entry: MockConfigEntry, hass: HomeAssistant
+) -> None:
     """Test switch entities."""
     # Arrange
     metrics = {metric_key: value}
@@ -31,6 +31,7 @@ async def test_switch_entities(
 
     # Assert
     sensor = hass.states.get(entity_id)
+    assert sensor
     assert sensor.state == "on" if value else "off"
 
 
@@ -47,7 +48,7 @@ async def test_bypass_lock_switch_entitity_set(
     value: int,
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
-):
+) -> None:
     """Test bypass lock switch set."""
     # Act
     with patch_metrics(metrics={}), patch_metrics_set() as metrics_set:
