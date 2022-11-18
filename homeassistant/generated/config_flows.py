@@ -9,6 +9,7 @@ FLOWS = {
         "group",
         "integration",
         "min_max",
+        "sum",
         "switch_as_x",
         "threshold",
         "tod",
@@ -483,18 +484,4 @@ FLOWS = {
         "zwave_js",
         "zwave_me",
     ],
-<<<<<<< HEAD
-=======
-    "helper": [
-        "derivative",
-        "group",
-        "integration",
-        "min_max",
-        "sum",
-        "switch_as_x",
-        "threshold",
-        "tod",
-        "utility_meter",
-    ],
->>>>>>> 3e929c798a (Add sum integration)
 }
