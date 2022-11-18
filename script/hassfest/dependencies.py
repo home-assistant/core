@@ -158,9 +158,6 @@ IGNORE_VIOLATIONS = {
 def calc_allowed_references(integration: Integration) -> set[str]:
     """Return a set of allowed references."""
     manifest = integration.manifest
-    if not manifest:  # No manifest, nothing allowed.
-        return set()
-
     allowed_references = (
         ALLOWED_USED_COMPONENTS
         | set(manifest.get("dependencies", []))

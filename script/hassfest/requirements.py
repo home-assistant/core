@@ -88,8 +88,7 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-        match = PACKAGE_REGEX.match(req)
-        if not match:
+        if not (match := PACKAGE_REGEX.match(req)):
             integration.add_error(
                 "requirements",
                 f'Requirement "{req}" does not match package regex pattern',
@@ -262,7 +261,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if normalized and "==" in requirement_arg:
             ver = requirement_arg.split("==")[-1]
             item = deptree.get(normalized)
-            is_installed = item and item["installed_version"] == ver
+            is_installed = bool(item and item["installed_version"] == ver)
 
         if not is_installed:
             try:
