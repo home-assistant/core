@@ -33,8 +33,8 @@ PLATFORMS = [Platform.SENSOR]
 class OVOCoordinatorData(BaseModel):
     """OVO Energy data."""
 
-    daily_usage: OVODailyUsage = Field(None, alias="daily_usage")
-    plan: OVOPlan = Field(None, alias="plan")
+    daily_usage: OVODailyUsage = Field(None)
+    plan: OVOPlan = Field(None)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
