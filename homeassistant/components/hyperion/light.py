@@ -242,7 +242,7 @@ class HyperionLight(LightEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if light is on. Light is considered on when there is an active source at the configured HA priority."""
+        """Return true if light is on. Light is considered on when there is a source at the configured HA priority."""
         return self._get_priority_entry_that_dictates_state() is not None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -478,10 +478,8 @@ class HyperionLight(LightEntity):
 
     def _get_priority_entry_that_dictates_state(self) -> dict[str, Any] | None:
         """Get the relevant Hyperion priority entry to consider."""
-        # Return the visible priority (whether or not it is the HA priority).
-
-        # Explicit type specifier to ensure this works when the underlying (typed)
-        # library is installed along with the tests. Casts would trigger a
-        # redundant-cast warning in this case.
-        priority: dict[str, Any] | None = self._client.visible_priority
-        return priority
+        # Return whether or not the HA priority is among the active priorities.
+        for priority in self._client.priorities or []:
+            if priority.get(const.KEY_PRIORITY) == self._get_option(CONF_PRIORITY):
+                return priority
+        return None
