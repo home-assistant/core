@@ -36,7 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.color as color_util
 
 from . import (
     TEST_AUTH_NOT_REQUIRED_RESP,
@@ -59,8 +58,6 @@ from . import (
     create_mock_client,
     setup_test_config_entry,
 )
-
-COLOR_BLACK = color_util.COLORS["black"]
 
 
 def _get_config_entry_from_unique_id(
