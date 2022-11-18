@@ -19,6 +19,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -79,6 +80,13 @@ UNIT_DESCRIPTIONS = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
+    ),
+    "kW": SensorEntityDescription(
+        key="kW",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_KILO_WATT,
     ),
     "Wh": SensorEntityDescription(
         key="Wh",
