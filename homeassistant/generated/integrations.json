@@ -5399,8 +5399,8 @@
       }
     },
     "text": {
-      "config_flow": false,
-      "iot_class": null
+      "integration_type": "hub",
+      "config_flow": false
     },
     "tfiac": {
       "name": "Tfiac",
