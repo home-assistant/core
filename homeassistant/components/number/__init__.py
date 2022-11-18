@@ -199,6 +199,14 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    PRECIPITATION = "precipitation"
+    """Precipitation.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
+    """
+
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
