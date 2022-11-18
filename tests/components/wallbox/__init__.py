@@ -10,6 +10,7 @@ from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
@@ -48,6 +49,7 @@ test_response = json.loads(
                 CHARGER_SERIAL_NUMBER_KEY: "20000",
                 CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
                 CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
+                CHARGER_CURRENCY_KEY: {"code": "€"},
             },
         }
     )

@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
@@ -127,6 +128,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ]
             data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
                 CHARGER_ENERGY_PRICE_KEY
+            ]
+            data[CHARGER_CURRENCY_KEY] = data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][
+                "code"
             ]
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
