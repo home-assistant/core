@@ -486,11 +486,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             elif flash == FLASH_SHORT:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
-    def _scale_rgbxx(
-        self,
-        rgbxx: tuple[int, ...],
-        kwargs: Any,
-    ) -> tuple[int, ...]:
+    def _scale_rgbxx(self, rgbxx: tuple[int, ...], kwargs: Any) -> tuple[int, ...]:
         # If there's a brightness topic set, we don't want to scale the
         # RGBxx values given using the brightness.
         brightness: int
