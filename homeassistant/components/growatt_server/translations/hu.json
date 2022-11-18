@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_plants": "Ezen a sz\u00e1ml\u00e1n nem tal\u00e1ltak n\u00f6v\u00e9nyeket"
+            "no_plants": "Ebben a fi\u00f3kban nem tal\u00e1lhat\u00f3 egy er\u0151m\u0171 sem"
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
@@ -9,9 +9,9 @@
         "step": {
             "plant": {
                 "data": {
-                    "plant_id": "N\u00f6v\u00e9ny"
+                    "plant_id": "Er\u0151m\u0171"
                 },
-                "title": "V\u00e1lassza ki a n\u00f6v\u00e9ny\u00e9t"
+                "title": "V\u00e1lassza ki az er\u0151m\u0171vet"
             },
             "user": {
                 "data": {
