@@ -60,7 +60,7 @@ def mock_get_homes(only_active=True):
 
 
 def mock_connection_with_home(access_token, websession, time_zone):
-    """Returns a mocked Tibber object with mocked home data"""
+    """Return a mocked Tibber object with mocked home data."""
     tibber_connection = AsyncMock()
 
     tibber_connection.name = "Mocked Name"
@@ -74,7 +74,7 @@ def mock_connection_with_home(access_token, websession, time_zone):
 
 
 def mock_connection(access_token, websession, time_zone):
-    """Returns a mocked Tibber object"""
+    """Return a mocked Tibber object."""
     tibber_connection = AsyncMock()
 
     tibber_connection.name = "Mocked Name"
