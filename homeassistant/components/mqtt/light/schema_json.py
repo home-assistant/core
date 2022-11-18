@@ -240,7 +240,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
         )
         if not self._config[CONF_COLOR_MODE]:
-            color_modes: set[ColorMode] = {ColorMode.ONOFF}
+            color_modes = {ColorMode.ONOFF}
             if config[CONF_BRIGHTNESS]:
                 color_modes.add(ColorMode.BRIGHTNESS)
             if config[CONF_COLOR_TEMP]:
@@ -479,7 +479,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             message["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_FLASH in kwargs:
-            flash: Any = kwargs.get(ATTR_FLASH)
+            flash: str | None = kwargs.get(ATTR_FLASH)
 
             if flash == FLASH_LONG:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
@@ -489,7 +489,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _scale_rgbxx(
         self,
         rgbxx: tuple[int, ...],
-        kwargs: dict[str, Any],
+        kwargs: Any,
     ) -> tuple[int, ...]:
         # If there's a brightness topic set, we don't want to scale the
         # RGBxx values given using the brightness.
@@ -498,14 +498,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             brightness = 255
         else:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        scaled_rgb = tuple(round(i / 255 * brightness) for i in rgbxx)
-        return scaled_rgb
+        return tuple(round(i / 255 * brightness) for i in rgbxx)
 
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
         return (
-            self.supported_color_modes is not None
-            and self._config[CONF_COLOR_MODE]
+            self._config[CONF_COLOR_MODE]
+            and self.supported_color_modes is not None
             and color_mode in self.supported_color_modes
         )
 
