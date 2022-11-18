@@ -1,0 +1,54 @@
+name: Delete Caches (PR)
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request_target:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "Closed PR number"
+        type: string
+        required: true
+
+jobs:
+  delete:
+    name: Delete caches
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Delete caches
+        run: |
+          ref="refs/pull/${{ github.event.inputs.pr-number || github.event.number }}/merge"
+          sort="last_accessed_at"
+          del_count=0
+
+          res=$(gh api --paginate \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/caches?sort=$sort)
+
+          res_count=$(echo "$res" | jq '.actions_caches | length')
+          if [[ "$res_count" -eq 0 ]]; then exit; fi
+
+          targets=$(echo "$res" | jq \
+            --arg ref "$ref" \
+            '.actions_caches[] | select(.ref == $ref)
+              | del(.created_at, .size_in_bytes, .version)')
+          targets_count=$(echo "$targets" | jq -s 'length')
+          if [[ "$targets_count" -eq 0 ]]; then exit; fi
+          echo "Found $targets_count caches"
+          echo "$targets"
+
+          for id in $(echo "$targets" | jq '.id'); do
+            echo "Delete cache with id: $id ..."
+            gh api \
+              --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/actions/caches/$id
+            (( del_count += 1 ))
+          done
+
+          echo "Deleted $del_count caches"
