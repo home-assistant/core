@@ -261,7 +261,7 @@ class ESPHomeClient(BaseBleakClient):
                 _on_bluetooth_connection_state,
                 timeout=timeout,
             )
-        except TimeoutAPIError:
+        except (asyncio.TimeoutError, TimeoutAPIError):
             await connected_future
             raise
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
