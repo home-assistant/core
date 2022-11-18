@@ -1,6 +1,7 @@
 """Support for OVO Energy."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
@@ -9,7 +10,6 @@ import async_timeout
 from ovoenergy.models import OVODailyUsage
 from ovoenergy.models.plan import OVOPlan
 from ovoenergy.ovoenergy import OVOEnergy
-from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -30,11 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-class OVOCoordinatorData(BaseModel):
+@dataclass
+class OVOCoordinatorData:
     """OVO Energy data."""
 
-    daily_usage: OVODailyUsage = Field(None)
-    plan: OVOPlan = Field(None)
+    daily_usage: OVODailyUsage | None = None
+    plan: OVOPlan | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
