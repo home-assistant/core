@@ -11,14 +11,19 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entity_id, metric_key, value",
+    "entity_id, metric_key, value, expected_state",
     [
-        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 1),
-        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 0),
+        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 1, "on"),
+        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 0, "off"),
     ],
 )
 async def test_switch_entities(
-    entity_id: str, metric_key: str, value: int, mock_entry: MockConfigEntry, hass: HomeAssistant
+    entity_id: str,
+    metric_key: str,
+    value: int,
+    expected_state: str,
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
 ) -> None:
     """Test switch entities."""
     # Arrange
@@ -32,7 +37,7 @@ async def test_switch_entities(
     # Assert
     sensor = hass.states.get(entity_id)
     assert sensor
-    assert sensor.state == "on" if value else "off"
+    assert sensor.state == expected_state
 
 
 @pytest.mark.parametrize(
