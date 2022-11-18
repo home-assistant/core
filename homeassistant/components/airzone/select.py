@@ -115,17 +115,18 @@ class AirzoneSelect(AirzoneEntity, SelectEntity):
         self._async_update_attrs()
         super()._handle_coordinator_update()
 
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update select attributes."""
-        opt_str = None
+    def _get_option_str(self) -> str | None:
         opt_val = self.get_airzone_value(self.entity_description.key)
         if opt_val is not None:
             for key, val in self.entity_description.options.items():
                 if val == opt_val:
-                    opt_str = key
-                    break
-        self._attr_current_option = opt_str
+                    return key
+        return None
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update select attributes."""
+        self._attr_current_option = self._get_option_str()
 
 
 class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneSelect):
