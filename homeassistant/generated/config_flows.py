@@ -154,6 +154,7 @@ FLOWS = {
         "gogogate2",
         "goodwe",
         "google",
+        "google_assistant_sdk",
         "google_sheets",
         "google_travel_time",
         "govee_ble",
