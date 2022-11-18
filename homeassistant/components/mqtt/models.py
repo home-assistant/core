@@ -200,6 +200,8 @@ class MqttValueTemplate:
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
+        rendered_payload: ReceivePayloadType
+
         if self._value_template is None:
             return payload
 
@@ -227,9 +229,12 @@ class MqttValueTemplate:
                 values,
                 self._value_template,
             )
-            return self._value_template.async_render_with_possible_json_value(
-                payload, variables=values
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, variables=values
+                )
             )
+            return rendered_payload
 
         _LOGGER.debug(
             "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
@@ -238,9 +243,10 @@ class MqttValueTemplate:
             default,
             self._value_template,
         )
-        return self._value_template.async_render_with_possible_json_value(
+        rendered_payload = self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+        return rendered_payload
 
 
 class EntityTopicState:
