@@ -1,39 +1,43 @@
 """Support for Google Assistant SDK."""
 from __future__ import annotations
 
-from datetime import datetime
-
 import aiohttp
-from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
-from gspread import Client
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_NAME, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import discovery
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CONFIG_ENTRY, DEFAULT_ACCESS, DOMAIN
+from .const import DEFAULT_ACCESS, DOMAIN
+from .helpers import async_send_text_commands
 
-DATA = "data"
-WORKSHEET = "worksheet"
-
-SERVICE_APPEND_SHEET = "append_sheet"
-
-SHEET_SERVICE_SCHEMA = vol.All(
+SERVICE_SEND_TEXT_COMMAND = "send_text_command"
+SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
+SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Required(DATA): dict,
+        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
+            str, vol.Length(min=1)
+        ),
     },
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Google Assistant SDK component."""
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, Platform.NOTIFY, DOMAIN, {CONF_NAME: DOMAIN}, config
+        )
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,40 +87,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Assistant SDK."""
 
-    def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
-        """Run append in the executor."""
-        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
-        try:
-            sheet = service.open_by_key(entry.unique_id)
-        except RefreshError as ex:
-            entry.async_start_reauth(hass)
-            raise ex
-        worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-        row_data = {"created": str(datetime.now())} | call.data[DATA]
-        columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-        row = [row_data.get(column, "") for column in columns]
-        for key, value in row_data.items():
-            if key not in columns:
-                columns.append(key)
-                worksheet.update_cell(1, len(columns), key)
-                row.append(value)
-        worksheet.append_row(row)
-
-    async def append_to_sheet(call: ServiceCall) -> None:
-        """Append new line of data to a Google Assistant SDK document."""
-        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-            call.data[DATA_CONFIG_ENTRY]
-        )
-        if not entry:
-            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
-        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
-            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
-        await session.async_ensure_token_valid()
-        await hass.async_add_executor_job(_append_to_sheet, call, entry)
+    async def send_text_command(call: ServiceCall) -> None:
+        """Send a text command to Google Assistant SDK."""
+        command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
+        await async_send_text_commands([command], hass)
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_APPEND_SHEET,
-        append_to_sheet,
-        schema=SHEET_SERVICE_SCHEMA,
+        SERVICE_SEND_TEXT_COMMAND,
+        send_text_command,
+        schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
     )

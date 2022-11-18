@@ -1,80 +1,18 @@
 """Tests for Google Assistant SDK."""
-
-from collections.abc import Awaitable, Callable, Generator
 import http
 import time
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from .conftest import ComponentSetup
+
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-TEST_SHEET_ID = "google-sheet-it"
-
-ComponentSetup = Callable[[], Awaitable[None]]
-
-
-@pytest.fixture(name="scopes")
-def mock_scopes() -> list[str]:
-    """Fixture to set the scopes present in the OAuth token."""
-    return ["https://www.googleapis.com/auth/drive.file"]
-
-
-@pytest.fixture(name="expires_at")
-def mock_expires_at() -> int:
-    """Fixture to set the oauth token expiration time."""
-    return time.time() + 3600
-
-
-@pytest.fixture(name="config_entry")
-def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
-    """Fixture for MockConfigEntry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SHEET_ID,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": " ".join(scopes),
-            },
-        },
-    )
-
-
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Generator[ComponentSetup, None, None]:
-    """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential("client-id", "client-secret"),
-        DOMAIN,
-    )
-
-    async def func() -> None:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-    yield func
 
 
 async def test_setup_success(
@@ -92,7 +30,7 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
+    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -100,7 +38,7 @@ async def test_setup_success(
     [
         [],
         [
-            "https://www.googleapis.com/auth/drive.file+plus+extra"
+            "https://www.googleapis.com/auth/assistant-sdk-prototype+plus+extra"
         ],  # Required scope is a prefix
         ["https://www.googleapis.com/auth/drive.readonly"],
     ],
@@ -125,7 +63,6 @@ async def test_missing_required_scopes_requires_reauth(
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test expired token is refreshed."""
@@ -168,7 +105,6 @@ async def test_expired_token_refresh_success(
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,
@@ -187,103 +123,71 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
-async def test_append_sheet(
+async def test_send_text_command(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call appending to a sheet."""
+    """Test service call send_text_command calls TextAssistant."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_assistant_sdk.Client") as mock_client:
+    command = "turn on home assistant unsupported device"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
+    ) as mock_assist_call:
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
+            "send_text_command",
+            {"command": command},
             blocking=True,
         )
-    assert len(mock_client.mock_calls) == 8
+    mock_assist_call.assert_called_once_with(command)
 
 
-async def test_append_sheet_invalid_config_entry(
+@pytest.mark.parametrize(
+    "status,requires_reauth",
+    [
+        (
+            http.HTTPStatus.UNAUTHORIZED,
+            True,
+        ),
+        (
+            http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            False,
+        ),
+    ],
+    ids=["failure_requires_reauth", "transient_failure"],
+)
+async def test_send_text_command_expired_token_refresh_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    expires_at: int,
-    scopes: list[str],
+    aioclient_mock: AiohttpClientMocker,
+    status: http.HTTPStatus,
+    requires_reauth: ConfigEntryState,
 ) -> None:
-    """Test service call with invalid config entries."""
-    config_entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SHEET_ID + "2",
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": " ".join(scopes),
-            },
-        },
-    )
-    config_entry2.add_to_hass(hass)
-
+    """Test failure refreshing token in send_text_command."""
     await setup_integration()
 
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry2.state is ConfigEntryState.LOADED
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
 
-    # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    entry.data["token"]["expires_at"] = time.time() - 3600
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        status=status,
+    )
+
+    with pytest.raises(aiohttp.ClientResponseError):
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id + "XXX",
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
+            "send_text_command",
+            {"command": "turn on tv"},
             blocking=True,
         )
 
-    # Unload the config entry invoke the service on the unloaded entry id
-    await hass.config_entries.async_unload(config_entry2.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry2.state is ConfigEntryState.NOT_LOADED
-
-    with pytest.raises(ValueError, match="Config entry not loaded"):
-        await hass.services.async_call(
-            DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry2.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
-            blocking=True,
-        )
-
-    # Unloading the other config entry will de-register the service
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    with pytest.raises(ServiceNotFound):
-        await hass.services.async_call(
-            DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
-            blocking=True,
-        )
+    assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth

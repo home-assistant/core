@@ -4,7 +4,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
-  "requirements": ["gspread==5.5.0"],
+  "requirements": ["gassist-text==0.0.3"],
   "codeowners": ["@tronikos"],
   "iot_class": "cloud_polling",
   "integration_type": "service"
