@@ -17,7 +17,7 @@ DEBOUNCE_COOLDOWN = 10
 DOMAIN = "heatzy"
 ECO_TEMP_H = "eco_tempH"
 ECO_TEMP_L = "eco_tempL"
-PLATFORMS = ["climate", "switch"]
+PLATFORMS = ["climate"]
 
 PILOTE_V1 = ["9420ae048da545c88fc6274d204dd25f"]
 PILOTE_V2 = [
