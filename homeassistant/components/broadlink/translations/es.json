@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "cannot_connect": "No se pudo conectar",
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
             "not_supported": "Dispositivo no compatible",
@@ -13,7 +13,7 @@
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
             "unknown": "Error inesperado"
         },
-        "flow_title": "{name} ( {model} en {host} )",
+        "flow_title": "{name} ({model} en {host})",
         "step": {
             "auth": {
                 "title": "Autenticarse en el dispositivo"
@@ -22,17 +22,17 @@
                 "data": {
                     "name": "Nombre"
                 },
-                "title": "Elija un nombre para el dispositivo"
+                "title": "Elige un nombre para el dispositivo"
             },
             "reset": {
-                "description": "Su dispositivo est\u00e1 bloqueado para la autenticaci\u00f3n. Siga las instrucciones para desbloquearlo:\n1. Reinicie el dispositivo de f\u00e1brica.\n2. Use la aplicaci\u00f3n oficial para agregar el dispositivo a su red local.\n3. Pare. No termine la configuraci\u00f3n. Cierre la aplicaci\u00f3n.\n4. Haga clic en Enviar.",
+                "description": "{name} ({model} en {host}) est\u00e1 bloqueado. Debes desbloquear el dispositivo para autenticarse y completar la configuraci\u00f3n. Instrucciones:\n1. Abre la aplicaci\u00f3n Broadlink.\n2. Haz clic en el dispositivo.\n3. Haz clic en `...` en la parte superior derecha.\n4. Despl\u00e1zate hasta la parte inferior de la p\u00e1gina.\n5. Desactiva el bloqueo.",
                 "title": "Desbloquear el dispositivo"
             },
             "unlock": {
                 "data": {
                     "unlock": "S\u00ed, hazlo."
                 },
-                "description": "Tu dispositivo est\u00e1 bloqueado. Esto puede provocar problemas de autenticaci\u00f3n en Home Assistant. \u00bfQuieres desbloquearlo?",
+                "description": "{name} ({model} en {host}) est\u00e1 bloqueado. Esto puede generar problemas de autenticaci\u00f3n en Home Assistant. \u00bfTe gustar\u00eda desbloquearlo?",
                 "title": "Desbloquear el dispositivo (opcional)"
             },
             "user": {
@@ -40,7 +40,7 @@
                     "host": "Host",
                     "timeout": "L\u00edmite de tiempo"
                 },
-                "title": "Conectarse al dispositivo"
+                "title": "Conectar al dispositivo"
             }
         }
     }

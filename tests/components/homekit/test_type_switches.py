@@ -17,7 +17,7 @@ from homeassistant.components.homekit.type_switches import (
     Vacuum,
     Valve,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -26,8 +26,7 @@ from homeassistant.components.vacuum import (
     SERVICE_TURN_ON,
     STATE_CLEANING,
     STATE_DOCKED,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -151,23 +150,23 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert acc.category == 29  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SHOWER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 30  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 28  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_VALVE})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
     await acc.run()
     await hass.async_block_till_done()
 
-    assert acc.aid == 2
+    assert acc.aid == 5
     assert acc.category == 29  # Faucet
 
     assert acc.char_active.value == 0
@@ -212,7 +211,12 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     entity_id = "vacuum.roomba"
 
     hass.states.async_set(
-        entity_id, None, {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START}
+        entity_id,
+        None,
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
 
@@ -227,7 +231,10 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     hass.states.async_set(
         entity_id,
         STATE_CLEANING,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
@@ -235,7 +242,10 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     hass.states.async_set(
         entity_id,
         STATE_DOCKED,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+        {
+            ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.START
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_on.value == 0

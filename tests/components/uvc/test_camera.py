@@ -11,7 +11,7 @@ from homeassistant.components.camera import (
     SERVICE_DISABLE_MOTION,
     SERVICE_ENABLE_MOTION,
     STATE_RECORDING,
-    SUPPORT_STREAM,
+    CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
 )
@@ -331,7 +331,7 @@ async def test_properties(hass, mock_remote):
     assert state.state == STATE_RECORDING
     assert state.attributes["brand"] == "Ubiquiti"
     assert state.attributes["model_name"] == "UVC"
-    assert state.attributes["supported_features"] == SUPPORT_STREAM
+    assert state.attributes["supported_features"] == CameraEntityFeature.STREAM
 
 
 async def test_motion_recording_mode_properties(hass, mock_remote):

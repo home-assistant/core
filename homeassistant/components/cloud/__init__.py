@@ -8,8 +8,7 @@ from enum import Enum
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components.alexa import const as alexa_const
-from homeassistant.components.google_assistant import const as ga_c
+from homeassistant.components import alexa, google_assistant
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -68,7 +67,7 @@ SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
+        vol.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
         vol.Optional(CONF_NAME): cv.string,
     }
 )
@@ -77,7 +76,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
+        vol.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
 

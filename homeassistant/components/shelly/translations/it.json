@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "reauth_unsuccessful": "La riautenticazione non \u00e8 riuscita, rimuovi l'integrazione e configurala di nuovo.",
             "unsupported_firmware": "Il dispositivo utilizza una versione del firmware non supportata."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Vuoi impostare {model} su {host}? \n\nI dispositivi alimentati a batteria protetti da password devono essere riattivati prima di continuare con la configurazione.\nI dispositivi alimentati a batteria che non sono protetti da password verranno aggiunti quando il dispositivo si riattiver\u00e0, ora puoi riattivare manualmente il dispositivo utilizzando un pulsante su di esso o attendere il prossimo aggiornamento dei dati dal dispositivo."
             },
             "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"

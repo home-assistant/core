@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 import aiohomekit
@@ -20,8 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
-from .storage import EntityMapStorage, async_get_entity_storage
+from .const import KNOWN_DEVICES, TRIGGERS
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,9 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await conn.async_setup()
-    except (AccessoryNotFoundError, EncryptionError, AccessoryDisconnectedError) as ex:
+    except (
+        asyncio.TimeoutError,
+        AccessoryNotFoundError,
+        EncryptionError,
+        AccessoryDisconnectedError,
+    ) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
-        await conn.pairing.close()
+        with contextlib.suppress(asyncio.TimeoutError):
+            await conn.pairing.close()
         raise ConfigEntryNotReady from ex
 
     return True
@@ -50,8 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Homekit devices."""
-    await async_get_entity_storage(hass)
-
     await async_get_controller(hass)
 
     hass.data[KNOWN_DEVICES] = {}
@@ -84,10 +88,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup caches before removing config entry."""
     hkid = entry.data["AccessoryPairingID"]
-
-    # Remove cached type data from .storage/homekit_controller-entity-map
-    entity_map_storage: EntityMapStorage = hass.data[ENTITY_MAP]
-    entity_map_storage.async_delete_map(hkid)
 
     controller = await async_get_controller(hass)
 

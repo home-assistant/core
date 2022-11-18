@@ -7,7 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -37,7 +37,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_current",
                     friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="homekit-1020301376-aid:1-sid:13-cid:18",
+                    unique_id="00:00:00:00:00:00_1_13_18",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
                     state="0.03",
@@ -45,7 +45,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_power",
                     friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="homekit-1020301376-aid:1-sid:13-cid:19",
+                    unique_id="00:00:00:00:00:00_1_13_19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=POWER_WATT,
                     state="0.8",
@@ -53,7 +53,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_energy_kwh",
                     friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="homekit-1020301376-aid:1-sid:13-cid:20",
+                    unique_id="00:00:00:00:00:00_1_13_20",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                     state="379.69299",
@@ -61,13 +61,13 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.inwall_outlet_0394de_outlet_a",
                     friendly_name="InWall Outlet-0394DE Outlet A",
-                    unique_id="homekit-1020301376-13",
+                    unique_id="00:00:00:00:00:00_1_13",
                     state="on",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_current_2",
                     friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="homekit-1020301376-aid:1-sid:25-cid:30",
+                    unique_id="00:00:00:00:00:00_1_25_30",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
                     state="0.05",
@@ -75,7 +75,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_power_2",
                     friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="homekit-1020301376-aid:1-sid:25-cid:31",
+                    unique_id="00:00:00:00:00:00_1_25_31",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=POWER_WATT,
                     state="0.8",
@@ -83,7 +83,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.inwall_outlet_0394de_energy_kwh_2",
                     friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="homekit-1020301376-aid:1-sid:25-cid:32",
+                    unique_id="00:00:00:00:00:00_1_25_32",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                     state="175.85001",
@@ -91,7 +91,7 @@ async def test_connectsense_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.inwall_outlet_0394de_outlet_b",
                     friendly_name="InWall Outlet-0394DE Outlet B",
-                    unique_id="homekit-1020301376-25",
+                    unique_id="00:00:00:00:00:00_1_25",
                     state="on",
                 ),
             ],

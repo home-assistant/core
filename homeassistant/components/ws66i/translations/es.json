@@ -4,7 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Ha fallado la conexi\u00f3n",
+            "cannot_connect": "No se pudo conectar",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -12,7 +12,7 @@
                 "data": {
                     "ip_address": "Direcci\u00f3n IP"
                 },
-                "title": "Conexi\u00f3n con el dispositivo"
+                "title": "Conectar al dispositivo"
             }
         }
     },
@@ -27,7 +27,7 @@
                     "source_5": "Nombre de la fuente #5",
                     "source_6": "Nombre de la fuente #6"
                 },
-                "title": "Configuraci\u00f3n de las fuentes"
+                "title": "Configurar fuentes"
             }
         }
     }

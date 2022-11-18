@@ -5,12 +5,12 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from brother import Brother, DictToObj, SnmpError, UnsupportedModel
-import pysnmp.hlapi.asyncio as SnmpEngine
+from brother import Brother, BrotherSensors, SnmpError, UnsupportedModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
@@ -26,13 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Brother from a config entry."""
     host = entry.data[CONF_HOST]
-    kind = entry.data[CONF_TYPE]
+    printer_type = entry.data[CONF_TYPE]
 
     snmp_engine = get_snmp_engine(hass)
+    try:
+        brother = await Brother.create(
+            host, printer_type=printer_type, snmp_engine=snmp_engine
+        )
+    except (ConnectionError, SnmpError) as error:
+        raise ConfigEntryNotReady from error
 
-    coordinator = BrotherDataUpdateCoordinator(
-        hass, host=host, kind=kind, snmp_engine=snmp_engine
-    )
+    coordinator = BrotherDataUpdateCoordinator(hass, brother)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -61,11 +65,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Brother data from the printer."""
 
-    def __init__(
-        self, hass: HomeAssistant, host: str, kind: str, snmp_engine: SnmpEngine
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, brother: Brother) -> None:
         """Initialize."""
-        self.brother = Brother(host, kind=kind, snmp_engine=snmp_engine)
+        self.brother = brother
 
         super().__init__(
             hass,
@@ -74,7 +76,7 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> DictToObj:
+    async def _async_update_data(self) -> BrotherSensors:
         """Update data via library."""
         try:
             async with async_timeout.timeout(20):

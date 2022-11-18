@@ -22,9 +22,9 @@ def client_fixture(data_bridge, data_sensor, data_task):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -38,19 +38,19 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_bridge", scope="session")
+@pytest.fixture(name="data_bridge", scope="package")
 def data_bridge_fixture():
     """Define bridge data."""
     return json.loads(load_fixture("bridge_data.json", "notion"))
 
 
-@pytest.fixture(name="data_sensor", scope="session")
+@pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "notion"))
 
 
-@pytest.fixture(name="data_task", scope="session")
+@pytest.fixture(name="data_task", scope="package")
 def data_task_fixture():
     """Define task data."""
     return json.loads(load_fixture("task_data.json", "notion"))
@@ -65,9 +65,3 @@ async def setup_notion_fixture(hass, client, config):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "user@host.com"

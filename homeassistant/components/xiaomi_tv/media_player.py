@@ -10,8 +10,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,7 +71,7 @@ class XiaomiTV(MediaPlayerEntity):
         self._tv = pymitv.TV(ip)
         # Default name value, only to be overridden by user.
         self._name = name
-        self._state = STATE_OFF
+        self._state = MediaPlayerState.OFF
 
     @property
     def name(self):
@@ -87,7 +88,7 @@ class XiaomiTV(MediaPlayerEntity):
         """Indicate that state is assumed."""
         return True
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """
         Instruct the TV to turn sleep.
 
@@ -95,22 +96,22 @@ class XiaomiTV(MediaPlayerEntity):
         because the TV won't accept any input when turned off. Thus, the user
         would be unable to turn the TV back on, unless it's done manually.
         """
-        if self._state != STATE_OFF:
+        if self._state != MediaPlayerState.OFF:
             self._tv.sleep()
 
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Wake the TV back up from sleep."""
-        if self._state != STATE_ON:
+        if self._state != MediaPlayerState.ON:
             self._tv.wake()
 
-            self._state = STATE_ON
+            self._state = MediaPlayerState.ON
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume by one."""
         self._tv.volume_up()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume by one."""
         self._tv.volume_down()

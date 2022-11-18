@@ -16,14 +16,14 @@ from pyisy.constants import (
 )
 from pyisy.nodes import Node
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -76,6 +76,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     """Representation of an ISY994 thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -95,11 +96,6 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         self._current_humidity = 0
         self._target_temp_low = 0
         self._target_temp_high = 0
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def temperature_unit(self) -> str:

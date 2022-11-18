@@ -1,0 +1,11 @@
+{
+    "state": {
+        "nam__caqi_level": {
+            "high": "\u0412\u0438\u0441\u043e\u043a\u043e",
+            "low": "\u041d\u0438\u0441\u043a\u043e",
+            "medium": "\u0421\u0440\u0435\u0434\u043d\u043e",
+            "very high": "\u041c\u043d\u043e\u0433\u043e \u0432\u0438\u0441\u043e\u043a\u043e",
+            "very low": "\u041c\u043d\u043e\u0433\u043e \u043d\u0438\u0441\u043a\u043e"
+        }
+    }
+}

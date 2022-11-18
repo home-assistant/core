@@ -3,7 +3,11 @@
   "name": "LIFX",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lifx",
-  "requirements": ["aiolifx==0.8.2", "aiolifx_effects==0.2.2"],
+  "requirements": [
+    "aiolifx==0.8.6",
+    "aiolifx_effects==0.3.0",
+    "aiolifx_themes==0.2.0"
+  ],
   "quality_scale": "platinum",
   "dependencies": ["network"],
   "homekit": {

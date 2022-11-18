@@ -28,6 +28,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.components.ssdp import (
@@ -169,9 +170,10 @@ async def test_gateway_setup(hass, aioclient_mock):
         assert forward_entry_setup.mock_calls[7][1] == (config_entry, LOCK_DOMAIN)
         assert forward_entry_setup.mock_calls[8][1] == (config_entry, NUMBER_DOMAIN)
         assert forward_entry_setup.mock_calls[9][1] == (config_entry, SCENE_DOMAIN)
-        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[11][1] == (config_entry, SIREN_DOMAIN)
-        assert forward_entry_setup.mock_calls[12][1] == (config_entry, SWITCH_DOMAIN)
+        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SELECT_DOMAIN)
+        assert forward_entry_setup.mock_calls[11][1] == (config_entry, SENSOR_DOMAIN)
+        assert forward_entry_setup.mock_calls[12][1] == (config_entry, SIREN_DOMAIN)
+        assert forward_entry_setup.mock_calls[13][1] == (config_entry, SWITCH_DOMAIN)
 
     device_registry = dr.async_get(hass)
     gateway_entry = device_registry.async_get_device(

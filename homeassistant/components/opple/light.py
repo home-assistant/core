@@ -69,7 +69,7 @@ class OppleLight(LightEntity):
         self._color_temp = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if light is available."""
         return self._device.is_online
 

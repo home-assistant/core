@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.components.signal_messenger.conftest import (
+from .conftest import (
     CONTENT,
     MESSAGE,
     NUMBER_FROM,

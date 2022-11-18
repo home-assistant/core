@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ring",
   "requirements": ["ring_doorbell==0.7.2"],
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@balloob"],
+  "codeowners": [],
   "config_flow": true,
   "dhcp": [
     {

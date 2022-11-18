@@ -58,25 +58,25 @@ def credentials_config_fixture():
     }
 
 
-@pytest.fixture(name="data_latest_event", scope="session")
+@pytest.fixture(name="data_latest_event", scope="package")
 def data_latest_event_fixture():
     """Define latest event data."""
     return json.loads(load_fixture("latest_event_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_sensor", scope="session")
+@pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_settings", scope="session")
+@pytest.fixture(name="data_settings", scope="package")
 def data_settings_fixture():
     """Define settings data."""
     return json.loads(load_fixture("settings_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_subscription", scope="session")
+@pytest.fixture(name="data_subscription", scope="package")
 def data_subscription_fixture():
     """Define subscription data."""
     return json.loads(load_fixture("subscription_data.json", "simplisafe"))

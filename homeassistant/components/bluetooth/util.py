@@ -1,27 +1,44 @@
 """The bluetooth integration utilities."""
 from __future__ import annotations
 
-import platform
+from bluetooth_adapters import BluetoothAdapters
+from bluetooth_auto_recovery import recover_adapter
 
-from .const import MACOS_DEFAULT_BLUETOOTH_ADAPTER, UNIX_DEFAULT_BLUETOOTH_ADAPTER
+from homeassistant.core import callback
+from homeassistant.util.dt import monotonic_time_coarse
+
+from .models import BluetoothServiceInfoBleak
 
 
-async def async_get_bluetooth_adapters() -> list[str]:
-    """Return a list of bluetooth adapters."""
-    if platform.system() == "Windows":  # We don't have a good way to detect on windows
-        return []
-    if platform.system() == "Darwin":  # CoreBluetooth is built in on MacOS hardware
-        return [MACOS_DEFAULT_BLUETOOTH_ADAPTER]
-    from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
-        get_bluetooth_adapters,
-    )
+@callback
+def async_load_history_from_system(
+    adapters: BluetoothAdapters,
+) -> dict[str, BluetoothServiceInfoBleak]:
+    """Load the device and advertisement_data history if available on the current system."""
+    now = monotonic_time_coarse()
+    return {
+        address: BluetoothServiceInfoBleak(
+            name=history.advertisement_data.local_name
+            or history.device.name
+            or history.device.address,
+            address=history.device.address,
+            rssi=history.advertisement_data.rssi,
+            manufacturer_data=history.advertisement_data.manufacturer_data,
+            service_data=history.advertisement_data.service_data,
+            service_uuids=history.advertisement_data.service_uuids,
+            source=history.source,
+            device=history.device,
+            advertisement=history.advertisement_data,
+            connectable=False,
+            time=now,
+        )
+        for address, history in adapters.history.items()
+    }
 
-    adapters = await get_bluetooth_adapters()
-    if (
-        UNIX_DEFAULT_BLUETOOTH_ADAPTER in adapters
-        and adapters[0] != UNIX_DEFAULT_BLUETOOTH_ADAPTER
-    ):
-        # The default adapter always needs to be the first in the list
-        # because that is how bleak works.
-        adapters.insert(0, adapters.pop(adapters.index(UNIX_DEFAULT_BLUETOOTH_ADAPTER)))
-    return adapters
+
+async def async_reset_adapter(adapter: str | None) -> bool | None:
+    """Reset the adapter."""
+    if adapter and adapter.startswith("hci"):
+        adapter_id = int(adapter[3:])
+        return await recover_adapter(adapter_id)
+    return False

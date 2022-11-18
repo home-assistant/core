@@ -1,6 +1,8 @@
 """Support for HomeMatic switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -50,11 +52,11 @@ class HMSwitch(HMDevice, SwitchEntity):
 
         return None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._hmdevice.on(self._channel)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._hmdevice.off(self._channel)
 

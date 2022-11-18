@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback

@@ -1,5 +1,5 @@
 """Constants for the Huisbaasje integration."""
-from huisbaasje.const import (
+from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
     SOURCE_TYPE_ELECTRICITY_IN,
     SOURCE_TYPE_ELECTRICITY_IN_LOW,

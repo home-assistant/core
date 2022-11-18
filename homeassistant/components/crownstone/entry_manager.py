@@ -27,6 +27,7 @@ from .const import (
     CONF_USB_SPHERE,
     DOMAIN,
     PLATFORMS,
+    PROJECT_NAME,
     SSE_LISTENERS,
     UART_LISTENERS,
 )
@@ -84,6 +85,7 @@ class CrownstoneEntryManager:
             password=password,
             access_token=self.cloud.access_token,
             websession=aiohttp_client.async_create_clientsession(self.hass),
+            project_name=PROJECT_NAME,
         )
         # Listen for events in the background, without task tracking
         asyncio.create_task(self.async_process_events(self.sse))

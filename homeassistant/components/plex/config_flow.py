@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -76,7 +77,8 @@ async def async_discover(hass):
     gdm = GDM()
     await hass.async_add_executor_job(gdm.scan)
     for server_data in gdm.entries:
-        await hass.config_entries.flow.async_init(
+        discovery_flow.async_create_flow(
+            hass,
             DOMAIN,
             context={CONF_SOURCE: config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=server_data,
@@ -104,6 +106,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.token = None
         self.client_id = None
         self._manual = False
+        self._reauth_config = None
 
     async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
@@ -176,6 +179,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
+        if self._reauth_config:
+            server_config = {**self._reauth_config, **server_config}
+
         errors = {}
         self.current_login = server_config
 
@@ -334,7 +340,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        self.current_login = dict(entry_data)
+        self._reauth_config = {
+            CONF_SERVER_IDENTIFIER: entry_data[CONF_SERVER_IDENTIFIER]
+        }
         return await self.async_step_user()
 
 

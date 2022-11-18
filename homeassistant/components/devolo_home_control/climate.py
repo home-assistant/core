@@ -8,12 +8,12 @@ from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +34,7 @@ async def async_setup_entry(
                     "devolo.model.Thermostat:Valve",
                     "devolo.model.Room:Thermostat",
                     "devolo.model.Eurotronic:Spirit:Device",
+                    "unk.model.Danfoss:Thermostat",
                 ):
                     entities.append(
                         DevoloClimateDeviceEntity(
@@ -66,7 +67,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         self._attr_precision = PRECISION_TENTHS
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = PRECISION_HALVES
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -88,7 +89,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         """Return the target temperature."""
         return self._value
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs: Any) -> None:

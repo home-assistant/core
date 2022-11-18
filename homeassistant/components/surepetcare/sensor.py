@@ -87,6 +87,7 @@ class SureBattery(SurePetcareEntity, SensorEntity):
 class Felaqua(SurePetcareEntity, SensorEntity):
     """Sure Petcare Felaqua."""
 
+    _attr_device_class = SensorDeviceClass.VOLUME
     _attr_native_unit_of_measurement = VOLUME_MILLILITERS
 
     def __init__(

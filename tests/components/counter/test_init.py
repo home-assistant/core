@@ -24,12 +24,9 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import async_decrement, async_increment, async_reset
+
 from tests.common import mock_restore_cache
-from tests.components.counter.common import (
-    async_decrement,
-    async_increment,
-    async_reset,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -591,17 +588,15 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 async def test_update_min_max(hass, hass_ws_client, storage_setup):
     """Test updating min/max updates the state."""
 
-    items = [
-        {
-            "id": "from_storage",
-            "initial": 15,
-            "name": "from storage",
-            "maximum": 100,
-            "minimum": 10,
-            "step": 3,
-            "restore": True,
-        }
-    ]
+    settings = {
+        "initial": 15,
+        "name": "from storage",
+        "maximum": 100,
+        "minimum": 10,
+        "step": 3,
+        "restore": True,
+    }
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -618,16 +613,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = settings | {"minimum": 19}
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "minimum": 19,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 19
@@ -635,18 +632,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_MAXIMUM] == 100
     assert state.attributes[ATTR_STEP] == 3
 
+    updated_settings = settings | {"maximum": 5, "minimum": 2, "step": 5}
     await client.send_json(
         {
             "id": 7,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "maximum": 5,
-            "minimum": 2,
-            "step": 5,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5
@@ -654,18 +651,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_MAXIMUM] == 5
     assert state.attributes[ATTR_STEP] == 5
 
+    updated_settings = settings | {"maximum": None, "minimum": None, "step": 6}
     await client.send_json(
         {
             "id": 8,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "maximum": None,
-            "minimum": None,
-            "step": 6,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5

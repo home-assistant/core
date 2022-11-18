@@ -37,7 +37,7 @@ async def test_lock_remove(
 
     await init_entry(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
-    await remove_entities(hass, [doorlock])
+    await remove_entities(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 0, 0)
     await adopt_devices(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
@@ -214,7 +214,7 @@ async def test_lock_do_lock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    doorlock.__fields__["close_lock"] = Mock()
+    doorlock.__fields__["close_lock"] = Mock(final=False)
     doorlock.close_lock = AsyncMock()
 
     await hass.services.async_call(
@@ -249,7 +249,7 @@ async def test_lock_do_unlock(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    new_lock.__fields__["open_lock"] = Mock()
+    new_lock.__fields__["open_lock"] = Mock(final=False)
     new_lock.open_lock = AsyncMock()
 
     await hass.services.async_call(

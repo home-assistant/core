@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 class UniFiBase(Entity):
     """UniFi entity base class."""
 
+    _attr_should_poll = False
+
     DOMAIN = ""
     TYPE = ""
 
@@ -93,8 +95,3 @@ class UniFiBase(Entity):
             er.async_get(self.hass).async_remove(self.entity_id)
         else:
             await self.async_remove(force_remove=True)
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False

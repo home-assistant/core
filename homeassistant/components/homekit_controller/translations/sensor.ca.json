@@ -1,6 +1,7 @@
 {
     "state": {
         "homekit_controller__thread_node_capabilities": {
+            "border_router_capable": "Pot funcionar com a encaminador (router) frontera",
             "full": "Dispositiu final complet",
             "minimal": "Dispositiu final redu\u00eft",
             "none": "Cap",
@@ -8,6 +9,7 @@
             "sleepy": "Dispositiu final dorment"
         },
         "homekit_controller__thread_status": {
+            "border_router": "Encaminador (router) frontera",
             "child": "Fill",
             "detached": "Desconnectat",
             "disabled": "Desactivat",

@@ -156,7 +156,7 @@ class Throttle:
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (
             not hasattr(method, "__self__")
-            and "." not in method.__qualname__.split(".<locals>.")[-1]
+            and "." not in method.__qualname__.rpartition(".<locals>.")[-1]
         )
 
         @wraps(method)

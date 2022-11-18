@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
@@ -100,6 +99,8 @@ def setup_platform(
 class NMBSLiveBoard(SensorEntity):
     """Get the next train from a station's liveboard."""
 
+    _attr_attribution = "https://api.irail.be/"
+
     def __init__(self, api_client, live_station, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
@@ -149,7 +150,6 @@ class NMBSLiveBoard(SensorEntity):
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if delay > 0:
@@ -158,7 +158,7 @@ class NMBSLiveBoard(SensorEntity):
 
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
@@ -176,6 +176,7 @@ class NMBSLiveBoard(SensorEntity):
 class NMBSSensor(SensorEntity):
     """Get the the total travel time for a given connection."""
 
+    _attr_attribution = "https://api.irail.be/"
     _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(
@@ -223,7 +224,6 @@ class NMBSSensor(SensorEntity):
             "platform_arriving": self._attrs["arrival"]["platform"],
             "platform_departing": self._attrs["departure"]["platform"],
             "vehicle_id": self._attrs["departure"]["vehicle"],
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if canceled != 1:
@@ -278,7 +278,7 @@ class NMBSSensor(SensorEntity):
 
         return "vias" in self._attrs and int(self._attrs["vias"]["number"]) > 0
 
-    def update(self):
+    def update(self) -> None:
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
             self._station_from, self._station_to

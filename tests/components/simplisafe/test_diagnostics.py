@@ -8,9 +8,17 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisa
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "options": {
-                "code": REDACTED,
-            },
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "simplisafe",
+            "title": REDACTED,
+            "data": {"token": REDACTED, "username": REDACTED},
+            "options": {"code": REDACTED},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "subscription_data": {
             "system_123": {
