@@ -122,15 +122,6 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
     def entity(self) -> FritzhomeEntityBase:
         """Return entity object from coordinator."""
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
-            name=self.entity.name,
-            identifiers={(DOMAIN, self.ain)},
-            configuration_url=self.coordinator.configuration_url,
-        )
-
 
 class FritzBoxDeviceEntity(FritzBoxEntity):
     """Reflects FritzhomeDevice and uses its attributes to construct FritzBoxDeviceEntity."""

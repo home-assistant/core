@@ -4,6 +4,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
@@ -33,6 +34,17 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
     def entity(self) -> FritzhomeTemplate:
         """Return the template entity."""
         return self.coordinator.data.templates[self.ain]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
+            name=self.entity.name,
+            identifiers={(FRITZBOX_DOMAIN, self.ain)},
+            configuration_url=self.coordinator.configuration_url,
+            manufacturer="AVM",
+            model="SmartHome Template",
+        )
 
     async def async_press(self) -> None:
         """Apply template and refresh."""
