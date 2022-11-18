@@ -383,13 +383,14 @@ async def async_setup_entry(
         ]
 
     gpus = []
-    for gpu in coordinator.data.gpu.gpus:
-        gpus.append(
-            {
-                "key": gpu,
-                "name": get_attr_if_available(coordinator.data.gpu, f"{gpu}_name"),
-            },
-        )
+    if coordinator.data.gpu.gpus is not None:
+        for gpu in coordinator.data.gpu.gpus:
+            gpus.append(
+                {
+                    "key": gpu,
+                    "name": get_attr_if_available(coordinator.data.gpu, f"{gpu}_name"),
+                },
+            )
 
     for index, gpu in enumerate(gpus):
         entities = [
