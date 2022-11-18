@@ -400,7 +400,7 @@ def async_fire_time_changed_exact(
 
 @ha.callback
 def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
     """Fire a time changed event.
 
