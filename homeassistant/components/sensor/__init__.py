@@ -254,8 +254,8 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
-    PRECIPITATION_DEPTH = "precipitation_depth"
-    """Precipitation depth.
+    PRECIPITATION = "precipitation"
+    """Precipitation.
 
     Unit of measurement:
     - SI / metric: `mm`
@@ -402,7 +402,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
-    SensorDeviceClass.PRECIPITATION_DEPTH: DistanceConverter,
+    SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,

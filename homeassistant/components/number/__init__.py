@@ -199,8 +199,8 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
-    PRECIPITATION_DEPTH = "precipitation_depth"
-    """Precipitation depth.
+    PRECIPITATION = "precipitation"
+    """Precipitation.
 
     Unit of measurement:
     - SI / metric: `mm`
