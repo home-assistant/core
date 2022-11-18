@@ -116,10 +116,10 @@ SENSOR_TYPES: tuple[KostalPikoEntityDescription, ...] = (
         formatter=round_one,
     ),
     KostalPikoEntityDescription(
+        device_class="kostal_piko__battery_charging_state",
         key=str(kostal.ActualBattery.CURRENT_DIR),
         name="Battery Charging State",
         icon="mdi:plus-minus",
-        state_class="kostal_piko__battery_charging_state",
         formatter=lambda b: CONDITION_MAP_BATTERY_STATUS[b]
         if b in CONDITION_MAP_BATTERY_STATUS
         else b,
@@ -308,10 +308,10 @@ SENSOR_TYPES: tuple[KostalPikoEntityDescription, ...] = (
         formatter=round_one,
     ),
     KostalPikoEntityDescription(
+        device_class="kostal_piko__inverter_operating_state",
         key=str(kostal.Home.OPERATING_STATUS),
         name="Operating Status",
         icon="mdi:state-machine",
-        state_class="kostal_piko__inverter_operating_state",
         formatter=lambda s: CONDITION_MAP_INVERTER_STATUS[s]
         if s in CONDITION_MAP_INVERTER_STATUS
         else s,
