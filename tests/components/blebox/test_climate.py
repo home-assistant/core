@@ -52,6 +52,29 @@ def saunabox_fixture():
     return (feature, "climate.saunabox_thermostat")
 
 
+@pytest.fixture(name="thermobox")
+def thermobox_fixture():
+    """Return a default climate entity mock."""
+    feature = mock_feature(
+        "climates",
+        blebox_uniapi.climate.Climate,
+        unique_id="BleBox-thermoBox-1afe34db9437-thermostat",
+        full_name="thermoBox-thermostat",
+        device_class=None,
+        is_on=None,
+        desired=None,
+        current=None,
+        min_temp=-54.3,
+        max_temp=124.3,
+        mode=2,
+        hvac_action=1,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My thermo")
+    type(product).model = PropertyMock(return_value="thermoBox")
+    return (feature, "climate.thermobox_thermostat")
+
+
 async def test_init(saunabox, hass, config):
     """Test default state."""
 
@@ -282,3 +305,27 @@ async def test_reding_hvac_actions(saunabox, hass, config, caplog):
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
+
+
+async def test_thermo_off(thermobox, hass, config, caplog):
+    """Test hvac action off fir given device state."""
+    caplog.set_level(logging.ERROR)
+
+    feature_mock, entity_id = thermobox
+    await async_setup_entity(hass, config, entity_id)
+
+    def set_off():
+        feature_mock.is_on = False
+        feature_mock.hvac_action = 0
+
+    feature_mock.async_update = AsyncMock(side_effect=set_off)
+
+    await hass.services.async_call(
+        "climate",
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.COOL]
