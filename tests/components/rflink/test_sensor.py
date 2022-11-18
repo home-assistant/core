@@ -285,7 +285,7 @@ async def test_sensor_attributes(hass, monkeypatch):
 
     rain_state = hass.states.get("sensor.rain_device")
     assert rain_state
-    assert "device_class" not in rain_state.attributes
+    assert rain_state.attributes["device_class"] == SensorDeviceClass.PRECIPITATION
     assert rain_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert rain_state.attributes["unit_of_measurement"] == PRECIPITATION_MILLIMETERS
 
