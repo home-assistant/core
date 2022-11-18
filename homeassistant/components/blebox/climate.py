@@ -21,13 +21,13 @@ from .const import DOMAIN, PRODUCT
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
-BLEBOX_TO_HVACMode = {
+BLEBOX_TO_HVACMODE = {
     0: HVACMode.OFF,
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
 }
 
-BLEBOX_TO_HVACAction = {
+BLEBOX_TO_HVACACTION = {
     0: HVACAction.IDLE,
     1: HVACAction.HEATING,
     2: HVACAction.COOLING,
@@ -66,16 +66,16 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         if self._feature.is_on is None:
             return None
         if self._feature.mode is not None:
-            return BLEBOX_TO_HVACMode[self._feature.mode]
+            return BLEBOX_TO_HVACMODE[self._feature.mode]
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
-        if self._feature.is_on is False and self._feature.hvac_action is not None:
-            return HVACAction.OFF
         if self._feature.hvac_action is not None:
-            return BLEBOX_TO_HVACAction[self._feature.hvac_action]
+            if not self._feature.is_on:
+                return HVACAction.OFF
+            return BLEBOX_TO_HVACACTION[self._feature.hvac_action]
         if not (is_on := self._feature.is_on):
             return None if is_on is None else HVACAction.OFF
 
