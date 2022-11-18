@@ -1,8 +1,10 @@
 """Support for EDL21 Smart Meters."""
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
@@ -39,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
+CONF_SCAN_INTERVAL_SECONDS = "scan_interval_seconds"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
@@ -46,6 +49,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL_SECONDS, default=MIN_TIME_BETWEEN_UPDATES
+        ): cv.positive_int,
     },
 )
 
@@ -302,6 +308,17 @@ class EDL21:
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
+        if (scan_interval_seconds := config[CONF_SCAN_INTERVAL_SECONDS]) is not None:
+            # EDL21 pushes one data package per second. In order to not lose
+            # packages, when time passed since last package is an iota earlier than
+            # the configured interval (if 1 second is selected), make the actual scan
+            # interval a bit smaller.
+            self._min_time = timedelta(
+                seconds=scan_interval_seconds - 1, milliseconds=900
+            )
+        else:
+            self._min_time = MIN_TIME_BETWEEN_UPDATES
+
     async def connect(self):
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
@@ -338,7 +355,12 @@ class EDL21:
 
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id,
+                            obis,
+                            name,
+                            entity_description,
+                            telegram,
+                            self._min_time,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -382,14 +404,22 @@ class EDL21Entity(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(
+        self,
+        electricity_id,
+        obis,
+        name,
+        entity_description,
+        telegram,
+        min_time: timedelta = MIN_TIME_BETWEEN_UPDATES,
+    ):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._min_time = min_time
         self._last_update = utcnow()
         self._state_attrs = {
             "status": "status",
@@ -397,7 +427,7 @@ class EDL21Entity(SensorEntity):
             "scaler": "scaler",
             "valueSignature": "value_signature",
         }
-        self._async_remove_dispatcher = None
+        self._async_remove_dispatcher: Callable[[], None] | None = None
         self.entity_description = entity_description
 
     async def async_added_to_hass(self) -> None:
@@ -451,7 +481,7 @@ class EDL21Entity(SensorEntity):
         return self._telegram.get("value")
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v
@@ -460,7 +490,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
