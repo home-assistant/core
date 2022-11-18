@@ -17,13 +17,25 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "entity_id, metric_key, value",
     [
-        ("number.vallox_supply_air_temperature_home", "A_CYC_HOME_AIR_TEMP_TARGET", 19),
-        ("number.vallox_supply_air_temperature_away", "A_CYC_AWAY_AIR_TEMP_TARGET", 18),
+        (
+            "number.vallox_supply_air_temperature_home",
+            "A_CYC_HOME_AIR_TEMP_TARGET",
+            19.0,
+        ),
+        (
+            "number.vallox_supply_air_temperature_away",
+            "A_CYC_AWAY_AIR_TEMP_TARGET",
+            18.0,
+        ),
     ],
 )
 async def test_temperature_number_entities(
-    entity_id, metric_key, value, mock_entry: MockConfigEntry, hass: HomeAssistant
-):
+    entity_id: str,
+    metric_key: str,
+    value: float,
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
     """Test temperature entities."""
     # Arrange
     metrics = {metric_key: value}
@@ -35,7 +47,7 @@ async def test_temperature_number_entities(
 
     # Assert
     sensor = hass.states.get(entity_id)
-    assert sensor.state == str(float(value))
+    assert sensor.state == str(value)
     assert sensor.attributes["unit_of_measurement"] == "°C"
 
 
@@ -48,8 +60,12 @@ async def test_temperature_number_entities(
     ],
 )
 async def test_fan_speed_number_entities(
-    entity_id, metric_key, value, mock_entry: MockConfigEntry, hass: HomeAssistant
-):
+    entity_id: str,
+    metric_key: str,
+    value: int,
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
     """Test fan speed entities."""
     # Arrange
     metrics = {metric_key: value}
@@ -68,7 +84,7 @@ async def test_fan_speed_number_entities(
 async def test_fan_speed_number_entitity_set(
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
-):
+) -> None:
     """Test fan speed set."""
     # Act
     with patch_metrics(metrics={}), patch_metrics_set() as metrics_set:
