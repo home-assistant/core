@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import RESOURCE_CONFIG, SENSOR_CONFIG, MockRestData, return_integration_config
+from . import MockRestData, return_integration_config
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -112,46 +112,16 @@ async def test_setup_config_no_sensors(
         await hass.async_block_till_done()
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
     """Test setup entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={**RESOURCE_CONFIG, "sensors": [SENSOR_CONFIG]},
-        entry_id="1",
-    )
-    entry.add_to_hass(hass)
 
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert load_int.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
     """Test unload an entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={**RESOURCE_CONFIG, "sensors": [SENSOR_CONFIG]},
-        entry_id="1",
-    )
-    entry.add_to_hass(hass)
 
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert load_int.state == config_entries.ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(load_int.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert load_int.state is config_entries.ConfigEntryState.NOT_LOADED

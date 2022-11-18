@@ -24,13 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import (
-    RESOURCE_CONFIG,
-    SENSOR_CONFIG,
-    MockRestData,
-    return_config,
-    return_integration_config,
-)
+from . import MockRestData, return_config, return_integration_config
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -413,20 +407,10 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     assert entity.unique_id == "ha_version_unique_id"
 
 
-async def test_setup_config_entry(hass: HomeAssistant) -> None:
+async def test_setup_config_entry(
+    hass: HomeAssistant, load_int: MockConfigEntry
+) -> None:
     """Test setup from config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={}, options={**RESOURCE_CONFIG, "sensors": [SENSOR_CONFIG]}
-    )
-    entry.add_to_hass(hass)
-
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"

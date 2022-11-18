@@ -3,29 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
-from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL
-from homeassistant.components.scrape.const import CONF_INDEX, CONF_SELECT
-from homeassistant.const import (
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_RESOURCE,
-    CONF_TIMEOUT,
-    CONF_VERIFY_SSL,
-)
-
-RESOURCE_CONFIG = {
-    CONF_RESOURCE: "https://www.home-assistant.io",
-    CONF_METHOD: DEFAULT_METHOD,
-    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-    CONF_TIMEOUT: DEFAULT_TIMEOUT,
-}
-SENSOR_CONFIG = {
-    CONF_NAME: "Current version",
-    CONF_SELECT: ".current-version h1",
-    CONF_INDEX: 0.0,
-}
-
 
 def return_integration_config(
     *,

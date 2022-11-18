@@ -39,13 +39,17 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     """
     return {
         CONF_RESOURCE: "https://www.home-assistant.io",
-        CONF_NAME: "Current version",
-        CONF_SELECT: ".current-version h1",
-        CONF_INDEX: 0,
         CONF_METHOD: DEFAULT_METHOD,
         CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        "sensors": [
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: ".current-version h1",
+                CONF_INDEX: 0,
+            }
+        ],
     }
 
 
