@@ -147,12 +147,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _optimistic: bool
-    _supported_color_modes: set[ColorMode] | None
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
     ]
     _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
-    _topics: dict[str, Any]
+    _fixed_color_mode: ColorMode | str | None
+    _topics: dict[str, str | None]
 
     def __init__(
         self,
@@ -162,8 +162,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize a MQTT Template light."""
-        # features
-        self._fixed_color_mode: ColorMode | str | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -281,9 +279,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     _LOGGER.warning("Invalid color value received")
 
             if CONF_EFFECT_TEMPLATE in self._config:
-                effect: str = str(
-                    self._value_templates[CONF_EFFECT_TEMPLATE](msg.payload)
-                )
+                effect = str(self._value_templates[CONF_EFFECT_TEMPLATE](msg.payload))
 
                 if (
                     CONF_EFFECT_LIST in self._config
@@ -393,7 +389,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["transition"] = kwargs[ATTR_TRANSITION]
 
         await self.async_publish(
-            self._topics[CONF_COMMAND_TOPIC],
+            str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_ON_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
@@ -416,7 +412,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["transition"] = kwargs[ATTR_TRANSITION]
 
         await self.async_publish(
-            self._topics[CONF_COMMAND_TOPIC],
+            str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_OFF_TEMPLATE](None, values),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
