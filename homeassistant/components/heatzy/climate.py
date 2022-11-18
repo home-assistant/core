@@ -97,6 +97,11 @@ class HeatzyThermostat(CoordinatorEntity[HeatzyDataUpdateCoordinator], ClimateEn
             return HVACMode.OFF
         return HVACMode.HEAT
 
+    @property
+    def _conf_attr(self):
+        """Return device attributes."""
+        return self.coordinator.data[self.unique_id].get(CONF_ATTR, {})
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -111,10 +116,6 @@ class HeatzyThermostat(CoordinatorEntity[HeatzyDataUpdateCoordinator], ClimateEn
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.async_set_preset_mode(PRESET_NONE)
-
-    @property
-    def _conf_attr(self):
-        return self.coordinator.data[self.unique_id].get(CONF_ATTR, {})
 
 
 class HeatzyPiloteV1Thermostat(HeatzyThermostat):
@@ -136,9 +137,7 @@ class HeatzyPiloteV1Thermostat(HeatzyThermostat):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return self.HEATZY_TO_HA_STATE.get(
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CONF_MODE)
-        )
+        return self.HEATZY_TO_HA_STATE.get(self._conf_attr.get(CONF_MODE))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -178,9 +177,7 @@ class HeatzyPiloteV2Thermostat(HeatzyThermostat):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return self.HEATZY_TO_HA_STATE.get(
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CONF_MODE)
-        )
+        return self.HEATZY_TO_HA_STATE.get(self._conf_attr.get(CONF_MODE))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -214,34 +211,22 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
     @property
     def current_temperature(self) -> float:
         """Return current temperature."""
-        cur_temp_high = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CUR_TEMP_H, 0)
-        )
-        cur_temp_low = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CUR_TEMP_L, 0)
-        )
+        cur_temp_high = self._conf_attr.get(CUR_TEMP_H, 0)
+        cur_temp_low = self._conf_attr.get(CUR_TEMP_L, 0)
         return (cur_temp_low + (cur_temp_high * 255)) / 10
 
     @property
     def target_temperature_high(self) -> float:
         """Return comfort temperature."""
-        cft_temp_high = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CFT_TEMP_H, 0)
-        )
-        cft_temp_low = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CFT_TEMP_L, 0)
-        )
+        cft_temp_high = self._conf_attr.get(CFT_TEMP_H, 0)
+        cft_temp_low = self._conf_attr.get(CFT_TEMP_L, 0)
         return (cft_temp_low + (cft_temp_high * 255)) / 10
 
     @property
     def target_temperature_low(self) -> float:
         """Return comfort temperature."""
-        eco_temp_high = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(ECO_TEMP_H, 0)
-        )
-        eco_temp_low = (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(ECO_TEMP_L, 0)
-        )
+        eco_temp_high = self._conf_attr.get(ECO_TEMP_H, 0)
+        eco_temp_low = self._conf_attr.get(ECO_TEMP_L, 0)
         return (eco_temp_low + (eco_temp_high * 255)) / 10
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -252,23 +237,16 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
         if (temp_eco or temp_cft) is None:
             return
 
-        b_temp_cft = int(temp_cft * 10)
-        b_temp_eco = int(temp_eco * 10)
-
-        self.coordinator.data[self.unique_id].get(CONF_ATTR, {})[
-            ECO_TEMP_L
-        ] = b_temp_eco
-        self.coordinator.data[self.unique_id].get(CONF_ATTR, {})[
-            CFT_TEMP_L
-        ] = b_temp_cft
+        self._conf_attr[ECO_TEMP_L] = int(temp_cft * 10)
+        self._conf_attr[CFT_TEMP_L] = int(temp_eco * 10)
 
         try:
             await self.coordinator.api.async_control_device(
                 self.unique_id,
                 {
                     CONF_ATTRS: {
-                        CFT_TEMP_L: b_temp_cft,
-                        ECO_TEMP_L: b_temp_eco,
+                        CFT_TEMP_L: self._conf_attr[CFT_TEMP_L],
+                        ECO_TEMP_L: self._conf_attr[ECO_TEMP_L],
                     }
                 },
             )
@@ -311,9 +289,6 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if (
-            self.coordinator.data[self.unique_id].get(CONF_ATTR, {}).get(CONF_ON_OFF)
-            == 0
-        ):
+        if self._conf_attr.get(CONF_ON_OFF) == 0:
             return HVACMode.OFF
         return HVACMode.HEAT
