@@ -63,10 +63,15 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
 
 @dataclass
-class ValloxNumberEntityDescription(NumberEntityDescription):
-    """Describes Vallox number entity."""
+class ValloxMetricMixin:
+    """Holds Vallox metric key."""
 
-    metric_key: str = ""
+    metric_key: str
+
+
+@dataclass
+class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
+    """Describes Vallox number entity."""
 
 
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
