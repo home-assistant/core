@@ -2754,6 +2754,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "kostal_piko": {
+      "name": "Kostal Piko Solar Inverter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kostal_plenticore": {
       "name": "Kostal Plenticore Solar Inverter",
       "integration_type": "hub",

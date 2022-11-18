@@ -220,6 +220,7 @@ FLOWS = {
         "knx",
         "kodi",
         "konnected",
+        "kostal_piko",
         "kostal_plenticore",
         "kraken",
         "kulersky",

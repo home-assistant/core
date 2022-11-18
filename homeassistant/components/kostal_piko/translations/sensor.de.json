@@ -1,0 +1,13 @@
+{
+  "state": {
+    "kostal_piko__battery_charging_state": {
+      "charging": "L\u00e4dt",
+      "discharging": "Entl\u00e4dt"
+    },
+    "kostal_piko__inverter_operating_state": {
+      "unknown": "Unbekannt",
+      "starting": "Startet",
+      "feed_in": "Einspeisen"
+    }
+  }
+}
