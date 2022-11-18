@@ -426,7 +426,7 @@ def async_fire_time_changed(
 
 @ha.callback
 def _async_fire_time_changed(
-    hass: HomeAssistant, utc_datetime: datetime = None, fire_all: bool = False
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
     timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
