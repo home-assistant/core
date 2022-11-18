@@ -255,12 +255,15 @@ class ESPHomeClient(BaseBleakClient):
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
-        self._cancel_connection_state = await self._client.bluetooth_device_connect(
-            self._address_as_int,
-            _on_bluetooth_connection_state,
-            timeout=timeout,
-        )
-        await connected_future
+        try:
+            self._cancel_connection_state = await self._client.bluetooth_device_connect(
+                self._address_as_int,
+                _on_bluetooth_connection_state,
+                timeout=timeout,
+            )
+        except TimeoutAPIError:
+            await connected_future
+            raise
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
         return True
