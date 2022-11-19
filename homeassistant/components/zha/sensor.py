@@ -875,6 +875,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
 
     SENSOR_ATTR = "portions_dispensed"
     _attr_name: str = "Portions dispensed"
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -884,3 +885,4 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     SENSOR_ATTR = "weight_dispensed"
     _attr_name: str = "Weight dispensed"
     _unit = UnitOfMass.GRAMS
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
