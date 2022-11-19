@@ -10,7 +10,7 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -844,7 +844,7 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 10
     _zcl_attribute: str = "serving_size"
-    _attr_name: str = "Serving size"
+    _attr_name: str = "Serving to dispense"
     _attr_mode: NumberMode = NumberMode.BOX
 
 
@@ -860,3 +860,4 @@ class AqaraPetFeederPortionWeight(
     _zcl_attribute: str = "portion_weight"
     _attr_name: str = "Portion weight"
     _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS

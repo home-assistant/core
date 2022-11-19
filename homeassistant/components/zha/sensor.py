@@ -874,7 +874,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
     """Sensor that displays the number of portions dispensed by the pet feeder."""
 
     SENSOR_ATTR = "portions_dispensed"
-    _attr_name: str = "Portions dispensed"
+    _attr_name: str = "Portions dispensed today"
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
 
 
@@ -883,6 +883,6 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     """Sensor that displays the weight weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
-    _attr_name: str = "Weight dispensed"
+    _attr_name: str = "Weight dispensed today"
     _unit = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
