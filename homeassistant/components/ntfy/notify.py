@@ -52,12 +52,12 @@ def get_service(
     """Get the ntfy notification service."""
     url = str(config.get(CONF_URL))
     topic = str(config.get(CONF_TOPIC))
-    username = str(config.get(CONF_USERNAME))
-    password = str(config.get(CONF_PASSWORD))
+    username = config.get(CONF_USERNAME)  # could be None since optional
+    password = config.get(CONF_PASSWORD)  # could be None since optional
     verify_ssl = bool(config.get(CONF_VERIFY_SSL))
 
     if username and password:
-        auth = requests.auth.HTTPBasicAuth(username, password)
+        auth = requests.auth.HTTPBasicAuth(str(username), str(password))
     else:
         auth = None
 
@@ -98,28 +98,19 @@ class NtfyNotificationService(BaseNotificationService):
             "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
         }
 
-        # Ignore target
-
         extra_data = kwargs.get(ATTR_DATA, {})
-        # If additional data parameters provided by user
+        # If additional data provided by user
         if extra_data:
-            # Add message and topic to kwargs
-            kwargs[ATTR_MESSAGE] = message
-            kwargs[CONF_TOPIC] = self._topic
+            # Override properties with elements from extra data
+            extra_data_keys = extra_data.keys()
+            if "message" in extra_data_keys:
+                post_data["message"] = extra_data["message"]
 
-            # Title already exists in kwargs
+            if "topic" in extra_data_keys:
+                post_data["topic"] = extra_data["topic"]
 
-            def _data_template_creator(value: Any) -> Any:
-                """Recursive template creator helper function."""
-                if isinstance(value, dict):
-                    return value
-
-                # Parsing error (data is not a dictionary)
-                value.hass = self._hass
-                return value.async_render(kwargs, parse_result=False)
-
-            # Combine additional data with message and title in JSON body
-            post_data.update(_data_template_creator(extra_data))
+            if "title" in extra_data_keys:
+                post_data["title"] = extra_data["title"]
 
         response = requests.post(
             self._url,
@@ -133,9 +124,9 @@ class NtfyNotificationService(BaseNotificationService):
             response.raise_for_status()  # raise an error if a 4xx or 5xx response is returned
         except requests.exceptions.HTTPError:
             _LOGGER.exception(
-                "Error communicating with ntfy. Response %d: %s:",
+                "Error communicating with ntfy. Response %d: %s",
                 response.status_code,
                 response.reason,
             )
 
-        _LOGGER.debug("Response %d: %s:", response.status_code, response.reason)
+        _LOGGER.debug("Response %d: %s", response.status_code, response.reason)
