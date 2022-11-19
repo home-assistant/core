@@ -12,12 +12,12 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS
 
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
-    OverkizCommandParam.STANDARD: STATE_ECO,
+    OverkizCommandParam.STANDARD: STATE_ON,
     OverkizCommandParam.HIGH_DEMAND: STATE_HIGH_DEMAND,
     OverkizCommandParam.STOP: STATE_OFF,
     OverkizCommandParam.MANUAL_ECO_ACTIVE: STATE_ECO,
@@ -38,6 +38,9 @@ DHWP_AWAY_MODES = [
 DHWP_BOOST_MODES = [
     OverkizCommandParam.BOOST,
 ]
+
+DEFAULT_MIN_TEMP: float = 30
+DEFAULT_MAX_TEMP: float = 70
 
 
 class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
@@ -132,60 +135,61 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        min_temp = self.device.states[OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE]
+        if min_temp:
+            return cast(float, min_temp.value_as_float)
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        max_temp = self.device.states[OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE]
+        if max_temp:
+            return cast(float, max_temp.value_as_float)
+        return DEFAULT_MAX_TEMP
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
-                OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
-            ),
-        )
+        current_temperature = self.device.states[
+            OverkizState.IO_MIDDLE_WATER_TEMPERATURE
+        ]
+        if current_temperature:
+            return current_temperature.value_as_float
+        current_temperature = self.device.states[
+            OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE
+        ]
+        if current_temperature:
+            return current_temperature.value_as_float
+        return None
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return cast(
-            float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
-        )
+        target_temperature = self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+        if target_temperature:
+            return target_temperature.value_as_float
+        return None
 
     @property
-    def target_temperature_high(self) -> float:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        target_temperature_high = self.device.states[
+            OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+        ]
+        if target_temperature_high:
+            return target_temperature_high.value_as_float
+        return None
 
     @property
-    def target_temperature_low(self) -> float:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        target_temperature_low = self.device.states[
+            OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+        ]
+        if target_temperature_low:
+            return target_temperature_low.value_as_float
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -248,6 +252,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             return
 
         if self._is_boost_mode_on:
+            # We're setting a non Boost mode and the device is currently in Boost mode, the following code remove all boost operations
             if self.executor.has_command(OverkizCommand.SET_BOOST_MODE):
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_BOOST_MODE, OverkizCommand.OFF
