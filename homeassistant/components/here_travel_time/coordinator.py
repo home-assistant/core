@@ -16,7 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
-from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_DESTINATION,
