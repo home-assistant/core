@@ -356,7 +356,7 @@ async def test_check_requesterror(hass, aioclient_mock):
         )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "unknown_error"
+    assert result["reason"] == "network_error"
 
 
 async def test_reauth_flow(hass, aioclient_mock):

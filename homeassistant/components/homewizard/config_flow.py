@@ -212,8 +212,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unsupported_api_version") from ex
 
         except RequestError as ex:
-            _LOGGER.error("Unexpected or no response")
-            raise AbortFlow("unknown_error") from ex
+            _LOGGER.error(ex)
+            raise AbortFlow("network_error") from ex
 
         except Exception as ex:
             _LOGGER.exception(

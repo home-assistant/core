@@ -22,6 +22,7 @@
       "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
+      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network",
       "reauth_successful": "Enabeling API was successful"
     }
   }
