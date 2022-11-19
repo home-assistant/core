@@ -95,6 +95,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "DHCP discovery detected Airzone WebServer: %s", self._discovered_mac
         )
 
+        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
+
+        await self.async_set_unique_id(format_mac(self._discovered_mac))
+        self._abort_if_unique_id_configured()
+
         options = ConnectionOptions(self._discovered_ip)
         airzone = AirzoneLocalApi(
             aiohttp_client.async_get_clientsession(self.hass), options
@@ -103,11 +108,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await airzone.get_version()
         except AirzoneError as err:
             raise AbortFlow("cannot_connect") from err
-
-        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
-
-        await self.async_set_unique_id(format_mac(self._discovered_mac))
-        self._abort_if_unique_id_configured()
 
         return await self.async_step_discovered_connection()
 
