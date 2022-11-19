@@ -42,6 +42,7 @@ async def test_time_with_datetime():
     assert time_entity.hour == 12
     assert time_entity.minute == 0
     assert time_entity.second == 0
+    assert isinstance(time_entity.value, time)
     assert time_entity.state_attributes == {
         ATTR_HOUR: 12,
         ATTR_MINUTE: 0,

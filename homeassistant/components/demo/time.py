@@ -20,18 +20,8 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo Time entity."""
-    async_add_entities(
-        [
-            DemoTime(
-                "time",
-                "Time",
-                time(12, 0, 0),
-                "mdi:clock",
-                False,
-            ),
-        ]
-    )
+    """Set up the Demo time entity."""
+    async_add_entities([DemoTime("time", "Time", time(12, 0, 0), "mdi:clock", False)])
 
 
 async def async_setup_entry(
@@ -44,7 +34,7 @@ async def async_setup_entry(
 
 
 class DemoTime(TimeEntity):
-    """Representation of a demo time entity."""
+    """Representation of a Demo time entity."""
 
     _attr_should_poll = False
 
@@ -56,7 +46,7 @@ class DemoTime(TimeEntity):
         icon: str,
         assumed_state: bool,
     ) -> None:
-        """Initialize the Demo Time entity."""
+        """Initialize the Demo time entity."""
         self._attr_assumed_state = assumed_state
         self._attr_icon = icon
         self._attr_name = name or DEVICE_DEFAULT_NAME
@@ -64,11 +54,7 @@ class DemoTime(TimeEntity):
         self._attr_unique_id = unique_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, unique_id)
-            },
-            name=self.name,
+            identifiers={(DOMAIN, unique_id)}, name=self.name
         )
 
     async def async_set_value(self, time_value: time) -> None:

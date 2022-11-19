@@ -8,7 +8,7 @@ set_value:
     time:
       name: Time
       description: The time to set.
-      required: false
+      required: true
       example: "22:15"
       selector:
         time:
