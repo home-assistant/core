@@ -1560,6 +1560,9 @@ securetar==2022.2.0
 # homeassistant.components.sense
 sense_energy==0.10.4
 
+# homeassistant.components.sensirion_ble
+sensirion-ble==0.0.1
+
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.0
 
