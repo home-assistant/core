@@ -84,6 +84,14 @@ SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
 
+ATTR_INTENT_ACTION = "intent_action"
+ATTR_INTENT_URI = "intent_uri"
+ATTR_INTENT_TYPE = "intent_type"
+ATTR_INTENT_PACKAGE_NAME = "intent_package_name"
+ATTR_INTENT_CLASS_NAME = "intent_class_name"
+ATTR_INTENT_EXTRAS = "intent_extras"
+ATTR_COMMAND = "command"
+
 SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,

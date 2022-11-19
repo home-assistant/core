@@ -210,6 +210,11 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("condition_type"): {str: cv.string_with_no_html},
                 vol.Optional("trigger_type"): {str: cv.string_with_no_html},
                 vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
+                vol.Optional("extra_fields"): {
+                    vol.Optional("action"): {str: cv.string_with_no_html},
+                    vol.Optional("condition"): {str: cv.string_with_no_html},
+                    vol.Optional("trigger"): {str: cv.string_with_no_html},
+                },
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),

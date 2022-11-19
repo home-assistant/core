@@ -12,7 +12,51 @@
   },
   "device_automation": {
     "action_type": {
-      "notify": "Send a notification"
+      "notify": "Send a notification",
+      "command_stop_tts": "Stop TTS",
+      "command_update_sensors": "Update Sensors",
+      "request_location_update": "Request Location Updates",
+      "command_auto_screen_brightness": "Turn On/Off Auto Screen Brightness",
+      "command_bluetooth": "Turn On/Off Bluetooth",
+      "command_ble_transmitter": "Turn On/Off BLE Beacon Transmitter",
+      "command_beacon_monitor": "Turn On/Off BLE Beacon Monitor",
+      "command_activity": "Launch an Activity",
+      "command_clear_notification": "Clear Notification",
+      "command_app_lock": "Configure App Lock",
+      "command_broadcast_intent": "Broadcast Intent",
+      "command_dnd": "Control Do Not Disturb",
+      "command_high_accuracy_mode": "Turn On/Off High Accuracy Mode",
+      "command_launch_app": "Launch App",
+      "command_media": "Control Media",
+      "command_ringer_mode": "Control Ringer Mode",
+      "command_screen_brightness_level": "Control Screen Brightness Level",
+      "command_screen_off_timeout": "Control Screen Off Timeout",
+      "command_screen_on": "Turn On Screen",
+      "command_persistent_connection": "Configure Persistent Connection",
+      "command_volume_level": "Control Volume Level",
+      "command_webview": "Open Webview",
+      "remove_channel": "Remove Notification Channel"
+    },
+    "extra_fields": {
+      "action": {
+        "intent_action": "Intent Action",
+        "intent_uri": "Intent URI",
+        "intent_type": "Intent Type",
+        "intent_package_name": "Intent Package Name",
+        "intent_class_name": "Intent Class Name",
+        "intent_extras": "Intent Extras",
+        "command": "Command",
+        "tag": "Tag",
+        "app_lock_enabled": "App Lock Enabled",
+        "app_lock_timeout": "App Lock Timeout",
+        "home_bypass_enabled": "Home Bypass Enabled",
+        "package_name": "Package Name",
+        "media_command": "Media Command",
+        "media_package_name": "Media Package Name",
+        "persisent": "Persistent",
+        "media_stream": "Media Stream",
+        "channel": "Channel"
+      }
     }
   }
 }
