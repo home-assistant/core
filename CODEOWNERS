@@ -625,6 +625,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_piko/ @scheidtdav @bedmanforever
+/tests/components/kostal_piko/ @scheidtdav @bedmanforever
 /homeassistant/components/kostal_plenticore/ @stegm
 /tests/components/kostal_plenticore/ @stegm
 /homeassistant/components/kraken/ @eifinger

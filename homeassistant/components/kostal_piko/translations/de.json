@@ -6,7 +6,8 @@
     },
     "error": {
       "unknown": "Ein unbekannter Fehler ist aufgetreten",
-      "cannot_connect": "Verbindung zum Inverter konnte nicht hergestellt werden"
+      "cannot_connect": "Verbindung zum Inverter konnte nicht hergestellt werden",
+      "not_specified": "Host nicht spezifiziert"
     },
     "step": {
       "user": {

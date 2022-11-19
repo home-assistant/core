@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -57,11 +57,14 @@ class KostalPikoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
             except ValueError as err:
-                _LOGGER.error("Kostal Piko api returned unknown value: %s", err)
-                errors[CONF_BASE] = "unknown"
+                _LOGGER.error("Kostal Piko setup failed: %s", err)
+                errors[CONF_HOST] = "not_specified"
             except ConnectionError as err:
                 _LOGGER.error("Could not connect to Kostal Piko api: %s", err)
                 errors[CONF_HOST] = "cannot_connect"
+            except AbortFlow:
+                _LOGGER.info("Flow aborted, unique id already configured")
+                raise
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception: %s", err)
                 errors[CONF_BASE] = "unknown"

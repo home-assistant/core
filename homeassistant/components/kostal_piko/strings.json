@@ -3,7 +3,8 @@
     "flow_title": "Kostal Piko Inverter Setup",
     "error": {
       "unknown": "An unknown error occured",
-      "cannot_connect": "Could not connect to inverter"
+      "cannot_connect": "Could not connect to inverter",
+      "not_specified": "Host not specified"
     },
     "step": {
       "user": {
