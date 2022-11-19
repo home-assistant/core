@@ -185,7 +185,7 @@ async def test_load_detect_api_disabled(aioclient_mock, hass):
 
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_load_handles_homewizardenergy_exception(aioclient_mock, hass):
