@@ -387,7 +387,7 @@ async def test_reauth_flow(hass, aioclient_mock):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "reauth_succesfull"
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_error(hass, aioclient_mock):
