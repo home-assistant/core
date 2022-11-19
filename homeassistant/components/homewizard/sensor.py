@@ -1,7 +1,6 @@
 """Creates Homewizard sensor entities."""
 from __future__ import annotations
 
-import logging
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -26,7 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
