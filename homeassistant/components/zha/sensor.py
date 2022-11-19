@@ -855,6 +855,7 @@ class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="last_feeding_source"):
 
     SENSOR_ATTR = "last_feeding_source"
     _attr_name: str = "Last feeding source"
+    _attr_icon = "mdi:devices"
 
     def formatter(self, value: int) -> int | float | None:
         """Numeric pass-through formatter."""
@@ -867,6 +868,7 @@ class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="last_feeding_size"):
 
     SENSOR_ATTR = "last_feeding_size"
     _attr_name: str = "Last feeding size"
+    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -876,6 +878,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
     SENSOR_ATTR = "portions_dispensed"
     _attr_name: str = "Portions dispensed today"
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:counter"
 
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -886,3 +889,4 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _attr_name: str = "Weight dispensed today"
     _unit = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:weight-gram"

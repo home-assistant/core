@@ -846,6 +846,7 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving
     _zcl_attribute: str = "serving_size"
     _attr_name: str = "Serving to dispense"
     _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:counter"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -861,3 +862,4 @@ class AqaraPetFeederPortionWeight(
     _attr_name: str = "Portion weight"
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
+    _attr_icon: str = "mdi:weight-gram"

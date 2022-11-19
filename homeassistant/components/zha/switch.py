@@ -444,6 +444,7 @@ class AqaraPetFeederLEDIndicator(
     _zcl_attribute: str = "disable_led_indicator"
     _attr_name = "LED indicator"
     _force_inverted = True
+    _attr_icon: str = "mdi:led-on"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -452,3 +453,4 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity, id_suffix="child_loc
 
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"

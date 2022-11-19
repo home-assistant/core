@@ -492,3 +492,4 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _select_attr = "feeding_mode"
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
+    _attr_icon: str = "mdi:wrench-clock"
