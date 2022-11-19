@@ -3,10 +3,17 @@
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
                 }
             }
         }

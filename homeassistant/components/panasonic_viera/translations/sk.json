@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "IP adresa",
                     "name": "N\u00e1zov"
                 }
             }

@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa"
         }
     }
 }
