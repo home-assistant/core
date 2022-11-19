@@ -19,7 +19,7 @@ def mock_operating_system():
         "homeassistant.components.usb.system_info.async_get_system_info",
         return_value={
             "hassio": True,
-            "docker": True,
+            "container": True,
         },
     ):
         yield
@@ -32,7 +32,7 @@ def mock_docker():
         "homeassistant.components.usb.system_info.async_get_system_info",
         return_value={
             "hassio": False,
-            "docker": True,
+            "container": True,
         },
     ):
         yield
@@ -45,7 +45,7 @@ def mock_venv():
         "homeassistant.components.usb.system_info.async_get_system_info",
         return_value={
             "hassio": False,
-            "docker": False,
+            "container": False,
             "virtualenv": True,
         },
     ):

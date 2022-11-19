@@ -22,7 +22,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         "hassio": hass.components.hassio.is_hassio(),
         "virtualenv": is_virtual_env(),
         "python_version": platform.python_version(),
-        "docker": False,
+        "container": False,
         "arch": platform.machine(),
         "timezone": str(hass.config.time_zone),
         "os_name": platform.system(),
@@ -37,10 +37,12 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     if platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
-        info_object["docker"] = os.path.isfile("/.dockerenv")
+        info_object["container"] = os.path.isfile("/.dockerenv") or os.path.isfile(
+            "/run/.containerenv"
+        )
 
     # Determine installation type on current data
-    if info_object["docker"]:
+    if info_object["container"]:
         if info_object["user"] == "root" and os.path.isfile("/OFFICIAL_IMAGE"):
             info_object["installation_type"] = "Home Assistant Container"
         else:

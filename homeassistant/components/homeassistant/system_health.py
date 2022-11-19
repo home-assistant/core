@@ -21,7 +21,7 @@ async def system_health_info(hass):
         "installation_type": info.get("installation_type"),
         "dev": info.get("dev"),
         "hassio": info.get("hassio"),
-        "docker": info.get("docker"),
+        "container": info.get("container"),
         "user": info.get("user"),
         "virtualenv": info.get("virtualenv"),
         "python_version": info.get("python_version"),

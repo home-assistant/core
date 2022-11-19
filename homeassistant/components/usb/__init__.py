@@ -201,7 +201,7 @@ class USBDiscovery:
         if not sys.platform.startswith("linux"):
             return
         info = await system_info.async_get_system_info(self.hass)
-        if info.get("docker"):
+        if info.get("container"):
             return
 
         from pyudev import (  # pylint: disable=import-outside-toplevel
