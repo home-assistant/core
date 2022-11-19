@@ -69,6 +69,7 @@ async def test_set_datetime_valid():
             {ATTR_DATE: date(2021, 12, 12)},
         ),
     )
+    assert isinstance(datetime_entity.native_value, datetime)
     assert datetime_entity.state == "2021-12-12 12:00:00"
 
     await _async_set_value(
@@ -79,6 +80,7 @@ async def test_set_datetime_valid():
             {ATTR_TIME: time(5, 1, 2)},
         ),
     )
+    assert isinstance(datetime_entity.native_value, datetime)
     assert datetime_entity.state == "2021-12-12 05:01:02"
 
 

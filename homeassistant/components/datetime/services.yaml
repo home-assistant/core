@@ -8,7 +8,7 @@ set_datetime:
     datetime:
       name: Date & Time
       description: The date/time to set.
-      required: false
+      required: true
       example: "2022/11/01 22:15"
       selector:
         datetime:

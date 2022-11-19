@@ -1,4 +1,4 @@
-"""Demo platform that offers a fake Date/time entity."""
+"""Demo platform that offers a fake date/time entity."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -20,7 +20,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo Date/Time entity."""
+    """Set up the Demo date/time entity."""
     async_add_entities(
         [
             DemoDateTime(
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class DemoDateTime(DateTimeEntity):
-    """Representation of a demo Date/time entity."""
+    """Representation of a Demo date/time entity."""
 
     _attr_should_poll = False
 
@@ -56,7 +56,7 @@ class DemoDateTime(DateTimeEntity):
         icon: str,
         assumed_state: bool,
     ) -> None:
-        """Initialize the Demo Date/Time entity."""
+        """Initialize the Demo date/time entity."""
         self._attr_assumed_state = assumed_state
         self._attr_icon = icon
         self._attr_name = name or DEVICE_DEFAULT_NAME
