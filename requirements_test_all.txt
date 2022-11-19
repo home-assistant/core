@@ -1506,7 +1506,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.10.0
+regenmaschine==2022.11.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
