@@ -62,6 +62,8 @@ class HWEnergyNumberEntity(
         await self.coordinator.async_refresh()
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the current value."""
+        if self.coordinator.data["state"].brightness is None:
+            return None
         return round(self.coordinator.data["state"].brightness * (100 / 255))
