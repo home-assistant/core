@@ -39,6 +39,7 @@ async def test_date_with_datetime():
     assert date_entity.day == 1
     assert date_entity.month == 1
     assert date_entity.year == 2020
+    assert isinstance(date_entity.value, date)
     assert date_entity.state_attributes == {
         ATTR_DAY: 1,
         ATTR_MONTH: 1,
