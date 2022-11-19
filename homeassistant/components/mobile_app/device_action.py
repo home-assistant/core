@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 import voluptuous as vol
 
@@ -42,13 +41,11 @@ NOTIFY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 COMMAND_NO_DATA_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.Any(
-            [
-                "command_stop_tts",
-                "command_update_sensors",
-                "request_location_update",
-                "clear_badge",
-                "update_complications",
-            ]
+            "command_stop_tts",
+            "command_update_sensors",
+            "request_location_update",
+            "clear_badge",
+            "update_complications",
         ),
     }
 )
@@ -56,12 +53,10 @@ COMMAND_NO_DATA_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 COMMAND_ONOFF_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.Any(
-            [
-                "command_auto_screen_brightness",
-                "command_bluetooth",
-                "command_ble_transmitter",
-                "command_beacon_monitor",
-            ]
+            "command_auto_screen_brightness",
+            "command_bluetooth",
+            "command_ble_transmitter",
+            "command_beacon_monitor",
         ),
         vol.Required(ATTR_COMMAND): vol.Any("turn_off", "turn_on"),
     }
@@ -328,7 +323,7 @@ async def async_call_action_from_config(
             "Unable to find notify service for webhook ID"
         )
 
-    service_data: dict[str, typing.Any] = {notify.ATTR_TARGET: webhook_id}
+    service_data: ConfigType = {notify.ATTR_TARGET: webhook_id}
     service_data[notify.ATTR_DATA] = {}
 
     if config[CONF_TYPE] == "notify":

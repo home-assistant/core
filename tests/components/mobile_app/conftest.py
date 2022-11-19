@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from .const import REGISTER, REGISTER_CLEARTEXT
+from .const import REGISTER, REGISTER_ANDROID, REGISTER_CLEARTEXT, REGISTER_IOS
 
 
 @pytest.fixture
@@ -43,6 +43,46 @@ async def push_registration(hass, authed_api_client):
         "/api/mobile_app/registrations",
         json={
             **REGISTER,
+            "app_data": {
+                "push_url": "http://localhost/mock-push",
+                "push_token": "abcd",
+            },
+        },
+    )
+
+    assert enc_reg.status == HTTPStatus.CREATED
+    return await enc_reg.json()
+
+
+@pytest.fixture
+async def android_registration(hass, authed_api_client):
+    """Return Android registration with push notifications enabled."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    enc_reg = await authed_api_client.post(
+        "/api/mobile_app/registrations",
+        json={
+            **REGISTER_ANDROID,
+            "app_data": {
+                "push_url": "http://localhost/mock-push",
+                "push_token": "abcd",
+            },
+        },
+    )
+
+    assert enc_reg.status == HTTPStatus.CREATED
+    return await enc_reg.json()
+
+
+@pytest.fixture
+async def ios_registration(hass, authed_api_client):
+    """Return iOS registration with push notifications enabled."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    enc_reg = await authed_api_client.post(
+        "/api/mobile_app/registrations",
+        json={
+            **REGISTER_IOS,
             "app_data": {
                 "push_url": "http://localhost/mock-push",
                 "push_token": "abcd",
