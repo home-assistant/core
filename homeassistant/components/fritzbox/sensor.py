@@ -235,4 +235,4 @@ class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.native_value(self.entity)
+        return self.entity_description.native_value(self.data)
