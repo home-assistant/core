@@ -111,16 +111,16 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
         self.ain = ain
         if entity_description is not None:
             self.entity_description = entity_description
-            self._attr_name = f"{self.entity.name} {entity_description.name}"
+            self._attr_name = f"{self.data.name} {entity_description.name}"
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
-            self._attr_name = self.entity.name
+            self._attr_name = self.data.name
             self._attr_unique_id = ain
 
     @property
     @abstractmethod
-    def entity(self) -> FritzhomeEntityBase:
-        """Return entity object from coordinator."""
+    def data(self) -> FritzhomeEntityBase:
+        """Return data object from coordinator."""
 
 
 class FritzBoxDeviceEntity(FritzBoxEntity):
@@ -129,21 +129,21 @@ class FritzBoxDeviceEntity(FritzBoxEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.entity.present
+        return super().available and self.data.present
 
     @property
-    def entity(self) -> FritzhomeDevice:
-        """Return device object from coordinator."""
+    def data(self) -> FritzhomeDevice:
+        """Return device data object from coordinator."""
         return self.coordinator.data.devices[self.ain]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            name=self.entity.name,
+            name=self.data.name,
             identifiers={(DOMAIN, self.ain)},
-            manufacturer=self.entity.manufacturer,
-            model=self.entity.productname,
-            sw_version=self.entity.fw_version,
+            manufacturer=self.data.manufacturer,
+            model=self.data.productname,
+            sw_version=self.data.fw_version,
             configuration_url=self.coordinator.configuration_url,
         )
