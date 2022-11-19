@@ -151,7 +151,9 @@ DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
 
 
 def wrap_msg_callback(
-    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+    msg_callback: AsyncDeprecatedMessageCallbackType
+    | DeprecatedMessageCallbackType
+    | partial,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function

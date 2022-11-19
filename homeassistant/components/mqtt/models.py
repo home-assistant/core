@@ -150,7 +150,7 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state:
+            if not self._template_state and self._command_template.hass is not None:
                 self._template_state = template.TemplateStateFromEntityId(
                     self._entity.hass, self._entity.entity_id
                 )
