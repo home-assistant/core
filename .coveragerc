@@ -1113,7 +1113,6 @@ omit =
     homeassistant/components/shelly/coordinator.py
     homeassistant/components/shelly/entity.py
     homeassistant/components/shelly/number.py
-    homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py

@@ -63,10 +63,16 @@ def mock_light_set_state(
 
 MOCK_BLOCKS = [
     Mock(
-        sensor_ids={"inputEvent": "S", "inputEventCnt": 2, "overpower": 0},
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+            "overpower": 0,
+            "power": 53.4,
+        },
         channel="0",
         type="relay",
         overpower=0,
+        power=53.4,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -91,8 +97,9 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0},
+        sensor_ids={"motion": 0, "temp": 22.1},
         motion=0,
+        temp=22.1,
         description="sensor_0",
         type="sensor",
     ),
@@ -138,6 +145,7 @@ MOCK_STATUS_COAP = {
         "old_version": "some_old_version",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
+    "wifi_sta": {"rssi": -64},
 }
 
 
@@ -150,6 +158,7 @@ MOCK_STATUS_RPC = {
         "current_pos": 50,
         "apower": 85.3,
     },
+    "temperature:0": {"tC": 22.9},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
