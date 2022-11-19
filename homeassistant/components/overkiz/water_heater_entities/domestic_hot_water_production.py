@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
 from ..entity import OverkizEntity
 
