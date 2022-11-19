@@ -8,7 +8,7 @@ set_value:
     date:
       name: Date
       description: The date to set.
-      required: false
+      required: true
       example: "2022/11/01"
       selector:
         date:

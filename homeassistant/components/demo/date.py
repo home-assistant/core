@@ -20,7 +20,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the demo Date entity."""
+    """Set up the Demo date entity."""
     async_add_entities(
         [
             DemoDate(
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class DemoDate(DateEntity):
-    """Representation of a demo Date entity."""
+    """Representation of a Demo date entity."""
 
     _attr_should_poll = False
 
@@ -56,7 +56,7 @@ class DemoDate(DateEntity):
         icon: str,
         assumed_state: bool,
     ) -> None:
-        """Initialize the Demo Date entity."""
+        """Initialize the Demo date entity."""
         self._attr_assumed_state = assumed_state
         self._attr_icon = icon
         self._attr_name = name or DEVICE_DEFAULT_NAME
@@ -64,11 +64,7 @@ class DemoDate(DateEntity):
         self._attr_unique_id = unique_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, unique_id)
-            },
-            name=self.name,
+            identifiers={(DOMAIN, unique_id)}, name=self.name
         )
 
     async def async_set_value(self, date_value: date | datetime) -> None:
