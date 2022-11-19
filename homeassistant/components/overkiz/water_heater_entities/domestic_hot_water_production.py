@@ -8,7 +8,6 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
-    STATE_OFF,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
