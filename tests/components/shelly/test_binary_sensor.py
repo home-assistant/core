@@ -6,11 +6,11 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import State
 
 from . import (
-    create_device,
-    create_entity,
     init_integration,
     mock_rest_update,
     mutate_rpc_device_status,
+    register_device,
+    register_entity,
 )
 
 from tests.common import mock_restore_cache
@@ -34,7 +34,7 @@ async def test_block_binary_sensor(hass, mock_block_device, monkeypatch):
 
 async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
     """Test block REST binary sensor."""
-    entity_id = create_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
+    entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
     await init_integration(hass, 1)
 
@@ -71,8 +71,8 @@ async def test_block_restored_sleeping_binary_sensor(
 ):
     """Test block restored sleeping binary sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    create_device(device_reg, entry)
-    entity_id = create_entity(
+    register_device(device_reg, entry)
+    entity_id = register_entity(
         hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
     )
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
@@ -115,7 +115,7 @@ async def test_rpc_sleeping_binary_sensor(
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
 
-    create_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry)
+    register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry)
 
     # Make device online
     mock_rpc_device.mock_update()
@@ -134,8 +134,8 @@ async def test_rpc_restored_sleeping_binary_sensor(
 ):
     """Test RPC restored binary sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    create_device(device_reg, entry)
-    entity_id = create_entity(
+    register_device(device_reg, entry)
+    entity_id = register_entity(
         hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
     )
 

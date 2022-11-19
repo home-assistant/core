@@ -84,14 +84,14 @@ async def mock_rest_update(hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
-def create_entity(
+def register_entity(
     hass: HomeAssistant,
     domain: str,
     object_id: str,
     unique_id: str,
     config_entry: ConfigEntry | None = None,
 ) -> str:
-    """Create enabled entity, return entity_id."""
+    """Register enabled entity, return entity_id."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
         domain,
@@ -104,8 +104,8 @@ def create_entity(
     return f"{domain}.{object_id}"
 
 
-def create_device(device_reg, config_entry: ConfigEntry):
-    """Create Shelly device."""
+def register_device(device_reg, config_entry: ConfigEntry):
+    """Register Shelly device."""
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={
