@@ -388,7 +388,7 @@ def async_fire_time_changed_exact(
     Consider that it is not possible to actually achieve an exact
     microsecond in production as the event loop is not precise enough.
     If your code relies on this level of precision, consider a different
-    approach as this is only for testing.
+    approach, as this is only for testing.
     """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
