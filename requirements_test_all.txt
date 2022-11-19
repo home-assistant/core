@@ -1250,6 +1250,9 @@ pykodi==0.2.7
 # homeassistant.components.kostal_plenticore
 pykoplenti==1.0.0
 
+# homeassistant.components.kostal_piko
+pykostal==0.0.2
+
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
 
