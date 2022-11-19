@@ -6,17 +6,22 @@ from typing import Any, cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.water_heater import (
-    STATE_ECO,
     STATE_HIGH_DEMAND,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_OFF, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
+)
 
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
-    OverkizCommandParam.STANDARD: STATE_ECO,
+    OverkizCommandParam.STANDARD: STATE_ON,
     OverkizCommandParam.HIGH_DEMAND: STATE_HIGH_DEMAND,
     OverkizCommandParam.STOP: STATE_OFF,
 }
