@@ -22,6 +22,7 @@ OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
     OverkizCommandParam.STOP: STATE_OFF,
     OverkizCommandParam.MANUAL_ECO_ACTIVE: STATE_ECO,
     OverkizCommandParam.MANUAL_ECO_INACTIVE: STATE_OFF,
+    OverkizCommandParam.ECO: STATE_ECO,
     OverkizCommandParam.AUTO: STATE_ECO,
     OverkizCommandParam.AUTO_MODE: STATE_ECO,
     OverkizCommandParam.BOOST: STATE_PERFORMANCE,
@@ -34,6 +35,11 @@ DHWP_AWAY_MODES = [
     OverkizCommandParam.AWAY,
     OverkizCommandParam.FROSTPROTECTION,
 ]
+
+ALTERNATE_WATER_TEMPERATURE: str = "core:WaterTargetTemperatureState"
+ALTERNATE_WATER_SET_TEMPERATURE: str = "setWaterTargetTemperature"
+ALTERNATE_REFRESH_WATER_TEMPERATURE: str = "refreshWaterTargetTemperature"
+ALTERNATE_REFRESH_DHW_MODE: str = "refreshDHWMode"
 
 DEFAULT_MIN_TEMP: float = 30
 DEFAULT_MAX_TEMP: float = 70
@@ -56,6 +62,12 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         if self.executor.has_state(OverkizState.IO_DHW_BOOST_MODE):
             return (
                 self.executor.select_state(OverkizState.IO_DHW_BOOST_MODE)
+                == OverkizCommandParam.ON
+            )
+
+        if self.executor.has_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE):
+            return (
+                self.executor.select_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE)
                 == OverkizCommandParam.ON
             )
 
@@ -165,6 +177,11 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         target_temperature = self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         if target_temperature:
             return target_temperature.value_as_float
+
+        target_temperature = self.device.states[ALTERNATE_WATER_TEMPERATURE]
+        if target_temperature:
+            return target_temperature.value_as_float
+
         return None
 
     @property
@@ -190,13 +207,23 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_TARGET_TEMPERATURE, target_temperature
-        )
+
+        if self.executor.has_command(OverkizCommand.SET_TARGET_TEMPERATURE):
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_TARGET_TEMPERATURE, target_temperature
+            )
+        elif self.executor.has_command(ALTERNATE_WATER_SET_TEMPERATURE):
+            await self.executor.async_execute_command(
+                ALTERNATE_WATER_SET_TEMPERATURE, target_temperature
+            )
 
         if self.executor.has_command(OverkizCommand.REFRESH_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE
+            )
+        elif self.executor.has_command(ALTERNATE_REFRESH_WATER_TEMPERATURE):
+            await self.executor.async_execute_command(
+                ALTERNATE_REFRESH_WATER_TEMPERATURE
             )
 
     @property
@@ -276,6 +303,23 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                         },
                     )
 
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DHW_MODE, OPERATION_MODE_TO_OVERKIZ[operation_mode]
+        dhw_mode = OPERATION_MODE_TO_OVERKIZ[operation_mode]
+
+        # Check if the dhw_mode we're trying to set is correctly enable for this device
+        state_mode_definition = self.executor.select_definition_state(
+            OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
         )
+        if (
+            state_mode_definition
+            and state_mode_definition.values
+            and dhw_mode not in state_mode_definition.values
+        ):
+            # If dhw_mode is not possible for this device, found the correct one
+            for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
+                if mode == operation_mode and param in state_mode_definition.values:
+                    dhw_mode = param
+
+        await self.executor.async_execute_command(OverkizCommand.SET_DHW_MODE, dhw_mode)
+
+        if self.executor.has_command(ALTERNATE_REFRESH_DHW_MODE):
+            await self.executor.async_execute_command(ALTERNATE_REFRESH_DHW_MODE)
