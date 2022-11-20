@@ -60,9 +60,7 @@ class WaterHeaterOperationMode(StrEnum):
 
     OFF = "off"
     ON = "on"
-    LEGIONELLA_PREVENTION = "legionella_prevention"
     BOOST = "boost"
-    AWAY = "away"
 
 
 class WaterHeaterCurrentOperation(StrEnum):
@@ -72,7 +70,7 @@ class WaterHeaterCurrentOperation(StrEnum):
     IDLE = "idle"
     HEATING = "heating"
     LEGIONELLA_PREVENTION = "legionella_prevention"
-    BOOST = "boost"
+    BOOSTING = "boosting"
 
 
 class WaterHeaterEntityFeature(IntEnum):
