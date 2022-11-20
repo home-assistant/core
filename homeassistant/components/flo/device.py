@@ -40,7 +40,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            async with timeout(10):
+            async with timeout(20):
                 await asyncio.gather(
                     *[
                         self.send_presence_ping(),
