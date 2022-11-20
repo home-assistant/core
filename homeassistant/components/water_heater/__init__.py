@@ -47,13 +47,6 @@ SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 
-STATE_ECO = "eco"
-STATE_ELECTRIC = "electric"
-STATE_PERFORMANCE = "performance"
-STATE_HIGH_DEMAND = "high_demand"
-STATE_HEAT_PUMP = "heat_pump"
-STATE_GAS = "gas"
-
 
 class WaterHeaterOperationMode(StrEnum):
     """Supported operation modes of a heater."""
