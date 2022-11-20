@@ -43,5 +43,11 @@
                 "description": "Vennligst skriv inn tilkoblingsinnstillingene for [ESPHome]( {esphome_url} )-noden."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "For \u00e5 forbedre Bluetooth-p\u00e5litelighet og ytelse anbefaler vi p\u00e5 det sterkeste \u00e5 oppdatere {name} med ESPHome 2022.11.0 eller nyere.",
+            "title": "Oppdater {name} med ESPHome 2022.11.0 eller nyere"
+        }
     }
 }

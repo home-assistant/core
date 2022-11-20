@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
-            "no_adapters": "Nem tal\u00e1ltak konfigur\u00e1latlan Bluetooth-adaptert"
+            "no_adapters": "Nem tal\u00e1lhat\u00f3 konfigur\u00e1latlan Bluetooth-adapter"
         },
         "flow_title": "{name}",
         "step": {

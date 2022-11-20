@@ -8,6 +8,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
                 "title": "Nastavenie 1-Wire"
             }
         }

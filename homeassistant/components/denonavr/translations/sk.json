@@ -2,6 +2,18 @@
     "config": {
         "abort": {
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "step": {
+            "select": {
+                "data": {
+                    "select_host": "IP adresa prij\u00edma\u010da"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "IP adresa"
+                }
+            }
         }
     }
 }
