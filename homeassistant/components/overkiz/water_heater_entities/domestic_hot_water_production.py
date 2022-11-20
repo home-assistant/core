@@ -174,11 +174,18 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+
+        target_temperature = self.device.states[ALTERNATE_WATER_TEMPERATURE]
         if target_temperature:
             return target_temperature.value_as_float
 
-        target_temperature = self.device.states[ALTERNATE_WATER_TEMPERATURE]
+        target_temperature = self.device.states[
+            OverkizState.CORE_TARGET_DWH_TEMPERATURE
+        ]
+        if target_temperature:
+            return target_temperature.value_as_float
+
+        target_temperature = self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         if target_temperature:
             return target_temperature.value_as_float
 
