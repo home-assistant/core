@@ -14,6 +14,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS
 
+from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_OPERATION_MODE: dict[str, str] = {
@@ -54,6 +55,25 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
+
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
+        """Init method."""
+        super().__init__(device_url, coordinator)
+
+        # Init operation mode to set for this specific device
+        self.overkiz_to_operation_mode: dict[str, str] = {}
+        state_mode_definition = self.executor.select_definition_state(
+            OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
+        )
+        if state_mode_definition and state_mode_definition.values:
+            # If dhw_mode is not possible for this device, found the correct one
+            for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
+                if param in state_mode_definition.values:
+                    self.overkiz_to_operation_mode[param] = mode
+        else:
+            self.overkiz_to_operation_mode = OVERKIZ_TO_OPERATION_MODE
 
     @property
     def _is_boost_mode_on(self) -> bool:
@@ -310,23 +330,9 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                         },
                     )
 
-        dhw_mode = OPERATION_MODE_TO_OVERKIZ[operation_mode]
-
-        # Check if the dhw_mode we're trying to set is correctly enable for this device
-        state_mode_definition = self.executor.select_definition_state(
-            OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_DHW_MODE, self.overkiz_to_operation_mode[operation_mode]
         )
-        if (
-            state_mode_definition
-            and state_mode_definition.values
-            and dhw_mode not in state_mode_definition.values
-        ):
-            # If dhw_mode is not possible for this device, found the correct one
-            for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
-                if mode == operation_mode and param in state_mode_definition.values:
-                    dhw_mode = param
-
-        await self.executor.async_execute_command(OverkizCommand.SET_DHW_MODE, dhw_mode)
 
         if self.executor.has_command(ALTERNATE_REFRESH_DHW_MODE):
             await self.executor.async_execute_command(ALTERNATE_REFRESH_DHW_MODE)
