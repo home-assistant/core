@@ -266,10 +266,8 @@ def async_setup_entry_rest(
     assert coordinator
 
     async_add_entities(
-        [
-            sensor_class(coordinator, sensor_id, sensors[sensor_id])
-            for sensor_id in sensors
-        ]
+        sensor_class(coordinator, sensor_id, sensors[sensor_id])
+        for sensor_id in sensors
     )
 
 
