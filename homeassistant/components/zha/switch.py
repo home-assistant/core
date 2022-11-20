@@ -227,7 +227,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
-    def is_inverted(self) -> bool:
+    def inverted(self) -> bool:
         """Return True if the switch is inverted."""
         if self._zcl_inverter_attribute:
             return bool(self._channel.cluster.get(self._zcl_inverter_attribute))
@@ -237,13 +237,13 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
         val = bool(self._channel.cluster.get(self._zcl_attribute))
-        return (not val) if self.is_inverted else val
+        return (not val) if self.inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
         try:
             result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: not state if self.is_inverted else state}
+                {self._zcl_attribute: not state if self.inverted else state}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -264,7 +264,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
-        _LOGGER.error("Polling current state")
+        self.error("Polling current state")
         if self._channel:
             value = await self._channel.get_attribute_value(
                 self._zcl_attribute, from_cache=False
@@ -272,7 +272,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
             await self._channel.get_attribute_value(
                 self._zcl_inverter_attribute, from_cache=False
             )
-            _LOGGER.debug("read value=%s, inverter=%s", value, self.is_inverted)
+            self.debug("read value=%s, inverted=%s", value, self.inverted)
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
