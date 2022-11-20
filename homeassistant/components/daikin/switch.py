@@ -82,7 +82,7 @@ class DaikinZoneSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return self._api.device_info()
+        return self._api.device_info
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
@@ -123,7 +123,7 @@ class DaikinStreamerSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return self._api.device_info()
+        return self._api.device_info
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
