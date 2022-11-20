@@ -1,7 +1,6 @@
 """Flo device object."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -41,13 +40,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             async with timeout(20):
-                await asyncio.gather(
-                    *[
-                        self.send_presence_ping(),
-                        self._update_device(),
-                        self._update_consumption_data(),
-                    ]
-                )
+                await self.send_presence_ping()
+                await self._update_device()
+                await self._update_consumption_data()
         except (RequestError) as error:
             raise UpdateFailed(error) from error
 
