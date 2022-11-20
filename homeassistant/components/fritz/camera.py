@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import AvmWrapper, FritzBoxBaseEntity
-from .const import DEFAULT_GUEST_WIFI_QR_REFRESH_SEC, DOMAIN
+from .const import DEFAULT_GUEST_WIFI_QR_REFRESH_SEC, DOMAIN, QR_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +52,6 @@ def _setup_guest_wifi_qr(
 class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
     """Implementation of the FritzBox guest wifi QR code camera entity."""
 
-    QR_CODE = "QR code"
-
     def __init__(
         self,
         avm_wrapper: AvmWrapper,
@@ -63,10 +61,8 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
         """Initialize the camera."""
         Camera.__init__(self)
 
-        self._attr_name = f"{device_friendly_name} {ssid} {self.QR_CODE}"
-        self._attr_unique_id = (
-            f"{avm_wrapper.unique_id}-guest-wlan-{slugify(self.QR_CODE)}"
-        )
+        self._attr_name = f"{device_friendly_name} {ssid} {QR_CODE}"
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-guest-wlan-{slugify(QR_CODE)}"
         self._attr_icon = "mdi:qrcode-scan"
         super().__init__(avm_wrapper, device_friendly_name)
 
