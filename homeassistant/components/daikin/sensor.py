@@ -45,7 +45,6 @@ class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
-    outdoor_sensor: bool  # Outdoor sensors will be linked to the outdoor device
 
 
 @dataclass
@@ -56,21 +55,19 @@ class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysM
 SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_INSIDE_TEMPERATURE,
-        name="Temperature",
+        name="Inside temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.inside_temperature,
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
-        name="Temperature",
+        name="Outdoor temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.outside_temperature,
-        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
@@ -79,7 +76,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
@@ -88,16 +84,14 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_POWER,
-        name="Estimated power consumption",
+        name="Compressor estimated power consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
-        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
@@ -107,7 +101,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
@@ -117,7 +110,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ENERGY_TODAY,
@@ -126,7 +118,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.today_energy_consumption, 2),
-        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
@@ -137,17 +128,15 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=FREQUENCY_HERTZ,
         entity_registry_enabled_default=False,
         value_func=lambda device: device.compressor_frequency,
-        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_ENERGY_TODAY,
-        name="Energy consumption",
+        name="Compressor energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
-        outdoor_sensor=True,
     ),
 )
 
@@ -223,6 +212,4 @@ class DaikinSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return self._api.device_info(
-            outdoor_device=self.entity_description.outdoor_sensor
-        )
+        return self._api.device_info
