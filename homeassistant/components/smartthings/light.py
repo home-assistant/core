@@ -101,7 +101,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
 
         return color_modes
 
-    def _determine_features(self):
+    def _determine_features(self) -> LightEntityFeature | int:
         """Get features supported by the device."""
         features = 0
         # Transition

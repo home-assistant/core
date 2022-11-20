@@ -6,6 +6,7 @@
         "step": {
             "manual_input": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 }
             }

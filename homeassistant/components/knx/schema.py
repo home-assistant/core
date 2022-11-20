@@ -79,8 +79,8 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
     return dpt_value_validator
 
 
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[misc]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[misc]
+numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
+sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
 string_type_validator = dpt_subclass_validator(DPTString)
 
 

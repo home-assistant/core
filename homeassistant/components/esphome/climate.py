@@ -197,7 +197,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return self._static_info.visual_max_temperature
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature | int:
         """Return the list of supported features."""
         features = 0
         if self._static_info.supports_two_point_target_temperature:

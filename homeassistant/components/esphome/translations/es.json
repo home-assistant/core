@@ -43,5 +43,11 @@
                 "description": "Por favor, introduce la configuraci\u00f3n de conexi\u00f3n de tu nodo [ESPHome]({esphome_url})."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Para mejorar la confiabilidad y el rendimiento de Bluetooth, recomendamos actualizar {name} con ESPHome 2022.11.0 o posterior.",
+            "title": "Actualizar {name} con ESPHome 2022.11.0 o posterior"
+        }
     }
 }

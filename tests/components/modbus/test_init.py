@@ -733,7 +733,10 @@ async def test_delay(hass, mock_pymodbus):
     time_stop = time_after_scan + timedelta(seconds=10)
     now = start_time
     while now < time_stop:
-        now += timedelta(seconds=1)
+        # This test assumed listeners are always fired at 0
+        # microseconds which is impossible in production so
+        # we use 999999 microseconds to simulate the real world.
+        now += timedelta(seconds=1, microseconds=999999)
         with mock.patch(
             "homeassistant.helpers.event.dt_util.utcnow",
             return_value=now,

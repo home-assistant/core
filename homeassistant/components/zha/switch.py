@@ -418,3 +418,15 @@ class InovelliRelayClickInOnOffMode(
 
     _zcl_attribute: str = "relay_click_in_on_off_mode"
     _attr_name: str = "Disable relay click in on off mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDisableDoubleTapClearNotificationsMode(
+    ZHASwitchConfigurationEntity, id_suffix="disable_clear_notifications_double_tap"
+):
+    """Inovelli disable clear notifications double tap control."""
+
+    _zcl_attribute: str = "disable_clear_notifications_double_tap"
+    _attr_name: str = "Disable config 2x tap to clear notifications"

@@ -166,7 +166,6 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
 
     processed = hass.data[DATA_REQS] = set()
 
-    # https://github.com/python/mypy/issues/1424
     await requirements.async_process_requirements(
         hass, module_path, module.REQUIREMENTS
     )

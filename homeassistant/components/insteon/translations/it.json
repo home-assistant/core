@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi",
-            "not_insteon_device": "Dispositivo rilevato non \u00e8 un dispositivo Insteon",
+            "not_insteon_device": "Il dispositivo rilevato non \u00e8 un dispositivo Insteon",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {

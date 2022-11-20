@@ -1,8 +1,10 @@
 """Test configuration for Shelly."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, UpdateType
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -61,9 +63,17 @@ def mock_light_set_state(
 
 MOCK_BLOCKS = [
     Mock(
-        sensor_ids={"inputEvent": "S", "inputEventCnt": 2},
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+            "overpower": 0,
+            "power": 53.4,
+        },
         channel="0",
         type="relay",
+        overpower=0,
+        power=53.4,
+        description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
     Mock(
@@ -85,6 +95,13 @@ MOCK_BLOCKS = [
         **mock_light_set_state(),
         type="light",
         set_state=AsyncMock(side_effect=mock_light_set_state),
+    ),
+    Mock(
+        sensor_ids={"motion": 0, "temp": 22.1},
+        motion=0,
+        temp=22.1,
+        description="sensor_0",
+        type="sensor",
     ),
 ]
 
@@ -128,12 +145,20 @@ MOCK_STATUS_COAP = {
         "old_version": "some_old_version",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
+    "wifi_sta": {"rssi": -64},
 }
 
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
-    "cover:0": {"state": "stopped", "pos_control": True, "current_pos": 50},
+    "cloud": {"connected": False},
+    "cover:0": {
+        "state": "stopped",
+        "pos_control": True,
+        "current_pos": 50,
+        "apower": 85.3,
+    },
+    "temperature:0": {"tC": 22.9},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -194,6 +219,7 @@ async def mock_block_device():
             blocks=MOCK_BLOCKS,
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
+            version="0.10.0",
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
@@ -204,25 +230,62 @@ async def mock_block_device():
         yield block_device_mock.return_value
 
 
-@pytest.fixture
-async def mock_rpc_device():
+def _mock_rpc_device(version: str | None = None):
     """Mock rpc (Gen2, Websocket) device."""
+    return Mock(
+        spec=RpcDevice,
+        config=MOCK_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY_RPC,
+        version=version or "0.12.0",
+        status=MOCK_STATUS_RPC,
+        firmware_version="some fw string",
+        initialized=True,
+    )
+
+
+@pytest.fixture
+async def mock_pre_ble_rpc_device():
+    """Mock rpc (Gen2, Websocket) device pre BLE."""
     with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
 
         def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0]({})
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.STATUS
+            )
 
-        device = Mock(
-            spec=RpcDevice,
-            config=MOCK_CONFIG,
-            event={},
-            shelly=MOCK_SHELLY_RPC,
-            status=MOCK_STATUS_RPC,
-            firmware_version="some fw string",
-            initialized=True,
-        )
-
+        device = _mock_rpc_device("0.11.0")
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+async def mock_rpc_device():
+    """Mock rpc (Gen2, Websocket) device with BLE support."""
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
+        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    ):
+
+        def update():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.STATUS
+            )
+
+        def event():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.EVENT
+            )
+
+        device = _mock_rpc_device("0.12.0")
+        rpc_device_mock.return_value = device
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
+
+        yield rpc_device_mock.return_value
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""

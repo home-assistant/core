@@ -48,7 +48,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -206,9 +205,8 @@ PLATFORM_SCHEMA_MODERN = vol.All(
 )
 
 # Configuring MQTT Covers under the cover platform key is deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    validate_options,
     warn_for_legacy_schema(cover.DOMAIN),
 )
 
@@ -217,23 +215,6 @@ DISCOVERY_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_options,
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT covers configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        cover.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -535,7 +516,7 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature | int:
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:

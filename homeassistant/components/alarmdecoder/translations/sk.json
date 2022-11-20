@@ -3,7 +3,29 @@
         "step": {
             "protocol": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "edit_select": "Upravi\u0165"
+                }
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF slu\u010dka",
+                    "zone_name": "N\u00e1zov z\u00f3ny",
+                    "zone_rfid": "RF Serial"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\u010c\u00edslo z\u00f3ny"
                 }
             }
         }

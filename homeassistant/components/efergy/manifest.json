@@ -6,5 +6,6 @@
   "requirements": ["pyefergy==22.1.1"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
-  "loggers": ["iso4217", "pyefergy"]
+  "loggers": ["iso4217", "pyefergy"],
+  "integration_type": "hub"
 }

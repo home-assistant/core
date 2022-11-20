@@ -196,19 +196,19 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 self._attr_latest_version = json_payload["latest_version"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_TITLE in json_payload and not self._attr_title:
+            if CONF_TITLE in json_payload:
                 self._attr_title = json_payload[CONF_TITLE]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_SUMMARY in json_payload and not self._attr_release_summary:
+            if CONF_RELEASE_SUMMARY in json_payload:
                 self._attr_release_summary = json_payload[CONF_RELEASE_SUMMARY]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_URL in json_payload and not self._attr_release_url:
+            if CONF_RELEASE_URL in json_payload:
                 self._attr_release_url = json_payload[CONF_RELEASE_URL]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_ENTITY_PICTURE in json_payload and not self._entity_picture:
+            if CONF_ENTITY_PICTURE in json_payload:
                 self._entity_picture = json_payload[CONF_ENTITY_PICTURE]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -253,7 +253,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature | int:
         """Return the list of supported features."""
         support = 0
 

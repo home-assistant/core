@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
-from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
 from aioshelly.rpc_device import RpcDevice, WsServer
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry, singleton
 from homeassistant.helpers.typing import EventType
@@ -41,13 +41,6 @@ def async_remove_shelly_entity(
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
-
-
-def temperature_unit(block_info: dict[str, Any]) -> str:
-    """Detect temperature unit."""
-    if block_info[BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
 
 
 def get_block_device_name(device: BlockDevice) -> str:
