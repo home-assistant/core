@@ -70,6 +70,7 @@ async def test_rpc_config_entry_diagnostics(
                     "beta": {"version": "some_beta_version"},
                     "stable": {"version": "some_beta_version"},
                 }
-            }
+            },
+            "wifi": {"rssi": -63},
         },
     }
