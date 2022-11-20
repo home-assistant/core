@@ -35,10 +35,6 @@ DHWP_AWAY_MODES = [
     OverkizCommandParam.FROSTPROTECTION,
 ]
 
-DHWP_BOOST_MODES = [
-    OverkizCommandParam.BOOST,
-]
-
 DEFAULT_MIN_TEMP: float = 30
 DEFAULT_MAX_TEMP: float = 70
 
@@ -86,7 +82,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
                     )
                 return False
 
-            return cast(str, operating_mode) in DHWP_BOOST_MODES
+            return cast(str, operating_mode) == OverkizCommandParam.BOOST
 
         return False
 
