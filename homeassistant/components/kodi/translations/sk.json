@@ -15,6 +15,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 }
             },

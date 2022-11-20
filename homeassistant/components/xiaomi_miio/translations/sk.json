@@ -8,6 +8,7 @@
         "step": {
             "manual": {
                 "data": {
+                    "host": "IP adresa",
                     "token": "API token"
                 }
             }

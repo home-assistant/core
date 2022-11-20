@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP adresa"
+                }
+            }
         }
     }
 }
