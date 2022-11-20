@@ -31,7 +31,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.helpers.sensor import (
+    sensor_description_to_key,
+    sensor_device_info_to_hass_device_info,
+)
 
 from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key
@@ -127,7 +130,7 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_class, description.native_unit_of_measurement)
+                sensor_description_to_key(description)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
             if description.native_unit_of_measurement

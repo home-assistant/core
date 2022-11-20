@@ -11,7 +11,12 @@ if TYPE_CHECKING:
     # `sensor_state_data` is a second-party library (i.e. maintained by Home Assistant
     # core members) which is not strictly required by Home Assistant.
     # Therefore, we import it as a type hint only.
-    from sensor_state_data import SensorDeviceInfo
+    from sensor_state_data import (
+        SensorDescription,
+        SensorDeviceClass,
+        SensorDeviceInfo,
+        Units,
+    )
 
 
 def sensor_device_info_to_hass_device_info(
@@ -26,3 +31,10 @@ def sensor_device_info_to_hass_device_info(
     if sensor_device_info.model is not None:
         device_info[const.ATTR_MODEL] = sensor_device_info.model
     return device_info
+
+
+def sensor_description_to_key(
+    description: SensorDescription,
+) -> tuple[SensorDeviceClass | None, Units | None]:
+    """Convert a sensor_state_data sensor description to a tuple key."""
+    return (description.device_class, description.native_unit_of_measurement)

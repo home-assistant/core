@@ -5,7 +5,6 @@ from typing import Optional, Union
 
 from sensor_state_data import (
     DeviceKey,
-    SensorDescription,
     SensorDeviceClass as SSDSensorDeviceClass,
     SensorUpdate,
     Units,
@@ -27,7 +26,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.helpers.sensor import (
+    sensor_description_to_key,
+    sensor_device_info_to_hass_device_info,
+)
 
 from .const import DOMAIN
 
@@ -65,13 +67,6 @@ def _device_key_to_bluetooth_entity_key(
     return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
 
-def _to_sensor_key(
-    description: SensorDescription,
-) -> tuple[SSDSensorDeviceClass, Units | None]:
-    assert description.device_class is not None
-    return (description.device_class, description.native_unit_of_measurement)
-
-
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> PassiveBluetoothDataUpdate:
@@ -83,10 +78,10 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             _device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                _to_sensor_key(description)
+                sensor_description_to_key(description)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if _to_sensor_key(description) in SENSOR_DESCRIPTIONS
+            if sensor_description_to_key(description) in SENSOR_DESCRIPTIONS
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
