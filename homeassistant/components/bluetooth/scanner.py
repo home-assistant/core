@@ -25,13 +25,14 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 from homeassistant.util.package import is_docker_env
 
+from .base_scanner import BaseHaScanner
 from .const import (
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBleak
+from .models import BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
