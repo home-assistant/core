@@ -2,16 +2,25 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD, DOMAIN
+from homeassistant.components.shelly.const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    REST_SENSORS_UPDATE_INTERVAL,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity_registry import async_get
+from homeassistant.util import dt
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "123456789ABC"
 
@@ -22,6 +31,7 @@ async def init_integration(
     model="SHSW-25",
     sleep_period=0,
     options: dict[str, Any] | None = None,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
     data = {
@@ -36,8 +46,9 @@ async def init_integration(
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    if not skip_setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     return entry
 
@@ -63,3 +74,44 @@ def inject_rpc_device_event(
     """Inject event for rpc device."""
     monkeypatch.setattr(mock_rpc_device, "event", event)
     mock_rpc_device.mock_event()
+
+
+async def mock_rest_update(hass: HomeAssistant):
+    """Move time to create REST sensors update event."""
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
+    )
+    await hass.async_block_till_done()
+
+
+def register_entity(
+    hass: HomeAssistant,
+    domain: str,
+    object_id: str,
+    unique_id: str,
+    config_entry: ConfigEntry | None = None,
+) -> str:
+    """Register enabled entity, return entity_id."""
+    entity_registry = async_get(hass)
+    entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        f"{MOCK_MAC}-{unique_id}",
+        suggested_object_id=object_id,
+        disabled_by=None,
+        config_entry=config_entry,
+    )
+    return f"{domain}.{object_id}"
+
+
+def register_device(device_reg, config_entry: ConfigEntry):
+    """Register Shelly device."""
+    device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={
+            (
+                device_registry.CONNECTION_NETWORK_MAC,
+                device_registry.format_mac(MOCK_MAC),
+            )
+        },
+    )

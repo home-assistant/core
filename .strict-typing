@@ -238,6 +238,7 @@ homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.senseme.*
 homeassistant.components.sensibo.*
+homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*

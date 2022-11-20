@@ -385,10 +385,10 @@ def async_fire_time_changed_exact(
 ) -> None:
     """Fire a time changed event at an exact microsecond.
 
-    Consider that its not possible to actually achieve an exact microsecond
-    in production as the event loop is not precise enough. If your code
-    relies on this level of precision, consider a different approach
-    as this is only for testing.
+    Consider that it is not possible to actually achieve an exact
+    microsecond in production as the event loop is not precise enough.
+    If your code relies on this level of precision, consider a different
+    approach, as this is only for testing.
     """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
@@ -404,10 +404,13 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event.
 
-    This function will ensure microseconds at at least 500000
-    to account for the synchronization repeating listeners.
+    This function will add up to 0.5 seconds to the time to ensure that
+    it accounts for the accidental synchronization avoidance code in repeating
+    listeners.
 
-    If you need to fire an exact microsecond, use async_fire_time_changed_exact.
+    As asyncio is cooperative, we can't guarantee that the event loop will
+    run an event at the exact time we want. If you need to fire time changed
+    for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
