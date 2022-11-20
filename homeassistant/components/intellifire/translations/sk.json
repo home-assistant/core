@@ -1,0 +1,12 @@
+{
+    "config": {
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "pick_device": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

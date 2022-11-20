@@ -389,7 +389,7 @@ brother==2.0.0
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.2.1
+bthome-ble==2.3.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1354,7 +1354,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
-pysma==0.7.2
+pysma==0.7.3
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -1562,6 +1562,9 @@ securetar==2022.2.0
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.4
+
+# homeassistant.components.sensirion_ble
+sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.0

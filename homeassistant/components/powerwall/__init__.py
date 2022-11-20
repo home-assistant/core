@@ -224,10 +224,12 @@ def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
 @callback
 def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Return True if the last update was successful."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        POWERWALL_COORDINATOR
-    ]
-    return coordinator.last_update_success
+    return bool(
+        (domain_data := hass.data.get(DOMAIN))
+        and (entry_data := domain_data.get(entry.entry_id))
+        and (coordinator := entry_data.get(POWERWALL_COORDINATOR))
+        and coordinator.last_update_success
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

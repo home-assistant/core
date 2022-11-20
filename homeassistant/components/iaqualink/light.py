@@ -85,7 +85,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     @property
     def effect_list(self) -> list:
         """Return supported light effects."""
-        return list(self.dev.supported_light_effects)
+        return list(self.dev.supported_effects)
 
     @property
     def color_mode(self) -> ColorMode:

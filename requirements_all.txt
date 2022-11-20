@@ -485,7 +485,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.2.1
+bthome-ble==2.3.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1913,7 +1913,7 @@ pysignalclirestapi==0.3.18
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.7.2
+pysma==0.7.3
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -2259,6 +2259,9 @@ sendgrid==6.8.2
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.4
+
+# homeassistant.components.sensirion_ble
+sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.0

@@ -68,7 +68,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
+        entry.entry_id
+    ][CONF_COORDINATOR]
 
     async_add_entities(
         [
@@ -93,10 +95,10 @@ class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator, ain, entity_description)
-        self._attr_name = f"{self.entity.name} {entity_description.name}"
+        self._attr_name = f"{self.data.name} {entity_description.name}"
         self._attr_unique_id = f"{ain}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self.entity_description.is_on(self.entity)
+        return self.entity_description.is_on(self.data)

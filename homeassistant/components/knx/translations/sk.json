@@ -6,6 +6,7 @@
         "step": {
             "manual_tunnel": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 }
             },
@@ -23,8 +24,14 @@
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
                 }
             },
+            "manual_tunnel": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            },
             "tunnel": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 }
             }

@@ -354,6 +354,7 @@ FLOWS = {
         "sense",
         "senseme",
         "sensibo",
+        "sensirion_ble",
         "sensorpro",
         "sensorpush",
         "sentry",
