@@ -269,6 +269,9 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
             value = await self._channel.get_attribute_value(
                 self._zcl_attribute, from_cache=False
             )
+            await self._channel.get_attribute_value(
+                self._zcl_inverter_attribute, from_cache=False
+            )
             _LOGGER.debug("read value=%s, inverter=%s", value, self.is_inverted)
 
 
