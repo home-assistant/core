@@ -35,7 +35,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -977,7 +977,7 @@ class SwitchInfo(TypedDict):
     callback_switch: Callable
 
 
-class FritzBoxBaseEntity:
+class FritzBoxBaseEntity(Entity):
     """Fritz host entity base class."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
