@@ -67,7 +67,7 @@ from .const import (
     SOURCE_LOCAL,
 )
 from .manager import BluetoothManager
-from .match import IntegrationMatcher
+from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange, BluetoothScanningMode
 from .scanner import HaScanner, ScannerStartError
 from .wrappers import HaBluetoothConnector
@@ -89,6 +89,7 @@ __all__ = [
     "async_scanner_count",
     "BaseHaScanner",
     "BaseHaRemoteScanner",
+    "BluetoothCallbackMatcher",
     "BluetoothChange",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
