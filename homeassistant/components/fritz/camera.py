@@ -65,7 +65,7 @@ class FritzGuestWifiQRCamera(FritzBoxBaseEntity, Camera):
 
         self._attr_name = f"{device_friendly_name} {ssid} {self.QR_CODE}"
         self._attr_unique_id = (
-            f"{avm_wrapper.unique_id}-{slugify(ssid)}-{slugify(self.QR_CODE)}"
+            f"{avm_wrapper.unique_id}-guest-wlan-{slugify(self.QR_CODE)}"
         )
         self._attr_icon = "mdi:qrcode-scan"
         super().__init__(avm_wrapper, device_friendly_name)
