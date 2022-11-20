@@ -4,6 +4,15 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v1.7.7
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-duplicate-keys
+          - --ignore-init-module-imports
+          - --remove-all-unused-imports
   - repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:

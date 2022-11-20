@@ -215,7 +215,6 @@ class MockBleakClient(BleakClient):
 
     async def disconnect(self, *args, **kwargs):
         """Mock disconnect."""
-        pass
 
     async def get_services(self, *args, **kwargs):
         """Mock get_services."""

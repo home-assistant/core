@@ -139,7 +139,6 @@ async def test_qos_encoding_default(hass, mqtt_mock_entry_no_yaml_config, caplog
     @callback
     def msg_callback(*args):
         """Do nothing."""
-        pass
 
     sub_state = None
     sub_state = async_prepare_subscribe_topics(
@@ -158,7 +157,6 @@ async def test_qos_encoding_custom(hass, mqtt_mock_entry_no_yaml_config, caplog)
     @callback
     def msg_callback(*args):
         """Do nothing."""
-        pass
 
     sub_state = None
     sub_state = async_prepare_subscribe_topics(
