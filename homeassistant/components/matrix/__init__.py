@@ -221,43 +221,44 @@ class MatrixBot:
                     self._expression_commands.setdefault(room_id, [])
                     self._expression_commands[room_id].append(command)
 
-    async def _handle_room_message(self, room: MatrixRoom, event: Event) -> None:
+    async def _handle_room_message(self, room: MatrixRoom, message: Event) -> None:
         """Handle a message sent to a Matrix room."""
-        # Corresponds to message type 'm.text'.
-        assert isinstance(event, RoomMessageText)
-
-        if event.sender == self._mx_id:
+        # Corresponds to message type 'm.text' and NOT other RoomMessage subtypes, like 'm.notice' and 'm.emote'.
+        if not isinstance(message, RoomMessageText):
             return
-        _LOGGER.debug("Handling message: %s", event.body)
+        # Don't respond to our own messages.
+        if message.sender == self._mx_id:
+            return
+        _LOGGER.debug("Handling message: %s", message.body)
 
         room_id = RoomID(room.room_id)
 
-        if event.body.startswith("!"):
+        if message.body.startswith("!"):
             # Could trigger a single-word command.
-            pieces = event.body.split()
+            pieces = message.body.split()
             word = WordCommand(pieces[0].lstrip("!"))
 
             if command := self._word_commands.get(room_id, {}).get(word):
-                event_data = {
+                message_data = {
                     "command": command[CONF_NAME],
-                    "sender": event.sender,
+                    "sender": message.sender,
                     "room": room_id,
                     "args": pieces[1:],
                 }
-                self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, event_data)
+                self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
         # After single-word commands, check all regex commands in the room.
         for command in self._expression_commands.get(room_id, []):
-            match: re.Match = command[CONF_EXPRESSION].match(event.body)  # type: ignore[literal-required]
+            match: re.Match = command[CONF_EXPRESSION].match(message.body)  # type: ignore[literal-required]
             if not match:
                 continue
-            event_data = {
+            message_data = {
                 "command": command[CONF_NAME],
-                "sender": event.sender,
+                "sender": message.sender,
                 "room": room_id,
                 "args": match.groupdict(),
             }
-            self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, event_data)
+            self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
     async def _join_room(self, room_id_or_alias: str) -> None:
         """Join a room or do nothing if already joined."""
