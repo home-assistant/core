@@ -47,7 +47,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.17.0
+PyViCare==2.19.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1326,7 +1326,7 @@ pillow==9.3.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.13.0
+plexapi==4.13.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -2586,7 +2586,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
-xknx==1.2.0
+xknx==1.2.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

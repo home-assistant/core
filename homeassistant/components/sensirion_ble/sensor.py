@@ -38,19 +38,19 @@ SENSOR_DESCRIPTIONS: dict[
         SSDSensorDeviceClass.CO2,
         Units.CONCENTRATION_PARTS_PER_MILLION,
     ): SensorEntityDescription(
-        key=f"{SensorDeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        key=f"{SSDSensorDeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=const.CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (SSDSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{SensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
+        key=f"{SSDSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=const.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (SSDSensorDeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
-        key=f"{SensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        key=f"{SSDSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=const.TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
