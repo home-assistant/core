@@ -68,7 +68,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             OverkizState.IO_DHW_MODE, OverkizState.MODBUSLINK_DHW_MODE
         )
         if state_mode_definition and state_mode_definition.values:
-            # If dhw_mode is not possible for this device, found the correct one
+            # Filter only for mode allowed by this device
             for param, mode in OVERKIZ_TO_OPERATION_MODE.items():
                 if param in state_mode_definition.values:
                     self.overkiz_to_operation_mode[param] = mode
