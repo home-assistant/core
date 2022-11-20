@@ -33,19 +33,19 @@ from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
     (SSDSensorDeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
-        key=f"{SensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        key=f"{SSDSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=const.TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (SSDSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{SensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
+        key=f"{SSDSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=const.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (SSDSensorDeviceClass.PRESSURE, Units.PRESSURE_HPA): SensorEntityDescription(
-        key=f"{SensorDeviceClass.PRESSURE}_{Units.PRESSURE_HPA}",
+        key=f"{SSDSensorDeviceClass.PRESSURE}_{Units.PRESSURE_HPA}",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=const.PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
@@ -54,7 +54,7 @@ SENSOR_DESCRIPTIONS = {
         SSDSensorDeviceClass.VOLTAGE,
         Units.ELECTRIC_POTENTIAL_MILLIVOLT,
     ): SensorEntityDescription(
-        key=f"{SensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_MILLIVOLT}",
+        key=f"{SSDSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_MILLIVOLT}",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=const.ELECTRIC_POTENTIAL_MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -63,7 +63,7 @@ SENSOR_DESCRIPTIONS = {
         SSDSensorDeviceClass.SIGNAL_STRENGTH,
         Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ): SensorEntityDescription(
-        key=f"{SensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+        key=f"{SSDSensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=const.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
