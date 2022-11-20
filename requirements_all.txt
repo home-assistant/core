@@ -467,7 +467,7 @@ boschshcpy==0.2.35
 boto3==1.20.24
 
 # homeassistant.components.broadlink
-broadlink==0.18.2
+broadlink==0.18.3
 
 # homeassistant.components.brother
 brother==2.0.0
