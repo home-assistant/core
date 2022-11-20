@@ -376,6 +376,70 @@ async def test_dhcp_discovery_update_ip_address(hass):
     assert entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
 
 
+async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(hass):
+    """Test we do not switch to another interface when auth is failing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = MagicMock(login=MagicMock(side_effect=AccessDeniedError("any")))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+
+
+async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(hass):
+    """Test we do not switch to another interface when auth is successful."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+    mock_powerwall = MagicMock(login=MagicMock(return_value=True))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname=MOCK_GATEWAY_DIN.lower(),
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
+
+
 async def test_dhcp_discovery_updates_unique_id(hass):
     """Test we can update the unique id from dhcp."""
     entry = MockConfigEntry(
