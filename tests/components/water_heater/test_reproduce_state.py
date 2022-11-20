@@ -20,13 +20,17 @@ async def test_reproducing_states(hass, caplog):
     hass.states.async_set(
         "water_heater.entity_on", WaterHeaterOperationMode.ON, {ATTR_TEMPERATURE: 45}
     )
-    hass.states.async_set("water_heater.entity_away", WaterHeaterOperationMode.AWAY, {})
+    hass.states.async_set(
+        "water_heater.entity_away",
+        WaterHeaterOperationMode.ON,
+        {ATTR_PRESET_MODE: "away"},
+    )
     hass.states.async_set(
         "water_heater.entity_boost", WaterHeaterOperationMode.BOOST, {}
     )
     hass.states.async_set(
         "water_heater.entity_all",
-        WaterHeaterOperationMode.AWAY,
+        WaterHeaterOperationMode.ON,
         {ATTR_PRESET_MODE: "eco", ATTR_TEMPERATURE: 45},
     )
 
@@ -44,11 +48,15 @@ async def test_reproducing_states(hass, caplog):
                 WaterHeaterOperationMode.ON,
                 {ATTR_TEMPERATURE: 45},
             ),
-            State("water_heater.entity_away", WaterHeaterOperationMode.AWAY, {}),
+            State(
+                "water_heater.entity_away",
+                WaterHeaterOperationMode.ON,
+                {ATTR_PRESET_MODE: "away"},
+            ),
             State("water_heater.entity_boost", WaterHeaterOperationMode.BOOST, {}),
             State(
                 "water_heater.entity_all",
-                WaterHeaterOperationMode.AWAY,
+                WaterHeaterOperationMode.ON,
                 {ATTR_PRESET_MODE: "eco", ATTR_TEMPERATURE: 45},
             ),
         ],
@@ -80,12 +88,12 @@ async def test_reproducing_states(hass, caplog):
             State("water_heater.entity_on", WaterHeaterOperationMode.OFF),
             State(
                 "water_heater.entity_away",
-                WaterHeaterOperationMode.LEGIONELLA_PREVENTION,
+                WaterHeaterOperationMode.BOOST,
                 {},
             ),
             State(
                 "water_heater.entity_boost",
-                WaterHeaterOperationMode.AWAY,
+                WaterHeaterOperationMode.ON,
                 {ATTR_TEMPERATURE: 45},
             ),
             State(
@@ -109,14 +117,10 @@ async def test_reproducing_states(hass, caplog):
         },
         {
             "entity_id": "water_heater.entity_away",
-            ATTR_OPERATION_MODE: WaterHeaterOperationMode.LEGIONELLA_PREVENTION,
+            ATTR_OPERATION_MODE: WaterHeaterOperationMode.BOOST,
         },
         {
             "entity_id": "water_heater.entity_boost",
-            ATTR_OPERATION_MODE: WaterHeaterOperationMode.AWAY,
-        },
-        {
-            "entity_id": "water_heater.entity_all",
             ATTR_OPERATION_MODE: WaterHeaterOperationMode.ON,
         },
     ]

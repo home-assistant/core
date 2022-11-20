@@ -35,7 +35,6 @@ async def async_setup_platform(
                 TEMP_FAHRENHEIT,
                 [
                     WaterHeaterOperationMode.ON,
-                    WaterHeaterOperationMode.AWAY,
                     WaterHeaterOperationMode.BOOST,
                 ],
                 WaterHeaterOperationMode.ON,
@@ -48,8 +47,8 @@ async def async_setup_platform(
                 "Demo Water Heater Celsius",
                 45,
                 TEMP_CELSIUS,
-                [WaterHeaterOperationMode.ON, WaterHeaterOperationMode.AWAY],
-                WaterHeaterOperationMode.AWAY,
+                [WaterHeaterOperationMode.ON, WaterHeaterOperationMode.OFF],
+                WaterHeaterOperationMode.ON,
                 WaterHeaterCurrentOperation.IDLE,
                 None,
                 None,
