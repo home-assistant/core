@@ -29,6 +29,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.bluetooth import device_key_to_bluetooth_entity_key
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import (
@@ -37,7 +38,6 @@ from homeassistant.helpers.sensor import (
 )
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
     (BlueMaestroSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(

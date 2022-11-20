@@ -20,12 +20,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TIME_SECONDS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.bluetooth import device_key_to_bluetooth_entity_key
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     OralBSensor.TIME: SensorEntityDescription(
