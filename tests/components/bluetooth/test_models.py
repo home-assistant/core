@@ -9,12 +9,11 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 import pytest
 
-from homeassistant.components.bluetooth import (
-    BaseHaScanner,
+from homeassistant.components.bluetooth import BaseHaScanner, HaBluetoothConnector
+from homeassistant.components.bluetooth.wrappers import (
+    HaBleakClientWrapper,
     HaBleakScannerWrapper,
-    HaBluetoothConnector,
 )
-from homeassistant.components.bluetooth.wrappers import HaBleakClientWrapper
 
 from . import (
     MockBleakClient,
