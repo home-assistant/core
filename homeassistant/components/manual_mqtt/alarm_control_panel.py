@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -374,18 +374,18 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         pending_time = self._pending_time(state)
         if state == STATE_ALARM_TRIGGERED:
             track_point_in_time(
-                self._hass, self.async_update_ha_state, self._state_ts + pending_time
+                self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
 
             trigger_time = self._trigger_time_by_state[self._previous_state]
             track_point_in_time(
                 self._hass,
-                self.async_update_ha_state,
+                self.async_scheduled_update,
                 self._state_ts + pending_time + trigger_time,
             )
         elif state in SUPPORTED_PENDING_STATES and pending_time:
             track_point_in_time(
-                self._hass, self.async_update_ha_state, self._state_ts + pending_time
+                self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
 
     def _validate_code(self, code, state):
@@ -412,6 +412,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             ATTR_PRE_PENDING_STATE: self._previous_state,
             ATTR_POST_PENDING_STATE: self._state,
         }
+
+    @callback
+    def async_scheduled_update(self, now):
+        """Update state at a scheduled point in time."""
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
