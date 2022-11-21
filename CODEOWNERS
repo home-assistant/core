@@ -143,8 +143,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/ble_parser/ @bdraco
-/tests/components/ble_parser/ @bdraco
 /homeassistant/components/blebox/ @bbx-a @riokuu
 /tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot

@@ -34,6 +34,15 @@ class BaseHaScanner:
         self.source = source
 
     @property
+    def scanning(self) -> bool:
+        """Return True if the scanner is scanning.
+
+        If the scanner if offline or paused this
+        should be overwritten to return False.
+        """
+        return True
+
+    @property
     @abstractmethod
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""

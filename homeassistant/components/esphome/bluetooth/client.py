@@ -256,17 +256,28 @@ class ESPHomeClient(BaseBleakClient):
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
-        try:
-            self._cancel_connection_state = await self._client.bluetooth_device_connect(
-                self._address_as_int,
-                _on_bluetooth_connection_state,
-                timeout=timeout,
-            )
-        except Exception:
-            with contextlib.suppress(BleakError):
-                await connected_future
-            raise
-        await connected_future
+        scanner = self.entry_data.ble_scanner
+        assert scanner is not None, "ESPHome BLE scanner disappeared"
+        with scanner.connecting():
+            try:
+                self._cancel_connection_state = (
+                    await self._client.bluetooth_device_connect(
+                        self._address_as_int,
+                        _on_bluetooth_connection_state,
+                        timeout=timeout,
+                    )
+                )
+            except Exception:  # pylint: disable=broad-except
+                with contextlib.suppress(BleakError):
+                    # If the connect call throws an exception,
+                    # we need to make sure we await the future
+                    # to avoid a warning about an un-retrieved
+                    # exception since we prefer to raise the
+                    # exception from the connect call as it
+                    # will be more descriptive.
+                    await connected_future
+                raise
+            await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
         return True

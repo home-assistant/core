@@ -529,12 +529,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "ble_parser": {
-      "name": "BLE Parser",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "blebox": {
       "name": "BleBox devices",
       "integration_type": "hub",

@@ -29,6 +29,7 @@ MOCK_SETTINGS = {
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
+    "external_power": 0,
 }
 
 
@@ -97,11 +98,19 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1},
+        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild"},
         motion=0,
         temp=22.1,
+        gas="mild",
         description="sensor_0",
         type="sensor",
+    ),
+    Mock(
+        sensor_ids={"battery": 98},
+        battery=98,
+        cfgChanged=0,
+        description="device_0",
+        type="device",
     ),
 ]
 
@@ -165,6 +174,8 @@ MOCK_STATUS_RPC = {
             "stable": {"version": "some_beta_version"},
         }
     },
+    "voltmeter": {"voltage": 4.3},
+    "wifi": {"rssi": -63},
 }
 
 

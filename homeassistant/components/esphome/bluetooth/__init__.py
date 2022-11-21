@@ -68,6 +68,7 @@ async def async_connect_scanner(
         can_connect=_async_can_connect_factory(entry_data, source),
     )
     scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
+    entry_data.ble_scanner = scanner
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
@@ -82,5 +83,6 @@ async def async_connect_scanner(
     def _async_unload() -> None:
         for callback in unload_callbacks:
             callback()
+        entry_data.ble_scanner = None
 
     return _async_unload

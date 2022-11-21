@@ -12,6 +12,7 @@ from homeassistant.components.shelly.const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
+    RPC_SENSORS_POLLING_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -80,6 +81,14 @@ async def mock_rest_update(hass: HomeAssistant):
     """Move time to create REST sensors update event."""
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
+    )
+    await hass.async_block_till_done()
+
+
+async def mock_polling_rpc_update(hass: HomeAssistant):
+    """Move time to create polling RPC sensors update event."""
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
     )
     await hass.async_block_till_done()
 
