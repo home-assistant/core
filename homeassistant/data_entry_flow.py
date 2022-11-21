@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+import copy
 from dataclasses import dataclass
 import logging
 from types import MappingProxyType
@@ -45,6 +46,32 @@ RESULT_TYPE_MENU = "menu"
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+
+def schema_with_suggested_values(
+    data_schema: vol.Schema,
+    suggested_values: Mapping[str, Any],
+    show_advanced_options: bool,
+) -> vol.Schema:
+    """Make a copy of the schema with suggested values set."""
+    schema = {}
+    for key, val in data_schema.schema.items():
+        if isinstance(key, vol.Marker):
+            # Exclude advanced field
+            if (
+                key.description
+                and key.description.get("advanced")
+                and not show_advanced_options
+            ):
+                continue
+
+        new_key = key
+        if key in suggested_values and isinstance(key, vol.Marker):
+            # Copy the marker to not modify the flow schema
+            new_key = copy.copy(key)
+            new_key.description = {"suggested_value": suggested_values[key]}
+        schema[new_key] = val
+    return vol.Schema(schema)
 
 
 @dataclass

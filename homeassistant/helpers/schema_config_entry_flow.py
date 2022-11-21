@@ -12,7 +12,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.data_entry_flow import FlowResult, UnknownHandler
+from homeassistant.data_entry_flow import (
+    FlowResult,
+    UnknownHandler,
+    schema_with_suggested_values,
+)
 
 from . import entity_registry as er, selector
 
@@ -200,25 +204,9 @@ class SchemaCommonFlowHandler:
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
-            schema = {}
-            for key, val in data_schema.schema.items():
-
-                if isinstance(key, vol.Marker):
-                    # Exclude advanced field
-                    if (
-                        key.description
-                        and key.description.get("advanced")
-                        and not self._handler.show_advanced_options
-                    ):
-                        continue
-
-                new_key = key
-                if key in suggested_values and isinstance(key, vol.Marker):
-                    # Copy the marker to not modify the flow schema
-                    new_key = copy.copy(key)
-                    new_key.description = {"suggested_value": suggested_values[key]}
-                schema[new_key] = val
-            data_schema = vol.Schema(schema)
+            data_schema = schema_with_suggested_values(
+                data_schema, suggested_values, self._handler.show_advanced_options
+            )
 
         errors = {"base": str(error)} if error else None
 
