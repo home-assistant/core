@@ -5,6 +5,7 @@ import logging
 
 from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
+import urllib3
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
 )
@@ -57,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -69,8 +72,12 @@ def setup_platform(
 ) -> None:
     """Set up the qBittorrent sensors."""
 
+    # Suppress InsecureRequestWarning if verify_ssl is False.
+    if not config[CONF_VERIFY_SSL]:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     try:
-        client = Client(config[CONF_URL])
+        client = Client(config[CONF_URL], verify=config[CONF_VERIFY_SSL])
         client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
