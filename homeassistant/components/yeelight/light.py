@@ -1002,9 +1002,9 @@ class YeelightNightLightMode(YeelightGenericLight):
         return PowerMode.MOONLIGHT
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag no supported features."""
-        return 0
+        return LightEntityFeature(0)
 
 
 class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
