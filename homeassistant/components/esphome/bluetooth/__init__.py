@@ -51,6 +51,8 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
+    # If we ever can get the BLE mac address from the device,
+    # we should use that for the source instead.
     source = str(entry.unique_id)
     name = entry.title
     new_info_callback = async_get_advertisement_callback(hass)
