@@ -467,7 +467,7 @@ async def test_switching_adapters_when_one_goes_away(
 async def test_switching_adapters_when_one_stop_scanning(
     hass, enable_bluetooth, register_hci0_scanner
 ):
-    """Test switching adapters when one goes away."""
+    """Test switching adapters when stops scanning."""
     is_scanning = True
 
     class ScannerThatPauses(BaseHaScanner):
@@ -515,7 +515,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     )
 
     # Now that hci2 has stopped scanning, we should prefer the poor signal
-    # since no poor signal is better than no signal
+    # since poor signal is better than no signal
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
         is switchbot_device_poor_signal
