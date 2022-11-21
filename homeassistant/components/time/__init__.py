@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import time, timedelta
 import logging
 from typing import final
 
@@ -80,7 +80,7 @@ class TimeEntity(Entity):
     """Representation of a Time entity."""
 
     entity_description: TimeEntityDescription
-    _attr_native_value: datetime | time | None
+    _attr_native_value: time | None
 
     @property
     @final
@@ -126,7 +126,7 @@ class TimeEntity(Entity):
         return self.native_value.second
 
     @property
-    def native_value(self) -> datetime | time | None:
+    def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self._attr_native_value
 

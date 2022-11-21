@@ -1,5 +1,5 @@
 """The tests for the time component."""
-from datetime import datetime, time
+from datetime import time
 
 from homeassistant.components.time import (
     ATTR_HOUR,
@@ -28,21 +28,6 @@ async def test_time():
     assert time_entity.hour == 12
     assert time_entity.minute == 0
     assert time_entity.second == 0
-    assert time_entity.state_attributes == {
-        ATTR_HOUR: 12,
-        ATTR_MINUTE: 0,
-        ATTR_SECOND: 0,
-    }
-
-
-async def test_time_with_datetime():
-    """Test time with datetime as native value."""
-    time_entity = MockTimeEntity(datetime(2020, 1, 1, 12, 0, 0))
-    assert time_entity.state == "12:00:00"
-    assert time_entity.hour == 12
-    assert time_entity.minute == 0
-    assert time_entity.second == 0
-    assert isinstance(time_entity.value, time)
     assert time_entity.state_attributes == {
         ATTR_HOUR: 12,
         ATTR_MINUTE: 0,
