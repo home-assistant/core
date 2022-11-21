@@ -448,7 +448,9 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac02", "lumi.motion.agl04"}
+)
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
