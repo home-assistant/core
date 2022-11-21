@@ -46,7 +46,7 @@ async def test_datetime_default():
     assert datetime_entity.hour == 12
     assert datetime_entity.minute == 0
     assert datetime_entity.second == 0
-    assert datetime_entity.timestamp == datetime(2020, 1, 1, 12, 0, 0).timestamp
+    assert datetime_entity.timestamp == datetime(2020, 1, 1, 12, 0, 0).timestamp()
     assert datetime_entity.state_attributes == {
         ATTR_DAY: 1,
         ATTR_MONTH: 1,
