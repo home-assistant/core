@@ -36,28 +36,18 @@ class BaseHaScanner:
         self.source = source
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
-
-    @property
-    def scanning(self) -> bool:
-        """Return if the scanner is scanning.
-
-        If the scanner if offline or paused this
-        should be overwritten to return False.
-
-        If the scanner can be running while a client
-        is connected this should be overwritten to
-        return True.
-        """
-        return not self._connecting
+        self.scanning = True
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
         """Context manager to track connecting state."""
         self._connecting += 1
+        self.scanning = not self._connecting
         try:
             yield
         finally:
             self._connecting -= 1
+            self.scanning = not self._connecting
 
     @property
     @abstractmethod

@@ -138,28 +138,7 @@ class HaScanner(BaseHaScanner):
         self._last_detection = 0.0
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
-        self._scanning = False
-
-    @property
-    def scanning(self) -> bool:
-        """Return True if the scanner is scanning.
-
-        This overrides the BaseHaScanner property to
-        return the actual scanning state of the scanner
-        since BlueZ based scanners can still be scanning
-        while connecting.
-
-        Since the RTL8671BU adapters have trouble with
-        scanning and connecting at the same time, we
-        may eventually want to use this property to
-        improve handling of these adapters and stop
-        scanning while connecting.
-
-        This is currently not possible since we have
-        no reliable way to know which chip is used
-        by the adapter.
-        """
-        return self._scanning
+        self.scanning = False
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -333,7 +312,7 @@ class HaScanner(BaseHaScanner):
             # Everything is fine, break out of the loop
             break
 
-        self._scanning = True
+        self.scanning = True
         self._async_setup_scanner_watchdog()
 
     @hass_callback
@@ -407,7 +386,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
-        self._scanning = False
+        self.scanning = False
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
