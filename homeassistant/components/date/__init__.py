@@ -90,42 +90,33 @@ class DateEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.strftime(FORMAT_DATE)
+        return self.native_value.strftime(FORMAT_DATE)
 
     @property
     @final
     def day(self) -> int | None:
         """Return day from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.day
+        return self.native_value.day
 
     @property
     @final
     def month(self) -> int | None:
         """Return month from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.month
+        return self.native_value.month
 
     @property
     @final
     def year(self) -> int | None:
         """Return year from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.year
-
-    @property
-    @final
-    def value(self) -> date | None:
-        """Return the entity value to represent the entity state."""
-        # If native value is a datetime, only return the date.
-        if isinstance(self.native_value, datetime):
-            return self.native_value.date()
-        return self.native_value
+        return self.native_value.year
 
     @property
     def native_value(self) -> datetime | date | None:
