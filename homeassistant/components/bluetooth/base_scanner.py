@@ -35,7 +35,11 @@ class BaseHaScanner:
 
     @property
     def scanning(self) -> bool:
-        """Return True if the scanner is scanning."""
+        """Return True if the scanner is scanning.
+
+        If the scanner if offline or paused this
+        should be overwritten to return False.
+        """
         return True
 
     @property

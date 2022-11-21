@@ -139,6 +139,12 @@ class HaScanner(BaseHaScanner):
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
         self.name = adapter_human_name(adapter, address)
+        self._scanning = False
+
+    @property
+    def scanning(self) -> bool:
+        """Return True if the scanner is scanning."""
+        return self._scanning
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -312,6 +318,7 @@ class HaScanner(BaseHaScanner):
             # Everything is fine, break out of the loop
             break
 
+        self._scanning = True
         self._async_setup_scanner_watchdog()
 
     @hass_callback
@@ -385,6 +392,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
+        self._scanning = False
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
