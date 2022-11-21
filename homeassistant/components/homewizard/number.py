@@ -32,7 +32,7 @@ async def async_setup_entry(
 class HWEnergyNumberEntity(
     CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], NumberEntity
 ):
-    """Representation switchable entity."""
+    """Representation of status light number."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
@@ -42,7 +42,7 @@ class HWEnergyNumberEntity(
         coordinator: HWEnergyDeviceUpdateCoordinator,
         entry: ConfigEntry,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the control number."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_status_light_level"
         self._attr_name = "Light level"
