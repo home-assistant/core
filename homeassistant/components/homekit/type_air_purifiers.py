@@ -81,10 +81,6 @@ class AirPurifier(Fan):
         if self.linked_humidity_sensor:
             humidity_serv = self.add_preload_service(SERV_HUMIDITY_SENSOR, CHAR_NAME)
             serv_air_purifier.add_linked_service(humidity_serv)
-            humidity_serv.configure_char(
-                CHAR_NAME,
-                value=cleanup_name_for_homekit(f"{self.display_name} Humidity"),
-            )
             self.char_current_humidity = humidity_serv.configure_char(
                 CHAR_CURRENT_HUMIDITY, value=0
             )
@@ -100,9 +96,6 @@ class AirPurifier(Fan):
                 [CHAR_AIR_QUALITY, CHAR_NAME, CHAR_PM25_DENSITY],
             )
             serv_air_purifier.add_linked_service(pm25_serv)
-            pm25_serv.configure_char(
-                CHAR_NAME, value=cleanup_name_for_homekit(f"{self.display_name} PM2.5")
-            )
             self.char_pm25_density = pm25_serv.configure_char(
                 CHAR_PM25_DENSITY, value=0
             )
@@ -119,10 +112,6 @@ class AirPurifier(Fan):
                 SERV_TEMPERATURE_SENSOR, [CHAR_NAME, CHAR_CURRENT_TEMPERATURE]
             )
             serv_air_purifier.add_linked_service(temperature_serv)
-            temperature_serv.configure_char(
-                CHAR_NAME,
-                value=cleanup_name_for_homekit(f"{self.display_name} Temperature"),
-            )
             self.char_current_temperature = temperature_serv.configure_char(
                 CHAR_CURRENT_TEMPERATURE, value=0
             )
