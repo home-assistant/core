@@ -29,6 +29,7 @@ MOCK_SETTINGS = {
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
+    "external_power": 0,
 }
 
 
@@ -63,9 +64,17 @@ def mock_light_set_state(
 
 MOCK_BLOCKS = [
     Mock(
-        sensor_ids={"inputEvent": "S", "inputEventCnt": 2},
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+            "overpower": 0,
+            "power": 53.4,
+        },
         channel="0",
         type="relay",
+        overpower=0,
+        power=53.4,
+        description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
     Mock(
@@ -87,6 +96,21 @@ MOCK_BLOCKS = [
         **mock_light_set_state(),
         type="light",
         set_state=AsyncMock(side_effect=mock_light_set_state),
+    ),
+    Mock(
+        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild"},
+        motion=0,
+        temp=22.1,
+        gas="mild",
+        description="sensor_0",
+        type="sensor",
+    ),
+    Mock(
+        sensor_ids={"battery": 98},
+        battery=98,
+        cfgChanged=0,
+        description="device_0",
+        type="device",
     ),
 ]
 
@@ -130,18 +154,28 @@ MOCK_STATUS_COAP = {
         "old_version": "some_old_version",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
+    "wifi_sta": {"rssi": -64},
 }
 
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
-    "cover:0": {"state": "stopped", "pos_control": True, "current_pos": 50},
+    "cloud": {"connected": False},
+    "cover:0": {
+        "state": "stopped",
+        "pos_control": True,
+        "current_pos": 50,
+        "apower": 85.3,
+    },
+    "temperature:0": {"tC": 22.9},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
             "stable": {"version": "some_beta_version"},
         }
     },
+    "voltmeter": {"voltage": 4.3},
+    "wifi": {"rssi": -63},
 }
 
 

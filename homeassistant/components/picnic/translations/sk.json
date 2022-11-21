@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "country_code": "K\u00f3d krajiny"
+                    "country_code": "K\u00f3d krajiny",
+                    "password": "Heslo"
                 }
             }
         }

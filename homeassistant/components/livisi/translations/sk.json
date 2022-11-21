@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "wrong_password": "Heslo je nespr\u00e1vne."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo"
+                }
+            }
+        }
+    }
+}

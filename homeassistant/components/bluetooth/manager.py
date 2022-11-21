@@ -29,6 +29,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import AdvertisementTracker
+from .base_scanner import BaseHaScanner
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
@@ -43,12 +44,7 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import (
-    BaseHaScanner,
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothServiceInfoBleak,
-)
+from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_load_history_from_system
 

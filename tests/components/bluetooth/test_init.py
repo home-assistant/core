@@ -11,13 +11,13 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BaseHaScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
-    models,
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
@@ -36,6 +36,7 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_DATA_UUID,
     SERVICE_UUID,
 )
+from homeassistant.components.bluetooth.wrappers import HaBleakScannerWrapper
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -2210,7 +2211,7 @@ async def test_wrapped_instance_with_filter(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
         )
         scanner.register_detection_callback(_device_detected)
@@ -2282,7 +2283,7 @@ async def test_wrapped_instance_with_service_uuids(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
         scanner.register_detection_callback(_device_detected)
@@ -2332,7 +2333,7 @@ async def test_wrapped_instance_with_broken_callbacks(
         )
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper(
+        scanner = HaBleakScannerWrapper(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
         scanner.register_detection_callback(_device_detected)
@@ -2381,7 +2382,7 @@ async def test_wrapped_instance_changes_uuids(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
@@ -2436,7 +2437,7 @@ async def test_wrapped_instance_changes_filters(
         empty_adv = generate_advertisement_data(local_name="empty")
 
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
         )
@@ -2468,7 +2469,7 @@ async def test_wrapped_instance_unsupported_filter(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert _get_manager() is not None
-        scanner = models.HaBleakScannerWrapper()
+        scanner = HaBleakScannerWrapper()
         scanner.set_scanning_filter(
             filters={
                 "unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -2643,12 +2644,12 @@ async def test_no_auto_detect_bluetooth_adapters_windows(hass):
 async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_bluetooth):
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
-    assert isinstance(scanner, models.HaBleakScannerWrapper)
+    assert isinstance(scanner, HaBleakScannerWrapper)
 
 
 async def test_scanner_count_connectable(hass, enable_bluetooth):
     """Test getting the connectable scanner count."""
-    scanner = models.BaseHaScanner(hass, "any")
+    scanner = BaseHaScanner(hass, "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
@@ -2656,7 +2657,7 @@ async def test_scanner_count_connectable(hass, enable_bluetooth):
 
 async def test_scanner_count(hass, enable_bluetooth):
     """Test getting the connectable and non-connectable scanner count."""
-    scanner = models.BaseHaScanner(hass, "any")
+    scanner = BaseHaScanner(hass, "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()
