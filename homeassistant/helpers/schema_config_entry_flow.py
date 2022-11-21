@@ -68,32 +68,6 @@ class SchemaFlowMenuStep:
     options: list[str] | dict[str, str]
 
 
-def schema_with_suggested_values(
-    data_schema: vol.Schema,
-    suggested_values: Mapping[str, Any],
-    show_advanced_options: bool,
-) -> vol.Schema:
-    """Make a copy of the schema with suggested values set."""
-    schema = {}
-    for key, val in data_schema.schema.items():
-        if isinstance(key, vol.Marker):
-            # Exclude advanced field
-            if (
-                key.description
-                and key.description.get("advanced")
-                and not show_advanced_options
-            ):
-                continue
-
-        new_key = key
-        if key in suggested_values and isinstance(key, vol.Marker):
-            # Copy the marker to not modify the flow schema
-            new_key = copy.copy(key)
-            new_key.description = {"suggested_value": suggested_values[key]}
-        schema[new_key] = val
-    return vol.Schema(schema)
-
-
 class SchemaCommonFlowHandler:
     """Handle a schema based config or options flow."""
 
@@ -190,9 +164,25 @@ class SchemaCommonFlowHandler:
             data_schema := self._get_schema(form_step, self._options)
         ) and data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
-            data_schema = schema_with_suggested_values(
-                data_schema, options, self._handler.show_advanced_options
-            )
+            schema = {}
+            for key, val in data_schema.schema.items():
+
+                if isinstance(key, vol.Marker):
+                    # Exclude advanced field
+                    if (
+                        key.description
+                        and key.description.get("advanced")
+                        and not self._handler.show_advanced_options
+                    ):
+                        continue
+
+                new_key = key
+                if key in options and isinstance(key, vol.Marker):
+                    # Copy the marker to not modify the flow schema
+                    new_key = copy.copy(key)
+                    new_key.description = {"suggested_value": options[key]}
+                schema[new_key] = val
+            data_schema = vol.Schema(schema)
 
         errors = {"base": str(error)} if error else None
 
