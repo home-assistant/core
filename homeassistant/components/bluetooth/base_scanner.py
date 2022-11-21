@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
@@ -32,15 +33,27 @@ class BaseHaScanner:
         """Initialize the scanner."""
         self.hass = hass
         self.source = source
+        self._connecting = 0
 
     @property
     def scanning(self) -> bool:
-        """Return True if the scanner is scanning.
+        """Return if the scanner is scanning.
 
         If the scanner if offline or paused this
         should be overwritten to return False.
+
+        If the scanner can be running while a client
+        is connected this should be overwritten to
+        return True.
         """
-        return True
+        return not self._connecting
+
+    @contextmanager
+    def connecting(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state."""
+        self._connecting += 1
+        yield
+        self._connecting -= 1
 
     @property
     @abstractmethod

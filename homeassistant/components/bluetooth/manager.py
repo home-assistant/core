@@ -169,6 +169,11 @@ class BluetoothManager:
                 return adapter
         return None
 
+    @hass_callback
+    def async_scanner_by_source(self, source: str) -> BaseHaScanner | None:
+        """Return the scanner for a source."""
+        return self._sources.get(source)
+
     async def async_get_bluetooth_adapters(
         self, cached: bool = True
     ) -> dict[str, AdapterDetails]:

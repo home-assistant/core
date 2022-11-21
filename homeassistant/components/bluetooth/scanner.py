@@ -143,7 +143,23 @@ class HaScanner(BaseHaScanner):
 
     @property
     def scanning(self) -> bool:
-        """Return True if the scanner is scanning."""
+        """Return True if the scanner is scanning.
+
+        This overrides the BaseHaScanner property to
+        return the actual scanning state of the scanner
+        since BlueZ based scanners can still be scanning
+        while connecting.
+
+        Since the RTL8671BU adapters have trouble with
+        scanning and connecting at the same time, we
+        may eventually want to use this property to
+        improve handling of these adapter if we stop
+        scanning while connecting.
+
+        This is currently not possible since we have
+        no reliable way to know which chip is used
+        by the adapter.
+        """
         return self._scanning
 
     @property
