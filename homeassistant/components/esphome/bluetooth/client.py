@@ -259,9 +259,7 @@ class ESPHomeClient(BaseBleakClient):
         timeout = kwargs.get("timeout", self._timeout)
         if not (scanner := async_scanner_by_source(self._hass, self._source)):
             raise BleakError("Scanner disappeared for {self._source}")
-        with scanner.connecting(
-            f"{self._ble_device.name} - {self._ble_device.address}"
-        ):
+        with scanner.connecting():
             self._cancel_connection_state = await self._client.bluetooth_device_connect(
                 self._address_as_int,
                 _on_bluetooth_connection_state,
