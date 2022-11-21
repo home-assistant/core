@@ -31,8 +31,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import async_get_hass
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -105,7 +104,7 @@ SENSOR_SETUP_OPT = {
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
-            options=[TEMP_CELSIUS, TEMP_FAHRENHEIT],
+            options=[cls.value for cls in UnitOfTemperature],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
@@ -166,7 +165,15 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Check for duplicate records."""
-        data: dict[str, Any] = dict(options)
+        matching_keys: set[str] = {
+            CONF_RESOURCE,
+            CONF_METHOD,
+            CONF_AUTHENTICATION,
+            CONF_USERNAME,
+            CONF_PASSWORD,
+            CONF_HEADERS,
+        }
+        data: dict[str, Any] = {k: v for k, v in options.items() if k in matching_keys}
         self._async_abort_entries_match(data)
 
 
