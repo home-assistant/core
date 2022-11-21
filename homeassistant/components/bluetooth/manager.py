@@ -506,7 +506,8 @@ class BluetoothManager:
         """Describe a source."""
         if scanner := self._sources.get(service_info.source):
             description = scanner.name
-        description = service_info.source
+        else:
+            description = service_info.source
         if service_info.connectable:
             description += " [connectable]"
         return description
