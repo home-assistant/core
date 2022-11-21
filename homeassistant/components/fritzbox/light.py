@@ -1,7 +1,7 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from requests.exceptions import HTTPError
 
@@ -77,7 +77,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
-        self._supported_hs = {}
+        self._supported_hs: dict[int, list[int]] = {}
         for values in supported_colors.values():
             hue = int(values[0][0])
             self._supported_hs[hue] = [
@@ -138,7 +138,9 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             try:
                 # HA gives 0..360 for hue, fritz light only supports 0..359
                 unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
-                unmapped_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
+                unmapped_saturation = round(
+                    cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
+                )
                 await self.hass.async_add_executor_job(
                     self.data.set_unmapped_color, (unmapped_hue, unmapped_saturation)
                 )

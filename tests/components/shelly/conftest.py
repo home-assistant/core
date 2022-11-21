@@ -30,6 +30,7 @@ MOCK_SETTINGS = {
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
     "external_power": 0,
+    "thermostats": [{"schedule_profile_names": {}}],
 }
 
 
@@ -106,9 +107,11 @@ MOCK_BLOCKS = [
         type="sensor",
     ),
     Mock(
-        sensor_ids={"battery": 98},
+        sensor_ids={"battery": 98, "valvePos": 50},
+        channel="0",
         battery=98,
         cfgChanged=0,
+        valvePos=50,
         description="device_0",
         type="device",
     ),

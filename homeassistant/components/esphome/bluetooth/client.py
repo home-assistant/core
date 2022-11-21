@@ -93,15 +93,17 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             # Because callbacks are delivered asynchronously it's possible
             # that we find out about the disconnection during the operation
             # before the callback is delivered.
+
+            # pylint: disable=protected-access
             if ex.error.error == -1:
                 _LOGGER.debug(
                     "%s: %s - %s: BLE device disconnected during %s operation",
-                    self._source,  # pylint: disable=protected-access
-                    self._ble_device.name,  # pylint: disable=protected-access
-                    self._ble_device.address,  # pylint: disable=protected-access
+                    self._source,
+                    self._ble_device.name,
+                    self._ble_device.address,
                     func.__name__,
                 )
-                self._async_ble_device_disconnected()  # pylint: disable=protected-access
+                self._async_ble_device_disconnected()
             raise BleakError(str(ex)) from ex
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
