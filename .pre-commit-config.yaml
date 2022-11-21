@@ -11,7 +11,6 @@ repos:
         args:
           - --in-place
           - --remove-duplicate-keys
-          - --ignore-init-module-imports
           - --remove-all-unused-imports
   - repo: https://github.com/psf/black
     rev: 22.10.0
