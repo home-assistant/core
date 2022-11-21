@@ -1,6 +1,7 @@
 """Tests for the Shelly integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
@@ -99,6 +100,7 @@ def register_entity(
     object_id: str,
     unique_id: str,
     config_entry: ConfigEntry | None = None,
+    capabilities: Mapping[str, Any] | None = None,
 ) -> str:
     """Register enabled entity, return entity_id."""
     entity_registry = async_get(hass)
@@ -109,6 +111,7 @@ def register_entity(
         suggested_object_id=object_id,
         disabled_by=None,
         config_entry=config_entry,
+        capabilities=capabilities,
     )
     return f"{domain}.{object_id}"
 
