@@ -113,8 +113,6 @@ class TextEntity(Entity):
     _attr_native_min: int = 0
     _attr_native_max: int = 100
     _attr_pattern: str | None = None
-    _attr_min: None = None
-    _attr_max: None = None
     _attr_state: None = None
     _attr_value: None = None
 
