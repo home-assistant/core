@@ -93,19 +93,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TextMode(StrEnum):
     """Modes for text entities."""
 
-    COLOR = "color"
-    DATE = "date"
-    DATETIME_LOCAL = "datetime-local"
-    EMAIL = "email"
-    MONTH = "month"
-    NUMBER = "number"
     PASSWORD = "password"
-    SEARCH = "search"
-    TEL = "tel"
     TEXT = "text"
-    TIME = "time"
-    URL = "url"
-    WEEK = "week"
 
 
 @dataclass
