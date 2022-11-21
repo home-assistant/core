@@ -40,8 +40,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-# mypy: disallow-any-generics
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Text entities."""
