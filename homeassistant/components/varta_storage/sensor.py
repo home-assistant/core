@@ -40,7 +40,7 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            configuration_url="http://" + coordinator.config_entry.data["host"],
+            configuration_url=f"http://{coordinator.config_entry.data['host']}",
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
             manufacturer="VARTA",
             name="VARTA Battery",
