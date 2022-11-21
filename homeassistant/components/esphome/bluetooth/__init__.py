@@ -51,12 +51,10 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
-    assert entry_data.device_info is not None
-    device_info = entry_data.device_info
     source = str(entry.unique_id)
-    name = entry.title
     new_info_callback = async_get_advertisement_callback(hass)
-    version = device_info.bluetooth_proxy_version
+    assert entry_data.device_info is not None
+    version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
         "%s: Connecting scanner version=%s, connectable=%s",
@@ -70,7 +68,7 @@ async def async_connect_scanner(
         can_connect=_async_can_connect_factory(entry_data, source),
     )
     scanner = ESPHomeScanner(
-        hass, source, name, new_info_callback, connector, connectable
+        hass, source, entry.title, new_info_callback, connector, connectable
     )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
