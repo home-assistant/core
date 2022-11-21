@@ -468,15 +468,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass, enable_bluetooth, register_hci0_scanner
 ):
     """Test switching adapters when stops scanning."""
-    is_scanning = True
-
-    class ScannerThatPauses(BaseHaScanner):
-        @property
-        def scanning(self) -> bool:
-            nonlocal is_scanning
-            return is_scanning
-
-    hci2_scanner = ScannerThatPauses(hass, "hci2", "hci2")
+    hci2_scanner = BaseHaScanner(hass, "hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
 
     address = "44:44:33:11:23:45"
@@ -508,7 +500,7 @@ async def test_switching_adapters_when_one_stop_scanning(
         is switchbot_device_good_signal
     )
 
-    is_scanning = False
+    hci2_scanner.scanning = False
 
     inject_advertisement_with_source(
         hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
