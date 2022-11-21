@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
+        }
+    }
+}

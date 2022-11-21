@@ -8,6 +8,16 @@
         },
         "flow_title": "{host}",
         "step": {
+            "credentials": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

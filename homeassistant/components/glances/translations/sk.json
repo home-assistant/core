@@ -5,6 +5,7 @@
                 "data": {
                     "host": "Hostite\u013e",
                     "name": "N\u00e1zov",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

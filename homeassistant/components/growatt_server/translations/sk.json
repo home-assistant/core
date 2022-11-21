@@ -6,7 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "password": "Heslo"
                 }
             }
         }

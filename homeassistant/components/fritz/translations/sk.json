@@ -8,10 +8,22 @@
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

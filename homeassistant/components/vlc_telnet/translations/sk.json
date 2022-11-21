@@ -9,10 +9,16 @@
         },
         "flow_title": "{host}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
                     "name": "N\u00e1zov",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

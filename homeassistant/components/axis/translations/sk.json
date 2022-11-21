@@ -9,6 +9,7 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }
