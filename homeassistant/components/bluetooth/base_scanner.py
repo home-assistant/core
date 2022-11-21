@@ -6,7 +6,6 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 import datetime
 from datetime import timedelta
-import logging
 from typing import Any, Final
 
 from bleak.backends.device import BLEDevice
@@ -25,8 +24,6 @@ from .const import (
 )
 from .models import HaBluetoothConnector
 
-_LOGGER = logging.getLogger(__name__)
-
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
@@ -39,7 +36,6 @@ class BaseHaScanner:
         self.source = source
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
-        self.connecting_devices: set[str] = set()
 
     @property
     def scanning(self) -> bool:
@@ -55,17 +51,13 @@ class BaseHaScanner:
         return not self._connecting
 
     @contextmanager
-    def connecting(self, device: str) -> Generator[None, None, None]:
+    def connecting(self) -> Generator[None, None, None]:
         """Context manager to track connecting state."""
-        self.connecting_devices.add(device)
         self._connecting += 1
-        _LOGGER.debug("Connecting to %s, %s", device, self._connecting)
         try:
             yield
         finally:
-            self.connecting_devices.discard(device)
             self._connecting -= 1
-            _LOGGER.debug("Done connecting to %s, %s", device, self._connecting)
 
     @property
     @abstractmethod
