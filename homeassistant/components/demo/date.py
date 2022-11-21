@@ -1,7 +1,7 @@
 """Demo platform that offers a fake Date entity."""
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 
 from homeassistant.components.date import DateEntity
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +52,7 @@ class DemoDate(DateEntity):
         self,
         unique_id: str,
         name: str,
-        state: date | datetime,
+        state: date,
         icon: str,
         assumed_state: bool,
     ) -> None:
@@ -67,7 +67,7 @@ class DemoDate(DateEntity):
             identifiers={(DOMAIN, unique_id)}, name=self.name
         )
 
-    async def async_set_value(self, date_value: date | datetime) -> None:
+    async def async_set_value(self, date_value: date) -> None:
         """Update the date."""
         self._attr_native_value = date_value
         self.async_write_ha_state()

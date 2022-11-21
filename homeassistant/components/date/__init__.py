@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import logging
 from typing import final
 
@@ -73,7 +73,7 @@ class DateEntity(Entity):
     """Representation of a Date entity."""
 
     entity_description: DateEntityDescription
-    _attr_native_value: date | datetime | None
+    _attr_native_value: date | None
 
     @property
     @final
@@ -119,7 +119,7 @@ class DateEntity(Entity):
         return self.native_value.year
 
     @property
-    def native_value(self) -> datetime | date | None:
+    def native_value(self) -> date | None:
         """Return the value reported by the date."""
         return self._attr_native_value
 
