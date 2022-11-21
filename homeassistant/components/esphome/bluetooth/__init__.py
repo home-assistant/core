@@ -51,13 +51,14 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
+    assert entry_data.device_info is not None
     # If we ever can get the BLE mac address from the device,
     # we should use that for the source instead.
-    source = str(entry.unique_id)
+    device_info = entry_data.device_info
+    source = device_info.mac_address or str(entry.unique_id)
     name = entry.title
     new_info_callback = async_get_advertisement_callback(hass)
-    assert entry_data.device_info is not None
-    version = entry_data.device_info.bluetooth_proxy_version
+    version = device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
         "%s: Connecting scanner version=%s, connectable=%s",
