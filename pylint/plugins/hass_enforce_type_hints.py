@@ -2214,7 +2214,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type=["SirenEntityFeature", "int"],
+                    return_type="SirenEntityFeature",
                 ),
             ],
         ),
