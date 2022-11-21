@@ -30,6 +30,8 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
+    __slots__ = ("hass", "source", "_connecting", "name", "scanning")
+
     def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
         """Initialize the scanner."""
         self.hass = hass
@@ -77,6 +79,16 @@ class BaseHaScanner:
 
 class BaseHaRemoteScanner(BaseHaScanner):
     """Base class for a Home Assistant remote BLE scanner."""
+
+    __slots__ = (
+        "_new_info_callback",
+        "_discovered_device_advertisement_datas",
+        "_discovered_device_timestamps",
+        "_connector",
+        "_connectable",
+        "_details",
+        "_expire_seconds",
+    )
 
     def __init__(
         self,
