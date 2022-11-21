@@ -661,7 +661,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type=["AlarmControlPanelEntityFeature", "int"],
+                    return_type="AlarmControlPanelEntityFeature",
                 ),
                 TypeHintMatch(
                     function_name="alarm_disarm",
