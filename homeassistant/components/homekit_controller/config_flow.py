@@ -420,6 +420,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Should never call this step without setting self.hkid
         assert self.hkid
+        description_placeholders = {}
 
         errors = {}
 
@@ -465,10 +466,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="accessory_not_found_error")
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
         if not self.finish_pairing:
             # Its possible that the first try may have been busy so
@@ -496,11 +498,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
                 return await self.async_step_protocol_error()
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
-        return self._async_step_pair_show_form(errors)
+        return self._async_step_pair_show_form(errors, description_placeholders)
 
     async def async_step_busy_error(
         self, user_input: dict[str, Any] | None = None
@@ -531,14 +534,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_step_pair_show_form(
-        self, errors: dict[str, str] | None = None
+        self,
+        errors: dict[str, str] | None = None,
+        description_placeholders: dict[str, str] | None = None,
     ) -> FlowResult:
         assert self.category
 
         placeholders = self.context["title_placeholders"] = {
             "name": self.name,
             "category": formatted_category(self.category),
-        }
+        } | (description_placeholders or {})
 
         schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
         if errors and errors.get("pairing_code") == "insecure_setup_code":
