@@ -10,7 +10,7 @@
     "step": {
       "discovered_connection": {
         "data": {
-          "id": "System ID",
+          "id": "[%key:component::airzone::config::step::user::data::id%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
