@@ -375,4 +375,8 @@ class ZhaMultiPANMigrationHelper:
         _LOGGER.debug("Restored backup after %s retries", retry)
 
         # Launch ZHA again
-        await self._hass.config_entries.async_setup(self._config_entry.entry_id)
+        try:
+            await self._hass.config_entries.async_setup(self._config_entry.entry_id)
+        except config_entries.OperationNotAllowed:
+            # ZHA is not unloaded
+            pass
