@@ -103,6 +103,13 @@ class MockRestData:
                 "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
                 "<template>Trying to get</template>"
             )
+        if self.payload == "test_scrape_sensor2":
+            self.data = (
+                "<div class='current-version material-card text'>"
+                "<h1>Hidden Version: 2021.12.10</h1>Released: <span class='release-date'>January 17, 2022</span>"
+                "<div class='links' style='links'><a href='/latest-release-notes/'>Release notes</a></div></div>"
+                "<template>Trying to get</template>"
+            )
         if self.payload == "test_scrape_uom_and_classes":
             self.data = (
                 "<div class='current-temp temp-card text'>"

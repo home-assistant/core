@@ -8,18 +8,12 @@ import pytest
 
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL
-from homeassistant.components.scrape.const import (
-    CONF_INDEX,
-    CONF_SELECT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.scrape.const import CONF_INDEX, CONF_SELECT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_RESOURCE,
-    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_VERIFY_SSL,
 )
@@ -42,7 +36,6 @@ async def get_config_to_integration_load() -> dict[str, Any]:
         CONF_METHOD: DEFAULT_METHOD,
         CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         "sensors": [
             {
                 CONF_NAME: "Current version",
