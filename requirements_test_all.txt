@@ -43,7 +43,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.17.0
+PyViCare==2.19.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -337,7 +337,7 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.8.4
+bleak-retry-connector==2.8.5
 
 # homeassistant.components.bluetooth
 bleak==0.19.2
@@ -515,7 +515,7 @@ fjaraskupan==2.2.0
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-flux_led==0.28.32
+flux_led==0.28.34
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -1334,7 +1334,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
-pysma==0.7.2
+pysma==0.7.3
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -1489,7 +1489,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.10.0
+regenmaschine==2022.11.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1776,7 +1776,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
-xknx==1.2.0
+xknx==1.2.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
