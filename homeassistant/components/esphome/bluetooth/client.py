@@ -275,7 +275,8 @@ class ESPHomeClient(BaseBleakClient):
                     # exception since we prefer to raise the
                     # exception from the connect call as it
                     # will be more descriptive.
-                    await connected_future
+                    if connected_future.done():
+                        await connected_future
                 raise
             await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
