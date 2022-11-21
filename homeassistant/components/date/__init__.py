@@ -30,6 +30,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = ["DOMAIN", "DateEntity", "DateEntityDescription"]
+
 
 async def _async_set_value(entity: DateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new date."""
@@ -72,10 +74,6 @@ class DateEntity(Entity):
 
     entity_description: DateEntityDescription
     _attr_native_value: date | datetime | None
-    _attr_year: None = None
-    _attr_month: None = None
-    _attr_day: None = None
-    _attr_state: None = None
 
     @property
     @final
