@@ -1,5 +1,0 @@
-{
-  "domain": "prusa",
-  "name": "Prusa",
-  "integrations": ["prusalink"]
-}
