@@ -515,7 +515,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     )
 
     # Now that hci2 has stopped scanning, we should prefer the poor signal
-    # since no poor signal is better than no signal
+    # since poor signal is better than no signal
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
         is switchbot_device_poor_signal
