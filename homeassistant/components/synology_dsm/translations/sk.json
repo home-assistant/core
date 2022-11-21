@@ -7,14 +7,23 @@
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "data": {
+                    "password": "Heslo",
                     "port": "Port"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
                 }
             },
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

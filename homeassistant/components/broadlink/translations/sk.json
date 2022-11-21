@@ -1,12 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa"
         },
+        "error": {
+            "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa"
+        },
+        "flow_title": "{name} ({model} na {host})",
         "step": {
             "finish": {
                 "data": {
                     "name": "N\u00e1zov"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
                 }
             }
         }

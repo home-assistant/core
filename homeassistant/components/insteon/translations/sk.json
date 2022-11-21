@@ -3,14 +3,18 @@
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
+        "flow_title": "{name}",
         "step": {
             "hubv1": {
                 "data": {
+                    "host": "IP adresa",
                     "port": "Port"
                 }
             },
             "hubv2": {
                 "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }
@@ -20,6 +24,8 @@
         "step": {
             "change_hub_config": {
                 "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

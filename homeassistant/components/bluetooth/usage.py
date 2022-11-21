@@ -6,7 +6,7 @@ import bleak
 from bleak.backends.service import BleakGATTServiceCollection
 import bleak_retry_connector
 
-from .models import HaBleakClientWrapper, HaBleakScannerWrapper
+from .wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 
 ORIGINAL_BLEAK_SCANNER = bleak.BleakScanner
 ORIGINAL_BLEAK_CLIENT = bleak.BleakClient

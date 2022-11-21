@@ -999,6 +999,8 @@ build.json @home-assistant/supervisor
 /tests/components/senseme/ @mikelawrence @bdraco
 /homeassistant/components/sensibo/ @andrey-git @gjohansson-ST
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
+/homeassistant/components/sensirion_ble/ @akx
+/tests/components/sensirion_ble/ @akx
 /homeassistant/components/sensor/ @home-assistant/core
 /tests/components/sensor/ @home-assistant/core
 /homeassistant/components/sensorpro/ @bdraco

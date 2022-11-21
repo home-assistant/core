@@ -1,9 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "{name} ({address})",
         "step": {
+            "password": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "password": "Heslo"
                 }
             }
         }

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

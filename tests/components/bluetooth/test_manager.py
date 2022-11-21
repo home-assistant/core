@@ -8,7 +8,7 @@ from bluetooth_adapters import AdvertisementHistory
 import pytest
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import models
+from homeassistant.components.bluetooth import BaseHaScanner
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
@@ -26,9 +26,7 @@ from . import (
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> None:
     """Register an hci0 scanner."""
-    cancel = bluetooth.async_register_scanner(
-        hass, models.BaseHaScanner(hass, "hci0"), True
-    )
+    cancel = bluetooth.async_register_scanner(hass, BaseHaScanner(hass, "hci0"), True)
     yield
     cancel()
 
@@ -36,9 +34,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> None:
     """Register an hci1 scanner."""
-    cancel = bluetooth.async_register_scanner(
-        hass, models.BaseHaScanner(hass, "hci1"), True
-    )
+    cancel = bluetooth.async_register_scanner(hass, BaseHaScanner(hass, "hci1"), True)
     yield
     cancel()
 
@@ -420,7 +416,7 @@ async def test_switching_adapters_when_one_goes_away(
 ):
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, models.BaseHaScanner(hass, "hci2"), True
+        hass, BaseHaScanner(hass, "hci2"), True
     )
 
     address = "44:44:33:11:23:45"

@@ -380,10 +380,38 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+def async_fire_time_changed_exact(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changed event."""
+    """Fire a time changed event at an exact microsecond.
+
+    Consider that it is not possible to actually achieve an exact
+    microsecond in production as the event loop is not precise enough.
+    If your code relies on this level of precision, consider a different
+    approach, as this is only for testing.
+    """
+    if datetime_ is None:
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+) -> None:
+    """Fire a time changed event.
+
+    This function will add up to 0.5 seconds to the time to ensure that
+    it accounts for the accidental synchronization avoidance code in repeating
+    listeners.
+
+    As asyncio is cooperative, we can't guarantee that the event loop will
+    run an event at the exact time we want. If you need to fire time changed
+    for an exact microsecond, use async_fire_time_changed_exact.
+    """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
     else:
@@ -396,8 +424,14 @@ def async_fire_time_changed(
         # staggering to avoid thundering herd.
         utc_datetime = utc_datetime.replace(microsecond=500000)
 
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
 
+
+@ha.callback
+def _async_fire_time_changed(
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+) -> None:
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue

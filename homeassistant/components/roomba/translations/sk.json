@@ -1,0 +1,23 @@
+{
+    "config": {
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link_manual": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "title": "Zadajte heslo"
+            },
+            "manual": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}
