@@ -453,12 +453,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.state != STATE_ALARM_PENDING:
-            return {}
-        return {
-            ATTR_PREVIOUS_STATE: self._previous_state,
-            ATTR_NEXT_STATE: self._state,
-        }
+        if self.state == STATE_ALARM_PENDING:
+            return {
+                ATTR_PREVIOUS_STATE: self._previous_state,
+                ATTR_NEXT_STATE: self._state,
+            }
+        if self.state == STATE_ALARM_TRIGGERED:
+            return {
+                ATTR_PREVIOUS_STATE: self._previous_state,
+            }
+        return {}
 
     @callback
     def async_scheduled_update(self, now):
