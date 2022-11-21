@@ -381,12 +381,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        rendered_topic: template.Template | None = None
         if msg_topic_template is not None:
             try:
-                rendered_topic: Any = template.Template(
-                    msg_topic_template, hass
-                ).async_render(parse_result=False)
-                msg_topic = valid_publish_topic(rendered_topic)
+                rendered_topic = cv.template(msg_topic_template)
+                rendered_topic.hass = hass
+                msg_topic = valid_publish_topic(
+                    rendered_topic.async_render(parse_result=False)
+                )
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish: rendering topic template of %s "
@@ -407,10 +409,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if payload_template is not None:
             try:
-                payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass=hass
-                ).async_render()
-            except (jinja2.TemplateError, TemplateError) as exc:
+                tpl = cv.template(payload_template)
+                payload = MqttCommandTemplate(tpl, hass=hass).async_render()
+            except (jinja2.TemplateError, TemplateError, vol.Invalid) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",
