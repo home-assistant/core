@@ -33,7 +33,7 @@ from homeassistant.const import (
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -936,3 +936,26 @@ def test_device_classes_aligned():
     for device_class in NumberDeviceClass:
         assert hasattr(SensorDeviceClass, device_class.name)
         assert getattr(SensorDeviceClass, device_class.name).value == device_class.value
+
+
+async def test_value_unknown_in_enumeration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on invalid enum value."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value="invalid_option",
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test provides state value 'invalid_option', "
+        "which is not in the list of options provided"
+    ) in caplog.text

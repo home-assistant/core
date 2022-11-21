@@ -77,6 +77,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
+ATTR_OPTIONS: Final = "options"
 
 DOMAIN: Final = "sensor"
 
@@ -446,6 +447,7 @@ class SensorEntityDescription(EntityDescription):
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
+    options: list[str] | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
 
@@ -457,6 +459,7 @@ class SensorEntity(Entity):
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
+    _attr_options: list[str] | None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_suggested_unit_of_measurement: str | None
@@ -524,6 +527,15 @@ class SensorEntity(Entity):
         return None
 
     @property
+    def options(self) -> list[str] | None:
+        """Return a set of possible options."""
+        if hasattr(self, "_attr_options"):
+            return self._attr_options
+        if hasattr(self, "entity_description"):
+            return self.entity_description.options
+        return None
+
+    @property
     def state_class(self) -> SensorStateClass | str | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
@@ -546,6 +558,9 @@ class SensorEntity(Entity):
         """Return the capability attributes."""
         if state_class := self.state_class:
             return {ATTR_STATE_CLASS: state_class}
+
+        if options := self.options:
+            return {ATTR_OPTIONS: options}
 
         return None
 
@@ -715,6 +730,17 @@ class SensorEntity(Entity):
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
+        # Enum checks
+        if (
+            value is not None
+            and (options := self.options) is not None
+            and value not in options
+        ):
+            raise ValueError(
+                f"Sensor {self.entity_id} provides state value '{value}', "
+                "which is not in the list of options provided"
+            )
+
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
@@ -840,7 +866,7 @@ class SensorExtraStoredData(ExtraStoredData):
             # native_value is a dict, but does not have all values
             return None
         except DecimalInvalidOperation:
-            # native_value coulnd't be returned from decimal_str
+            # native_value couldn't be returned from decimal_str
             return None
 
         return cls(native_value, native_unit_of_measurement)
