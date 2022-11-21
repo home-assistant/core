@@ -40,6 +40,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
+    SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -148,12 +149,16 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         validate_user_input=validate_sensor_setup,
     ),
 }
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(DATA_SCHEMA_RESOURCE),
+}
 
 
 class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Scrape."""
 
     config_flow = CONFIG_FLOW
+    options_flow = OPTIONS_FLOW
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
@@ -163,3 +168,7 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Check for duplicate records."""
         data: dict[str, Any] = dict(options)
         self._async_abort_entries_match(data)
+
+
+class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
+    """Handle a config flow for Scrape."""
