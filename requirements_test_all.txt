@@ -1074,7 +1074,7 @@ pybravia==0.2.3
 pycfdns==2.0.0
 
 # homeassistant.components.cast
-pychromecast==12.1.4
+pychromecast==13.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
