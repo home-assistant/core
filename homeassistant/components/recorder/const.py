@@ -14,6 +14,9 @@ MYSQLDB_URL_PREFIX = "mysql://"
 MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
 
+EVENT_RECORDER_5MIN_STATISTICS_UPDATED = "recorder_5min_statistics_updated"
+EVENT_RECORDER_HOURLY_STATISTICS_UPDATED = "recorder_hourly_statistics_updated"
+
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
 MAX_QUEUE_BACKLOG = 40000
