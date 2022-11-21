@@ -56,8 +56,8 @@ async def get_data_to_integration_load() -> MockRestData:
     return MockRestData("test_scrape_sensor")
 
 
-@pytest.fixture
-async def load_int(
+@pytest.fixture(name="loaded_entry")
+async def load_integration(
     hass: HomeAssistant, get_config: dict[str, Any], get_data: MockRestData
 ) -> MockConfigEntry:
     """Set up the Scrape integration in Home Assistant."""
@@ -75,6 +75,6 @@ async def load_int(
         return_value=get_data,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     return config_entry

@@ -408,7 +408,7 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
 
 
 async def test_setup_config_entry(
-    hass: HomeAssistant, load_int: MockConfigEntry
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """Test setup from config entry."""
 

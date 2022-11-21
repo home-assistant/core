@@ -153,13 +153,13 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
     }
 
 
-async def test_options_flow(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
+async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test options config flow."""
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    result = await hass.config_entries.options.async_init(load_int.entry_id)
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"

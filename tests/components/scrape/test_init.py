@@ -112,16 +112,16 @@ async def test_setup_config_no_sensors(
         await hass.async_block_till_done()
 
 
-async def test_setup_entry(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
+async def test_setup_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test setup entry."""
 
-    assert load_int.state == config_entries.ConfigEntryState.LOADED
+    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant, load_int: MockConfigEntry) -> None:
+async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
     """Test unload an entry."""
 
-    assert load_int.state == config_entries.ConfigEntryState.LOADED
-    assert await hass.config_entries.async_unload(load_int.entry_id)
+    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
     await hass.async_block_till_done()
-    assert load_int.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert loaded_entry.state is config_entries.ConfigEntryState.NOT_LOADED
