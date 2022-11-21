@@ -26,9 +26,8 @@ from . import (
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> None:
     """Register an hci0 scanner."""
-    cancel = bluetooth.async_register_scanner(
-        hass, BaseHaScanner(hass, "00:00:00:00:00::01", "hci0"), True
-    )
+    hci0_scanner = BaseHaScanner(hass, "hci0", "hci0")
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
     yield
     cancel()
 
@@ -36,9 +35,8 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> None:
     """Register an hci1 scanner."""
-    cancel = bluetooth.async_register_scanner(
-        hass, BaseHaScanner(hass, "00:00:00:00:00::02", "hci1"), True
-    )
+    hci1_scanner = BaseHaScanner(hass, "hci1", "hci1")
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
     yield
     cancel()
 
@@ -420,7 +418,7 @@ async def test_switching_adapters_when_one_goes_away(
 ):
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, BaseHaScanner(hass, "00:00:00:00:00:03", "hci2"), True
+        hass, BaseHaScanner(hass, "hci2", "hci2"), True
     )
 
     address = "44:44:33:11:23:45"
