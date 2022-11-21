@@ -302,7 +302,7 @@ def aiohttp_client_cls():
 
 @pytest.fixture
 def aiohttp_client(
-    loop: asyncio.AbstractEventLoop,
+    event_loop: asyncio.AbstractEventLoop,
 ) -> Generator[AiohttpClient, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
@@ -313,6 +313,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
+    loop = event_loop
     clients = []
 
     async def go(
@@ -359,9 +360,10 @@ def hass_fixture_setup():
 
 
 @pytest.fixture
-def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
+def hass(hass_fixture_setup, event_loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    loop = event_loop
     hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE

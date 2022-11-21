@@ -62,7 +62,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def aiohttp_server(loop, aiohttp_server, socket_enabled):
+def aiohttp_server(event_loop, aiohttp_server, socket_enabled):
     """Return aiohttp_server and allow opening sockets."""
     return aiohttp_server
 
