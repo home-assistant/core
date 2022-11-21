@@ -36,7 +36,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
         CONF_METHOD: DEFAULT_METHOD,
         CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
-        "sensors": [
+        "sensor": [
             {
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",

@@ -130,7 +130,7 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
 
 def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate sensor setup."""
-    return {"sensors": [user_input]}
+    return {"sensor": [user_input]}
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)

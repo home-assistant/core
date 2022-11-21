@@ -73,7 +73,7 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
-        "sensors": [
+        "sensor": [
             {
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
@@ -143,7 +143,7 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
         CONF_METHOD: "GET",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
-        "sensors": [
+        "sensor": [
             {
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
@@ -187,7 +187,7 @@ async def test_options_flow(hass: HomeAssistant, load_int: MockConfigEntry) -> N
             CONF_TIMEOUT: 10.0,
             CONF_USERNAME: "secret_username",
             CONF_PASSWORD: "secret_password",
-            "sensors": [
+            "sensor": [
                 {
                     CONF_NAME: "Current version",
                     CONF_SELECT: ".current-version h1",

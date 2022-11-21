@@ -155,7 +155,7 @@ async def async_setup_entry(
 
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
     config = dict(entry.options)
-    for sensor in config["sensors"]:
+    for sensor in config["sensor"]:
         sensor_config: ConfigType = vol.Schema(
             TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
         )(sensor)
