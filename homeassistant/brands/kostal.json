@@ -1,0 +1,5 @@
+{
+  "domain": "kostal",
+  "name": "Kostal",
+  "integrations": ["kostal_plenticore", "kostal_piko"]
+}
