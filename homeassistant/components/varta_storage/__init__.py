@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         varta.client.connect()
     except Exception as ex:
-        _LOGGER.warning("Could not connect to modbus server")
+        LOGGER.warning("Could not connect to modbus server")
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         # Name of the data. For logging purposes.
         name="sensor",
         update_method=async_update_data,

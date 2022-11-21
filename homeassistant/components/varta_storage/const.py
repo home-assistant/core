@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, TIME_HOURS, UnitOfEnergy, UnitOfPower
 
 DOMAIN = "varta_storage"
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
