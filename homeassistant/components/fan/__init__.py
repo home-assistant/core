@@ -44,7 +44,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 class FanEntityFeature(IntFlag):
     """Supported features of the fan entity."""
 
-    NONE = 0
     SET_SPEED = 1
     OSCILLATE = 2
     DIRECTION = 4

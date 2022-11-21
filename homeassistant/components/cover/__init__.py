@@ -89,7 +89,6 @@ DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 class CoverEntityFeature(IntFlag):
     """Supported features of the cover entity."""
 
-    NONE = 0
     OPEN = 1
     CLOSE = 2
     SET_POSITION = 4

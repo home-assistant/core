@@ -179,7 +179,6 @@ REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 class MediaPlayerEntityFeature(IntFlag):
     """Supported features of the media player entity."""
 
-    NONE = 0
     PAUSE = 1
     SEEK = 2
     VOLUME_SET = 4

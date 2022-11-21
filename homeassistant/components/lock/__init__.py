@@ -51,7 +51,6 @@ LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.st
 class LockEntityFeature(IntFlag):
     """Supported features of the lock entity."""
 
-    NONE = 0
     OPEN = 1
 
 

@@ -98,7 +98,6 @@ STATE_IDLE: Final = "idle"
 class CameraEntityFeature(IntFlag):
     """Supported features of the camera entity."""
 
-    NONE = 0
     ON_OFF = 1
     STREAM = 2
 

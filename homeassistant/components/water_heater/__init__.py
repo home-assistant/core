@@ -59,7 +59,6 @@ STATE_GAS = "gas"
 class WaterHeaterEntityFeature(IntFlag):
     """Supported features of the fan entity."""
 
-    NONE = 0
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
     AWAY_MODE = 4

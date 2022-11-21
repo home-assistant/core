@@ -149,7 +149,6 @@ SERVICE_SET_TEMPERATURE = "set_temperature"
 class ClimateEntityFeature(IntFlag):
     """Supported features of the climate entity."""
 
-    NONE = 0
     TARGET_TEMPERATURE = 1
     TARGET_TEMPERATURE_RANGE = 2
     TARGET_HUMIDITY = 4
