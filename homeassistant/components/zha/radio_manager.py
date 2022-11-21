@@ -40,7 +40,7 @@ AUTOPROBE_RADIOS = (
 
 CONNECT_DELAY_S = 1.0
 
-MIGRATION_RETRIES = 10
+MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
@@ -145,7 +145,8 @@ class ZhaRadioManager:
         async with self._connect_zigpy_app() as app:
             await app.backups.restore_backup(backup, **kwargs)
 
-    def parse_radio_type(self, radio_type: str) -> RadioType:
+    @staticmethod
+    def parse_radio_type(radio_type: str) -> RadioType:
         """Parse a radio type name, accounting for past aliases."""
         if radio_type == "efr32":
             return RadioType.ezsp
@@ -176,8 +177,12 @@ class ZhaRadioManager:
 
         return False
 
-    async def async_load_network_settings(self, create_backup: bool = False) -> None:
+    async def async_load_network_settings(
+        self, *, create_backup: bool = False
+    ) -> zigpy.backups.NetworkBackup | None:
         """Connect to the radio and load its current network settings."""
+        backup = None
+
         async with self._connect_zigpy_app() as app:
             # Check if the stick has any settings and load them
             try:
@@ -191,10 +196,12 @@ class ZhaRadioManager:
                 )
 
                 if create_backup:
-                    await app.backups.create_backup()
+                    backup = await app.backups.create_backup()
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+
+        return backup
 
     async def async_form_network(self) -> None:
         """Form a brand new network."""
@@ -287,10 +294,10 @@ class ZhaMultiPANMigrationHelper:
         migration_data = HARDWARE_MIGRATION_SCHEMA(data)
 
         name = migration_data["new_discovery_info"]["name"]
-        new_radio_type = self._radio_mgr.parse_radio_type(
+        new_radio_type = ZhaRadioManager.parse_radio_type(
             migration_data["new_discovery_info"]["radio_type"]
         )
-        old_radio_type = self._radio_mgr.parse_radio_type(
+        old_radio_type = ZhaRadioManager.parse_radio_type(
             migration_data["old_discovery_info"]["radio_type"]
         )
 
@@ -314,10 +321,16 @@ class ZhaMultiPANMigrationHelper:
             # ZHA is not running
             pass
 
-        # Load our current network settings
-        await self._radio_mgr.async_load_network_settings(create_backup=True)
-        self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
+        # Temporarily connect to the old radio to read its settings
+        old_radio_mgr = ZhaRadioManager()
+        old_radio_mgr.hass = self._hass
+        old_radio_mgr.radio_type = old_radio_type
+        old_radio_mgr.device_path = old_device_settings[CONF_DEVICE_PATH]
+        old_radio_mgr.device_settings = old_device_settings
+        backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
 
+        # Then configure the radio manager for the new radio to use the new settings
+        self._radio_mgr.chosen_backup = backup
         self._radio_mgr.radio_type = new_radio_type
         self._radio_mgr.device_path = new_device_settings[CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = new_device_settings
@@ -335,25 +348,31 @@ class ZhaMultiPANMigrationHelper:
         )
         return True
 
-    async def async_finish_migration(self) -> bool:
+    async def async_finish_migration(self) -> None:
         """Finish ZHA migration.
 
-        Returns True migration succeeded.
+        Throws an exception if the migration did not succeed.
         """
         # Restore the backup, permanently overwriting the device IEEE address
         for retry in range(MIGRATION_RETRIES):
             try:
                 if await self._radio_mgr.async_restore_backup_step_1():
                     await self._radio_mgr.async_restore_backup_step_2(True)
-                _LOGGER.debug("Restored backup after %s retries", retry)
-                return True
+
+                break
             except OSError as err:
+                if retry >= MIGRATION_RETRIES - 1:
+                    raise
+
                 _LOGGER.debug(
-                    "Failed to restore backup %s, retrying in %s seconds",
+                    "Failed to restore backup %r, retrying in %s seconds",
                     err,
                     CONNECT_DELAY_S,
                 )
 
             await asyncio.sleep(CONNECT_DELAY_S)
 
-        return False
+        _LOGGER.debug("Restored backup after %s retries", retry)
+
+        # Launch ZHA again
+        await self._hass.config_entries.async_setup(self._config_entry.entry_id)
