@@ -152,7 +152,7 @@ class HaScanner(BaseHaScanner):
         Since the RTL8671BU adapters have trouble with
         scanning and connecting at the same time, we
         may eventually want to use this property to
-        improve handling of these adapter if we stop
+        improve handling of these adapters and stop
         scanning while connecting.
 
         This is currently not possible since we have
