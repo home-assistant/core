@@ -5404,10 +5404,6 @@
         }
       }
     },
-    "text": {
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "tfiac": {
       "name": "Tfiac",
       "integration_type": "hub",
@@ -6417,7 +6413,6 @@
     "sun",
     "switch_as_x",
     "tag",
-    "text",
     "threshold",
     "tod",
     "uptime",
