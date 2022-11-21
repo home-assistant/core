@@ -16,7 +16,7 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
-from bluetooth_adapters import DEFAULT_ADDRESS, adapter_human_name
+from bluetooth_adapters import DEFAULT_ADDRESS
 from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -130,7 +130,7 @@ class HaScanner(BaseHaScanner):
     ) -> None:
         """Init bluetooth discovery."""
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
-        super().__init__(hass, source)
+        super().__init__(hass, source, adapter)
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
@@ -138,12 +138,27 @@ class HaScanner(BaseHaScanner):
         self._last_detection = 0.0
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
-        self.name = adapter_human_name(adapter, address)
         self._scanning = False
 
     @property
     def scanning(self) -> bool:
-        """Return True if the scanner is scanning."""
+        """Return True if the scanner is scanning.
+
+        This overrides the BaseHaScanner property to
+        return the actual scanning state of the scanner
+        since BlueZ based scanners can still be scanning
+        while connecting.
+
+        Since the RTL8671BU adapters have trouble with
+        scanning and connecting at the same time, we
+        may eventually want to use this property to
+        improve handling of these adapter if we stop
+        scanning while connecting.
+
+        This is currently not possible since we have
+        no reliable way to know which chip is used
+        by the adapter.
+        """
         return self._scanning
 
     @property

@@ -39,8 +39,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
-from .bluetooth.scanner import ESPHomeScanner
-
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +90,6 @@ class RuntimeEntryData:
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
-    ble_scanner: ESPHomeScanner | None = None
     ble_connections_free: int = 0
     ble_connections_limit: int = 0
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(

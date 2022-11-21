@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
@@ -10,6 +11,7 @@ from typing import Any, Final
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
+from bluetooth_adapters import adapter_human_name
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -28,19 +30,32 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
-    def __init__(self, hass: HomeAssistant, source: str) -> None:
+    def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
         """Initialize the scanner."""
         self.hass = hass
         self.source = source
+        self._connecting = 0
+        self.name = adapter_human_name(adapter, source)
 
     @property
     def scanning(self) -> bool:
-        """Return True if the scanner is scanning.
+        """Return if the scanner is scanning.
 
         If the scanner if offline or paused this
         should be overwritten to return False.
+
+        If the scanner can be running while a client
+        is connected this should be overwritten to
+        return True.
         """
-        return True
+        return not self._connecting
+
+    @contextmanager
+    def connecting(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state."""
+        self._connecting += 1
+        yield
+        self._connecting -= 1
 
     @property
     @abstractmethod
@@ -75,12 +90,13 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self,
         hass: HomeAssistant,
         scanner_id: str,
+        name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         connector: HaBluetoothConnector,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(hass, scanner_id)
+        super().__init__(hass, scanner_id, name)
         self._new_info_callback = new_info_callback
         self._discovered_device_advertisement_datas: dict[
             str, tuple[BLEDevice, AdvertisementData]
