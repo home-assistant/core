@@ -43,6 +43,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_OPENING = "opening"
 
 
 @dataclass
@@ -96,6 +97,13 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
+SENSOR_DESC_OPENING = EnOceanSensorEntityDescription(
+    key=SENSOR_TYPE_OPENING,
+    name="opening",
+    icon="mdi:door-open",
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_OPENING}",
+)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -147,6 +155,9 @@ def setup_platform(
 
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
+    
+    elif sensor_type == SENSOR_TYPE_OPENING:
+        entities = [EnOceanOpening(dev_id, dev_name, SENSOR_DESC_OPENING)]
 
     add_entities(entities)
 
@@ -281,3 +292,21 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._attr_native_value = "tilt"
 
         self.schedule_update_ha_state()
+
+class EnOceanopening(EnOceanSensor):
+    """Representation of an EnOcean opening sensor
+
+    EEPs (EnOcean Equipment Profiles):
+    - D5 00 01  (Contact sensor type NODON SDO - 2- 1 
+    """
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        action = (packet.data[1] & 0x01)   """ retrieve Contact (CO) value"""
+
+        if action == 0x01:
+            self._attr_native_value = STATE_CLOSED
+        if action === 0x00:
+            self._attr_native_value = STATE_OPEN
+       
+    self.schedule_update_ha_state()
