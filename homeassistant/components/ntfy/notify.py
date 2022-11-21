@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA,
