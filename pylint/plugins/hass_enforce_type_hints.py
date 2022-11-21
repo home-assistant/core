@@ -2539,7 +2539,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type=["WaterHeaterEntityFeature", "int"],
+                    return_type="WaterHeaterEntityFeature",
                 ),
                 TypeHintMatch(
                     function_name="target_temperature",
