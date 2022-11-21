@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import schema_with_suggested_values
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -170,6 +171,18 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._async_verify(data, "user", self.step_user_schema)
 
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_FROM_WINDOW, description={"suggested_values": DEFAULT_FROM_WINDOW}
+        ): vol.Coerce(float),
+        vol.Optional(
+            CONF_TO_WINDOW, description={"suggested_values": DEFAULT_TO_WINDOW}
+        ): vol.Coerce(float),
+    }
+)
+
+
 class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a OpenUV options flow."""
 
@@ -186,24 +199,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FROM_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_TO_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_TO_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                }
+            data_schema=schema_with_suggested_values(
+                OPTIONS_SCHEMA, self.entry.options, False
             ),
         )
