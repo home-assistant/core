@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -41,6 +42,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             }
         ],
     }
@@ -78,3 +80,13 @@ async def load_integration(
         await hass.async_block_till_done()
 
     return config_entry
+
+
+@pytest.fixture(autouse=True)
+def uuid_fixture() -> str:
+    """Automatically path uuid generator."""
+    with patch(
+        "homeassistant.components.scrape.config_flow.uuid.uuid1",
+        return_value="3699ef88-69e6-11ed-a1eb-0242ac120002",
+    ):
+        yield

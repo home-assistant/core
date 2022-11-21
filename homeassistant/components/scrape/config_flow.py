@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+import uuid
 
 import voluptuous as vol
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -125,7 +127,15 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
 
 def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate sensor setup."""
-    return {"sensor": [{**user_input, CONF_INDEX: int(user_input[CONF_INDEX])}]}
+    return {
+        "sensor": [
+            {
+                **user_input,
+                CONF_INDEX: int(user_input[CONF_INDEX]),
+                CONF_UNIQUE_ID: uuid.uuid1(),
+            }
+        ]
+    }
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
