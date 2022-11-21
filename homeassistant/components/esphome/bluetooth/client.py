@@ -277,6 +277,7 @@ class ESPHomeClient(BaseBleakClient):
                     # will be more descriptive.
                     if connected_future.done():
                         await connected_future
+                connected_future.cancel()
                 raise
             await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
