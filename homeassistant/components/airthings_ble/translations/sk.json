@@ -6,6 +6,7 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
-        }
+        },
+        "flow_title": "{name}"
     }
 }

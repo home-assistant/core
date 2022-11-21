@@ -177,7 +177,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """
         if self.info.primary_value.value is None:
             return None
-        return round((self.info.primary_value.value / 99) * 255)
+        return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
     def color_mode(self) -> str | None:

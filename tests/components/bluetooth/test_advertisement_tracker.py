@@ -314,7 +314,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             """Return a list of discovered devices."""
             return {}
 
-    scanner = FakeScanner(hass, "new")
+    scanner = FakeScanner(hass, "new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)
 
     @callback

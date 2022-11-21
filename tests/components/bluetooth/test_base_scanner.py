@@ -70,7 +70,7 @@ async def test_remote_scanner(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -140,7 +140,7 @@ async def test_remote_scanner_expires_connectable(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -210,7 +210,7 @@ async def test_remote_scanner_expires_non_connectable(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 

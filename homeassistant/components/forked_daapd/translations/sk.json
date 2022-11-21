@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "wrong_password": "Nespr\u00e1vne heslo."
+        },
         "flow_title": "{name} ({host})",
         "step": {
             "user": {
