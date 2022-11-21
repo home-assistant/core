@@ -2061,7 +2061,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type=["RemoteEntityFeature", "int"],
+                    return_type="RemoteEntityFeature",
                 ),
                 TypeHintMatch(
                     function_name="send_command",
