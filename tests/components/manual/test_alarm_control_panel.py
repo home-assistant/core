@@ -1223,3 +1223,216 @@ async def test_restore_state(hass, expected_state):
     state = hass.states.get("alarm_control_panel.test")
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "expected_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+    ],
+)
+async def test_restore_state_arming(hass, expected_state):
+    """Ensure ARMING state is restored on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=15)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": STATE_ALARM_DISARMED,
+        "next_state": expected_state,
+    }
+    mock_restore_cache(
+        hass, (State(entity_id, expected_state, attributes, last_updated=time),)
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 60,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == STATE_ALARM_DISARMED
+    assert state.attributes["next_state"] == expected_state
+    assert state.state == STATE_ALARM_ARMING
+
+    future = time + timedelta(seconds=61)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "previous_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_DISARMED),
+    ],
+)
+async def test_restore_state_pending(hass, previous_state):
+    """Ensure PENDING state is restored on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=15)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": previous_state,
+        "next_state": STATE_ALARM_TRIGGERED,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == previous_state
+    assert state.attributes["next_state"] == STATE_ALARM_TRIGGERED
+    assert state.state == STATE_ALARM_PENDING
+
+    future = time + timedelta(seconds=61)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = time + timedelta(seconds=121)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == previous_state
+
+
+@pytest.mark.parametrize(
+    "previous_state",
+    [
+        (STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_DISARMED),
+    ],
+)
+async def test_restore_state_triggered(hass, previous_state):
+    """Ensure PENDING state is resolved to TRIGGERED on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=75)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": previous_state,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["previous_state"] == previous_state
+    assert "next_state" not in state.attributes
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    future = time + timedelta(seconds=121)
+    with freeze_time(future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == previous_state
+
+
+async def test_restore_state_triggered_long_ago(hass):
+    """Ensure TRIGGERED state is resolved on startup."""
+    time = dt_util.utcnow() - timedelta(seconds=125)
+    entity_id = "alarm_control_panel.test"
+    attributes = {
+        "previous_state": STATE_ALARM_ARMED_AWAY,
+    }
+    mock_restore_cache(
+        hass,
+        (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "delay_time": 60,
+                "trigger_time": 60,
+                "disarm_after_trigger": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_DISARMED

@@ -358,7 +358,10 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._state = state
         self._state_ts = dt_util.utcnow()
         self.async_schedule_update_ha_state()
+        self._async_set_state_update_events()
 
+    def _async_set_state_update_events(self) -> None:
+        state = self._state
         if state == STATE_ALARM_TRIGGERED:
             pending_time = self._pending_time(state)
             async_track_point_in_time(
@@ -418,14 +421,14 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            if (
-                state.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING)
-                and hasattr(state, "attributes")
-                and state.attributes[ATTR_PREVIOUS_STATE]
-            ):
-                # If in arming or pending state, we return to the ATTR_PREVIOUS_STATE
-                self._state = state.attributes[ATTR_PREVIOUS_STATE]
-                self._state_ts = dt_util.utcnow()
+            self._state_ts = state.last_updated
+            if hasattr(state, "attributes") and ATTR_NEXT_STATE in state.attributes:
+                # If in arming or pending state we record the transition,
+                # not the current state
+                self._state = state.attributes[ATTR_NEXT_STATE]
             else:
                 self._state = state.state
-                self._state_ts = state.last_updated
+
+            if hasattr(state, "attributes") and ATTR_PREVIOUS_STATE in state.attributes:
+                self._previous_state = state.attributes[ATTR_PREVIOUS_STATE]
+                self._async_set_state_update_events()
