@@ -516,9 +516,9 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self) -> CoverEntityFeature | int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             if self._config.get(CONF_PAYLOAD_OPEN) is not None:
                 supported_features |= CoverEntityFeature.OPEN
