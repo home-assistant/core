@@ -529,7 +529,7 @@ async def test_pb_service_write(
         data[do_write[DATA]],
     )
     if do_return[DATA]:
-        assert caplog.messages[-1].startswith("Pymodbus:")
+        assert any(message.startswith("Pymodbus:") for message in caplog.messages)
 
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
