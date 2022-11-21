@@ -11,12 +11,19 @@
         "step": {
             "link": {
                 "data": {
+                    "password": "Heslo",
                     "port": "Port"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
                 }
             },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "{name} {model} ({host})",
         "step": {
             "user": {
                 "data": {

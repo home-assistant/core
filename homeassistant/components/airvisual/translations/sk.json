@@ -27,7 +27,8 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Hostite\u013e"
+                    "ip_address": "Hostite\u013e",
+                    "password": "Heslo"
                 }
             },
             "reauth_confirm": {

@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "Heslo",
                     "username": "Email"
-                }
+                },
+                "title": "Zadajte pou\u017e\u00edvate\u013esk\u00e9 meno a heslo"
             }
         }
     }

@@ -5,9 +5,15 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
-                    "host": "URL"
+                    "host": "URL",
+                    "password": "Heslo"
                 }
             }
         }
