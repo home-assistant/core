@@ -163,19 +163,6 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return config entry title."""
         return options[CONF_RESOURCE]
 
-    def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
-        """Check for duplicate records."""
-        matching_keys: set[str] = {
-            CONF_RESOURCE,
-            CONF_METHOD,
-            CONF_AUTHENTICATION,
-            CONF_USERNAME,
-            CONF_PASSWORD,
-            CONF_HEADERS,
-        }
-        data: dict[str, Any] = {k: v for k, v in options.items() if k in matching_keys}
-        self._async_abort_entries_match(data)
-
 
 class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
     """Handle a config flow for Scrape."""
