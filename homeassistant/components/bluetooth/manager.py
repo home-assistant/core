@@ -634,9 +634,11 @@ class BluetoothManager:
         self, scanner: BaseHaScanner, connectable: bool
     ) -> CALLBACK_TYPE:
         """Register a new scanner."""
+        _LOGGER.debug("Registering scanner %s", scanner)
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
+            _LOGGER.debug("Unregistering scanner %s", scanner)
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
             del self._sources[scanner.source]

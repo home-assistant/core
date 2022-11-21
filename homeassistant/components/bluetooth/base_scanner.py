@@ -54,8 +54,10 @@ class BaseHaScanner:
     def connecting(self) -> Generator[None, None, None]:
         """Context manager to track connecting state."""
         self._connecting += 1
-        yield
-        self._connecting -= 1
+        try:
+            yield
+        finally:
+            self._connecting -= 1
 
     @property
     @abstractmethod
