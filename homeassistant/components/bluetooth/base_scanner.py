@@ -30,34 +30,26 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
+    __slots__ = ("hass", "source", "_connecting", "name", "scanning")
+
     def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
         """Initialize the scanner."""
         self.hass = hass
         self.source = source
         self._connecting = 0
         self.name = adapter_human_name(adapter, source) if adapter != source else source
-
-    @property
-    def scanning(self) -> bool:
-        """Return if the scanner is scanning.
-
-        If the scanner if offline or paused this
-        should be overwritten to return False.
-
-        If the scanner can be running while a client
-        is connected this should be overwritten to
-        return True.
-        """
-        return not self._connecting
+        self.scanning = True
 
     @contextmanager
     def connecting(self) -> Generator[None, None, None]:
         """Context manager to track connecting state."""
         self._connecting += 1
+        self.scanning = not self._connecting
         try:
             yield
         finally:
             self._connecting -= 1
+            self.scanning = not self._connecting
 
     @property
     @abstractmethod
@@ -87,6 +79,16 @@ class BaseHaScanner:
 
 class BaseHaRemoteScanner(BaseHaScanner):
     """Base class for a Home Assistant remote BLE scanner."""
+
+    __slots__ = (
+        "_new_info_callback",
+        "_discovered_device_advertisement_datas",
+        "_discovered_device_timestamps",
+        "_connector",
+        "_connectable",
+        "_details",
+        "_expire_seconds",
+    )
 
     def __init__(
         self,
