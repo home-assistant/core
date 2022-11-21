@@ -37,6 +37,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = ["DOMAIN", "TimeEntity", "TimeEntityDescription"]
+
 
 async def _async_set_value(entity: TimeEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new date."""
@@ -79,11 +81,6 @@ class TimeEntity(Entity):
 
     entity_description: TimeEntityDescription
     _attr_native_value: datetime | time | None
-    _attr_value: None = None
-    _attr_hour: None = None
-    _attr_minute: None = None
-    _attr_second: None = None
-    _attr_state: None = None
 
     @property
     @final
@@ -100,42 +97,33 @@ class TimeEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.strftime(FORMAT_TIME)
+        return self.native_value.strftime(FORMAT_TIME)
 
     @property
     @final
     def hour(self) -> int | None:
         """Return hour from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.hour
+        return self.native_value.hour
 
     @property
     @final
     def minute(self) -> int | None:
         """Return minute from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.minute
+        return self.native_value.minute
 
     @property
     @final
     def second(self) -> int | None:
         """Return second from value."""
-        if self.value is None:
+        if self.native_value is None:
             return None
-        return self.value.second
-
-    @property
-    @final
-    def value(self) -> time | None:
-        """Return the entity value to represent the entity state."""
-        # If native value is a datetime, only return the time
-        if isinstance(self.native_value, datetime):
-            return self.native_value.time()
-        return self.native_value
+        return self.native_value.second
 
     @property
     def native_value(self) -> datetime | time | None:
