@@ -83,7 +83,8 @@ RESOURCE_SETUP = {
     ),
 }
 
-SENSOR_SETUP_OPT = {
+SENSOR_SETUP = {
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     vol.Required(CONF_SELECT): TextSelector(),
     vol.Optional(CONF_INDEX, default=0): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
@@ -111,10 +112,6 @@ SENSOR_SETUP_OPT = {
     ),
 }
 
-SENSOR_SETUP = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-}
-
 
 def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate rest setup."""
@@ -122,7 +119,7 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
     try:
         rest = create_rest_data_from_config(hass, rest_config)
-        asyncio.run_coroutine_threadsafe(rest.async_update(), hass.loop)
+        asyncio.run_coroutine_threadsafe(rest.async_update(), hass.loop).result()
     except Exception as err:
         raise SchemaFlowError("resource_error") from err
     return user_input
@@ -134,8 +131,7 @@ def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
-DATA_SCHEMA_SENSOR = vol.Schema({**SENSOR_SETUP, **SENSOR_SETUP_OPT})
-DATA_SCHEMA_SENSOR_OPT = vol.Schema(SENSOR_SETUP_OPT)
+DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(

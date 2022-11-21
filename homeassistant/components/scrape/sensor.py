@@ -57,8 +57,6 @@ from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
-
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         # Linked to the loading of the page (can be linked to RestData)
@@ -161,7 +159,7 @@ async def async_setup_entry(
         )(sensor)
 
         name: str = sensor_config[CONF_NAME]
-        select: str | None = sensor_config.get(CONF_SELECT)
+        select: str = sensor_config[CONF_SELECT]
         attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
         index: int = int(sensor_config[CONF_INDEX])
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)

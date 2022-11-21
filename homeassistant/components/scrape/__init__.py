@@ -43,8 +43,7 @@ COMBINED_SCHEMA = vol.Schema(
         vol.Optional(SENSOR_DOMAIN): vol.All(
             cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
         ),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
