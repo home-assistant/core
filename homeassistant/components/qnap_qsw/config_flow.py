@@ -79,7 +79,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("DHCP discovery detected QSW: %s", self._discovered_mac)
 
         await self.async_set_unique_id(format_mac(self._discovered_mac))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_URL: self._discovered_url,
+            }
+        )
 
         options = ConnectionOptions(self._discovered_url, "", "")
         qsw = QnapQswApi(aiohttp_client.async_get_clientsession(self.hass), options)
