@@ -30,7 +30,7 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
+    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001):
         yield
 
 
@@ -87,6 +87,9 @@ def mock_connect_zigpy_app() -> Generator[None, None, None]:
 
     mock_connect_app = MagicMock()
     mock_connect_app.__aenter__.return_value.backups.backups = [MagicMock()]
+    mock_connect_app.__aenter__.return_value.backups.create_backup.return_value = (
+        MagicMock()
+    )
 
     with patch(
         "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
@@ -95,6 +98,7 @@ def mock_connect_zigpy_app() -> Generator[None, None, None]:
         yield
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port(
     hass: HomeAssistant,
     mock_connect_zigpy_app,
@@ -106,6 +110,7 @@ async def test_migrate_matching_port(
         domain=DOMAIN,
         options={},
         title="Test",
+        version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -144,7 +149,7 @@ async def test_migrate_matching_port(
     }
     assert config_entry.title == "Test Updated"
 
-    assert await migration_helper.async_finish_migration()
+    await migration_helper.async_finish_migration()
 
 
 async def test_migrate_matching_port_config_entry_not_loaded(
@@ -197,7 +202,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
     }
     assert config_entry.title == "Test Updated"
 
-    assert await migration_helper.async_finish_migration()
+    await migration_helper.async_finish_migration()
 
 
 @patch(
@@ -255,8 +260,9 @@ async def test_migrate_matching_port_retry(
     }
     assert config_entry.title == "Test Updated"
 
-    assert not await migration_helper.async_finish_migration()
-    assert mock_restore_backup_step_1.call_count == 10
+    with pytest.raises(OSError):
+        await migration_helper.async_finish_migration()
+    assert mock_restore_backup_step_1.call_count == 100
 
 
 async def test_migrate_non_matching_port(
