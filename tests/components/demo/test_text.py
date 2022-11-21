@@ -9,7 +9,7 @@ from homeassistant.components.text import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, MAX_LENGTH_STATE_STATE
 from homeassistant.setup import async_setup_component
 
 ENTITY_TEXT = "text.text"
@@ -27,7 +27,7 @@ def test_setup_params(hass):
     state = hass.states.get(ENTITY_TEXT)
     assert state.state == "Hello world"
     assert state.attributes[ATTR_MIN] == 0
-    assert state.attributes[ATTR_MAX] == 100
+    assert state.attributes[ATTR_MAX] == MAX_LENGTH_STATE_STATE
     assert state.attributes[ATTR_PATTERN] is None
     assert state.attributes[ATTR_MODE] == "text"
 
