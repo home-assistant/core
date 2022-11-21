@@ -2345,7 +2345,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
-                    return_type=["UpdateEntityFeature", "int"],
+                    return_type="UpdateEntityFeature",
                 ),
                 TypeHintMatch(
                     function_name="title",

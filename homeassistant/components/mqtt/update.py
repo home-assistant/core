@@ -253,9 +253,9 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> UpdateEntityFeature | int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
-        support = 0
+        support = UpdateEntityFeature(0)
 
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             support |= UpdateEntityFeature.INSTALL
