@@ -47,7 +47,9 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
         )
 
         self.entity_description = description
-        self._attr_unique_id = coordinator.config_entry.unique_id + "-" + self.name
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-{self.entity_description.key}"
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
