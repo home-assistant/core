@@ -1,7 +1,6 @@
 """Adds config flow for Scrape integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -118,8 +117,7 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     hass = async_get_hass()
     rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
     try:
-        rest = create_rest_data_from_config(hass, rest_config)
-        asyncio.run_coroutine_threadsafe(rest.async_update(), hass.loop).result()
+        create_rest_data_from_config(hass, rest_config)
     except Exception as err:
         raise SchemaFlowError("resource_error") from err
     return user_input
@@ -127,7 +125,7 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
 
 def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     """Validate sensor setup."""
-    return {"sensor": [user_input]}
+    return {"sensor": [{**user_input, CONF_INDEX: int(user_input[CONF_INDEX])}]}
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
