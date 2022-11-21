@@ -114,7 +114,6 @@ class TextEntity(Entity):
     _attr_native_max: int = 100
     _attr_pattern: str | None = None
     _attr_state: None = None
-    _attr_value: None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
