@@ -50,6 +50,9 @@ async def test_block_rest_sensor(hass, mock_block_device, monkeypatch):
 
 async def test_block_sleeping_sensor(hass, mock_block_device, monkeypatch):
     """Test block sleeping sensor."""
+    monkeypatch.setattr(
+        mock_block_device.blocks[DEVICE_BLOCK_ID], "sensor_ids", {"battery": 98}
+    )
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
     await init_integration(hass, 1, sleep_period=1000)
 
