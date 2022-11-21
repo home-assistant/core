@@ -2,12 +2,12 @@
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SENSORS, VartaSensorEntityDescription
 
 
 async def async_setup_entry(
@@ -17,7 +17,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        VartaStorageEntity(coordinator, idx) for idx, ent in enumerate(coordinator.data)
+        VartaStorageEntity(coordinator, description=description)
+        for description in SENSORS
     )
 
 
@@ -32,10 +33,11 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
 
     """
 
-    def __init__(self, coordinator, idx):
+    entity_description: VartaSensorEntityDescription
+
+    def __init__(self, coordinator, description: VartaSensorEntityDescription):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self.idx = idx
 
         self._attr_device_info = DeviceInfo(
             configuration_url="http://" + coordinator.config_entry.data["host"],
@@ -44,29 +46,17 @@ class VartaStorageEntity(CoordinatorEntity, SensorEntity):
             name="VARTA Battery",
         )
 
+        self.entity_description = description
         self._attr_unique_id = coordinator.config_entry.unique_id + "-" + self.name
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self.coordinator.data[self.idx]["name"]
-
-    @property
-    def native_value(self):
-        """Return the native value of the sensor."""
-        return self.coordinator.data[self.idx]["native_value"]
-
-    @property
-    def device_class(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self.idx]["device_class"]
-
-    @property
-    def state_class(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self.idx]["state_class"]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement of the sensor."""
-        return self.coordinator.data[self.idx]["native_unit_of_measurement"]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.entity_description.source_key is None:
+            raise Exception(
+                "Invalid entity configuration: source_key is not set in varta entity description."
+            )
+        self._attr_native_value = getattr(
+            self.coordinator.data, self.entity_description.source_key
+        )
+        self.async_write_ha_state()
