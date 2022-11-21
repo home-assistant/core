@@ -35,7 +35,7 @@ class BaseHaScanner:
         self.hass = hass
         self.source = source
         self._connecting = 0
-        self.name = adapter_human_name(adapter, source)
+        self.name = adapter_human_name(adapter, source) if adapter != source else source
 
     @property
     def scanning(self) -> bool:
