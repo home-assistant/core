@@ -152,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-                title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                title = f"Airzone {mac}"
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
