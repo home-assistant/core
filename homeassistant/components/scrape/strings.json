@@ -16,16 +16,14 @@
           "password": "[%key:common::config_flow::data::password%]",
           "headers": "Headers",
           "method": "Method",
-          "timeout": "Timeout",
-          "scan_interval": "Scan intervall"
+          "timeout": "Timeout"
         },
         "data_description": {
           "resource": "The URL to the website that contains the value",
           "authentication": "Type of the HTTP authentication. Either basic or digest",
           "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
           "headers": "Headers to use for the web request",
-          "timeout": "Timeout for connection to website",
-          "scan_interval": "Polling frequency in seconds"
+          "timeout": "Timeout for connection to website"
         }
       },
       "sensor": {
@@ -47,6 +45,29 @@
           "device_class": "The type/class of the sensor to set the icon in the frontend",
           "state_class": "The state_class of the sensor",
           "unit_of_measurement": "Choose temperature measurement or create your own"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
+          "method": "[%key:component::scrape::config::step::user::data::method%]",
+          "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
+          "username": "[%key:component::scrape::config::step::user::data::username%]",
+          "password": "[%key:component::scrape::config::step::user::data::password%]",
+          "headers": "[%key:component::scrape::config::step::user::data::headers%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data::verify_ssl%]",
+          "timeout": "[%key:component::scrape::config::step::user::data::timeout%]"
+        },
+        "data_description": {
+          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
+          "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
+          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
+          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]"
         }
       }
     }

@@ -35,7 +35,6 @@
                     "method": "Method",
                     "password": "Password",
                     "resource": "Resource",
-                    "scan_interval": "Scan intervall",
                     "timeout": "Timeout",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
@@ -44,7 +43,6 @@
                     "authentication": "Type of the HTTP authentication. Either basic or digest",
                     "headers": "Headers to use for the web request",
                     "resource": "The URL to the website that contains the value",
-                    "scan_interval": "Polling frequency in seconds",
                     "timeout": "Timeout for connection to website",
                     "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
                 }
@@ -55,6 +53,29 @@
         "moved_yaml": {
             "description": "Configuring Scrape using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation.",
             "title": "The Scrape YAML configuration has been moved"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "authentication": "Select authentication method",
+                    "headers": "Headers",
+                    "method": "Method",
+                    "password": "Password",
+                    "resource": "Resource",
+                    "timeout": "Timeout",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "authentication": "Type of the HTTP authentication. Either basic or digest",
+                    "headers": "Headers to use for the web request",
+                    "resource": "The URL to the website that contains the value",
+                    "timeout": "Timeout for connection to website",
+                    "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
+                }
+            }
         }
     }
 }
