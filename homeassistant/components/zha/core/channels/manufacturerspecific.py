@@ -110,6 +110,11 @@ class OppleRemote(ZigbeeChannel):
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
             }
+        elif self.cluster.endpoint.model == "lumi.motion.agl04":
+            self.ZCL_INIT_ATTRS = {
+                "detection_interval": True,
+                "motion_sensitivity": True,
+            }
         elif self.cluster.endpoint.model == "lumi.motion.ac01":
             self.ZCL_INIT_ATTRS = {
                 "presence": True,
@@ -124,7 +129,7 @@ class OppleRemote(ZigbeeChannel):
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
-        if self.cluster.endpoint.model == "lumi.motion.ac02":
+        if self.cluster.endpoint.model in ("lumi.motion.ac02", "lumi.motion.agl04"):
             interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
             if interval is not None:
                 self.debug("Loaded detection interval at startup: %s", interval)

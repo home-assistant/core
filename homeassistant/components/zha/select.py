@@ -336,7 +336,8 @@ class AqaraMotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+    channel_names="opple_cluster",
+    models={"lumi.motion.ac01", "lumi.motion.ac02", "lumi.motion.agl04"},
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA motion sensitivity configuration entity."""
