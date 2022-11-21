@@ -543,7 +543,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = self.context["title_placeholders"] = {
             "name": self.name,
             "category": formatted_category(self.category),
-        } | (description_placeholders or {})
+        }
 
         schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
         if errors and errors.get("pairing_code") == "insecure_setup_code":
@@ -552,7 +552,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
-            description_placeholders=placeholders,
+            description_placeholders=placeholders | (description_placeholders or {}),
             data_schema=vol.Schema(schema),
         )
 
