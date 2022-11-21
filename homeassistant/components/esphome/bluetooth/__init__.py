@@ -52,10 +52,8 @@ async def async_connect_scanner(
     """Connect scanner."""
     assert entry.unique_id is not None
     assert entry_data.device_info is not None
-    # If we ever can get the BLE mac address from the device,
-    # we should use that for the source instead.
     device_info = entry_data.device_info
-    source = device_info.mac_address or str(entry.unique_id)
+    source = str(entry.unique_id)
     name = entry.title
     new_info_callback = async_get_advertisement_callback(hass)
     version = device_info.bluetooth_proxy_version
