@@ -68,6 +68,7 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     EVENT_HOMEKIT_CHANGED,
@@ -174,7 +175,10 @@ def get_accessory(  # noqa: C901
             a_type = "WindowCovering"
 
     elif state.domain == "fan":
-        a_type = "Fan"
+        if config.get(CONF_LINKED_PM25_SENSOR):
+            a_type = "AirPurifier"
+        else:
+            a_type = "Fan"
 
     elif state.domain == "humidifier":
         a_type = "HumidifierDehumidifier"
