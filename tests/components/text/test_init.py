@@ -13,7 +13,9 @@ from homeassistant.components.text import (
     TextMode,
     _async_set_value,
 )
+from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 
 
 class MockTextEntity(TextEntity):
@@ -43,7 +45,7 @@ async def test_text_default(hass):
 
     assert text.capability_attributes == {
         ATTR_MIN: 0,
-        ATTR_MAX: 100,
+        ATTR_MAX: MAX_LENGTH_STATE_STATE,
         ATTR_MODE: TextMode.TEXT,
         ATTR_PATTERN: None,
     }
@@ -58,7 +60,7 @@ async def test_text_new_min_max_pattern(hass):
 
     assert text.capability_attributes == {
         ATTR_MIN: 0,
-        ATTR_MAX: 255,
+        ATTR_MAX: MAX_LENGTH_STATE_STATE,
         ATTR_MODE: TextMode.TEXT,
         ATTR_PATTERN: r"[a-z]",
     }
@@ -69,17 +71,17 @@ async def test_text_set_value(hass):
     text = MockTextEntity(native_min=1, native_max=5, pattern=r"[a-z]")
     text.hass = hass
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"})
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
         )
@@ -93,15 +95,11 @@ async def test_text_set_value(hass):
 
 async def test_text_value_outside_bounds(hass):
     """Test text entity with value that is outside min and max."""
-    assert (
+    with pytest.raises(ValueError):
         MockTextEntity(
             "hello world", native_min=2, native_max=5, pattern=r"[a-z]"
         ).state
-        == "hello"
-    )
-    assert (
+    with pytest.raises(ValueError):
         MockTextEntity(
             "hello world", native_min=15, native_max=20, pattern=r"[a-z]"
         ).state
-        is None
-    )
