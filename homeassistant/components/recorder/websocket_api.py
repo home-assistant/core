@@ -1,7 +1,7 @@
 """The Recorder websocket API."""
 from __future__ import annotations
 
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 import logging
 from typing import Any, Literal
 
@@ -32,6 +32,7 @@ from .statistics import (
     async_change_statistics_unit,
     async_import_statistics,
     list_statistic_ids,
+    resolve_period,
     statistic_during_period,
     statistics_during_period,
     validate_statistics,
@@ -128,67 +129,7 @@ async def ws_get_statistic_during_period(
     if "offset" in msg and "duration" not in msg:
         raise HomeAssistantError
 
-    start_time = None
-    end_time = None
-
-    if "calendar" in msg:
-        calendar_period = msg["calendar"]["period"]
-        start_of_day = dt_util.start_of_local_day()
-        offset = msg["calendar"].get("offset", 0)
-        if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=offset)
-            end_time = start_time + timedelta(hours=1)
-        elif calendar_period == "day":
-            start_time = start_of_day
-            start_time += timedelta(days=offset)
-            end_time = start_time + timedelta(days=1)
-        elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
-            start_time += timedelta(days=offset * 7)
-            end_time = start_time + timedelta(weeks=1)
-        elif calendar_period == "month":
-            start_time = start_of_day.replace(day=28)
-            # This works for up to 48 months of offset
-            start_time = (start_time + timedelta(days=offset * 31)).replace(day=1)
-            end_time = (start_time + timedelta(days=31)).replace(day=1)
-        else:  # calendar_period = "year"
-            start_time = start_of_day.replace(month=12, day=31)
-            # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=offset * 366)).replace(
-                month=1, day=1
-            )
-            end_time = (start_time + timedelta(days=365)).replace(day=1)
-
-        start_time = dt_util.as_utc(start_time)
-        end_time = dt_util.as_utc(end_time)
-
-    elif "fixed_period" in msg:
-        if start_time_str := msg["fixed_period"].get("start_time"):
-            if start_time := dt_util.parse_datetime(start_time_str):
-                start_time = dt_util.as_utc(start_time)
-            else:
-                connection.send_error(
-                    msg["id"], "invalid_start_time", "Invalid start_time"
-                )
-                return
-
-        if end_time_str := msg["fixed_period"].get("end_time"):
-            if end_time := dt_util.parse_datetime(end_time_str):
-                end_time = dt_util.as_utc(end_time)
-            else:
-                connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
-                return
-
-    elif "rolling_window" in msg:
-        duration = msg["rolling_window"]["duration"]
-        now = dt_util.utcnow()
-        start_time = now - duration
-        end_time = start_time + duration
-
-        if offset := msg["rolling_window"].get("offset"):
-            start_time += offset
-            end_time += offset
+    start_time, end_time = resolve_period(msg)
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
