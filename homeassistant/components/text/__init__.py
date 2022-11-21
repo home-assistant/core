@@ -101,9 +101,9 @@ class TextMode(StrEnum):
 class TextEntityDescription(EntityDescription):
     """A class that describes text entities."""
 
-    native_min: int = 0
-    native_max: int = MAX_LENGTH_STATE_STATE
-    mode: TextMode = TextMode.TEXT
+    native_min: int | None = None
+    native_max: int | None = None
+    mode: TextMode | None = None
     pattern: str | None = None
 
 
@@ -152,14 +152,20 @@ class TextEntity(Entity):
     @property
     def mode(self) -> TextMode:
         """Return the mode of the entity."""
-        if hasattr(self, "entity_description"):
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.mode is not None
+        ):
             return self.entity_description.mode
         return self._attr_mode
 
     @property
     def native_min(self) -> int:
         """Return the minimum length of the value."""
-        if hasattr(self, "entity_description"):
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.native_min is not None
+        ):
             return self.entity_description.native_min
         return self._attr_native_min
 
@@ -172,7 +178,10 @@ class TextEntity(Entity):
     @property
     def native_max(self) -> int:
         """Return the maximum length of the value."""
-        if hasattr(self, "entity_description"):
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.native_max is not None
+        ):
             return self.entity_description.native_max
         return self._attr_native_max
 
@@ -185,7 +194,10 @@ class TextEntity(Entity):
     @property
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
-        if hasattr(self, "entity_description"):
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.pattern is not None
+        ):
             return self.entity_description.pattern
         return self._attr_pattern
 
