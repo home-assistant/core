@@ -45,6 +45,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = ["DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
+
 
 def _split_date_time(config):
     """Split date/time components."""
@@ -142,14 +144,6 @@ class DateTimeEntity(Entity):
 
     entity_description: DateTimeEntityDescription
     _attr_native_value: datetime | None
-    _attr_year: None = None
-    _attr_month: None = None
-    _attr_day: None = None
-    _attr_hour: None = None
-    _attr_minute: None = None
-    _attr_second: None = None
-    _attr_timestamp: None = None
-    _attr_state: None = None
 
     @property
     @final
