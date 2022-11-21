@@ -318,13 +318,11 @@ class BluetoothManager:
             # If the old advertisement is stale, any new advertisement is preferred
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
+                    "%s (%s): Switching from %s to %s (time elapsed:%s > stale seconds:%s)",
                     new.name,
                     new.address,
-                    self._async_describe_source(old.source),
-                    old.connectable,
-                    self._async_describe_source(new.source),
-                    new.connectable,
+                    self._async_describe_source(old),
+                    self._async_describe_source(new),
                     new.time - old.time,
                     stale_seconds,
                 )
@@ -335,13 +333,11 @@ class BluetoothManager:
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
+                    "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s > old rssi:%s)",
                     new.name,
                     new.address,
-                    self._async_describe_source(old.source),
-                    old.connectable,
-                    self._async_describe_source(new.source),
-                    new.connectable,
+                    self._async_describe_source(old),
+                    self._async_describe_source(new),
                     new.rssi,
                     RSSI_SWITCH_THRESHOLD,
                     old.rssi,
@@ -478,13 +474,11 @@ class BluetoothManager:
         matched_domains = self._integration_matcher.match_domains(service_info)
         if debug:
             _LOGGER.debug(
-                "%s: %s %s connectable: %s match: %s rssi: %s",
-                self._async_describe_source(source),
+                "%s: %s %s match: %s",
+                self._async_describe_source(service_info),
                 address,
                 advertisement_data,
-                connectable,
                 matched_domains,
-                advertisement_data.rssi,
             )
 
         if is_connectable_by_any_source:
@@ -508,11 +502,14 @@ class BluetoothManager:
             )
 
     @hass_callback
-    def _async_describe_source(self, source: str) -> str:
+    def _async_describe_source(self, service_info: BluetoothServiceInfoBleak) -> str:
         """Describe a source."""
-        if scanner := self._sources.get(source):
-            return scanner.name
-        return source
+        if scanner := self._sources.get(service_info.source):
+            description = scanner.name
+        description = service_info.source
+        if service_info.connectable:
+            description += " [connectable]"
+        return description
 
     @hass_callback
     def async_track_unavailable(
