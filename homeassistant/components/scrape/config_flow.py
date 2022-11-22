@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 import uuid
 
@@ -63,8 +62,6 @@ from homeassistant.helpers.selector import (
 
 from . import COMBINED_SCHEMA
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 RESOURCE_SETUP = {
     vol.Required(CONF_RESOURCE): TextSelector(
@@ -206,7 +203,6 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
             user_input = validate_sensor(user_input)
             sensors: list[dict[str, Any]] = self.config_entry.options["sensor"]
             sensors.append(user_input)
-            _LOGGER.debug("New options: %s", self.config_entry.options)
             return self.async_create_entry(data=self.config_entry.options)
 
         return self.async_show_form(
@@ -244,7 +240,6 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
         sensors: list[dict[str, Any]] = self.config_entry.options["sensor"]
         if user_input is not None:
             sensors[self._sensor_index] = validate_sensor(user_input)
-            _LOGGER.debug("New options: %s", self.config_entry.options)
             return self.async_create_entry(data=self.config_entry.options)
 
         return self.async_show_form(
