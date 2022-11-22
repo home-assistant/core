@@ -195,16 +195,20 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
 
     _sensor_index: int
 
+    @property
+    def _options(self) -> dict[str, Any]:
+        # pylint: disable-next=protected-access
+        return self._common_handler._options
+
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Add a new sensor."""
         if user_input is not None:
             user_input = validate_sensor(user_input)
-            options = dict(self.config_entry.options)
             # Need deep-copy of the list to trigger update_listener
-            options["sensor"] = [*options["sensor"], user_input]
-            return self.async_create_entry(data=options)
+            self._options["sensor"] = [*self._options["sensor"], user_input]
+            return self.async_create_entry(data=self._options)
 
         return self.async_show_form(
             step_id="add_sensor",
@@ -219,7 +223,7 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
             self._sensor_index = int(user_input[CONF_INDEX])
             return await self.async_step_edit_sensor()
 
-        sensors: list[dict[str, Any]] = self.config_entry.options["sensor"]
+        sensors: list[dict[str, Any]] = self._options["sensor"]
         return self.async_show_form(
             step_id="select_edit_sensor",
             data_schema=vol.Schema(
@@ -238,14 +242,13 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Edit a sensor."""
-        options = dict(self.config_entry.options)
-        sensors: list[dict[str, Any]] = options["sensor"]
+        sensors: list[dict[str, Any]] = self._options["sensor"]
         if user_input is not None:
             # Need deep-copy of the list to trigger update_listener
             sensors = [*sensors]
             sensors[self._sensor_index] = validate_sensor(user_input)
-            options["sensor"] = sensors
-            return self.async_create_entry(data=options)
+            self._options["sensor"] = sensors
+            return self.async_create_entry(data=self._options)
 
         return self.async_show_form(
             step_id="edit_sensor",
