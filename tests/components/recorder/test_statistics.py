@@ -1,10 +1,12 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
+import datetime
 from datetime import timedelta
 import importlib
 import sys
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 import pytest
 from pytest import approx
 from sqlalchemy import create_engine
@@ -25,6 +27,7 @@ from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
+    resolve_period,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
@@ -1540,3 +1543,80 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
 
     return zero, four, states
+
+
+@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+async def test_resolve_period(hass):
+    """Test statistic_during_period."""
+
+    now = dt_util.utcnow()
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
+    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
+    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
+    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
+    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
+    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+
+    # Fixed period
+    assert resolve_period({}) == (None, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now}}) == (None, now)
+
+    assert resolve_period({"fixed_period": {"start_time": now}}) == (now, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now, "start_time": now}}) == (
+        now,
+        now,
+    )
+
+    # Rolling window
+    assert resolve_period(
+        {"rolling_window": {"duration": timedelta(hours=1, minutes=25)}}
+    ) == (now - timedelta(hours=1, minutes=25), now)
+
+    assert resolve_period(
+        {
+            "rolling_window": {
+                "duration": timedelta(hours=1),
+                "offset": timedelta(minutes=-25),
+            }
+        }
+    ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
