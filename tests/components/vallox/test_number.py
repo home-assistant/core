@@ -1,15 +1,9 @@
 """Tests for Vallox number platform."""
 import pytest
 
-from homeassistant.components.number.const import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import patch_metrics, patch_metrics_set
+from .conftest import patch_metrics
 
 from tests.common import MockConfigEntry
 
