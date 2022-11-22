@@ -33,6 +33,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
+        # We don't enforce harsh typing here so that we can avoid weird asserts or
+        # checks for these objects' existence:
         self._api: API = None  # type: ignore[assignment]
         self._api_key: str = None  # type: ignore[assignment]
 
@@ -51,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _async_step_create_entry(self, sensor: SensorModel) -> FlowResult:
+    async def _async_create_entry(self, sensor: SensorModel) -> FlowResult:
         """Create the config entry."""
         await self.async_set_unique_id(str(sensor.sensor_index))
         self._abort_if_unique_id_configured()
@@ -133,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        return await self._async_step_create_entry(nearest_sensor)
+        return await self._async_create_entry(nearest_sensor)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
