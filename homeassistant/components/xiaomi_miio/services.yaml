@@ -173,6 +173,32 @@ remote_set_led_off:
       integration: xiaomi_miio
       domain: remote
 
+set_mop_mode:
+  name: Set mop mode
+  description: "Set the mop mode of a vacuum."
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    mop_mode:
+      name: Mop mode
+      description: "Define the mop mode to set in the vacuum."
+      required: true
+
+set_mop_intensity:
+  name: Set mop intensity
+  description: "Set the mop intensity of a vacuum."
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: vacuum
+  fields:
+    mop_intensity:
+      name: Mop intensity
+      description: "Define the mop intensity to set in the vacuum."
+      required: true
+
 switch_set_wifi_led_on:
   name: Switch set Wi-fi LED on
   description: Turn the wifi led on.

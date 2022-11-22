@@ -299,6 +299,8 @@ SERVICE_SET_POWER_MODE = "switch_set_power_mode"
 SERVICE_SET_POWER_PRICE = "switch_set_power_price"
 
 # Vacuum Services
+SERVICE_SET_MOP_MODE = "set_mop_mode"
+SERVICE_SET_MOP_INTENSITY = "set_mop_intensity"
 SERVICE_MOVE_REMOTE_CONTROL = "vacuum_remote_control_move"
 SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_remote_control_move_step"
 SERVICE_START_REMOTE_CONTROL = "vacuum_remote_control_start"

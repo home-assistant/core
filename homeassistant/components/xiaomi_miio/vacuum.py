@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from miio import DeviceException
+from miio.integrations.vacuum.roborock.vacuum import MopIntensity, MopMode
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -37,6 +38,8 @@ from .const import (
     SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
+    SERVICE_SET_MOP_INTENSITY,
+    SERVICE_SET_MOP_MODE,
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
 )
@@ -45,6 +48,8 @@ from .device import XiaomiCoordinatedMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ERROR = "error"
+ATTR_MOP_MODE = "mop_mode"
+ATTR_MOP_INTENSITY = "mop_intensity"
 ATTR_RC_DURATION = "duration"
 ATTR_RC_ROTATION = "rotation"
 ATTR_RC_VELOCITY = "velocity"
@@ -177,6 +182,30 @@ async def async_setup_entry(
             {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
             MiroboVacuum.async_clean_segment.__name__,
         )
+        platform.async_register_entity_service(
+            SERVICE_SET_MOP_MODE,
+            {
+                vol.Required("mop_mode"): vol.Any(
+                    vol.Coerce(int),
+                    [vol.Coerce(int)],
+                    vol.Coerce(str),
+                    [vol.Coerce(str)],
+                )
+            },
+            MiroboVacuum.async_set_mop_mode.__name__,
+        )
+        platform.async_register_entity_service(
+            SERVICE_SET_MOP_INTENSITY,
+            {
+                vol.Required("mop_intensity"): vol.Any(
+                    vol.Coerce(int),
+                    [vol.Coerce(int)],
+                    vol.Coerce(str),
+                    [vol.Coerce(str)],
+                )
+            },
+            MiroboVacuum.async_set_mop_intensity.__name__,
+        )
 
     async_add_entities(entities, update_before_add=True)
 
@@ -250,6 +279,20 @@ class MiroboVacuum(
         return []
 
     @property
+    def mop_mode(self) -> str | None:
+        """Return the mop mode of the vacuum cleaner."""
+        if mop_mode := self.coordinator.data.mop_mode:
+            return mop_mode.name
+        return None
+
+    @property
+    def mop_intensity(self) -> str | None:
+        """Return the mop intensity of the vacuum cleaner."""
+        if mop_intensity := self.coordinator.data.mop_intensity:
+            return mop_intensity.name
+        return None
+
+    @property
     def timers(self) -> list[dict[str, Any]]:
         """Get the list of added timers of the vacuum cleaner."""
         return [
@@ -266,6 +309,12 @@ class MiroboVacuum(
         """Return the specific state attributes of this vacuum cleaner."""
         attrs: dict[str, Any] = {}
         attrs[ATTR_STATUS] = str(self.coordinator.data.status.state)
+
+        if mop_mode := self.coordinator.data.mop_mode:
+            attrs[ATTR_MOP_MODE] = mop_mode.name
+
+        if mop_intensity := self.coordinator.data.mop_intensity:
+            attrs[ATTR_MOP_INTENSITY] = mop_intensity.name
 
         if self.coordinator.data.status.got_error:
             attrs[ATTR_ERROR] = self.coordinator.data.status.error
@@ -314,6 +363,42 @@ class MiroboVacuum(
                 return
         await self._try_command(
             "Unable to set fan speed: %s", self._device.set_fan_speed, fan_speed_int
+        )
+
+    async def async_set_mop_mode(self, mop_mode: str, **kwargs: Any) -> None:
+        """Set mop mode."""
+        mop_mode_int = MopMode[mop_mode]
+        if mop_mode_int is None:
+            try:
+                mop_mode_int = int(mop_mode)
+            except ValueError as exc:
+                _LOGGER.error(
+                    "Mop mode not recognized (%s). Valid mop modes are: %s",
+                    exc,
+                    list(MopMode),
+                )
+                return
+        await self._try_command(
+            "Unable to set mop mode: %s", self._device.set_mop_mode, mop_mode_int
+        )
+
+    async def async_set_mop_intensity(self, mop_intensity: str, **kwargs: Any) -> None:
+        """Set mop intensity."""
+        mop_intensity_int = MopIntensity[mop_intensity]
+        if mop_intensity_int is None:
+            try:
+                mop_intensity_int = int(mop_intensity)
+            except ValueError as exc:
+                _LOGGER.error(
+                    "Mop intensity not recognized (%s). Valid mop intensities are: %s",
+                    exc,
+                    list(MopIntensity),
+                )
+                return
+        await self._try_command(
+            "Unable to set mop intensity: %s",
+            self._device.set_mop_intensity,
+            mop_intensity_int,
         )
 
     async def async_return_to_base(self, **kwargs: Any) -> None:

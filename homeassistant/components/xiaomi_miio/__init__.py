@@ -28,9 +28,11 @@ from miio import (
     FanZA5,
     RoborockVacuum,
     Timer,
+    VacuumException,
     VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
+from miio.integrations.vacuum.roborock.vacuum import MopIntensity, MopMode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
@@ -199,6 +201,8 @@ class VacuumCoordinatorData:
     timers: list[Timer]
     fan_speeds: dict[str, int]
     fan_speeds_reverse: dict[int, str]
+    mop_mode: MopMode | None
+    mop_intensity: MopIntensity | None
 
 
 @dataclass(init=False, frozen=True)
@@ -221,6 +225,8 @@ class VacuumCoordinatorDataAttributes:
     timer: str = "timer"
     fan_speeds: str = "fan_speeds"
     fan_speeds_reverse: str = "fan_speeds_reverse"
+    mop_mode: str = "mop_mode"
+    mop_intensity: str = "mop_intensity"
 
 
 def _async_update_data_vacuum(hass, device: RoborockVacuum):
@@ -237,6 +243,11 @@ def _async_update_data_vacuum(hass, device: RoborockVacuum):
             )
 
         fan_speeds = device.fan_speed_presets()
+        mop_mode = device.mop_mode()
+        try:
+            mop_intensity = device.mop_intensity()
+        except VacuumException:
+            mop_intensity = None
 
         data = VacuumCoordinatorData(
             device.status(),
@@ -247,6 +258,8 @@ def _async_update_data_vacuum(hass, device: RoborockVacuum):
             timer,
             fan_speeds,
             {v: k for k, v in fan_speeds.items()},
+            mop_mode,
+            mop_intensity,
         )
 
         return data
