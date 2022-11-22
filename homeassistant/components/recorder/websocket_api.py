@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -26,6 +26,7 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .const import MAX_QUEUE_BACKLOG
+from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -129,7 +130,7 @@ async def ws_get_statistic_during_period(
     if "offset" in msg and "duration" not in msg:
         raise HomeAssistantError
 
-    start_time, end_time = resolve_period(msg)
+    start_time, end_time = resolve_period(cast(StatisticPeriod, msg))
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(

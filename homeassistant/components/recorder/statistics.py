@@ -53,7 +53,13 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import StatisticData, StatisticMetaData, StatisticResult, process_timestamp
+from .models import (
+    StatisticData,
+    StatisticMetaData,
+    StatisticPeriod,
+    StatisticResult,
+    process_timestamp,
+)
 from .util import (
     execute,
     execute_stmt_lambda_element,
@@ -1374,7 +1380,7 @@ def _get_newest_sum_statistic(
 
 
 def resolve_period(
-    period_def: dict[str, Any]
+    period_def: StatisticPeriod,
 ) -> tuple[datetime | None, datetime | None]:
     """Return start and end datetimes for a period definition."""
     start_time = None
@@ -1383,28 +1389,28 @@ def resolve_period(
     if "calendar" in period_def:
         calendar_period = period_def["calendar"]["period"]
         start_of_day = dt_util.start_of_local_day()
-        offset = period_def["calendar"].get("offset", 0)
+        cal_offset = period_def["calendar"].get("offset", 0)
         if calendar_period == "hour":
             start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=offset)
+            start_time += timedelta(hours=cal_offset)
             end_time = start_time + timedelta(hours=1)
         elif calendar_period == "day":
             start_time = start_of_day
-            start_time += timedelta(days=offset)
+            start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
             start_time = start_of_day - timedelta(days=start_of_day.weekday())
-            start_time += timedelta(days=offset * 7)
+            start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":
             start_time = start_of_day.replace(day=28)
             # This works for up to 48 months of offset
-            start_time = (start_time + timedelta(days=offset * 31)).replace(day=1)
+            start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
             end_time = (start_time + timedelta(days=31)).replace(day=1)
         else:  # calendar_period = "year"
             start_time = start_of_day.replace(month=12, day=31)
             # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=offset * 366)).replace(
+            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
                 month=1, day=1
             )
             end_time = (start_time + timedelta(days=365)).replace(day=1)
