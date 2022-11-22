@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 import logging
+from typing import Any, cast
 
-from RFXtrx import ControlEvent, RFXtrxEvent, SensorEvent
+from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,16 +25,17 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
@@ -39,14 +43,14 @@ from .const import ATTR_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
-def _battery_convert(value):
+def _battery_convert(value: int | None) -> int | None:
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
     return (value + 1) * 10
 
 
-def _rssi_convert(value):
+def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
@@ -57,7 +61,9 @@ def _rssi_convert(value):
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 
-    convert: Callable = lambda x: x
+    convert: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: cast(
+        StateType, x
+    )
 
 
 SENSOR_TYPES = (
@@ -166,7 +172,8 @@ SENSOR_TYPES = (
         key="Rain rate",
         name="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
@@ -200,12 +207,14 @@ SENSOR_TYPES = (
         name="Wind average speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
         name="Wind gust",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",
@@ -243,16 +252,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up config entry."""
 
-    def _supported(event):
+    def _supported(event: RFXtrxEvent) -> bool:
         return isinstance(event, (ControlEvent, SensorEvent))
 
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
-    ):
-        entities: list[RfxtrxSensor] = []
+        entity_info: dict[str, Any],
+    ) -> list[Entity]:
+        entities: list[Entity] = []
         for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
             entities.append(
                 RfxtrxSensor(
@@ -271,14 +280,22 @@ async def async_setup_entry(
 
 
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
-    """Representation of a RFXtrx sensor."""
+    """Representation of a RFXtrx sensor.
+
+    Since all repeated events have meaning, these types of sensors
+    need to have force update enabled.
+    """
 
     _attr_force_update = True
-    """We should force updates. Repeated states have meaning."""
-
     entity_description: RfxtrxSensorEntityDescription
 
-    def __init__(self, device, device_id, entity_description, event=None):
+    def __init__(
+        self,
+        device: RFXtrxDevice,
+        device_id: DeviceTuple,
+        entity_description: RfxtrxSensorEntityDescription,
+        event: RFXtrxEvent | None = None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
@@ -296,7 +313,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             self._apply_event(get_rfx_object(event))
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         if not self._event:
             return None
@@ -304,7 +321,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         return self.entity_description.convert(value)
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(self, event: RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return

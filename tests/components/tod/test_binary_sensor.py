@@ -5,6 +5,8 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -786,3 +788,25 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
     assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
     assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
+
+
+async def test_unique_id(hass: HomeAssistant) -> None:
+    """Test unique id."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Evening",
+                "after": "18:00",
+                "before": "22:00",
+                "unique_id": "very_unique_id",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("binary_sensor.evening")
+
+    assert entity.unique_id == "very_unique_id"

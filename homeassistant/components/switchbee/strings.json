@@ -6,8 +6,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "switch_as_light": "Initialize switches as light entities"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -18,15 +17,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "devices": "Devices to include"
-        }
-      }
     }
   }
 }

@@ -6,6 +6,13 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import voluptuous as vol
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -42,7 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -57,6 +58,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
@@ -328,7 +330,9 @@ async def async_test_home_assistant(loop, load_registries=True):
     return hass
 
 
-def async_mock_service(hass, domain, service, schema=None):
+def async_mock_service(
+    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -369,23 +373,65 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"]._mqtt_handle_message(msg)
+    hass.data["mqtt"].client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+def async_fire_time_changed_exact(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changed event."""
+    """Fire a time changed event at an exact microsecond.
+
+    Consider that it is not possible to actually achieve an exact
+    microsecond in production as the event loop is not precise enough.
+    If your code relies on this level of precision, consider a different
+    approach, as this is only for testing.
+    """
     if datetime_ is None:
         utc_datetime = date_util.utcnow()
     else:
         utc_datetime = date_util.as_utc(datetime_)
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+) -> None:
+    """Fire a time changed event.
+
+    This function will add up to 0.5 seconds to the time to ensure that
+    it accounts for the accidental synchronization avoidance code in repeating
+    listeners.
+
+    As asyncio is cooperative, we can't guarantee that the event loop will
+    run an event at the exact time we want. If you need to fire time changed
+    for an exact microsecond, use async_fire_time_changed_exact.
+    """
+    if datetime_ is None:
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+
+    if utc_datetime.microsecond < 500000:
+        # Allow up to 500000 microseconds to be added to the time
+        # to handle update_coordinator's and
+        # async_track_time_interval's
+        # staggering to avoid thundering herd.
+        utc_datetime = utc_datetime.replace(microsecond=500000)
+
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def _async_fire_time_changed(
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+) -> None:
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -417,18 +463,20 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
     if integration is None:
         return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
-    else:
-        return pathlib.Path(__file__).parent.joinpath(
-            "components", integration, "fixtures", filename
-        )
+
+    return pathlib.Path(__file__).parent.joinpath(
+        "components", integration, "fixtures", filename
+    )
 
 
-def load_fixture(filename, integration=None):
+def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()
 
 
-def mock_state_change_event(hass, new_state, old_state=None):
+def mock_state_change_event(
+    hass: HomeAssistant, new_state: State, old_state: State | None = None
+) -> None:
     """Mock state change envent."""
     event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
 
@@ -439,7 +487,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 
 @ha.callback
-def mock_component(hass, component):
+def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
         AssertionError(f"Integration {component} is already setup")
@@ -447,7 +495,10 @@ def mock_component(hass, component):
     hass.config.components.add(component)
 
 
-def mock_registry(hass, mock_entries=None):
+def mock_registry(
+    hass: HomeAssistant,
+    mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
+) -> entity_registry.EntityRegistry:
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
@@ -460,7 +511,9 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_area_registry(hass, mock_entries=None):
+def mock_area_registry(
+    hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
+) -> area_registry.AreaRegistry:
     """Mock the Area Registry."""
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
@@ -469,7 +522,10 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None):
+def mock_device_registry(
+    hass: HomeAssistant,
+    mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
+) -> device_registry.DeviceRegistry:
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = device_registry.DeviceRegistryItems()
@@ -545,7 +601,9 @@ class MockUser(auth_models.User):
         self._permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
 
-async def register_auth_provider(hass, config):
+async def register_auth_provider(
+    hass: HomeAssistant, config: ConfigType
+) -> auth_providers.AuthProvider:
     """Register an auth provider."""
     provider = await auth_providers.auth_provider_from_config(
         hass, hass.auth._store, config
@@ -909,17 +967,15 @@ def assert_setup_component(count, domain=None):
 SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        config[recorder.CONF_DB_URL] = db_url
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.migrate_schema"
-    ):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})

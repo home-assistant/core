@@ -1,11 +1,19 @@
 {
     "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        },
         "step": {
             "user": {
                 "data": {
                     "username": "Brukernavn"
                 }
             }
+        }
+    },
+    "options": {
+        "abort": {
+            "unknown": "Uventet feil"
         }
     }
 }

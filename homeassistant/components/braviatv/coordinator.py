@@ -5,23 +5,35 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import timedelta
 from functools import wraps
 import logging
+from types import MappingProxyType
 from typing import Any, Final, TypeVar
 
 from pybravia import (
     BraviaTV,
+    BraviaTVAuthError,
     BraviaTVConnectionError,
     BraviaTVConnectionTimeout,
     BraviaTVError,
     BraviaTVNotFound,
+    BraviaTVTurnedOff,
 )
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import MediaType
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CLIENTID_PREFIX, DOMAIN, NICKNAME
+from .const import (
+    CONF_CLIENT_ID,
+    CONF_NICKNAME,
+    CONF_USE_PSK,
+    DOMAIN,
+    LEGACY_CLIENT_ID,
+    NICKNAME_PREFIX,
+)
 
 _BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
 _P = ParamSpec("_P")
@@ -58,13 +70,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         client: BraviaTV,
-        pin: str,
+        config: MappingProxyType[str, Any],
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
-        self.pin = pin
+        self.pin = config[CONF_PIN]
+        self.use_psk = config.get(CONF_USE_PSK, False)
+        self.client_id = config.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
+        self.nickname = config.get(CONF_NICKNAME, NICKNAME_PREFIX)
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -110,9 +125,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
+                if self.use_psk:
+                    await self.client.connect(psk=self.pin)
+                else:
+                    await self.client.connect(
+                        pin=self.pin, clientid=self.client_id, nickname=self.nickname
+                    )
                 self.connected = True
 
             power_status = await self.client.get_power_status()
@@ -133,7 +151,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except (BraviaTVConnectionError, BraviaTVConnectionTimeout):
+        except BraviaTVAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False
             _LOGGER.debug("Update skipped, Bravia TV is off")
@@ -282,3 +302,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         cmd,
                         commands_keys,
                     )
+
+    @catch_braviatv_errors
+    async def async_reboot_device(self) -> None:
+        """Send command to reboot the device."""
+        await self.client.reboot()
+
+    @catch_braviatv_errors
+    async def async_terminate_apps(self) -> None:
+        """Send command to terminate all applications."""
+        await self.client.terminate_apps()

@@ -21,6 +21,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Coinbase med YAML er fjernet.\n\nDin eksisterende YAML-konfigurasjon brukes ikke av Home Assistant.\n\nFjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 l\u00f8se dette problemet.",
+            "title": "Coinbase YAML-konfigurasjonen er fjernet"
+        }
+    },
     "options": {
         "error": {
             "currency_unavailable": "En eller flere av de forespurte valutasaldoene leveres ikke av Coinbase API.",

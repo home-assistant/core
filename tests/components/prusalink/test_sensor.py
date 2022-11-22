@@ -79,11 +79,9 @@ async def test_sensors_active_job(
     mock_config_entry,
     mock_api,
     mock_printer_api,
-    mock_job_api_active,
+    mock_job_api_printing,
 ):
     """Test sensors while active job."""
-    mock_printer_api["state"]["flags"]["printing"] = True
-
     with patch(
         "homeassistant.components.prusalink.sensor.utcnow",
         return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=timezone.utc),

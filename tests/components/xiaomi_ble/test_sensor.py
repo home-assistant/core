@@ -1,18 +1,14 @@
 """Test the Xiaomi config flow."""
 
-from unittest.mock import patch
 
-from homeassistant.components.bluetooth import (
-    BluetoothChange,
-    async_get_advertisement_callback,
-)
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
-from . import MMC_T201_1_SERVICE_INFO, make_advertisement
+from . import HHCCJCY10_SERVICE_INFO, MMC_T201_1_SERVICE_INFO, make_advertisement
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 
 async def test_sensors(hass):
@@ -23,22 +19,11 @@ async def test_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(MMC_T201_1_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info_bleak(hass, MMC_T201_1_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
@@ -63,29 +48,18 @@ async def test_xiaomi_formaldeyhde(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
     # WARNING: This test data is synthetic, rather than captured from a real device
     # obj type is 0x1010, payload len is 0x2 and payload is 0xf400
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x10\x10\x02\xf4\x00"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
 
     await hass.async_block_till_done()
@@ -110,29 +84,18 @@ async def test_xiaomi_consumable(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
     # WARNING: This test data is synthetic, rather than captured from a real device
     # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
 
     await hass.async_block_till_done()
@@ -157,29 +120,16 @@ async def test_xiaomi_battery_voltage(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 0
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # WARNING: This test data is synthetic, rather than captured from a real device
     # obj type is 0x0a10, payload len is 0x2 and payload is 0x6400
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x0a\x10\x02\x64\x00"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
 
     await hass.async_block_till_done()
@@ -211,44 +161,33 @@ async def test_xiaomi_HHCCJCY01(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00"
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
@@ -296,56 +235,45 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     """This device has multiple advertisements before all sensors are visible but not connectable."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="C4:7C:8D:6A:3E:7B",
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
             connectable=False,
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
             connectable=False,
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
             connectable=False,
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
             connectable=False,
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 4
@@ -392,34 +320,36 @@ async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = async_get_advertisement_callback(hass)
-
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
             connectable=True,
         ),
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
             connectable=False,
         ),
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
             connectable=False,
         ),
     )
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
@@ -477,27 +407,16 @@ async def test_xiaomi_CGDK2(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(
+    inject_bluetooth_service_info_bleak(
+        hass,
         make_advertisement(
             "58:2D:34:12:20:89",
             b"XXo\x06\x07\x89 \x124-X_\x17m\xd5O\x02\x00\x00/\xa4S\xfa",
         ),
-        BluetoothChange.ADVERTISEMENT,
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
@@ -511,6 +430,61 @@ async def test_xiaomi_CGDK2(hass):
     )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_hhcc_HHCCJCY10(hass):
+    """This device used a different UUID compared to the other Xiaomi sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="DC:23:4D:E5:5B:FC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, HHCCJCY10_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
+
+    temp_sensor = hass.states.get("sensor.plant_sensor_5bfc_temperature")
+    temp_sensor_attr = temp_sensor.attributes
+    assert temp_sensor.state == "11.0"
+    assert temp_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Temperature"
+    assert temp_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    illu_sensor = hass.states.get("sensor.plant_sensor_5bfc_illuminance")
+    illu_sensor_attr = illu_sensor.attributes
+    assert illu_sensor.state == "79012"
+    assert illu_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Illuminance"
+    assert illu_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illu_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    cond_sensor = hass.states.get("sensor.plant_sensor_5bfc_conductivity")
+    cond_sensor_attr = cond_sensor.attributes
+    assert cond_sensor.state == "91"
+    assert cond_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Conductivity"
+    assert cond_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
+    assert cond_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    moist_sensor = hass.states.get("sensor.plant_sensor_5bfc_moisture")
+    moist_sensor_attr = moist_sensor.attributes
+    assert moist_sensor.state == "14"
+    assert moist_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Moisture"
+    assert moist_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert moist_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    bat_sensor = hass.states.get("sensor.plant_sensor_5bfc_battery")
+    bat_sensor_attr = bat_sensor.attributes
+    assert bat_sensor.state == "40"
+    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Battery"
+    assert bat_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert bat_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

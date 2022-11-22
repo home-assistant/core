@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from functools import partial
 from typing import Any, Optional, Protocol, cast
 
@@ -41,7 +41,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
     def get_service(
@@ -49,7 +49,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
 
@@ -82,7 +82,7 @@ def async_setup_legacy(
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
-            notify_service = None
+            notify_service: BaseNotificationService | None = None
             try:
                 if hasattr(platform, "async_get_service"):
                     notify_service = await platform.async_get_service(
@@ -162,9 +162,11 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
+    notify_services: list[BaseNotificationService] = hass.data[NOTIFY_SERVICES][
+        integration_name
+    ]
     tasks = [
-        notify_service.async_register_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_register_services() for notify_service in notify_services
     ]
 
     await asyncio.gather(*tasks)
@@ -173,15 +175,20 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
-    if NOTIFY_DISCOVERY_DISPATCHER in hass.data:
-        hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
+    notify_discovery_dispatcher: Callable[[], None] | None = hass.data.get(
+        NOTIFY_DISCOVERY_DISPATCHER
+    )
+    if notify_discovery_dispatcher:
+        notify_discovery_dispatcher()
         hass.data[NOTIFY_DISCOVERY_DISPATCHER] = None
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
+    notify_services: list[BaseNotificationService] = hass.data[NOTIFY_SERVICES][
+        integration_name
+    ]
     tasks = [
-        notify_service.async_unregister_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_unregister_services() for notify_service in notify_services
     ]
 
     await asyncio.gather(*tasks)
@@ -275,7 +282,7 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            for name, target in self.targets.items():  # type: ignore[attr-defined]
+            for name, target in self.targets.items():
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)

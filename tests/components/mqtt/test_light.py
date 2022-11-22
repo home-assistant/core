@@ -216,7 +216,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
-    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -233,11 +232,6 @@ from tests.components.light import common
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[light.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -2945,15 +2939,6 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
-    """Test reloading the MQTT platform with late entry setup."""
-    domain = light.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
-
-
 @pytest.mark.parametrize(
     "topic,value,attribute,attribute_value,init_payload",
     [
@@ -3151,16 +3136,3 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
-    """Test a setup with deprecated yaml platform schema."""
-    domain = light.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["name"] = "test"
-    assert await async_setup_component(hass, domain, {domain: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-    assert hass.states.get(f"{domain}.test") is not None

@@ -43,13 +43,14 @@ def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        TEMP_CELSIUS,
-        LENGTH_METERS,
-        SPEED_KILOMETERS_PER_HOUR,
-        VOLUME_LITERS,
-        MASS_GRAMS,
-        PRESSURE_PA,
-        LENGTH_MILLIMETERS,
+        accumulated_precipitation=LENGTH_MILLIMETERS,
+        conversions={},
+        length=LENGTH_METERS,
+        mass=MASS_GRAMS,
+        pressure=PRESSURE_PA,
+        temperature=TEMP_CELSIUS,
+        volume=VOLUME_LITERS,
+        wind_speed=SPEED_KILOMETERS_PER_HOUR,
     )
 
 
@@ -973,11 +974,26 @@ def test_average(hass):
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
 
+    # Testing of default values
+    assert template.Template("{{ average([1, 2, 3], -1) }}", hass).async_render() == 2
+    assert template.Template("{{ average([], -1) }}", hass).async_render() == -1
+    assert template.Template("{{ average([], default=-1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ average([], 5, default=-1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ average(1, 'a', 3, default=-1) }}", hass).async_render()
+        == -1
+    )
+
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
 
     with pytest.raises(TemplateError):
         template.Template("{{ average() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average([]) }}", hass).async_render()
 
 
 def test_min(hass):
@@ -1332,6 +1348,22 @@ def test_is_state(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state", "available") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_is_state_attr(hass):
     """Test is_state_attr method."""
@@ -1352,10 +1384,28 @@ def test_is_state_attr(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_state_attr(hass):
     """Test state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set(
+        "test.object", "available", {"effect": "action", "mode": "on"}
+    )
     tpl = template.Template(
         """
 {% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}
@@ -1372,6 +1422,22 @@ def test_state_attr(hass):
     )
     assert tpl.async_render() is True
 
+    tpl = template.Template(
+        """
+{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("state_attr", "effect") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "action"
+
 
 def test_states_function(hass):
     """Test using states as a function."""
@@ -1381,6 +1447,22 @@ def test_states_function(hass):
 
     tpl2 = template.Template('{{ states("test.object2") }}', hass)
     assert tpl2.async_render() == "unknown"
+
+    tpl = template.Template(
+        """
+{% if "test.object" | states == "available" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("states") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "available"
 
 
 @patch(
@@ -1564,6 +1646,45 @@ def test_timedelta(mock_is_safe, hass):
             hass,
         ).async_render()
         assert result == "15 days"
+
+
+def test_version(hass):
+    """Test version filter and function."""
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version}}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9')}}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result == "2099.9.9"
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ version(None) < '2099.9.10' }}",
+            hass,
+        ).async_render()
 
 
 def test_regex_match(hass):
@@ -2416,6 +2537,32 @@ async def test_integration_entities(hass):
     # Test non existing integration/entry title
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+async def test_config_entry_id(hass):
+    """Test config_entry_id function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_registry = mock_registry(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | config_entry_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | config_entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | config_entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(
+        hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
+    )
+    assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 
 

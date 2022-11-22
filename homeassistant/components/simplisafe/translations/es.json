@@ -39,6 +39,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con una ID de entidad de destino de `{alternate_target}`. Luego, haz clic en ENVIAR a continuaci\u00f3n para marcar este problema como resuelto.",
+            "title": "Se va a eliminar el servicio {deprecated_service}"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -17,6 +17,16 @@
                 "data": {
                     "location_type": "Umiestnenie"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo"
+                }
             }
         }
     }

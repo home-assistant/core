@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 from aiohttp import web
+import async_timeout
 
 from homeassistant import core
 from homeassistant.components import (
@@ -871,7 +872,8 @@ async def wait_for_state_change_or_timeout(
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
 
     try:
-        await asyncio.wait_for(ev.wait(), timeout=STATE_CHANGE_WAIT_TIMEOUT)
+        async with async_timeout.timeout(STATE_CHANGE_WAIT_TIMEOUT):
+            await ev.wait()
     except asyncio.TimeoutError:
         pass
     finally:

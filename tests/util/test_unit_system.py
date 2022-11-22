@@ -1,24 +1,35 @@
 """Test the unit system helper."""
+from __future__ import annotations
+
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILLIMETERS,
     MASS,
-    MASS_GRAMS,
     PRESSURE,
-    PRESSURE_PA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
-    VOLUME_LITERS,
     WIND_SPEED,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -29,114 +40,121 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            INVALID_UNIT,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=INVALID_UNIT,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            INVALID_UNIT,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=INVALID_UNIT,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            INVALID_UNIT,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=INVALID_UNIT,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            INVALID_UNIT,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=INVALID_UNIT,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            INVALID_UNIT,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=INVALID_UNIT,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            INVALID_UNIT,
-            LENGTH_MILLIMETERS,
+            accumulated_precipitation=UnitOfLength.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=INVALID_UNIT,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            INVALID_UNIT,
+            accumulated_precipitation=INVALID_UNIT,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
 
 def test_invalid_value():
     """Test no conversion happens if value is non-numeric."""
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.length("25a", LENGTH_KILOMETERS)
+        METRIC_SYSTEM.length("25a", UnitOfLength.KILOMETERS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.temperature("50K", TEMP_CELSIUS)
+        METRIC_SYSTEM.temperature("50K", UnitOfTemperature.CELSIUS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.wind_speed("50km/h", SPEED_METERS_PER_SECOND)
+        METRIC_SYSTEM.wind_speed("50km/h", UnitOfSpeed.METERS_PER_SECOND)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.volume("50L", VOLUME_LITERS)
+        METRIC_SYSTEM.volume("50L", UnitOfVolume.LITERS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.pressure("50Pa", PRESSURE_PA)
+        METRIC_SYSTEM.pressure("50Pa", UnitOfPressure.PA)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.accumulated_precipitation("50mm", LENGTH_MILLIMETERS)
+        METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
 
 
 def test_as_dict():
     """Test that the as_dict() method returns the expected dictionary."""
     expected = {
-        LENGTH: LENGTH_KILOMETERS,
-        WIND_SPEED: SPEED_METERS_PER_SECOND,
-        TEMPERATURE: TEMP_CELSIUS,
-        VOLUME: VOLUME_LITERS,
-        MASS: MASS_GRAMS,
-        PRESSURE: PRESSURE_PA,
-        ACCUMULATED_PRECIPITATION: LENGTH_MILLIMETERS,
+        LENGTH: UnitOfLength.KILOMETERS,
+        WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
+        TEMPERATURE: UnitOfTemperature.CELSIUS,
+        VOLUME: UnitOfVolume.LITERS,
+        MASS: UnitOfMass.GRAMS,
+        PRESSURE: UnitOfPressure.PA,
+        ACCUMULATED_PRECIPITATION: UnitOfLength.MILLIMETERS,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -149,7 +167,7 @@ def test_temperature_same_unit():
 
 def test_temperature_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.temperature(5, "abc")
 
 
@@ -170,7 +188,7 @@ def test_temperature_to_imperial():
 
 def test_length_unknown_unit():
     """Test length conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "fr")
 
 
@@ -192,7 +210,7 @@ def test_length_to_imperial():
 
 def test_wind_speed_unknown_unit():
     """Test wind_speed conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "turtles")
 
 
@@ -220,7 +238,7 @@ def test_pressure_same_unit():
 
 def test_pressure_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.pressure(5, "K")
 
 
@@ -252,7 +270,7 @@ def test_accumulated_precipitation_same_unit():
 
 def test_accumulated_precipitation_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.accumulated_precipitation(5, "K")
 
 
@@ -284,16 +302,186 @@ def test_accumulated_precipitation_to_imperial():
 
 def test_properties():
     """Test the unit properties are returned as expected."""
-    assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
-    assert METRIC_SYSTEM.wind_speed_unit == SPEED_METERS_PER_SECOND
-    assert METRIC_SYSTEM.temperature_unit == TEMP_CELSIUS
-    assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
-    assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
-    assert METRIC_SYSTEM.pressure_unit == PRESSURE_PA
-    assert METRIC_SYSTEM.accumulated_precipitation_unit == LENGTH_MILLIMETERS
+    assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
+    assert METRIC_SYSTEM.wind_speed_unit == UnitOfSpeed.METERS_PER_SECOND
+    assert METRIC_SYSTEM.temperature_unit == UnitOfTemperature.CELSIUS
+    assert METRIC_SYSTEM.mass_unit == UnitOfMass.GRAMS
+    assert METRIC_SYSTEM.volume_unit == UnitOfVolume.LITERS
+    assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
+    assert METRIC_SYSTEM.accumulated_precipitation_unit == UnitOfLength.MILLIMETERS
 
 
-def test_is_metric():
+@pytest.mark.parametrize(
+    "unit_system, expected_flag",
+    [
+        (METRIC_SYSTEM, True),
+        (IMPERIAL_SYSTEM, False),
+    ],
+)
+def test_is_metric(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_flag: bool
+):
     """Test the is metric flag."""
-    assert METRIC_SYSTEM.is_metric
-    assert not IMPERIAL_SYSTEM.is_metric
+    assert unit_system.is_metric == expected_flag
+    assert (
+        "Detected code that accesses the `is_metric` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "unit_system, expected_name, expected_private_name",
+    [
+        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
+        (
+            US_CUSTOMARY_SYSTEM,
+            _CONF_UNIT_SYSTEM_IMPERIAL,
+            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+        ),
+    ],
+)
+def test_deprecated_name(
+    caplog: pytest.LogCaptureFixture,
+    unit_system: UnitSystem,
+    expected_name: str,
+    expected_private_name: str,
+) -> None:
+    """Test the name is deprecated."""
+    assert unit_system.name == expected_name
+    assert unit_system._name == expected_private_name
+    assert (
+        "Detected code that accesses the `name` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "key, expected_system",
+    [
+        (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
+    ],
+)
+def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
+    """Test get_unit_system."""
+    assert get_unit_system(key) is expected_system
+
+
+@pytest.mark.parametrize(
+    "key", [None, "", "invalid_custom", _CONF_UNIT_SYSTEM_IMPERIAL]
+)
+def test_get_unit_system_invalid(key: str) -> None:
+    """Test get_unit_system with an invalid key."""
+    with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
+        _ = get_unit_system(key)
+
+
+@pytest.mark.parametrize(
+    "device_class, original_unit, state_unit",
+    (
+        # Test distance conversion
+        (SensorDeviceClass.DISTANCE, UnitOfLength.FEET, UnitOfLength.METERS),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.INCHES, UnitOfLength.MILLIMETERS),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, UnitOfLength.KILOMETERS),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.YARDS, UnitOfLength.METERS),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
+        (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
+        (SensorDeviceClass.GAS, "very_much", None),
+        # Test speed conversion
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.FEET_PER_SECOND,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.MILES_PER_HOUR,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.KILOMETERS_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.METERS_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.MILLILITERS),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, None),
+        (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test water meter conversion
+        (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+        (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, None),
+        (SensorDeviceClass.WATER, UnitOfVolume.LITERS, None),
+        (SensorDeviceClass.WATER, "very_much", None),
+    ),
+)
+def test_get_metric_converted_unit_(
+    device_class: SensorDeviceClass,
+    original_unit: str,
+    state_unit: str | None,
+) -> None:
+    """Test unit conversion rules."""
+    unit_system = METRIC_SYSTEM
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
+
+
+@pytest.mark.parametrize(
+    "device_class, original_unit, state_unit",
+    (
+        # Test distance conversion
+        (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.METERS, UnitOfLength.FEET),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
+        (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+        (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
+        (SensorDeviceClass.GAS, "very_much", None),
+        # Test speed conversion
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.METERS_PER_SECOND,
+            UnitOfSpeed.MILES_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+            UnitOfSpeed.MILES_PER_HOUR,
+        ),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.FEET_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
+        (SensorDeviceClass.SPEED, UnitOfSpeed.MILES_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCES),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
+        (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test water meter conversion
+        (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+        (SensorDeviceClass.WATER, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
+        (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
+        (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
+        (SensorDeviceClass.WATER, "very_much", None),
+    ),
+)
+def test_get_us_converted_unit(
+    device_class: SensorDeviceClass,
+    original_unit: str,
+    state_unit: str | None,
+) -> None:
+    """Test unit conversion rules."""
+    unit_system = US_CUSTOMARY_SYSTEM
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit

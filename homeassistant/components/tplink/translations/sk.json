@@ -1,0 +1,17 @@
+{
+    "config": {
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Zariadenie"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

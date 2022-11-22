@@ -1,9 +1,11 @@
 """Support for Velbus devices."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
+import os
+import shutil
 
-from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
@@ -13,12 +15,13 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_INTERFACE,
     CONF_MEMO_TEXT,
     DOMAIN,
+    SERVICE_CLEAR_CACHE,
     SERVICE_SCAN,
     SERVICE_SET_MEMO_TEXT,
     SERVICE_SYNC,
@@ -66,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller = Velbus(
         entry.data[CONF_PORT],
-        cache_dir=hass.config.path(".storage/velbuscache/"),
+        cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
@@ -132,11 +135,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    async def clear_cache(call: ServiceCall) -> None:
+        """Handle a clear cache service call."""
+        # clear the cache
+        with suppress(FileNotFoundError):
+            if call.data[CONF_ADDRESS]:
+                await hass.async_add_executor_job(
+                    os.unlink,
+                    hass.config.path(
+                        STORAGE_DIR,
+                        f"velbuscache-{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p",
+                    ),
+                )
+            else:
+                await hass.async_add_executor_job(
+                    shutil.rmtree,
+                    hass.config.path(
+                        STORAGE_DIR, f"velbuscache-{call.data[CONF_INTERFACE]}/"
+                    ),
+                )
+        # call a scan to repopulate
+        await scan(call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_CACHE,
+        clear_cache,
+        vol.Schema(
+            {
+                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+            }
+        ),
+    )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Remove the velbus connection."""
+    """Unload (close) the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
@@ -145,33 +184,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
         hass.services.async_remove(DOMAIN, SERVICE_SYNC)
         hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
+        hass.services.async_remove(DOMAIN, SERVICE_CLEAR_CACHE)
     return unload_ok
 
 
-class VelbusEntity(Entity):
-    """Representation of a Velbus entity."""
-
-    _attr_should_poll: bool = False
-
-    def __init__(self, channel: VelbusChannel) -> None:
-        """Initialize a Velbus entity."""
-        self._channel = channel
-        self._attr_name = channel.get_name()
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, str(channel.get_module_address())),
-            },
-            manufacturer="Velleman",
-            model=channel.get_module_type_name(),
-            name=channel.get_full_name(),
-            sw_version=channel.get_module_sw_version(),
-        )
-        serial = channel.get_module_serial() or str(channel.get_module_address())
-        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
-
-    async def async_added_to_hass(self) -> None:
-        """Add listener for state changes."""
-        self._channel.on_status_update(self._on_update)
-
-    async def _on_update(self) -> None:
-        self.async_write_ha_state()
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove the velbus entry, so we also have to cleanup the cache dir."""
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+    )

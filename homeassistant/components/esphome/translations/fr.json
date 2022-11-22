@@ -43,5 +43,10 @@
                 "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome]({esphome_url})."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Pour am\u00e9liorer la fiabilit\u00e9 et les performances du Bluetooth, nous recommandons vivement de mettre \u00e0 jour {nom} avec ESPHome 2022.11.0 ou ult\u00e9rieure."
+        }
     }
 }

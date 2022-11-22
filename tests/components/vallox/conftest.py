@@ -54,6 +54,11 @@ def patch_profile_set():
     return patch("homeassistant.components.vallox.Vallox.set_profile")
 
 
+def patch_metrics_set():
+    """Patch the Vallox metrics set values."""
+    return patch("homeassistant.components.vallox.Vallox.set_values")
+
+
 @pytest.fixture(autouse=True)
 def patch_profile_home():
     """Patch the Vallox profile response."""

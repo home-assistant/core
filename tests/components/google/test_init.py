@@ -818,3 +818,24 @@ async def test_assign_unique_id_failure(
 
     assert config_entry.state is config_entry_status
     assert config_entry.unique_id is None
+
+
+async def test_remove_entry(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+) -> None:
+    """Test load and remove of a ConfigEntry."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED

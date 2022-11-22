@@ -9,11 +9,13 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "Heslo",
                     "username": "Email / devolo ID"
                 }
             },
             "zeroconf_confirm": {
                 "data": {
+                    "password": "Heslo",
                     "username": "Email / devolo ID"
                 }
             }

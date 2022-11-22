@@ -8,7 +8,6 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -62,6 +61,7 @@ async def async_setup_entry(
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
@@ -141,7 +141,6 @@ class LogiCam(Camera):
     def extra_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "battery_saving_mode": (
                 STATE_ON if self._camera.battery_saving else STATE_OFF
             ),

@@ -8,8 +8,9 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 EVENT_RFY_ENABLE_SUN_AUTO = "0C1a0000030101011300000003"
 EVENT_RFY_DISABLE_SUN_AUTO = "0C1a0000030101011400000003"

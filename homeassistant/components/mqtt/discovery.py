@@ -7,7 +7,9 @@ import functools
 import logging
 import re
 import time
+from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,6 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -30,6 +33,8 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
+from .models import ReceiveMessage
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,47 +63,43 @@ SUPPORTED_COMPONENTS = [
     "sensor",
     "switch",
     "tag",
+    "update",
     "vacuum",
 ]
 
-ALREADY_DISCOVERED = "mqtt_discovered_components"
-PENDING_DISCOVERED = "mqtt_pending_components"
-DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
-DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
-INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
-LAST_DISCOVERY = "mqtt_last_discovery"
 
 TOPIC_BASE = "~"
 
 
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
+class MQTTDiscoveryPayload(dict[str, Any]):
+    """Class to hold and MQTT discovery payload and discovery data."""
 
-    discovery_data: dict
-
-
-def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
-    """Clear entry in ALREADY_DISCOVERED list."""
-    del hass.data[ALREADY_DISCOVERED][discovery_hash]
+    discovery_data: DiscoveryInfoType
 
 
-def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
-    """Clear entry in ALREADY_DISCOVERED list."""
-    hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
+    """Clear entry from already discovered list."""
+    get_mqtt_data(hass).discovery_already_discovered.remove(discovery_hash)
+
+
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
+    """Add entry to already discovered list."""
+    get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
 
 
 async def async_start(  # noqa: C901
-    hass: HomeAssistant, discovery_topic, config_entry=None
+    hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
     """Start MQTT Discovery."""
+    mqtt_data = get_mqtt_data(hass)
     mqtt_integrations = {}
 
-    async def async_discovery_message_received(msg):
+    async def async_discovery_message_received(msg) -> None:
         """Process the received message."""
-        hass.data[LAST_DISCOVERY] = time.time()
+        mqtt_data.last_discovery = time.time()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -126,7 +127,7 @@ async def async_start(  # noqa: C901
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
 
-        payload = MQTTConfig(payload)
+        payload = MQTTDiscoveryPayload(payload)
 
         for key in list(payload):
             abbreviated_key = key
@@ -139,6 +140,14 @@ async def async_start(  # noqa: C901
                 abbreviated_key = key
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
+
+        if CONF_AVAILABILITY in payload:
+            for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                if isinstance(availability_conf, dict):
+                    for key in list(availability_conf):
+                        abbreviated_key = key
+                        key = ABBREVIATIONS.get(key, key)
+                        availability_conf[key] = availability_conf.pop(abbreviated_key)
 
         if TOPIC_BASE in payload:
             base = payload.pop(TOPIC_BASE)
@@ -174,8 +183,8 @@ async def async_start(  # noqa: C901
 
             payload[CONF_PLATFORM] = "mqtt"
 
-        if discovery_hash in hass.data[PENDING_DISCOVERED]:
-            pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
+        if discovery_hash in mqtt_data.discovery_pending_discovered:
+            pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
             pending.appendleft(payload)
             _LOGGER.info(
                 "Component has already been discovered: %s %s, queuing update",
@@ -186,27 +195,31 @@ async def async_start(  # noqa: C901
 
         await async_process_discovery_payload(component, discovery_id, payload)
 
-    async def async_process_discovery_payload(component, discovery_id, payload):
+    async def async_process_discovery_payload(
+        component: str, discovery_id: str, payload: MQTTDiscoveryPayload
+    ) -> None:
         """Process the payload of a new discovery."""
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
-        if discovery_hash in hass.data[ALREADY_DISCOVERED] or payload:
+        if discovery_hash in mqtt_data.discovery_already_discovered or payload:
 
-            async def discovery_done(_):
-                pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
+            async def discovery_done(_) -> None:
+                pending = mqtt_data.discovery_pending_discovered[discovery_hash][
+                    "pending"
+                ]
                 _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
                 if not pending:
-                    hass.data[PENDING_DISCOVERED][discovery_hash]["unsub"]()
-                    hass.data[PENDING_DISCOVERED].pop(discovery_hash)
+                    mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
+                    mqtt_data.discovery_pending_discovered.pop(discovery_hash)
                 else:
                     payload = pending.pop()
                     await async_process_discovery_payload(
                         component, discovery_id, payload
                     )
 
-            if discovery_hash not in hass.data[PENDING_DISCOVERED]:
-                hass.data[PENDING_DISCOVERED][discovery_hash] = {
+            if discovery_hash not in mqtt_data.discovery_pending_discovered:
+                mqtt_data.discovery_pending_discovered[discovery_hash] = {
                     "unsub": async_dispatcher_connect(
                         hass,
                         MQTT_DISCOVERY_DONE.format(discovery_hash),
@@ -215,7 +228,7 @@ async def async_start(  # noqa: C901
                     "pending": deque([]),
                 }
 
-        if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+        if discovery_hash in mqtt_data.discovery_already_discovered:
             # Dispatch update
             _LOGGER.info(
                 "Component has already been discovered: %s %s, sending update",
@@ -228,7 +241,7 @@ async def async_start(  # noqa: C901
         elif payload:
             # Add component
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
-            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
+            mqtt_data.discovery_already_discovered.add(discovery_hash)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
             )
@@ -238,37 +251,34 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data.setdefault(DATA_CONFIG_FLOW_LOCK, asyncio.Lock())
-    hass.data[ALREADY_DISCOVERED] = {}
-    hass.data[PENDING_DISCOVERED] = {}
-
     discovery_topics = [
         f"{discovery_topic}/+/+/config",
         f"{discovery_topic}/+/+/+/config",
     ]
-    hass.data[DISCOVERY_UNSUBSCRIBE] = await asyncio.gather(
+    mqtt_data.discovery_unsubscribe = await asyncio.gather(
         *(
             mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
             for topic in discovery_topics
         )
     )
 
-    hass.data[LAST_DISCOVERY] = time.time()
+    mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
-
-    hass.data[INTEGRATION_UNSUBSCRIBE] = {}
 
     for (integration, topics) in mqtt_integrations.items():
 
-        async def async_integration_message_received(integration, msg):
+        async def async_integration_message_received(
+            integration: str, msg: ReceiveMessage
+        ) -> None:
             """Process the received message."""
+            assert mqtt_data.data_config_flow_lock
             key = f"{integration}_{msg.subscribed_topic}"
 
             # Lock to prevent initiating many parallel config flows.
             # Note: The lock is not intended to prevent a race, only for performance
-            async with hass.data[DATA_CONFIG_FLOW_LOCK]:
+            async with mqtt_data.data_config_flow_lock:
                 # Already unsubscribed
-                if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
+                if key not in mqtt_data.integration_unsubscribe:
                     return
 
                 data = MqttServiceInfo(
@@ -288,14 +298,14 @@ async def async_start(  # noqa: C901
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):
-                    unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
+                    unsub = mqtt_data.integration_unsubscribe.pop(key, None)
                     if unsub is None:
                         return
                     unsub()
 
         for topic in topics:
             key = f"{integration}_{topic}"
-            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await mqtt.async_subscribe(
+            mqtt_data.integration_unsubscribe[key] = await mqtt.async_subscribe(
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),
@@ -305,11 +315,10 @@ async def async_start(  # noqa: C901
 
 async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
-    if DISCOVERY_UNSUBSCRIBE in hass.data:
-        for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:
-            unsub()
-        hass.data[DISCOVERY_UNSUBSCRIBE] = []
-    if INTEGRATION_UNSUBSCRIBE in hass.data:
-        for key, unsub in list(hass.data[INTEGRATION_UNSUBSCRIBE].items()):
-            unsub()
-            hass.data[INTEGRATION_UNSUBSCRIBE].pop(key)
+    mqtt_data = get_mqtt_data(hass)
+    for unsub in mqtt_data.discovery_unsubscribe:
+        unsub()
+    mqtt_data.discovery_unsubscribe = []
+    for key, unsub in list(mqtt_data.integration_unsubscribe.items()):
+        unsub()
+        mqtt_data.integration_unsubscribe.pop(key)

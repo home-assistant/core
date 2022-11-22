@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from freezegun import freeze_time
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.helpers import entity_registry
+import homeassistant.util.dt as dt_util
 
 from .conftest import (
     mock_config_entry,
@@ -13,6 +16,8 @@ from .conftest import (
     patch_async_register_callback,
     patch_melnor_device,
 )
+
+from tests.common import async_fire_time_changed
 
 
 async def test_battery_sensor(hass):
@@ -29,6 +34,42 @@ async def test_battery_sensor(hass):
         assert battery_sensor.attributes["unit_of_measurement"] == PERCENTAGE
         assert battery_sensor.attributes["device_class"] == SensorDeviceClass.BATTERY
         assert battery_sensor.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+
+async def test_minutes_remaining_sensor(hass):
+    """Test the minutes remaining sensor."""
+
+    now = dt_util.utcnow()
+
+    entry = mock_config_entry(hass)
+    device = mock_melnor_device()
+
+    end_time = now + dt_util.dt.timedelta(minutes=10)
+
+    # we control this mock
+    # pylint: disable=protected-access
+    device.zone1._end_time = (end_time).timestamp()
+
+    with freeze_time(now), patch_async_ble_device_from_address(), patch_melnor_device(
+        device
+    ), patch_async_register_callback():
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Valve is off, report 0
+        minutes_sensor = hass.states.get("sensor.zone_1_manual_cycle_end")
+        assert minutes_sensor.state == "unknown"
+        assert minutes_sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
+        # Turn valve on
+        device.zone1._is_watering = True
+
+        async_fire_time_changed(hass, now + dt_util.dt.timedelta(seconds=10))
+        await hass.async_block_till_done()
+
+        # Valve is on, report 10
+        minutes_remaining_sensor = hass.states.get("sensor.zone_1_manual_cycle_end")
+        assert minutes_remaining_sensor.state == end_time.isoformat(timespec="seconds")
 
 
 async def test_rssi_sensor(hass):

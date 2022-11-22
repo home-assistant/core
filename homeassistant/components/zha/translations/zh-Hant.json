@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "\u57f7\u884c\u5168\u90e8 LED \u6548\u679c",
+            "issue_individual_led_effect": "\u57f7\u884c\u500b\u5225 LED \u6548\u679c",
             "squawk": "\u61c9\u7b54",
             "warn": "\u8b66\u544a"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA \u5c07\u505c\u6b62\u3001\u662f\u5426\u8981\u7e7c\u7e8c\uff1f",
                 "title": "\u91cd\u65b0\u8a2d\u5b9a ZHA"
             },
+            "instruct_unplug": {
+                "description": "\u820a\u7121\u7dda\u96fb\u5df2\u7d93\u91cd\u7f6e\uff0c\u5047\u5982\u786c\u9ad4\u4e0d\u518d\u4f7f\u7528\u3001\u53ef\u4ee5\u9032\u884c\u79fb\u9664\u3002",
+                "title": "\u79fb\u9664\u820a\u7121\u7dda\u96fb"
+            },
+            "intent_migrate": {
+                "description": "\u820a\u7121\u7dda\u96fb\u5c07\u6703\u9032\u884c\u91cd\u7f6e\u3002\u5047\u5982\u4f7f\u7528\u7684\u9069\u914d\u5668\u70ba\u985e\u4f3c\u65bc HUSBZB-1 \u7684 Z-Wave \u8207 Zigbee \u8907\u5408\u88dd\u7f6e\uff0c\u5c07\u50c5\u6703\u91cd\u7f6e Zigbee \u90e8\u5206\u3002\n\n\u662f\u5426\u8981\u7e7c\u7e8c\uff1f",
+                "title": "\u9077\u79fb\u81f3\u65b0\u7121\u7dda\u96fb"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"
@@ -232,6 +242,14 @@
                 },
                 "description": "\u5099\u4efd\u4e2d\u7684 IEEE \u4f4d\u5740\u8207\u73fe\u6709\u7121\u7dda\u96fb\u4e0d\u540c\u3002\u70ba\u4e86\u78ba\u8a8d\u7db2\u8def\u6b63\u5e38\u5de5\u4f5c\uff0c\u7121\u7dda\u96fb\u7684 IEEE \u4f4d\u5740\u5fc5\u9808\u9032\u884c\u8b8a\u66f4\u3002\n\n\u6b64\u70ba\u6c38\u4e45\u6027\u64cd\u4f5c\u3002.",
                 "title": "\u8986\u5beb\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "\u8981\u9077\u79fb\u81f3\u65b0\u7121\u7dda\u96fb\u6216\u91cd\u65b0\u8a2d\u5b9a\u76ee\u524d\u7121\u7dda\u96fb\uff1f",
+                "menu_options": {
+                    "intent_migrate": "\u9077\u79fb\u81f3\u65b0\u7121\u7dda\u96fb",
+                    "intent_reconfigure": "\u91cd\u65b0\u8a2d\u5b9a\u76ee\u524d\u7121\u7dda\u96fb"
+                },
+                "title": "\u9077\u79fb\u6216\u91cd\u65b0\u8a2d\u5b9a"
             },
             "upload_manual_backup": {
                 "data": {

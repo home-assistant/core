@@ -277,7 +277,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._presets
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = self._supported_flags
         if HVACMode.HEAT_COOL in self.hvac_modes:
@@ -585,6 +585,7 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_4eeyebrt",
         "_TZE200_cpmgn2cf",
         "_TZE200_9sfg7gm0",
+        "_TZE200_8whxpsiw",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
@@ -760,10 +761,14 @@ class StelproFanHeater(Thermostat):
 @STRICT_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers={
+        "_TZE200_7yoranx2",
         "_TZE200_e9ba97vf",  # TV01-ZG
-        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
         "_TZE200_hue3yfsn",  # TV02-ZG
+        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
+        "_TZE200_kds0pmmv",  # MOES TRV TV02
         "_TZE200_kly8gjlz",  # TV05-ZG
+        "_TZE200_lnbfnyxd",
+        "_TZE200_mudxchsu",
     },
 )
 class ZONNSMARTThermostat(Thermostat):

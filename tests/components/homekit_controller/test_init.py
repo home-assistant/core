@@ -18,10 +18,14 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import Helper, remove_device, setup_test_accessories_with_controller
+from .common import (
+    Helper,
+    remove_device,
+    setup_test_accessories_with_controller,
+    setup_test_component,
+)
 
 from tests.common import async_fire_time_changed
-from tests.components.homekit_controller.common import setup_test_component
 
 ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"

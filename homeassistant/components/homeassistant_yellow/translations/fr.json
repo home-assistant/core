@@ -1,0 +1,16 @@
+{
+    "options": {
+        "step": {
+            "install_addon": {
+                "title": "L'installation du module compl\u00e9mentaire multi-protocoles de Silicon Labs a commenc\u00e9."
+            },
+            "show_revert_guide": {
+                "description": "Si vous voulez utiliser uniquement le firmware Zigbee, suivez les \u00e9tapes manuelles suivantes :\n\n  * Supprimez le module compl\u00e9mentaire multi-protocoles de Silicon Labs.\n\n  * Flashez le firmware qui supporte uniquement Zigbee en suivant le guide https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually.\n\n  * Reconfigurez ZHA pour migrer les param\u00e8tres vers le nouveau canal",
+                "title": "Le support multi-protocoles est activ\u00e9 pour cet appareil."
+            },
+            "start_addon": {
+                "title": "Le module compl\u00e9mentaire multi-protocoles de Silicon Labs d\u00e9marre."
+            }
+        }
+    }
+}

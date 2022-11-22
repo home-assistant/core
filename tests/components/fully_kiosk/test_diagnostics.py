@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientSession
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.diagnostics import (
     DEVICE_INFO_TO_REDACT,

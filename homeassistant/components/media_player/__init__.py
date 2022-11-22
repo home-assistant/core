@@ -12,13 +12,14 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, cast, final
+from typing import Any, Final, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
+from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
@@ -136,12 +137,11 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CACHE_IMAGES = "images"
-CACHE_MAXSIZE = "maxsize"
-CACHE_LOCK = "lock"
-CACHE_URL = "url"
-CACHE_CONTENT = "content"
-ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16}
+CACHE_IMAGES: Final = "images"
+CACHE_MAXSIZE: Final = "maxsize"
+CACHE_LOCK: Final = "lock"
+CACHE_URL: Final = "url"
+CACHE_CONTENT: Final = "content"
 
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
@@ -214,6 +214,25 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_REPEAT,
 ]
 
+# mypy: disallow-any-generics
+
+
+class _CacheImage(TypedDict, total=False):
+    """Class to hold a cached image."""
+
+    lock: Required[asyncio.Lock]
+    content: tuple[bytes | None, str | None]
+
+
+class _ImageCache(TypedDict):
+    """Class to hold a cached image."""
+
+    images: collections.OrderedDict[str, _CacheImage]
+    maxsize: int
+
+
+_ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
@@ -248,7 +267,7 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for media_players."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[MediaPlayerEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -420,13 +439,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -473,7 +492,7 @@ class MediaPlayerEntity(Entity):
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
     _attr_state: MediaPlayerState | str | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
@@ -673,7 +692,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_group_members
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
@@ -901,9 +920,7 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            await self.hass.async_add_executor_job(
-                self.toggle  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in {
@@ -921,9 +938,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            await self.hass.async_add_executor_job(
-                self.volume_up  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if (
@@ -939,9 +954,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            await self.hass.async_add_executor_job(
-                self.volume_down  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if (
@@ -954,9 +967,7 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            await self.hass.async_add_executor_job(
-                self.media_play_pause  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == MediaPlayerState.PLAYING:
@@ -989,15 +1000,14 @@ class MediaPlayerEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, Any] = {}
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
@@ -1060,8 +1070,8 @@ class MediaPlayerEntity(Entity):
 
         Images are cached in memory (the images are typically 10-100kB in size).
         """
-        cache_images = cast(collections.OrderedDict, ENTITY_IMAGE_CACHE[CACHE_IMAGES])
-        cache_maxsize = cast(int, ENTITY_IMAGE_CACHE[CACHE_MAXSIZE])
+        cache_images = _ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = _ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
         if urlparse(url).hostname is None:
             url = f"{get_url(self.hass)}{url}"
@@ -1071,7 +1081,7 @@ class MediaPlayerEntity(Entity):
 
         async with cache_images[url][CACHE_LOCK]:
             if CACHE_CONTENT in cache_images[url]:
-                return cache_images[url][CACHE_CONTENT]  # type:ignore[no-any-return]
+                return cache_images[url][CACHE_CONTENT]
 
         (content, content_type) = await self._async_fetch_image(url)
 
@@ -1120,7 +1130,7 @@ class MediaPlayerImageView(HomeAssistantView):
         + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
         """Initialize a media player view."""
         self.component = component
 
@@ -1191,8 +1201,8 @@ async def websocket_browse_media(
 
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
-    component = hass.data[DOMAIN]
-    player: MediaPlayerEntity | None = component.get_entity(msg["entity_id"])
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
+    player = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")

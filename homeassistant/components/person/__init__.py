@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -107,7 +107,7 @@ async def async_add_user_device_tracker(
     hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
 ):
     """Add a device tracker to a person linked to a user."""
-    coll = cast(PersonStorageCollection, hass.data[DOMAIN][1])
+    coll: PersonStorageCollection = hass.data[DOMAIN][1]
 
     for person in coll.async_items():
         if person.get(ATTR_USER_ID) != user_id:
@@ -134,12 +134,12 @@ def persons_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     ):
         return []
 
-    component: EntityComponent = hass.data[DOMAIN][2]
+    component: EntityComponent[Person] = hass.data[DOMAIN][2]
 
     return [
         person_entity.entity_id
         for person_entity in component.entities
-        if entity_id in cast(Person, person_entity).device_trackers
+        if entity_id in person_entity.device_trackers
     ]
 
 
@@ -149,12 +149,12 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN][2]
+    component: EntityComponent[Person] = hass.data[DOMAIN][2]
 
     if (person_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return cast(Person, person_entity).device_trackers
+    return person_entity.device_trackers
 
 
 CREATE_FIELDS = {
@@ -326,7 +326,7 @@ The following persons point at invalid users:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
-    entity_component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
@@ -547,8 +547,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
 @websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
 def ws_list_person(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List persons."""
     yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(

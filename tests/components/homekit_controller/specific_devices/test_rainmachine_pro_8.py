@@ -4,7 +4,7 @@ Make sure that existing RainMachine support isn't broken.
 https://github.com/home-assistant/core/issues/31745
 """
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -34,49 +34,49 @@ async def test_rainmachine_pro_8_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-512",
+                    unique_id="00:00:00:00:00:00_1_512",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_2",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-768",
+                    unique_id="00:00:00:00:00:00_1_768",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_3",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-1024",
+                    unique_id="00:00:00:00:00:00_1_1024",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_4",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-1280",
+                    unique_id="00:00:00:00:00:00_1_1280",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_5",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-1536",
+                    unique_id="00:00:00:00:00:00_1_1536",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_6",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-1792",
+                    unique_id="00:00:00:00:00:00_1_1792",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_7",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-2048",
+                    unique_id="00:00:00:00:00:00_1_2048",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.rainmachine_00ce4a_8",
                     friendly_name="RainMachine-00ce4a",
-                    unique_id="homekit-00aa0000aa0a-2304",
+                    unique_id="00:00:00:00:00:00_1_2304",
                     state="off",
                 ),
             ],

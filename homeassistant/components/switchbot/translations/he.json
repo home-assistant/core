@@ -7,6 +7,11 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "password": {
+                "data": {
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
+                }
+            },
             "user": {
                 "data": {
                     "name": "\u05e9\u05dd",

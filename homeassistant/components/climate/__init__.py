@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
@@ -129,10 +129,12 @@ SET_TEMPERATURE_SCHEMA = vol.All(
     ),
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ClimateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -189,13 +191,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -223,7 +225,7 @@ class ClimateEntity(Entity):
     _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
-    _attr_supported_features: int
+    _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
     _attr_target_humidity: int | None = None
@@ -529,7 +531,7 @@ class ClimateEntity(Entity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
-            await self.hass.async_add_executor_job(self.turn_on)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_on)
             return
 
         # Fake turn on
@@ -542,7 +544,7 @@ class ClimateEntity(Entity):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if hasattr(self, "turn_off"):
-            await self.hass.async_add_executor_job(self.turn_off)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
@@ -550,7 +552,7 @@ class ClimateEntity(Entity):
             await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
@@ -558,7 +560,7 @@ class ClimateEntity(Entity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
             )
         return self._attr_min_temp
@@ -567,7 +569,7 @@ class ClimateEntity(Entity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
             )
         return self._attr_max_temp
@@ -602,7 +604,7 @@ async def async_service_temperature_set(
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = convert_temperature(
+            kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit
             )
         else:

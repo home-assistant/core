@@ -30,7 +30,7 @@ from aioqsw.const import (
     QSD_VERSION,
 )
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant

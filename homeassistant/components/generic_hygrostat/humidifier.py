@@ -147,7 +147,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._attr_supported_features = 0
         if away_humidity:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
@@ -282,7 +281,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         self._target_humidity = humidity
-        await self._async_operate(force=True)
+        await self._async_operate()
         await self.async_update_ha_state()
 
     @property

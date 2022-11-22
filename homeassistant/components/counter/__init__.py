@@ -93,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the counters."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Counter](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(

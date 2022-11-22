@@ -132,7 +132,7 @@ class InputSelectStore(Store):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED

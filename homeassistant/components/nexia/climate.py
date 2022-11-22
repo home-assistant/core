@@ -166,12 +166,11 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_emergency_heat = self._thermostat.has_emergency_heat()
         self._has_humidify_support = self._thermostat.has_humidify_support()
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
-        supported = NEXIA_SUPPORTED
+        self._attr_supported_features = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
-            supported |= ClimateEntityFeature.TARGET_HUMIDITY
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self._has_emergency_heat:
-            supported |= ClimateEntityFeature.AUX_HEAT
-        self._attr_supported_features = supported
+            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
         self._attr_preset_modes = self._zone.get_presets()
         self._attr_fan_modes = self._thermostat.get_fan_modes()
         self._attr_hvac_modes = HVAC_MODES
@@ -206,7 +205,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Set the hvac run mode."""
         if run_mode is not None:
             if run_mode == HOLD_PERMANENT:
-                await self._zone.call_permanent_hold()
+                await self._zone.set_permanent_hold()
             else:
                 await self._zone.call_return_to_schedule()
         if hvac_mode is not None:
@@ -378,7 +377,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn Aux Heat on."""
-        self._thermostat.set_emergency_heat(True)
+        await self._thermostat.set_emergency_heat(True)
         self._signal_thermostat_update()
 
     async def async_turn_off(self) -> None:
@@ -399,7 +398,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             await self._zone.call_return_to_schedule()
             await self._zone.set_mode(mode=OPERATION_MODE_AUTO)
         else:
-            await self._zone.call_permanent_hold()
+            await self._zone.set_permanent_hold()
             await self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
 
         self._signal_zone_update()

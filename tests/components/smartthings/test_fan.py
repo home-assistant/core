@@ -9,7 +9,7 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
@@ -36,7 +36,7 @@ async def test_entity_state(hass, device_factory):
     # Dimmer 1
     state = hass.states.get("fan.fan_1")
     assert state.state == "on"
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SET_SPEED
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.SET_SPEED
     assert state.attributes[ATTR_PERCENTAGE] == 66
 
 

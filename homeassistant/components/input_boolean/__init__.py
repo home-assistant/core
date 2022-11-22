@@ -92,7 +92,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input boolean."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputBoolean](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
