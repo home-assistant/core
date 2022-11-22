@@ -38,10 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=SENSOR_TYPE_CURRENT_STATUS,
-        name="Status",
-    ),
+    SensorEntityDescription(key=SENSOR_TYPE_CURRENT_STATUS, name="Status"),
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
@@ -106,7 +103,9 @@ class QBittorrentSensor(SensorEntity):
         self.client = qbittorrent_client
         self._exception = exception
 
+        self._attr_unique_id = f"{client_name}-{description.key}".lower()
         self._attr_name = f"{client_name} {description.name}"
+        self._attr_icon = description.icon
         self._attr_available = False
 
     def update(self) -> None:

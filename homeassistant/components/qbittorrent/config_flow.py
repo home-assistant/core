@@ -1,5 +1,6 @@
 """Config flow for qBittorrent."""
-import logging
+from __future__ import annotations
+
 from typing import Any
 
 from qbittorrent.client import LoginRequired
@@ -19,34 +20,36 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 from .helpers import setup_client
 
-_LOGGER = logging.getLogger(__name__)
-
-
-def validate_input(data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    client = setup_client(
-        data[CONF_URL], data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_VERIFY_SSL]
-    )
-    client.get_alternative_speed_status()  # Get an arbitrary attribute that requires authentication
-
 
 class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the qBittorrent integration."""
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a user-initiated config flow."""
         errors = {}
 
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
+                # Try to set up qBittorrent client to validate configuration
+                await self.hass.async_add_executor_job(
+                    setup_client,
+                    user_input[CONF_URL],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    user_input[CONF_VERIFY_SSL],
+                )
             except LoginRequired:
                 errors = {"base": "invalid_auth"}
             except RequestException:
                 errors = {"base": "cannot_connect"}
             if not errors:
+                await self.async_set_unique_id(
+                    user_input[CONF_URL], raise_on_progress=False
+                )
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME), data=user_input
+                    title=user_input[CONF_NAME], data=user_input
                 )
 
         return self.async_show_form(

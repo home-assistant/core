@@ -2,6 +2,7 @@
 import logging
 
 from qbittorrent.client import LoginRequired
+from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,22 +14,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
 from .helpers import setup_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the qBittorrent component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up qBittorrent from a config entry."""
+    assert entry.unique_id is not None
     try:
-        hass.async_add_executor_job(
+        await hass.async_add_executor_job(
             setup_client,
             entry.data[CONF_URL],
             entry.data[CONF_USERNAME],
@@ -38,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LoginRequired as err:
         _LOGGER.error("Invalid credentials")
         raise ConfigEntryNotReady from err
-    except Exception as err:
+    except RequestException as err:
         _LOGGER.error("Failed to connect")
         raise ConfigEntryNotReady from err
 
