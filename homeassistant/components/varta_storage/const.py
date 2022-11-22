@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -14,6 +15,8 @@ from homeassistant.const import PERCENTAGE, TIME_HOURS, UnitOfEnergy, UnitOfPowe
 
 DOMAIN = "varta_storage"
 LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass

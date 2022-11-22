@@ -1,8 +1,6 @@
 """The VARTA Storage integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 import async_timeout
 from vartastorage import vartastorage
 
@@ -13,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -55,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=1),
+        update_interval=SCAN_INTERVAL,
     )
 
     await coordinator.async_config_entry_first_refresh()
