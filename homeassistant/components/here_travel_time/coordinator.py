@@ -10,12 +10,13 @@ import here_transit
 from here_transit import HERETransitApi
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_DESTINATION,
@@ -98,7 +99,9 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         mapped_origin_lon: float = section["departure"]["place"]["location"]["lng"]
         mapped_destination_lat: float = section["arrival"]["place"]["location"]["lat"]
         mapped_destination_lon: float = section["arrival"]["place"]["location"]["lng"]
-        distance: float = summary["length"] / 1000
+        distance: float = DistanceConverter.convert(
+            summary["length"], UnitOfLength.METERS, UnitOfLength.KILOMETERS
+        )
         origin_name: str | None = None
         if (names := section["spans"][0].get("names")) is not None:
             origin_name = names[0]["value"]
@@ -181,8 +184,10 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         mapped_destination_lon: float = sections[-1]["arrival"]["place"]["location"][
             "lng"
         ]
-        distance: float = (
-            sum(section["travelSummary"]["length"] for section in sections) / 1000
+        distance: float = DistanceConverter.convert(
+            sum(section["travelSummary"]["length"] for section in sections),
+            UnitOfLength.METERS,
+            UnitOfLength.KILOMETERS,
         )
         duration: float = sum(
             section["travelSummary"]["duration"] for section in sections

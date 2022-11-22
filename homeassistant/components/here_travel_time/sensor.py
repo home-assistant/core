@@ -18,8 +18,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    LENGTH_KILOMETERS,
     TIME_MINUTES,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -68,7 +68,7 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             device_class=SensorDeviceClass.DISTANCE,
-            native_unit_of_measurement=LENGTH_KILOMETERS,
+            native_unit_of_measurement=UnitOfLength.KILOMETERS,
         ),
     )
 
