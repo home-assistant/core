@@ -1735,7 +1735,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.12.0
+vallox-websocket-api==2.13.1
 
 # homeassistant.components.rdw
 vehicle==0.4.0
