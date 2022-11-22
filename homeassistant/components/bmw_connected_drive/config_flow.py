@@ -94,8 +94,13 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return BMWOptionsFlow(config_entry)
 
 
-class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class BMWOptionsFlow(config_entries.OptionsFlow):
     """Handle a option flow for MyBMW."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize MyBMW option flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -125,7 +130,7 @@ class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_READ_ONLY,
-                        default=self.options.get(CONF_READ_ONLY, False),
+                        default=self.config_entry.options.get(CONF_READ_ONLY, False),
                     ): bool,
                 }
             ),

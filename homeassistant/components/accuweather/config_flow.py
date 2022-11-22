@@ -91,8 +91,12 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return AccuWeatherOptionsFlowHandler(config_entry)
 
 
-class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options for AccuWeather."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize AccuWeather options flow."""
+        self.config_entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -113,7 +117,7 @@ class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_FORECAST,
-                        default=self.options.get(CONF_FORECAST, False),
+                        default=self.config_entry.options.get(CONF_FORECAST, False),
                     ): bool
                 }
             ),

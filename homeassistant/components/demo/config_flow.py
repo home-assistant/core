@@ -37,8 +37,13 @@ class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title="Demo", data=import_info)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -61,11 +66,11 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     vol.Required("constant"): "Constant Value",
                     vol.Optional(
                         CONF_BOOLEAN,
-                        default=self.options.get(CONF_BOOLEAN, False),
+                        default=self.config_entry.options.get(CONF_BOOLEAN, False),
                     ): bool,
                     vol.Optional(
                         CONF_INT,
-                        default=self.options.get(CONF_INT, 10),
+                        default=self.config_entry.options.get(CONF_INT, 10),
                     ): int,
                 }
             ),
@@ -85,15 +90,20 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_STRING,
-                        default=self.options.get(CONF_STRING, "Default"),
+                        default=self.config_entry.options.get(
+                            CONF_STRING,
+                            "Default",
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_SELECT,
-                        default=self.options.get(CONF_SELECT, "default"),
+                        default=self.config_entry.options.get(CONF_SELECT, "default"),
                     ): vol.In(["default", "other"]),
                     vol.Optional(
                         CONF_MULTISELECT,
-                        default=self.options.get(CONF_MULTISELECT, ["default"]),
+                        default=self.config_entry.options.get(
+                            CONF_MULTISELECT, ["default"]
+                        ),
                     ): cv.multi_select({"default": "Default", "other": "Other"}),
                 }
             ),

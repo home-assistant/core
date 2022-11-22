@@ -22,12 +22,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -290,10 +285,15 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class DeconzOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class DeconzOptionsFlowHandler(OptionsFlow):
     """Handle deCONZ options."""
 
     gateway: DeconzGateway
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize deCONZ options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -318,7 +318,7 @@ class DeconzOptionsFlowHandler(OptionsFlowWithConfigEntry):
             schema_options[
                 vol.Optional(
                     option,
-                    default=self.options.get(option, default),
+                    default=self.config_entry.options.get(option, default),
                 )
             ] = bool
 

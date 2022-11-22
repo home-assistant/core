@@ -41,8 +41,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user")
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options handler for iss."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
@@ -56,7 +61,7 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_SHOW_ON_MAP,
-                        default=self.options.get(CONF_SHOW_ON_MAP, False),
+                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,
                 }
             ),

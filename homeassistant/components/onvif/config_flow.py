@@ -262,8 +262,13 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await device.close()
 
 
-class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle ONVIF options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize ONVIF options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the ONVIF options."""
@@ -276,7 +281,7 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
             self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                self.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
             return self.async_create_entry(title="", data=self.options)
 
@@ -285,7 +290,9 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             advanced_options[
                 vol.Optional(
                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=self.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                    default=self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
                 )
             ] = bool
         return self.async_show_form(
@@ -294,13 +301,13 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_EXTRA_ARGUMENTS,
-                        default=self.options.get(
+                        default=self.config_entry.options.get(
                             CONF_EXTRA_ARGUMENTS, DEFAULT_ARGUMENTS
                         ),
                     ): str,
                     vol.Optional(
                         CONF_RTSP_TRANSPORT,
-                        default=self.options.get(
+                        default=self.config_entry.options.get(
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
