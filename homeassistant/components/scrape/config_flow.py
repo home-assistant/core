@@ -244,6 +244,7 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
             # Need deep-copy of the list to trigger update_listener
             sensors = [*sensors]
             sensors[self._sensor_index] = validate_sensor(user_input)
+            options["sensor"] = sensors
             return self.async_create_entry(data=options)
 
         return self.async_show_form(
