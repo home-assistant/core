@@ -115,9 +115,6 @@ async def _async_set_value(
     """Service call wrapper to set a new datetime."""
     date_ = service_call.data.get(ATTR_DATE)
     time_ = service_call.data.get(ATTR_TIME)
-    time_zone = dt_util.get_time_zone(
-        service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
-    )
     if date_ is None or time_ is None:
         if entity.native_value is None:
             raise ValueError(
@@ -129,6 +126,8 @@ async def _async_set_value(
         if not time_:
             time_ = entity.native_value.time()
 
+    time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
+    time_zone = dt_util.get_time_zone(time_zone_str)
     return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
 
 
