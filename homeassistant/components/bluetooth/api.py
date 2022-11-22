@@ -45,6 +45,19 @@ def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
 
 
 @hass_callback
+def async_scanner_by_source(hass: HomeAssistant, source: str) -> BaseHaScanner | None:
+    """Return a scanner for a given source.
+
+    This method is only intended to be used by integrations that implement
+    a bluetooth client and need to interact with a scanner directly.
+
+    It is not intended to be used by integrations that need to interact
+    with a device.
+    """
+    return _get_manager(hass).async_scanner_by_source(source)
+
+
+@hass_callback
 def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
     """Return the number of scanners currently in use."""
     return _get_manager(hass).async_scanner_count(connectable)

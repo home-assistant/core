@@ -20,7 +20,7 @@ from . import MockBleakClient, _get_manager, generate_advertisement_data
 from tests.common import async_fire_time_changed
 
 
-async def test_remote_scanner(hass):
+async def test_remote_scanner(hass, enable_bluetooth):
     """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
@@ -70,7 +70,7 @@ async def test_remote_scanner(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -104,7 +104,7 @@ async def test_remote_scanner(hass):
     cancel()
 
 
-async def test_remote_scanner_expires_connectable(hass):
+async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
     """Test the remote scanner expires stale connectable data."""
     manager = _get_manager()
 
@@ -140,7 +140,7 @@ async def test_remote_scanner_expires_connectable(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -174,7 +174,7 @@ async def test_remote_scanner_expires_connectable(hass):
     cancel()
 
 
-async def test_remote_scanner_expires_non_connectable(hass):
+async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
     """Test the remote scanner expires stale non connectable data."""
     manager = _get_manager()
 
@@ -210,7 +210,7 @@ async def test_remote_scanner_expires_non_connectable(hass):
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
     scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -263,5 +263,63 @@ async def test_remote_scanner_expires_non_connectable(hass):
 
     assert len(scanner.discovered_devices) == 0
     assert len(scanner.discovered_devices_and_advertisement_data) == 0
+
+    cancel()
+
+
+async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
+    """Test that the default behavior is to mark the scanner as not scanning when connecting."""
+    manager = _get_manager()
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    with scanner.connecting():
+        assert scanner.scanning is False
+
+        # We should still accept new advertisements while connecting
+        # since advertisements are delivered asynchronously and
+        # we don't want to miss any even when we are willing to
+        # accept advertisements from another scanner in the brief window
+        # between when we start connecting and when we stop scanning
+        scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    devices = scanner.discovered_devices
+    assert len(scanner.discovered_devices) == 1
+    assert len(scanner.discovered_devices_and_advertisement_data) == 1
+    assert devices[0].name == "wohand"
 
     cancel()

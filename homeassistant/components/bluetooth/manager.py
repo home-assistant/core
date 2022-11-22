@@ -126,7 +126,7 @@ class BluetoothManager:
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
-        self._sources: set[str] = set()
+        self._sources: dict[str, BaseHaScanner] = {}
         self._bluetooth_adapters = bluetooth_adapters
 
     @property
@@ -168,6 +168,11 @@ class BluetoothManager:
             if details[ADAPTER_ADDRESS] == address:
                 return adapter
         return None
+
+    @hass_callback
+    def async_scanner_by_source(self, source: str) -> BaseHaScanner | None:
+        """Return the scanner for a source."""
+        return self._sources.get(source)
 
     async def async_get_bluetooth_adapters(
         self, cached: bool = True
@@ -302,6 +307,7 @@ class BluetoothManager:
         self,
         old: BluetoothServiceInfoBleak,
         new: BluetoothServiceInfoBleak,
+        debug: bool,
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
@@ -310,34 +316,32 @@ class BluetoothManager:
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
-            _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
-                new.name,
-                new.address,
-                old.source,
-                old.connectable,
-                new.source,
-                new.connectable,
-                new.time - old.time,
-                stale_seconds,
-            )
+            if debug:
+                _LOGGER.debug(
+                    "%s (%s): Switching from %s to %s (time elapsed:%s > stale seconds:%s)",
+                    new.name,
+                    new.address,
+                    self._async_describe_source(old),
+                    self._async_describe_source(new),
+                    new.time - old.time,
+                    stale_seconds,
+                )
             return False
         if (new.rssi or NO_RSSI_VALUE) - RSSI_SWITCH_THRESHOLD > (
             old.rssi or NO_RSSI_VALUE
         ):
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
-            _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
-                new.name,
-                new.address,
-                old.source,
-                old.connectable,
-                new.source,
-                new.connectable,
-                new.rssi,
-                RSSI_SWITCH_THRESHOLD,
-                old.rssi,
-            )
+            if debug:
+                _LOGGER.debug(
+                    "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s > old rssi:%s)",
+                    new.name,
+                    new.address,
+                    self._async_describe_source(old),
+                    self._async_describe_source(new),
+                    new.rssi,
+                    RSSI_SWITCH_THRESHOLD,
+                    old.rssi,
+                )
             return False
         return True
 
@@ -367,6 +371,7 @@ class BluetoothManager:
         connectable_history = self._connectable_history
 
         source = service_info.source
+        debug = _LOGGER.isEnabledFor(logging.DEBUG)
         # This logic is complex due to the many combinations of scanners that are supported.
         #
         # We need to handle multiple connectable and non-connectable scanners
@@ -384,9 +389,10 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
-            and old_service_info.source in self._sources
+            and (scanner := self._sources.get(old_service_info.source))
+            and scanner.scanning
             and self._prefer_previous_adv_from_different_source(
-                old_service_info, service_info
+                old_service_info, service_info, debug
             )
         ):
             # If we are rejecting the new advertisement and the device is connectable
@@ -404,9 +410,14 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
-                        and old_connectable_service_info.source in self._sources
+                        and (
+                            connectable_scanner := self._sources.get(
+                                old_connectable_service_info.source
+                            )
+                        )
+                        and connectable_scanner.scanning
                         and self._prefer_previous_adv_from_different_source(
-                            old_connectable_service_info, service_info
+                            old_connectable_service_info, service_info, debug
                         )
                     )
                 ):
@@ -461,15 +472,14 @@ class BluetoothManager:
             )
 
         matched_domains = self._integration_matcher.match_domains(service_info)
-        _LOGGER.debug(
-            "%s: %s %s connectable: %s match: %s rssi: %s",
-            source,
-            address,
-            advertisement_data,
-            connectable,
-            matched_domains,
-            advertisement_data.rssi,
-        )
+        if debug:
+            _LOGGER.debug(
+                "%s: %s %s match: %s",
+                self._async_describe_source(service_info),
+                address,
+                advertisement_data,
+                matched_domains,
+            )
 
         if is_connectable_by_any_source:
             # Bleak callbacks must get a connectable device
@@ -490,6 +500,17 @@ class BluetoothManager:
                 {"source": config_entries.SOURCE_BLUETOOTH},
                 service_info,
             )
+
+    @hass_callback
+    def _async_describe_source(self, service_info: BluetoothServiceInfoBleak) -> str:
+        """Describe a source."""
+        if scanner := self._sources.get(service_info.source):
+            description = scanner.name
+        else:
+            description = service_info.source
+        if service_info.connectable:
+            description += " [connectable]"
+        return description
 
     @hass_callback
     def async_track_unavailable(
@@ -611,15 +632,17 @@ class BluetoothManager:
         self, scanner: BaseHaScanner, connectable: bool
     ) -> CALLBACK_TYPE:
         """Register a new scanner."""
+        _LOGGER.debug("Registering scanner %s", scanner.name)
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
+            _LOGGER.debug("Unregistering scanner %s", scanner.name)
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
-            self._sources.remove(scanner.source)
+            del self._sources[scanner.source]
 
         scanners.append(scanner)
-        self._sources.add(scanner.source)
+        self._sources[scanner.source] = scanner
         return _unregister_scanner
 
     @hass_callback

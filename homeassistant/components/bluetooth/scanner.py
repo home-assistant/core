@@ -16,7 +16,7 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
-from bluetooth_adapters import DEFAULT_ADDRESS, adapter_human_name
+from bluetooth_adapters import DEFAULT_ADDRESS
 from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -130,7 +130,7 @@ class HaScanner(BaseHaScanner):
     ) -> None:
         """Init bluetooth discovery."""
         source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
-        super().__init__(hass, source)
+        super().__init__(hass, source, adapter)
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
@@ -138,7 +138,7 @@ class HaScanner(BaseHaScanner):
         self._last_detection = 0.0
         self._start_time = 0.0
         self._new_info_callback = new_info_callback
-        self.name = adapter_human_name(adapter, address)
+        self.scanning = False
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -312,6 +312,7 @@ class HaScanner(BaseHaScanner):
             # Everything is fine, break out of the loop
             break
 
+        self.scanning = True
         self._async_setup_scanner_watchdog()
 
     @hass_callback
@@ -385,6 +386,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
+        self.scanning = False
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
