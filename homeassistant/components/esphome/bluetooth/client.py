@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -262,11 +263,26 @@ class ESPHomeClient(BaseBleakClient):
         if not (scanner := async_scanner_by_source(self._hass, self._source)):
             raise BleakError("Scanner disappeared for {self._source}")
         with scanner.connecting():
-            self._cancel_connection_state = await self._client.bluetooth_device_connect(
-                self._address_as_int,
-                _on_bluetooth_connection_state,
-                timeout=timeout,
-            )
+            try:
+                self._cancel_connection_state = (
+                    await self._client.bluetooth_device_connect(
+                        self._address_as_int,
+                        _on_bluetooth_connection_state,
+                        timeout=timeout,
+                    )
+                )
+            except Exception:  # pylint: disable=broad-except
+                with contextlib.suppress(BleakError):
+                    # If the connect call throws an exception,
+                    # we need to make sure we await the future
+                    # to avoid a warning about an un-retrieved
+                    # exception since we prefer to raise the
+                    # exception from the connect call as it
+                    # will be more descriptive.
+                    if connected_future.done():
+                        await connected_future
+                connected_future.cancel()
+                raise
             await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
