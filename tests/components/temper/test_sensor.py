@@ -9,7 +9,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 
 
-async def test_temperature_readback(hass: Homeassistant) -> None:
+async def test_temperature_readback(hass: HomeAssistant) -> None:
     """Test for reading sensors."""
     mock_temper_device = Mock()
     mock_temper_device.get_temperature.return_value = 12.3
