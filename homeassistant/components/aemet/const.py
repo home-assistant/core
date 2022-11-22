@@ -21,11 +21,11 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     Platform,
+    UnitOfVolumetricFlux,
 )
 
 ATTRIBUTION = "Powered by AEMET OpenData"
@@ -208,7 +208,8 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION,
         name="Precipitation",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
@@ -265,7 +266,8 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_RAIN,
         name="Rain",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_RAIN_PROB,
@@ -276,7 +278,8 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_SNOW,
         name="Snow",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW_PROB,

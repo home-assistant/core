@@ -5,7 +5,7 @@
             "cannot_connect": "No se pudo conectar"
         },
         "error": {
-            "api_password": "Autenticaci\u00f3n no v\u00e1lida, utilice la clave de la API o la contrase\u00f1a.",
+            "api_password": "Autenticaci\u00f3n no v\u00e1lida, utiliza la clave API o la contrase\u00f1a.",
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
@@ -17,7 +17,7 @@
                     "host": "Host",
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Introduce la direcci\u00f3n IP de tu aire acondicionado Daikin.\n\nTen en cuenta que la Clave API y la Contrase\u00f1a son usadas por los dispositivos BRP072Cxx y SKYFi respectivamente.",
+                "description": "Introduce la Direcci\u00f3n IP de tu aire acondicionado Daikin. \n\nTen en cuenta que Clave API y Contrase\u00f1a solo los utilizan los dispositivos BRP072Cxx y SKYFi respectivamente.",
                 "title": "Configurar aire acondicionado Daikin"
             }
         }

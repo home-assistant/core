@@ -13,7 +13,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
@@ -25,24 +25,29 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session
+from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
-from tests.components.recorder.common import wait_recording_done
 
 
 def test_session_scope_not_setup(hass_recorder):
     """Try to create a session scope when not setup."""
     hass = hass_recorder()
     with patch.object(
-        hass.data[DATA_INSTANCE], "get_session", return_value=None
+        util.get_instance(hass), "get_session", return_value=None
     ), pytest.raises(RuntimeError):
         with util.session_scope(hass=hass):
             pass
 
 
-def test_recorder_bad_commit(hass_recorder):
+def test_recorder_bad_commit(hass_recorder, recorder_db_url):
     """Bad _commit should retry 3 times."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: mysql does not raise an OperationalError
+        # which triggers retries for the bad query below, it raises ProgrammingError
+        # on which we give up
+        return
+
     hass = hass_recorder()
 
     def work(session):
@@ -543,11 +548,15 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
     assert message in caplog.text
 
 
-def test_basic_sanity_check(hass_recorder):
+def test_basic_sanity_check(hass_recorder, recorder_db_url):
     """Test the basic sanity checks with a missing table."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
 
@@ -557,10 +566,14 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder, caplog):
+def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     """Run Checks on the open database."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
-    instance = recorder.get_instance(hass)
+    instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
     cursor = instance.engine.raw_connection().cursor()
@@ -636,11 +649,15 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(hass_recorder):
+def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     """Test periodic db cleanups."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
-    with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
+    with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
+        util.periodic_db_cleanups(util.get_instance(hass))
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -652,8 +669,8 @@ def test_periodic_db_cleanups(hass_recorder):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test database write lock."""
@@ -663,10 +680,8 @@ async def test_write_lock_db(
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
     }
-    await async_setup_recorder_instance(hass, config)
+    instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
-
-    instance = hass.data[DATA_INSTANCE]
 
     def _drop_table():
         with instance.engine.connect() as connection:

@@ -4,18 +4,15 @@ Test against characteristics captured from a Velux Gateway.
 https://github.com/home-assistant/core/issues/44314
 """
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-)
+from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -54,10 +51,10 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="cover.velux_window_roof_window",
                             friendly_name="VELUX Window Roof Window",
-                            unique_id="homekit-1111111a114a111a-8",
-                            supported_features=SUPPORT_CLOSE
-                            | SUPPORT_SET_POSITION
-                            | SUPPORT_OPEN,
+                            unique_id="00:00:00:00:00:00_3_8",
+                            supported_features=CoverEntityFeature.CLOSE
+                            | CoverEntityFeature.SET_POSITION
+                            | CoverEntityFeature.OPEN,
                             state="closed",
                         ),
                     ],
@@ -75,21 +72,24 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_temperature_sensor",
                             friendly_name="VELUX Sensor Temperature sensor",
-                            unique_id="homekit-a11b111-8",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                            unique_id="00:00:00:00:00:00_2_8",
                             unit_of_measurement=TEMP_CELSIUS,
                             state="18.9",
                         ),
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_humidity_sensor",
                             friendly_name="VELUX Sensor Humidity sensor",
-                            unique_id="homekit-a11b111-11",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                            unique_id="00:00:00:00:00:00_2_11",
                             unit_of_measurement=PERCENTAGE,
                             state="58",
                         ),
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_carbon_dioxide_sensor",
                             friendly_name="VELUX Sensor Carbon Dioxide sensor",
-                            unique_id="homekit-a11b111-14",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                            unique_id="00:00:00:00:00:00_2_14",
                             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             state="400",
                         ),

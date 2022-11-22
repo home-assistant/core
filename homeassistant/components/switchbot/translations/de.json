@@ -7,10 +7,20 @@
             "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "password": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "F\u00fcr das Ger\u00e4t {name} ist ein Kennwort erforderlich."
+            },
             "user": {
                 "data": {
+                    "address": "Ger\u00e4teadresse",
                     "mac": "MAC-Adresse des Ger\u00e4ts",
                     "name": "Name",
                     "password": "Passwort"

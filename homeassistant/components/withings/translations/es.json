@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Configuraci\u00f3n actualizada para el perfil.",
-            "authorize_url_timeout": "Tiempo de espera agotado durante la generaci\u00f3n de la URL de autorizaci\u00f3n.",
-            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
-            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [revisa la secci\u00f3n de ayuda]({docs_url})"
         },
         "create_entry": {
-            "default": "Autenticado correctamente con Withings."
+            "default": "Autenticado con \u00e9xito con Withings."
         },
         "error": {
             "already_configured": "La cuenta ya est\u00e1 configurada"
@@ -21,12 +21,16 @@
                 "data": {
                     "profile": "Nombre de perfil"
                 },
-                "description": "\u00bfQu\u00e9 perfil seleccion\u00f3 en el sitio web de Withings? Es importante que los perfiles coincidan, de lo contrario los datos se etiquetar\u00e1n incorrectamente.",
+                "description": "Proporciona un nombre de perfil \u00fanico para estos datos. Por lo general, este es el nombre del perfil que seleccionaste en el paso anterior.",
                 "title": "Perfil de usuario."
             },
             "reauth": {
                 "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
-                "title": "Re-autentificar el perfil"
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
+                "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
     }

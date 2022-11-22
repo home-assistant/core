@@ -85,7 +85,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
-        key="electricity_delivery",
+        key="current_electricity_delivery",
         name="Power production",
         obis_reference=obis_references.CURRENT_ELECTRICITY_DELIVERY,
         device_class=SensorDeviceClass.POWER,
@@ -559,6 +559,7 @@ class DSMREntity(SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
+        value: StateType
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
@@ -573,10 +574,7 @@ class DSMREntity(SensorEntity):
                 float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
             )
 
-        if value is not None:
-            return value
-
-        return None
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:

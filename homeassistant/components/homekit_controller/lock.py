@@ -13,11 +13,14 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .connection import HKDevice
+from .entity import HomeKitEntity
 
 CURRENT_STATE_MAP = {
     0: STATE_UNLOCKED,
@@ -37,15 +40,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit lock."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if service.type != ServicesTypes.LOCK_MECHANISM:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([HomeKitLock(conn, info)], True)
+        entity = HomeKitLock(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.LOCK
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -117,6 +124,10 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         await self.async_put_characteristics(
             {CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: TARGET_STATE_MAP[state]}
         )
+        # Some locks need to be polled to update the current state
+        # after a target state change.
+        # https://github.com/home-assistant/core/issues/81887
+        await self._accessory.async_request_update()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

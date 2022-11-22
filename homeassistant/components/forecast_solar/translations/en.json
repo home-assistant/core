@@ -25,7 +25,7 @@
                     "inverter_size": "Inverter size (Watt)",
                     "modules power": "Total Watt peak power of your solar modules"
                 },
-                "description": "These values allow tweaking the Solar.Forecast result. Please refer to the documentation if a field is unclear."
+                "description": "These values allow tweaking the Forecast.Solar result. Please refer to the documentation if a field is unclear."
             }
         }
     }

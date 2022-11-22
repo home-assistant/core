@@ -9,11 +9,12 @@ from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as util_dt
 
+from . import TEST_IMAGE
+
 
 async def test_upload_image(hass, hass_client, hass_ws_client):
     """Test we can upload an image."""
     now = util_dt.utcnow()
-    test_image = pathlib.Path(__file__).parent / "logo.png"
 
     with tempfile.TemporaryDirectory() as tempdir, patch.object(
         hass.config, "path", return_value=tempdir
@@ -22,7 +23,7 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 
-        with test_image.open("rb") as fp:
+        with TEST_IMAGE.open("rb") as fp:
             res = await client.post("/api/image/upload", data={"file": fp})
 
         assert res.status == 200
@@ -36,7 +37,7 @@ async def test_upload_image(hass, hass_client, hass_ws_client):
 
         tempdir = pathlib.Path(tempdir)
         item_folder: pathlib.Path = tempdir / item["id"]
-        assert (item_folder / "original").read_bytes() == test_image.read_bytes()
+        assert (item_folder / "original").read_bytes() == TEST_IMAGE.read_bytes()
 
         # fetch non-existing image
         res = await client.get("/api/image/serve/non-existing/256x256")

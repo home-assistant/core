@@ -37,7 +37,7 @@
       "unknown_error": "Device reported an unknown error. Pairing failed.",
       "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
       "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
-      "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently."
+      "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently: {error}"
     },
     "abort": {
       "no_devices": "No unpaired devices could be found",

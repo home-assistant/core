@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from enum import Enum
 import functools
@@ -17,22 +17,24 @@ from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from .data_entry_flow import FlowResult
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from .helpers import device_registry, entity_registry, storage
+from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
-from .setup import async_process_deps_reqs, async_setup_component
+from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
-    from .helpers.service_info.bluetooth import BluetoothServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +137,16 @@ DISCOVERY_SOURCES = {
 RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
+
+SIGNAL_CONFIG_ENTRY_CHANGED = "config_entry_changed"
+
+
+class ConfigEntryChange(StrEnum):
+    """What was changed in a config entry."""
+
+    ADDED = "added"
+    REMOVED = "removed"
+    UPDATED = "updated"
 
 
 class ConfigEntryDisabler(StrEnum):
@@ -310,7 +322,7 @@ class ConfigEntry:
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
-            self.state = ConfigEntryState.SETUP_IN_PROGRESS
+            self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         self.supports_unload = await support_entry_unload(hass, self.domain)
         self.supports_remove_device = await support_remove_from_device(
@@ -327,8 +339,7 @@ class ConfigEntry:
                 err,
             )
             if self.domain == integration.domain:
-                self.state = ConfigEntryState.SETUP_ERROR
-                self.reason = "Import error"
+                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
             return
 
         if self.domain == integration.domain:
@@ -341,14 +352,12 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                self.state = ConfigEntryState.SETUP_ERROR
-                self.reason = "Import error"
+                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self.state = ConfigEntryState.MIGRATION_ERROR
-                self.reason = None
+                self.async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
         error_reason = None
@@ -378,8 +387,7 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
-            self.state = ConfigEntryState.SETUP_RETRY
-            self.reason = str(ex) or None
+            self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             message = str(ex)
@@ -427,11 +435,9 @@ class ConfigEntry:
             return
 
         if result:
-            self.state = ConfigEntryState.LOADED
-            self.reason = None
+            self.async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
-            self.state = ConfigEntryState.SETUP_ERROR
-            self.reason = error_reason
+            self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -452,8 +458,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self.state = ConfigEntryState.NOT_LOADED
-            self.reason = None
+            self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
         if self.state == ConfigEntryState.NOT_LOADED:
@@ -467,8 +472,7 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self.state = ConfigEntryState.NOT_LOADED
-                self.reason = None
+                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         component = integration.get_component()
@@ -479,17 +483,16 @@ class ConfigEntry:
 
             if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
-
-                self.state = ConfigEntryState.NOT_LOADED
-                self.reason = None
+                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
             if integration.domain == self.domain:
-                self.state = ConfigEntryState.FAILED_UNLOAD
-                self.reason = "Unload not supported"
+                self.async_set_state(
+                    hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
+                )
             return False
 
         try:
@@ -499,20 +502,20 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self.state = ConfigEntryState.NOT_LOADED
-                self.reason = None
+                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload()
 
             # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
-                self.state = ConfigEntryState.FAILED_UNLOAD
-                self.reason = "Unknown error"
+                self.async_set_state(
+                    hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
+                )
             return False
 
     async def async_remove(self, hass: HomeAssistant) -> None:
@@ -540,6 +543,17 @@ class ConfigEntry:
                 self.title,
                 integration.domain,
             )
+
+    @callback
+    def async_set_state(
+        self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
+    ) -> None:
+        """Set the state of the config entry."""
+        self.state = state
+        self.reason = reason
+        async_dispatcher_send(
+            hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
+        )
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
@@ -640,25 +654,41 @@ class ConfigEntry:
                 await asyncio.gather(*pending)
 
     @callback
-    def async_start_reauth(self, hass: HomeAssistant) -> None:
+    def async_start_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
         """Start a reauth flow."""
-        flow_context = {
-            "source": SOURCE_REAUTH,
-            "entry_id": self.entry_id,
-            "title_placeholders": {"name": self.title},
-            "unique_id": self.unique_id,
-        }
-
-        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
-            if flow["context"] == flow_context:
-                return
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 self.domain,
-                context=flow_context,
-                data=self.data,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
+                data=self.data | (data or {}),
             )
+        )
+
+    @callback
+    def async_get_active_flows(
+        self, hass: HomeAssistant, sources: set[str]
+    ) -> Generator[FlowResult, None, None]:
+        """Get any active flows of certain sources for this entry."""
+        return (
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
+            if flow["context"].get("source") in sources
+            and flow["context"].get("entry_id") == self.entry_id
         )
 
     @callback
@@ -887,6 +917,7 @@ class ConfigEntries:
             )
         self._entries[entry.entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
@@ -942,6 +973,7 @@ class ConfigEntries:
                 )
             )
 
+        self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         return {"require_restart": not unload_success}
 
     async def _async_shutdown(self, event: Event) -> None:
@@ -1016,7 +1048,10 @@ class ConfigEntries:
             raise UnknownEntry
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
-            raise OperationNotAllowed
+            raise OperationNotAllowed(
+                f"The config entry {entry.title} ({entry.domain}) with entry_id {entry.entry_id}"
+                f" cannot be setup because is already loaded in the {entry.state} state"
+            )
 
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
@@ -1038,7 +1073,10 @@ class ConfigEntries:
             raise UnknownEntry
 
         if not entry.state.recoverable:
-            raise OperationNotAllowed
+            raise OperationNotAllowed(
+                f"The config entry {entry.title} ({entry.domain}) with entry_id "
+                f"{entry.entry_id} cannot be unloaded because it is not in a recoverable state ({entry.state})"
+            )
 
         return await entry.async_unload(self.hass)
 
@@ -1153,8 +1191,17 @@ class ConfigEntries:
                 self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
-
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         return True
+
+    @callback
+    def _async_dispatch(
+        self, change_type: ConfigEntryChange, entry: ConfigEntry
+    ) -> None:
+        """Dispatch a config entry change."""
+        async_dispatcher_send(
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
+        )
 
     @callback
     def async_setup_platforms(
@@ -1235,6 +1282,22 @@ class ConfigEntries:
         """Return data to save."""
         return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
+    async def async_wait_component(self, entry: ConfigEntry) -> bool:
+        """Wait for an entry's component to load and return if the entry is loaded.
+
+        This is primarily intended for existing config entries which are loaded at
+        startup, awaiting this function will block until the component and all its
+        config entries are loaded.
+        Config entries which are created after Home Assistant is started can't be waited
+        for, the function will just return if the config entry is loaded or not.
+        """
+        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_event.wait()
+        # The component was not loaded.
+        if entry.domain not in self.hass.config.components:
+            return False
+        return entry.state == ConfigEntryState.LOADED
+
 
 async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
     """Migrate the pre-0.73 config format to the latest version."""
@@ -1289,6 +1352,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self,
         updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
+        *,
+        error: str = "already_configured",
     ) -> None:
         """Abort if the unique ID is already configured."""
         if self.unique_id is None:
@@ -1324,7 +1389,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -1485,7 +1550,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self._async_step_discovery_without_unique_id()

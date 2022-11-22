@@ -19,15 +19,7 @@
       }
     ],
     "deleted": [],
-    "loaded": [
-      {
-        "UserID": "userid",
-        "created": "2000-00-00T00:00:00.447Z",
-        "key": "key",
-        "loaded": "2000-00-00T00:00:00.447Z",
-        "slot": 1
-      }
-    ]
+    "loaded": []
   },
   "SerialNumber": "ABC",
   "Type": 3,

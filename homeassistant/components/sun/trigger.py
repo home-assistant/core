@@ -3,10 +3,6 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import (
     CONF_EVENT,
     CONF_OFFSET,
@@ -16,9 +12,8 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -32,11 +27,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
     description = event
@@ -45,7 +40,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def call_action():
+    def call_action() -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
             job,

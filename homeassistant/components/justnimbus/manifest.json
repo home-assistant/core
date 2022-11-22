@@ -1,0 +1,9 @@
+{
+  "domain": "justnimbus",
+  "name": "JustNimbus",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/justnimbus",
+  "requirements": ["justnimbus==0.6.0"],
+  "codeowners": ["@kvanzuijlen"],
+  "iot_class": "cloud_polling"
+}

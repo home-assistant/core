@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Vattumannen",
+            "aries": "V\u00e4duren",
+            "cancer": "Kr\u00e4ftan",
+            "capricorn": "Stenbocken",
+            "gemini": "Tvillingarna",
+            "leo": "Lejonet",
+            "libra": "V\u00e5gen",
+            "pisces": "Fiskarna",
+            "sagittarius": "Skytten",
+            "scorpio": "Skorpionen",
+            "taurus": "Oxen",
+            "virgo": "Jungfrun"
+        }
+    }
+}

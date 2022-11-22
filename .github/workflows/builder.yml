@@ -24,12 +24,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -67,10 +67,10 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -100,7 +100,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
@@ -115,7 +115,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -146,20 +146,20 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.07.0
+        uses: home-assistant/builder@2022.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -198,7 +198,7 @@ jobs:
           - yellow
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Set build additional args
         run: |
@@ -212,20 +212,20 @@ jobs:
           fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.07.0
+        uses: home-assistant/builder@2022.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -241,7 +241,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -280,18 +280,18 @@ jobs:
           - "homeassistant"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Login to DockerHub
         if: matrix.registry == 'homeassistant'
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
         if: matrix.registry == 'ghcr.io/home-assistant'
-        uses: docker/login-action@v2.0.0
+        uses: docker/login-action@v2.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

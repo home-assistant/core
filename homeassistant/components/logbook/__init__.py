@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
+from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.filters import (
     extract_include_exclude_filter_conf,
     merge_include_exclude_filters,
@@ -32,14 +32,17 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import rest_api, websocket_api
-from .const import (
+from .const import (  # noqa: F401
     ATTR_MESSAGE,
     DOMAIN,
     LOGBOOK_ENTITIES_FILTER,
+    LOGBOOK_ENTRY_CONTEXT_ID,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
+    LOGBOOK_ENTRY_ICON,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
+    LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_FILTERS,
 )
 from .models import LazyEventPartialState  # noqa: F401

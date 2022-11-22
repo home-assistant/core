@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
-from homeassistant.components.cover import DEVICE_CLASS_GATE
-from homeassistant.components.media_player.const import (
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -26,10 +26,11 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -2019,7 +2020,7 @@ async def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units = US_CUSTOMARY_SYSTEM
     device = (
         "climate.test_thermostat",
         "cool",
@@ -2030,7 +2031,7 @@ async def test_thermostat(hass):
             "current_temperature": 75.0,
             "friendly_name": "Test Thermostat",
             "supported_features": 1 | 2 | 4 | 128,
-            "hvac_modes": ["off", "heat", "cool", "auto", "dry"],
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
             "preset_mode": None,
             "preset_modes": ["eco"],
             "min_temp": 50,
@@ -2220,7 +2221,7 @@ async def test_thermostat(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
 
-    # Assert we can call custom modes
+    # Assert we can call custom modes for dry and fan_only
     call, msg = await assert_request_calls_service(
         "Alexa.ThermostatController",
         "SetThermostatMode",
@@ -2230,6 +2231,18 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "CUSTOM", "customName": "DEHUMIDIFY"}},
     )
     assert call.data["hvac_mode"] == "dry"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "FAN"}},
+    )
+    assert call.data["hvac_mode"] == "fan_only"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
 
@@ -2274,9 +2287,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
-
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):
@@ -2755,7 +2765,7 @@ async def test_cover_gate(hass):
         {
             "friendly_name": "Test cover gate",
             "supported_features": 3,
-            "device_class": DEVICE_CLASS_GATE,
+            "device_class": CoverDeviceClass.GATE,
         },
     )
     appliance = await discovery_test(device, hass)

@@ -4,7 +4,7 @@ import logging
 
 from roonapi import RoonApi, RoonDiscovery
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
@@ -13,7 +13,6 @@ from .const import CONF_ROON_ID, ROON_APPINFO
 _LOGGER = logging.getLogger(__name__)
 INITIAL_SYNC_INTERVAL = 5
 FULL_SYNC_INTERVAL = 30
-PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 class RoonServer:
@@ -53,7 +52,6 @@ class RoonServer:
             (host, port) = get_roon_host()
             return RoonApi(ROON_APPINFO, token, host, port, blocking_init=True)
 
-        hass = self.hass
         core_id = self.config_entry.data.get(CONF_ROON_ID)
 
         self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
@@ -65,11 +63,6 @@ class RoonServer:
         # Default to 'host' for compatibility with older configs without core_id
         self.roon_id = (
             core_id if core_id is not None else self.config_entry.data[CONF_HOST]
-        )
-
-        # initialize media_player platform
-        await hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
         )
 
         # Initialize Roon background polling

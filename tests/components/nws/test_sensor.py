@@ -6,10 +6,9 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry
-from tests.components.nws.const import (
+from .const import (
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     NONE_OBSERVATION,
@@ -18,12 +17,14 @@ from tests.components.nws.const import (
     SENSOR_EXPECTED_OBSERVATION_METRIC,
 )
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     "units,result_observation,result_forecast",
     [
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             SENSOR_EXPECTED_OBSERVATION_IMPERIAL,
             EXPECTED_FORECAST_IMPERIAL,
         ),

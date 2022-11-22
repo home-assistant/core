@@ -158,7 +158,7 @@ async def test_entry_diagnostics(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -248,7 +248,7 @@ async def test_redact_diagnostics(
                         "gps_accuracy": 1.5,
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
-                        "source_type": None,
+                        "source_type": "gps",
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,

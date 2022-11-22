@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Zariadenie nie je podporovan\u00e9"
+        }
+    }
+}

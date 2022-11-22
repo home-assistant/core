@@ -67,7 +67,7 @@ def _test_camera_rtsp_creds(data):
 
 
 class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ezviz."""
+    """Handle a config flow for EZVIZ."""
 
     VERSION = 1
 
@@ -101,7 +101,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_camera_rtsp(self, data):
         """Try DESCRIBE on RTSP camera with credentials."""
 
-        # Get Ezviz cloud credentials from config entry
+        # Get EZVIZ cloud credentials from config entry
         ezviz_client_creds = {
             CONF_USERNAME: None,
             CONF_PASSWORD: None,
@@ -311,14 +311,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class EzvizOptionsFlowHandler(OptionsFlow):
-    """Handle Ezviz client options."""
+    """Handle EZVIZ client options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage Ezviz options."""
+        """Manage EZVIZ options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

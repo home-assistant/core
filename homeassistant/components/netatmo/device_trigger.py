@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -26,6 +22,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .climate import STATE_NETATMO_AWAY, STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE
@@ -34,10 +31,6 @@ from .const import (
     DOMAIN,
     EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMERA,
-    MODEL_NATHERM1,
-    MODEL_NOC,
-    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -45,10 +38,10 @@ from .const import (
 CONF_SUBTYPE = "subtype"
 
 DEVICES = {
-    MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
-    MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
-    MODEL_NATHERM1: CLIMATE_TRIGGERS,
-    MODEL_NRV: CLIMATE_TRIGGERS,
+    "Smart Indoor Camera": INDOOR_CAMERA_TRIGGERS,
+    "Smart Outdoor Camera": OUTDOOR_CAMERA_TRIGGERS,
+    "Smart Thermostat": CLIMATE_TRIGGERS,
+    "Smart Valve": CLIMATE_TRIGGERS,
 }
 
 SUBTYPES = {
@@ -79,7 +72,7 @@ async def async_validate_trigger_config(
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if not device:
+    if not device or device.model is None:
         raise InvalidDeviceAutomationConfig(
             f"Trigger invalid, device with ID {config[CONF_DEVICE_ID]} not found"
         )
@@ -140,8 +133,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
@@ -169,5 +162,5 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )

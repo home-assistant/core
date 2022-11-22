@@ -38,14 +38,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temperature_util,
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
 )
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,47 +100,49 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
-VALID_UNITS_PRESSURE: tuple[str, ...] = (
+VALID_UNITS_PRESSURE: set[str] = {
     PRESSURE_HPA,
     PRESSURE_MBAR,
     PRESSURE_INHG,
     PRESSURE_MMHG,
-)
-VALID_UNITS_TEMPERATURE: tuple[str, ...] = (
+}
+VALID_UNITS_TEMPERATURE: set[str] = {
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-)
-VALID_UNITS_PRECIPITATION: tuple[str, ...] = (
+}
+VALID_UNITS_PRECIPITATION: set[str] = {
     LENGTH_MILLIMETERS,
     LENGTH_INCHES,
-)
-VALID_UNITS_VISIBILITY: tuple[str, ...] = (
+}
+VALID_UNITS_VISIBILITY: set[str] = {
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-)
-VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
+}
+VALID_UNITS_WIND_SPEED: set[str] = {
     SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-)
-
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: pressure_util.convert,
-    ATTR_WEATHER_TEMPERATURE_UNIT: temperature_util.convert,
-    ATTR_WEATHER_VISIBILITY_UNIT: distance_util.convert,
-    ATTR_WEATHER_PRECIPITATION_UNIT: distance_util.convert,
-    ATTR_WEATHER_WIND_SPEED_UNIT: speed_util.convert,
 }
 
-VALID_UNITS: dict[str, tuple[str, ...]] = {
+UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
+    ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
+    ATTR_WEATHER_TEMPERATURE_UNIT: TemperatureConverter.convert,
+    ATTR_WEATHER_VISIBILITY_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_PRECIPITATION_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
+}
+
+VALID_UNITS: dict[str, set[str]] = {
     ATTR_WEATHER_PRESSURE_UNIT: VALID_UNITS_PRESSURE,
     ATTR_WEATHER_TEMPERATURE_UNIT: VALID_UNITS_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY_UNIT: VALID_UNITS_VISIBILITY,
     ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
+
+# mypy: disallow-any-generics
 
 
 def round_temperature(temperature: float | None, precision: float) -> float | None:
@@ -185,7 +186,7 @@ class Forecast(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -194,13 +195,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -419,7 +420,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
+        return (
+            PRESSURE_HPA if self.hass.config.units is METRIC_SYSTEM else PRESSURE_INHG
+        )
 
     @final
     @property
@@ -483,7 +486,7 @@ class WeatherEntity(Entity):
         """
         return (
             SPEED_KILOMETERS_PER_HOUR
-            if self.hass.config.units.is_metric
+            if self.hass.config.units is METRIC_SYSTEM
             else SPEED_MILES_PER_HOUR
         )
 
@@ -626,9 +629,9 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted from native units to user-configured units."""
-        data = {}
+        data: dict[str, Any] = {}
 
         precision = self.precision
 
@@ -705,9 +708,9 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
         if self.forecast is not None:
-            forecast = []
-            for forecast_entry in self.forecast:
-                forecast_entry = dict(forecast_entry)
+            forecast: list[dict[str, Any]] = []
+            for existing_forecast_entry in self.forecast:
+                forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
 
                 temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)

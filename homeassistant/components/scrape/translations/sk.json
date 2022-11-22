@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
+        }
+    }
+}

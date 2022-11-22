@@ -16,9 +16,15 @@
                     "api_key": "API kulcs",
                     "api_token": "API jelsz\u00f3"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg API kulcs\u00e1nak adatait a Coinbase \u00e1ltal megadott m\u00f3don.",
+                "description": "K\u00e9rem, adja meg API kulcs\u00e1nak adatait a Coinbase \u00e1ltal megadott m\u00f3don.",
                 "title": "Coinbase API kulcs r\u00e9szletei"
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "A Coinbase YAML haszn\u00e1lat\u00e1val t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3j\u00e1t a Home Assistant nem haszn\u00e1lja.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Coinbase YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fclt"
         }
     },
     "options": {

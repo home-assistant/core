@@ -1,5 +1,6 @@
 """UniFi Network services."""
 
+from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -77,7 +78,7 @@ async def async_reconnect_client(hass, data) -> None:
         ):
             continue
 
-        await controller.api.clients.reconnect(mac)
+        await controller.api.request(ClientReconnectRequest.create(mac))
 
 
 async def async_remove_clients(hass, data) -> None:
@@ -109,4 +110,4 @@ async def async_remove_clients(hass, data) -> None:
             clients_to_remove.append(client.mac)
 
         if clients_to_remove:
-            await controller.api.clients.remove_clients(macs=clients_to_remove)
+            await controller.api.request(ClientRemoveRequest.create(clients_to_remove))

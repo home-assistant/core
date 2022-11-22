@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components.blueprint import BlueprintInputs
+from homeassistant.components import websocket_api
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT, BlueprintInputs
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODE,
     CONF_NAME,
+    CONF_PATH,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -27,7 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import extract_domain_configs
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -78,120 +81,114 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all scripts that reference the entity."""
+def _scripts_with_x(
+    hass: HomeAssistant, referenced_id: str, property_name: str
+) -> list[str]:
+    """Return all scripts that reference the x."""
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
 
     return [
         script_entity.entity_id
         for script_entity in component.entities
-        if entity_id in script_entity.script.referenced_entities
+        if referenced_id in getattr(script_entity.script, property_name)
     ]
+
+
+def _x_in_script(hass: HomeAssistant, entity_id: str, property_name: str) -> list[str]:
+    """Return all x in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
+
+    if (script_entity := component.get_entity(entity_id)) is None:
+        return []
+
+    return list(getattr(script_entity.script, property_name))
+
+
+@callback
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all scripts that reference the entity."""
+    return _scripts_with_x(hass, entity_id, "referenced_entities")
 
 
 @callback
 def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_entities)
+    return _x_in_script(hass, entity_id, "referenced_entities")
 
 
 @callback
 def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if device_id in script_entity.script.referenced_devices
-    ]
+    return _scripts_with_x(hass, device_id, "referenced_devices")
 
 
 @callback
 def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_devices)
+    return _x_in_script(hass, entity_id, "referenced_devices")
 
 
 @callback
 def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     """Return all scripts that reference the area."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if area_id in script_entity.script.referenced_areas
-    ]
+    return _scripts_with_x(hass, area_id, "referenced_areas")
 
 
 @callback
 def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all areas in a script."""
+    return _x_in_script(hass, entity_id, "referenced_areas")
+
+
+@callback
+def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
+    """Return all scripts that reference the blueprint."""
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
 
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_areas)
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if script_entity.referenced_blueprint == blueprint_path
+    ]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[ScriptEntity](LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    # To register scripts as valid domain for Blueprint
+    # Register script as valid domain for Blueprint
     async_get_blueprints(hass)
 
-    if not await _async_process_config(hass, config, component):
-        await async_get_blueprints(hass).async_populate()
+    await _async_process_config(hass, config, component)
+
+    # Add some default blueprints to blueprints/script, does nothing
+    # if blueprints/script already exists
+    await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
-        if (conf := await component.async_prepare_reload()) is None:
+        await async_get_blueprints(hass).async_reset_cache()
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_turn_on(
                 variables=variables, context=service.context, wait=False
@@ -200,9 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
 
         if not script_entities:
             return
@@ -216,9 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
@@ -234,78 +227,136 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
+    websocket_api.async_register_command(hass, websocket_config)
 
     return True
 
 
-async def _async_process_config(hass, config, component) -> bool:
-    """Process script configuration.
+@dataclass
+class ScriptEntityConfig:
+    """Container for prepared script entity configuration."""
 
-    Return true, if Blueprints were used.
-    """
-    entities = []
-    blueprints_used = False
+    config_block: ConfigType
+    key: str
+    raw_blueprint_inputs: ConfigType | None
+    raw_config: ConfigType | None
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
 
-        for object_id, config_block in conf.items():
-            raw_blueprint_inputs = None
-            raw_config = None
+async def _prepare_script_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> list[ScriptEntityConfig]:
+    """Parse configuration and prepare script entity configuration."""
+    script_configs: list[ScriptEntityConfig] = []
 
-            if isinstance(config_block, BlueprintInputs):
-                blueprints_used = True
-                blueprint_inputs = config_block
-                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+    conf: dict[str, dict[str, Any] | BlueprintInputs] = config[DOMAIN]
 
-                try:
-                    raw_config = blueprint_inputs.async_substitute()
-                    config_block = cast(
-                        dict[str, Any],
-                        await async_validate_config_item(hass, raw_config),
-                    )
-                except vol.Invalid as err:
-                    LOGGER.error(
-                        "Blueprint %s generated invalid script with input %s: %s",
-                        blueprint_inputs.blueprint.name,
-                        blueprint_inputs.inputs,
-                        humanize_error(config_block, err),
-                    )
-                    continue
-            else:
-                raw_config = cast(ScriptConfig, config_block).raw_config
+    for key, config_block in conf.items():
+        raw_blueprint_inputs = None
+        raw_config = None
 
-            entities.append(
-                ScriptEntity(
-                    hass, object_id, config_block, raw_config, raw_blueprint_inputs
+        if isinstance(config_block, BlueprintInputs):
+            blueprint_inputs = config_block
+            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+            try:
+                raw_config = blueprint_inputs.async_substitute()
+                config_block = cast(
+                    dict[str, Any],
+                    await async_validate_config_item(hass, raw_config),
                 )
-            )
+            except vol.Invalid as err:
+                LOGGER.error(
+                    "Blueprint %s generated invalid script with input %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    humanize_error(config_block, err),
+                )
+                continue
+        else:
+            raw_config = cast(ScriptConfig, config_block).raw_config
 
+        script_configs.append(
+            ScriptEntityConfig(config_block, key, raw_blueprint_inputs, raw_config)
+        )
+
+    return script_configs
+
+
+async def _create_script_entities(
+    hass: HomeAssistant, script_configs: list[ScriptEntityConfig]
+) -> list[ScriptEntity]:
+    """Create script entities from prepared configuration."""
+    entities: list[ScriptEntity] = []
+
+    for script_config in script_configs:
+
+        entity = ScriptEntity(
+            hass,
+            script_config.key,
+            script_config.config_block,
+            script_config.raw_config,
+            script_config.raw_blueprint_inputs,
+        )
+        entities.append(entity)
+
+    return entities
+
+
+async def _async_process_config(hass, config, component) -> None:
+    """Process script configuration."""
+    entities = []
+
+    def script_matches_config(script: ScriptEntity, config: ScriptEntityConfig) -> bool:
+        return script.unique_id == config.key and script.raw_config == config.raw_config
+
+    def find_matches(
+        scripts: list[ScriptEntity],
+        script_configs: list[ScriptEntityConfig],
+    ) -> tuple[set[int], set[int]]:
+        """Find matches between a list of script entities and a list of configurations.
+
+        A script or configuration is only allowed to match at most once to handle
+        the case of multiple scripts with identical configuration.
+
+        Returns a tuple of sets of indices: ({script_matches}, {config_matches})
+        """
+        script_matches: set[int] = set()
+        config_matches: set[int] = set()
+
+        for script_idx, script in enumerate(scripts):
+            for config_idx, config in enumerate(script_configs):
+                if config_idx in config_matches:
+                    # Only allow a script config to match at most once
+                    continue
+                if script_matches_config(script, config):
+                    script_matches.add(script_idx)
+                    config_matches.add(config_idx)
+                    # Only allow a script to match at most once
+                    break
+
+        return script_matches, config_matches
+
+    script_configs = await _prepare_script_config(hass, config)
+    scripts: list[ScriptEntity] = list(component.entities)
+
+    # Find scripts and configurations which have matches
+    script_matches, config_matches = find_matches(scripts, script_configs)
+
+    # Remove scripts which have changed config or no longer exist
+    tasks = [
+        script.async_remove()
+        for idx, script in enumerate(scripts)
+        if idx not in script_matches
+    ]
+    await asyncio.gather(*tasks)
+
+    # Create scripts which have changed config or have been added
+    updated_script_configs = [
+        config for idx, config in enumerate(script_configs) if idx not in config_matches
+    ]
+    entities = await _create_script_entities(hass, updated_script_configs)
     await component.async_add_entities(entities)
-
-    async def service_handler(service: ServiceCall) -> None:
-        """Execute a service call to script.<script name>."""
-        entity_id = ENTITY_ID_FORMAT.format(service.service)
-        script_entity = component.get_entity(entity_id)
-        await script_entity.async_turn_on(
-            variables=service.data, context=service.context
-        )
-
-    # Register services for all entities that were created successfully.
-    for entity in entities:
-        hass.services.async_register(
-            DOMAIN, entity.object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
-        )
-
-        # Register the service description
-        service_desc = {
-            CONF_NAME: entity.name,
-            CONF_DESCRIPTION: entity.description,
-            CONF_FIELDS: entity.fields,
-        }
-        async_set_service_schema(hass, DOMAIN, entity.object_id, service_desc)
-
-    return blueprints_used
 
 
 class ScriptEntity(ToggleEntity, RestoreEntity):
@@ -313,33 +364,31 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, cfg, raw_config, blueprint_inputs):
+    def __init__(self, hass, key, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
-        self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
 
-        # The object ID of scripts need / are unique already
-        # they cannot be changed from the UI after creating
-        self._attr_unique_id = object_id
+        # The key of scripts are unique and cannot be changed from the UI after creating
+        self._attr_unique_id = key
 
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(key)
         self.script = Script(
             hass,
             cfg[CONF_SEQUENCE],
-            cfg.get(CONF_ALIAS, object_id),
+            cfg.get(CONF_ALIAS, key),
             DOMAIN,
             running_description="script sequence",
             change_listener=self.async_change_listener,
             script_mode=cfg[CONF_MODE],
             max_runs=cfg[CONF_MAX],
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
-            logger=logging.getLogger(f"{__name__}.{object_id}"),
+            logger=logging.getLogger(f"{__name__}.{key}"),
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
-        self._raw_config = raw_config
+        self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
         self._blueprint_inputs = blueprint_inputs
 
@@ -371,6 +420,13 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
     def is_on(self):
         """Return true if script is on."""
         return self.script.is_running
+
+    @property
+    def referenced_blueprint(self):
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
     @callback
     def async_change_listener(self):
@@ -412,8 +468,8 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
     async def _async_run(self, variables, context):
         with trace_script(
             self.hass,
-            self.object_id,
-            self._raw_config,
+            self.unique_id,
+            self.raw_config,
             self._blueprint_inputs,
             context,
             self._trace_config,
@@ -434,8 +490,26 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         """
         await self.script.async_stop()
 
+    async def _service_handler(self, service: ServiceCall) -> None:
+        """Execute a service call to script.<script name>."""
+        await self.async_turn_on(variables=service.data, context=service.context)
+
     async def async_added_to_hass(self) -> None:
-        """Restore last triggered on startup."""
+        """Restore last triggered on startup and register service."""
+
+        unique_id = cast(str, self.unique_id)
+        self.hass.services.async_register(
+            DOMAIN, unique_id, self._service_handler, schema=SCRIPT_SERVICE_SCHEMA
+        )
+
+        # Register the service description
+        service_desc = {
+            CONF_NAME: cast(er.RegistryEntry, self.registry_entry).name or self.name,
+            CONF_DESCRIPTION: self.description,
+            CONF_FIELDS: self.fields,
+        }
+        async_set_service_schema(self.hass, DOMAIN, unique_id, service_desc)
+
         if state := await self.async_get_last_state():
             if last_triggered := state.attributes.get("last_triggered"):
                 self.script.last_triggered = parse_datetime(last_triggered)
@@ -445,4 +519,29 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         await self.script.async_stop()
 
         # remove service
-        self.hass.services.async_remove(DOMAIN, self.object_id)
+        self.hass.services.async_remove(DOMAIN, self.unique_id)
+
+
+@websocket_api.websocket_command({"type": "script/config", "entity_id": str})
+def websocket_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get script config."""
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
+
+    script = component.get_entity(msg["entity_id"])
+
+    if script is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "config": script.raw_config,
+        },
+    )

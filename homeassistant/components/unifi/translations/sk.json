@@ -6,9 +6,11 @@
         "error": {
             "faulty_credentials": "Neplatn\u00e9 overenie"
         },
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"

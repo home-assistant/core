@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "ID progetto di accesso al dispositivo"
                 },
-                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di  5 $ USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID Client OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\nInserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
+                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di 5 $ USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID Client OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\nInserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
                 "title": "Nest: crea un progetto di accesso al dispositivo"
             },
             "device_project_upgrade": {
@@ -95,6 +95,16 @@
             "camera_person": "Persona rilevata",
             "camera_sound": "Suono rilevato",
             "doorbell_chime": "Campanello premuto"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configurazione di Nest in configuration.yaml sar\u00e0 rimossa in Home Assistant 2022.10. \n\nLe credenziali dell'applicazione OAuth esistenti e le impostazioni di accesso sono state importate automaticamente nell'interfaccia utente. Rimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Nest sar\u00e0 rimossa"
+        },
+        "removed_app_auth": {
+            "description": "Per migliorare la sicurezza e ridurre il rischio di phishing, Google ha deprecato il metodo di autenticazione utilizzato da Home Assistant. \n\n **Ci\u00f2 richiede un'azione da parte tua per risolverlo** ([maggiori informazioni]({more_info_url})) \n\n 1. Visita la pagina delle integrazioni\n 1. Fare clic su Riconfigura sull'integrazione Nest.\n 1. Home Assistant ti guider\u00e0 attraverso i passaggi per l'aggiornamento all'autenticazione Web. \n\n Consulta le [istruzioni per l'integrazione]({documentation_url}) di Nest per informazioni sulla risoluzione dei problemi.",
+            "title": "Le credenziali di autenticazione Nest devono essere aggiornate"
         }
     }
 }

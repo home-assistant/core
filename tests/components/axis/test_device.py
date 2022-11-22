@@ -441,7 +441,7 @@ async def test_device_reset(hass):
 
 async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
-    with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
+    with patch.object(axis, "get_axis_device", side_effect=axis.errors.CannotConnect):
         await setup_axis_integration(hass)
     assert hass.data[AXIS_DOMAIN] == {}
 
@@ -449,7 +449,7 @@ async def test_device_not_accessible(hass):
 async def test_device_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch.object(
-        axis.device, "get_device", side_effect=axis.errors.AuthenticationRequired
+        axis, "get_axis_device", side_effect=axis.errors.AuthenticationRequired
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_axis_integration(hass)
         mock_flow_init.assert_called_once()
@@ -458,7 +458,7 @@ async def test_device_trigger_reauth_flow(hass):
 
 async def test_device_unknown_error(hass):
     """Unknown errors are handled."""
-    with patch.object(axis.device, "get_device", side_effect=Exception):
+    with patch.object(axis, "get_axis_device", side_effect=Exception):
         await setup_axis_integration(hass)
     assert hass.data[AXIS_DOMAIN] == {}
 
@@ -468,7 +468,7 @@ async def test_new_event_sends_signal(hass):
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry)
+    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
 
     with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
         axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
@@ -484,8 +484,7 @@ async def test_shutdown():
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry)
-    axis_device.api = Mock()
+    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 
@@ -497,7 +496,7 @@ async def test_get_device_fails(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
 
 async def test_get_device_device_unavailable(hass):
@@ -505,7 +504,7 @@ async def test_get_device_device_unavailable(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
 
 async def test_get_device_unknown_error(hass):
@@ -513,4 +512,4 @@ async def test_get_device_unknown_error(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)

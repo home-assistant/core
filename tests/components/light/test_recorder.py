@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass, recorder_mock):
+async def test_exclude_attributes(recorder_mock, hass):
     """Test light registered attributes to be excluded."""
     await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {"platform": "demo"}}

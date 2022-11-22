@@ -1,6 +1,8 @@
 {
     "config": {
         "error": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
             "invalid_sensor": "Sensor saknas eller \u00e4r ogiltig"
         },
         "step": {

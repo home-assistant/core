@@ -21,6 +21,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Coinbase'i seadistamine YAML-i abil on eemaldatud.\n\nHome Assistant ei kasuta olemasolevat YAML-i konfiguratsiooni.\n\nEemalda sidumine failist configuration.yaml ja taask\u00e4ivita selle probleemi lahendamiseks Home Assistant.",
+            "title": "Coinbase YAML konfiguratsioon on eemaldatud"
+        }
+    },
     "options": {
         "error": {
             "currency_unavailable": "Coinbase API ei paku \u00fchte v\u00f5i mitut soovitud valuutasaldot.",

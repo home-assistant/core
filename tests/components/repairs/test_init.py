@@ -1,17 +1,25 @@
 """Test the repairs websocket API."""
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
+from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.repairs import async_create_issue, async_delete_issue
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import (
-    async_ignore_issue,
     async_process_repairs_platforms,
 )
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+    async_ignore_issue,
+    create_issue,
+    delete_issue,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -60,6 +68,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -77,6 +86,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -89,6 +99,8 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         issues[0]["issue_id"],
         breaks_in_ha_version=issues[0]["breaks_in_ha_version"],
         is_fixable=issues[0]["is_fixable"],
+        is_persistent=False,
+        issue_domain="my_issue_domain",
         learn_more_url="blablabla",
         severity=issues[0]["severity"],
         translation_key=issues[0]["translation_key"],
@@ -105,6 +117,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         dismissed_version=None,
         ignored=False,
         learn_more_url="blablabla",
+        issue_domain="my_issue_domain",
     )
 
 
@@ -135,6 +148,7 @@ async def test_create_issue_invalid_version(
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -181,6 +195,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -198,6 +213,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -218,6 +234,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -237,6 +254,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -256,6 +274,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -268,6 +287,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
         issues[0]["issue_id"],
         breaks_in_ha_version=issues[0]["breaks_in_ha_version"],
         is_fixable=issues[0]["is_fixable"],
+        is_persistent=False,
         learn_more_url="blablabla",
         severity=issues[0]["severity"],
         translation_key=issues[0]["translation_key"],
@@ -284,6 +304,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
         dismissed_version=ha_version,
         ignored=True,
         learn_more_url="blablabla",
+        issue_domain=None,
     )
 
     # Unignore the same issue
@@ -301,6 +322,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 dismissed_version=None,
                 ignored=False,
                 learn_more_url="blablabla",
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -334,6 +356,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -351,6 +374,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -370,6 +394,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -403,6 +428,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -420,6 +446,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T08:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -446,3 +473,68 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     await async_process_repairs_platforms(hass)
 
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
+
+
+@freeze_time("2022-07-21 08:22:00")
+async def test_sync_methods(
+    hass: HomeAssistant,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test sync method for creating and deleting an issue."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}
+
+    def _create_issue() -> None:
+        create_issue(
+            hass,
+            "fake_integration",
+            "sync_issue",
+            breaks_in_ha_version="2022.9",
+            is_fixable=True,
+            is_persistent=False,
+            learn_more_url="https://theuselessweb.com",
+            severity=IssueSeverity.ERROR,
+            translation_key="abc_123",
+            translation_placeholders={"abc": "123"},
+        )
+
+    await hass.async_add_executor_job(_create_issue)
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": "2022.9",
+                "created": "2022-07-21T08:22:00+00:00",
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_id": "sync_issue",
+                "issue_domain": None,
+                "learn_more_url": "https://theuselessweb.com",
+                "severity": "error",
+                "translation_key": "abc_123",
+                "translation_placeholders": {"abc": "123"},
+            }
+        ]
+    }
+
+    await hass.async_add_executor_job(
+        delete_issue, hass, "fake_integration", "sync_issue"
+    )
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}

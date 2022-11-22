@@ -6,19 +6,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..const import MQTT_DATA_DEVICE_TRACKER_LEGACY
 from ..mixins import warn_for_legacy_schema
-from .schema_discovery import PLATFORM_SCHEMA_MODERN  # noqa: F401
-from .schema_discovery import async_setup_entry_from_discovery
-from .schema_yaml import PLATFORM_SCHEMA_YAML, async_setup_scanner_from_yaml
-
-# Configuring MQTT Device Trackers under the device_tracker platform key is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_YAML, warn_for_legacy_schema(device_tracker.DOMAIN)
+from .schema_discovery import (  # noqa: F401
+    PLATFORM_SCHEMA_MODERN,
+    async_setup_entry_from_discovery,
 )
 
-# Legacy setup
-async_setup_scanner = async_setup_scanner_from_yaml
+# Configuring MQTT Device Trackers under the device_tracker platform key is deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
+PLATFORM_SCHEMA = vol.All(warn_for_legacy_schema(device_tracker.DOMAIN))
 
 
 async def async_setup_entry(
@@ -28,8 +24,3 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT device_tracker through configuration.yaml and dynamically through MQTT discovery."""
     await async_setup_entry_from_discovery(hass, config_entry, async_add_entities)
-    # (re)load legacy service
-    if MQTT_DATA_DEVICE_TRACKER_LEGACY in hass.data:
-        await async_setup_scanner_from_yaml(
-            hass, **hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY]
-        )

@@ -1,4 +1,4 @@
-"""An abstract class common to all Ezviz entities."""
+"""An abstract class common to all EZVIZ entities."""
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +11,7 @@ from .coordinator import EzvizDataUpdateCoordinator
 
 
 class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
-    """Generic entity encapsulating common features of Ezviz device."""
+    """Generic entity encapsulating common features of EZVIZ device."""
 
     def __init__(
         self,

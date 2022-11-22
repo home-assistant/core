@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "anna_with_adam": "Tanto Anna quanto Adam detectaram. Adicione seu Adam em vez de sua Anna"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",

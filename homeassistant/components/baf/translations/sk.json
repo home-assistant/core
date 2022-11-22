@@ -8,6 +8,7 @@
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
+        "flow_title": "{name} - {model} ({ip_address})",
         "step": {
             "user": {
                 "data": {

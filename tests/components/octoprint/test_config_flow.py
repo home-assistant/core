@@ -533,3 +533,55 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_form(hass):
+    """Test we get the form."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "entry_id": entry.entry_id,
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert not result["errors"]
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
+
+    with patch(
+        "homeassistant.components.octoprint.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"

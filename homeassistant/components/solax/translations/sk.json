@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

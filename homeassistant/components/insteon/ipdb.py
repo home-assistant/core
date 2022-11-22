@@ -1,5 +1,6 @@
 """Utility methods for the Insteon platform."""
 from pyinsteon.device_types import (
+    AccessControl_Morningstar,
     ClimateControl_Thermostat,
     ClimateControl_WirelessThermostat,
     DimmableLightingControl,
@@ -12,6 +13,7 @@ from pyinsteon.device_types import (
     DimmableLightingControl_OutletLinc,
     DimmableLightingControl_SwitchLinc,
     DimmableLightingControl_ToggleLinc,
+    EnergyManagement_LoadController,
     GeneralController_ControlLinc,
     GeneralController_MiniRemote_4,
     GeneralController_MiniRemote_8,
@@ -44,11 +46,13 @@ from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 from .const import ON_OFF_EVENTS
 
 DEVICE_PLATFORM = {
+    AccessControl_Morningstar: {LOCK: [1]},
     DimmableLightingControl: {LIGHT: [1], ON_OFF_EVENTS: [1]},
     DimmableLightingControl_DinRail: {LIGHT: [1], ON_OFF_EVENTS: [1]},
     DimmableLightingControl_FanLinc: {LIGHT: [1], FAN: [2], ON_OFF_EVENTS: [1, 2]},
@@ -67,6 +71,7 @@ DEVICE_PLATFORM = {
     DimmableLightingControl_OutletLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
     DimmableLightingControl_SwitchLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
     DimmableLightingControl_ToggleLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    EnergyManagement_LoadController: {SWITCH: [1], BINARY_SENSOR: [2]},
     GeneralController_ControlLinc: {ON_OFF_EVENTS: [1]},
     GeneralController_MiniRemote_4: {ON_OFF_EVENTS: range(1, 5)},
     GeneralController_MiniRemote_8: {ON_OFF_EVENTS: range(1, 9)},

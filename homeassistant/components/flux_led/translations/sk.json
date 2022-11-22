@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
         }
     }
 }

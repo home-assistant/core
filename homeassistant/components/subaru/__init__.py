@@ -31,6 +31,8 @@ from .const import (
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_HAS_SAFETY_SERVICE,
     VEHICLE_LAST_UPDATE,
+    VEHICLE_MODEL_NAME,
+    VEHICLE_MODEL_YEAR,
     VEHICLE_NAME,
     VEHICLE_VIN,
 )
@@ -147,6 +149,8 @@ def get_vehicle_info(controller, vin):
     """Obtain vehicle identifiers and capabilities."""
     info = {
         VEHICLE_VIN: vin,
+        VEHICLE_MODEL_NAME: controller.get_model_name(vin),
+        VEHICLE_MODEL_YEAR: controller.get_model_year(vin),
         VEHICLE_NAME: controller.vin_to_name(vin),
         VEHICLE_HAS_EV: controller.get_ev_status(vin),
         VEHICLE_API_GEN: controller.get_api_gen(vin),
@@ -163,5 +167,6 @@ def get_device_info(vehicle_info):
     return DeviceInfo(
         identifiers={(DOMAIN, vehicle_info[VEHICLE_VIN])},
         manufacturer=MANUFACTURER,
+        model=f"{vehicle_info[VEHICLE_MODEL_YEAR]} {vehicle_info[VEHICLE_MODEL_NAME]}",
         name=vehicle_info[VEHICLE_NAME],
     )

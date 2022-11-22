@@ -111,6 +111,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class EcoNetEntity(Entity):
     """Define a base EcoNet entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, econet):
         """Initialize."""
         self._econet = econet
@@ -155,11 +157,3 @@ class EcoNetEntity(Entity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False

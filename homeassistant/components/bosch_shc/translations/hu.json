@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "pairing_failed": "A p\u00e1ros\u00edt\u00e1s nem siker\u00fclt; K\u00e9rj\u00fck, ellen\u0151rizze, hogy a Bosch Smart Home Controller p\u00e1ros\u00edt\u00e1si m\u00f3dban van-e (villog a LED), \u00e9s hogy a jelszava helyes-e.",
+            "pairing_failed": "A p\u00e1ros\u00edt\u00e1s nem siker\u00fclt; K\u00e9rem, ellen\u0151rizze, hogy a Bosch Smart Home Controller p\u00e1ros\u00edt\u00e1si m\u00f3dban van-e (villog a LED), \u00e9s hogy a jelszava helyes-e.",
             "session_error": "Munkamenet hiba: Az API nem OK eredm\u00e9nyt ad vissza.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "K\u00e9rj\u00fck, addig nyomja a Bosch Smart Home Controller el\u00fcls\u0151 gombj\u00e1t, am\u00edg a LED villogni nem kezd.\nK\u00e9szen \u00e1ll {model} @ {host} be\u00e1ll\u00edt\u00e1s\u00e1nak folytat\u00e1s\u00e1ra Home Assistant seg\u00edts\u00e9g\u00e9vel?"
+                "description": "K\u00e9rem, addig nyomja a Bosch Smart Home Controller el\u00fcls\u0151 gombj\u00e1t, am\u00edg a LED villogni nem kezd.\nK\u00e9szen \u00e1ll {model} @ {host} be\u00e1ll\u00edt\u00e1s\u00e1nak folytat\u00e1s\u00e1ra Home Assistant seg\u00edts\u00e9g\u00e9vel?"
             },
             "credentials": {
                 "data": {

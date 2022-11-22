@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "no_locations": "Nessuna localit\u00e0 trovata",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    }
+}

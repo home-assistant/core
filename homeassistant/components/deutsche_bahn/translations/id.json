@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Integrasi Deutsche Bahn sedang menunggu penghapusan dari Home Assistant dan tidak akan lagi tersedia pada Home Assistant 2022.11.\n\nIntegrasi ini dalam proses penghapusan, karena bergantung pada proses webscraping, yang tidak diizinkan.\n\nHapus konfigurasi Deutsche Bahn YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Integrasi Deutsche Bahn dalam proses penghapusan"
+        }
+    }
+}
