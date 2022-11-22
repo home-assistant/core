@@ -116,7 +116,7 @@ async def _async_set_value(
     date_ = service_call.data.get(ATTR_DATE)
     time_ = service_call.data.get(ATTR_TIME)
     time_zone = dt_util.get_time_zone(
-        service_call.data.get(ATTR_TIME_ZONE) or hass.config.time_zone
+        service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
     )
     if date_ is None or time_ is None:
         if entity.native_value is None:
