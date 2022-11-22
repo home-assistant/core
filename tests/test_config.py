@@ -402,6 +402,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 3,
     }
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
@@ -483,10 +484,10 @@ async def test_migration_and_updating_configuration(hass, hass_storage):
     expected_new_core_data["data"]["currency"] = "USD"
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
-    expected_new_core_data["minor_version"] = 2
+    expected_new_core_data["minor_version"] = 3
     # defaults for country and language
     expected_new_core_data["data"]["country"] = None
-    expected_new_core_data["data"]["language"] = None
+    expected_new_core_data["data"]["language"] = "en"
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"

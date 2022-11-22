@@ -53,6 +53,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -216,18 +217,11 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
-async def async_from_config_dict(
-    config: ConfigType, hass: core.HomeAssistant
-) -> core.HomeAssistant | None:
-    """Try to configure Home Assistant from a configuration dictionary.
-
-    Dynamically loads required components and its dependencies.
-    This method is a coroutine.
-    """
-    start = monotonic()
-
-    hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
+async def load_registries(hass: core.HomeAssistant) -> None:
+    """Load the registries and cache the result of platform.uname().processor."""
+    if DATA_REGISTRIES_LOADED in hass.data:
+        return
+    hass.data[DATA_REGISTRIES_LOADED] = None
 
     def _cache_uname_processor() -> None:
         """Cache the result of platform.uname().processor in the executor.
@@ -247,6 +241,21 @@ async def async_from_config_dict(
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
     )
+
+
+async def async_from_config_dict(
+    config: ConfigType, hass: core.HomeAssistant
+) -> core.HomeAssistant | None:
+    """Try to configure Home Assistant from a configuration dictionary.
+
+    Dynamically loads required components and its dependencies.
+    This method is a coroutine.
+    """
+    start = monotonic()
+
+    hass.config_entries = config_entries.ConfigEntries(hass, config)
+    await hass.config_entries.async_initialize()
+    await load_registries(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)

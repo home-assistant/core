@@ -581,7 +581,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
-        (CONF_LANGUAGE, "_language"),
+        (CONF_LANGUAGE, "language"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
