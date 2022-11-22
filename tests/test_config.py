@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import MockUser, get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -562,6 +562,72 @@ async def test_loading_configuration(hass):
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+
+
+@pytest.mark.parametrize(
+    "minor_version, users, user_data, default_language",
+    (
+        (2, (), {}, "en"),
+        (2, ({"is_owner": True},), {}, "en"),
+        (
+            2,
+            ({"id": "user1", "is_owner": True},),
+            {"user1": {"language": {"language": "sv"}}},
+            "sv",
+        ),
+        (
+            2,
+            ({"id": "user1", "is_owner": False},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+        (3, (), {}, "en"),
+        (3, ({"is_owner": True},), {}, "en"),
+        (
+            3,
+            ({"id": "user1", "is_owner": True},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+        (
+            3,
+            ({"id": "user1", "is_owner": False},),
+            {"user1": {"language": {"language": "sv"}}},
+            "en",
+        ),
+    ),
+)
+async def test_language_default(
+    hass, hass_storage, minor_version, users, user_data, default_language
+):
+    """Test language config default to owner user's language during migration.
+
+    This should only happen if the core store version < 1.3
+    """
+    core_data = {
+        "data": {},
+        "key": "core.config",
+        "version": 1,
+        "minor_version": minor_version,
+    }
+    hass_storage["core.config"] = dict(core_data)
+
+    for user_config in users:
+        user = MockUser(**user_config).add_to_hass(hass)
+        if user.id not in user_data:
+            continue
+        storage_key = f"frontend.user_data_{user.id}"
+        hass_storage[storage_key] = {
+            "key": storage_key,
+            "version": 1,
+            "data": user_data[user.id],
+        }
+
+    await config_util.async_process_ha_core_config(
+        hass,
+        {},
+    )
+    assert hass.config.language == default_language
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):

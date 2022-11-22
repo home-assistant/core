@@ -588,19 +588,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     _raise_issue_if_historic_currency(hass, hass.config.currency)
 
-    if hac.language is None:
-        owner = await hass.auth.async_get_owner()
-        if owner is not None:
-            # pylint: disable-next=import-outside-toplevel
-            from .components.frontend import storage as frontend_store
-
-            _, owner_data = await frontend_store.async_user_store(hass, owner.id)
-
-            if "language" in owner_data and "language" in owner_data["language"]:
-                with suppress(vol.InInvalid):
-                    # pylint: disable-next=protected-access
-                    hac._language = cv.language(owner_data["language"]["language"])
-
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
 

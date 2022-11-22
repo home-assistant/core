@@ -15,6 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import suppress
 from contextvars import ContextVar
 import datetime
 import enum
@@ -113,7 +114,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 2
+CORE_STORAGE_MINOR_VERSION = 3
 
 DOMAIN = "homeassistant"
 
@@ -1808,7 +1809,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
         self.country: str | None = None
-        self._language: str | None = None
+        self.language: str = "en"
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
@@ -1838,13 +1839,6 @@ class Config:
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
-
-    @property
-    def language(self) -> str | None:
-        """Return the configured language."""
-        if self._language is not None:
-            return self._language
-        return "en"
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -1978,7 +1972,7 @@ class Config:
         if country is not _UNDEF:
             self.country = cast(Optional[str], country)
         if language is not None:
-            self._language = language
+            self.language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -2035,7 +2029,7 @@ class Config:
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
-            "language": self._language,
+            "language": self.language,
         }
 
         await self._store.async_save(data)
@@ -2074,6 +2068,35 @@ class Config:
                 data["unit_system_v2"] = self._original_unit_system
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the owner account
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        # pylint: disable-next=import-outside-toplevel
+                        from .helpers import config_validation as cv
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                # pylint: disable-next=protected-access
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+
             if old_major_version > 1:
                 raise NotImplementedError
             return data
