@@ -6,13 +6,13 @@ from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import types
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.data_entry_flow import FlowResult, UnknownHandler
+from homeassistant.data_entry_flow import FlowResult
 
 from . import entity_registry as er, selector
 
@@ -219,15 +219,16 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow):
             config_entry: config_entries.ConfigEntry,
         ) -> config_entries.OptionsFlow:
             """Get the options flow for this handler."""
-            if cls.options_flow is None:
-                raise UnknownHandler
+            if TYPE_CHECKING:
+                assert cls.options_flow is not None
 
             return SchemaOptionsFlowHandler(
                 config_entry, cls.options_flow, cls.async_options_flow_finished
             )
 
         # Create an async_get_options_flow method
-        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        if cls.options_flow is not None:
+            cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
 
         # Create flow step methods for each step defined in the flow schema
         for step in cls.config_flow:
