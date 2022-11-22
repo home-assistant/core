@@ -109,7 +109,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
         """Initialize a Media Group entity."""
         self._name = name
         self._state: str | None = None
-        self._supported_features: int = 0
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -211,11 +210,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def state(self) -> str | None:
         """Return the state of the media group."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -411,7 +405,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             else:
                 self._state = MediaPlayerState.OFF
 
-        supported_features = 0
+        supported_features = MediaPlayerEntityFeature(0)
         if self._features[KEY_CLEAR_PLAYLIST]:
             supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
         if self._features[KEY_TRACKS]:
@@ -442,5 +436,5 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 | MediaPlayerEntityFeature.VOLUME_STEP
             )
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self.async_write_ha_state()

@@ -185,14 +185,14 @@ class WazeTravelTimeData:
                 )
                 routes = params.calc_all_routes_info(real_time=realtime)
 
-                if incl_filter is not None:
+                if incl_filter not in {None, ""}:
                     routes = {
                         k: v
                         for k, v in routes.items()
                         if incl_filter.lower() in k.lower()
                     }
 
-                if excl_filter is not None:
+                if excl_filter not in {None, ""}:
                     routes = {
                         k: v
                         for k, v in routes.items()

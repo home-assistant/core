@@ -14,13 +14,12 @@ from homeassistant.components.recorder.db_schema import StatisticsMeta
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
-    process_timestamp_to_utc_isoformat,
+    process_timestamp,
 )
 from homeassistant.components.recorder.statistics import (
     async_import_statistics,
     get_metadata,
     list_statistic_ids,
-    statistics_during_period,
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.const import STATE_UNAVAILABLE
@@ -32,6 +31,7 @@ from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
+    statistics_during_period,
     wait_recording_done,
 )
 
@@ -153,9 +153,8 @@ def test_compile_hourly_statistics(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -227,9 +226,8 @@ def test_compile_hourly_statistics_purged_state_changes(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -332,9 +330,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -345,9 +342,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test2": [
             {
-                "statistic_id": "sensor.test2",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": 13.05084745762712,
                 "min": -10.0,
                 "max": 30.0,
@@ -358,9 +354,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test3": [
             {
-                "statistic_id": "sensor.test3",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": 13.05084745762712,
                 "min": -10.0,
                 "max": 30.0,
@@ -371,9 +366,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test6": [
             {
-                "statistic_id": "sensor.test6",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -384,9 +378,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test7": [
             {
-                "statistic_id": "sensor.test7",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -492,35 +485,32 @@ async def test_compile_hourly_sum_statistics_amount(
     expected_stats = {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(period0),
+                "last_reset": process_timestamp(period0),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 40.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 70.0),
             },
@@ -684,26 +674,22 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
+                "last_reset": process_timestamp(dt_util.as_local(one)),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (sum(seq) - seq[0])),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=5)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=10)),
+                "start": process_timestamp(zero + timedelta(minutes=5)),
+                "end": process_timestamp(zero + timedelta(minutes=10)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(two)),
+                "last_reset": process_timestamp(dt_util.as_local(two)),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (2 * sum(seq) - seq[0])),
             },
@@ -784,13 +770,12 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
+                "last_reset": process_timestamp(dt_util.as_local(one)),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (sum(seq) - seq[0] - seq[3])),
             },
@@ -868,13 +853,12 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(one),
+                "last_reset": process_timestamp(one),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])),
             },
@@ -992,9 +976,8 @@ def test_compile_hourly_sum_statistics_negative_state(
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats[entity_id] == [
         {
-            "statistic_id": entity_id,
-            "start": process_timestamp_to_utc_isoformat(zero),
-            "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+            "start": process_timestamp(zero),
+            "end": process_timestamp(zero + timedelta(minutes=5)),
             "max": None,
             "mean": None,
             "min": None,
@@ -1081,9 +1064,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1092,9 +1074,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "sum": approx(factor * 10.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1103,9 +1084,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "sum": approx(factor * 30.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1183,9 +1163,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1194,9 +1173,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "sum": approx(factor * 10.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1205,9 +1183,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "sum": approx(factor * 50.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1297,9 +1274,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         "sensor.test1": [
             {
                 "last_reset": None,
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1308,9 +1284,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             },
             {
                 "last_reset": None,
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1319,9 +1294,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             },
             {
                 "last_reset": None,
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1390,35 +1364,32 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(period0),
+                "last_reset": process_timestamp(period0),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
             },
@@ -1500,105 +1471,96 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(period0),
+                "last_reset": process_timestamp(period0),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
             },
         ],
         "sensor.test2": [
             {
-                "statistic_id": "sensor.test2",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(period0),
+                "last_reset": process_timestamp(period0),
                 "state": approx(130.0),
                 "sum": approx(20.0),
             },
             {
-                "statistic_id": "sensor.test2",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(45.0),
                 "sum": approx(-65.0),
             },
             {
-                "statistic_id": "sensor.test2",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(75.0),
                 "sum": approx(-35.0),
             },
         ],
         "sensor.test3": [
             {
-                "statistic_id": "sensor.test3",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(period0),
+                "last_reset": process_timestamp(period0),
                 "state": approx(5.0),
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": "sensor.test3",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(50.0),
                 "sum": approx(60.0),
             },
             {
-                "statistic_id": "sensor.test3",
-                "start": process_timestamp_to_utc_isoformat(period2),
-                "end": process_timestamp_to_utc_isoformat(period2_end),
+                "start": process_timestamp(period2),
+                "end": process_timestamp(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "last_reset": process_timestamp(four),
                 "state": approx(90.0),
                 "sum": approx(100.0),
             },
@@ -1654,9 +1616,8 @@ def test_compile_hourly_statistics_unchanged(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(four),
-                "end": process_timestamp_to_utc_isoformat(four + timedelta(minutes=5)),
+                "start": process_timestamp(four),
+                "end": process_timestamp(four + timedelta(minutes=5)),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -1687,9 +1648,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(21.1864406779661),
                 "min": approx(10.0),
                 "max": approx(25.0),
@@ -1729,7 +1689,11 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 def test_compile_hourly_statistics_unavailable(
     hass_recorder, caplog, device_class, state_unit, value
 ):
-    """Test compiling hourly statistics, with the sensor being unavailable."""
+    """Test compiling hourly statistics, with one sensor being unavailable.
+
+    sensor.test1 is unavailable and should not have statistics generated
+    sensor.test2 should have statistics generated
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -1753,9 +1717,8 @@ def test_compile_hourly_statistics_unavailable(
     assert stats == {
         "sensor.test2": [
             {
-                "statistic_id": "sensor.test2",
-                "start": process_timestamp_to_utc_isoformat(four),
-                "end": process_timestamp_to_utc_isoformat(four + timedelta(minutes=5)),
+                "start": process_timestamp(four),
+                "end": process_timestamp(four + timedelta(minutes=5)),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -1970,9 +1933,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2005,9 +1967,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2145,9 +2106,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2180,9 +2140,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2259,9 +2218,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2290,9 +2248,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2301,11 +2258,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=10)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)),
+                "end": process_timestamp(zero + timedelta(minutes=15)),
                 "mean": approx(mean2),
                 "min": approx(min),
                 "max": approx(max),
@@ -2377,13 +2331,8 @@ def test_compile_hourly_statistics_equivalent_units_2(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(seconds=30 * 5)
-                ),
-                "end": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(seconds=30 * 15)
-                ),
+                "start": process_timestamp(zero + timedelta(seconds=30 * 5)),
+                "end": process_timestamp(zero + timedelta(seconds=30 * 15)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2447,9 +2396,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean1),
                 "min": approx(min),
                 "max": approx(max),
@@ -2492,9 +2440,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean1),
                 "min": approx(min),
                 "max": approx(max),
@@ -2503,11 +2450,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=10)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)),
+                "end": process_timestamp(zero + timedelta(minutes=15)),
                 "mean": approx(mean2),
                 "min": approx(min),
                 "max": approx(max),
@@ -2550,9 +2494,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean1),
                 "min": approx(min),
                 "max": approx(max),
@@ -2561,11 +2504,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=10)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)),
+                "end": process_timestamp(zero + timedelta(minutes=15)),
                 "mean": approx(mean2),
                 "min": approx(min),
                 "max": approx(max),
@@ -2574,11 +2514,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=20)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=25)),
+                "start": process_timestamp(zero + timedelta(minutes=20)),
+                "end": process_timestamp(zero + timedelta(minutes=25)),
                 "mean": approx(mean2),
                 "min": approx(min),
                 "max": approx(max),
@@ -2643,9 +2580,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2688,9 +2624,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2699,11 +2634,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(
-                    zero + timedelta(minutes=10)
-                ),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)),
+                "end": process_timestamp(zero + timedelta(minutes=15)),
                 "mean": approx(mean2),
                 "min": approx(min),
                 "max": approx(max),
@@ -2819,9 +2751,8 @@ def test_compile_hourly_statistics_changing_statistics(
     assert stats == {
         "sensor.test1": [
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period0),
-                "end": process_timestamp_to_utc_isoformat(period0_end),
+                "start": process_timestamp(period0),
+                "end": process_timestamp(period0_end),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -2830,9 +2761,8 @@ def test_compile_hourly_statistics_changing_statistics(
                 "sum": None,
             },
             {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(period1),
-                "end": process_timestamp_to_utc_isoformat(period1_end),
+                "start": process_timestamp(period1),
+                "end": process_timestamp(period1_end),
                 "mean": None,
                 "min": None,
                 "max": None,
@@ -3067,9 +2997,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "statistic_id": entity_id,
-                    "start": process_timestamp_to_utc_isoformat(start),
-                    "end": process_timestamp_to_utc_isoformat(end),
+                    "start": process_timestamp(start),
+                    "end": process_timestamp(end),
                     "mean": approx(expected_average),
                     "min": approx(expected_minimum),
                     "max": approx(expected_maximum),
@@ -3125,9 +3054,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "statistic_id": entity_id,
-                    "start": process_timestamp_to_utc_isoformat(start),
-                    "end": process_timestamp_to_utc_isoformat(end),
+                    "start": process_timestamp(start),
+                    "end": process_timestamp(end),
                     "mean": approx(expected_average),
                     "min": approx(expected_minimum),
                     "max": approx(expected_maximum),
@@ -3183,9 +3111,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "statistic_id": entity_id,
-                    "start": process_timestamp_to_utc_isoformat(start),
-                    "end": process_timestamp_to_utc_isoformat(end),
+                    "start": process_timestamp(start),
+                    "end": process_timestamp(end),
                     "mean": approx(expected_average),
                     "min": approx(expected_minimum),
                     "max": approx(expected_maximum),
@@ -3241,9 +3168,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "statistic_id": entity_id,
-                    "start": process_timestamp_to_utc_isoformat(start),
-                    "end": process_timestamp_to_utc_isoformat(end),
+                    "start": process_timestamp(start),
+                    "end": process_timestamp(end),
                     "mean": approx(expected_average),
                     "min": approx(expected_minimum),
                     "max": approx(expected_maximum),
@@ -3997,6 +3923,180 @@ async def test_validate_statistics_unit_change_no_conversion(
             }
         ],
     }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "attributes, unit1, unit2",
+    [
+        (NONE_SENSOR_ATTRIBUTES, "m3", "m³"),
+        (NONE_SENSOR_ATTRIBUTES, "rpm", "RPM"),
+        (NONE_SENSOR_ATTRIBUTES, "RPM", "rpm"),
+    ],
+)
+async def test_validate_statistics_unit_change_equivalent_units(
+    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2
+):
+    """Test validate_statistics.
+
+    This tests no validation issue is created when a sensor's unit changes to an
+    equivalent unit.
+    """
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    async def assert_statistic_ids(expected_result):
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(StatisticsMeta))
+            assert len(db_states) == len(expected_result)
+            for i in range(len(db_states)):
+                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+                assert (
+                    db_states[i].unit_of_measurement
+                    == expected_result[i]["unit_of_measurement"]
+                )
+
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to an equivalent unit - empty response
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics one hour later, metadata will be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
+    )
+    await assert_validation_result(client, {})
+
+
+@pytest.mark.parametrize(
+    "attributes, unit1, unit2, supported_unit",
+    [
+        (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "L, fl. oz., ft³, gal, mL, m³"),
+    ],
+)
+async def test_validate_statistics_unit_change_equivalent_units_2(
+    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2, supported_unit
+):
+    """Test validate_statistics.
+
+    This tests a validation issue is created when a sensor's unit changes to an
+    equivalent unit which is not known to the unit converters.
+    """
+
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    async def assert_statistic_ids(expected_result):
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(StatisticsMeta))
+            assert len(db_states) == len(expected_result)
+            for i in range(len(db_states)):
+                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+                assert (
+                    db_states[i].unit_of_measurement
+                    == expected_result[i]["unit_of_measurement"]
+                )
+
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to an equivalent unit which is not known by the unit converters
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+    )
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit1,
+                    "state_unit": unit2,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": "units_changed",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+    # Run statistics one hour later, metadata will not be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
     await assert_validation_result(client, expected)
 
 

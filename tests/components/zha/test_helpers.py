@@ -195,3 +195,17 @@ async def test_zcl_schema_conversions(hass, device_light):
 
     assert isinstance(converted_data["start_hue"], uint16_t)
     assert converted_data["start_hue"] == 196
+
+    # This time, the update flags bitmap is empty
+    raw_data = {
+        "update_flags": [],
+        "action": 0x02,
+        "direction": 0x01,
+        "time": 20,
+        "start_hue": 196,
+    }
+
+    converted_data = convert_to_zcl_values(raw_data, command_schema)
+
+    # No flags are passed through
+    assert converted_data["update_flags"] == 0

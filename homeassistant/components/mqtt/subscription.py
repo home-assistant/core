@@ -21,7 +21,7 @@ class EntitySubscription:
     hass: HomeAssistant = attr.ib()
     topic: str = attr.ib()
     message_callback: MessageCallbackType = attr.ib()
-    subscribe_task: Coroutine | None = attr.ib()
+    subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None = attr.ib()
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
@@ -53,7 +53,7 @@ class EntitySubscription:
             hass, self.topic, self.message_callback, self.qos, self.encoding
         )
 
-    async def subscribe(self):
+    async def subscribe(self) -> None:
         """Subscribe to a topic."""
         if not self.subscribe_task:
             return

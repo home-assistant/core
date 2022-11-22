@@ -1,7 +1,21 @@
 {
     "config": {
         "error": {
+            "incorrect_password": "Nespr\u00e1vne heslo",
             "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo"
+                }
+            }
         }
     }
 }

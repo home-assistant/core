@@ -1,16 +1,25 @@
 """Support for Rflink sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -35,8 +44,67 @@ from . import (
 SENSOR_ICONS = {
     "humidity": "mdi:water-percent",
     "battery": "mdi:battery",
-    "temperature": "mdi:thermometer",
 }
+
+SENSOR_TYPES = (
+    # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
+    SensorEntityDescription(
+        key="distance",
+        name="Distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="barometric_pressure",
+        name="Barometric pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="average_windspeed",
+        name="Average windspeed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windgusts",
+        name="Wind gusts",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windspeed",
+        name="Wind speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="windtemp",
+        name="Wind temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="windchill",
+        name="Wind chill",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+)
+
+SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -72,10 +140,6 @@ def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        if ATTR_UNIT_OF_MEASUREMENT not in config:
-            config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
-                config[CONF_SENSOR_TYPE]
-            )
         device = RflinkSensor(device_id, **config)
         devices.append(device)
 
@@ -112,11 +176,21 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(
-        self, device_id, sensor_type, unit_of_measurement, initial_event=None, **kwargs
-    ):
+        self,
+        device_id: str,
+        sensor_type: str,
+        unit_of_measurement: str | None = None,
+        initial_event=None,
+        **kwargs: Any,
+    ) -> None:
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
+        if sensor_type in SENSOR_TYPES_DICT:
+            self.entity_description = SENSOR_TYPES_DICT[sensor_type]
+        elif not unit_of_measurement:
+            self._unit_of_measurement = lookup_unit_for_sensor_type(sensor_type)
+
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
@@ -164,7 +238,11 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return measurement unit."""
-        return self._unit_of_measurement
+        if self._unit_of_measurement:
+            return self._unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_unit_of_measurement
+        return None
 
     @property
     def native_value(self):

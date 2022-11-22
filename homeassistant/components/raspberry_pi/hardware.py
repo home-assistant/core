@@ -42,6 +42,10 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     if not board.startswith("rpi"):
         raise HomeAssistantError
 
+    config_entries = [
+        entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
     return [
         HardwareInfo(
             board=BoardInfo(
@@ -50,6 +54,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 model=MODELS.get(board),
                 revision=None,
             ),
+            config_entries=config_entries,
             dongle=None,
             name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
             url=None,

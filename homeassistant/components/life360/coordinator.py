@@ -26,6 +26,7 @@ from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
+    COMM_MAX_RETRIES,
     COMM_TIMEOUT,
     CONF_AUTHORIZATION,
     DOMAIN,
@@ -106,6 +107,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
         self._api = Life360(
             session=async_get_clientsession(hass),
             timeout=COMM_TIMEOUT,
+            max_retries=COMM_MAX_RETRIES,
             authorization=entry.data[CONF_AUTHORIZATION],
         )
         self._missing_loc_reason = hass.data[DOMAIN].missing_loc_reason

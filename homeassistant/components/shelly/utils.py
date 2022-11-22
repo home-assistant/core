@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
-from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
 from aioshelly.rpc_device import RpcDevice, WsServer
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry, singleton
 from homeassistant.helpers.typing import EventType
@@ -41,13 +41,6 @@ def async_remove_shelly_entity(
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
-
-
-def temperature_unit(block_info: dict[str, Any]) -> str:
-    """Detect temperature unit."""
-    if block_info[BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
 
 
 def get_block_device_name(device: BlockDevice) -> str:
@@ -272,6 +265,11 @@ def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
     return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
 
 
+def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
+    """Return the device wakeup period in seconds or 0 for non sleeping devices."""
+    return cast(int, status["sys"].get("wakeup_period", 0))
+
+
 def get_info_auth(info: dict[str, Any]) -> bool:
     """Return true if device has authorization enabled."""
     return cast(bool, info.get("auth") or info.get("auth_en"))
@@ -357,13 +355,6 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
-
-
-def is_rpc_device_externally_powered(
-    config: dict[str, Any], status: dict[str, Any], key: str
-) -> bool:
-    """Return true if device has external power instead of battery."""
-    return cast(bool, status[key]["external"]["present"])
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:

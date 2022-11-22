@@ -59,6 +59,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "image",
@@ -263,9 +264,9 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Required("integration_type"): "virtual",
-        vol.Exclusive("iot_standard", "virtual_integration"): vol.Any(
-            "homekit", "zigbee", "zwave"
-        ),
+        vol.Exclusive("iot_standards", "virtual_integration"): [
+            vol.Any("homekit", "zigbee", "zwave")
+        ],
         vol.Exclusive("supported_by", "virtual_integration"): str,
     }
 )

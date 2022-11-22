@@ -35,7 +35,7 @@ def patch_cluster(cluster):
                     zcl_f.ReadAttributeRecord(
                         attr_id,
                         zcl_f.Status.SUCCESS,
-                        zcl_f.TypeValue(python_type=None, value=value),
+                        zcl_f.TypeValue(type=None, value=value),
                     )
                 )
             else:

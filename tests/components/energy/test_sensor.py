@@ -16,16 +16,16 @@ from homeassistant.components.sensor.recorder import compile_statistics
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    UnitOfEnergy,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -142,7 +142,7 @@ async def test_cost_sensor_price_entity_total_increasing(
         return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
 
@@ -346,7 +346,7 @@ async def test_cost_sensor_price_entity_total(
         return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
@@ -552,7 +552,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
         return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
@@ -700,9 +700,10 @@ async def test_cost_sensor_price_entity_total_no_reset(
 @pytest.mark.parametrize(
     "energy_unit,factor",
     [
-        (ENERGY_WATT_HOUR, 1000),
-        (ENERGY_KILO_WATT_HOUR, 1),
-        (ENERGY_MEGA_WATT_HOUR, 0.001),
+        (UnitOfEnergy.WATT_HOUR, 1000),
+        (UnitOfEnergy.KILO_WATT_HOUR, 1),
+        (UnitOfEnergy.MEGA_WATT_HOUR, 0.001),
+        (UnitOfEnergy.GIGA_JOULE, 0.001 * 3.6),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -765,9 +766,10 @@ async def test_cost_sensor_handle_energy_units(
 @pytest.mark.parametrize(
     "price_unit,factor",
     [
-        (f"EUR/{ENERGY_WATT_HOUR}", 0.001),
-        (f"EUR/{ENERGY_KILO_WATT_HOUR}", 1),
-        (f"EUR/{ENERGY_MEGA_WATT_HOUR}", 1000),
+        (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
+        (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
+        (f"EUR/{UnitOfEnergy.MEGA_WATT_HOUR}", 1000),
+        (f"EUR/{UnitOfEnergy.GIGA_JOULE}", 1000 / 3.6),
     ],
 )
 async def test_cost_sensor_handle_price_units(
@@ -775,7 +777,7 @@ async def test_cost_sensor_handle_price_units(
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     price_attributes = {
@@ -832,7 +834,10 @@ async def test_cost_sensor_handle_price_units(
     assert state.state == "20.0"
 
 
-@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+@pytest.mark.parametrize(
+    "unit",
+    (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+)
 async def test_cost_sensor_handle_gas(
     setup_integration, hass, hass_storage, unit
 ) -> None:
@@ -888,7 +893,7 @@ async def test_cost_sensor_handle_gas_kwh(
 ) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
@@ -933,13 +938,73 @@ async def test_cost_sensor_handle_gas_kwh(
     assert state.state == "50.0"
 
 
+@pytest.mark.parametrize(
+    "unit_system,usage_unit,growth",
+    (
+        # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
+        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, 374.025974025974),
+        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, 50.0),
+        (METRIC_SYSTEM, VOLUME_CUBIC_METERS, 50.0),
+    ),
+)
+async def test_cost_sensor_handle_water(
+    setup_integration, hass, hass_storage, unit_system, usage_unit, growth
+) -> None:
+    """Test water cost price from sensor entity."""
+    hass.config.units = unit_system
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: usage_unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "water",
+            "stat_energy_from": "sensor.water_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.water_consumption",
+        100,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.water_consumption_cost")
+    assert state.state == "0.0"
+
+    # water use bumped to 200 ft³/m³
+    hass.states.async_set(
+        "sensor.water_consumption",
+        200,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.water_consumption_cost")
+    assert float(state.state) == pytest.approx(growth)
+
+
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
     setup_integration, hass, hass_storage, caplog, state_class
 ) -> None:
     """Test energy sensor rejects sensor with wrong state_class."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: state_class,
     }
     energy_data = data.EnergyManager.default_preferences()
@@ -1000,7 +1065,7 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 ) -> None:
     """Test energy sensor rejects state_class measurement with no last_reset."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
         ATTR_STATE_CLASS: state_class,
     }
     energy_data = data.EnergyManager.default_preferences()

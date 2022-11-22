@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -44,7 +45,8 @@ TEST_DATA = [
             "entity_count": 3,
             "device_count": 3,
             "entity_id": "number.presence_sensor_delay",
-            "unique_id": "00:00:00:00:00:00:00:00-delay",
+            "unique_id": "00:00:00:00:00:00:00:00-00-delay",
+            "old_unique_id": "00:00:00:00:00:00:00:00-delay",
             "state": "0",
             "entity_category": EntityCategory.CONFIG,
             "attributes": {
@@ -62,7 +64,43 @@ TEST_DATA = [
             "unsupported_service_response": {"delay": 0},
             "out_of_range_service_value": 66666,
         },
-    )
+    ),
+    (  # Presence sensor - duration configuration
+        {
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"dark": False, "presence": False},
+            "config": {
+                "duration": 0,
+                "on": True,
+                "reachable": True,
+                "temperature": 10,
+            },
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
+        },
+        {
+            "entity_count": 3,
+            "device_count": 3,
+            "entity_id": "number.presence_sensor_duration",
+            "unique_id": "00:00:00:00:00:00:00:00-00-duration",
+            "state": "0",
+            "entity_category": EntityCategory.CONFIG,
+            "attributes": {
+                "min": 0,
+                "max": 65535,
+                "step": 1,
+                "mode": "auto",
+                "friendly_name": "Presence sensor Duration",
+            },
+            "websocket_event": {"config": {"duration": 10}},
+            "next_state": "10",
+            "supported_service_value": 111,
+            "supported_service_response": {"duration": 111},
+            "unsupported_service_value": 0.1,
+            "unsupported_service_response": {"duration": 0},
+            "out_of_range_service_value": 66666,
+        },
+    ),
 ]
 
 
@@ -73,6 +111,15 @@ async def test_number_entities(
     """Test successful creation of number entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
+
+    # Create entity entry to migrate to new unique ID
+    if "old_unique_id" in expected:
+        ent_reg.async_get_or_create(
+            NUMBER_DOMAIN,
+            DECONZ_DOMAIN,
+            expected["old_unique_id"],
+            suggested_object_id=expected["entity_id"].replace("number.", ""),
+        )
 
     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"0": sensor_data}}):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -105,8 +152,7 @@ async def test_number_entities(
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "config": {"delay": 10},
-    }
+    } | expected["websocket_event"]
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]

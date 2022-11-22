@@ -3,8 +3,12 @@
         "step": {
             "setup_network": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 }
+            },
+            "setup_serial": {
+                "title": "Zariadenie"
             }
         }
     }

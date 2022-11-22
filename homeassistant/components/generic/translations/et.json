@@ -75,6 +75,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Pilt tundub OK"
+                },
+                "description": "![Camera Still Image Preview]({preview_url})",
+                "title": "Eelvaade"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Sisu t\u00fc\u00fcp"

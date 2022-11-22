@@ -25,9 +25,9 @@ class Awning(OverkizGenericCover):
     _attr_device_class = CoverDeviceClass.AWNING
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features: int = super().supported_features
+        supported_features = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_DEPLOYMENT):
             supported_features |= CoverEntityFeature.SET_POSITION

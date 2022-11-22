@@ -7,5 +7,6 @@
   "after_dependencies": ["google_assistant", "alexa"],
   "codeowners": ["@home-assistant/cloud"],
   "iot_class": "cloud_push",
-  "loggers": ["hass_nabucasa"]
+  "loggers": ["hass_nabucasa"],
+  "integration_type": "system"
 }

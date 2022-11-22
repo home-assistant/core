@@ -6,7 +6,7 @@
         "step": {
             "bluetooth_confirm": {
                 "description": "Vuoi aggiungere la valvola Bluetooth Melnor `{name}` a Home Assistant?",
-                "title": "Scoperta la valvola Bluetooth Melnor"
+                "title": "Rilevata valvola Bluetooth Melnor"
             }
         }
     }

@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
@@ -64,7 +65,8 @@ class HVVDepartureSensor(SensorEntity):
         self.station_name = self.config_entry.data[CONF_STATION]["name"]
         self._attr_extra_state_attributes = {}
         self._attr_available = False
-        self._attr_name = f"Departures at {self.station_name}"
+        self._attr_has_entity_name = True
+        self._attr_name = "Departures"
         self._last_error = None
 
         self.gti = hub.gti
@@ -167,6 +169,7 @@ class HVVDepartureSensor(SensorEntity):
     def device_info(self):
         """Return the device info for this sensor."""
         return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (
                     DOMAIN,
@@ -176,5 +179,5 @@ class HVVDepartureSensor(SensorEntity):
                 )
             },
             manufacturer=MANUFACTURER,
-            name=self.name,
+            name=self.config_entry.data[CONF_STATION]["name"],
         )

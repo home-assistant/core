@@ -35,6 +35,7 @@
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Utilizar los tiempos de ejecuci\u00f3n de las zonas desde la aplicaci\u00f3n RainMachine",
                     "zone_run_time": "Tiempo de ejecuci\u00f3n de zona predeterminado (en segundos)"
                 },
                 "title": "Configurar RainMachine"

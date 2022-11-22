@@ -75,6 +75,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dieses Bild sieht gut aus."
+                },
+                "description": "![Kamera-Standbildvorschau]({preview_url})",
+                "title": "Vorschau"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Inhaltstyp"

@@ -21,5 +21,6 @@
     }
   ],
   "zeroconf": ["_zwave-js-server._tcp.local."],
-  "loggers": ["zwave_js_server"]
+  "loggers": ["zwave_js_server"],
+  "integration_type": "hub"
 }
