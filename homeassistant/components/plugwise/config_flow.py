@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohttp import ClientError
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
-    InvalidSetupError,
     InvalidXMLError,
     ResponseError,
-    XMLDataMissingError,
+    UnsupportedDeviceError,
 )
 from plugwise.smile import Smile
 import voluptuous as vol
@@ -36,7 +34,6 @@ from .const import (
     DOMAIN,
     FLOW_SMILE,
     FLOW_STRETCH,
-    LOGGER,
     PW_TYPE,
     SMILE,
     STRETCH,
@@ -179,21 +176,15 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 api = await validate_gw_input(self.hass, user_input)
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
+            except ConnectionFailedError:
+                errors[CONF_BASE] = "cannot_connect"
             except InvalidAuthentication:
                 errors[CONF_BASE] = "invalid_auth"
-            except (
-                ClientError,
-                ConnectionFailedError,
-                InvalidXMLError,
-                ResponseError,
-            ):
-                errors[CONF_BASE] = "cannot_connect"
-            except XMLDataMissingError:
-                errors[CONF_BASE] = "retry"
+            except (InvalidXMLError, ResponseError):
+                errors[CONF_BASE] = "response_error"
+            except UnsupportedDeviceError:
+                errors[CONF_BASE] = "warn_code_owner"
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
             else:
                 await self.async_set_unique_id(

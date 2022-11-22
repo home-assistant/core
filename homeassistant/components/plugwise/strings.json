@@ -15,9 +15,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_setup": "Add your Adam instead of your Anna, see the Home Assistant Plugwise integration documentation for more information",
-      "retry": "Something went wrong, please retry",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "response_error": "Invalid XML data, or error indication received",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "warn_code_owner": "Unsupported device found, please create an Issue in the HA Core github"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
