@@ -13,6 +13,8 @@
             },
             "user": {
                 "data": {
+                    "address": "Adresa zariadenia",
+                    "mac": "MAC adresa zariadenia",
                     "name": "N\u00e1zov",
                     "password": "Heslo"
                 }

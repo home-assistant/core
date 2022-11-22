@@ -1,5 +1,12 @@
 {
     "config": {
-        "flow_title": "{label} ({host}) {serial}"
+        "flow_title": "{label} ({host}) {serial}",
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Zariadenie"
+                }
+            }
+        }
     }
 }

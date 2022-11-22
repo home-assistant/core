@@ -3,19 +3,45 @@
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert"
         },
+        "error": {
+            "resource_error": "Restdaten konnten nicht aktualisiert werden. \u00dcberpr\u00fcfe deine Konfiguration"
+        },
         "step": {
+            "sensor": {
+                "data": {
+                    "attribute": "Attribut",
+                    "device_class": "Ger\u00e4teklasse",
+                    "index": "Index",
+                    "name": "Name",
+                    "select": "Ausw\u00e4hlen",
+                    "state_class": "Zustandsklasse",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "value_template": "Wertvorlage"
+                },
+                "data_description": {
+                    "attribute": "Wert eines Attributs auf dem ausgew\u00e4hlten Tag abrufen",
+                    "device_class": "Der Typ/die Klasse des Sensors, um das Symbol im Frontend festzulegen",
+                    "index": "Definiert, welche der vom CSS-Selektor zur\u00fcckgegebenen Elemente verwendet werden sollen",
+                    "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
+                    "state_class": "Die state_class des Sensors",
+                    "unit_of_measurement": "W\u00e4hle die Temperaturmessung oder erstelle deine eigene",
+                    "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln"
+                }
+            },
             "user": {
                 "data": {
                     "attribute": "Attribut",
-                    "authentication": "Authentifizierung",
+                    "authentication": "Authentifizierungsmethode ausw\u00e4hlen",
                     "device_class": "Ger\u00e4teklasse",
                     "headers": "Header",
                     "index": "Index",
+                    "method": "Methode",
                     "name": "Name",
                     "password": "Passwort",
                     "resource": "Ressource",
                     "select": "Ausw\u00e4hlen",
                     "state_class": "Zustandsklasse",
+                    "timeout": "Zeit\u00fcberschreitung",
                     "unit_of_measurement": "Ma\u00dfeinheit",
                     "username": "Benutzername",
                     "value_template": "Wertvorlage",
@@ -30,6 +56,7 @@
                     "resource": "Die URL der Website, die den Wert enth\u00e4lt",
                     "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
                     "state_class": "Die state_class des Sensors",
+                    "timeout": "Zeit\u00fcberschreitung f\u00fcr die Verbindung zur Website",
                     "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln",
                     "verify_ssl": "Aktiviert/deaktiviert die \u00dcberpr\u00fcfung des SSL/TLS-Zertifikats, z.B. wenn es selbst signiert ist"
                 }
@@ -47,15 +74,17 @@
             "init": {
                 "data": {
                     "attribute": "Attribut",
-                    "authentication": "Authentifizierung",
+                    "authentication": "Authentifizierungsmethode ausw\u00e4hlen",
                     "device_class": "Ger\u00e4teklasse",
                     "headers": "Header",
                     "index": "Index",
+                    "method": "Methode",
                     "name": "Name",
                     "password": "Passwort",
                     "resource": "Ressource",
                     "select": "Ausw\u00e4hlen",
                     "state_class": "Zustandsklasse",
+                    "timeout": "Zeit\u00fcberschreitung",
                     "unit_of_measurement": "Ma\u00dfeinheit",
                     "username": "Benutzername",
                     "value_template": "Wertvorlage",
@@ -70,6 +99,7 @@
                     "resource": "Die URL der Website, die den Wert enth\u00e4lt",
                     "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
                     "state_class": "Die state_class des Sensors",
+                    "timeout": "Zeit\u00fcberschreitung f\u00fcr die Verbindung zur Website",
                     "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln",
                     "verify_ssl": "Aktiviert/deaktiviert die \u00dcberpr\u00fcfung des SSL/TLS-Zertifikats, z.B. wenn es selbst signiert ist"
                 }

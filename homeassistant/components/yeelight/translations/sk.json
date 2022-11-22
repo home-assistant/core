@@ -5,6 +5,11 @@
         },
         "flow_title": "{model} {id} ({host})",
         "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Zariadenie"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
