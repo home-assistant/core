@@ -302,7 +302,7 @@ class EnOceanopening(EnOceanSensor):
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-        action = (packet.data[1] & 0x01)   """ retrieve Contact (CO) value"""
+        action = (packet.data[1] & 0x01)  # retrieve Contact (CO) value
 
         if action == 0x01:
             self._attr_native_value = STATE_CLOSED
