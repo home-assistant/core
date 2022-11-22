@@ -293,7 +293,8 @@ class EnOceanWindowHandle(EnOceanSensor):
 
         self.schedule_update_ha_state()
 
-class EnOceanopening(EnOceanSensor):
+
+class EnOceanOpening(EnOceanSensor):
     """Representation of an EnOcean opening sensor
 
     EEPs (EnOcean Equipment Profiles):
