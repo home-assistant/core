@@ -258,7 +258,11 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow):
         cls, config_entry: config_entries.ConfigEntry
     ) -> bool:
         """Return options flow support for this handler."""
-        return cls.options_flow is not None
+        return (
+            cls.async_get_options_flow
+            is not config_entries.ConfigFlow.async_get_options_flow
+            or cls.options_flow is not None
+        )
 
     @staticmethod
     def _async_step(step_id: str) -> Callable:
