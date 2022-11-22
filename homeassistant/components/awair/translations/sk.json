@@ -12,6 +12,7 @@
             },
             "local_pick": {
                 "data": {
+                    "device": "Zaradenie",
                     "host": "IP adresa"
                 }
             },

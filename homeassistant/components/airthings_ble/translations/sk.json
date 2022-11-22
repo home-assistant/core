@@ -7,6 +7,13 @@
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Zaradenie"
+                }
+            }
+        }
     }
 }

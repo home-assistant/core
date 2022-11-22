@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "wrong_password": "Heslo je nespr\u00e1vne."
         },
         "step": {
