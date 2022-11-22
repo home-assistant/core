@@ -11,23 +11,23 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "host": "Server URL",
                     "password": "Password",
-                    "username": "Email",
-                    "sync_rooms": "Synchronize Rooms",
-                    "scan_interval": "Update Bulbs interval",
                     "polling": "Poll Bulb states",
-                    "host": "Server URL"
+                    "scan_interval": "Update Bulbs interval",
+                    "sync_rooms": "Synchronize Rooms",
+                    "username": "Email"
                 },
                 "title": "Fill in your Klyqa login information"
             },
             "user": {
                 "data": {
+                    "host": "Server URL",
                     "password": "Password",
-                    "username": "Email",
-                    "sync_rooms": "Synchronize rooms",
-                    "scan_interval": "Update bulb interval in seconds",
                     "polling": "Polling bulb states in interval",
-                    "host": "Server URL"
+                    "scan_interval": "Update bulb interval in seconds",
+                    "sync_rooms": "Synchronize rooms",
+                    "username": "Email"
                 },
                 "title": "Fill in your Klyqa login information"
             }
@@ -42,12 +42,12 @@
         "step": {
             "init": {
                 "data": {
+                    "host": "Server URL",
                     "password": "Password",
-                    "username": "Email",
-                    "sync_rooms": "Synchronize rooms",
-                    "scan_interval": "Update bulb interval in seconds",
                     "polling": "Polling bulb state after interval",
-                    "host": "Server URL"
+                    "scan_interval": "Update bulb interval in seconds",
+                    "sync_rooms": "Synchronize rooms",
+                    "username": "Email"
                 },
                 "title": "Your Klyqa integration information"
             }

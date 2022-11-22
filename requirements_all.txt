@@ -158,9 +158,6 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==12.0.0
 
-# homeassistant.components.klyqa
-aiofiles==0.8.0
-
 # homeassistant.components.flo
 aioflo==2021.11.0
 
@@ -992,7 +989,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.klyqa
-klyqa_ctl==1.0.3
+klyqa_ctl==1.0.12
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1524,9 +1521,6 @@ pycomfoconnect==0.4
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
-# homeassistant.components.klyqa
-pycryptodomex==3.14.1
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
 
@@ -2056,9 +2050,6 @@ python-qbittorrent==0.4.2
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
 
-# homeassistant.components.klyqa
-python-slugify==4.0.1
-
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
 
@@ -2563,9 +2554,6 @@ waterfurnace==1.1.0
 
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
-
-# homeassistant.components.klyqa
-websockets==10.3
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.17.0
