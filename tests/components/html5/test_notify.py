@@ -282,7 +282,7 @@ class TestHtml5Notify:
 def test_create_vapid_withoutvapid():
     """Test creating empty vapid."""
     resp = html5.create_vapid_headers(
-        vapid_email=None, vapid_private_key=None, subscription_info=None
+        vapid_email=None, vapid_private_key=None, subscription_info=None, timestamp=None
     )
     assert resp is None
 
