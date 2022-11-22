@@ -167,12 +167,13 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "init"
 
-    await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
+        {"next_step_id": "resource"},
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "resource"
 
     mocker = MockRestData("test_scrape_sensor2")
     with patch("homeassistant.components.rest.RestData", return_value=mocker):
