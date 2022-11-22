@@ -51,9 +51,9 @@ def with_store(orig_func: Callable) -> Callable:
         """Provide user specific data and store to function."""
         user_id = connection.user.id
 
-        store, data = await async_user_store(hass, user_id)
+        store, user_data = await async_user_store(hass, user_id)
 
-        await orig_func(hass, connection, msg, store, data[user_id])
+        await orig_func(hass, connection, msg, store, user_data)
 
     return with_store_func
 
