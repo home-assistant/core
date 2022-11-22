@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -106,36 +106,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
-        native_step=1.0,
-    ),
-    ValloxNumberEntityDescription(
-        key="fan_speed_home",
-        name="Fan speed (Home)",
-        icon="mdi:fan",
-        metric_key="A_CYC_HOME_SPEED_SETTING",
-        native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0.0,
-        native_max_value=100.0,
-        native_step=1.0,
-    ),
-    ValloxNumberEntityDescription(
-        key="fan_speed_away",
-        name="Fan speed (Away)",
-        icon="mdi:fan",
-        metric_key="A_CYC_AWAY_SPEED_SETTING",
-        native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0.0,
-        native_max_value=100.0,
-        native_step=1.0,
-    ),
-    ValloxNumberEntityDescription(
-        key="fan_speed_boost",
-        name="Fan speed (Boost)",
-        icon="mdi:fan",
-        metric_key="A_CYC_BOOST_SPEED_SETTING",
-        native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0.0,
-        native_max_value=100.0,
         native_step=1.0,
     ),
 )
