@@ -7,6 +7,13 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
+      "choice_sensor_selection": {
+        "description": "A PurpleAir sensor can be added to Home Assistant in two different ways:\n\n1. You can search for the sensor nearest to a latitude/longitude.\n2. You can add a sensor by its \"index\" (its ID).",
+        "menu_options": {
+          "by_coordinates": "Search for sensors nearby to a latitude/longitude",
+          "by_sensor_index": "Input a sensor index"
+        }
+      },
       "by_coordinates": {
         "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
         "data": {
@@ -14,11 +21,19 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "distance": "The radius (in kilometers) to search within"
         }
+      },
+      "by_sensor_index": {
+        "description": "Input a PurpleAir sensor index (ID).",
+        "data": {
+          "sensor_index": "The PurpleAir sensor index to track"
+        }
       }
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_sensor_index_format": "Invalid sensor index format",
       "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+      "sensor_index_not_found": "Unknown sensor index",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aiopurpleair import API
-from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, NotFoundError, PurpleAirError
 from aiopurpleair.models.sensors import SensorModel
 import voluptuous as vol
 
@@ -18,6 +18,12 @@ from .const import CONF_SENSOR_INDEX, DOMAIN, LOGGER
 CONF_DISTANCE = "distance"
 
 DEFAULT_DISTANCE = 5
+
+STEP_BY_SENSOR_INDEX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SENSOR_INDEX): cv.string,
+    }
+)
 
 STEP_CHECK_API_KEY_SCHEMA = vol.Schema(
     {
@@ -102,6 +108,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry(nearest_sensor)
 
+    async def async_step_by_sensor_index(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the selection of a sensor by index."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="by_sensor_index", data_schema=STEP_BY_SENSOR_INDEX_SCHEMA
+            )
+
+        if not user_input[CONF_SENSOR_INDEX].isnumeric():
+            return self.async_show_form(
+                step_id="by_sensor_index",
+                data_schema=STEP_BY_SENSOR_INDEX_SCHEMA,
+                errors={CONF_SENSOR_INDEX: "invalid_sensor_index_format"},
+            )
+
+        errors = {}
+
+        try:
+            sensor_response = await self._api.sensors.async_get_sensor(
+                user_input[CONF_SENSOR_INDEX]
+            )
+        except NotFoundError:
+            errors[CONF_SENSOR_INDEX] = "sensor_index_not_found"
+        except PurpleAirError as err:
+            LOGGER.error("PurpleAir error while getting sensor: %s", err)
+            errors["base"] = "unknown"
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected exception while getting sensor: %s", err)
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(
+                step_id="by_sensor_index",
+                data_schema=STEP_BY_SENSOR_INDEX_SCHEMA,
+                errors=errors,
+            )
+
+        return await self._async_create_entry(sensor_response.sensor)
+
     async def async_step_check_api_key(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -135,7 +181,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._api_key = user_input[CONF_API_KEY]
 
-        return await self.async_step_by_coordinates()
+        return self.async_show_menu(
+            step_id="choice_sensor_selection",
+            menu_options=["by_coordinates", "by_sensor_index"],
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
