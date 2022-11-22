@@ -23,7 +23,9 @@ async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_user_data)
 
 
-async def async_user_store(hass: HomeAssistant, user_id: str) -> tuple[Store, Any]:
+async def async_user_store(
+    hass: HomeAssistant, user_id: str
+) -> tuple[Store, dict[str, Any]]:
     """Access a user store."""
     stores, data = hass.data[DATA_STORAGE]
     if (store := stores.get(user_id)) is None:
