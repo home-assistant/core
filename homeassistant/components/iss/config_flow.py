@@ -41,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user")
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Config flow options handler for iss."""
 
     async def async_step_init(self, user_input=None) -> FlowResult:

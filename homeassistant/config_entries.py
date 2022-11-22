@@ -1679,19 +1679,11 @@ class OptionsFlow(data_entry_flow.FlowHandler):
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
-    """Base class for options flows with config entry."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-
-class OptionsFlowWithConfigEntryOptions(OptionsFlowWithConfigEntry):
     """Base class for options flows with config entry and options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
+        self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
 
 

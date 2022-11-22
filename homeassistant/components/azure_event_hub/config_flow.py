@@ -169,7 +169,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await validate_data(self._data)
 
 
-class AEHOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class AEHOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle azure event hub options."""
 
     async def async_step_init(

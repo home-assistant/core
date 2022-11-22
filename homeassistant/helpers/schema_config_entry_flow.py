@@ -300,7 +300,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow):
         )
 
 
-class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle a schema based options flow."""
 
     def __init__(

@@ -133,7 +133,7 @@ async def _async_build_schema_with_user_input(
     return vol.Schema(schema)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle a option flow for homekit."""
 
     async def async_step_init(

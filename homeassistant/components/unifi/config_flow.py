@@ -245,7 +245,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
 
-class UnifiOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class UnifiOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle Unifi Network options."""
 
     controller: UniFiController

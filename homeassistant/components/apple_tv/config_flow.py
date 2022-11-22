@@ -525,7 +525,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self.atv.name, data=data)
 
 
-class AppleTVOptionsFlow(config_entries.OptionsFlowWithConfigEntryOptions):
+class AppleTVOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Handle Apple TV options."""
 
     async def async_step_init(self, user_input=None):

@@ -94,7 +94,7 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return BMWOptionsFlow(config_entry)
 
 
-class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntryOptions):
+class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Handle a option flow for MyBMW."""
 
     async def async_step_init(

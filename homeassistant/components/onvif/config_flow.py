@@ -262,7 +262,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await device.close()
 
 
-class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
+class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle ONVIF options."""
 
     async def async_step_init(self, user_input=None):

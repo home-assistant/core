@@ -26,7 +26,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     OptionsFlow,
-    OptionsFlowWithConfigEntryOptions,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -290,7 +290,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class DeconzOptionsFlowHandler(OptionsFlowWithConfigEntryOptions):
+class DeconzOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle deCONZ options."""
 
     gateway: DeconzGateway
