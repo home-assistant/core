@@ -107,6 +107,10 @@ class TestWorkdaySetup:
             "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": -1}
         }
 
+        self.config_market_holidays = {
+            "binary_sensor": {"platform": "workday", "country": "NYSE"}
+        }
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -339,6 +343,19 @@ class TestWorkdaySetup:
             setup_component(
                 self.hass, "binary_sensor", self.config_remove_named_holidays
             )
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"
+
+    # Veterans' Day is not a market holiday, so the workday sensor should be on
+    @patch(FUNCTION_PATH, return_value=date(2022, 11, 11))
+    def test_config_market_holidays_veterans_day(self, mock_date):
+        """Test if market holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_market_holidays)
+            self.hass.block_till_done()
 
         self.hass.start()
 

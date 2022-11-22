@@ -43,8 +43,9 @@ DEFAULT_OFFSET = 0
 def valid_country(value: Any) -> str:
     """Validate that the given country is supported."""
     value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
-
+    all_supported_countries = (
+        holidays.list_supported_countries() | holidays.list_supported_financial()
+    )
     try:
         raw_value = value.encode("utf-8")
     except UnicodeError as err:
