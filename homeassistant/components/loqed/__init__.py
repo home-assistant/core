@@ -22,15 +22,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up loqed from a config entry."""
     websession = async_get_clientsession(hass)
-    host = entry.data["host"]
+    host = entry.data["bridge_ip"]
     apiclient = loqed.APIClient(websession, f"http://{host}")
     api = loqed.LoqedAPI(apiclient)
 
     lock = await api.async_get_lock(
-        entry.data["api_key"],
-        entry.data["bkey"],
-        entry.data["key_id"],
-        entry.data["host"],
+        entry.data["lock_key_key"],
+        entry.data["bridge_key"],
+        entry.data["lock_key_local_id"],
+        entry.data["bridge_ip"],
     )
     coordinator = LoqedDataCoordinator(hass, api, lock, entry)
     await coordinator.ensure_webhooks()

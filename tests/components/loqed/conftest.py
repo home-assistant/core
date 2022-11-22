@@ -26,13 +26,12 @@ def config_entry_fixture() -> MockConfigEntry:
         version=1,
         domain=DOMAIN,
         data={
-            "config": config,
             "id": "Foo",
-            "ip": json_config["bridge_ip"],
-            "host": json_config["bridge_mdns_hostname"],
-            "bkey": json_config["bridge_key"],
-            "key_id": int(json_config["lock_key_local_id"]),
-            "api_key": json_config["lock_key_key"],
+            "bridge_ip": json_config["bridge_ip"],
+            "bridge_mdns_hostname": json_config["bridge_mdns_hostname"],
+            "bridge_key": json_config["bridge_key"],
+            "lock_key_local_id": int(json_config["lock_key_local_id"]),
+            "lock_key_key": json_config["lock_key_key"],
             CONF_WEBHOOK_ID: "Webhook_id",
         },
     )
