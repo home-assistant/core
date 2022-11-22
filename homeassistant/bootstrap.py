@@ -229,6 +229,25 @@ async def async_from_config_dict(
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
+    # Load the registries and cache the result of platform.uname().processor
+    await asyncio.gather(
+        area_registry.async_load(hass),
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        issue_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
+    )
+
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
@@ -529,25 +548,6 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
-
-    # Load the registries and cache the result of platform.uname().processor
-    await asyncio.gather(
-        area_registry.async_load(hass),
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        issue_registry.async_load(hass),
-        hass.async_add_executor_job(_cache_uname_processor),
-    )
 
     # Initialize recorder
     if "recorder" in domains_to_setup:

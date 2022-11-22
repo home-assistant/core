@@ -16,9 +16,16 @@ DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
 
 
+def _initialize_frontend_storage(hass: HomeAssistant) -> None:
+    """Set up frontend storage."""
+    if DATA_STORAGE in hass.data:
+        return
+    hass.data[DATA_STORAGE] = ({}, {})
+
+
 async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
-    hass.data[DATA_STORAGE] = ({}, {})
+    _initialize_frontend_storage(hass)
     websocket_api.async_register_command(hass, websocket_set_user_data)
     websocket_api.async_register_command(hass, websocket_get_user_data)
 
@@ -27,6 +34,7 @@ async def async_user_store(
     hass: HomeAssistant, user_id: str
 ) -> tuple[Store, dict[str, Any]]:
     """Access a user store."""
+    _initialize_frontend_storage(hass)
     stores, data = hass.data[DATA_STORAGE]
     if (store := stores.get(user_id)) is None:
         store = stores[user_id] = Store(
