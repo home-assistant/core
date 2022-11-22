@@ -17,6 +17,11 @@
                 "data": {
                     "password": "Heslo"
                 }
+            },
+            "user": {
+                "data": {
+                    "device": "Zariadenie"
+                }
             }
         }
     }

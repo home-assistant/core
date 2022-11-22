@@ -136,9 +136,9 @@ class MqttLock(MqttEntity, LockEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-        self._attr_supported_features = (
-            LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in config else 0
-        )
+        self._attr_supported_features = LockEntityFeature(0)
+        if CONF_PAYLOAD_OPEN in config:
+            self._attr_supported_features |= LockEntityFeature.OPEN
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

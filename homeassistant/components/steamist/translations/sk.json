@@ -4,6 +4,11 @@
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
         },
         "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Zariadenie"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

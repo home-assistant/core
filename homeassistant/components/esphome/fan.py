@@ -158,9 +158,9 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
     @property
-    def supported_features(self) -> FanEntityFeature | int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = 0
+        flags = FanEntityFeature(0)
         if self._static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
         if self._static_info.supports_speed:

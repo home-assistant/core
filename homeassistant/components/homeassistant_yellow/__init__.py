@@ -18,6 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import ZHA_HW_DISCOVERY_DATA
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -52,22 +54,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     if addon_info.state == AddonState.NOT_INSTALLED:
-        path = "/dev/ttyAMA1"
+        hw_discovery_data = ZHA_HW_DISCOVERY_DATA
     else:
-        path = get_zigbee_socket(hass, addon_info)
-
-    await hass.config_entries.flow.async_init(
-        "zha",
-        context={"source": "hardware"},
-        data={
-            "name": "Yellow",
+        hw_discovery_data = {
+            "name": "Yellow Multi-PAN",
             "port": {
-                "path": path,
+                "path": get_zigbee_socket(hass, addon_info),
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
             "radio_type": "efr32",
-        },
+        }
+
+    await hass.config_entries.flow.async_init(
+        "zha",
+        context={"source": "hardware"},
+        data=hw_discovery_data,
     )
 
     return True

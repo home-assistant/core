@@ -6,6 +6,9 @@
         "flow_title": "{name} ({category})",
         "step": {
             "user": {
+                "data": {
+                    "device": "Zariadenie"
+                },
                 "title": "V\u00fdber zariadenia"
             }
         }

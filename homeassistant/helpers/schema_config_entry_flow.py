@@ -306,7 +306,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(
         self,
         config_entry: config_entries.ConfigEntry,
-        options_flow: dict[str, vol.Schema],
+        options_flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None],
     ) -> None:
         """Initialize options flow."""
