@@ -195,7 +195,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: TEST_IP,
         CONF_PORT: TEST_PORT,
