@@ -125,7 +125,7 @@ class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_READ_ONLY,
-                        default=self.config_entry.options.get(CONF_READ_ONLY, False),
+                        default=self.options.get(CONF_READ_ONLY, False),
                     ): bool,
                 }
             ),

@@ -56,7 +56,7 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
+                        default=self.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,
                 }
             ),

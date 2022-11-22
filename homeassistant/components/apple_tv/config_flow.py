@@ -540,9 +540,7 @@ class AppleTVOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_START_OFF,
-                        default=self.config_entry.options.get(
-                            CONF_START_OFF, DEFAULT_START_OFF
-                        ),
+                        default=self.options.get(CONF_START_OFF, DEFAULT_START_OFF),
                     ): bool,
                 }
             ),

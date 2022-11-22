@@ -318,7 +318,7 @@ class DeconzOptionsFlowHandler(OptionsFlowWithConfigEntry):
             schema_options[
                 vol.Optional(
                     option,
-                    default=self.config_entry.options.get(option, default),
+                    default=self.options.get(option, default),
                 )
             ] = bool
 

@@ -113,7 +113,7 @@ class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_FORECAST,
-                        default=self.config_entry.options.get(CONF_FORECAST, False),
+                        default=self.options.get(CONF_FORECAST, False),
                     ): bool
                 }
             ),

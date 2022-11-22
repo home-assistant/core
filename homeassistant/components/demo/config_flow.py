@@ -61,11 +61,11 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     vol.Required("constant"): "Constant Value",
                     vol.Optional(
                         CONF_BOOLEAN,
-                        default=self.config_entry.options.get(CONF_BOOLEAN, False),
+                        default=self.options.get(CONF_BOOLEAN, False),
                     ): bool,
                     vol.Optional(
                         CONF_INT,
-                        default=self.config_entry.options.get(CONF_INT, 10),
+                        default=self.options.get(CONF_INT, 10),
                     ): int,
                 }
             ),
@@ -85,20 +85,15 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_STRING,
-                        default=self.config_entry.options.get(
-                            CONF_STRING,
-                            "Default",
-                        ),
+                        default=self.options.get(CONF_STRING, "Default"),
                     ): str,
                     vol.Optional(
                         CONF_SELECT,
-                        default=self.config_entry.options.get(CONF_SELECT, "default"),
+                        default=self.options.get(CONF_SELECT, "default"),
                     ): vol.In(["default", "other"]),
                     vol.Optional(
                         CONF_MULTISELECT,
-                        default=self.config_entry.options.get(
-                            CONF_MULTISELECT, ["default"]
-                        ),
+                        default=self.options.get(CONF_MULTISELECT, ["default"]),
                     ): cv.multi_select({"default": "Default", "other": "Other"}),
                 }
             ),

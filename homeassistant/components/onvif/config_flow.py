@@ -276,7 +276,7 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
             self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                self.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
             return self.async_create_entry(title="", data=self.options)
 
@@ -285,9 +285,7 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             advanced_options[
                 vol.Optional(
                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=self.config_entry.options.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                    ),
+                    default=self.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
                 )
             ] = bool
         return self.async_show_form(
@@ -296,13 +294,13 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_EXTRA_ARGUMENTS,
-                        default=self.config_entry.options.get(
+                        default=self.options.get(
                             CONF_EXTRA_ARGUMENTS, DEFAULT_ARGUMENTS
                         ),
                     ): str,
                     vol.Optional(
                         CONF_RTSP_TRANSPORT,
-                        default=self.config_entry.options.get(
+                        default=self.options.get(
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
