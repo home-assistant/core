@@ -245,15 +245,10 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
 
-class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
+class UnifiOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
     """Handle Unifi Network options."""
 
     controller: UniFiController
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize UniFi Network options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -37,13 +37,8 @@ class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title="Demo", data=import_info)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
     """Handle options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

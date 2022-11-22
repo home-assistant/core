@@ -169,13 +169,8 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await validate_data(self._data)
 
 
-class AEHOptionsFlowHandler(config_entries.OptionsFlow):
+class AEHOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntryOptions):
     """Handle azure event hub options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize AEH options flow."""
-        self.config_entry = config_entry
-        self.options = deepcopy(dict(config_entry.options))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
