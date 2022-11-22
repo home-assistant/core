@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -284,61 +284,61 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
 
-    def alarm_disarm(self, code: str | None = None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._validate_code(code, STATE_ALARM_DISARMED):
+        if not self._async_validate_code(code, STATE_ALARM_DISARMED):
             return
 
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def alarm_arm_home(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self.code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._async_validate_code(
             code, STATE_ALARM_ARMED_HOME
         ):
             return
 
-        self._update_state(STATE_ALARM_ARMED_HOME)
+        self._async_update_state(STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self.code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._async_validate_code(
             code, STATE_ALARM_ARMED_AWAY
         ):
             return
 
-        self._update_state(STATE_ALARM_ARMED_AWAY)
+        self._async_update_state(STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_night(self, code: str | None = None) -> None:
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self.code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._async_validate_code(
             code, STATE_ALARM_ARMED_NIGHT
         ):
             return
 
-        self._update_state(STATE_ALARM_ARMED_NIGHT)
+        self._async_update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_arm_vacation(self, code: str | None = None) -> None:
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        if self.code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._async_validate_code(
             code, STATE_ALARM_ARMED_VACATION
         ):
             return
 
-        self._update_state(STATE_ALARM_ARMED_VACATION)
+        self._async_update_state(STATE_ALARM_ARMED_VACATION)
 
-    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        if self.code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._async_validate_code(
             code, STATE_ALARM_ARMED_CUSTOM_BYPASS
         ):
             return
 
-        self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
+        self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-    def alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """
         Send alarm trigger command.
 
@@ -347,9 +347,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
-        self._update_state(STATE_ALARM_TRIGGERED)
+        self._async_update_state(STATE_ALARM_TRIGGERED)
 
-    def _update_state(self, state: str) -> None:
+    def _async_update_state(self, state: str) -> None:
         """Update the state."""
         if self._state == state:
             return
@@ -357,16 +357,16 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
         if state == STATE_ALARM_TRIGGERED:
             pending_time = self._pending_time(state)
-            track_point_in_time(
+            async_track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
 
             trigger_time = self._trigger_time_by_state[self._previous_state]
-            track_point_in_time(
+            async_track_point_in_time(
                 self._hass,
                 self.async_scheduled_update,
                 self._state_ts + pending_time + trigger_time,
@@ -374,20 +374,20 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         elif state in SUPPORTED_ARMING_STATES:
             arming_time = self._arming_time(state)
             if arming_time:
-                track_point_in_time(
+                async_track_point_in_time(
                     self._hass,
                     self.async_scheduled_update,
                     self._state_ts + arming_time,
                 )
 
-    def _validate_code(self, code, state):
+    def _async_validate_code(self, code, state):
         """Validate given code."""
         if self._code is None:
             return True
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(
+            alarm_code = self._code.async_render(
                 parse_result=False, from_state=self._state, to_state=state
             )
         check = not alarm_code or code == alarm_code
