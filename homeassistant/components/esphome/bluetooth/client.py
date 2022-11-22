@@ -67,6 +67,8 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if disconnected_event.is_set():
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
             raise BleakError(
                 f"{self._source}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
