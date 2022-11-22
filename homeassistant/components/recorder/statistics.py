@@ -1413,17 +1413,8 @@ def resolve_period(
         end_time = dt_util.as_utc(end_time)
 
     elif "fixed_period" in period_def:
-        if start_time_str := period_def["fixed_period"].get("start_time"):
-            if start_time := dt_util.parse_datetime(start_time_str):
-                start_time = dt_util.as_utc(start_time)
-            else:
-                raise HomeAssistantError("invalid_start_time")
-
-        if end_time_str := period_def["fixed_period"].get("end_time"):
-            if end_time := dt_util.parse_datetime(end_time_str):
-                end_time = dt_util.as_utc(end_time)
-            else:
-                raise HomeAssistantError("invalid_end_time")
+        start_time = period_def["fixed_period"].get("start_time")
+        end_time = period_def["fixed_period"].get("end_time")
 
     elif "rolling_window" in period_def:
         duration = period_def["rolling_window"]["duration"]

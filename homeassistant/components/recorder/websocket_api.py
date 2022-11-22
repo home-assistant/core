@@ -91,8 +91,8 @@ def _ws_get_statistic_during_period(
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
             {
-                vol.Optional("start_time"): str,
-                vol.Optional("end_time"): str,
+                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
+                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
             }
         ),
         vol.Exclusive("rolling_window", "period"): vol.Schema(
