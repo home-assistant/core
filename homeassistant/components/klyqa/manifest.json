@@ -1,7 +1,6 @@
 {
   "domain": "klyqa",
   "name": "Klyqa",
-  "version": "1.0.9-review",
   "documentation": "https://github.com/klyqa/home-assistant-integration",
   "config_flow": true,
   "dependencies": ["network"],
