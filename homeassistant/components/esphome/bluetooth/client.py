@@ -443,28 +443,9 @@ class ESPHomeClient(BaseBleakClient):
         Returns:
             (bytearray) The read data.
         """
-        cache = self.entry_data.get_gatt_descriptors_cache(self._address_as_int)
-        if True or kwargs.get("use_cached", False):
-            if value := cache.get(handle):
-                _LOGGER.warning(
-                    "%s: %s - %s: Cached descriptor hit: %s",
-                    self._source,
-                    self._ble_device.name,
-                    self._ble_device.address,
-                    handle,
-                )
-                return value
-            _LOGGER.warning(
-                "%s: %s - %s: Cached descriptor miss: %s",
-                self._source,
-                self._ble_device.name,
-                self._ble_device.address,
-                handle,
-            )
-        value = cache[handle] = await self._client.bluetooth_gatt_read_descriptor(
+        return await self._client.bluetooth_gatt_read_descriptor(
             self._address_as_int, handle, GATT_READ_TIMEOUT
         )
-        return value
 
     @verify_connected
     @api_error_as_bleak_error
