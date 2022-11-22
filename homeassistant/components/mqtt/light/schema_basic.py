@@ -415,11 +415,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             supported_color_modes
         )
 
-        supported_features: int = 0
-        supported_features |= (
-            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and LightEntityFeature.EFFECT
-        )
-        self._attr_supported_features = supported_features
+        self._attr_supported_features = LightEntityFeature(0)
+        if topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     def _is_optimistic(self, attribute: str) -> bool:
         """Return True if the attribute is optimistically updated."""
