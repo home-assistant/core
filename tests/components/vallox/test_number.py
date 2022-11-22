@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
             18.0,
         ),
         (
-            "number.vallox_supply_air_target_boost",
+            "number.vallox_supply_air_temperature_boost",
             "A_CYC_BOOST_AIR_TEMP_TARGET",
             17.0,
         ),
