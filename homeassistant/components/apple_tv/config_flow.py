@@ -525,13 +525,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self.atv.name, data=data)
 
 
-class AppleTVOptionsFlow(config_entries.OptionsFlow):
+class AppleTVOptionsFlow(config_entries.OptionsFlowWithConfigEntryOptions):
     """Handle Apple TV options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Apple TV options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the Apple TV options."""
