@@ -33,6 +33,11 @@ SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
 )
 
 
+def short_mac(addr: str) -> str:
+    """Convert MAC address to short address."""
+    return addr.replace(":", "")[-4:].upper()
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone device."""
 
@@ -152,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-                title = f"Airzone {mac}"
+                title = f"Airzone {short_mac(mac)}"
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(

@@ -12,6 +12,7 @@ from aioairzone.exceptions import (
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
+from homeassistant.components.airzone.config_flow import short_mac
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -310,7 +311,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"Airzone {DHCP_SERVICE_INFO.macaddress}"
+        assert result["title"] == f"Airzone {short_mac(DHCP_SERVICE_INFO.macaddress)}"
         assert result["data"][CONF_HOST] == TEST_IP
         assert result["data"][CONF_PORT] == TEST_PORT
         assert result["data"][CONF_ID] == TEST_ID
