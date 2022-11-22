@@ -446,6 +446,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         return SWING_OFF
 
+    @property                                                        
+    def extra_state_attributes(self):
+        """Return device specific state attributes."""
+        LOGGER.debug("Device status:", self.device.status)
+        return self.device.status
+
     def turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
         if DPCode.SWITCH in self.device.function:
