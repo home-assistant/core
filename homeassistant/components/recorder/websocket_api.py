@@ -33,12 +33,16 @@ from .statistics import (
     async_change_statistics_unit,
     async_import_statistics,
     list_statistic_ids,
-    resolve_period,
     statistic_during_period,
     statistics_during_period,
     validate_statistics,
 )
-from .util import async_migration_in_progress, async_migration_is_live, get_instance
+from .util import (
+    async_migration_in_progress,
+    async_migration_is_live,
+    get_instance,
+    resolve_period,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
