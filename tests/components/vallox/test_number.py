@@ -13,7 +13,7 @@ from .conftest import patch_metrics, patch_metrics_set
 
 from tests.common import MockConfigEntry
 
-test_temperature_entities_data = [
+TEST_TEMPERATURE_ENTITIES_DATA = [
     (
         "number.vallox_supply_air_temperature_home",
         "A_CYC_HOME_AIR_TEMP_TARGET",
@@ -32,7 +32,7 @@ test_temperature_entities_data = [
 ]
 
 
-@pytest.mark.parametrize("entity_id, metric_key, value", test_temperature_entities_data)
+@pytest.mark.parametrize("entity_id, metric_key, value", TEST_TEMPERATURE_ENTITIES_DATA)
 async def test_temperature_number_entities(
     entity_id: str,
     metric_key: str,
@@ -55,7 +55,7 @@ async def test_temperature_number_entities(
     assert sensor.attributes["unit_of_measurement"] == "°C"
 
 
-@pytest.mark.parametrize("entity_id, metric_key, value", test_temperature_entities_data)
+@pytest.mark.parametrize("entity_id, metric_key, value", TEST_TEMPERATURE_ENTITIES_DATA)
 async def test_temperature_number_entity_set(
     entity_id: str,
     metric_key: str,
