@@ -7,8 +7,15 @@ set_datetime:
   fields:
     datetime:
       name: Date & Time
-      description: The date/time to set.
+      description: The date/time to set. If no time zone is specified, time will assumed to be in the time zone of the Home Assistant instance.
       required: true
       example: "2022/11/01 22:15"
       selector:
         datetime:
+    time_zone:
+      name: Time Zone
+      description: The time zone to use for the date/time. Defaults to the time zone of the Home Assistant instance.
+      required: false
+      example: "America/New_York"
+      selector:
+        text:

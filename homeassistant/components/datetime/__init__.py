@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import functools
 import logging
 from typing import final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import FORMAT_DATETIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -31,6 +31,7 @@ from .const import (
     ATTR_MONTH,
     ATTR_SECOND,
     ATTR_TIME,
+    ATTR_TIME_ZONE,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
     DOMAIN,
@@ -74,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         {
                             vol.Optional(ATTR_DATE): cv.date,
                             vol.Optional(ATTR_TIME): cv.time,
+                            vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
                             **ENTITY_SERVICE_FIELDS,
                         }
                     ),
@@ -82,6 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Schema(
                     {
                         vol.Required(ATTR_DATETIME): cv.datetime,
+                        vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
                         **ENTITY_SERVICE_FIELDS,
                     }
                 ),
@@ -92,6 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             dt_util.utc_from_timestamp,
                             dt_util.as_local,
                         ),
+                        vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
                         **ENTITY_SERVICE_FIELDS,
                     }
                 ),
@@ -99,27 +103,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
             _split_date_time,
         ),
-        _async_set_value,
+        functools.partial(_async_set_value, hass),
     )
 
     return True
 
 
-async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) -> None:
+async def _async_set_value(
+    hass: HomeAssistant, entity: DateTimeEntity, service_call: ServiceCall
+) -> None:
     """Service call wrapper to set a new datetime."""
     date_ = service_call.data.get(ATTR_DATE)
     time_ = service_call.data.get(ATTR_TIME)
+    time_zone = dt_util.get_time_zone(
+        service_call.data.get(ATTR_TIME_ZONE) or hass.config.time_zone
+    )
     if date_ is None or time_ is None:
         if entity.native_value is None:
             raise ValueError(
-                "Entity has no native value to infer missing date/time parts"
+                f"Entity {entity.entity_id} has no native value to infer missing "
+                "date/time parts"
             )
         if not date_:
             date_ = entity.native_value.date()
         if not time_:
             time_ = entity.native_value.time()
 
-    return await entity.async_set_value(datetime.combine(date_, time_))
+    return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -164,9 +174,18 @@ class DateTimeEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if self.native_value is None:
+        value = self.native_value
+        if value is None:
             return None
-        return self.native_value.strftime(FORMAT_DATETIME)
+        if value.tzinfo is None:
+            raise ValueError(
+                f"Invalid datetime: {self.entity_id} provides state '{value}', "
+                "which is missing timezone information"
+            )
+        if value.tzinfo != timezone.utc:
+            value = value.astimezone(timezone.utc)
+
+        return value.isoformat(timespec="seconds")
 
     @property
     @final

@@ -1,5 +1,5 @@
 """The tests for the datetime component."""
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 
 from homeassistant.components.datetime import (
     ATTR_DATE,
@@ -26,9 +26,11 @@ class MockDateTimeEntity(DateTimeEntity):
 
     def __init__(
         self,
-        native_value=datetime(2020, 1, 1, 12, 0, 0),
+        hass,
+        native_value=datetime(2020, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
     ):
         """Initialize mock datetime entity."""
+        hass.config.time_zone = "UTC"
         self._attr_native_value = native_value
 
     async def async_set_value(self, dt_value: datetime) -> None:
@@ -36,17 +38,17 @@ class MockDateTimeEntity(DateTimeEntity):
         self._attr_native_value = dt_value
 
 
-async def test_datetime_default():
+async def test_datetime_default(hass):
     """Test default datetime."""
-    datetime_entity = MockDateTimeEntity()
-    assert datetime_entity.state == "2020-01-01 12:00:00"
+    datetime_entity = MockDateTimeEntity(hass)
+    assert datetime_entity.state == "2020-01-01T12:00:00+00:00"
     assert datetime_entity.day == 1
     assert datetime_entity.month == 1
     assert datetime_entity.year == 2020
     assert datetime_entity.hour == 12
     assert datetime_entity.minute == 0
     assert datetime_entity.second == 0
-    assert datetime_entity.timestamp == datetime(2020, 1, 1, 12, 0, 0).timestamp()
+    assert datetime_entity.timestamp == 1577880000.0
     assert datetime_entity.state_attributes == {
         ATTR_DAY: 1,
         ATTR_MONTH: 1,
@@ -54,14 +56,15 @@ async def test_datetime_default():
         ATTR_HOUR: 12,
         ATTR_MINUTE: 0,
         ATTR_SECOND: 0,
-        ATTR_TIMESTAMP: 1577898000.0,
+        ATTR_TIMESTAMP: 1577880000.0,
     }
 
 
-async def test_set_datetime_valid():
+async def test_set_datetime_valid(hass):
     """Test set_datetime service valid scenarios."""
-    datetime_entity = MockDateTimeEntity()
+    datetime_entity = MockDateTimeEntity(hass)
     await _async_set_value(
+        hass,
         datetime_entity,
         ServiceCall(
             DOMAIN,
@@ -70,9 +73,10 @@ async def test_set_datetime_valid():
         ),
     )
     assert isinstance(datetime_entity.native_value, datetime)
-    assert datetime_entity.state == "2021-12-12 12:00:00"
+    assert datetime_entity.state == "2021-12-12T12:00:00+00:00"
 
     await _async_set_value(
+        hass,
         datetime_entity,
         ServiceCall(
             DOMAIN,
@@ -81,7 +85,7 @@ async def test_set_datetime_valid():
         ),
     )
     assert isinstance(datetime_entity.native_value, datetime)
-    assert datetime_entity.state == "2021-12-12 05:01:02"
+    assert datetime_entity.state == "2021-12-12T05:01:02+00:00"
 
 
 async def test_validate():
