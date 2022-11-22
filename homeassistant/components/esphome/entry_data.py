@@ -98,11 +98,21 @@ class RuntimeEntryData:
     _gatt_services_cache: MutableMapping[int, BleakGATTServiceCollection] = field(
         default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
     )
+    _gatt_descriptors_cache: MutableMapping[int, dict[int, bytearray]] = field(
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+    )
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
         return self.device_info.name if self.device_info else self.entry_id
+
+    def get_gatt_descriptors_cache(self, address: int) -> dict[int, bytearray]:
+        """Get the GATT descriptor for the given address."""
+        if descriptor_cache := self._gatt_descriptors_cache.get(address):
+            return descriptor_cache
+        descriptor_cache = self._gatt_descriptors_cache[address] = {}
+        return descriptor_cache
 
     def get_gatt_services_cache(
         self, address: int
