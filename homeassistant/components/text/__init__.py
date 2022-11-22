@@ -101,9 +101,9 @@ class TextMode(StrEnum):
 class TextEntityDescription(EntityDescription):
     """A class that describes text entities."""
 
-    native_min: int | None = None
-    native_max: int | None = None
-    mode: TextMode | None = None
+    native_min: int = 0
+    native_max: int = MAX_LENGTH_STATE_STATE
+    mode: TextMode = TextMode.TEXT
     pattern: str | None = None
 
 
@@ -111,11 +111,11 @@ class TextEntity(Entity):
     """Representation of a Text entity."""
 
     entity_description: TextEntityDescription
-    _attr_mode: TextMode = TextMode.TEXT
+    _attr_mode: TextMode
     _attr_native_value: str | None
-    _attr_native_min: int = 0
-    _attr_native_max: int = MAX_LENGTH_STATE_STATE
-    _attr_pattern: str | None = None
+    _attr_native_min: int
+    _attr_native_max: int
+    _attr_pattern: str | None
     _attr_state: None = None
 
     @property
@@ -136,38 +136,41 @@ class TextEntity(Entity):
             return None
         if len(self.native_value) < self.min:
             raise ValueError(
-                f"Value {self.native_value} is too short (minimum length {self.min})"
+                f"Entity {self.entity_id} provides state {self.native_value} which is "
+                f"too short (minimum length {self.min})"
             )
         if len(self.native_value) > self.max:
             raise ValueError(
-                f"Value {self.native_value} is too long (maximum length {self.max})"
+                f"Entity {self.entity_id} provides state {self.native_value} which is "
+                f"too long (maximum length {self.max})"
             )
         if (
             self.pattern is not None
             and re.compile(self.pattern).match(self.native_value) is None
         ):
-            raise ValueError(f"Value does not match expected pattern {self.pattern}")
+            raise ValueError(
+                f"Entity {self.entity_id} provides state {self.native_value} which "
+                f"does not match expected pattern {self.pattern}"
+            )
         return self.native_value
 
     @property
     def mode(self) -> TextMode:
         """Return the mode of the entity."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.mode is not None
-        ):
+        if hasattr(self, "_attr_mode"):
+            return self._attr_mode
+        if hasattr(self, "entity_description"):
             return self.entity_description.mode
-        return self._attr_mode
+        return TextMode.TEXT
 
     @property
     def native_min(self) -> int:
         """Return the minimum length of the value."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.native_min is not None
-        ):
+        if hasattr(self, "_attr_native_min"):
+            return self._attr_native_min
+        if hasattr(self, "entity_description"):
             return self.entity_description.native_min
-        return self._attr_native_min
+        return 0
 
     @property
     @final
@@ -178,12 +181,11 @@ class TextEntity(Entity):
     @property
     def native_max(self) -> int:
         """Return the maximum length of the value."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.native_max is not None
-        ):
+        if hasattr(self, "_attr_native_max"):
+            return self._attr_native_max
+        if hasattr(self, "entity_description"):
             return self.entity_description.native_max
-        return self._attr_native_max
+        return MAX_LENGTH_STATE_STATE
 
     @property
     @final
@@ -194,12 +196,11 @@ class TextEntity(Entity):
     @property
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.pattern is not None
-        ):
+        if hasattr(self, "_attr_pattern"):
+            return self._attr_pattern
+        if hasattr(self, "entity_description"):
             return self.entity_description.pattern
-        return self._attr_pattern
+        return None
 
     @property
     def native_value(self) -> str | None:
