@@ -6,7 +6,7 @@ from plugwise.exceptions import (
     InvalidAuthentication,
     InvalidXMLError,
     ResponseError,
-    XMLDataMissingError,
+    UnsupportedDeviceError,
 )
 import pytest
 
@@ -102,7 +102,7 @@ def mock_smile():
         smile_mock.InvalidAuthentication = InvalidAuthentication
         smile_mock.InvalidXMLError = InvalidXMLError
         smile_mock.ResponseError = ResponseError
-        smile_mock.XMLDataMissingError = XMLDataMissingError
+        smile_mock.UnsupportedDeviceError = UnsupportedDeviceError
         smile_mock.return_value.connect.return_value = True
         yield smile_mock.return_value
 
@@ -269,14 +269,14 @@ async def test_zercoconf_discovery_update_configuration(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    "side_effect, reason",
     [
         (ConnectionFailedError, "cannot_connect"),
         (InvalidAuthentication, "invalid_auth"),
-        (InvalidXMLError, "cannot_connect"),
-        (ResponseError, "cannot_connect"),
+        (InvalidXMLError, "response_error"),
+        (ResponseError, "response_error"),
         (RuntimeError, "unknown"),
-        (XMLDataMissingError, "retry"),
+        (UnsupportedDeviceError, "warn_code_owner"),
     ],
 )
 async def test_flow_errors(

@@ -1,14 +1,12 @@
 """Tests for the Plugwise Climate integration."""
-import asyncio
 from unittest.mock import MagicMock
 
-import aiohttp
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidXMLError,
     ResponseError,
-    XMLDataMissingError,
+    UnsupportedDeviceError,
 )
 import pytest
 
@@ -46,15 +44,13 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "side_effect, entry_state",
     [
-        (ConnectionFailedError),
-        (InvalidAuthentication),
-        (InvalidXMLError),
-        (ResponseError),
-        (XMLDataMissingError),
-        (aiohttp.ClientError),
-        (asyncio.TimeoutError),
+        (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
+        (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
+        (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
+        (ResponseError, ConfigEntryState.SETUP_RETRY),
+        (UnsupportedDeviceError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_config_entry_not_ready(
@@ -62,6 +58,7 @@ async def test_config_entry_not_ready(
     mock_config_entry: MockConfigEntry,
     mock_smile_anna: MagicMock,
     side_effect: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test the Plugwise configuration entry not ready."""
     mock_smile_anna.connect.side_effect = side_effect
@@ -71,10 +68,7 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert len(mock_smile_anna.connect.mock_calls) == 1
-    assert mock_config_entry.state in (
-        ConfigEntryState.SETUP_ERROR,
-        ConfigEntryState.SETUP_RETRY,
-    )
+    assert mock_config_entry.state == entry_state
 
 
 @pytest.mark.parametrize(
