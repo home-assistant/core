@@ -128,7 +128,9 @@ async def _async_set_value(
 
     time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
     time_zone = dt_util.get_time_zone(time_zone_str)
-    return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
+    return await entity.async_set_value(
+        datetime.combine(date_, time_, time_zone).astimezone(timezone.utc)
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
