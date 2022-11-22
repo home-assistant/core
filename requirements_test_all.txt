@@ -331,7 +331,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.34.2
+bellows==0.34.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.10.4
@@ -1811,10 +1811,10 @@ zamg==0.1.1
 zeroconf==0.39.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.86
+zha-quirks==0.0.87
 
 # homeassistant.components.zha
-zigpy-deconz==0.19.0
+zigpy-deconz==0.19.1
 
 # homeassistant.components.zha
 zigpy-xbee==0.16.2
@@ -1826,7 +1826,7 @@ zigpy-zigate==0.10.3
 zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.5
+zigpy==0.51.6
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.43.0
