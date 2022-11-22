@@ -3,38 +3,39 @@ from __future__ import annotations
 
 import logging
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     STATE_IDLE,
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    SENSOR_TYPE_CURRENT_STATUS,
+    SENSOR_TYPE_DOWNLOAD_SPEED,
+    SENSOR_TYPE_UPLOAD_SPEED,
+)
+from .helpers import setup_client
 
 from .const import DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPE_CURRENT_STATUS = "current_status"
-SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
-SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -59,42 +60,29 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entites: AddEntitiesCallback,
 ) -> None:
-    """Set up the qBittorrent sensors."""
+    """Set up qBittorrent sensor entries."""
+    client = await hass.async_add_executor_job(
+        setup_client,
+        entry.data[CONF_URL],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_VERIFY_SSL],
+    )
 
-    try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
-
-    name = config.get(CONF_NAME)
+    name = entry.data[CONF_NAME]
 
     entities = [
         QBittorrentSensor(description, client, name, LoginRequired)
         for description in SENSOR_TYPES
     ]
 
-    add_entities(entities, True)
+    async_add_entites(entities, True)
 
 
 def format_speed(speed):

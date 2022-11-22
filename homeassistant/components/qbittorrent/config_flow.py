@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -17,14 +17,16 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
+from .helpers import setup_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    client = Client(data[CONF_URL], verify=data[CONF_VERIFY_SSL])
-    client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
+    client = setup_client(
+        data[CONF_URL], data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_VERIFY_SSL]
+    )
     client.get_alternative_speed_status()  # Get an arbitrary attribute that requires authentication
 
 
@@ -43,7 +45,6 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
             except RequestException:
                 errors = {"base": "cannot_connect"}
             if not errors:
-                await self.async_set_unique_id(user_input.get(CONF_NAME))
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME), data=user_input
                 )
