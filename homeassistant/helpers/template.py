@@ -789,7 +789,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @property
-    def entity_id(self) -> str:  # type: ignore[override] # mypy issue 4125
+    def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -797,43 +797,43 @@ class TemplateStateBase(State):
         return self._entity_id
 
     @property
-    def state(self) -> str:  # type: ignore[override] # mypy issue 4125
+    def state(self) -> str:  # type: ignore[override]
         """Wrap State.state."""
         self._collect_state()
         return self._state.state
 
     @property
-    def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override] # mypy issue 4125
+    def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override]
         """Wrap State.attributes."""
         self._collect_state()
         return self._state.attributes
 
     @property
-    def last_changed(self) -> datetime:  # type: ignore[override] # mypy issue 4125
+    def last_changed(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_changed."""
         self._collect_state()
         return self._state.last_changed
 
     @property
-    def last_updated(self) -> datetime:  # type: ignore[override] # mypy issue 4125
+    def last_updated(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
         return self._state.last_updated
 
     @property
-    def context(self) -> Context:  # type: ignore[override] # mypy issue 4125
+    def context(self) -> Context:  # type: ignore[override]
         """Wrap State.context."""
         self._collect_state()
         return self._state.context
 
     @property
-    def domain(self) -> str:  # type: ignore[override] # mypy issue 4125
+    def domain(self) -> str:  # type: ignore[override]
         """Wrap State.domain."""
         self._collect_state()
         return self._state.domain
 
     @property
-    def object_id(self) -> str:  # type: ignore[override] # mypy issue 4125
+    def object_id(self) -> str:  # type: ignore[override]
         """Wrap State.object_id."""
         self._collect_state()
         return self._state.object_id
@@ -883,7 +883,7 @@ class TemplateStateFromEntityId(TemplateStateBase):
         super().__init__(hass, collect, entity_id)
 
     @property
-    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
+    def _state(self) -> State:  # type: ignore[override]
         state = self._hass.states.get(self._entity_id)
         if not state:
             state = State(self._entity_id, STATE_UNKNOWN)
