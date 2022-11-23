@@ -36,6 +36,7 @@ async def test_fan_state(
     # Assert
     sensor = hass.states.get("fan.vallox")
     assert sensor
+    assert sensor
     assert sensor.state == expected_state
 
 

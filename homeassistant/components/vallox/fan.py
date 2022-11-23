@@ -97,7 +97,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         self._client = client
 
         self._attr_unique_id = str(self._device_uuid)
-        self._attr_preset_modes = list(STR_TO_VALLOX_PROFILE_SETTABLE.keys())
+        self._attr_preset_modes = list(STR_TO_VALLOX_PROFILE_SETTABLE)
 
     @property
     def is_on(self) -> bool:
