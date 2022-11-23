@@ -142,8 +142,8 @@ async def test_setup_zha_multipan(
     config_entry = hass.config_entries.async_entries("zha")[0]
     assert config_entry.data == {
         "device": {
-            "baudrate": 115200,
-            "flow_control": "hardware",
+            "baudrate": 57600,  # ZHA default
+            "flow_control": "software",  # ZHA default
             "path": "socket://core-silabs-multiprotocol:9999",
         },
         "radio_type": "ezsp",
