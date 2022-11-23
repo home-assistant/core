@@ -207,52 +207,6 @@ async def test_migrate_matching_port_usb(
     await migration_helper.async_finish_migration()
 
 
-@patch(
-    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
-    mock_detect_radio_type(ret=False),
-)
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migrate_matching_port_usb_detect_fails(
-    hass: HomeAssistant,
-    mock_connect_zigpy_app,
-) -> None:
-    """Test automatic migration."""
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
-        domain=DOMAIN,
-        options={},
-        title="Test",
-        version=3,
-    )
-    config_entry.add_to_hass(hass)
-
-    migration_data = {
-        "new_discovery_info": {
-            "name": "Test Updated",
-            "port": {
-                "path": "socket://some/virtual_port",
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
-        },
-        "old_discovery_info": {
-            "usb": UsbServiceInfo("/dev/ttyTEST123", "blah", "blah", None, None, None)
-        },
-    }
-
-    migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
-    assert not await migration_helper.async_initiate_migration(migration_data)
-
-    # Check the ZHA config entry data is not updated
-    assert config_entry.data == {
-        "device": {"path": "/dev/ttyTEST123"},
-        "radio_type": "ezsp",
-    }
-    assert config_entry.title == "Test"
-
-
 async def test_migrate_matching_port_config_entry_not_loaded(
     hass: HomeAssistant,
     mock_connect_zigpy_app,

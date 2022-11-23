@@ -333,16 +333,12 @@ class ZhaMultiPANMigrationHelper:
             pass
 
         # Temporarily connect to the old radio to read its settings
+        config_entry_data = self._config_entry.data
         old_radio_mgr = ZhaRadioManager()
         old_radio_mgr.hass = self._hass
-        old_radio_mgr.device_path = old_device_path
-        if "hw" in migration_data["old_discovery_info"]:
-            old_radio_mgr.radio_type = old_radio_type
-            old_radio_mgr.device_settings = old_device_settings
-        else:
-            if not await old_radio_mgr.detect_radio_type():
-                # Could not talk to the USB port, do nothing
-                return False
+        old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
+        old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
+        old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
         backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
 
         # Then configure the radio manager for the new radio to use the new settings
