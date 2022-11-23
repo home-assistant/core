@@ -15,7 +15,6 @@ from homeassistant.components.text import (
 )
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 
 
 class MockTextEntity(TextEntity):
@@ -71,17 +70,17 @@ async def test_text_set_value(hass):
     text = MockTextEntity(native_min=1, native_max=5, pattern=r"[a-z]")
     text.hass = hass
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"})
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await _async_set_value(
             text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
         )
