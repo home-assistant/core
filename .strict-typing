@@ -5,14 +5,10 @@
 # Strict typing is enabled by default for core files.
 # Add it here to add 'disallow_any_generics'.
 # --- Only for core file! ---
-homeassistant.exceptions
-homeassistant.core
-homeassistant.loader
-homeassistant.requirements
-homeassistant.runner
-homeassistant.setup
 homeassistant.auth.auth_store
 homeassistant.auth.providers.*
+homeassistant.core
+homeassistant.exceptions
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
 homeassistant.helpers.debounce
@@ -29,6 +25,10 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.loader
+homeassistant.requirements
+homeassistant.runner
+homeassistant.setup
 homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
@@ -79,9 +79,9 @@ homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
-homeassistant.components.cover.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
@@ -151,6 +151,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
+homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -173,6 +174,7 @@ homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
+homeassistant.components.logger.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
@@ -191,6 +193,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nextdns.*
 homeassistant.components.nfandroidtv.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
@@ -213,9 +216,9 @@ homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.radarr.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
-homeassistant.components.radarr.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
@@ -228,12 +231,14 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
+homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.senseme.*
 homeassistant.components.sensibo.*
+homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*

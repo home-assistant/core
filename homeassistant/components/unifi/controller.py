@@ -44,7 +44,6 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -55,14 +54,12 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
-    DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     PLATFORMS,
-    POE_SWITCH,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -140,8 +137,6 @@ class UniFiController:
 
         # Client control options
 
-        # Config entry option to control poe clients.
-        self.option_poe_clients = options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
         # Config entry option with list of clients to control network access.
         self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
         # Config entry option to control DPI restriction groups.
@@ -305,9 +300,8 @@ class UniFiController:
         ):
             if entry.domain == Platform.DEVICE_TRACKER:
                 mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == Platform.SWITCH and (
-                entry.unique_id.startswith(BLOCK_SWITCH)
-                or entry.unique_id.startswith(POE_SWITCH)
+            elif entry.domain == Platform.SWITCH and entry.unique_id.startswith(
+                BLOCK_SWITCH
             ):
                 mac = entry.unique_id.split("-", 1)[1]
             else:

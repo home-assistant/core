@@ -15,7 +15,6 @@ import uuid
 
 import attr
 import certifi
-from paho.mqtt.client import MQTTMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,13 +51,19 @@ from .const import (
     CONF_CLIENT_KEY,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_ENCODING,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_TRANSPORT,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PROTOCOL_5,
     PROTOCOL_31,
+    TRANSPORT_WEBSOCKETS,
 )
 from .models import (
     AsyncMessageCallbackType,
@@ -273,8 +278,10 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
+        if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+        elif protocol == PROTOCOL_5:
+            proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
 
@@ -282,7 +289,8 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = mqtt.Client(client_id, protocol=proto)
+        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._client = mqtt.Client(client_id, protocol=proto, transport=transport)
 
         # Enable logging
         self._client.enable_logger()
@@ -300,6 +308,10 @@ class MqttClientSetup:
         client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
+        if transport == TRANSPORT_WEBSOCKETS:
+            ws_path = config.get(CONF_WS_PATH)
+            ws_headers = config.get(CONF_WS_HEADERS)
+            self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
                 certificate,
@@ -559,8 +571,9 @@ class MQTT:
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
-        _flags: dict[str, Any],
+        _flags: dict[str, int],
         result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
@@ -620,7 +633,7 @@ class MQTT:
             )
 
     def _mqtt_on_message(
-        self, _mqttc: mqtt.Client, _userdata: None, msg: MQTTMessage
+        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
@@ -634,7 +647,7 @@ class MQTT:
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
+    def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
         _LOGGER.debug(
             "Received%s message on %s: %s",
             " retained" if msg.retain else "",
@@ -678,9 +691,13 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos: tuple[Any, ...] | None = None,
+        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
+        _properties_reason: mqtt.ReasonCodes | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
+        # The callback signature for on_unsubscribe is different from on_subscribe
+        # see https://github.com/eclipse/paho.mqtt.python/issues/687
+        # properties and reasoncodes are not used in Home Assistant
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
@@ -696,7 +713,11 @@ class MQTT:
                 self._pending_operations[mid] = asyncio.Event()
 
     def _mqtt_on_disconnect(
-        self, _mqttc: mqtt.Client, _userdata: None, result_code: int
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        result_code: int,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """Disconnected callback."""
         self.connected = False

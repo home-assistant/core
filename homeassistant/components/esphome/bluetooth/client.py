@@ -3,12 +3,18 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 from typing import Any, TypeVar, cast
 import uuid
 
-from aioesphomeapi import ESP_CONNECTION_ERROR_DESCRIPTION, BLEConnectionError
+from aioesphomeapi import (
+    ESP_CONNECTION_ERROR_DESCRIPTION,
+    ESPHOME_GATT_ERRORS,
+    BLEConnectionError,
+)
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
+from aioesphomeapi.core import BluetoothGATTAPIError
 import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
@@ -16,6 +22,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
+from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.core import CALLBACK_TYPE
 
 from ..domain_data import DomainData
@@ -60,6 +67,8 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if disconnected_event.is_set():
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
             raise BleakError(
                 f"{self._source}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
@@ -79,6 +88,26 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             return await func(self, *args, **kwargs)
         except TimeoutAPIError as err:
             raise asyncio.TimeoutError(str(err)) from err
+        except BluetoothGATTAPIError as ex:
+            # If the device disconnects in the middle of an operation
+            # be sure to mark it as disconnected so any library using
+            # the proxy knows to reconnect.
+            #
+            # Because callbacks are delivered asynchronously it's possible
+            # that we find out about the disconnection during the operation
+            # before the callback is delivered.
+
+            # pylint: disable=protected-access
+            if ex.error.error == -1:
+                _LOGGER.debug(
+                    "%s: %s - %s: BLE device disconnected during %s operation",
+                    self._source,
+                    self._ble_device.name,
+                    self._ble_device.address,
+                    func.__name__,
+                )
+                self._async_ble_device_disconnected()
+            raise BleakError(str(ex)) from ex
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
 
@@ -94,11 +123,12 @@ class ESPHomeClient(BaseBleakClient):
         """Initialize the ESPHomeClient."""
         assert isinstance(address_or_ble_device, BLEDevice)
         super().__init__(address_or_ble_device, *args, **kwargs)
+        self._hass = kwargs["hass"]
         self._ble_device = address_or_ble_device
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.domain_data = DomainData.get(kwargs["hass"])
+        self.domain_data = DomainData.get(self._hass)
         config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client
@@ -133,6 +163,7 @@ class ESPHomeClient(BaseBleakClient):
         was_connected = self._is_connected
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         self._is_connected = False
+        self._notify_cancels.clear()
         if self._disconnected_event:
             self._disconnected_event.set()
             self._disconnected_event = None
@@ -207,7 +238,9 @@ class ESPHomeClient(BaseBleakClient):
                     human_error = ESP_CONNECTION_ERROR_DESCRIPTION[ble_connection_error]
                 except (KeyError, ValueError):
                     ble_connection_error_name = str(error)
-                    human_error = f"Unknown error code {error}"
+                    human_error = ESPHOME_GATT_ERRORS.get(
+                        error, f"Unknown error code {error}"
+                    )
                 connected_future.set_exception(
                     BleakError(
                         f"Error {ble_connection_error_name} while connecting: {human_error}"
@@ -229,12 +262,15 @@ class ESPHomeClient(BaseBleakClient):
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
-        self._cancel_connection_state = await self._client.bluetooth_device_connect(
-            self._address_as_int,
-            _on_bluetooth_connection_state,
-            timeout=timeout,
-        )
-        await connected_future
+        if not (scanner := async_scanner_by_source(self._hass, self._source)):
+            raise BleakError("Scanner disappeared for {self._source}")
+        with scanner.connecting():
+            self._cancel_connection_state = await self._client.bluetooth_device_connect(
+                self._address_as_int,
+                _on_bluetooth_connection_state,
+                timeout=timeout,
+            )
+            await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
         return True
@@ -457,12 +493,20 @@ class ESPHomeClient(BaseBleakClient):
                 UUID or directly by the BleakGATTCharacteristic object representing it.
             callback (function): The function to be called on notification.
         """
+        ble_handle = characteristic.handle
+        if ble_handle in self._notify_cancels:
+            raise BleakError(
+                "Notifications are already enabled on "
+                f"service:{characteristic.service_uuid} "
+                f"characteristic:{characteristic.uuid} "
+                f"handle:{ble_handle}"
+            )
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
-            characteristic.handle,
+            ble_handle,
             lambda handle, data: callback(data),
         )
-        self._notify_cancels[characteristic.handle] = cancel_coro
+        self._notify_cancels[ble_handle] = cancel_coro
 
     @api_error_as_bleak_error
     async def stop_notify(
@@ -477,5 +521,7 @@ class ESPHomeClient(BaseBleakClient):
                 directly by the BleakGATTCharacteristic object representing it.
         """
         characteristic = self._resolve_characteristic(char_specifier)
-        coro = self._notify_cancels.pop(characteristic.handle)
-        await coro()
+        # Do not raise KeyError if notifications are not enabled on this characteristic
+        # to be consistent with the behavior of the BlueZ backend
+        if coro := self._notify_cancels.pop(characteristic.handle, None):
+            await coro()

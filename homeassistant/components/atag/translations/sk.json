@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "title": "Pripojte sa k zariadeniu"
             }
         }
     }

@@ -47,6 +47,9 @@
                 "description": "Saisissez les param\u00e8tres de connexion \u00e0 la cam\u00e9ra."
             },
             "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Cette image semble conforme."
+                },
                 "title": "Aper\u00e7u"
             }
         }
@@ -72,6 +75,9 @@
         },
         "step": {
             "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Cette image semble conforme."
+                },
                 "title": "Aper\u00e7u"
             },
             "content_type": {

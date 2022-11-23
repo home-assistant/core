@@ -41,6 +41,9 @@
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "\u66f4\u65b0\u4f86\u6e90\u5217\u8868\u6642\u767c\u751f\u932f\u8aa4\u3002\n\n\u8acb\u78ba\u5b9a\u96fb\u8996\u5df2\u7d93\u65bc\u8a2d\u5b9a\u524d\u958b\u555f\u3002"
+        },
         "step": {
             "user": {
                 "data": {

@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
@@ -54,6 +55,16 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 }
             ]
         },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                }
+            ]
+        },
     ],
 )
 async def test_config_binary_sensor(hass, mock_modbus):
@@ -88,6 +99,15 @@ async def test_config_binary_sensor(hass, mock_modbus):
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                },
+            ],
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 },
             ],
         },

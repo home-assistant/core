@@ -156,11 +156,17 @@ class BasicChannel(ZigbeeChannel):
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Basic channel."""
         super().__init__(cluster, ch_pool)
-        if is_hue_motion_sensor(self):
+        if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
             )
             self.ZCL_INIT_ATTRS["trigger_indicator"] = True
+        elif (
+            self.cluster.endpoint.manufacturer == "TexasInstruments"
+            and self.cluster.endpoint.model == "ti.router"
+        ):
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["transmit_power"] = True
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
@@ -352,6 +358,7 @@ class OnOffChannel(ZigbeeChannel):
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
             )
+            self.ZCL_INIT_ATTRS["backlight_mode"] = True
             self.ZCL_INIT_ATTRS["power_on_state"] = True
 
     @property

@@ -58,5 +58,18 @@
             "single_push": "{subtype} enkelt trykk",
             "triple": "{subtype} trippelklikket"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth-st\u00f8tte krever fastvareversjon {ble_min_version} eller nyere."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth-skannermodus"
+                },
+                "description": "Bluetooth-skanning kan v\u00e6re aktiv eller passiv. Med aktiv ber Shelly om data fra enheter i n\u00e6rheten; med passiv, mottar Shelly u\u00f8nsket data fra enheter i n\u00e6rheten."
+            }
+        }
     }
 }

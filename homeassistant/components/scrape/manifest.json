@@ -5,5 +5,6 @@
   "requirements": ["beautifulsoup4==4.11.1", "lxml==4.9.1"],
   "after_dependencies": ["rest"],
   "codeowners": ["@fabaff", "@gjohansson-ST", "@epenet"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "config_flow": true
 }
