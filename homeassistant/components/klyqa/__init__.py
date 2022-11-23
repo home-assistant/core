@@ -32,6 +32,8 @@ from .const import (
 PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.VACUUM]
 SCAN_INTERVAL: timedelta = timedelta(seconds=120)
 
+""" Ignore type, because the Klyqa_account class is in another file and --follow-imports=strict is on"""
+
 
 class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
     """HAKlyqaAccount."""
