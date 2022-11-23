@@ -15,13 +15,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, LOGGER
 
-user_step_data_schema = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
-
 NoneType = type(None)
 
 
