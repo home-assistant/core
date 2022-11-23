@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
         "step": {
             "user": {
                 "data": {

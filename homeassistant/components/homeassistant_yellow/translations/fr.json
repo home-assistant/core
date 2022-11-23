@@ -1,5 +1,8 @@
 {
     "options": {
+        "error": {
+            "unknown": "Erreur inattendue"
+        },
         "step": {
             "install_addon": {
                 "title": "L'installation du module compl\u00e9mentaire multi-protocoles de Silicon Labs a commenc\u00e9."
