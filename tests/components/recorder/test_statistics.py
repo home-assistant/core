@@ -1557,11 +1557,11 @@ async def test_validate_db_schema_fix_float_issue(
     statistics = {
         "recorder.db_test": [
             {
-                "last_reset": precise_time.isoformat(),
+                "last_reset": precise_time,
                 "max": precise_number,
                 "mean": precise_number,
                 "min": precise_number,
-                "start": precise_time.isoformat(),
+                "start": precise_time,
                 "state": precise_number,
                 "sum": precise_number,
             }
@@ -1631,11 +1631,11 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
     statistics = {
         "recorder.db_test": [
             {
-                "last_reset": precise_time.isoformat(),
+                "last_reset": precise_time,
                 "max": precise_number,
                 "mean": precise_number,
                 "min": precise_number,
-                "start": precise_time.isoformat(),
+                "start": precise_time,
                 "state": precise_number,
                 "sum": precise_number,
             }

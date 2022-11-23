@@ -2342,8 +2342,8 @@ def _validate_db_schema(
                     schema_errors,
                     stored_statistic[0],
                     {
-                        "last_reset": statistics["last_reset"].isoformat(),
-                        "start": statistics["start"].isoformat(),
+                        "last_reset": statistics["last_reset"],
+                        "start": statistics["start"],
                     },
                     ("start", "last_reset"),
                     table.__tablename__,
