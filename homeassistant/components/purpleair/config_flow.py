@@ -63,41 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_API_KEY: self._api_key, CONF_SENSOR_INDEX: sensor.sensor_index},
         )
 
-    async def async_step_check_api_key(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="check_api_key", data_schema=STEP_CHECK_API_KEY_SCHEMA
-            )
-
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        self._api = API(user_input[CONF_API_KEY], session=session)
-        errors = {}
-
-        try:
-            await self._api.async_check_api_key()
-        except InvalidApiKeyError:
-            errors[CONF_API_KEY] = "invalid_api_key"
-        except PurpleAirError as err:
-            LOGGER.error("PurpleAir error while checking API key: %s", err)
-            errors["base"] = "unknown"
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception while checking API key: %s", err)
-            errors["base"] = "unknown"
-
-        if errors:
-            return self.async_show_form(
-                step_id="check_api_key",
-                data_schema=STEP_CHECK_API_KEY_SCHEMA,
-                errors=errors,
-            )
-
-        self._api_key = user_input[CONF_API_KEY]
-
-        return await self.async_step_by_coordinates()
-
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -136,6 +101,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return await self._async_create_entry(nearest_sensor)
+
+    async def async_step_check_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="check_api_key", data_schema=STEP_CHECK_API_KEY_SCHEMA
+            )
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        self._api = API(user_input[CONF_API_KEY], session=session)
+        errors = {}
+
+        try:
+            await self._api.async_check_api_key()
+        except InvalidApiKeyError:
+            errors[CONF_API_KEY] = "invalid_api_key"
+        except PurpleAirError as err:
+            LOGGER.error("PurpleAir error while checking API key: %s", err)
+            errors["base"] = "unknown"
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected exception while checking API key: %s", err)
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(
+                step_id="check_api_key",
+                data_schema=STEP_CHECK_API_KEY_SCHEMA,
+                errors=errors,
+            )
+
+        self._api_key = user_input[CONF_API_KEY]
+
+        return await self.async_step_by_coordinates()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
