@@ -11,7 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "host": "Server URL",
+                    "host": "Klyqa Server URL",
                     "password": "Password",
                     "polling": "Poll Bulb states",
                     "scan_interval": "Update Bulbs interval",
@@ -22,7 +22,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Server URL",
+                    "host": "Klyqa Server URL",
                     "password": "Password",
                     "polling": "Polling bulb states in interval",
                     "scan_interval": "Update bulb interval in seconds",
@@ -42,7 +42,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "Server URL",
+                    "host": "Klyqa Server URL",
                     "password": "Password",
                     "polling": "Polling bulb state after interval",
                     "scan_interval": "Update bulb interval in seconds",
