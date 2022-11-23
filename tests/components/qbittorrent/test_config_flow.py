@@ -5,8 +5,8 @@ import pytest
 from requests.exceptions import RequestException
 from requests.sessions import Session
 
-from homeassistant.components.qbittorrent.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.qbittorrent.const import DEFAULT_NAME, DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -28,7 +28,6 @@ CONFIG_VALID = {
     CONF_VERIFY_SSL: True,
 }
 
-
 CONFIG_INVALID_AUTH = {
     CONF_NAME: "abcd",
     CONF_URL: "http://localhost:8080",
@@ -37,13 +36,18 @@ CONFIG_INVALID_AUTH = {
     CONF_VERIFY_SSL: True,
 }
 
-
 CONFIG_CANNOT_CONNECT = {
     CONF_NAME: "abcd",
     CONF_URL: "http://nowhere:23456",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
     CONF_VERIFY_SSL: True,
+}
+
+CONFIG_IMPORT_VALID = {
+    CONF_URL: "http://localhost:8080",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
 }
 
 
@@ -143,15 +147,39 @@ async def test_cannot_connect(hass: HomeAssistant, api, cannot_connect):
 
 async def test_flow_user_already_configured(hass: HomeAssistant, api):
     """Test user initialized flow with duplicate server."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_VALID,
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_VALID)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONFIG_VALID
     )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
+
+async def test_flow_import(hass: HomeAssistant):
+    """Test import step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_IMPORT},
+        data=CONFIG_IMPORT_VALID,
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == CONFIG_VALID | {CONF_NAME: DEFAULT_NAME}
+
+
+async def test_flow_import_already_configured(hass: HomeAssistant, api):
+    """Test import step already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_VALID)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_IMPORT},
+        data=CONFIG_IMPORT_VALID,
+    )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"

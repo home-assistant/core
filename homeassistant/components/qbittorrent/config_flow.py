@@ -1,6 +1,7 @@
 """Config flow for qBittorrent."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from qbittorrent.client import LoginRequired
@@ -19,6 +20,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 from .helpers import setup_client
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -66,4 +69,29 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        for entry in self._async_current_entries():
+            if entry.data[CONF_URL] == config[CONF_URL]:
+                _LOGGER.warning(
+                    "YAML config for qBittorrent with URL %s has been imported. Please remove it",
+                    config[CONF_URL],
+                )
+                return self.async_abort(reason="already_configured")
+
+        config_name: str = (
+            str(config.get(CONF_NAME)) if config.get(CONF_NAME) else DEFAULT_NAME
+        )
+        await self.async_set_unique_id(config.get(CONF_URL), raise_on_progress=False)
+        return self.async_create_entry(
+            title=config_name,
+            data={
+                CONF_NAME: config_name,
+                CONF_URL: config.get(CONF_URL),
+                CONF_USERNAME: config.get(CONF_USERNAME),
+                CONF_PASSWORD: config.get(CONF_PASSWORD),
+                CONF_VERIFY_SSL: True,
+            },
         )
