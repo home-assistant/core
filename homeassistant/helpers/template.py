@@ -20,7 +20,7 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, NoReturn, TypeVar, cast, overload
+from typing import Any, Literal, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -368,7 +368,7 @@ class Template:
                 return
 
             try:
-                self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
+                self._compiled_code = self._env.compile(self.template)
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -2183,7 +2183,36 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         return super().is_safe_attribute(obj, attr, value)
 
-    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
+    @overload
+    def compile(  # type: ignore[misc]
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[False] = False,
+        defer_init: bool = False,
+    ) -> CodeType:
+        ...
+
+    @overload
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[True] = ...,
+        defer_init: bool = False,
+    ) -> str:
+        ...
+
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: bool = False,
+        defer_init: bool = False,
+    ) -> CodeType | str:
         """Compile the template."""
         if (
             name is not None
@@ -2194,8 +2223,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # If there are any non-default keywords args, we do
             # not cache.  In prodution we currently do not have
             # any instance of this.
-            return super().compile(source, name, filename, raw, defer_init)
+            return super().compile(  # type: ignore[no-any-return,call-overload]
+                source,
+                name,
+                filename,
+                raw,
+                defer_init,
+            )
 
+        cached: CodeType | str | None
         if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 
