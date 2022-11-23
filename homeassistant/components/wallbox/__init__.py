@@ -129,9 +129,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
                 CHARGER_ENERGY_PRICE_KEY
             ]
-            data[CHARGER_CURRENCY_KEY] = data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][
-                "code"
-            ]
+            data[CHARGER_CURRENCY_KEY] = (
+                data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY]["code"] + "/kWh"
+            )
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
