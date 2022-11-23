@@ -30,7 +30,10 @@ async def test_number_entity_not_loaded_when_not_available(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get("number.product_name_aabbccddeeff_light_level") is None
+    assert (
+        hass.states.get("number.product_name_aabbccddeeff_status_light_brightness")
+        is None
+    )
 
 
 async def test_number_loads_entities(hass, mock_config_entry_data, mock_config_entry):
@@ -52,17 +55,19 @@ async def test_number_loads_entities(hass, mock_config_entry_data, mock_config_e
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("number.product_name_aabbccddeeff_light_level")
+    state = hass.states.get("number.product_name_aabbccddeeff_status_light_brightness")
     assert state
     assert state.state == "100"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Light level"
+        == "Product Name (aabbccddeeff) Status light brightness"
     )
 
-    entry = entity_registry.async_get("number.product_name_aabbccddeeff_light_level")
+    entry = entity_registry.async_get(
+        "number.product_name_aabbccddeeff_status_light_brightness"
+    )
     assert entry
-    assert entry.unique_id == "aabbccddeeff_status_light_level"
+    assert entry.unique_id == "aabbccddeeff_status_light_brightness"
     assert not entry.disabled
 
 
@@ -89,7 +94,9 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
         await hass.async_block_till_done()
 
         assert (
-            hass.states.get("number.product_name_aabbccddeeff_light_level").state
+            hass.states.get(
+                "number.product_name_aabbccddeeff_status_light_brightness"
+            ).state
             == "100"
         )
 
@@ -98,7 +105,7 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_light_level",
+                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
                 ATTR_VALUE: 50,
             },
             blocking=True,
@@ -106,7 +113,9 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
 
         await hass.async_block_till_done()
         assert (
-            hass.states.get("number.product_name_aabbccddeeff_light_level").state
+            hass.states.get(
+                "number.product_name_aabbccddeeff_status_light_brightness"
+            ).state
             == "50"
         )
         assert len(api.state_set.mock_calls) == 1
@@ -116,7 +125,7 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_light_level",
+                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
                 ATTR_VALUE: 0,
             },
             blocking=True,
@@ -124,6 +133,9 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
 
         await hass.async_block_till_done()
         assert (
-            hass.states.get("number.product_name_aabbccddeeff_light_level").state == "0"
+            hass.states.get(
+                "number.product_name_aabbccddeeff_status_light_brightness"
+            ).state
+            == "0"
         )
         assert len(api.state_set.mock_calls) == 2

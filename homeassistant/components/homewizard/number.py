@@ -44,8 +44,8 @@ class HWEnergyNumberEntity(
     ) -> None:
         """Initialize the control number."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.unique_id}_status_light_level"
-        self._attr_name = "Light level"
+        self._attr_unique_id = f"{entry.unique_id}_status_light_brightness"
+        self._attr_name = "Status light brightness"
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_icon = "mdi:lightbulb-on"
         self._attr_device_info = {
