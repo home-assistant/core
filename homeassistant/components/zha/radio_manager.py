@@ -309,13 +309,7 @@ class ZhaMultiPANMigrationHelper:
         )
 
         if "hw" in migration_data["old_discovery_info"]:
-            old_radio_type = ZhaRadioManager.parse_radio_type(
-                migration_data["old_discovery_info"]["hw"]["radio_type"]
-            )
-            old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
-                migration_data["old_discovery_info"]["hw"]["port"]
-            )
-            old_device_path = old_device_settings[CONF_DEVICE_PATH]
+            old_device_path = migration_data["old_discovery_info"]["hw"]["port"]["path"]
         else:  # usb
             device = migration_data["old_discovery_info"]["usb"].device
             old_device_path = await self._hass.async_add_executor_job(
