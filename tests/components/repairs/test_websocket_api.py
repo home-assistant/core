@@ -1,9 +1,11 @@
 """Test the repairs websocket API."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, Mock
 
+from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
@@ -508,8 +510,8 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
 
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
-    hass_client,
-    hass_ws_client,
+    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
