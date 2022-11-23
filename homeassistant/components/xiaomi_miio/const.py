@@ -22,6 +22,7 @@ CONF_MANUAL = "manual"
 
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
+CONF_LAZY_DISCOVER = "lazy_discover"
 
 # Keys
 KEY_COORDINATOR = "coordinator"
