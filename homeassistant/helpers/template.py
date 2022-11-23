@@ -212,7 +212,7 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-_types: list[type[dict | list | set]] = [dict, list, set]
+_types: tuple[type[dict | list | set], ...] = (dict, list, set)
 RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _types}
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
