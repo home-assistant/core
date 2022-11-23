@@ -429,7 +429,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_entry_match(
         self, local_id: str, remote_id: str | None, host: str, port: int, use_ssl: bool
-    ) -> None:
+    ) -> FlowResult | None:
         # Look for another entry with the same PANEL_ID (local or remote).
         # If there already is a matching panel, take the change to notify the Coordinator
         # so that it uses the newly discovered IP address. This mitigates the issues
@@ -455,7 +455,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         entry, unique_id=entry.unique_id, data=new_data
                     )
                 # Abort the configuration, as there already is an entry for this PANEL-ID.
-                self.async_abort(reason="already_configured")
+                return self.async_abort(reason="already_configured")
+        return None
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -472,9 +473,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_id = discovery_info.properties.get("idl")
         remote_id = discovery_info.properties.get("idr")
         if local_id is not None:
-            await self._async_handle_entry_match(
+            abort_result = await self._async_handle_entry_match(
                 local_id, remote_id, host, port, use_ssl
             )
+            if abort_result:
+                return abort_result
 
         self._selected_mode = CONF_ELMAX_MODE_DIRECT
         self._panel_direct_hostname = host
