@@ -142,7 +142,7 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
     At this point, the device is fully local.
     """
 
-    _attr_name = "Enable Cloud"
+    _attr_name = "Enable cloud"
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -153,13 +153,13 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, entry, "enable_cloud")
+        super().__init__(coordinator, entry, "cloud_enabled")
         self.hass = hass
         self.entry = entry
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
-        await self.coordinator.api.system_set(enable_cloud=True)
+        await self.coordinator.api.system_set(cloud_enabled=True)
         await self.coordinator.async_refresh()
 
         persistent_notification.async_dismiss(
@@ -168,7 +168,7 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
-        await self.coordinator.api.system_set(enable_cloud=False)
+        await self.coordinator.api.system_set(cloud_enabled=False)
         await self.coordinator.async_refresh()
 
         persistent_notification.async_create(
