@@ -27,7 +27,6 @@ import weakref
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
-from jinja2.runtime import Context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from typing_extensions import Concatenate, ParamSpec
@@ -99,6 +98,7 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+_ContextT = TypeVar("_ContextT")
 _T = TypeVar("_T")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
@@ -2087,11 +2087,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # can be discarded, we only need to get at the hass object.
         def hassfunction(
             func: Callable[Concatenate[HomeAssistant, _P], _R]
-        ) -> Callable[Concatenate[Context, _P], _R]:
+        ) -> Callable[Concatenate[_ContextT, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(_: Context, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+            def wrapper(_: _ContextT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
                 return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
