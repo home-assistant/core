@@ -10,6 +10,9 @@
         },
         "flow_title": "{name} - {model} ({ip_address})",
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {name} - {model} ({ip_address})?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP adresa"

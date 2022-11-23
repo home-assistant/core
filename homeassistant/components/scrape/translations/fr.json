@@ -4,18 +4,32 @@
             "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
         },
         "step": {
+            "sensor": {
+                "data": {
+                    "attribute": "Attribut",
+                    "index": "Index",
+                    "name": "Nom",
+                    "state_class": "Classe d'\u00e9tat",
+                    "unit_of_measurement": "Unit\u00e9 de mesure"
+                },
+                "data_description": {
+                    "state_class": "La state_class du capteur"
+                }
+            },
             "user": {
                 "data": {
                     "attribute": "Attribut",
-                    "authentication": "Authentification",
+                    "authentication": "S\u00e9lectionner la m\u00e9thode d\u2019authentification",
                     "device_class": "Classe d'appareil",
                     "headers": "En-t\u00eates",
                     "index": "Index",
+                    "method": "M\u00e9thode",
                     "name": "Nom",
                     "password": "Mot de passe",
                     "resource": "Ressource",
                     "select": "S\u00e9lectionner",
                     "state_class": "Classe d'\u00e9tat",
+                    "timeout": "D\u00e9lai d\u2019expiration",
                     "unit_of_measurement": "Unit\u00e9 de mesure",
                     "username": "Nom d'utilisateur",
                     "value_template": "Mod\u00e8le de valeur",
@@ -30,6 +44,7 @@
                     "resource": "L'URL du site web qui contient la valeur",
                     "select": "D\u00e9finit la balise \u00e0 rechercher. Consultez les s\u00e9lecteurs CSS de Beautifulsoup pour plus de d\u00e9tails",
                     "state_class": "La state_class du capteur",
+                    "timeout": "D\u00e9lai d\u2019expiration pour la connexion au site Web",
                     "value_template": "D\u00e9finit un mod\u00e8le pour obtenir l'\u00e9tat du capteur",
                     "verify_ssl": "Active ou d\u00e9sactive la v\u00e9rification du certificat SSL/TLS, par exemple s'il est auto-sign\u00e9"
                 }
@@ -41,15 +56,17 @@
             "init": {
                 "data": {
                     "attribute": "Attribut",
-                    "authentication": "Authentification",
+                    "authentication": "S\u00e9lectionner la m\u00e9thode d\u2019authentification",
                     "device_class": "Classe d'appareil",
                     "headers": "En-t\u00eates",
                     "index": "Index",
+                    "method": "M\u00e9thode",
                     "name": "Nom",
                     "password": "Mot de passe",
                     "resource": "Ressource",
                     "select": "S\u00e9lectionner",
                     "state_class": "Classe d'\u00e9tat",
+                    "timeout": "D\u00e9lai d\u2019expiration",
                     "unit_of_measurement": "Unit\u00e9 de mesure",
                     "username": "Nom d'utilisateur",
                     "value_template": "Mod\u00e8le de valeur",
@@ -64,6 +81,7 @@
                     "resource": "L'URL du site web qui contient la valeur",
                     "select": "D\u00e9finit la balise \u00e0 rechercher. Consultez les s\u00e9lecteurs CSS de Beautifulsoup pour plus de d\u00e9tails",
                     "state_class": "La state_class du capteur",
+                    "timeout": "D\u00e9lai d\u2019expiration pour la connexion au site Web",
                     "value_template": "D\u00e9finit un mod\u00e8le pour obtenir l'\u00e9tat du capteur",
                     "verify_ssl": "Active ou d\u00e9sactive la v\u00e9rification du certificat SSL/TLS, par exemple s'il est auto-sign\u00e9"
                 }

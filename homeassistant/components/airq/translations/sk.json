@@ -13,7 +13,8 @@
                 "data": {
                     "ip_address": "IP adresa",
                     "password": "Heslo"
-                }
+                },
+                "title": "Identifikujte zariadenie"
             }
         }
     }

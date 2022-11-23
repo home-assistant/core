@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "unsupported": "Nepodporovan\u00e9 zariadenie"
+        },
+        "error": {
+            "unsupported": "Nepodporovan\u00e9 zariadenie"
+        },
         "flow_title": "{model} ({name})",
         "step": {
             "user": {

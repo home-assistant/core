@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Meno"
+                    "name": "Meno",
+                    "source": "Vstupn\u00fd sn\u00edma\u010d"
                 }
             }
         }

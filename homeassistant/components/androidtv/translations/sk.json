@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "device_class": "Typ zariadenia",
                     "host": "Hostite\u013e",
                     "port": "Port"
                 }

@@ -1,11 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
             "user": {
                 "data": {
+                    "device_key": "K\u013e\u00fa\u010d zariadenia",
                     "host": "Hostite\u013e",
                     "port": "Port"
                 }

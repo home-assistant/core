@@ -4,7 +4,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Aktualizujte svoje heslo pre {email}"
             },
             "user": {
                 "data": {

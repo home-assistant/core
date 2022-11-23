@@ -10,7 +10,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Aktualizova\u0165 heslo pre {username}"
             },
             "service": {
                 "title": "Vyberte slu\u017eby"
