@@ -74,7 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
-
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
