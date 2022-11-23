@@ -1,4 +1,4 @@
-"""The tests for the  MQTT device_tracker platform."""
+"""The tests for the MQTT device_tracker platform."""
 
 from unittest.mock import patch
 
