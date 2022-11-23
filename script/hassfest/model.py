@@ -25,7 +25,7 @@ class Error:
 class Config:
     """Config for the run."""
 
-    specific_integrations: pathlib.Path | None = attr.ib()
+    specific_integrations: list[pathlib.Path] | None = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
     requirements: bool = attr.ib()
