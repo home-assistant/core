@@ -168,7 +168,7 @@ class ResultWrapper:
     render_result: str | None
 
 
-def gen_result_wrapper(kls: type[set | list | dict]) -> type:
+def gen_result_wrapper(kls: type[dict | list | set]) -> type:
     """Generate a result wrapper."""
 
     class Wrapper(kls, ResultWrapper):  # type: ignore[valid-type,misc]
