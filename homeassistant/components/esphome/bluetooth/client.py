@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -65,6 +66,8 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if disconnected_event.is_set():
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
             raise BleakError(
                 f"{self._source}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
