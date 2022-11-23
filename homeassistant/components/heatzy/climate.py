@@ -234,7 +234,7 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
         temp_eco = kwargs[ATTR_TARGET_TEMP_LOW]
         temp_cft = kwargs[ATTR_TARGET_TEMP_HIGH]
 
-        if (temp_eco or temp_cft) is None:
+        if temp_eco is None or temp_cft is None:
             return
 
         self._conf_attr[ECO_TEMP_L] = int(temp_cft * 10)
