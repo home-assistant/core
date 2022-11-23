@@ -88,6 +88,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={"version": str(nvr_info.version)},
             data={"entry_id": entry.entry_id},
         )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecate_smart_sensor",
+        is_fixable=False,
+        breaks_in_ha_version="2023.2.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecate_smart_sensor",
+    )
 
     try:
         await _async_setup_entry(hass, entry, data_service)

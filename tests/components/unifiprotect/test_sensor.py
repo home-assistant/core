@@ -410,7 +410,6 @@ async def test_sensor_setup_camera(
     assert state
     assert state.state == OBJECT_TYPE_NONE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 0
 
 
 async def test_sensor_setup_camera_with_last_trip_time(

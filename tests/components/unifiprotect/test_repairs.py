@@ -40,9 +40,12 @@ async def test_ea_warning_ignore(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    issue = msg["result"]["issues"][0]
-    assert issue["issue_id"] == "ea_warning"
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "ea_warning":
+            issue = i
+    assert issue is not None
 
     url = RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
@@ -89,9 +92,12 @@ async def test_ea_warning_fix(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    issue = msg["result"]["issues"][0]
-    assert issue["issue_id"] == "ea_warning"
+    assert len(msg["result"]["issues"]) > 0
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "ea_warning":
+            issue = i
+    assert issue is not None
 
     url = RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "ea_warning"})
