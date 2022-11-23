@@ -1,8 +1,9 @@
 """Support for Klyqa smart devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Any
 
 from klyqa_ctl import klyqa_ctl as api
 
@@ -52,9 +53,9 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
         super().__init__(data_communicator, username, password)
         self.hass = hass
         self.polling = polling
-        self.entry: ConfigEntry = entry
+        self.entry: ConfigEntry | None = entry
 
-    async def login(self, print_onboarded_devices=False) -> bool:
+    async def login(self, print_onboarded_devices: bool = False) -> bool:
         """Login."""
         ret: bool = await super().login(print_onboarded_devices=False)
         if ret:
@@ -129,7 +130,6 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
                     registered_entity_id = entity_registry.async_get_entity_id(
                         Platform.LIGHT, DOMAIN, slugify(group["id"])  # u_id
                     )
-                    # existing = self.hass.states.get(entity_id)
                     existing = (
                         self.hass.states.get(registered_entity_id)
                         if registered_entity_id
@@ -141,7 +141,7 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
                         or not existing
                         or ATTR_RESTORED in existing.attributes
                     ):
-                        """found klyqa device not in the light entities"""
+                        # found klyqa device not in the light entities
                         if (
                             len(group["devices"]) > 0
                             and "productId" in group["devices"][0]
@@ -169,8 +169,6 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
             ]
             if len(klyqa_new_light_registered) == 1:
                 sync_account_devices_with_ha_entities(device_type)
-
-        return True
 
 
 class KlyqaData:
@@ -253,7 +251,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     klyqa_data: KlyqaData = hass.data[DOMAIN]
 
-    unload_ok: bool = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
 
     while klyqa_data.remove_listeners:
         listener: Callable = klyqa_data.remove_listeners.pop(-1)
