@@ -47,8 +47,8 @@ from homeassistant.util.unit_conversion import (
 
 from .const import (
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_UPDATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_UPDATED,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     MAX_ROWS_TO_PURGE,
     SupportedDialect,
 )
@@ -703,9 +703,9 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
         session.add(StatisticsRuns(start=start))
 
     if fire_events:
-        instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_UPDATED)
+        instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
         if start.minute == 55:
-            instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_UPDATED)
+            instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
     return True
 
