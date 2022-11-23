@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ async def async_setup_entry(
     if coordinator.data["system"]:
         async_add_entities(
             [
-                HWEnergyEnableCloudEntity(coordinator, entry),
+                HWEnergyEnableCloudEntity(hass, coordinator, entry),
             ]
         )
 
@@ -146,20 +147,39 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        coordinator: HWEnergyDeviceUpdateCoordinator,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator, entry, "enable_cloud")
+        self.hass = hass
+        self.entry = entry
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
         await self.coordinator.api.system_set(enable_cloud=True)
         await self.coordinator.async_refresh()
 
+        persistent_notification.async_dismiss(
+            self.hass, f"{DOMAIN}_cloud_disabled_for_{self.unique_id}"
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
         await self.coordinator.api.system_set(enable_cloud=False)
         await self.coordinator.async_refresh()
+
+        persistent_notification.async_create(
+            self.hass,
+            title="HomeWizard Energy",
+            message=(
+                f"Cloud communication for HomeWizard Energy has been disabled for {self.entry.title}. "
+                "Keep in mind that this makes the HomeWizard Energy app unusable for this device."
+            ),
+            notification_id=f"{DOMAIN}_cloud_disabled_for_{self.unique_id}",
+        )
 
     @property
     def icon(self) -> str | None:
