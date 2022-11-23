@@ -70,7 +70,7 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
         raise ValueError(
             f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
         )
-    if entity.pattern is not None and re.compile(entity.pattern).match(value) is None:
+    if entity.pattern_cmp is not None and entity.pattern_cmp.match(value) is None:
         raise ValueError(
             f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
         )
@@ -103,7 +103,7 @@ class TextEntityDescription(EntityDescription):
     native_min: int = 0
     native_max: int = MAX_LENGTH_STATE_STATE
     mode: TextMode = TextMode.TEXT
-    pattern: re.Pattern | None = None
+    pattern: str | None = None
 
 
 class TextEntity(Entity):
@@ -114,8 +114,9 @@ class TextEntity(Entity):
     _attr_native_value: str | None
     _attr_native_min: int
     _attr_native_max: int
-    _attr_pattern: re.Pattern | None
+    _attr_pattern: str | None
     _attr_state: None = None
+    __pattern_cmp: re.Pattern | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -124,7 +125,7 @@ class TextEntity(Entity):
             ATTR_MODE: self.mode,
             ATTR_MIN: self.min,
             ATTR_MAX: self.max,
-            ATTR_PATTERN: self.pattern.pattern if self.pattern else None,
+            ATTR_PATTERN: self.pattern,
         }
 
     @property
@@ -143,7 +144,10 @@ class TextEntity(Entity):
                 f"Entity {self.entity_id} provides state {self.native_value} which is "
                 f"too long (maximum length {self.max})"
             )
-        if self.pattern is not None and self.pattern.match(self.native_value) is None:
+        if (
+            self.pattern_cmp is not None
+            and self.pattern_cmp.match(self.native_value) is None
+        ):
             raise ValueError(
                 f"Entity {self.entity_id} provides state {self.native_value} which "
                 f"does not match expected pattern {self.pattern}"
@@ -190,7 +194,20 @@ class TextEntity(Entity):
         return min(self.native_max, MAX_LENGTH_STATE_STATE)
 
     @property
-    def pattern(self) -> re.Pattern | None:
+    @final
+    def pattern_cmp(self) -> re.Pattern | None:
+        """Return a compiled pattern."""
+        if self.pattern is None and self.__pattern_cmp is not None:
+            self.__pattern_cmp = None
+        elif self.pattern is not None and (
+            self.__pattern_cmp is None
+            or str(self.pattern) != str(self.__pattern_cmp.pattern)
+        ):
+            self.__pattern_cmp = re.compile(self.pattern)
+        return self.__pattern_cmp
+
+    @property
+    def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         if hasattr(self, "_attr_pattern"):
             return self._attr_pattern
