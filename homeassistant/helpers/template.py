@@ -386,7 +386,7 @@ class Template:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
-        assert self.hass is not None
+        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -494,7 +494,7 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
-            assert self.hass is not None
+            assert self.hass is not None, "hass variable not set on template"
             try:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
