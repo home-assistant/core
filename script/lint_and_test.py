@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Lazy 'tox' to quickly check if branch is up to PR standards.
+Quickly check if branch is up to PR standards.
 
-This is NOT a tox replacement, only a quick check during development.
+This is NOT a full CI/linting replacement, only a quick check during development.
 """
 import asyncio
 from collections import namedtuple
@@ -214,7 +214,7 @@ async def main():
 
     print("=============================")
     if not test_files:
-        print("No test files identified, ideally you should run tox")
+        print("No test files identified")
         return
 
     code, _ = await async_exec(
@@ -223,7 +223,7 @@ async def main():
     print("=============================")
 
     if code == 0:
-        printc(PASS, "Yay! This will most likely pass tox")
+        printc(PASS, "Yay! This will most likely pass CI")
     else:
         printc(FAIL, "Tests not passing")
 

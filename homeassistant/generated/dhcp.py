@@ -7,6 +7,10 @@ from __future__ import annotations
 
 DHCP: list[dict[str, str | bool]] = [
     {
+        "domain": "airzone",
+        "macaddress": "E84F25*",
+    },
+    {
         "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
