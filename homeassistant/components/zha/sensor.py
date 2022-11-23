@@ -510,6 +510,34 @@ class PolledSmartEnergySummation(SmartEnergySummation):
         await self._channel.async_force_update()
 
 
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class Tier1SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier1_summation_delivered"
+):
+    """Tier 1 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier1_summ_delivered"
+    _attr_name: str = "Tier 1 Summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class Tier2SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier2_summation_delivered"
+):
+    """Tier 2 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
+    _attr_name: str = "Tier 2 Summation delivered"
+
+
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
