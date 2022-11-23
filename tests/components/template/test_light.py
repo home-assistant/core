@@ -174,8 +174,8 @@ async def test_template_state_text(hass, setup_light):
     state = hass.states.get("light.test_template_light")
     assert state.state == set_state
     assert "color_mode" not in state.attributes
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
 
 
 @pytest.mark.parametrize("count", [1])
