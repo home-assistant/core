@@ -5,6 +5,7 @@ DOMAIN = "wallbox"
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QSX"]
 
+CODE_KEY = "code"
 CONF_STATION = "station"
 CHARGER_ADDED_DISCHARGED_ENERGY_KEY = "added_discharged_energy"
 CHARGER_ADDED_ENERGY_KEY = "added_energy"
