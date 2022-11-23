@@ -224,7 +224,7 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
 
     @property
     def target_temperature_low(self) -> float:
-        """Return comfort temperature."""
+        """Return eco temperature."""
         eco_temp_high = self._conf_attr.get(ECO_TEMP_H, 0)
         eco_temp_low = self._conf_attr.get(ECO_TEMP_L, 0)
         return (eco_temp_low + (eco_temp_high * 255)) / 10
