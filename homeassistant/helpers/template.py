@@ -1361,7 +1361,7 @@ def distance(hass, *args):
     )
 
 
-def is_state(hass: HomeAssistant, entity_id: str, state: State | list[State]) -> bool:
+def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and (
