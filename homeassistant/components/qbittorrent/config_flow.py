@@ -31,8 +31,10 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            for entry in self._async_current_entries():
+                if user_input[CONF_URL] == entry.data[CONF_URL]:
+                    return self.async_abort(reason="already_configured")
             try:
-                # Try to set up qBittorrent client to validate configuration
                 await self.hass.async_add_executor_job(
                     setup_client,
                     user_input[CONF_URL],

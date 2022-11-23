@@ -10,12 +10,15 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_SOURCE,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 CONFIG_VALID = {
     CONF_NAME: "abcd",
@@ -96,7 +99,7 @@ def qbittorrent_setup_fixture():
 async def test_show_form_no_input(hass: HomeAssistant):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
@@ -106,7 +109,7 @@ async def test_flow_user(hass: HomeAssistant, api, ok):
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
         data=CONFIG_VALID,
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -118,7 +121,7 @@ async def test_invalid_auth(hass: HomeAssistant, api, invalid_auth):
     """Test user initialized flow with invalid credential."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
         data=CONFIG_INVALID_AUTH,
     )
     assert result["type"] == FlowResultType.FORM
@@ -130,9 +133,25 @@ async def test_cannot_connect(hass: HomeAssistant, api, cannot_connect):
     """Test user initialized flow with connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
         data=CONFIG_INVALID_AUTH,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_user_already_configured(hass: HomeAssistant, api):
+    """Test user initialized flow with duplicate server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_VALID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONFIG_VALID
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
