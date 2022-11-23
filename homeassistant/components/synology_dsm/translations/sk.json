@@ -13,7 +13,8 @@
                 "data": {
                     "password": "Heslo",
                     "port": "Port"
-                }
+                },
+                "description": "Chcete nastavi\u0165 {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {

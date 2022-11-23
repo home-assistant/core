@@ -1,7 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "flow_title": "{name} {model} ({host})",
         "step": {
+            "confirm": {
+                "description": "Chcete nastavi\u0165 {name} {model} ({host})?"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

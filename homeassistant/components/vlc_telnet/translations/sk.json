@@ -12,7 +12,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Zadajte spr\u00e1vne heslo pre hostite\u013ea: {host}"
             },
             "user": {
                 "data": {

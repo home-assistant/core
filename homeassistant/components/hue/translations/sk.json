@@ -32,6 +32,11 @@
     "device_automation": {
         "trigger_subtype": {
             "1": "Prv\u00e9 tla\u010didlo"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
+            "remote_button_short_press": "\"{subtype}\" stla\u010den\u00e9",
+            "remote_button_short_release": "\u201c{subtype}\u201c uvo\u013enen\u00e9"
         }
     }
 }

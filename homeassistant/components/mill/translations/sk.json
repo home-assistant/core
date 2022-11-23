@@ -5,6 +5,9 @@
                 "data": {
                     "password": "Heslo"
                 }
+            },
+            "local": {
+                "description": "Lok\u00e1lna IP adresa zariadenia."
             }
         }
     }

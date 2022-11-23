@@ -1,9 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
         },
+        "flow_title": "{name} ({ipaddress})",
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {name} ({ip_address})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Zariadenie"

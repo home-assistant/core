@@ -5,6 +5,8 @@
         },
         "trigger_type": {
             "current": "{entity_name} pr\u00fad sa zmen\u00ed",
+            "temperature": "Zmena teploty {entity_name}",
+            "value": "Zmena hodnoty {entity_name}",
             "voltage": "{entity_name} zmen\u00ed nap\u00e4tie"
         }
     },
