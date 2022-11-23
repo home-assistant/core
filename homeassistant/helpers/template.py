@@ -202,7 +202,6 @@ class TupleWrapper(tuple, ResultWrapper):
 
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
-        super().__init__()
         self.render_result = render_result
 
     def __str__(self) -> str:
