@@ -70,7 +70,7 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
         raise ValueError(
             f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
         )
-    if entity.pattern_cmp and entity.pattern_cmp.match(value) is None:
+    if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
             f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
         )
@@ -144,7 +144,7 @@ class TextEntity(Entity):
                 f"Entity {self.entity_id} provides state {self.native_value} which is "
                 f"too long (maximum length {self.max})"
             )
-        if self.pattern_cmp and self.pattern_cmp.match(self.native_value) is None:
+        if self.pattern_cmp and not self.pattern_cmp.match(self.native_value):
             raise ValueError(
                 f"Entity {self.entity_id} provides state {self.native_value} which "
                 f"does not match expected pattern {self.pattern}"
@@ -197,7 +197,7 @@ class TextEntity(Entity):
         if self.pattern is None:
             self.__pattern_cmp = None
             return None
-        if self.__pattern_cmp is None or self.pattern != self.__pattern_cmp.pattern:
+        if not self.__pattern_cmp or self.pattern != self.__pattern_cmp.pattern:
             self.__pattern_cmp = re.compile(self.pattern)
         return self.__pattern_cmp
 
