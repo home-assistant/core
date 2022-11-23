@@ -5,7 +5,8 @@
             "addon_install_failed": "Gagal menginstal add-on Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "Gagal mengatur konfigurasi Silicon Labs Multiprotocol.",
             "addon_start_failed": "Gagal memulai add-on Silicon Labs Multiprotocol.",
-            "not_hassio": "Opsi perangkat keras hanya bisa dikonfigurasi pada instalasi HassOS."
+            "not_hassio": "Opsi perangkat keras hanya bisa dikonfigurasi pada instalasi HassOS.",
+            "zha_migration_failed": "Migrasi ZHA tidak berhasil."
         },
         "error": {
             "unknown": "Kesalahan yang tidak diharapkan"

@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_integration_config
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_config(hass: HomeAssistant) -> None:
@@ -109,3 +110,18 @@ async def test_setup_config_no_sensors(
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
+
+
+async def test_setup_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
+    """Test setup entry."""
+
+    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
+
+
+async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
+    """Test unload an entry."""
+
+    assert loaded_entry.state == config_entries.ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    assert loaded_entry.state is config_entries.ConfigEntryState.NOT_LOADED

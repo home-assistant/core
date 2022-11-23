@@ -1,9 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
+        "flow_title": "{model} ({device_id})",
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {model} ({device_id})?"
+            },
             "local": {
                 "data": {
                     "host": "IP adresa"
@@ -11,6 +17,7 @@
             },
             "local_pick": {
                 "data": {
+                    "device": "Zaradenie",
                     "host": "IP adresa"
                 }
             },

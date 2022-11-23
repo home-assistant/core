@@ -19,7 +19,8 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, NoReturn, TypeVar, cast, overload
+from types import CodeType
+from typing import Any, Literal, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -40,6 +41,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
+    Context,
     HomeAssistant,
     State,
     callback,
@@ -329,19 +331,19 @@ class Template:
         "_hash_cache",
     )
 
-    def __init__(self, template, hass=None):
+    def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
         """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
         self.template: str = template.strip()
-        self._compiled_code = None
+        self._compiled_code: CodeType | None = None
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
-        self._exc_info = None
-        self._limited = None
-        self._strict = None
+        self._exc_info: sys._OptExcInfo | None = None
+        self._limited: bool | None = None
+        self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
 
     @property
@@ -366,7 +368,7 @@ class Template:
                 return
 
             try:
-                self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
+                self._compiled_code = self._env.compile(self.template)
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -382,10 +384,10 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
-
+        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -407,7 +409,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -423,7 +425,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if self.hass.config.legacy_templates or not parse_result:
+        if not parse_result or self.hass and self.hass.config.legacy_templates:
             return render_result
 
         return self._parse_result(render_result)
@@ -493,6 +495,7 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
+            assert self.hass is not None, "hass variable not set on template"
             try:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
@@ -607,6 +610,7 @@ class Template:
             self._strict is None or self._strict == strict
         ), "can't change between strict and non strict template"
         assert not (strict and limited), "can't combine strict and limited template"
+        assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
         self._strict = strict
@@ -683,7 +687,7 @@ class AllStates:
         if render_info is not None:
             render_info.all_states_lifecycle = True
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return all states."""
         self._collect_all()
         return _state_generator(self._hass, None)
@@ -693,7 +697,7 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id):
+    def __call__(self, entity_id: str) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
@@ -716,7 +720,7 @@ class DomainStates:
         self._hass = hass
         self._domain = domain
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> TemplateState | None:
         """Return the states."""
         return _get_state_if_valid(self._hass, f"{self._domain}.{name}")
 
@@ -734,7 +738,7 @@ class DomainStates:
         if entity_collect is not None:
             entity_collect.domains_lifecycle.add(self._domain)
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return the iteration over all the states."""
         self._collect_domain()
         return _state_generator(self._hass, self._domain)
@@ -774,7 +778,7 @@ class TemplateStateBase(State):
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
@@ -788,7 +792,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -796,49 +800,49 @@ class TemplateStateBase(State):
         return self._entity_id
 
     @property
-    def state(self):
+    def state(self) -> str:  # type: ignore[override]
         """Wrap State.state."""
         self._collect_state()
         return self._state.state
 
     @property
-    def attributes(self):
+    def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override]
         """Wrap State.attributes."""
         self._collect_state()
         return self._state.attributes
 
     @property
-    def last_changed(self):
+    def last_changed(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_changed."""
         self._collect_state()
         return self._state.last_changed
 
     @property
-    def last_updated(self):
+    def last_updated(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
         return self._state.last_updated
 
     @property
-    def context(self):
+    def context(self) -> Context:  # type: ignore[override]
         """Wrap State.context."""
         self._collect_state()
         return self._state.context
 
     @property
-    def domain(self):
+    def domain(self) -> str:  # type: ignore[override]
         """Wrap State.domain."""
         self._collect_state()
         return self._state.domain
 
     @property
-    def object_id(self):
+    def object_id(self) -> str:  # type: ignore[override]
         """Wrap State.object_id."""
         self._collect_state()
         return self._state.object_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -882,7 +886,7 @@ class TemplateStateFromEntityId(TemplateStateBase):
         super().__init__(hass, collect, entity_id)
 
     @property
-    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
+    def _state(self) -> State:  # type: ignore[override]
         state = self._hass.states.get(self._entity_id)
         if not state:
             state = State(self._entity_id, STATE_UNKNOWN)
@@ -903,7 +907,9 @@ def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateSta
     return TemplateState(hass, state, collect=False)
 
 
-def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
+def _state_generator(
+    hass: HomeAssistant, domain: str | None
+) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
         yield _template_state_no_collect(hass, state)
@@ -912,7 +918,7 @@ def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -2177,7 +2183,36 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         return super().is_safe_attribute(obj, attr, value)
 
-    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
+    @overload
+    def compile(  # type: ignore[misc]
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[False] = False,
+        defer_init: bool = False,
+    ) -> CodeType:
+        ...
+
+    @overload
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[True] = ...,
+        defer_init: bool = False,
+    ) -> str:
+        ...
+
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: bool = False,
+        defer_init: bool = False,
+    ) -> CodeType | str:
         """Compile the template."""
         if (
             name is not None
@@ -2188,8 +2223,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # If there are any non-default keywords args, we do
             # not cache.  In prodution we currently do not have
             # any instance of this.
-            return super().compile(source, name, filename, raw, defer_init)
+            return super().compile(  # type: ignore[no-any-return,call-overload]
+                source,
+                name,
+                filename,
+                raw,
+                defer_init,
+            )
 
+        cached: CodeType | str | None
         if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 

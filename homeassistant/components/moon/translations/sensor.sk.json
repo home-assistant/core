@@ -1,0 +1,10 @@
+{
+    "state": {
+        "moon__phase": {
+            "first_quarter": "Prv\u00e1 \u0161tvrtina",
+            "full_moon": "Spln",
+            "last_quarter": "Posledn\u00e1 \u0161tvrtina",
+            "new_moon": "Nov mesiac"
+        }
+    }
+}

@@ -16,5 +16,13 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Zisten\u00fd pohyb",
+            "camera_person": "Zisten\u00e1 osoba",
+            "camera_sound": "Rozpoznan\u00fd zvuk",
+            "doorbell_chime": "Zvon\u010dek stla\u010den\u00fd"
+        }
     }
 }

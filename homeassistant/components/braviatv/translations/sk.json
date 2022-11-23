@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa"
         },

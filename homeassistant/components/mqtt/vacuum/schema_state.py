@@ -60,7 +60,7 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 
-DEFAULT_SERVICES: VacuumEntityFeature | int = (
+DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
@@ -68,7 +68,7 @@ DEFAULT_SERVICES: VacuumEntityFeature | int = (
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
-ALL_SERVICES: VacuumEntityFeature | int = (
+ALL_SERVICES = (
     DEFAULT_SERVICES
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.LOCATE

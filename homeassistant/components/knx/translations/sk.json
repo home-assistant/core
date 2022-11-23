@@ -7,18 +7,37 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
+                }
+            },
+            "routing": {
+                "data": {
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
                 }
             },
             "secure_manual": {
                 "data": {
-                    "device_authentication": "Heslo na overenie zariadenia"
+                    "device_authentication": "Heslo na overenie zariadenia",
+                    "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
+                }
+            },
+            "secure_tunnel_manual": {
+                "data": {
+                    "device_authentication": "Heslo na overenie zariadenia",
+                    "user_id": "ID pou\u017e\u00edvate\u013ea",
+                    "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
                 }
             }
         }
     },
     "options": {
         "step": {
+            "connection_type": {
+                "data": {
+                    "connection_type": "Typ pripojenia KNX"
+                }
+            },
             "init": {
                 "data": {
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
@@ -26,7 +45,21 @@
             },
             "manual_tunnel": {
                 "data": {
-                    "host": "Hostite\u013e"
+                    "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
+                    "port": "Port"
+                }
+            },
+            "routing": {
+                "data": {
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                }
+            },
+            "secure_tunnel_manual": {
+                "data": {
+                    "device_authentication": "Heslo na overenie zariadenia",
+                    "user_id": "ID pou\u017e\u00edvate\u013ea",
+                    "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
                 }
             },
             "tunnel": {

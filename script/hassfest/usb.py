@@ -5,7 +5,7 @@ from .model import Config, Integration
 from .serializer import format_python_namespace
 
 
-def generate_and_validate(integrations: list[dict[str, str]]) -> str:
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate usb data."""
     match_list = []
 

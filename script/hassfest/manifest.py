@@ -119,7 +119,7 @@ def documentation_url(value: str) -> str:
     return value
 
 
-def verify_lowercase(value: str):
+def verify_lowercase(value: str) -> str:
     """Verify a value is lowercase."""
     if value.lower() != value:
         raise vol.Invalid("Value needs to be lowercase")
@@ -127,7 +127,7 @@ def verify_lowercase(value: str):
     return value
 
 
-def verify_uppercase(value: str):
+def verify_uppercase(value: str) -> str:
     """Verify a value is uppercase."""
     if value.upper() != value:
         raise vol.Invalid("Value needs to be uppercase")
@@ -135,7 +135,7 @@ def verify_uppercase(value: str):
     return value
 
 
-def verify_version(value: str):
+def verify_version(value: str) -> str:
     """Verify the version."""
     try:
         AwesomeVersion(
@@ -153,7 +153,7 @@ def verify_version(value: str):
     return value
 
 
-def verify_wildcard(value: str):
+def verify_wildcard(value: str) -> str:
     """Verify the matcher contains a wildcard."""
     if "*" not in value:
         raise vol.Invalid(f"'{value}' needs to contain a wildcard matcher")
@@ -286,13 +286,13 @@ CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
 )
 
 
-def validate_version(integration: Integration):
+def validate_version(integration: Integration) -> None:
     """
     Validate the version of the integration.
 
     Will be removed when the version key is no longer optional for custom integrations.
     """
-    if not integration.manifest.get("version"):
+    if not (integration.manifest and integration.manifest.get("version")):
         integration.add_error("manifest", "No 'version' key in the manifest file.")
         return
 
