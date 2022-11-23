@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
+    Context,
     HomeAssistant,
     State,
     callback,
@@ -683,7 +684,7 @@ class AllStates:
         if render_info is not None:
             render_info.all_states_lifecycle = True
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return all states."""
         self._collect_all()
         return _state_generator(self._hass, None)
@@ -693,7 +694,7 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id):
+    def __call__(self, entity_id: str) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
@@ -716,7 +717,7 @@ class DomainStates:
         self._hass = hass
         self._domain = domain
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> TemplateState | None:
         """Return the states."""
         return _get_state_if_valid(self._hass, f"{self._domain}.{name}")
 
@@ -734,7 +735,7 @@ class DomainStates:
         if entity_collect is not None:
             entity_collect.domains_lifecycle.add(self._domain)
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return the iteration over all the states."""
         self._collect_domain()
         return _state_generator(self._hass, self._domain)
@@ -752,9 +753,9 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id")
+    __slots__ = ("_hass", "_collect", "_underlying_entity_id")
 
-    _state: State
+    _underlying_state: State
 
     __setitem__ = _readonly
     __delitem__ = _readonly
@@ -765,111 +766,115 @@ class TemplateStateBase(State):
         """Initialize template state."""
         self._hass = hass
         self._collect = collect
-        self._entity_id = entity_id
+        self._underlying_entity_id = entity_id
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
-            self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
+            self._hass.data[_RENDER_INFO].entities.add(self._underlying_entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
             if self._collect and _RENDER_INFO in self._hass.data:
-                self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
-            return getattr(self._state, item)
+                self._hass.data[_RENDER_INFO].entities.add(self._underlying_entity_id)
+            return getattr(self._underlying_state, item)
         if item == "entity_id":
-            return self._entity_id
+            return self._underlying_entity_id
         if item == "state_with_unit":
             return self.state_with_unit
         raise KeyError
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:  # type: ignore[override] # mypy issue 4125
         """Wrap State.entity_id.
 
         Intentionally does not collect state
         """
-        return self._entity_id
+        return self._underlying_entity_id
 
     @property
-    def state(self):
+    def state(self) -> str:  # type: ignore[override] # mypy issue 4125
         """Wrap State.state."""
         self._collect_state()
-        return self._state.state
+        return self._underlying_state.state
 
     @property
-    def attributes(self):
+    def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override] # mypy issue 4125
         """Wrap State.attributes."""
         self._collect_state()
-        return self._state.attributes
+        return self._underlying_state.attributes
 
     @property
-    def last_changed(self):
+    def last_changed(self) -> datetime:  # type: ignore[override] # mypy issue 4125
         """Wrap State.last_changed."""
         self._collect_state()
-        return self._state.last_changed
+        return self._underlying_state.last_changed
 
     @property
-    def last_updated(self):
+    def last_updated(self) -> datetime:  # type: ignore[override] # mypy issue 4125
         """Wrap State.last_updated."""
         self._collect_state()
-        return self._state.last_updated
+        return self._underlying_state.last_updated
 
     @property
-    def context(self):
+    def context(self) -> Context:  # type: ignore[override] # mypy issue 4125
         """Wrap State.context."""
         self._collect_state()
-        return self._state.context
+        return self._underlying_state.context
 
     @property
-    def domain(self):
+    def domain(self) -> str:  # type: ignore[override] # mypy issue 4125
         """Wrap State.domain."""
         self._collect_state()
-        return self._state.domain
+        return self._underlying_state.domain
 
     @property
-    def object_id(self):
+    def object_id(self) -> str:  # type: ignore[override] # mypy issue 4125
         """Wrap State.object_id."""
         self._collect_state()
-        return self._state.object_id
+        return self._underlying_state.object_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
-        return self._state.name
+        return self._underlying_state.name
 
     @property
     def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
         self._collect_state()
-        unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        return f"{self._state.state} {unit}" if unit else self._state.state
+        unit = self._underlying_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return (
+            f"{self._underlying_state.state} {unit}"
+            if unit
+            else self._underlying_state.state
+        )
 
     def __eq__(self, other: Any) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
-        return self._state.__eq__(other)
+        return self._underlying_state.__eq__(other)
 
 
 class TemplateState(TemplateStateBase):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_state",)
+    __slots__ = ("_underlying_state",)
 
     # Inheritance is done so functions that check against State keep working
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
         """Initialize template state."""
         super().__init__(hass, collect, state.entity_id)
-        self._state = state
+        self._underlying_state = state
 
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template TemplateState({self._state!r})>"
+        return f"<template TemplateState({self._underlying_state!r})>"
 
 
 class TemplateStateFromEntityId(TemplateStateBase):
@@ -882,15 +887,15 @@ class TemplateStateFromEntityId(TemplateStateBase):
         super().__init__(hass, collect, entity_id)
 
     @property
-    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
-        state = self._hass.states.get(self._entity_id)
+    def _state(self) -> State:
+        state = self._hass.states.get(self._underlying_entity_id)
         if not state:
-            state = State(self._entity_id, STATE_UNKNOWN)
+            state = State(self._underlying_entity_id, STATE_UNKNOWN)
         return state
 
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template TemplateStateFromEntityId({self._entity_id})>"
+        return f"<template TemplateStateFromEntityId({self._underlying_entity_id})>"
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
@@ -903,7 +908,9 @@ def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateSta
     return TemplateState(hass, state, collect=False)
 
 
-def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
+def _state_generator(
+    hass: HomeAssistant, domain: str | None
+) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
         yield _template_state_no_collect(hass, state)
