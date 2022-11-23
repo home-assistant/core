@@ -30,7 +30,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import EventType, StateType
@@ -504,6 +504,15 @@ async def async_setup_entry(
 
     # Can't be hass.async_add_job because job runs forever
     task = asyncio.create_task(connect_and_reconnect())
+
+    @callback
+    async def _async_stop(_: Event) -> None:
+        task.cancel()
+
+    # Make sure task is cancelled on shutdown (or tests complete)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    )
 
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
