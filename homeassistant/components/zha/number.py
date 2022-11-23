@@ -865,3 +865,63 @@ class AqaraPetFeederPortionWeight(
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
     _attr_icon: str = "mdi:weight-gram"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationTarget(ZHANumberConfigurationEntity, id_suffix="irrigation_target"):
+    """GiEX valve litres or seconds target (depending on valve mode)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[12]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 3600
+    _attr_native_unit_of_measurement: str = "L or sec"
+    _zcl_attribute: str = "irrigation_target"
+    _attr_name: str = "Irrigation target"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationCycleTimes(
+    ZHANumberConfigurationEntity, id_suffix="irrigation_num_times"
+):
+    """GiEX valve number of cycle irrigation times."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[12]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "irrigation_num_times"
+    _attr_name: str = "Number of irrigation cycles"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexIrrigationInterval(
+    ZHANumberConfigurationEntity, id_suffix="irrigation_interval"
+):
+    """GiEX valve interval between cycles."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[12]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 3600
+    _attr_native_unit_of_measurement: str | None = UNITS[73]
+    _zcl_attribute: str = "irrigation_interval"
+    _attr_name: str = "Interval between cycles"

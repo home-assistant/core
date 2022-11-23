@@ -494,3 +494,25 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
     _attr_icon: str = "mdi:wrench-clock"
+
+
+class GiexValveMode(types.enum1):
+    """GiEX valve mode enum."""
+
+    Duration = 0
+    Capacity = 1
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_sh1btabb",
+        "_TZE200_a7sghmms",
+    },
+)
+class GiexValveModeSelectEntity(ZCLEnumSelectEntity, id_suffix="irrigation_mode"):
+    """GiEX valve mode select options."""
+
+    _select_attr = "irrigation_mode"
+    _enum = GiexValveMode
+    _attr_name = "Irrigation mode"
