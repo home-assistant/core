@@ -2033,7 +2033,7 @@ async def test_thermostat(hass):
             "supported_features": 1 | 2 | 4 | 128,
             "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
             "preset_mode": None,
-            "preset_modes": ["eco"],
+            "preset_modes": ["eco", "boost"],
             "min_temp": 50,
             "max_temp": 90,
         },
@@ -2109,11 +2109,13 @@ async def test_thermostat(hass):
             "targetSetpoint": {"value": 70.0, "scale": "FAHRENHEIT"},
             "lowerSetpoint": {"value": 293.15, "scale": "KELVIN"},
             "upperSetpoint": {"value": 30.0, "scale": "CELSIUS"},
+            "schedule": {"duration": "PT1H15M"},
         },
     )
     assert call.data["temperature"] == 70.0
     assert call.data["target_temp_low"] == 68.0
     assert call.data["target_temp_high"] == 86.0
+    assert call.data["duration"] == 75
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal(
         "Alexa.ThermostatController",
@@ -2130,7 +2132,6 @@ async def test_thermostat(hass):
         "upperSetpoint",
         {"value": 86.0, "scale": "FAHRENHEIT"},
     )
-
     msg = await assert_request_fails(
         "Alexa.ThermostatController",
         "SetTargetTemperature",
@@ -2287,6 +2288,17 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
+
+    # Assert we can call boost preset
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_preset_mode",
+        hass,
+        payload={"thermostatMode": "BOOST"},
+    )
+    assert call.data["preset_mode"] == "boost"
 
 
 async def test_exclude_filters(hass):
