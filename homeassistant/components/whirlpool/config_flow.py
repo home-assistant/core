@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Confirm re-authentication with Aladdin Connect."""
+        """Confirm re-authentication with Whirlpool Sixth Sense."""
         errors: dict[str, str] = {}
 
         if user_input:
