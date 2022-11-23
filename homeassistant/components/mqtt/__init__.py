@@ -383,11 +383,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
             try:
-                rendered_topic: Any = template.Template(  # type: ignore[no-untyped-call]
+                rendered_topic: Any = template.Template(
                     msg_topic_template, hass
-                ).async_render(
-                    parse_result=False
-                )
+                ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
@@ -410,8 +408,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template),  # type: ignore[no-untyped-call]
-                    hass=hass,
+                    template.Template(payload_template), hass=hass
                 ).async_render()
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
