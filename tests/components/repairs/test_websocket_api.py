@@ -72,7 +72,11 @@ async def create_issues(hass, ws_client, issues=None):
     return issues
 
 
-EXPECTED_DATA = {"issue_1": None, "issue_2": {"blah": "bleh"}, "abort_issue1": None}
+EXPECTED_DATA = {
+    "issue_1": None,
+    "issue_2": {"blah": "bleh"},
+    "abort_issue1": None,
+}
 
 
 class MockFixFlow(RepairsFlow):
