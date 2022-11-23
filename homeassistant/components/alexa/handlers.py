@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 import logging
 import math
 import re
-from typing import Any, cast
+from typing import Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -883,13 +883,12 @@ async def async_api_set_target_temp(
         duration = payload.get("schedule").get("duration", "")
 
         result = re.search(r"\d{1,2}(?=H)", duration)
-        hours = cast(int, result.group(0)) if result else 0
+        hours = int(result.group(0)) if result else 0
 
         result = re.search(r"\d{1,2}(?=M)", duration)
-        mins = cast(int, result.group(0)) if result else 0
-
+        mins = int(result.group(0)) if result else 0
         duration = (hours * 60) + mins
-        data["duration"] = duration
+        data[climate.ATTR_DURATION] = duration
         response.add_context_property(
             {
                 "name": "duration",
@@ -961,17 +960,16 @@ async def async_api_set_thermostat_mode(
     """Process a set thermostat mode request."""
     entity = directive.entity
     mode = directive.payload["thermostatMode"]
-    custom_mode = mode.get("customName", None)
     mode = mode if isinstance(mode, str) else mode["value"]
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
+    preset_mode = (
+        mode if mode != "CUSTOM" else directive.payload["thermostatMode"]["customName"]
+    )
+
     ha_preset = next(
-        (
-            k
-            for k, v in API_THERMOSTAT_PRESETS.items()
-            if v == (mode if mode != "CUSTOM" else custom_mode)
-        ),
+        (k for k, v in API_THERMOSTAT_PRESETS.items() if v == preset_mode),
         None,
     )
 
@@ -1201,7 +1199,6 @@ async def async_api_adjust_mode(
     Requires capabilityResources supportedModes to be ordered.
     Only supportedModes with ordered=True support the adjustMode directive.
     """
-
     # Currently no supportedModes are configured with ordered=True to support this request.
     raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
