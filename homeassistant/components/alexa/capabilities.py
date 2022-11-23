@@ -1427,7 +1427,6 @@ class AlexaModeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-
         # Fan Direction Resource
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             self._resource = AlexaModeResource(
@@ -1625,7 +1624,6 @@ class AlexaRangeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-
         # Fan Speed Percentage Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
             percentage_step = self.entity.attributes.get(fan.ATTR_PERCENTAGE_STEP)
@@ -1837,7 +1835,6 @@ class AlexaToggleController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-
         # Fan Oscillating Resource
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
             self._resource = AlexaCapabilityResource(

@@ -828,7 +828,6 @@ class InputNumberCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-
         yield AlexaRangeController(
             self.entity, instance=f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}"
         )
