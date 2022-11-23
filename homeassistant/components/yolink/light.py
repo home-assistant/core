@@ -31,6 +31,12 @@ async def async_setup_entry(
 class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     """YoLink Dimmer Entity."""
 
+    _attr_has_entity_name: bool = True
+    _attr_color_mode: ColorMode | str | None = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes: set[ColorMode] | set[str] | None = {
+        ColorMode.BRIGHTNESS
+    }
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -40,9 +46,6 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}"
         self._attr_name = f"{coordinator.device.device_name} (State)"
-        self._attr_has_entity_name = True
-        self._attr_color_mode = ColorMode.BRIGHTNESS
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
