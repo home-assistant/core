@@ -112,6 +112,7 @@ CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 ATTR_AUX_HEAT = "aux_heat"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
+ATTR_DURATION = "duration"
 ATTR_FAN_MODES = "fan_modes"
 ATTR_FAN_MODE = "fan_mode"
 ATTR_PRESET_MODE = "preset_mode"

@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any
+import re
+from typing import Any, cast
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -48,6 +49,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
@@ -875,6 +877,24 @@ async def async_api_set_target_temp(
                 "name": "upperSetpoint",
                 "namespace": "Alexa.ThermostatController",
                 "value": {"value": temp_high, "scale": API_TEMP_UNITS[unit]},
+            }
+        )
+    if "schedule" in payload:
+        duration = payload.get("schedule").get("duration", "")
+
+        result = re.search(r"\d{1,2}(?=H)", duration)
+        hours = cast(int, result.group(0)) if result else 0
+
+        result = re.search(r"\d{1,2}(?=M)", duration)
+        mins = cast(int, result.group(0)) if result else 0
+
+        duration = (hours * 60) + mins
+        data["duration"] = duration
+        response.add_context_property(
+            {
+                "name": "duration",
+                "namespace": "Alexa.ThermostatController",
+                "value": {"value": duration, "scale": TIME_MINUTES},
             }
         )
 

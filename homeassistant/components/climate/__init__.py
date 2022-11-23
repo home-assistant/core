@@ -37,6 +37,7 @@ from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_DURATION,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
@@ -125,6 +126,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
             vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
+            vol.Optional(ATTR_DURATION): vol.Coerce(int),
         }
     ),
 )
