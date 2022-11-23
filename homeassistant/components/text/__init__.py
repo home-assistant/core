@@ -197,12 +197,10 @@ class TextEntity(Entity):
     @final
     def pattern_cmp(self) -> re.Pattern | None:
         """Return a compiled pattern."""
-        if self.pattern is None and self.__pattern_cmp is not None:
+        if self.pattern is None:
             self.__pattern_cmp = None
-        elif self.pattern is not None and (
-            self.__pattern_cmp is None
-            or str(self.pattern) != str(self.__pattern_cmp.pattern)
-        ):
+            return None
+        if self.__pattern_cmp is None or self.pattern != self.__pattern_cmp.pattern:
             self.__pattern_cmp = re.compile(self.pattern)
         return self.__pattern_cmp
 
