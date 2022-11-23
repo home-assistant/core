@@ -49,10 +49,6 @@ class HWEnergyNumberEntity(
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_icon = "mdi:lightbulb-on"
         self._attr_device_info = {
-            "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
             "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
         }
 
