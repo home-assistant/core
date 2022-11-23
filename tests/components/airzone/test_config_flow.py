@@ -302,8 +302,6 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
         await hass.async_block_till_done()
 
         conf_entries = hass.config_entries.async_entries(DOMAIN)
