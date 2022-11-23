@@ -29,8 +29,8 @@ from homeassistant.components.recorder import (
     statistics,
 )
 from homeassistant.components.recorder.const import (
-    EVENT_RECORDER_5MIN_STATISTICS_UPDATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_UPDATED,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     KEEPALIVE_TIME,
 )
 from homeassistant.components.recorder.db_schema import (
@@ -972,10 +972,10 @@ def test_auto_statistics(hass_recorder, freezer):
     hass.block_till_done()
 
     hass.bus.listen(
-        EVENT_RECORDER_5MIN_STATISTICS_UPDATED, async_5min_stats_updated_listener
+        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
     )
     hass.bus.listen(
-        EVENT_RECORDER_HOURLY_STATISTICS_UPDATED, async_hourly_stats_updated_listener
+        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
     )
 
     real_compile_statistics = statistics.compile_statistics
@@ -1086,10 +1086,10 @@ def test_compile_missing_statistics(tmpdir, freezer):
     freezer.tick(timedelta(hours=1))
     hass = get_test_home_assistant()
     hass.bus.listen(
-        EVENT_RECORDER_5MIN_STATISTICS_UPDATED, async_5min_stats_updated_listener
+        EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
     )
     hass.bus.listen(
-        EVENT_RECORDER_HOURLY_STATISTICS_UPDATED, async_hourly_stats_updated_listener
+        EVENT_RECORDER_HOURLY_STATISTICS_GENERATED, async_hourly_stats_updated_listener
     )
 
     recorder_helper.async_initialize_recorder(hass)
