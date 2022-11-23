@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -162,24 +161,10 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         await self.coordinator.api.system_set(cloud_enabled=True)
         await self.coordinator.async_refresh()
 
-        persistent_notification.async_dismiss(
-            self.hass, f"{DOMAIN}_cloud_disabled_for_{self.unique_id}"
-        )
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
         await self.coordinator.api.system_set(cloud_enabled=False)
         await self.coordinator.async_refresh()
-
-        persistent_notification.async_create(
-            self.hass,
-            title="HomeWizard Energy",
-            message=(
-                f"Cloud communication for HomeWizard Energy has been disabled for {self.entry.title}. "
-                "Keep in mind that this makes the HomeWizard Energy app unusable for this device."
-            ),
-            notification_id=f"{DOMAIN}_cloud_disabled_for_{self.unique_id}",
-        )
 
     @property
     def icon(self) -> str | None:
