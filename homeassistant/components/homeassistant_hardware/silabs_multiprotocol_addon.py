@@ -285,10 +285,8 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                     "name": self._zha_name(),
                     "port": {
                         "path": get_zigbee_socket(self.hass, addon_info),
-                        "baudrate": 115200,
-                        "flow_control": "hardware",
                     },
-                    "radio_type": "efr32",
+                    "radio_type": "ezsp",
                 },
                 "old_discovery_info": await self._async_zha_physical_discovery(),
             }

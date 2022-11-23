@@ -70,10 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "name": "Sky Connect Multi-PAN",
         "port": {
             "path": get_zigbee_socket(hass, addon_info),
-            "baudrate": 115200,
-            "flow_control": "hardware",
         },
-        "radio_type": "efr32",
+        "radio_type": "ezsp",
     }
     await hass.config_entries.flow.async_init(
         "zha",
