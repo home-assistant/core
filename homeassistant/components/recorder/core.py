@@ -376,7 +376,12 @@ class Recorder(threading.Thread):
         return True
 
     def do_adhoc_statistics(self, **kwargs: Any) -> None:
-        """Trigger an adhoc statistics run."""
+        """Trigger an adhoc statistics run.
+
+        This is only used by tests, and will not fire events:
+        - EVENT_RECORDER_5MIN_STATISTICS_GENERATED
+        - EVENT_RECORDER_HOURLY_STATISTICS_GENERATED
+        """
         if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue_task(StatisticsTask(start, False))
