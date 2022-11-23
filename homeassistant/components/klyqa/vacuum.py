@@ -5,10 +5,10 @@ import argparse
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-import traceback
 from typing import Any
 
 from klyqa_ctl import klyqa_ctl as api
+from klyqa_ctl.devices.device import format_uid
 from klyqa_ctl.devices.vacuum import KlyqaVCResponseStatus
 
 from homeassistant.components.vacuum import (
@@ -93,7 +93,7 @@ async def async_setup_klyqa(
 
         device_settings: dict[str, Any] = event.data
 
-        u_id: str = api.format_uid(device_settings["localDeviceId"])
+        u_id: str = format_uid(device_settings["localDeviceId"])
 
         entity_id: str = ENTITY_ID_FORMAT.format(u_id)
 
@@ -112,7 +112,7 @@ async def async_setup_klyqa(
             Platform.VACUUM, DOMAIN, u_id
         )
 
-        LOGGER.info("Add entity %s (%s).", entity_id, device_settings.get("name"))
+        LOGGER.info("Add entity %s (%s)", entity_id, device_settings.get("name"))
         new_entity: KlyqaVC = KlyqaVC(
             device_settings,
             device_state,
@@ -123,7 +123,7 @@ async def async_setup_klyqa(
             hass=hass,
         )
         await new_entity.async_update_settings()
-        new_entity._update_state(device_state.status)
+        new_entity.update_device_state(device_state.status)
         if new_entity:
             add_entities([new_entity], True)
 
@@ -169,8 +169,8 @@ class KlyqaVC(StateVacuumEntity):
 
         self._klyqa_account = klyqa_api
 
-        self.u_id = api.format_uid(settings["localDeviceId"])
-        self._attr_unique_id: str = api.format_uid(self.u_id)
+        self.u_id = format_uid(settings["localDeviceId"])
+        self._attr_unique_id: str = format_uid(self.u_id)
         self._klyqa_device = device
         self.entity_id = entity_id
 
@@ -225,7 +225,7 @@ class KlyqaVC(StateVacuumEntity):
         device_result: list[Any] = [
             x
             for x in devices_settings
-            if api.format_uid(str(x["localDeviceId"])) == self.u_id
+            if format_uid(str(x["localDeviceId"])) == self.u_id
         ]
         if len(device_result) < 1:
             return
@@ -233,7 +233,7 @@ class KlyqaVC(StateVacuumEntity):
         self.settings = device_result[0]
 
         self._attr_name = self.settings["name"]
-        self._attr_unique_id = api.format_uid(self.settings["localDeviceId"])
+        self._attr_unique_id = format_uid(self.settings["localDeviceId"])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self.name,
@@ -265,10 +265,7 @@ class KlyqaVC(StateVacuumEntity):
         if self.config_entry:
 
             device_registry.async_get_or_create(
-                **{
-                    "config_entry_id": self.config_entry.entry_id,
-                    **self._attr_device_info,
-                }
+                config_entry_id=self.config_entry.entry_id, **self._attr_device_info
             )
 
         if entity_registry_entry:
@@ -311,7 +308,7 @@ class KlyqaVC(StateVacuumEntity):
         await self.send_to_devices(["get", "--all"])
 
         if self.u_id in self._klyqa_account.devices:
-            self._update_state(self._klyqa_account.devices[self.u_id].status)
+            self.update_device_state(self._klyqa_account.devices[self.u_id].status)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
@@ -366,7 +363,7 @@ class KlyqaVC(StateVacuumEntity):
                 return
 
             if self.u_id in self._klyqa_account.devices:
-                self._update_state(self._klyqa_account.devices[self.u_id].status)
+                self.update_device_state(self._klyqa_account.devices[self.u_id].status)
                 if self._added_klyqa:
                     self.schedule_update_ha_state()
 
@@ -380,7 +377,7 @@ class KlyqaVC(StateVacuumEntity):
 
         LOGGER.info("Send start!")
         new_task = asyncio.create_task(
-            self._klyqa_account._send_to_devices(
+            self._klyqa_account.send_to_devices(
                 args_parsed,
                 args,
                 async_answer_callback=send_answer_cb,
@@ -400,7 +397,7 @@ class KlyqaVC(StateVacuumEntity):
         self.schedule_update_ha_state()
         await self.async_update_settings()
 
-    def _update_state(self, state_complete: api.KlyqaVCResponseStatus) -> None:
+    def update_device_state(self, state_complete: api.KlyqaVCResponseStatus) -> None:
         """Process state request response from the device to the entity state."""
         self._attr_assumed_state = True
 
@@ -453,19 +450,21 @@ class KlyqaVC(StateVacuumEntity):
             and state_complete.workingstatus < len(status)
             else None
         )
-        # retranslate our suction ids to HA
-        speed: int | None = int(
-            self._attr_fan_speed_list.index(
-                list(api.VC_SUCTION_STRENGTHS)[state_complete.suction - 1].name
-            )
+        speed_name: str | None = (
+            list(api.VC_SUCTION_STRENGTHS)[state_complete.suction - 1].name
             if state_complete.suction is not None
+            else None
+        )
+
+        # retranslate our suction ids to HA
+        speed: int | None = (
+            int(self._attr_fan_speed_list.index(speed_name))
+            if speed_name is not None
             else None
         )
         self._attr_fan_speed = (
             self._attr_fan_speed_list[speed] if speed is not None and speed > -1 else ""
         )
-
-        self._attr_is_on: bool = state_complete.power == "on"
 
         self._attr_assumed_state = False
         self.state_complete = state_complete

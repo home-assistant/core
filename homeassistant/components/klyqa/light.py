@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import partial
-import traceback
 from typing import Any
 
 import klyqa_ctl as api
@@ -36,7 +35,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.area_registry import SAVE_DELAY, AreaEntry, AreaRegistry
+from homeassistant.helpers.area_registry import AreaEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
@@ -141,7 +140,7 @@ async def async_setup_klyqa(
             hass=hass,
         )
         await new_entity.async_update_settings()
-        new_entity._update_state(light_state.status)
+        new_entity.update_device_state(light_state.status)
         if new_entity:
             add_entities([new_entity], True)
 
@@ -236,13 +235,11 @@ class KlyqaLight(RestoreEntity, LightEntity):
             self.device_config = api.device_configs[self.settings["productId"]]
         else:
             acc: HAKlyqaAccount = self._klyqa_account
-            response_object: TypeJSON | None = (
-                await self.hass.async_add_executor_job(
-                    partial(
-                        acc.request,
-                        "/config/product/" + self.settings["productId"],
-                        timeout=30,
-                    )
+            response_object: TypeJSON | None = await self.hass.async_add_executor_job(
+                partial(
+                    acc.request,
+                    "/config/product/" + self.settings["productId"],
+                    timeout=30,
                 )
             )
             if response_object is not None:
@@ -336,12 +333,9 @@ class KlyqaLight(RestoreEntity, LightEntity):
 
         device_entry: dr.DeviceEntry | None = None
         if self.config_entry:
-
             device_entry = device_registry.async_get_or_create(
-                **{
-                    "config_entry_id": self.config_entry.entry_id,
-                    **self._attr_device_info,
-                }
+                config_entry_id=self.config_entry.entry_id,
+                **self._attr_device_info,
             )
 
         self.rooms = []
@@ -544,7 +538,8 @@ class KlyqaLight(RestoreEntity, LightEntity):
             args.extend(["--transitionTime", str(self._attr_transition_time)])
 
         LOGGER.info(
-            f"Send to bulb {self.entity_id}%s: %s",
+            "Send to bulb %s%s: %s",
+            {self.entity_id},
             f" ({self.name})" if self.name else "",
             " ".join(args),
         )
@@ -573,7 +568,7 @@ class KlyqaLight(RestoreEntity, LightEntity):
         await self.send_to_bulbs(["--request"])
 
         if self.u_id in self._klyqa_account.devices:
-            self._update_state(self._klyqa_account.devices[self.u_id].status)
+            self.update_device_state(self._klyqa_account.devices[self.u_id].status)
 
     async def send_to_bulbs(
         self,
@@ -593,7 +588,7 @@ class KlyqaLight(RestoreEntity, LightEntity):
                 return
 
             if self.u_id in self._klyqa_account.devices:
-                self._update_state(self._klyqa_account.devices[self.u_id].status)
+                self.update_device_state(self._klyqa_account.devices[self.u_id].status)
                 if self._added_klyqa:
                     self.schedule_update_ha_state()
 
@@ -607,7 +602,7 @@ class KlyqaLight(RestoreEntity, LightEntity):
         args_parsed = parser.parse_args(args=args)
 
         new_task = asyncio.create_task(
-            self._klyqa_account._send_to_devices(
+            self._klyqa_account.send_to_devices(
                 args_parsed,
                 args,
                 async_answer_callback=send_answer_cb,
@@ -628,7 +623,9 @@ class KlyqaLight(RestoreEntity, LightEntity):
 
         await self.async_update_settings()
 
-    def _update_state(self, state_complete: api.KlyqaBulbResponseStatus | None) -> None:
+    def update_device_state(
+        self, state_complete: api.KlyqaBulbResponseStatus | None
+    ) -> None:
         """Process state request response from the bulb to the entity state."""
         self._attr_assumed_state = True
 

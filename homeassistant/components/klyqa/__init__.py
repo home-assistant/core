@@ -156,7 +156,7 @@ class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
             klyqa_new_light_registered = [
                 key
                 for key, _ in self.hass.bus.async_listeners().items()
-                if key == EVENT_KLYQA_NEW_LIGHT or key == EVENT_KLYQA_NEW_LIGHT_GROUP
+                if key in (EVENT_KLYQA_NEW_LIGHT, EVENT_KLYQA_NEW_LIGHT_GROUP)
             ]
             if len(klyqa_new_light_registered) == 2:
                 sync_account_devices_with_ha_entities(device_type)
