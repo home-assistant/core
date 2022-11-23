@@ -141,7 +141,7 @@ async def test_set_fan_speed(
     hass: HomeAssistant,
 ) -> None:
     """Test set fan speed percentage."""
-    with patch_profile(profile), patch_metrics_set() as metrics_set:
+    with patch_profile(profile), patch_metrics_set() as metrics_set, patch_metrics({}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         await hass.services.async_call(

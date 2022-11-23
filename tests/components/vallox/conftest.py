@@ -58,6 +58,16 @@ def patch_metrics_set():
 
 
 @pytest.fixture(autouse=True)
+def patch_profile_home():
+    """Patch the Vallox profile response."""
+    with patch(
+        "homeassistant.components.vallox.Vallox.get_profile",
+        return_value=PROFILE.HOME,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def patch_model():
     """Patch the Vallox model response."""
     with patch(
