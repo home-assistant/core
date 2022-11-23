@@ -2,7 +2,8 @@
 import json
 from unittest.mock import AsyncMock, patch
 
-from homewizard_energy.models import Data, Device, State
+from homewizard_energy.features import Features
+from homewizard_energy.models import Data, Device, State, System
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -37,11 +38,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_homewizardenergy():
-    """Return a mocked P1 meter."""
+    """Return a mocked all-feature device."""
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
     ) as device:
         client = device.return_value
+        client.features = AsyncMock(return_value=Features("HWE-SKT", "3.01"))
         client.device = AsyncMock(
             return_value=Device.from_dict(
                 json.loads(load_fixture("homewizard/device.json"))
@@ -55,6 +57,11 @@ def mock_homewizardenergy():
         client.state = AsyncMock(
             return_value=State.from_dict(
                 json.loads(load_fixture("homewizard/state.json"))
+            )
+        )
+        client.system = AsyncMock(
+            return_value=System.from_dict(
+                json.loads(load_fixture("homewizard/system.json"))
             )
         )
         yield device
