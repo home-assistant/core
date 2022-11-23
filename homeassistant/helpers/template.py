@@ -19,6 +19,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
+from types import CodeType
 from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
@@ -330,19 +331,19 @@ class Template:
         "_hash_cache",
     )
 
-    def __init__(self, template, hass=None):
+    def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
         """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
         self.template: str = template.strip()
-        self._compiled_code = None
+        self._compiled_code: CodeType | None = None
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
-        self._exc_info = None
-        self._limited = None
-        self._strict = None
+        self._exc_info: sys._OptExcInfo | None = None
+        self._limited: bool | None = None
+        self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
 
     @property
@@ -383,10 +384,10 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
-
+        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -408,7 +409,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -424,7 +425,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if self.hass.config.legacy_templates or not parse_result:
+        if not parse_result or self.hass and self.hass.config.legacy_templates:
             return render_result
 
         return self._parse_result(render_result)
@@ -494,6 +495,7 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
+            assert self.hass is not None, "hass variable not set on template"
             try:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
@@ -608,6 +610,7 @@ class Template:
             self._strict is None or self._strict == strict
         ), "can't change between strict and non strict template"
         assert not (strict and limited), "can't combine strict and limited template"
+        assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
         self._strict = strict
