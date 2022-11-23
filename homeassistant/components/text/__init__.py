@@ -13,7 +13,6 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -64,15 +63,15 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
     """Service call wrapper to set a new value."""
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
-        raise HomeAssistantError(
+        raise ValueError(
             f"Value {value} for {entity.name} is too short (minimum length {entity.min})"
         )
     if len(value) > entity.max:
-        raise HomeAssistantError(
+        raise ValueError(
             f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
         )
     if entity.pattern is not None and re.compile(entity.pattern).match(value) is None:
-        raise HomeAssistantError(
+        raise ValueError(
             f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
@@ -104,7 +103,7 @@ class TextEntityDescription(EntityDescription):
     native_min: int = 0
     native_max: int = MAX_LENGTH_STATE_STATE
     mode: TextMode = TextMode.TEXT
-    pattern: str | None = None
+    pattern: re.Pattern | None = None
 
 
 class TextEntity(Entity):
@@ -115,7 +114,7 @@ class TextEntity(Entity):
     _attr_native_value: str | None
     _attr_native_min: int
     _attr_native_max: int
-    _attr_pattern: str | None
+    _attr_pattern: re.Pattern | None
     _attr_state: None = None
 
     @property
@@ -125,7 +124,7 @@ class TextEntity(Entity):
             ATTR_MODE: self.mode,
             ATTR_MIN: self.min,
             ATTR_MAX: self.max,
-            ATTR_PATTERN: self.pattern,
+            ATTR_PATTERN: self.pattern.pattern if self.pattern else None,
         }
 
     @property
@@ -144,10 +143,7 @@ class TextEntity(Entity):
                 f"Entity {self.entity_id} provides state {self.native_value} which is "
                 f"too long (maximum length {self.max})"
             )
-        if (
-            self.pattern is not None
-            and re.compile(self.pattern).match(self.native_value) is None
-        ):
+        if self.pattern is not None and self.pattern.match(self.native_value) is None:
             raise ValueError(
                 f"Entity {self.entity_id} provides state {self.native_value} which "
                 f"does not match expected pattern {self.pattern}"
@@ -194,7 +190,7 @@ class TextEntity(Entity):
         return min(self.native_max, MAX_LENGTH_STATE_STATE)
 
     @property
-    def pattern(self) -> str | None:
+    def pattern(self) -> re.Pattern | None:
         """Return the regex pattern that the value must match."""
         if hasattr(self, "_attr_pattern"):
             return self._attr_pattern
