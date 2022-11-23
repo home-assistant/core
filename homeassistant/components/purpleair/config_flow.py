@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from aiopurpleair import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
-from aiopurpleair.models.sensors import SensorModel
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,10 +32,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        # We don't enforce harsh typing here so that we can avoid weird asserts or
-        # checks for these objects' existence:
+        # We don't enforce strict typing here to avoid weird asserts and checks for
+        # existence when, practically speaking, it will always exist:
         self._api: API = None  # type: ignore[assignment]
-        self._api_key: str = None  # type: ignore[assignment]
+        self._entry_data: dict[str, Any] = {}
 
     @property
     def step_by_coordinates_schema(self) -> vol.Schema:
@@ -53,15 +52,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _async_create_entry(self, sensor: SensorModel) -> FlowResult:
+    async def _async_create_entry(self, entry_title: str) -> FlowResult:
         """Create the config entry."""
-        await self.async_set_unique_id(str(sensor.sensor_index))
+        await self.async_set_unique_id(str(self._entry_data[CONF_SENSOR_INDEX]))
         self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=cast(str, sensor.name),
-            data={CONF_API_KEY: self._api_key, CONF_SENSOR_INDEX: sensor.sensor_index},
-        )
+        return self.async_create_entry(title=entry_title, data=self._entry_data)
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -100,7 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        return await self._async_create_entry(nearest_sensor)
+        self._entry_data[CONF_SENSOR_INDEX] = nearest_sensor.sensor_index
+        return await self._async_create_entry(cast(str, nearest_sensor.name))
 
     async def async_step_check_api_key(
         self, user_input: dict[str, Any] | None = None
@@ -133,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        self._api_key = user_input[CONF_API_KEY]
+        self._entry_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
         return await self.async_step_by_coordinates()
 
