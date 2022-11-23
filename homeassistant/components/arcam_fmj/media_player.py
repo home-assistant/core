@@ -61,6 +61,7 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -70,9 +71,7 @@ class ArcamFmj(MediaPlayerEntity):
     ) -> None:
         """Initialize device."""
         self._state = state
-        self._device_name = device_name
-        self._attr_name = f"{device_name} - Zone: {state.zn}"
-        self._uuid = uuid
+        self._attr_name = f"Zone {state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -87,6 +86,14 @@ class ArcamFmj(MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, uuid),
+            },
+            manufacturer="Arcam",
+            model="Arcam FMJ AVR",
+            name=device_name,
+        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -94,19 +101,6 @@ class ArcamFmj(MediaPlayerEntity):
         if self._state.get_power():
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._uuid),
-                (DOMAIN, self._state.client.host, self._state.client.port),  # type: ignore[arg-type]
-            },
-            manufacturer="Arcam",
-            model="Arcam FMJ AVR",
-            name=self._device_name,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
