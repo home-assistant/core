@@ -523,6 +523,7 @@ MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         key="detected_object",
         name="Detected Object",
         device_class=DEVICE_CLASS_DETECTION,
+        entity_registry_enabled_default=False,
         ufp_value="is_smart_detected",
         ufp_event_obj="last_smart_detect_event",
     ),
