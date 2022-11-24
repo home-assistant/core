@@ -49,6 +49,7 @@ class Platform(StrEnum):
     SIREN = "siren"
     STT = "stt"
     SWITCH = "switch"
+    TEXT = "text"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
