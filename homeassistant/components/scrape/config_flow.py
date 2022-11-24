@@ -37,7 +37,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import (
@@ -131,7 +130,7 @@ def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
 DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_RESOURCE,
         next_step="sensor",
@@ -142,7 +141,7 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         validate_user_input=validate_sensor_setup,
     ),
 }
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(DATA_SCHEMA_RESOURCE),
 }
 
