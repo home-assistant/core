@@ -195,11 +195,6 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
 
     _sensor_index: int
 
-    @property
-    def _options(self) -> dict[str, Any]:
-        # pylint: disable-next=protected-access
-        return self._common_handler._options
-
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
