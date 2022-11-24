@@ -895,12 +895,14 @@ async def test_options_flow(hass):
         result["flow_id"],
         user_input={
             const.CONF_CLOUD_SUBDEVICES: True,
+            const.CONF_LAZY_DISCOVER: False,
         },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_CLOUD_SUBDEVICES: True,
+        const.CONF_LAZY_DISCOVER: False,
     }
 
 
@@ -934,6 +936,7 @@ async def test_options_flow_incomplete(hass):
         result["flow_id"],
         user_input={
             const.CONF_CLOUD_SUBDEVICES: True,
+            const.CONF_LAZY_DISCOVER: False,
         },
     )
 
