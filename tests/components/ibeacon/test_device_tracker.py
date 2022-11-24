@@ -142,8 +142,8 @@ async def test_device_tracker_random_address(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
 
-async def test_device_tracker_random_address_infrequent_chagnes(hass):
-    """Test creating and updating device_tracker with a random mac that only changes every 15 minutes."""
+async def test_device_tracker_random_address_infrequent_changes(hass):
+    """Test creating and updating device_tracker with a random mac that only changes once per day."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -207,17 +207,23 @@ async def test_device_tracker_random_address_infrequent_chagnes(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
     one_day_future = start_time + 86400
+    previous_service_info = async_last_service_info(
+        hass, "AA:BB:CC:DD:EE:14", connectable=False
+    )
     inject_bluetooth_service_info_bleak(
         hass,
         BluetoothServiceInfoBleak(
             name="RandomAddress_1234",
-            address="AA:BB:CC:DD:EE:00",
+            address="AA:BB:CC:DD:EE:14",
             rssi=-63,
             service_data={},
             manufacturer_data={76: b"\x02\x15RandCharmBeacons\x0e\xfe\x13U\xc5"},
             service_uuids=[],
             source="local",
             time=one_day_future,
+            connectable=False,
+            device=device,
+            advertisement=previous_service_info.advertisement,
         ),
     )
     device = async_ble_device_from_address(hass, "AA:BB:CC:DD:EE:14", False)
