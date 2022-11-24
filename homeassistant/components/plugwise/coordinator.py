@@ -6,6 +6,7 @@ from plugwise import Smile
 from plugwise.constants import DeviceData, GatewayData
 from plugwise.exceptions import (
     ConnectionFailedError,
+    InvalidAuthentication,
     InvalidXMLError,
     ResponseError,
     UnsupportedDeviceError,
@@ -52,16 +53,16 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         """Fetch data from Plugwise."""
         try:
             data = await self.api.async_update()
+        except InvalidAuthentication as err:
+            raise UpdateFailed("Authentication failed") from err
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
                 "Invalid XML data, or error indication received for the Plugwise Adam/Smile/Stretch"
             ) from err
         except UnsupportedDeviceError as err:
-            raise UpdateFailed(
-                "Unsupported device found, please create an Issue in the Home Assistant Core github"
-            ) from err
+            raise UpdateFailed("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed("Failed to connect") from err
         return PlugwiseData(
             gateway=cast(GatewayData, data[0]),
             devices=cast(dict[str, DeviceData], data[1]),
