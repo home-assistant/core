@@ -308,11 +308,6 @@ class HeatMeterSensor(
             else:
                 self._attr_native_value = asdict(self.coordinator.data)[api_key]
 
-        _LOGGER.debug(
-            "Updated value of %s",
-            self.key,
-        )
-
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_values_from_api()
