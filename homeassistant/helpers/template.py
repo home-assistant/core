@@ -2090,9 +2090,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(
-                context: jinja2.runtime.Context, *args: _P.args, **kwargs: _P.kwargs
-            ) -> _R:
+            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
                 return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
