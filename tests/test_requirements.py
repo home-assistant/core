@@ -448,7 +448,7 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 3  # zeroconf also depends on http
+    assert len(mock_process.mock_calls) == 4  # zeroconf also depends on http
     assert mock_process.mock_calls[0][1][1] == zeroconf.requirements
 
 
