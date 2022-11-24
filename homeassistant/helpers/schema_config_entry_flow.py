@@ -43,7 +43,7 @@ class SchemaFlowFormStep:
     # schema is defined. The next_step function is passed the union of config entry
     # options and user input from previous steps.
     # If next_step returns None, the flow is ended with FlowResultType.CREATE_ENTRY.
-    next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
+    next_step: Callable[[dict[str, Any]], str | None] | None = None
 
     # Optional function to allow amending a form schema.
     # The update_form_schema function is called before async_show_form is called. The
@@ -136,8 +136,11 @@ class SchemaCommonFlowHandler:
         next_step_id: str = step_id
         if user_input is not None or form_step.schema is None:
             # Get next step
-            next_step_id_or_end_flow = form_step.next_step(self._options)
-            if next_step_id_or_end_flow is None:
+            if (
+                form_step.next_step is None
+                or (next_step_id_or_end_flow := form_step.next_step(self._options))
+                is None
+            ):
                 # Flow done, create entry or update config entry options
                 return self._handler.async_create_entry(data=self._options)
 
@@ -188,7 +191,10 @@ class SchemaCommonFlowHandler:
 
         # Show form for next step
         return self._handler.async_show_form(
-            step_id=next_step_id, data_schema=data_schema, errors=errors
+            step_id=next_step_id,
+            data_schema=data_schema,
+            errors=errors,
+            last_step=True if form_step.next_step is None else None,
         )
 
     async def _async_menu_step(
