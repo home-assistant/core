@@ -38,12 +38,14 @@ class SchemaFlowFormStep:
     # The validate_user_input should raise SchemaFlowError is user input is invalid.
     validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
 
-    # Optional function to identify next step.
-    # The next_step function is called if the schema validates successfully or if no
-    # schema is defined. The next_step function is passed the union of config entry
-    # options and user input from previous steps.
-    # If next_step is None, the flow is ended with FlowResultType.CREATE_ENTRY.
-    next_step: Callable[[dict[str, Any]], str] | None = None
+    next_step: Callable[[dict[str, Any]], str] | str | None = None
+    """Optional property to identify next step.
+
+    If `next_step` is a function, it is called if the schema validates successfully or
+    if no schema is defined. The `next_step` function is passed the union of config entry
+    options and user input from previous steps.
+    If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
+    """
 
     # Optional function to allow amending a form schema.
     # The update_form_schema function is called before async_show_form is called. The
@@ -140,7 +142,10 @@ class SchemaCommonFlowHandler:
                 # Flow done, create entry or update config entry options
                 return self._handler.async_create_entry(data=self._options)
 
-            next_step_id = form_step.next_step(self._options)
+            if isinstance(form_step.next_step, str):
+                next_step_id = form_step.next_step
+            else:
+                next_step_id = form_step.next_step(self._options)
 
         return self._show_next_step(next_step_id)
 
