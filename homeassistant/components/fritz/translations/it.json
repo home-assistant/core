@@ -20,7 +20,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "FRITZ! Box rilevato: {name} \n\n Configura gli strumenti del FRITZ! Box per controllare il tuo {name}",
+                "description": "FRITZ! Box rilevato: {name} \n\nConfigura gli strumenti del FRITZ! Box per controllare il tuo {name}",
                 "title": "Configura gli strumenti del FRITZ!Box"
             },
             "reauth_confirm": {

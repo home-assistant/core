@@ -1,15 +1,18 @@
 """Tests for the Bluetooth integration manager."""
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from bleak.backends.scanner import BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+import pytest
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BaseHaScanner
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -20,8 +23,26 @@ from . import (
 )
 
 
+@pytest.fixture
+def register_hci0_scanner(hass: HomeAssistant) -> None:
+    """Register an hci0 scanner."""
+    hci0_scanner = BaseHaScanner(hass, "hci0", "hci0")
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
+    yield
+    cancel()
+
+
+@pytest.fixture
+def register_hci1_scanner(hass: HomeAssistant) -> None:
+    """Register an hci1 scanner."""
+    hci1_scanner = BaseHaScanner(hass, "hci1", "hci1")
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
+    yield
+    cancel()
+
+
 async def test_advertisements_do_not_switch_adapters_for_no_reason(
-    hass, enable_bluetooth
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
 ):
     """Test we only switch adapters when needed."""
 
@@ -68,7 +89,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
     )
 
 
-async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
+async def test_switching_adapters_based_on_rssi(
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
+):
     """Test switching adapters based on rssi."""
 
     address = "44:44:33:11:23:45"
@@ -122,7 +145,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
 
-async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
+async def test_switching_adapters_based_on_zero_rssi(
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
+):
     """Test switching adapters based on zero rssi."""
 
     address = "44:44:33:11:23:45"
@@ -176,7 +201,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
     )
 
 
-async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
+async def test_switching_adapters_based_on_stale(
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
+):
     """Test switching adapters based on the previous advertisement being stale."""
 
     address = "44:44:33:11:23:41"
@@ -246,8 +273,8 @@ async def test_restore_history_from_dbus(hass, one_adapter):
     }
 
     with patch(
-        "bluetooth_adapters.BlueZDBusObjects",
-        return_value=MagicMock(load=AsyncMock(), history=history),
+        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+        history,
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -256,7 +283,7 @@ async def test_restore_history_from_dbus(hass, one_adapter):
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
-    hass, enable_bluetooth
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
 ):
     """Test switching adapters based on rssi from connectable to non connectable."""
 
@@ -339,7 +366,7 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
 
 
 async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_connectable(
-    hass, enable_bluetooth
+    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
 ):
     """Test we can still get a connectable BLEDevice when the best path is non-connectable.
 
@@ -384,3 +411,106 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
         bluetooth.async_ble_device_from_address(hass, address, True)
         is switchbot_device_poor_signal
     )
+
+
+async def test_switching_adapters_when_one_goes_away(
+    hass, enable_bluetooth, register_hci0_scanner
+):
+    """Test switching adapters when one goes away."""
+    cancel_hci2 = bluetooth.async_register_scanner(
+        hass, BaseHaScanner(hass, "hci2", "hci2"), True
+    )
+
+    address = "44:44:33:11:23:45"
+
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci2"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_poor_signal = generate_advertisement_data(
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
+    )
+
+    # We want to prefer the good signal when we have options
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    cancel_hci2()
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
+    )
+
+    # Now that hci2 is gone, we should prefer the poor signal
+    # since no poor signal is better than no signal
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal
+    )
+
+
+async def test_switching_adapters_when_one_stop_scanning(
+    hass, enable_bluetooth, register_hci0_scanner
+):
+    """Test switching adapters when stops scanning."""
+    hci2_scanner = BaseHaScanner(hass, "hci2", "hci2")
+    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
+
+    address = "44:44:33:11:23:45"
+
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci2"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_poor_signal = generate_advertisement_data(
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
+    )
+
+    # We want to prefer the good signal when we have options
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    hci2_scanner.scanning = False
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
+    )
+
+    # Now that hci2 has stopped scanning, we should prefer the poor signal
+    # since poor signal is better than no signal
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal
+    )
+
+    cancel_hci2()

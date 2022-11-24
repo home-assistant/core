@@ -553,7 +553,7 @@ class OnkyoDeviceZone(OnkyoDevice):
             )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Return media player features that are supported."""
         if self._supports_volume:
             return SUPPORT_ONKYO

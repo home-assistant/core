@@ -269,7 +269,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return round((self.device.brightness * 255.0) / 100.0)
+        return round((cast(int, self.device.brightness) * 255.0) / 100.0)
 
     @property
     def hs_color(self) -> tuple[int, int] | None:
@@ -312,7 +312,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     device: SmartLightStrip
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return super().supported_features | LightEntityFeature.EFFECT
 

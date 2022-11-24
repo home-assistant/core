@@ -7,6 +7,7 @@ from unittest.mock import patch
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
 from homeassistant.components.bluetooth import (
+    BaseHaScanner,
     async_register_scanner,
     async_track_unavailable,
 )
@@ -17,7 +18,6 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -314,7 +314,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             """Return a list of discovered devices."""
             return {}
 
-    scanner = FakeScanner(hass, "new")
+    scanner = FakeScanner(hass, "new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)
 
     @callback

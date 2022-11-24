@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Seadme aadress",
-                    "mac": "Seadme MAC-aadress",
-                    "name": "Nimi",
-                    "password": "Salas\u00f5na"
-                },
-                "title": "Switchbot seadme seadistamine"
+                    "address": "Seadme aadress"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Korduskatsete arv",
-                    "retry_timeout": "Korduskatsete vaheline aeg",
-                    "scan_timeout": "Kui kaua andmeid otsida",
-                    "update_time": "V\u00e4rskenduste vaheline aeg (sekundites)"
+                    "retry_count": "Korduskatsete arv"
                 }
             }
         }

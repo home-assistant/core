@@ -1,0 +1,13 @@
+{
+    "state": {
+        "sensibo__sensitivity": {
+            "n": "Norm\u00e1lne",
+            "s": "Citliv\u00e9"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Pocitovo",
+            "humidity": "Vlhkos\u0165",
+            "temperature": "Teplota"
+        }
+    }
+}

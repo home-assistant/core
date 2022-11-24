@@ -9,12 +9,14 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "email": "Email"
+                    "email": "Email",
+                    "password": "Heslo"
                 }
             },
             "user": {
                 "data": {
-                    "email": "Email"
+                    "email": "Email",
+                    "password": "Heslo"
                 }
             }
         }
