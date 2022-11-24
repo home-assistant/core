@@ -151,13 +151,18 @@ class SchemaCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        form_step: SchemaFlowFormStep = cast(
-            SchemaFlowFormStep, self._flow[next_step_id]
-        )
-
         options = dict(self._options)
         if user_input:
             options.update(user_input)
+
+        if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
+            menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
+            return self._handler.async_show_menu(
+                step_id=next_step_id,
+                menu_options=menu_step.options,
+            )
+
+        form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
         if (
             data_schema := self._get_schema(form_step, self._options)
@@ -197,10 +202,10 @@ class SchemaCommonFlowHandler:
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a menu step."""
-        form_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
+        menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
             step_id=step_id,
-            menu_options=form_step.options,
+            menu_options=menu_step.options,
         )
 
 
