@@ -3,7 +3,7 @@
   "name": "LOQED Touch Smart Lock",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/loqed",
-  "requirements": ["loqedAPI==2.1.3"],
+  "requirements": ["loqedAPI==2.1.5"],
   "dependencies": ["webhook", "application_credentials"],
   "codeowners": ["@cpolhout"],
   "iot_class": "local_push",

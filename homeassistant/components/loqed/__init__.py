@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     lock = await api.async_get_lock(
         entry.data["lock_key_key"],
         entry.data["bridge_key"],
-        entry.data["lock_key_local_id"],
+        int(entry.data["lock_key_local_id"]),
         entry.data["bridge_ip"],
     )
     coordinator = LoqedDataCoordinator(hass, api, lock, entry)
