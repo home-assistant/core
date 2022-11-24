@@ -49,20 +49,6 @@ class SchemaFlowFormStep:
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
-    # Optional function to allow amending a form schema.
-    # The update_form_schema function is called before async_show_form is called. The
-    # update_form_schema function is passed the handler, which is either an instance of
-    # SchemaConfigFlowHandler or SchemaOptionsFlowHandler, the schema, and the union of
-    # config entry options and user input from previous steps.
-    update_form_schema: Callable[
-        [
-            SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-            vol.Schema,
-            dict[str, Any],
-        ],
-        vol.Schema,
-    ] = lambda _handler, schema, _options: schema
-
 
 @dataclass
 class SchemaFlowMenuStep:
