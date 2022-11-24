@@ -4,7 +4,7 @@
   "documentation": "https://github.com/klyqa/home-assistant-integration",
   "config_flow": true,
   "dependencies": ["network"],
-  "requirements": ["klyqa_ctl==1.0.14"],
+  "requirements": ["klyqa_ctl==1.0.16"],
   "codeowners": ["@fraizy22", "@klyqa"],
   "iot_class": "local_push"
 }

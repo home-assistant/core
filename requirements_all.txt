@@ -989,7 +989,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.klyqa
-klyqa_ctl==1.0.14
+klyqa_ctl==1.0.16
 
 # homeassistant.components.konnected
 konnected==1.2.0
