@@ -355,11 +355,17 @@ class IBeaconCoordinator:
             if group_id not in self._unavailable_group_ids
             and (service_info := self._last_seen_by_group_id.get(group_id))
             and (
-                # Since we will not be callbacks for ibeacons with random macs
-                # that rotate infrequently since their data is static we need
-                # to ask for the latest service info for the address we last
-                # saw to get the latest timestamp. If its missing we know the
-                # address is no longer advertising.
+                # We will not be callbacks for iBeacons with random macs
+                # that rotate infrequently since their advertisement data is
+                # does not change as the bluetooth.async_register_callback API
+                # suppresses callbacks for duplicate advertisements to avoid
+                # exposing integrations to the firehose of bluetooth advertisements.
+                #
+                # To solve this we need to ask for the latest service info for
+                # the address we last saw to get the latest timestamp.
+                #
+                # If there is no last service info for the address we know that
+                # the device is no longer advertising.
                 not (
                     latest_service_info := bluetooth.async_last_service_info(
                         self.hass, service_info.address, connectable=False
