@@ -2094,7 +2094,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = pass_context(self.globals["device_attr"])
+
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.tests["is_device_attr"] = pass_eval_context(self.globals["is_device_attr"])
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
