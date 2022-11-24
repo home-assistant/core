@@ -25,8 +25,13 @@ class SchemaFlowError(Exception):
 class SchemaFlowFormStep:
     """Define a config or options flow step."""
 
-    # Optional schema for requesting and validating user input. If schema validation
-    # fails, the step will be retried. If the schema is None, no user input is requested.
+    # Optional voluptuous schema, or function which returns a schema or None, for
+    # requesting and validating user input.
+    # If a function is specified, the function will be passed the handler, which is
+    # either an instance of SchemaConfigFlowHandler or SchemaOptionsFlowHandler, and the
+    # union of config entry options and user input from previous steps.
+    # If schema validation fails, the step will be retried. If the schema is None, no
+    # user input is requested.
     schema: vol.Schema | Callable[
         [SchemaConfigFlowHandler | SchemaOptionsFlowHandler, dict[str, Any]],
         vol.Schema | None,
@@ -44,20 +49,6 @@ class SchemaFlowFormStep:
     # options and user input from previous steps.
     # If next_step returns None, the flow is ended with FlowResultType.CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
-
-    # Optional function to allow amending a form schema.
-    # The update_form_schema function is called before async_show_form is called. The
-    # update_form_schema function is passed the handler, which is either an instance of
-    # SchemaConfigFlowHandler or SchemaOptionsFlowHandler, the schema, and the union of
-    # config entry options and user input from previous steps.
-    update_form_schema: Callable[
-        [
-            SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-            vol.Schema,
-            dict[str, Any],
-        ],
-        vol.Schema,
-    ] = lambda _handler, schema, _options: schema
 
 
 @dataclass
