@@ -29,7 +29,8 @@ async def test_menu_step(hass: HomeAssistant) -> None:
         "user": SchemaFlowMenuStep(MENU_1),
         "option1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "menu2"),
         "menu2": SchemaFlowMenuStep(MENU_2),
-        "option3": SchemaFlowFormStep(vol.Schema({})),
+        "option3": SchemaFlowFormStep(vol.Schema({}), next_step="option4"),
+        "option4": SchemaFlowFormStep(vol.Schema({})),
     }
 
     class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
@@ -62,6 +63,10 @@ async def test_menu_step(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "option3"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "option4"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == FlowResultType.CREATE_ENTRY
