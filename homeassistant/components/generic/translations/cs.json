@@ -1,17 +1,9 @@
 {
     "config": {
-        "abort": {
-            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
-        },
         "error": {
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "content_type": {
-                "data": {
-                    "content_type": "Typ obsahu"
-                }
-            },
             "user": {
                 "data": {
                     "password": "Heslo",
@@ -31,11 +23,6 @@
         "step": {
             "confirm_still": {
                 "title": "N\u00e1hled"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Typ obsahu"
-                }
             },
             "init": {
                 "data": {

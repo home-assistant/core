@@ -7,14 +7,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Interval aktualiz\u00e1cie"
-                }
-            }
-        }
     }
 }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No se encontraron dispositivos en la red",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
@@ -10,28 +9,15 @@
             "malformed_url": "URL con formato incorrecto",
             "no_still_image_or_stream_url": "Debes especificar al menos una imagen fija o URL de transmisi\u00f3n",
             "relative_url": "No se permiten URLs relativas",
-            "stream_file_not_found": "No se encontr\u00f3 el archivo al intentar conectarse a la transmisi\u00f3n (\u00bfest\u00e1 instalado ffmpeg?)",
-            "stream_http_not_found": "HTTP 404 Not found al intentar conectarse a la transmisi\u00f3n",
             "stream_io_error": "Error de entrada/salida al intentar conectarse a la transmisi\u00f3n. \u00bfProtocolo de transporte RTSP incorrecto?",
             "stream_no_route_to_host": "No se pudo encontrar el host al intentar conectarse a la transmisi\u00f3n",
-            "stream_no_video": "La transmisi\u00f3n no tiene video",
             "stream_not_permitted": "Operaci\u00f3n no permitida al intentar conectarse a la transmisi\u00f3n. \u00bfProtocolo de transporte RTSP incorrecto?",
-            "stream_unauthorised": "La autorizaci\u00f3n fall\u00f3 al intentar conectarse a la transmisi\u00f3n",
             "template_error": "Error al renderizar la plantilla. Revisa el registro para obtener m\u00e1s informaci\u00f3n.",
             "timeout": "Tiempo de espera al cargar la URL",
             "unable_still_load": "No se puede cargar una imagen v\u00e1lida desde la URL de la imagen fija (p. ej., host no v\u00e1lido, URL o error de autenticaci\u00f3n). Revisa el registro para obtener m\u00e1s informaci\u00f3n.",
             "unknown": "Error inesperado"
         },
         "step": {
-            "confirm": {
-                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Tipos de contenido"
-                },
-                "description": "Especifica el tipo de contenido para el flujo."
-            },
             "user": {
                 "data": {
                     "authentication": "Autenticaci\u00f3n",
@@ -62,13 +48,9 @@
             "malformed_url": "URL con formato incorrecto",
             "no_still_image_or_stream_url": "Debes especificar al menos una imagen fija o URL de transmisi\u00f3n",
             "relative_url": "No se permiten URLs relativas",
-            "stream_file_not_found": "No se encontr\u00f3 el archivo al intentar conectarse a la transmisi\u00f3n (\u00bfest\u00e1 instalado ffmpeg?)",
-            "stream_http_not_found": "HTTP 404 Not found al intentar conectarse a la transmisi\u00f3n",
             "stream_io_error": "Error de entrada/salida al intentar conectarse a la transmisi\u00f3n. \u00bfProtocolo de transporte RTSP incorrecto?",
             "stream_no_route_to_host": "No se pudo encontrar el host al intentar conectarse a la transmisi\u00f3n",
-            "stream_no_video": "La transmisi\u00f3n no tiene video",
             "stream_not_permitted": "Operaci\u00f3n no permitida al intentar conectarse a la transmisi\u00f3n. \u00bfProtocolo de transporte RTSP incorrecto?",
-            "stream_unauthorised": "La autorizaci\u00f3n fall\u00f3 al intentar conectarse a la transmisi\u00f3n",
             "template_error": "Error al renderizar la plantilla. Revisa el registro para obtener m\u00e1s informaci\u00f3n.",
             "timeout": "Tiempo de espera al cargar la URL",
             "unable_still_load": "No se puede cargar una imagen v\u00e1lida desde la URL de la imagen fija (p. ej., host no v\u00e1lido, URL o error de autenticaci\u00f3n). Revisa el registro para obtener m\u00e1s informaci\u00f3n.",
@@ -81,12 +63,6 @@
                 },
                 "description": "![Vista previa de imagen fija de c\u00e1mara]({preview_url})",
                 "title": "Vista previa"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Tipos de contenido"
-                },
-                "description": "Especifica el tipo de contenido para el flujo."
             },
             "init": {
                 "data": {

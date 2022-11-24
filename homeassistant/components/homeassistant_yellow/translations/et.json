@@ -6,7 +6,7 @@
             "addon_set_config_failed": "Silicon Labs Multiprotocol konfiguratsiooni seadistamine eba\u00f5nnestus.",
             "addon_start_failed": "Silicon Labsi mitmeprotokolli lisandmooduli k\u00e4ivitamine nurjus.",
             "not_hassio": "Riistvaravalikuid saab konfigureerida ainult HassOS-i paigaldustes.",
-            "zha_migration_failed": "ZHA r\u00e4nne nurjus."
+            "zha_migration_failed": "ZHA sidumise siirdamine nurjus."
         },
         "error": {
             "unknown": "Ootamatu t\u00f5rge"

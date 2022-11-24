@@ -14,9 +14,7 @@
             },
             "user": {
                 "data": {
-                    "device_class": "Trieda zariadenia",
-                    "password": "Heslo",
-                    "unit_of_measurement": "Jednotka merania"
+                    "password": "Heslo"
                 }
             }
         }
@@ -25,9 +23,7 @@
         "step": {
             "init": {
                 "data": {
-                    "device_class": "Trieda zariadenia",
-                    "password": "Heslo",
-                    "unit_of_measurement": "Jednotka merania"
+                    "password": "Heslo"
                 }
             }
         }

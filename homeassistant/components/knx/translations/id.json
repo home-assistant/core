@@ -60,19 +60,6 @@
                 },
                 "description": "Masukkan informasi untuk file `.knxkeys` Anda."
             },
-            "secure_manual": {
-                "data": {
-                    "device_authentication": "Kata sandi autentikasi perangkat",
-                    "user_id": "ID pengguna",
-                    "user_password": "Kata sandi pengguna"
-                },
-                "data_description": {
-                    "device_authentication": "Ini diatur dalam panel 'IP' dalam antarmuka di ETS.",
-                    "user_id": "Ini sering kali merupakan tunnel nomor +1. Jadi 'Tunnel 2' akan memiliki User-ID '3'.",
-                    "user_password": "Kata sandi untuk koneksi tunnel tertentu yang diatur di panel 'Properties' tunnel di ETS."
-                },
-                "description": "Masukkan informasi IP aman Anda."
-            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Kata sandi autentikasi perangkat",
@@ -90,7 +77,6 @@
                 "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
                 "menu_options": {
                     "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
-                    "secure_manual": "Konfigurasikan kunci aman IP secara manual",
                     "secure_tunnel_manual": "Konfigurasikan kunci aman IP secara manual"
                 }
             },
@@ -99,12 +85,6 @@
                     "gateway": "Koneksi Tunnel KNX"
                 },
                 "description": "Pilih gateway dari daftar."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "Jenis Koneksi KNX"
-                },
-                "description": "Masukkan jenis koneksi yang harus kami gunakan untuk koneksi KNX Anda. \nOTOMATIS - Integrasi melakukan konektivitas ke bus KNX Anda dengan melakukan pemindaian gateway. \nTUNNELING - Integrasi akan terhubung ke bus KNX Anda melalui tunneling. \nROUTING - Integrasi akan terhubung ke bus KNX Anda melalui routing."
             }
         }
     },
@@ -134,25 +114,6 @@
                     "connection_type": "Jenis Koneksi KNX"
                 },
                 "description": "Masukkan jenis koneksi yang harus kami gunakan untuk koneksi KNX Anda. \nOTOMATIS - Integrasi melakukan konektivitas ke bus KNX Anda dengan melakukan pemindaian gateway. \nTUNNELING - Integrasi akan terhubung ke bus KNX Anda melalui tunneling. \nROUTING - Integrasi akan terhubung ke bus KNX Anda melalui routing."
-            },
-            "init": {
-                "data": {
-                    "connection_type": "Jenis Koneksi KNX",
-                    "individual_address": "Alamat individu default",
-                    "local_ip": "IP lokal Home Assistant",
-                    "multicast_group": "Grup multicast",
-                    "multicast_port": "Port multicast",
-                    "rate_limit": "Batas data",
-                    "state_updater": "Pembaruan status"
-                },
-                "data_description": {
-                    "individual_address": "Alamat KNX yang akan digunakan oleh Home Assistant, misalnya `0.0.4`",
-                    "local_ip": "Gunakan `0.0.0.0` untuk penemuan otomatis.",
-                    "multicast_group": "Digunakan untuk perutean dan penemuan. Bawaan: `224.0.23.12`",
-                    "multicast_port": "Digunakan untuk perutean dan penemuan. Bawaan: `3671`",
-                    "rate_limit": "Telegram keluar maksimum per detik.\nDirekomendasikan: 20 hingga 40",
-                    "state_updater": "Menyetel default untuk status pembacaan KNX Bus. Saat dinonaktifkan, Home Assistant tidak akan secara aktif mengambil status entitas dari KNX Bus. Hal ini bisa ditimpa dengan opsi entitas `sync_state`."
-                }
             },
             "manual_tunnel": {
                 "data": {
@@ -222,14 +183,7 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "Koneksi Tunnel KNX",
-                    "host": "Host",
-                    "port": "Port",
-                    "tunneling_type": "Jenis Tunnel KNX"
-                },
-                "data_description": {
-                    "host": "Alamat IP perangkat tunneling KNX/IP.",
-                    "port": "Port perangkat tunneling KNX/IP."
+                    "gateway": "Koneksi Tunnel KNX"
                 },
                 "description": "Pilih gateway dari daftar."
             }

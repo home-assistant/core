@@ -1,7 +1,7 @@
 {
-  "state": {
-    "harmony__activities": {
-      "power_off": "Power Off"
+    "state": {
+        "harmony__activities": {
+            "power_off": "Power Off"
+        }
     }
-  }
 }

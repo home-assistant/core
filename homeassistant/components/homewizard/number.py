@@ -1,6 +1,8 @@
 """Creates HomeWizard Number entities."""
 from __future__ import annotations
 
+from typing import Optional, cast
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -60,6 +62,7 @@ class HWEnergyNumberEntity(
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        if self.coordinator.data["state"].brightness is None:
+        brightness = cast(Optional[float], self.coordinator.data["state"].brightness)
+        if brightness is None:
             return None
-        return round(self.coordinator.data["state"].brightness * (100 / 255))
+        return round(brightness * (100 / 255))

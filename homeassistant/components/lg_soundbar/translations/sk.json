@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
-            "existing_instance_updated": "Aktualizovan\u00e1 existuj\u00faca konfigur\u00e1cia."
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
         },
         "step": {
             "user": {

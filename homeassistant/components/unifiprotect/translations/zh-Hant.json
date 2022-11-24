@@ -47,7 +47,6 @@
             "title": "\u4f7f\u7528\u6436\u5148\u9ad4\u9a57\u7248\u8a2d\u5b9a\u932f\u8aa4"
         },
         "ea_warning": {
-            "description": "\u6b63\u5728\u4f7f\u7528\u7684  UniFi Protect {version} \u7248\u3001\u70ba Home Assistant \u4e0d\u652f\u63f4\u7684\u6436\u5148\u9ad4\u9a57\u7248\u672c\uff0c\u53ef\u80fd\u6703\u5c0e\u81f4 UniFi Protect \u6574\u5408\u51fa\u73fe\u554f\u984c\u3001\u6216\u7121\u6cd5\u6b63\u5e38\u5de5\u4f5c\u3002",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +63,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "\u5fc5\u9808\u70ba\u4ee5\u9017\u865f\uff08\uff1a\uff09\u5206\u9694\u958b\u7684 MAC \u5730\u5740\u5217\u8868"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "\u5373\u6642\u6307\u6a19\uff08\u8b66\u544a\uff1a\u5927\u91cf\u63d0\u5347 CPU \u4f7f\u7528\u7387\uff09",
                     "allow_ea": "\u5141\u8a31\u4f7f\u7528\u6436\u5148\u9ad4\u9a57\u7248 Protect\uff08\u8b66\u544a\uff1a\u53ef\u80fd\u6703\u5c0e\u81f4\u6574\u5408\u8b8a\u70ba\u4e0d\u652f\u63f4\uff09)",
                     "disable_rtsp": "\u95dc\u9589 RTSP \u4e32\u6d41",
-                    "ignored_devices": "\u4ee5\u9017\u865f\u5206\u9694\u7684\u5ffd\u7565 MAC \u4f4d\u5740\u5217\u8868",
                     "max_media": "\u5a92\u9ad4\u700f\u89bd\u5668\u6700\u9ad8\u8f09\u5165\u4e8b\u4ef6\u6578\uff08\u589e\u52a0\u8a18\u61b6\u9ad4\u4f7f\u7528\uff09",
                     "override_connection_host": "\u7f6e\u63db\u9023\u7dda\u4e3b\u6a5f\u7aef"
                 },

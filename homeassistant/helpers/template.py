@@ -19,7 +19,8 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, NoReturn, TypeVar, cast, overload
+from types import CodeType
+from typing import Any, Literal, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -28,6 +29,7 @@ import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -95,6 +97,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 }
 
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
@@ -169,10 +173,10 @@ class ResultWrapper:
     render_result: str | None
 
 
-def gen_result_wrapper(kls):
+def gen_result_wrapper(kls: type[dict | list | set]) -> type:
     """Generate a result wrapper."""
 
-    class Wrapper(kls, ResultWrapper):
+    class Wrapper(kls, ResultWrapper):  # type: ignore[valid-type,misc]
         """Wrapper of a kls that can store render_result."""
 
         def __init__(self, *args: Any, render_result: str | None = None) -> None:
@@ -185,7 +189,7 @@ def gen_result_wrapper(kls):
                 if kls is set:
                     return str(set(self))
 
-                return cast(str, kls.__str__(self))
+                return kls.__str__(self)
 
             return self.render_result
 
@@ -213,10 +217,8 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-RESULT_WRAPPERS: dict[type, type] = {
-    kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
-    for kls in (list, dict, set)
-}
+_types: tuple[type[dict | list | set], ...] = (dict, list, set)
+RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _types}
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
@@ -330,19 +332,19 @@ class Template:
         "_hash_cache",
     )
 
-    def __init__(self, template, hass=None):
+    def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
         """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
         self.template: str = template.strip()
-        self._compiled_code = None
+        self._compiled_code: CodeType | None = None
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
-        self._exc_info = None
-        self._limited = None
-        self._strict = None
+        self._exc_info: sys._OptExcInfo | None = None
+        self._limited: bool | None = None
+        self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
 
     @property
@@ -367,7 +369,7 @@ class Template:
                 return
 
             try:
-                self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
+                self._compiled_code = self._env.compile(self.template)
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -383,10 +385,10 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
-
+        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -408,7 +410,7 @@ class Template:
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass.config.legacy_templates:
+            if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
@@ -424,7 +426,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if self.hass.config.legacy_templates or not parse_result:
+        if not parse_result or self.hass and self.hass.config.legacy_templates:
             return render_result
 
         return self._parse_result(render_result)
@@ -494,6 +496,7 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
+            assert self.hass is not None, "hass variable not set on template"
             try:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
@@ -608,6 +611,7 @@ class Template:
             self._strict is None or self._strict == strict
         ), "can't change between strict and non strict template"
         assert not (strict and limited), "can't combine strict and limited template"
+        assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
         self._strict = strict
@@ -915,7 +919,7 @@ def _state_generator(
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -2078,12 +2082,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # evaluated fresh with every execution, rather than executed
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
-        def hassfunction(func):
+        def hassfunction(
+            func: Callable[Concatenate[HomeAssistant, _P], _R],
+        ) -> Callable[Concatenate[Any, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(hass, *args[1:], **kwargs)
+            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+                return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
 
@@ -2091,7 +2097,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = pass_context(self.globals["device_attr"])
+
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.tests["is_device_attr"] = pass_eval_context(self.globals["is_device_attr"])
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
@@ -2180,7 +2189,36 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         return super().is_safe_attribute(obj, attr, value)
 
-    def compile(self, source, name=None, filename=None, raw=False, defer_init=False):
+    @overload
+    def compile(  # type: ignore[misc]
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[False] = False,
+        defer_init: bool = False,
+    ) -> CodeType:
+        ...
+
+    @overload
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: Literal[True] = ...,
+        defer_init: bool = False,
+    ) -> str:
+        ...
+
+    def compile(
+        self,
+        source: str | jinja2.nodes.Template,
+        name: str | None = None,
+        filename: str | None = None,
+        raw: bool = False,
+        defer_init: bool = False,
+    ) -> CodeType | str:
         """Compile the template."""
         if (
             name is not None
@@ -2191,8 +2229,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             # If there are any non-default keywords args, we do
             # not cache.  In prodution we currently do not have
             # any instance of this.
-            return super().compile(source, name, filename, raw, defer_init)
+            return super().compile(  # type: ignore[no-any-return,call-overload]
+                source,
+                name,
+                filename,
+                raw,
+                defer_init,
+            )
 
+        cached: CodeType | str | None
         if (cached := self.template_cache.get(source)) is None:
             cached = self.template_cache[source] = super().compile(source)
 
