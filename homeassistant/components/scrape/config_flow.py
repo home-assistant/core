@@ -134,7 +134,7 @@ DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_RESOURCE,
-        next_step=lambda _: "sensor",
+        next_step="sensor",
         validate_user_input=validate_rest_setup,
     ),
     "sensor": SchemaFlowFormStep(
