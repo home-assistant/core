@@ -1,7 +1,6 @@
 """Helper functions for webOS Smart TV."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -24,19 +23,6 @@ def async_get_device_entry_by_device_id(
         raise ValueError(f"Device {device_id} is not a valid {DOMAIN} device.")
 
     return device
-
-
-@callback
-def async_is_device_config_entry_not_loaded(
-    hass: HomeAssistant, device_id: str
-) -> bool:
-    """Return whether device's config entries are not loaded."""
-    device = async_get_device_entry_by_device_id(hass, device_id)
-    return any(
-        (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.state != ConfigEntryState.LOADED
-        for entry_id in device.config_entries
-    )
 
 
 @callback

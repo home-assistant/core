@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_cleaning": "{entity_name} er a\u00f0 \u00fer\u00edfa"
+        }
+    },
     "state": {
         "_": {
             "cleaning": "A\u00f0 ryksuga",

@@ -1,6 +1,8 @@
 """Services for the Picnic integration."""
 from __future__ import annotations
 
+from typing import cast
+
 from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
@@ -64,7 +66,7 @@ async def handle_add_product(
     product_id = call.data.get("product_id")
     if not product_id:
         product_id = await hass.async_add_executor_job(
-            _product_search, api_client, call.data.get("product_name")
+            _product_search, api_client, cast(str, call.data["product_name"])
         )
 
     if not product_id:

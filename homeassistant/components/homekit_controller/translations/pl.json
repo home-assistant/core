@@ -14,7 +14,7 @@
             "authentication_error": "Niepoprawny kod parowania HomeKit. Sprawd\u017a go i spr\u00f3buj ponownie.",
             "insecure_setup_code": "\u017b\u0105dany kod instalacyjny jest niezabezpieczony ze wzgl\u0119du na jego trywialny charakter. To akcesorium nie spe\u0142nia podstawowych wymaga\u0144 bezpiecze\u0144stwa.",
             "max_peers_error": "Urz\u0105dzenie odm\u00f3wi\u0142o parowania, poniewa\u017c nie ma wolnej pami\u0119ci parowania",
-            "pairing_failed": "Wyst\u0105pi\u0142 nieobs\u0142ugiwany b\u0142\u0105d podczas pr\u00f3by sparowania z tym urz\u0105dzeniem. Mo\u017ce to by\u0107 tymczasowa awaria lub urz\u0105dzenie mo\u017ce nie by\u0107 obecnie obs\u0142ugiwane.",
+            "pairing_failed": "Wyst\u0105pi\u0142 nieobs\u0142ugiwany b\u0142\u0105d podczas pr\u00f3by sparowania z tym urz\u0105dzeniem. Mo\u017ce to by\u0107 tymczasowa awaria lub urz\u0105dzenie mo\u017ce nie by\u0107 obecnie obs\u0142ugiwane: {error}",
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },

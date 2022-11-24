@@ -192,6 +192,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "translation_key": "bad_psu",
                 "translation_placeholders": None,
             },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "cold_tea",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
+            },
         ]
     }
 
@@ -279,6 +293,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "severity": "critical",
                 "translation_key": "bad_psu",
                 "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "cold_tea",
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
             },
         ]
     }

@@ -47,7 +47,6 @@
             "title": "Be\u00e1ll\u00edt\u00e1si hiba a korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3 haszn\u00e1lat\u00e1val"
         },
         "ea_warning": {
-            "description": "\u00d6n az UniFi Protect {version} verzi\u00f3j\u00e1t haszn\u00e1lja. A korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3kat Home Assistant nem t\u00e1mogatja, \u00e9s az UniFi Protect integr\u00e1ci\u00f3ja le\u00e1llhat, vagy nem az elv\u00e1rt m\u00f3don m\u0171k\u00f6dhet.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +63,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Egy list\u00e1ra van sz\u00fcks\u00e9g, melyben a MAC-c\u00edmek vessz\u0151vel vannak elv\u00e1lasztva"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Val\u00f3s idej\u0171 m\u00e9r\u0151sz\u00e1mok (FIGYELEM: nagym\u00e9rt\u00e9kben n\u00f6veli a CPU terhel\u00e9st)",
                     "allow_ea": "A Protect korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3inak enged\u00e9lyez\u00e9se (FIGYELMEZTET\u00c9S: Az integr\u00e1ci\u00f3t nem t\u00e1mogatottk\u00e9nt jel\u00f6li meg)",
                     "disable_rtsp": "Az RTSP adatfolyam letilt\u00e1sa",
-                    "ignored_devices": "A figyelmen k\u00edv\u00fcl hagyand\u00f3 eszk\u00f6z\u00f6k MAC-c\u00edm\u00e9nek vessz\u0151vel elv\u00e1lasztott list\u00e1ja",
                     "max_media": "A m\u00e9diab\u00f6ng\u00e9sz\u0151be bet\u00f6ltend\u0151 esem\u00e9nyek maxim\u00e1lis sz\u00e1ma (n\u00f6veli a RAM-haszn\u00e1latot)",
                     "override_connection_host": "Kapcsolat c\u00edm\u00e9nek fel\u00fclb\u00edr\u00e1l\u00e1sa"
                 },

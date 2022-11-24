@@ -11,12 +11,6 @@
             "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Passord"
-                },
-                "description": "Autentiseringstokener ble ugyldige, logg inn for \u00e5 gjenskape dem."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"

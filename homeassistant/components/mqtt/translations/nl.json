@@ -21,7 +21,6 @@
                     "advanced_options": "Geavanceerde opties",
                     "broker": "Broker",
                     "client_id": "Client ID (leeg laten voor een willekeurig ID)",
-                    "discovery": "Detectie inschakelen",
                     "keepalive": "Tijd tussen het verzenden van keep-a-live berichten",
                     "password": "Wachtwoord",
                     "port": "Poort",

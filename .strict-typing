@@ -174,6 +174,7 @@ homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
+homeassistant.components.logger.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
@@ -181,10 +182,12 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
+homeassistant.components.min_max.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
+homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
@@ -237,6 +240,7 @@ homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.senseme.*
 homeassistant.components.sensibo.*
+homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*

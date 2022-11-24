@@ -424,7 +424,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = MUSIC_PLAYER_BASE_SUPPORT
         zone = self.coordinator.data.zones[self._zone_id]

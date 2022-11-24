@@ -57,7 +57,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         # Not all AtlanticElectricalTowelDryer models support presets, thus we need to check if the command is available
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
-            self._attr_supported_features += ClimateEntityFeature.PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
     @property
     def hvac_mode(self) -> str:

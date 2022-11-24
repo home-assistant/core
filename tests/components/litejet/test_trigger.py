@@ -12,7 +12,7 @@ import homeassistant.util.dt as dt_util
 
 from . import async_init_integration
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import async_fire_time_changed_exact, async_mock_service
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ async def simulate_time(hass, mock_litejet, delta):
         return_value=mock_litejet.start_time + delta,
     ):
         _LOGGER.info("now=%s", dt_util.utcnow())
-        async_fire_time_changed(hass, mock_litejet.start_time + delta)
+        async_fire_time_changed_exact(hass, mock_litejet.start_time + delta)
         await hass.async_block_till_done()
         _LOGGER.info("done with now=%s", dt_util.utcnow())
 

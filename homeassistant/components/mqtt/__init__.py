@@ -76,7 +76,10 @@ from .const import (  # noqa: F401
     CONF_TLS_INSECURE,
     CONF_TLS_VERSION,
     CONF_TOPIC,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
@@ -134,6 +137,9 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
+    CONF_WS_PATH,
+    CONF_WS_HEADERS,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
@@ -192,7 +198,7 @@ async def _async_setup_discovery(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Start the MQTT protocol service."""
+    """Set up the MQTT protocol service."""
     mqtt_data = get_mqtt_data(hass, True)
 
     conf: ConfigType | None = config.get(DOMAIN)
@@ -464,9 +470,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
-            # Reload the legacy yaml platform
-            await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
-
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
             tasks = [

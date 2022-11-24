@@ -389,7 +389,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return self.session.media_episode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
