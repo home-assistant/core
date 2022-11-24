@@ -79,6 +79,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert result2["result"].unique_id == "uuid"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -116,6 +117,7 @@ async def test_form_mac_info_response_empty(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert result2["result"].unique_id == "uuid"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -158,6 +160,7 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert result2["result"].unique_id == "uuid"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -203,6 +206,7 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert result2["result"].unique_id == "uuid"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -241,6 +245,7 @@ async def test_form_uuid_missing_from_mac_info(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
+    assert result2["result"].unique_id == "uuid"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -281,9 +286,7 @@ async def test_form_uuid_not_provided_by_api(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "name"
-    assert (
-        "unique_id" not in result2["context"] or result2["context"]["unique_id"] is None
-    )
+    assert result2["result"].unique_id is None
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_PORT,
@@ -383,7 +386,7 @@ async def test_form_socket_timeout(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_OSError(hass):
+async def test_form_os_error(hass):
     """Test we handle OSError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
