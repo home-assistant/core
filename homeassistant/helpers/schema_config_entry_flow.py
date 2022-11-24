@@ -194,7 +194,7 @@ class SchemaCommonFlowHandler:
             step_id=next_step_id,
             data_schema=data_schema,
             errors=errors,
-            last_step=True if form_step.next_step is None else None,
+            last_step=form_step.next_step is None,
         )
 
     async def _async_menu_step(
