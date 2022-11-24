@@ -11,19 +11,12 @@ from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
+from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 
 
 class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -104,28 +97,6 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == config[CONF_API_KEY]:
-                _part = config[CONF_API_KEY][0:4]
-                _msg = f"Radarr yaml config with partial key {_part} has been imported. Please remove it"
-                LOGGER.warning(_msg)
-                return self.async_abort(reason="already_configured")
-        proto = "https" if config[CONF_SSL] else "http"
-        host_port = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
-        path = ""
-        if config["urlbase"].rstrip("/") not in ("", "/", "/api"):
-            path = config["urlbase"].rstrip("/")
-        return self.async_create_entry(
-            title=DEFAULT_NAME,
-            data={
-                CONF_URL: f"{proto}://{host_port}{path}",
-                CONF_API_KEY: config[CONF_API_KEY],
-                CONF_VERIFY_SSL: False,
-            },
         )
 
 
