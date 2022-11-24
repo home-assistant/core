@@ -26,11 +26,13 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    UnitOfTemperature,
 )
 from homeassistant.core import async_get_hass
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -99,6 +101,13 @@ SENSOR_SETUP = {
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
             options=[cls.value for cls in SensorStateClass],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+        SelectSelectorConfig(
+            options=[cls.value for cls in UnitOfTemperature],
+            custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
