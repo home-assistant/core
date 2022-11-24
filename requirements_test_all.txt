@@ -850,7 +850,7 @@ nexia==2.0.6
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.1.1
+nextdns==1.2.0
 
 # homeassistant.components.nibe_heatpump
 nibe==1.3.0
