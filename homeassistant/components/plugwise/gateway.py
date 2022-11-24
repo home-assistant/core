@@ -55,9 +55,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Error while communicating to the Plugwise Smile"
         ) from err
     except UnsupportedDeviceError as err:
-        raise HomeAssistantError(
-            "Unsupported device found: please create an Issue in the HA Core github"
-        ) from err
+        raise HomeAssistantError("Device with unsupported firmware") from err
 
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Smile")
