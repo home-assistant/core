@@ -101,7 +101,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
                 vol.Optional(
                     CONF_LAZY_DISCOVER,
-                    default=self.config_entry.options.get(CONF_LAZY_DISCOVER, True),
+                    default=self.config_entry.options.get(CONF_LAZY_DISCOVER, False),
                 ): bool,
             }
         )
