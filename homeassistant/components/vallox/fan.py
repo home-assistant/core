@@ -150,25 +150,16 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        _LOGGER.debug("Turn on")
-
         update_needed = False
+
+        if not self.is_on:
+            update_needed |= await self._async_set_power(True)
 
         if preset_mode:
             update_needed |= await self._async_set_preset_mode_internal(preset_mode)
 
         if percentage is not None:
             update_needed |= await self._async_set_percentage_internal(percentage)
-
-        if not self.is_on:
-            try:
-                await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
-
-            except ValloxApiException as err:
-                _LOGGER.error("Error turning on: %s", err)
-
-            else:
-                update_needed = True
 
         if update_needed:
             # This state change affects other entities like sensors. Force an immediate update that
@@ -180,15 +171,10 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         if not self.is_on:
             return
 
-        try:
-            await self._client.set_values({METRIC_KEY_MODE: MODE_OFF})
+        update_needed = await self._async_set_power(False)
 
-        except ValloxApiException as err:
-            _LOGGER.error("Error turning off: %s", err)
-            return
-
-        # Same as for turn_on method.
-        await self.coordinator.async_request_refresh()
+        if update_needed:
+            await self.coordinator.async_request_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -200,6 +186,17 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
         if update_needed:
             await self.coordinator.async_request_refresh()
+
+    async def _async_set_power(self, mode: bool) -> bool:
+        try:
+            await self._client.set_values(
+                {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
+            )
+        except ValloxApiException as err:
+            _LOGGER.error("Error setting mode: %s", err)
+            return False
+
+        return True
 
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
         """
@@ -218,7 +215,9 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             return False
 
         try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode])
+            profile = STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode]
+            await self._client.set_profile(profile)
+            self.coordinator.data.profile = profile
 
         except ValloxApiException as err:
             _LOGGER.error("Error setting preset: %s", err)

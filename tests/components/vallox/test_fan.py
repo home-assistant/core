@@ -1,4 +1,6 @@
 """Tests for Vallox fan platform."""
+from unittest.mock import call
+
 import pytest
 from vallox_websocket_api import PROFILE
 
@@ -96,6 +98,50 @@ async def test_turn_on_off(
 
 
 @pytest.mark.parametrize(
+    "initial_metrics, expected_call_args_list",
+    [
+        (
+            {"A_CYC_MODE": 5},
+            [
+                call({"A_CYC_MODE": 0}),
+                call({"A_CYC_AWAY_SPEED_SETTING": 15}),
+            ],
+        ),
+        (
+            {"A_CYC_MODE": 0},
+            [
+                call({"A_CYC_AWAY_SPEED_SETTING": 15}),
+            ],
+        ),
+    ],
+)
+async def test_turn_on_with_parameters(
+    initial_metrics: dict[str, int],
+    expected_call_args_list: list[tuple],
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
+    """Test turn on/off."""
+    with patch_metrics(
+        metrics=initial_metrics
+    ), patch_metrics_set() as metrics_set, patch_profile_set() as profile_set:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            service_data={
+                ATTR_ENTITY_ID: "fan.vallox",
+                ATTR_PERCENTAGE: "15",
+                ATTR_PRESET_MODE: "Away",
+            },
+            blocking=True,
+        )
+        assert metrics_set.call_args_list == expected_call_args_list
+        profile_set.assert_called_once_with(PROFILE.AWAY)
+
+
+@pytest.mark.parametrize(
     "preset, initial_profile, expected_profile",
     [
         ("Home", PROFILE.AWAY, PROFILE.HOME),
@@ -127,22 +173,25 @@ async def test_set_preset_mode(
 
 
 @pytest.mark.parametrize(
-    "profile, percentage, expected_called_with",
+    "profile, percentage, expected_call_args_list",
     [
-        (PROFILE.HOME, 40, {"A_CYC_HOME_SPEED_SETTING": 40}),
-        (PROFILE.AWAY, 30, {"A_CYC_AWAY_SPEED_SETTING": 30}),
-        (PROFILE.BOOST, 60, {"A_CYC_BOOST_SPEED_SETTING": 60}),
+        (PROFILE.HOME, 40, [call({"A_CYC_HOME_SPEED_SETTING": 40})]),
+        (PROFILE.AWAY, 30, [call({"A_CYC_AWAY_SPEED_SETTING": 30})]),
+        (PROFILE.BOOST, 60, [call({"A_CYC_BOOST_SPEED_SETTING": 60})]),
+        (PROFILE.HOME, 0, [call({"A_CYC_MODE": 5})]),
     ],
 )
 async def test_set_fan_speed(
     profile: PROFILE,
     percentage: int,
-    expected_called_with: dict[str, int],
+    expected_call_args_list: list[tuple],
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
 ) -> None:
     """Test set fan speed percentage."""
-    with patch_profile(profile), patch_metrics_set() as metrics_set, patch_metrics({}):
+    with patch_profile(profile), patch_metrics_set() as metrics_set, patch_metrics(
+        {"A_CYC_MODE": 0}
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         await hass.services.async_call(
@@ -151,4 +200,4 @@ async def test_set_fan_speed(
             service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PERCENTAGE: percentage},
             blocking=True,
         )
-        metrics_set.assert_called_once_with(expected_called_with)
+        assert metrics_set.call_args_list == expected_call_args_list
