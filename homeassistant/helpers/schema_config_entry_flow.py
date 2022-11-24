@@ -311,7 +311,9 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     ) -> None:
         """Initialize options flow."""
         super().__init__(config_entry)
-        self._common_handler = SchemaCommonFlowHandler(self, options_flow, self.options)
+        self._common_handler = SchemaCommonFlowHandler(
+            self, options_flow, self._options
+        )
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
