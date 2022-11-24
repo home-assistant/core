@@ -15,4 +15,7 @@ LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
 SWITCH_PLATFORM: Final = "switch"
 
+BINARY_SENSOR_PLATFORM: Final = "binary_sensor"
+
 PSS_DEVICE_TYPE: Final = "PSS"
+WDS_DEVICE_TYPE: Final = "WDS"

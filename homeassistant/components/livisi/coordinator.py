@@ -92,6 +92,16 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         on_state = response["onState"]
         return on_state["value"]
 
+    async def async_get_wds_state(self, capability: str) -> bool | None:
+        """Set the WDS state."""
+        response: dict[str, Any] = await self.aiolivisi.async_get_pss_state(
+            capability[1:]
+        )
+        if response is None:
+            return None
+        on_state = response["isOpen"]
+        return on_state["value"]
+
     async def async_set_all_rooms(self) -> None:
         """Set the room list."""
         response: list[dict[str, Any]] = await self.aiolivisi.async_get_all_rooms()
