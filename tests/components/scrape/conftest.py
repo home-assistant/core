@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 from unittest.mock import patch
+import uuid
 
 import pytest
 
@@ -87,6 +88,6 @@ def uuid_fixture() -> str:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.scrape.config_flow.uuid.uuid1",
-        return_value="3699ef88-69e6-11ed-a1eb-0242ac120002",
+        return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120002"),
     ):
         yield
