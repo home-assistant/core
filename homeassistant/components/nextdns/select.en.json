@@ -1,0 +1,21 @@
+{
+  "state": {
+    "nextdns__logs_location": {
+      "switzerland": "Switzerland",
+      "european_union": "European Union",
+      "great_britain": "Great Britain",
+      "united_states": "United States"
+    },
+    "nextdns__logs_retention": {
+      "one_hour": "One hour",
+      "six_hours": "Six hours",
+      "one_day": "One day",
+      "one_week": "One week",
+      "one_month": "One month",
+      "three_moths": "Three months",
+      "six_months": "Six moths",
+      "one_year": "One year",
+      "two_years": "Two years"
+    }
+  }
+}

@@ -144,7 +144,13 @@ class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStat
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 COORDINATORS = [
     (ATTR_CONNECTION, NextDnsConnectionUpdateCoordinator, UPDATE_INTERVAL_CONNECTION),
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
