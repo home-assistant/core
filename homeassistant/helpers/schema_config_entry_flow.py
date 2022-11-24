@@ -32,19 +32,21 @@ class SchemaFlowFormStep:
         vol.Schema | None,
     ] | None
 
-    # Optional function to validate user input.
-    # The validate_user_input function is called if the schema validates successfully.
-    # The validate_user_input function is passed the user input from the current step.
-    # The validate_user_input should raise SchemaFlowError is user input is invalid.
     validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
+    """Optional function to validate user input.
+
+    - The `validate_user_input` function is called if the schema validates successfully.
+    - The `validate_user_input` function is passed the user input from the current step.
+    - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
+    """
 
     next_step: Callable[[dict[str, Any]], str] | str | None = None
     """Optional property to identify next step.
 
-    If `next_step` is a function, it is called if the schema validates successfully or
+    - If `next_step` is a function, it is called if the schema validates successfully or
     if no schema is defined. The `next_step` function is passed the union of config entry
     options and user input from previous steps.
-    If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
+    - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
     # Optional function to allow amending a form schema.
