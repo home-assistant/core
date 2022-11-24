@@ -96,9 +96,9 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
