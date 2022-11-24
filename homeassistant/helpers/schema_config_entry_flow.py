@@ -75,12 +75,12 @@ class SchemaCommonFlowHandler:
         self,
         handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
         flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
-        config_entry: config_entries.ConfigEntry | None,
+        options: dict[str, Any] | None,
     ) -> None:
         """Initialize a common handler."""
         self._flow = flow
         self._handler = handler
-        self._options = dict(config_entry.options) if config_entry is not None else {}
+        self._options = options if options is not None else {}
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -300,7 +300,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow):
         )
 
 
-class SchemaOptionsFlowHandler(config_entries.OptionsFlow):
+class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle a schema based options flow."""
 
     def __init__(
@@ -310,8 +310,10 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlow):
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None],
     ) -> None:
         """Initialize options flow."""
-        self._common_handler = SchemaCommonFlowHandler(self, options_flow, config_entry)
-        self.config_entry = config_entry
+        super().__init__(config_entry)
+        self._common_handler = SchemaCommonFlowHandler(
+            self, options_flow, self._options
+        )
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
