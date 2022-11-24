@@ -22,20 +22,27 @@ class SchemaFlowError(Exception):
 
 
 @dataclass
-class SchemaFlowFormStep:
+class SchemaFlowStep:
     """Define a config or options flow step."""
 
-    # Optional voluptuous schema, or function which returns a schema or None, for
-    # requesting and validating user input.
-    # If a function is specified, the function will be passed the handler, which is
-    # either an instance of SchemaConfigFlowHandler or SchemaOptionsFlowHandler, and the
-    # union of config entry options and user input from previous steps.
-    # If schema validation fails, the step will be retried. If the schema is None, no
-    # user input is requested.
+
+@dataclass
+class SchemaFlowFormStep(SchemaFlowStep):
+    """Define a config or options flow form step."""
+
     schema: vol.Schema | Callable[
         [SchemaConfigFlowHandler | SchemaOptionsFlowHandler, dict[str, Any]],
         vol.Schema | None,
     ] | None
+    """Optional voluptuous schema, or function which returns a schema or None, for
+    requesting and validating user input.
+
+    - If a function is specified, the function will be passed the handler, which is
+    either an instance of SchemaConfigFlowHandler or SchemaOptionsFlowHandler, and the
+    union of config entry options and user input from previous steps.
+    - If schema validation fails, the step will be retried. If the schema is None, no
+    user input is requested.
+    """
 
     validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
     """Optional function to validate user input.
@@ -56,7 +63,7 @@ class SchemaFlowFormStep:
 
 
 @dataclass
-class SchemaFlowMenuStep:
+class SchemaFlowMenuStep(SchemaFlowStep):
     """Define a config or options flow menu step."""
 
     # Menu options
@@ -69,7 +76,7 @@ class SchemaCommonFlowHandler:
     def __init__(
         self,
         handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-        flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
+        flow: Mapping[str, SchemaFlowStep],
         options: dict[str, Any] | None,
     ) -> None:
         """Initialize a common handler."""
@@ -210,8 +217,8 @@ class SchemaCommonFlowHandler:
 class SchemaConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a schema based config flow."""
 
-    config_flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep]
-    options_flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] | None = None
+    config_flow: Mapping[str, SchemaFlowStep]
+    options_flow: Mapping[str, SchemaFlowStep] | None = None
 
     VERSION = 1
 
@@ -311,7 +318,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     def __init__(
         self,
         config_entry: config_entries.ConfigEntry,
-        options_flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
+        options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
     ) -> None:

@@ -115,7 +115,7 @@ def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]
     return _set_group_type
 
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA, set_group_type("binary_sensor")
@@ -139,7 +139,7 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
 }
 
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(None, next_step=choose_options_step),
     "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
