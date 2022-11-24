@@ -249,7 +249,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self._config[CONF_CODE_ARM_REQUIRED]
+        return bool(self._config[CONF_CODE_ARM_REQUIRED])
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.

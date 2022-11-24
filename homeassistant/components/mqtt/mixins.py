@@ -620,7 +620,8 @@ async def cleanup_device_registry(
 
 def get_discovery_hash(discovery_data: DiscoveryInfoType) -> tuple[str, str]:
     """Get the discovery hash from the discovery data."""
-    return discovery_data[ATTR_DISCOVERY_HASH]
+    discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+    return discovery_hash
 
 
 def send_discovery_done(hass: HomeAssistant, discovery_data: DiscoveryInfoType) -> None:
@@ -1113,7 +1114,7 @@ class MqttEntity(
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._config[CONF_ENABLED_BY_DEFAULT]
+        return bool(self._config[CONF_ENABLED_BY_DEFAULT])
 
     @property
     def entity_category(self) -> EntityCategory | None:

@@ -80,7 +80,6 @@ if TYPE_CHECKING:
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_COOLDOWN = 2
@@ -148,16 +147,19 @@ AsyncDeprecatedMessageCallbackType = Callable[
     [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
+DeprecatedMessageCallbackTypes = Union[
+    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
+]
 
 
 def wrap_msg_callback(
-    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+    msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function
     check_func = msg_callback
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]
 
     wrapper_func: AsyncMessageCallbackType | MessageCallbackType
     if asyncio.iscoroutinefunction(check_func):
@@ -170,14 +172,15 @@ def wrap_msg_callback(
             )
 
         wrapper_func = async_wrapper
-    else:
+        return wrapper_func
 
-        @wraps(msg_callback)
-        def wrapper(msg: ReceiveMessage) -> None:
-            """Call with deprecated signature."""
-            msg_callback(msg.topic, msg.payload, msg.qos)
+    @wraps(msg_callback)
+    def wrapper(msg: ReceiveMessage) -> None:
+        """Call with deprecated signature."""
+        msg_callback(msg.topic, msg.payload, msg.qos)
 
-        wrapper_func = wrapper
+    wrapper_func = wrapper
+
     return wrapper_func
 
 
@@ -187,8 +190,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: AsyncMessageCallbackType
     | MessageCallbackType
-    | DeprecatedMessageCallbackType
-    | AsyncDeprecatedMessageCallbackType,
+    | DeprecatedMessageCallbackTypes,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -219,7 +221,7 @@ async def async_subscribe(
             msg_callback.__name__,
         )
         wrapped_msg_callback = wrap_msg_callback(
-            cast(DeprecatedMessageCallbackType, msg_callback)
+            cast(DeprecatedMessageCallbackTypes, msg_callback)
         )
 
     async_remove = await mqtt_data.client.async_subscribe(
