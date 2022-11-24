@@ -129,7 +129,6 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:ev-station",
         name="Depot Price",
         precision=2,
-        device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_ENERGY_PRICE_KEY: WallboxSensorEntityDescription(
@@ -137,7 +136,6 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:ev-station",
         name="Energy Price",
         precision=2,
-        device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
@@ -204,6 +202,9 @@ class WallboxSensor(WallboxEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor. When monetary, get the value from the api."""
-        if self.entity_description.device_class == SensorDeviceClass.MONETARY:
+        if self.entity_description.key in (
+            CHARGER_ENERGY_PRICE_KEY,
+            CHARGER_DEPOT_PRICE_KEY,
+        ):
             return cast(str, self.coordinator.data[CHARGER_CURRENCY_KEY])
         return cast(str, self.entity_description.native_unit_of_measurement)

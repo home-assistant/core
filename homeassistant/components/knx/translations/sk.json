@@ -7,17 +7,19 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
                 }
             },
-            "secure_manual": {
+            "routing": {
                 "data": {
-                    "device_authentication": "Heslo na overenie zariadenia",
-                    "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
                 }
             },
             "secure_tunnel_manual": {
                 "data": {
+                    "device_authentication": "Heslo na overenie zariadenia",
+                    "user_id": "ID pou\u017e\u00edvate\u013ea",
                     "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
                 }
             }
@@ -25,25 +27,28 @@
     },
     "options": {
         "step": {
-            "init": {
+            "connection_type": {
                 "data": {
-                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                    "connection_type": "Typ pripojenia KNX"
                 }
             },
             "manual_tunnel": {
                 "data": {
-                    "host": "Hostite\u013e"
+                    "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
+                    "port": "Port"
+                }
+            },
+            "routing": {
+                "data": {
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
                 }
             },
             "secure_tunnel_manual": {
                 "data": {
+                    "device_authentication": "Heslo na overenie zariadenia",
+                    "user_id": "ID pou\u017e\u00edvate\u013ea",
                     "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
-                }
-            },
-            "tunnel": {
-                "data": {
-                    "host": "Hostite\u013e",
-                    "port": "Port"
                 }
             }
         }

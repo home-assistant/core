@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "flow_title": "{name}",
         "step": {
             "user": {
@@ -7,6 +10,9 @@
                     "host": "Hostite\u013e",
                     "port": "Port"
                 }
+            },
+            "zeroconf_confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
             }
         }
     }

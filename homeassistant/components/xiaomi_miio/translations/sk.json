@@ -7,6 +7,11 @@
         },
         "flow_title": "{name}",
         "step": {
+            "connect": {
+                "data": {
+                    "model": "Model zariadenia"
+                }
+            },
             "manual": {
                 "data": {
                     "host": "IP adresa",

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
@@ -14,6 +17,7 @@
     },
     "options": {
         "error": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {

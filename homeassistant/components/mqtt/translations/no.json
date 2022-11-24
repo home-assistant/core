@@ -24,7 +24,6 @@
                     "client_cert": "Last opp klientsertifikatfil",
                     "client_id": "Klient-ID (la st\u00e5 tomt til tilfeldig generert)",
                     "client_key": "Last opp privat n\u00f8kkelfil",
-                    "discovery": "Aktiver oppdagelse",
                     "keepalive": "Tiden mellom sending hold levende meldinger",
                     "password": "Passord",
                     "port": "Port",

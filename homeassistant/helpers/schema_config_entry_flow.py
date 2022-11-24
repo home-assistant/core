@@ -32,18 +32,22 @@ class SchemaFlowFormStep:
         vol.Schema | None,
     ] | None
 
-    # Optional function to validate user input.
-    # The validate_user_input function is called if the schema validates successfully.
-    # The validate_user_input function is passed the user input from the current step.
-    # The validate_user_input should raise SchemaFlowError is user input is invalid.
     validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
+    """Optional function to validate user input.
 
-    # Optional function to identify next step.
-    # The next_step function is called if the schema validates successfully or if no
-    # schema is defined. The next_step function is passed the union of config entry
-    # options and user input from previous steps.
-    # If next_step returns None, the flow is ended with FlowResultType.CREATE_ENTRY.
-    next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
+    - The `validate_user_input` function is called if the schema validates successfully.
+    - The `validate_user_input` function is passed the user input from the current step.
+    - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
+    """
+
+    next_step: Callable[[dict[str, Any]], str] | str | None = None
+    """Optional property to identify next step.
+
+    - If `next_step` is a function, it is called if the schema validates successfully or
+    if no schema is defined. The `next_step` function is passed the union of config entry
+    options and user input from previous steps.
+    - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
+    """
 
     # Optional function to allow amending a form schema.
     # The update_form_schema function is called before async_show_form is called. The
@@ -75,12 +79,12 @@ class SchemaCommonFlowHandler:
         self,
         handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
         flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
-        config_entry: config_entries.ConfigEntry | None,
+        options: dict[str, Any] | None,
     ) -> None:
         """Initialize a common handler."""
         self._flow = flow
         self._handler = handler
-        self._options = dict(config_entry.options) if config_entry is not None else {}
+        self._options = options if options is not None else {}
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -136,12 +140,14 @@ class SchemaCommonFlowHandler:
         next_step_id: str = step_id
         if user_input is not None or form_step.schema is None:
             # Get next step
-            next_step_id_or_end_flow = form_step.next_step(self._options)
-            if next_step_id_or_end_flow is None:
+            if form_step.next_step is None:
                 # Flow done, create entry or update config entry options
                 return self._handler.async_create_entry(data=self._options)
 
-            next_step_id = next_step_id_or_end_flow
+            if isinstance(form_step.next_step, str):
+                next_step_id = form_step.next_step
+            else:
+                next_step_id = form_step.next_step(self._options)
 
         return self._show_next_step(next_step_id)
 
@@ -152,13 +158,18 @@ class SchemaCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        form_step: SchemaFlowFormStep = cast(
-            SchemaFlowFormStep, self._flow[next_step_id]
-        )
-
         options = dict(self._options)
         if user_input:
             options.update(user_input)
+
+        if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
+            menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
+            return self._handler.async_show_menu(
+                step_id=next_step_id,
+                menu_options=menu_step.options,
+            )
+
+        form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
         if (
             data_schema := self._get_schema(form_step, self._options)
@@ -188,17 +199,20 @@ class SchemaCommonFlowHandler:
 
         # Show form for next step
         return self._handler.async_show_form(
-            step_id=next_step_id, data_schema=data_schema, errors=errors
+            step_id=next_step_id,
+            data_schema=data_schema,
+            errors=errors,
+            last_step=form_step.next_step is None,
         )
 
     async def _async_menu_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a menu step."""
-        form_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
+        menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
         return self._handler.async_show_menu(
             step_id=step_id,
-            menu_options=form_step.options,
+            menu_options=menu_step.options,
         )
 
 
@@ -300,18 +314,27 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow):
         )
 
 
-class SchemaOptionsFlowHandler(config_entries.OptionsFlow):
+class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle a schema based options flow."""
 
     def __init__(
         self,
         config_entry: config_entries.ConfigEntry,
-        options_flow: dict[str, vol.Schema],
-        async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None],
+        options_flow: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep],
+        async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
+        | None = None,
     ) -> None:
-        """Initialize options flow."""
-        self._common_handler = SchemaCommonFlowHandler(self, options_flow, config_entry)
-        self.config_entry = config_entry
+        """Initialize options flow.
+
+        If needed, `async_options_flow_finished` can be set to take necessary actions
+        after the options flow is finished. The second parameter contains config entry
+        options, which is the union of stored options and user input from the options
+        flow steps.
+        """
+        super().__init__(config_entry)
+        self._common_handler = SchemaCommonFlowHandler(
+            self, options_flow, self._options
+        )
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
@@ -342,7 +365,8 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlow):
         **kwargs: Any,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        self._async_options_flow_finished(self.hass, data)
+        if self._async_options_flow_finished:
+            self._async_options_flow_finished(self.hass, data)
         return super().async_create_entry(title="", data=data, **kwargs)
 
 

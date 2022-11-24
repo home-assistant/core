@@ -51,6 +51,7 @@ from .api import (
     async_rediscover_address,
     async_register_callback,
     async_register_scanner,
+    async_scanner_by_source,
     async_scanner_count,
     async_track_unavailable,
 )
@@ -86,6 +87,7 @@ __all__ = [
     "async_register_callback",
     "async_register_scanner",
     "async_track_unavailable",
+    "async_scanner_by_source",
     "async_scanner_count",
     "BaseHaScanner",
     "BaseHaRemoteScanner",

@@ -7,15 +7,17 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Heslo"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
                 }
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "D\u00f4veryhodn\u00e9 zariadenie"
+                },
+                "description": "Vyberte svoje d\u00f4veryhodn\u00e9 zariadenie",
+                "title": "d\u00f4veryhodn\u00e9 zariadenie iCloud"
             },
             "user": {
                 "data": {

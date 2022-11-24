@@ -149,7 +149,7 @@ async def test_setup_zha_multipan(
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Yellow"
+    assert config_entry.title == "Yellow Multi-PAN"
 
 
 async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:

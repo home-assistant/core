@@ -5,6 +5,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP adresa",
@@ -22,6 +25,13 @@
     },
     "options": {
         "step": {
+            "add_override": {
+                "data": {
+                    "address": "Adresa zariadenia (t. j. 1a2b3c)",
+                    "cat": "Kateg\u00f3ria zariadenia (t. j. 0x10)",
+                    "subcat": "Podkateg\u00f3ria zariadenia (napr. 0x0a)"
+                }
+            },
             "change_hub_config": {
                 "data": {
                     "host": "IP adresa",

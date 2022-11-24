@@ -5,7 +5,8 @@
             "addon_install_failed": "No se pudo instalar el complemento Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "No se pudo establecer la configuraci\u00f3n de Silicon Labs Multiprotocol.",
             "addon_start_failed": "No se pudo iniciar el complemento Silicon Labs Multiprotocol.",
-            "not_hassio": "Las opciones de hardware solo se pueden configurar en instalaciones de HassOS."
+            "not_hassio": "Las opciones de hardware solo se pueden configurar en instalaciones de HassOS.",
+            "zha_migration_failed": "La migraci\u00f3n de ZHA no tuvo \u00e9xito."
         },
         "error": {
             "unknown": "Error inesperado"
@@ -22,7 +23,7 @@
                 "data": {
                     "enable_multi_pan": "Habilitar soporte multiprotocolo"
                 },
-                "description": "Cuando el soporte multiprotocolo est\u00e1 habilitado, la radio IEEE 802.15.4 de Home Assistant Yellow se puede usar tanto para Zigbee como para Thread (usado por Matter) al mismo tiempo. Nota: Esta es una caracter\u00edstica experimental.",
+                "description": "Cuando el soporte multiprotocolo est\u00e1 habilitado, la radio IEEE 802.15.4 de Home Assistant Yellow se puede usar tanto para Zigbee como para Thread (usado por Matter) al mismo tiempo. Si la integraci\u00f3n ZHA Zigbee ya usa la radio, ZHA se volver\u00e1 a configurar para usar el firmware multiprotocolo. \n\nNota: Esta es una caracter\u00edstica experimental.",
                 "title": "Habilitar el soporte multiprotocolo en la radio IEEE 802.15.4"
             },
             "install_addon": {

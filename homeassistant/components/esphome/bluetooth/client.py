@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import contextlib
 import logging
 from typing import Any, TypeVar, cast
 import uuid
@@ -21,6 +22,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
+from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.core import CALLBACK_TYPE
 
 from ..domain_data import DomainData
@@ -65,6 +67,8 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if disconnected_event.is_set():
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
             raise BleakError(
                 f"{self._source}: {self._ble_device.name} - {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
@@ -119,11 +123,12 @@ class ESPHomeClient(BaseBleakClient):
         """Initialize the ESPHomeClient."""
         assert isinstance(address_or_ble_device, BLEDevice)
         super().__init__(address_or_ble_device, *args, **kwargs)
+        self._hass = kwargs["hass"]
         self._ble_device = address_or_ble_device
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.domain_data = DomainData.get(kwargs["hass"])
+        self.domain_data = DomainData.get(self._hass)
         config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client
@@ -257,12 +262,15 @@ class ESPHomeClient(BaseBleakClient):
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
-        self._cancel_connection_state = await self._client.bluetooth_device_connect(
-            self._address_as_int,
-            _on_bluetooth_connection_state,
-            timeout=timeout,
-        )
-        await connected_future
+        if not (scanner := async_scanner_by_source(self._hass, self._source)):
+            raise BleakError("Scanner disappeared for {self._source}")
+        with scanner.connecting():
+            self._cancel_connection_state = await self._client.bluetooth_device_connect(
+                self._address_as_int,
+                _on_bluetooth_connection_state,
+                timeout=timeout,
+            )
+            await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         self._disconnected_event = asyncio.Event()
         return True

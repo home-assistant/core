@@ -334,7 +334,7 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._attr_supported_features = 0
+        self._attr_supported_features = FanEntityFeature(0)
         self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE

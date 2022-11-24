@@ -4,6 +4,11 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Zariadenie"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Heslo"

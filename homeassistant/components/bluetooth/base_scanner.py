@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 import datetime
 from datetime import timedelta
 from typing import Any, Final
@@ -10,6 +11,7 @@ from typing import Any, Final
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak_retry_connector import NO_RSSI_VALUE
+from bluetooth_adapters import adapter_human_name
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -28,10 +30,26 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
-    def __init__(self, hass: HomeAssistant, source: str) -> None:
+    __slots__ = ("hass", "source", "_connecting", "name", "scanning")
+
+    def __init__(self, hass: HomeAssistant, source: str, adapter: str) -> None:
         """Initialize the scanner."""
         self.hass = hass
         self.source = source
+        self._connecting = 0
+        self.name = adapter_human_name(adapter, source) if adapter != source else source
+        self.scanning = True
+
+    @contextmanager
+    def connecting(self) -> Generator[None, None, None]:
+        """Context manager to track connecting state."""
+        self._connecting += 1
+        self.scanning = not self._connecting
+        try:
+            yield
+        finally:
+            self._connecting -= 1
+            self.scanning = not self._connecting
 
     @property
     @abstractmethod
@@ -62,16 +80,27 @@ class BaseHaScanner:
 class BaseHaRemoteScanner(BaseHaScanner):
     """Base class for a Home Assistant remote BLE scanner."""
 
+    __slots__ = (
+        "_new_info_callback",
+        "_discovered_device_advertisement_datas",
+        "_discovered_device_timestamps",
+        "_connector",
+        "_connectable",
+        "_details",
+        "_expire_seconds",
+    )
+
     def __init__(
         self,
         hass: HomeAssistant,
         scanner_id: str,
+        name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         connector: HaBluetoothConnector,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(hass, scanner_id)
+        super().__init__(hass, scanner_id, name)
         self._new_info_callback = new_info_callback
         self._discovered_device_advertisement_datas: dict[
             str, tuple[BLEDevice, AdvertisementData]

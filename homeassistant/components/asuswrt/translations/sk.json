@@ -13,5 +13,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "require_ip": "Zariadenia musia ma\u0165 IP (pre re\u017eim pr\u00edstupov\u00e9ho bodu)"
+                }
+            }
+        }
     }
 }

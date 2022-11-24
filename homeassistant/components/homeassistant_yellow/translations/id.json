@@ -5,7 +5,8 @@
             "addon_install_failed": "Gagal menginstal add-on Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "Gagal mengatur konfigurasi Silicon Labs Multiprotocol.",
             "addon_start_failed": "Gagal memulai add-on Silicon Labs Multiprotocol.",
-            "not_hassio": "Opsi perangkat keras hanya bisa dikonfigurasi pada instalasi HassOS."
+            "not_hassio": "Opsi perangkat keras hanya bisa dikonfigurasi pada instalasi HassOS.",
+            "zha_migration_failed": "Migrasi ZHA tidak berhasil."
         },
         "error": {
             "unknown": "Kesalahan yang tidak diharapkan"
@@ -22,7 +23,7 @@
                 "data": {
                     "enable_multi_pan": "Aktifkan dukungan multiprotokol"
                 },
-                "description": "Jika dukungan multiprotocol diaktifkan, radio IEEE 802.15.4 Home Assistant Yellow dapat digunakan untuk Zigbee dan Thread (digunakan oleh Matter) secara bersamaan. Catatan: Ini adalah fitur eksperimental.",
+                "description": "Jika dukungan multiprotocol diaktifkan, radio IEEE 802.15.4 Home Assistant Yellow dapat digunakan untuk Zigbee dan Thread (digunakan oleh Matter) secara bersamaan. Catatan: Ini adalah fitur eksperimental. Jika komponen radio telah digunakan oleh integrasi ZHA Zigbee, ZHA akan dikonfigurasi ulang untuk menggunakan firmware multiprotokol.\n\nCatatan: Fitur ini bersifat eksperimental.",
                 "title": "Aktifkan dukungan multiprotokol pada radio IEEE 802.15.4"
             },
             "install_addon": {

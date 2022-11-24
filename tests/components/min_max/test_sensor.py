@@ -35,7 +35,7 @@ RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 
 
-async def test_default_name_sensor(hass):
+async def test_default_name_sensor(hass: HomeAssistant) -> None:
     """Test the min sensor with a default name."""
     config = {
         "sensor": {
@@ -60,7 +60,7 @@ async def test_default_name_sensor(hass):
     assert entity_ids[2] == state.attributes.get("min_entity_id")
 
 
-async def test_min_sensor(hass):
+async def test_min_sensor(hass: HomeAssistant) -> None:
     """Test the min sensor."""
     config = {
         "sensor": {
@@ -92,7 +92,7 @@ async def test_min_sensor(hass):
     assert entity.unique_id == "very_unique_id"
 
 
-async def test_max_sensor(hass):
+async def test_max_sensor(hass: HomeAssistant) -> None:
     """Test the max sensor."""
     config = {
         "sensor": {
@@ -119,7 +119,7 @@ async def test_max_sensor(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
-async def test_mean_sensor(hass):
+async def test_mean_sensor(hass: HomeAssistant) -> None:
     """Test the mean sensor."""
     config = {
         "sensor": {
@@ -145,7 +145,7 @@ async def test_mean_sensor(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
-async def test_mean_1_digit_sensor(hass):
+async def test_mean_1_digit_sensor(hass: HomeAssistant) -> None:
     """Test the mean with 1-digit precision sensor."""
     config = {
         "sensor": {
@@ -171,7 +171,7 @@ async def test_mean_1_digit_sensor(hass):
     assert str(float(MEAN_1_DIGIT)) == state.state
 
 
-async def test_mean_4_digit_sensor(hass):
+async def test_mean_4_digit_sensor(hass: HomeAssistant) -> None:
     """Test the mean with 4-digit precision sensor."""
     config = {
         "sensor": {
@@ -197,7 +197,7 @@ async def test_mean_4_digit_sensor(hass):
     assert str(float(MEAN_4_DIGITS)) == state.state
 
 
-async def test_median_sensor(hass):
+async def test_median_sensor(hass: HomeAssistant) -> None:
     """Test the median sensor."""
     config = {
         "sensor": {
@@ -223,7 +223,7 @@ async def test_median_sensor(hass):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
-async def test_range_4_digit_sensor(hass):
+async def test_range_4_digit_sensor(hass: HomeAssistant) -> None:
     """Test the range with 4-digit precision sensor."""
     config = {
         "sensor": {
@@ -249,7 +249,7 @@ async def test_range_4_digit_sensor(hass):
     assert str(float(RANGE_4_DIGITS)) == state.state
 
 
-async def test_range_1_digit_sensor(hass):
+async def test_range_1_digit_sensor(hass: HomeAssistant) -> None:
     """Test the range with 1-digit precision sensor."""
     config = {
         "sensor": {
@@ -275,7 +275,7 @@ async def test_range_1_digit_sensor(hass):
     assert str(float(RANGE_1_DIGIT)) == state.state
 
 
-async def test_not_enough_sensor_value(hass):
+async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     """Test that there is nothing done if not enough values available."""
     config = {
         "sensor": {
@@ -327,7 +327,7 @@ async def test_not_enough_sensor_value(hass):
     assert state.attributes.get("max_value") is None
 
 
-async def test_different_unit_of_measurement(hass):
+async def test_different_unit_of_measurement(hass: HomeAssistant) -> None:
     """Test for different unit of measurement."""
     config = {
         "sensor": {
@@ -374,7 +374,7 @@ async def test_different_unit_of_measurement(hass):
     assert state.attributes.get("unit_of_measurement") == "ERR"
 
 
-async def test_last_sensor(hass):
+async def test_last_sensor(hass: HomeAssistant) -> None:
     """Test the last sensor."""
     config = {
         "sensor": {
@@ -399,7 +399,7 @@ async def test_last_sensor(hass):
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_1", 12345)
     hass.states.async_set("sensor.test_2", 45678)

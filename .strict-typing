@@ -182,10 +182,12 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
+homeassistant.components.min_max.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
+homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*

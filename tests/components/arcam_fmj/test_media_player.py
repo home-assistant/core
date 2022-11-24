@@ -20,7 +20,7 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 
-from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_UUID
+from .conftest import MOCK_HOST, MOCK_UUID
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
@@ -41,7 +41,6 @@ async def test_properties(player, state):
         ATTR_NAME: f"Arcam FMJ ({MOCK_HOST})",
         ATTR_IDENTIFIERS: {
             ("arcam_fmj", MOCK_UUID),
-            ("arcam_fmj", MOCK_HOST, MOCK_PORT),
         },
         ATTR_MODEL: "Arcam FMJ AVR",
         ATTR_MANUFACTURER: "Arcam",
@@ -102,7 +101,8 @@ async def test_mute_volume(player, state, mute):
 
 async def test_name(player):
     """Test name."""
-    assert player.name == f"{MOCK_NAME} - Zone: 1"
+    data = await update(player)
+    assert data.attributes["friendly_name"] == "Zone 1"
 
 
 async def test_update(player, state):

@@ -27,7 +27,6 @@ from tests.components.recorder.common import (
 def test_setup():
     """Test setup method of history."""
     # Verification occurs in the fixture
-    pass
 
 
 def test_get_significant_states(hass_history):
