@@ -513,7 +513,6 @@ class PolledSmartEnergySummation(SmartEnergySummation):
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
     models={"ZLinky_TIC"},
-    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
 class Tier1SmartEnergySummation(
     SmartEnergySummation, id_suffix="tier1_summation_delivered"
@@ -527,7 +526,6 @@ class Tier1SmartEnergySummation(
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
     models={"ZLinky_TIC"},
-    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
 class Tier2SmartEnergySummation(
     SmartEnergySummation, id_suffix="tier2_summation_delivered"
@@ -536,6 +534,74 @@ class Tier2SmartEnergySummation(
 
     SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
     _attr_name: str = "Tier 2 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier3SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier3_summation_delivered"
+):
+    """Tier 3 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier3_summ_delivered"
+    _attr_name: str = "Tier 3 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier4SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier4_summation_delivered"
+):
+    """Tier 4 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier4_summ_delivered"
+    _attr_name: str = "Tier 4 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier5SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier5_summation_delivered"
+):
+    """Tier 5 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier5_summ_delivered"
+    _attr_name: str = "Tier 5 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class Tier6SmartEnergySummation(
+    SmartEnergySummation, id_suffix="tier6_summation_delivered"
+):
+    """Tier 6 Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR: int | str = "current_tier6_summ_delivered"
+    _attr_name: str = "Tier 6 summation delivered"
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"ZLinky_TIC"},
+)
+class RegisterTierDeliveredSensor(Sensor, id_suffix="register_tier_delivered"):
+    """Active register tier delivered sensor."""
+
+    SENSOR_ATTR: int | str = "active_register_tier_delivered"
+    _attr_icon = "mdi:calendar-clock"
+    _attr_name: str = "Register tier delivered"
+
+    def formatter(self, value: int) -> int | None:
+        """Numeric pass-through formatter."""
+        return value
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
