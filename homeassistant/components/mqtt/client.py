@@ -152,6 +152,7 @@ DeprecatedMessageCallbackTypes = Union[
 ]
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.5.0
 def wrap_msg_callback(
     msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
@@ -203,6 +204,7 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
+    # Support for a deprecated callback type will be removed from HA core 2023.5.0
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
@@ -216,7 +218,8 @@ async def async_subscribe(
     if non_default == 3:
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
-            "Signature of MQTT msg_callback '%s.%s' is deprecated",
+            "Signature of MQTT msg_callback '%s.%s' is deprecated, "
+            "this will stop working with HA core 2023.5",
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
