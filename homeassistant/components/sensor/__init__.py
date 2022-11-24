@@ -694,6 +694,7 @@ class SensorEntity(Entity):
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
         device_class = self.device_class
+        state_class = self.state_class
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
@@ -731,15 +732,25 @@ class SensorEntity(Entity):
                 ) from err
 
         # Enum checks
-        if (
-            value is not None
-            and (options := self.options) is not None
-            and value not in options
-        ):
-            raise ValueError(
-                f"Sensor {self.entity_id} provides state value '{value}', "
-                "which is not in the list of options provided"
-            )
+        if value is not None and (options := self.options) is not None:
+            if state_class:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has an state_class and thus indicating "
+                    "it has a numeric value; it incorrectly provides a list of options"
+                )
+
+            if device_class and device_class in SensorDeviceClass:
+                raise ValueError(
+                    f"Sensor {self.entity_id} has an device_class indicating "
+                    "it is an numeric or datetime value; "
+                    "it incorrectly provides a list of options"
+                )
+
+            if value not in options:
+                raise ValueError(
+                    f"Sensor {self.entity_id} provides state value '{value}', "
+                    "which is not in the list of options provided"
+                )
 
         if (
             value is not None

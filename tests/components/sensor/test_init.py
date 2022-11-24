@@ -6,7 +6,7 @@ import pytest
 from pytest import approx
 
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_CENTIMETERS,
@@ -958,4 +958,52 @@ async def test_value_unknown_in_enumeration(
     assert (
         "Sensor sensor.test provides state value 'invalid_option', "
         "which is not in the list of options provided"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_entity_with_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on entities that provide an enum with a device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=21,
+        device_class=SensorDeviceClass.POWER,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has an device_class indicating it is an "
+        "numeric or datetime value; it incorrectly provides a list of options"
+    ) in caplog.text
+
+
+async def test_invalid_enumeration_numeric_entity(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+):
+    """Test warning on numeric entities that provide an enum."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=42,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["option1", "option2"],
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Sensor sensor.test has an state_class and thus indicating "
+        "it has a numeric value; it incorrectly provides a list of options"
     ) in caplog.text
