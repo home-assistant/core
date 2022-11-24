@@ -192,6 +192,8 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
     """Handle an options flow for Scrape."""
 
     # `init` and `resource` steps are managed via OPTIONS_FLOW
+    # However, `SchemaOptionsFlowHandler` does not (yet?) handle
+    # sub-lists so other steps are managed manually
 
     _sensor_index: int
 
@@ -220,7 +222,6 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
             self._sensor_index = int(user_input[CONF_INDEX])
             return await self.async_step_edit_sensor()
 
-        sensors: list[dict[str, Any]] = self._options["sensor"]
         return self.async_show_form(
             step_id="select_edit_sensor",
             data_schema=vol.Schema(
@@ -228,7 +229,7 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
                     vol.Required(CONF_INDEX): vol.In(
                         {
                             str(index): config[CONF_NAME]
-                            for index, config in enumerate(sensors)
+                            for index, config in enumerate(self._sensors)
                         },
                     )
                 }
