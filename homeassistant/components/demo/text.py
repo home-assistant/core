@@ -24,7 +24,7 @@ async def async_setup_platform(
             DemoText(
                 unique_id="text",
                 name="Text",
-                icon="mdi:text",
+                icon=None,
                 native_value="Hello world",
             ),
             DemoText(
@@ -71,7 +71,7 @@ class DemoText(TextEntity):
         self,
         unique_id: str,
         name: str,
-        icon: str,
+        icon: str | None,
         native_value: str | None,
         mode: TextMode = TextMode.TEXT,
         native_max: int | None = None,
