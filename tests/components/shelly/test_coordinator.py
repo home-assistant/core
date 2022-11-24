@@ -70,14 +70,6 @@ async def test_block_reload_on_cfg_change(hass, mock_block_device, monkeypatch):
 
 async def test_block_no_reload_on_bulb_changes(hass, mock_block_device, monkeypatch):
     """Test block no reload on bulb mode/effect change."""
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "blue")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "mode")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "gain")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "brightness")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "effect")
-    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "colorTemp")
     await init_integration(hass, 1, model="SHBLB-1")
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
