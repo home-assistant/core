@@ -170,10 +170,10 @@ class ResultWrapper:
     render_result: str | None
 
 
-def gen_result_wrapper(kls):
+def gen_result_wrapper(kls: type[dict | list | set]) -> type:
     """Generate a result wrapper."""
 
-    class Wrapper(kls, ResultWrapper):
+    class Wrapper(kls, ResultWrapper):  # type: ignore[valid-type,misc]
         """Wrapper of a kls that can store render_result."""
 
         def __init__(self, *args: Any, render_result: str | None = None) -> None:
@@ -186,7 +186,7 @@ def gen_result_wrapper(kls):
                 if kls is set:
                     return str(set(self))
 
-                return cast(str, kls.__str__(self))
+                return kls.__str__(self)
 
             return self.render_result
 
@@ -214,10 +214,8 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-RESULT_WRAPPERS: dict[type, type] = {
-    kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
-    for kls in (list, dict, set)
-}
+_types: tuple[type[dict | list | set], ...] = (dict, list, set)
+RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _types}
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
