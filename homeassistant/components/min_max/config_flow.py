@@ -30,7 +30,9 @@ _STATISTIC_MEASURES = [
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN, multiple=True),
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, "number", "input_number"], multiple=True
+            ),
         ),
         vol.Required(CONF_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
