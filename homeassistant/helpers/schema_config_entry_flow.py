@@ -310,7 +310,13 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
     ) -> None:
-        """Initialize options flow."""
+        """Initialize options flow.
+
+        If needed, `async_options_flow_finished` can be set to take necessary actions
+        after the options flow is finished. The second parameter contains config entry
+        options, which is the union of stored options and user input from the options
+        flow steps.
+        """
         super().__init__(config_entry)
         self._common_handler = SchemaCommonFlowHandler(
             self, options_flow, self._options
