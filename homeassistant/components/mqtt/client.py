@@ -152,7 +152,7 @@ DeprecatedMessageCallbackTypes = Union[
 ]
 
 
-# Support for a deprecated callback type will be removed from HA core 2023.5.0
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 def wrap_msg_callback(
     msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
