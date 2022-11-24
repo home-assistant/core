@@ -10,27 +10,10 @@
             "discovery_confirm": {
                 "description": "Chcete nastavi\u0165 {model} ({device_id})?"
             },
-            "local": {
-                "data": {
-                    "host": "IP adresa"
-                }
-            },
             "local_pick": {
                 "data": {
                     "device": "Zaradenie",
                     "host": "IP adresa"
-                }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Pr\u00edstupov\u00fd token",
-                    "email": "Email"
-                }
-            },
-            "user": {
-                "data": {
-                    "access_token": "Pr\u00edstupov\u00fd token",
-                    "email": "Email"
                 }
             }
         }

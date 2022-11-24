@@ -23,11 +23,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfigurering av \u00e5pne valutakurser med YAML er fjernet. \n\n Fjern Open Exchange Rates YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
-            "title": "Open Exchange Rates YAML-konfigurasjonen er fjernet"
-        }
     }
 }

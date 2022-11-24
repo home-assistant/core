@@ -7,18 +7,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
-                    "name": "N\u00e1zov",
                     "password": "Heslo",
                     "port": "Port"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Frekvencia aktualiz\u00e1cie"
                 }
             }
         }

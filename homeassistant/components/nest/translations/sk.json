@@ -8,13 +8,6 @@
         },
         "error": {
             "invalid_pin": "Nespr\u00e1vny PIN"
-        },
-        "step": {
-            "auth": {
-                "data": {
-                    "code": "Pr\u00edstupov\u00fd token"
-                }
-            }
         }
     },
     "device_automation": {
