@@ -24,8 +24,10 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
@@ -604,6 +606,30 @@ def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
     instance: Recorder = hass.data[DATA_INSTANCE]
     return instance
+
+
+PERIOD_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive("calendar", "period"): vol.Schema(
+            {
+                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
+                vol.Optional("offset"): int,
+            }
+        ),
+        vol.Exclusive("fixed_period", "period"): vol.Schema(
+            {
+                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
+                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+            }
+        ),
+        vol.Exclusive("rolling_window", "period"): vol.Schema(
+            {
+                vol.Required("duration"): cv.time_period_dict,
+                vol.Optional("offset"): cv.time_period_dict,
+            }
+        ),
+    }
+)
 
 
 def resolve_period(

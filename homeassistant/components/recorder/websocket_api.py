@@ -38,6 +38,7 @@ from .statistics import (
     validate_statistics,
 )
 from .util import (
+    PERIOD_SCHEMA,
     async_migration_in_progress,
     async_migration_is_live,
     get_instance,
@@ -88,24 +89,6 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Exclusive("calendar", "period"): vol.Schema(
-            {
-                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
-                vol.Optional("offset"): int,
-            }
-        ),
-        vol.Exclusive("fixed_period", "period"): vol.Schema(
-            {
-                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
-                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
-            }
-        ),
-        vol.Exclusive("rolling_window", "period"): vol.Schema(
-            {
-                vol.Required("duration"): cv.time_period_dict,
-                vol.Optional("offset"): cv.time_period_dict,
-            }
-        ),
         vol.Optional("statistic_id"): str,
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
@@ -122,6 +105,7 @@ def _ws_get_statistic_during_period(
                 vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
         ),
+        **PERIOD_SCHEMA.schema,
     }
 )
 @websocket_api.async_response
