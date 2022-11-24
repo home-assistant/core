@@ -201,7 +201,7 @@ class Glowv1Thermostat(HeatzyPiloteV2Thermostat):
     """Heatzy Glow."""
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return supported features."""
         return (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
