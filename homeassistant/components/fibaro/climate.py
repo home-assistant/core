@@ -1,12 +1,12 @@
 """Support for Fibaro thermostats."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 from typing import Any
 
 from homeassistant.components.climate import (
     ENTITY_ID_FORMAT,
-    HVAC_MODES,
     PRESET_AWAY,
     PRESET_BOOST,
     ClimateEntity,
@@ -199,11 +199,9 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             prop = self._op_mode_device.fibaro_device.properties
             if "supportedThermostatModes" in prop:
                 for mode in prop.supportedThermostatModes:
-                    mode_lower_case = mode.lower()
-                    if mode_lower_case in HVAC_MODES:
-                        if mode_lower_case not in self._attr_hvac_modes:
-                            self._attr_hvac_modes.append(mode_lower_case)
-                    else:
+                    try:
+                        self._attr_hvac_modes.append(HVACMode(mode.lower()))
+                    except ValueError:
                         self._attr_preset_modes.append(mode)
             else:
                 if "supportedOperatingModes" in prop:
@@ -212,10 +210,12 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                     op_modes = prop.supportedModes.split(",")
                 for mode in op_modes:
                     mode = int(mode)
-                    if mode in OPMODES_HVAC:
-                        mode_ha = OPMODES_HVAC[mode]
-                        if mode_ha not in self._attr_hvac_modes:
-                            self._attr_hvac_modes.append(mode_ha)
+                    if (
+                        mode in OPMODES_HVAC
+                        and (mode_ha := OPMODES_HVAC.get(mode))
+                        and mode_ha not in self._attr_hvac_modes
+                    ):
+                        self._attr_hvac_modes.append(mode_ha)
                     if mode in OPMODES_PRESET:
                         self._attr_preset_modes.append(OPMODES_PRESET[mode])
 
@@ -275,14 +275,11 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Return hvac operation ie. heat, cool, idle."""
         fibaro_operation_mode = self.fibaro_op_mode
         if isinstance(fibaro_operation_mode, str):
-            fibaro_operation_mode = fibaro_operation_mode.lower()
-            if fibaro_operation_mode in HVAC_MODES:
-                return fibaro_operation_mode
+            with suppress(ValueError):
+                return HVACMode(fibaro_operation_mode.lower())
         elif fibaro_operation_mode in OPMODES_HVAC:
             return OPMODES_HVAC[fibaro_operation_mode]
-
-        # Fallback to auto if we have an incompatible mode
-        return HVACMode.AUTO
+        return None
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
@@ -311,10 +308,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
 
         prop = self._op_mode_device.fibaro_device.properties
         if "thermostatOperatingState" in prop:
-            state = prop.thermostatOperatingState.lower()
-            for action in HVACAction:
-                if state == action.value:
-                    return action
+            with suppress(ValueError):
+                return HVACAction(prop.thermostatOperatingState.lower())
 
         return None
 
