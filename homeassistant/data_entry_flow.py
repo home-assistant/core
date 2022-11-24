@@ -444,10 +444,15 @@ class FlowHandler:
         """If we should show advanced options."""
         return self.context.get("show_advanced_options", False)
 
-    def schema_with_suggested_values(
+    def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
     ) -> vol.Schema:
-        """Make a copy of the schema with suggested values set."""
+        """Make a copy of the schema, populated with suggested values.
+
+        For each schema marker matching items in `suggested_values`,
+        the `suggested_value` will be set. The existing `suggested_value` will
+        be left untouched if there is no matching item.
+        """
         schema = {}
         for key, val in data_schema.schema.items():
             if isinstance(key, vol.Marker):
