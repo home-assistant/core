@@ -47,7 +47,6 @@
             "title": "Kesalahan penyiapan menggunakan versi Early Access"
         },
         "ea_warning": {
-            "description": "Anda menggunakan UniFi Protect v{version} yang merupakan versi Early Access. Versi Early Access tidak didukung oleh Home Assistant dan dapat menyebabkan integrasi UniFi Protect rusak atau tidak berfungsi seperti yang diharapkan.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +63,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Harus berupa daftar alamat MAC yang dipisahkan dengan koma"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metrik waktu nyata (PERINGATAN: Meningkatkan penggunaan CPU)",
                     "allow_ea": "Izinkan versi Early Access UniFi Protect (PERINGATAN: Akan menandai integrasi Anda sebagai tidak didukung)",
                     "disable_rtsp": "Nonaktifkan aliran RTSP",
-                    "ignored_devices": "Daftar alamat MAC perangkat yang dipisahkan koma untuk diabaikan",
                     "max_media": "Jumlah maksimum peristiwa yang akan dimuat untuk Browser Media (meningkatkan penggunaan RAM)",
                     "override_connection_host": "Timpa Host Koneksi"
                 },

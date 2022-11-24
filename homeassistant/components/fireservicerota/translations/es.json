@@ -11,12 +11,6 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Contrase\u00f1a"
-                },
-                "description": "Los tokens de autenticaci\u00f3n dejaron de ser v\u00e1lidos, inicia sesi\u00f3n para volver a crearlos."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a"

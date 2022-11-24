@@ -24,7 +24,6 @@
                     "client_cert": "Carica il file del certificato client",
                     "client_id": "ID client (lasciare vuoto per generarne uno casualmente)",
                     "client_key": "Carica il file della chiave privata",
-                    "discovery": "Attiva il rilevamento",
                     "keepalive": "L'intervallo di tempo tra l'invio di messaggi di mantenimento in attivit\u00e0",
                     "password": "Password",
                     "port": "Porta",

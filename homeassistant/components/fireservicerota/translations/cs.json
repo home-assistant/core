@@ -11,12 +11,6 @@
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Heslo"
-                },
-                "description": "Ov\u011b\u0159ovac\u00ed tokeny jsou neplatn\u00e9. Chcete-li je znovu vytvo\u0159it, p\u0159ihlaste se."
-            },
             "user": {
                 "data": {
                     "password": "Heslo",

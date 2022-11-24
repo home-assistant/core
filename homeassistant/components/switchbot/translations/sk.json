@@ -18,19 +18,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Adresa zariadenia",
-                    "mac": "MAC adresa zariadenia",
-                    "name": "N\u00e1zov",
-                    "password": "Heslo"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_time": "\u010cas medzi aktualiz\u00e1ciami (sekundy)"
+                    "address": "Adresa zariadenia"
                 }
             }
         }
