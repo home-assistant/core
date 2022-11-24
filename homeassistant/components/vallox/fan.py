@@ -5,9 +5,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any, NamedTuple
 
-from vallox_websocket_api import Vallox
-from vallox_websocket_api.exceptions import ValloxApiException
-from vallox_websocket_api.vallox import PROFILE_TO_SET_FAN_SPEED_METRIC_MAP
+from vallox_websocket_api import (
+    PROFILE_TO_SET_FAN_SPEED_METRIC_MAP,
+    Vallox,
+    ValloxApiException,
+    ValloxInvalidInputException,
+)
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -131,31 +134,6 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             for attr in EXTRA_STATE_ATTRIBUTES
         }
 
-    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
-        """
-        Set new preset mode.
-
-        Returns true if the mode has been changed, false otherwise.
-        """
-        try:
-            self._valid_preset_mode_or_raise(preset_mode)
-
-        except NotValidPresetModeError as err:
-            _LOGGER.error(err)
-            return False
-
-        if preset_mode == self.preset_mode:
-            return False
-
-        try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode])
-
-        except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error setting preset: %s", err)
-            return False
-
-        return True
-
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         update_needed = await self._async_set_preset_mode_internal(preset_mode)
@@ -177,7 +155,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         update_needed = False
 
         if preset_mode:
-            update_needed = await self._async_set_preset_mode_internal(preset_mode)
+            update_needed |= await self._async_set_preset_mode_internal(preset_mode)
 
         if percentage is not None:
             update_needed |= await self._async_set_percentage_internal(percentage)
@@ -186,7 +164,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             try:
                 await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
 
-            except OSError as err:
+            except ValloxApiException as err:
                 _LOGGER.error("Error turning on: %s", err)
 
             else:
@@ -205,7 +183,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         try:
             await self._client.set_values({METRIC_KEY_MODE: MODE_OFF})
 
-        except OSError as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error turning off: %s", err)
             return
 
@@ -223,20 +201,46 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         if update_needed:
             await self.coordinator.async_request_refresh()
 
+    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
+        """
+        Set new preset mode.
+
+        Returns true if the mode has been changed, false otherwise.
+        """
+        try:
+            self._valid_preset_mode_or_raise(preset_mode)
+
+        except NotValidPresetModeError as err:
+            _LOGGER.error(err)
+            return False
+
+        if preset_mode == self.preset_mode:
+            return False
+
+        try:
+            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode])
+
+        except ValloxApiException as err:
+            _LOGGER.error("Error setting preset: %s", err)
+            return False
+
+        return True
+
     async def _async_set_percentage_internal(self, percentage: int) -> bool:
         """
         Set fan speed percentage for current profile.
 
         Returns true if speed has been changed, false otherwise.
         """
-        if percentage == self.percentage:
-            return False
-
         vallox_profile = self.coordinator.data.profile
 
         try:
             await self._client.set_fan_speed(vallox_profile, percentage)
-        except AttributeError:
+        except ValloxInvalidInputException:
+            # This can happen if current profile does not support setting the fan speed.
+            return False
+        except ValloxApiException as err:
+            _LOGGER.error("Error setting preset: %s", err)
             return False
 
         return True
