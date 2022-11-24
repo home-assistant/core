@@ -49,10 +49,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    try:
-        await coordinator.remove_webhooks()
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Failed to delete webhook")
-        return False
+    await coordinator.remove_webhooks()
 
     return unload_ok

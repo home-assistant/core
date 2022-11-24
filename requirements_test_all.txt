@@ -878,7 +878,7 @@ life360==5.5.0
 logi-circle==0.2.3
 
 # homeassistant.components.loqed
-loqedAPI==2.1.3
+loqedAPI==2.1.4
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
