@@ -958,4 +958,7 @@ class GiexIrrigationEndTime(Sensor, id_suffix="irrigation_end_time"):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
-        return self._channel.cluster.get(self.SENSOR_ATTR)
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
+            return None
+        return raw_state
