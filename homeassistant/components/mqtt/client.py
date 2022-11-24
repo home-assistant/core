@@ -219,7 +219,7 @@ async def async_subscribe(
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
             "Signature of MQTT msg_callback '%s.%s' is deprecated, "
-            "this will stop working with HA core 2023.5",
+            "this will stop working with HA core 2023.2",
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
