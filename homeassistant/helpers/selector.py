@@ -466,6 +466,7 @@ class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
 class EntitySelector(Selector):
     """Selector of a single or list of entities."""
 
+    config: EntitySelectorConfig
     selector_type = "entity"
 
     CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
@@ -476,7 +477,7 @@ class EntitySelector(Selector):
         }
     )
 
-    def __init__(self, config: EntitySelectorConfig | None = None) -> None:
+    def __init__(self, config: EntitySelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
