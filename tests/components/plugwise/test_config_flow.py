@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
+    InvalidSetupError,
     InvalidXMLError,
     ResponseError,
     UnsupportedDeviceError,
@@ -100,6 +101,7 @@ def mock_smile():
     ) as smile_mock:
         smile_mock.ConnectionFailedError = ConnectionFailedError
         smile_mock.InvalidAuthentication = InvalidAuthentication
+        smile_mock.InvalidSetupError = InvalidSetupError
         smile_mock.InvalidXMLError = InvalidXMLError
         smile_mock.ResponseError = ResponseError
         smile_mock.UnsupportedDeviceError = UnsupportedDeviceError
@@ -273,10 +275,11 @@ async def test_zercoconf_discovery_update_configuration(
     [
         (ConnectionFailedError, "cannot_connect"),
         (InvalidAuthentication, "invalid_auth"),
+        (InvalidSetupError, "invalid_setup"),
         (InvalidXMLError, "response_error"),
         (ResponseError, "response_error"),
         (RuntimeError, "unknown"),
-        (UnsupportedDeviceError, "warn_code_owner"),
+        (UnsupportedDeviceError, "unsupported"),
     ],
 )
 async def test_flow_errors(
