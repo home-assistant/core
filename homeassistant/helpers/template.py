@@ -2086,7 +2086,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # can be discarded, we only need to get at the hass object.
         def hassfunction(
             func: Callable[Concatenate[HomeAssistant, _P], _R],
-        ) -> Callable[Concatenate[jinja2.runtime.Context, _P], _R]:
+        ) -> Callable[Concatenate[Any, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
