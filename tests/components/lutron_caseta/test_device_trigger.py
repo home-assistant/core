@@ -34,8 +34,8 @@ from tests.common import (
 
 MOCK_BUTTON_DEVICES = [
     {
-        "device_id": "710",
-        "Name": "Back Hall Pico",
+        "device_id": "9",
+        "Name": "Dining Room_Pico",
         "ID": 2,
         "Area": {"Name": "Back Hall"},
         "Buttons": [
@@ -45,14 +45,14 @@ MOCK_BUTTON_DEVICES = [
             {"Number": 5},
             {"Number": 6},
         ],
-        "leap_name": "Back Hall_Back Hall Pico",
+        "leap_name": "Dining Room_Pico",
         "type": "Pico3ButtonRaiseLower",
         "model": "PJ2-3BRL-GXX-X01",
-        "serial": 43845548,
+        "serial": 68551522,
     },
     {
-        "device_id": "742",
-        "Name": "Front Steps Sunnata Keypad",
+        "device_id": "1355",
+        "Name": "Main Stairs Position 1 Keypad",
         "ID": 3,
         "Area": {"Name": "Front Steps"},
         "Buttons": [
@@ -65,12 +65,12 @@ MOCK_BUTTON_DEVICES = [
         "leap_name": "Front Steps_Front Steps Sunnata Keypad",
         "type": "SunnataKeypad",
         "model": "RRST-W4B-XX",
-        "serial": 43845547,
+        "serial": 66286451,
     },
     {
         "device_id": "786",
         "Name": "Example Homeowner Keypad",
-        "ID": 3,
+        "ID": 4,
         "Area": {"Name": "Front Steps"},
         "Buttons": [
             {"Number": 12},
@@ -84,7 +84,7 @@ MOCK_BUTTON_DEVICES = [
         "leap_name": "Front Steps_Example Homeowner Keypad",
         "type": "HomeownerKeypad",
         "model": "Homeowner Keypad",
-        "serial": None,
+        "serial": "1234_786",
     },
 ]
 
@@ -112,9 +112,9 @@ async def _async_setup_lutron_with_picos(hass):
     return config_entry.entry_id
 
 
-async def test_get_triggers(hass, device_reg):
+async def test_get_triggers(hass):
     """Test we get the expected triggers from a lutron pico."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
     dr_button_devices = data.button_devices
     device_id = list(dr_button_devices)[0]
@@ -149,9 +149,11 @@ async def test_get_triggers(hass, device_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_for_invalid_device_id(hass, device_reg):
+async def test_get_triggers_for_invalid_device_id(hass):
     """Test error raised for invalid lutron device_id."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
+
+    device_reg = device_registry.async_get(hass)
 
     invalid_device = device_reg.async_get_or_create(
         config_entry_id=config_entry_id,
@@ -165,9 +167,10 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
     assert triggers == []
 
 
-async def test_get_triggers_for_non_button_device(hass, device_reg):
+async def test_get_triggers_for_non_button_device(hass):
     """Test error raised for invalid lutron device_id."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
+    device_reg = device_registry.async_get(hass)
 
     invalid_device = device_reg.async_get_or_create(
         config_entry_id=config_entry_id,
@@ -181,9 +184,11 @@ async def test_get_triggers_for_non_button_device(hass, device_reg):
     assert triggers == []
 
 
-async def test_none_serial_keypad(hass, device_reg):
+async def test_none_serial_keypad(hass):
     """Test serial assignment for keypads without serials."""
-    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+    config_entry_id = await _async_setup_lutron_with_picos(hass)
+
+    device_reg = device_registry.async_get(hass)
 
     keypad_device = device_reg.async_get_or_create(
         config_entry_id=config_entry_id,
