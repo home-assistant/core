@@ -66,17 +66,6 @@ async def async_setup_entry(
         entities = []
 
         # Look to see if payload contains new measures
-        for measure in measures:
-            if measure["@id"] in measurements:
-                continue
-
-            if "latestReading" not in measure:
-                # Don't create a sensor entity for a gauge that isn't available
-                continue
-
-            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
-
-            measurements.add(measure["@id"])
         for measure in stagescale:
             if measure["@id"] in measurements:
                 continue
@@ -91,6 +80,17 @@ async def async_setup_entry(
                     measure["@id"],
                 )
             )
+
+            measurements.add(measure["@id"])
+        for measure in measures:
+            if measure["@id"] in measurements:
+                continue
+
+            if "latestReading" not in measure:
+                # Don't create a sensor entity for a gauge that isn't available
+                continue
+
+            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
 
             measurements.add(measure["@id"])
 
