@@ -195,14 +195,16 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
 
     _sensor_index: int
 
+    @property
+    def _sensors(self) -> list[dict[str, Any]]:
+        return self._options["sensor"]
+
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Add a new sensor."""
         if user_input is not None:
-            user_input = validate_sensor(user_input)
-            # Need deep-copy of the list to trigger update_listener
-            self._options["sensor"] = [*self._options["sensor"], user_input]
+            self._sensors.append(validate_sensor(user_input))
             return self.async_create_entry(data=self._options)
 
         return self.async_show_form(
@@ -237,19 +239,15 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Edit a sensor."""
-        sensors: list[dict[str, Any]] = self._options["sensor"]
         if user_input is not None:
-            # Need deep-copy of the list to trigger update_listener
-            sensors = [*sensors]
-            sensors[self._sensor_index] = validate_sensor(user_input)
-            self._options["sensor"] = sensors
+            self._sensors[self._sensor_index] = validate_sensor(user_input)
             return self.async_create_entry(data=self._options)
 
         return self.async_show_form(
             step_id="edit_sensor",
             data_schema=schema_with_suggested_values(
                 DATA_SCHEMA_SENSOR,
-                sensors[self._sensor_index],
+                self._sensors[self._sensor_index],
                 self.show_advanced_options,
             ),
         )
