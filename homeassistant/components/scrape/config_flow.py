@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import FlowResult, schema_with_suggested_values
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -158,7 +159,9 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowMenuStep(["resource", "add_sensor", "select_edit_sensor"]),
+    "init": SchemaFlowMenuStep(
+        ["resource", "add_sensor", "select_edit_sensor", "remove_sensor"]
+    ),
     "resource": SchemaFlowFormStep(
         DATA_SCHEMA_RESOURCE,
         validate_user_input=validate_rest_setup,
@@ -250,5 +253,32 @@ class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
                 DATA_SCHEMA_SENSOR,
                 self._sensors[self._sensor_index],
                 self.show_advanced_options,
+            ),
+        )
+
+    async def async_step_remove_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Remove existing sensors."""
+        if user_input is not None:
+            removed_indexes: set[str] = set(user_input[CONF_INDEX])
+            self._options["sensor"] = [
+                value
+                for index, value in enumerate(self._sensors)
+                if str(index) not in removed_indexes
+            ]
+            return self.async_create_entry(data=self._options)
+
+        return self.async_show_form(
+            step_id="remove_sensor",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_INDEX): cv.multi_select(
+                        {
+                            str(index): config[CONF_NAME]
+                            for index, config in enumerate(self._sensors)
+                        },
+                    )
+                }
             ),
         )
