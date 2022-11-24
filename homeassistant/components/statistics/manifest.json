@@ -5,5 +5,7 @@
   "after_dependencies": ["recorder"],
   "codeowners": ["@fabaff", "@ThomDietrich"],
   "quality_scale": "internal",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "config_flow": true,
+  "integration_type": "helper"
 }

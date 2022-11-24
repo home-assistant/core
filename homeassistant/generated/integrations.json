@@ -5099,12 +5099,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "statistics": {
-      "name": "Statistics",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "statsd": {
       "name": "StatsD",
       "integration_type": "hub",
@@ -6351,6 +6345,12 @@
     "schedule": {
       "integration_type": "helper",
       "config_flow": false
+    },
+    "statistics": {
+      "name": "Statistics",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "switch_as_x": {
       "integration_type": "helper",

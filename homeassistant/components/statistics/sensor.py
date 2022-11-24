@@ -12,13 +12,24 @@ from typing import Any, Literal, cast
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder import (
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    get_instance,
+    history,
+)
+from homeassistant.components.recorder.models import StatisticPeriod
+from homeassistant.components.recorder.statistics import (
+    get_metadata,
+    statistic_during_period,
+)
+from homeassistant.components.recorder.util import PERIOD_SCHEMA, resolve_period
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -37,7 +48,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -48,7 +59,16 @@ from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, PLATFORMS
+from . import PLATFORMS
+from .const import (
+    CONF_PRECISION,
+    CONF_STATE_CHARACTERISTIC,
+    DOMAIN,
+    STAT_AVERAGE_STEP_LTS,
+    STAT_SUM_DIFFERENCES_LTS,
+    STAT_VALUE_MAX_LTS,
+    STAT_VALUE_MIN_LTS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +107,8 @@ STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
 
+CONF_PERIOD = "period"
+
 # Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = {
     STAT_AVERAGE_LINEAR,
@@ -115,6 +137,23 @@ STATS_NUMERIC_SUPPORT = {
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
     STAT_VARIANCE,
+}
+
+# Statistics supported by a long term statistic source (numeric)
+STATS_NUMERIC_SUPPORT_LTS = {
+    STAT_AVERAGE_STEP_LTS,
+    STAT_SUM_DIFFERENCES_LTS,
+    STAT_VALUE_MAX_LTS,
+    STAT_VALUE_MIN_LTS,
+}
+
+STATS_LTS_TO_RECORDER_CHARACTERISTIC: dict[
+    str, Literal["max", "mean", "min", "change"]
+] = {
+    STAT_AVERAGE_STEP_LTS: "mean",
+    STAT_SUM_DIFFERENCES_LTS: "change",
+    STAT_VALUE_MAX_LTS: "max",
+    STAT_VALUE_MIN_LTS: "min",
 }
 
 # Statistics supported by a binary_sensor source
@@ -172,13 +211,12 @@ STAT_BINARY_PERCENTAGE = {
     STAT_MEAN,
 }
 
-CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
-CONF_PRECISION = "precision"
 CONF_PERCENTILE = "percentile"
 
 DEFAULT_NAME = "Statistical characteristic"
+DEFAULT_PERCENTILE = 50
 DEFAULT_PRECISION = 2
 ICON = "mdi:calculator"
 
@@ -222,7 +260,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
+        vol.Optional(CONF_PERCENTILE, default=DEFAULT_PERCENTILE): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=99)
         ),
     }
@@ -232,6 +270,36 @@ PLATFORM_SCHEMA = vol.All(
     valid_state_characteristic_configuration,
     valid_boundary_configuration,
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize min/max/mean config entry."""
+    registry = er.async_get(hass)
+    source_entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_ENTITY_ID]
+    )
+    state_characteristic = config_entry.options[CONF_STATE_CHARACTERISTIC]
+
+    entity: SensorEntity | None = None
+
+    if state_characteristic in STATS_NUMERIC_SUPPORT_LTS:
+        entity = LTSStatisticsSensor(
+            source_entity_id=source_entity_id,
+            name=config_entry.title,
+            unique_id=config_entry.entry_id,
+            state_characteristic=state_characteristic,
+            precision=DEFAULT_PRECISION,
+            period=PERIOD_SCHEMA(config_entry.options["period"]),
+        )
+
+    if not entity:
+        return
+
+    async_add_entities([entity], update_before_add=True)
 
 
 async def async_setup_platform(
@@ -749,3 +817,101 @@ class StatisticsSensor(SensorEntity):
         if len(self.states) > 0:
             return 100.0 / len(self.states) * self.states.count(True)
         return None
+
+
+class LTSStatisticsSensor(SensorEntity):
+    """Representation of a Statistics sensor sourcing data from the LTS tables."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        source_entity_id: str,
+        name: str,
+        unique_id: str | None,
+        state_characteristic: str,
+        precision: int,
+        period: StatisticPeriod,
+    ) -> None:
+        """Initialize the Statistics sensor."""
+        self._attr_icon: str = ICON
+        self._attr_name: str = name
+        self._attr_unique_id: str | None = unique_id
+        self._source_entity_id: str = source_entity_id
+        self._recorder_characteristic: Literal[
+            "max", "mean", "min", "change"
+        ] = STATS_LTS_TO_RECORDER_CHARACTERISTIC[state_characteristic]
+        self._precision: int = precision
+        self._value: StateType = None
+        self._period = period
+
+        self._update_listener: CALLBACK_TYPE | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        @callback
+        def async_stats_updated_listener(_event: Event | None) -> None:
+            """Handle recorder LTS updated."""
+            self.async_schedule_update_ha_state(True)
+
+        async def async_stats_sensor_startup(_: HomeAssistant) -> None:
+            """Add listener and get recorded state."""
+            _LOGGER.debug("Startup for %s", self.entity_id)
+
+            self.async_on_remove(
+                self.hass.bus.async_listen(
+                    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+                    async_stats_updated_listener,
+                )
+            )
+
+        self.async_on_remove(async_at_start(self.hass, async_stats_sensor_startup))
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the class of this entity."""
+        _state = self.hass.states.get(self._source_entity_id)
+        return None if _state is None else _state.attributes.get(ATTR_DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> Literal[SensorStateClass.MEASUREMENT]:
+        """Return the state class of this entity."""
+        return SensorStateClass.MEASUREMENT
+
+    async def async_update(self) -> None:
+        """Get the latest data and updates the states."""
+        _LOGGER.debug("%s: updating statistics", self.entity_id)
+        await get_instance(self.hass).async_add_executor_job(
+            self._update_long_term_stats_from_database
+        )
+
+    def _update_long_term_stats_from_database(self) -> None:
+        """Update the long term statistics from the database."""
+
+        result = get_metadata(
+            self.hass,
+            statistic_ids=[self._source_entity_id],
+        ).get(self._source_entity_id)
+        if result:
+            self._attr_native_unit_of_measurement = result[1].get("unit_of_measurement")
+        else:
+            self._attr_native_unit_of_measurement = None
+
+        start_time, end_time = resolve_period(self._period)
+        stat = statistic_during_period(
+            self.hass,
+            start_time,
+            end_time,
+            self._source_entity_id,
+            {self._recorder_characteristic},
+            None,
+        )
+        value = stat.get(self._recorder_characteristic)
+        with contextlib.suppress(TypeError):
+            value = round(cast(float, value), self._precision)
+            if self._precision == 0:
+                value = int(value)
+
+        self._attr_native_value = value
+        self._attr_available = self._attr_native_value is not None

@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
+from homeassistant.components.statistics.const import DOMAIN as STATISTICS_DOMAIN
 from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
