@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 from pyuptimerobot import UptimeRobotAuthenticationException
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
@@ -27,7 +27,7 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_presentation(hass: HomeAssistant) -> None:
+async def test_presentation(hass: spencerAssistant) -> None:
     """Test the presenstation of UptimeRobot sensors."""
     await setup_uptimerobot_integration(hass)
 
@@ -38,7 +38,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 
-async def test_switch_off(hass: HomeAssistant) -> None:
+async def test_switch_off(hass: spencerAssistant) -> None:
     """Test entity unaviable on update failure."""
 
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -68,7 +68,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     assert entity.state == STATE_OFF
 
 
-async def test_switch_on(hass: HomeAssistant) -> None:
+async def test_switch_on(hass: spencerAssistant) -> None:
     """Test entity unaviable on update failure."""
 
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -96,7 +96,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         assert entity.state == STATE_ON
 
 
-async def test_authentication_error(hass: HomeAssistant, caplog) -> None:
+async def test_authentication_error(hass: spencerAssistant, caplog) -> None:
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
@@ -107,7 +107,7 @@ async def test_authentication_error(hass: HomeAssistant, caplog) -> None:
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         side_effect=UptimeRobotAuthenticationException,
     ), patch(
-        "homeassistant.config_entries.ConfigEntry.async_start_reauth"
+        "spencerassistant.config_entries.ConfigEntry.async_start_reauth"
     ) as config_entry_reauth:
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -119,7 +119,7 @@ async def test_authentication_error(hass: HomeAssistant, caplog) -> None:
         assert config_entry_reauth.assert_called
 
 
-async def test_refresh_data(hass: HomeAssistant, caplog) -> None:
+async def test_refresh_data(hass: spencerAssistant, caplog) -> None:
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
@@ -127,7 +127,7 @@ async def test_refresh_data(hass: HomeAssistant, caplog) -> None:
     assert entity.state == STATE_ON
 
     with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_request_refresh"
+        "spencerassistant.helpers.update_coordinator.DataUpdateCoordinator.async_request_refresh"
     ) as coordinator_refresh:
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -139,7 +139,7 @@ async def test_refresh_data(hass: HomeAssistant, caplog) -> None:
         assert coordinator_refresh.assert_called
 
 
-async def test_switch_api_failure(hass: HomeAssistant, caplog) -> None:
+async def test_switch_api_failure(hass: spencerAssistant, caplog) -> None:
     """Test general exception turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 

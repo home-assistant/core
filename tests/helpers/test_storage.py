@@ -7,16 +7,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STOP,
+from spencerassistant.const import (
+    EVENT_spencerASSISTANT_FINAL_WRITE,
+    EVENT_spencerASSISTANT_STOP,
 )
-from homeassistant.core import CoreState
-from homeassistant.helpers import storage
-from homeassistant.util import dt
-from homeassistant.util.color import RGBColor
+from spencerassistant.core import CoreState
+from spencerassistant.helpers import storage
+from spencerassistant.util import dt
+from spencerassistant.util.color import RGBColor
 
-from tests.common import async_fire_time_changed, async_test_home_assistant
+from tests.common import async_fire_time_changed, async_test_spencer_assistant
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -29,13 +29,13 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 
 @pytest.fixture
 def store(hass):
-    """Fixture of a store that prevents writing on Home Assistant stop."""
+    """Fixture of a store that prevents writing on spencer Assistant stop."""
     return storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
 @pytest.fixture
 def store_v_1_1(hass):
-    """Fixture of a store that prevents writing on Home Assistant stop."""
+    """Fixture of a store that prevents writing on spencer Assistant stop."""
     return storage.Store(
         hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
     )
@@ -43,7 +43,7 @@ def store_v_1_1(hass):
 
 @pytest.fixture
 def store_v_1_2(hass):
-    """Fixture of a store that prevents writing on Home Assistant stop."""
+    """Fixture of a store that prevents writing on spencer Assistant stop."""
     return storage.Store(
         hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_2
     )
@@ -51,7 +51,7 @@ def store_v_1_2(hass):
 
 @pytest.fixture
 def store_v_2_1(hass):
-    """Fixture of a store that prevents writing on Home Assistant stop."""
+    """Fixture of a store that prevents writing on spencer Assistant stop."""
     return storage.Store(
         hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
     )
@@ -84,7 +84,7 @@ async def test_custom_encoder(hass):
 
 async def test_loading_non_existing(hass, store):
     """Test we can save and load data."""
-    with patch("homeassistant.util.json.open", side_effect=FileNotFoundError):
+    with patch("spencerassistant.util.json.open", side_effect=FileNotFoundError):
         data = await store.async_load()
     assert data is None
 
@@ -116,12 +116,12 @@ async def test_saving_with_delay(hass, store, hass_storage):
 
 
 async def test_saving_on_final_write(hass, hass_storage):
-    """Test delayed saves trigger when we quit Home Assistant."""
+    """Test delayed saves trigger when we quit spencer Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     store.async_delay_save(lambda: MOCK_DATA, 5)
     assert store.key not in hass_storage
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     hass.state = CoreState.stopping
     await hass.async_block_till_done()
 
@@ -129,7 +129,7 @@ async def test_saving_on_final_write(hass, hass_storage):
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
@@ -142,7 +142,7 @@ async def test_saving_on_final_write(hass, hass_storage):
 async def test_not_delayed_saving_while_stopping(hass, hass_storage):
     """Test delayed saves don't write after the stop event has fired."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     hass.state = CoreState.stopping
 
@@ -153,12 +153,12 @@ async def test_not_delayed_saving_while_stopping(hass, hass_storage):
 
 
 async def test_not_delayed_saving_after_stopping(hass, hass_storage):
-    """Test delayed saves don't write after stop if issued before stopping Home Assistant."""
+    """Test delayed saves don't write after stop if issued before stopping spencer Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     store.async_delay_save(lambda: MOCK_DATA, 10)
     assert store.key not in hass_storage
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     hass.state = CoreState.stopping
     await hass.async_block_till_done()
     assert store.key not in hass_storage
@@ -169,7 +169,7 @@ async def test_not_delayed_saving_after_stopping(hass, hass_storage):
 
 
 async def test_not_saving_while_stopping(hass, hass_storage):
-    """Test saves don't write when stopping Home Assistant."""
+    """Test saves don't write when stopping spencer Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     hass.state = CoreState.stopping
     await store.async_save(MOCK_DATA)
@@ -467,7 +467,7 @@ async def test_changing_delayed_written_data(hass, store, hass_storage):
 async def test_saving_load_round_trip(tmpdir):
     """Test saving and loading round trip."""
     loop = asyncio.get_running_loop()
-    hass = await async_test_home_assistant(loop)
+    hass = await async_test_spencer_assistant(loop)
 
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "temp_storage"

@@ -1,8 +1,8 @@
 """The tests for the Async Media player helper functions."""
 import pytest
 
-import homeassistant.components.media_player as mp
-from homeassistant.const import (
+import spencerassistant.components.media_player as mp
+from spencerassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,

@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.alexa import errors
-from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.components.alexa import errors
+from spencerassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.aiohttp_client import async_get_clientsession
+from spencerassistant.helpers.entity import EntityCategory
 
 from tests.common import async_fire_time_changed, mock_registry
 
@@ -278,8 +278,8 @@ def patch_sync_helper():
         to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
         return True
 
-    with patch("homeassistant.components.cloud.alexa_config.SYNC_DELAY", 0), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig._sync_helper",
+    with patch("spencerassistant.components.cloud.alexa_config.SYNC_DELAY", 0), patch(
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig._sync_helper",
         side_effect=sync_helper,
     ):
         yield to_update, to_remove
@@ -409,9 +409,9 @@ async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
     await conf.set_authorized(True)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig.async_sync_entities",
     ) as mock_sync, patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.async_enable_proactive_mode",
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig.async_enable_proactive_mode",
     ):
         await cloud_prefs.async_update(alexa_report_state=True)
         await hass.async_block_till_done()
@@ -441,7 +441,7 @@ async def test_alexa_handle_logout(hass, cloud_prefs, cloud_stub):
     await aconf.async_initialize()
 
     with patch(
-        "homeassistant.components.alexa.config.async_enable_proactive_mode",
+        "spencerassistant.components.alexa.config.async_enable_proactive_mode",
         return_value=Mock(),
     ) as mock_enable:
         await aconf.async_enable_proactive_mode()

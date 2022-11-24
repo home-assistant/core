@@ -234,7 +234,7 @@
       },
       {
         "_id": "12:34:56:32:a7:60",
-        "home_name": "Ateljen",
+        "spencer_name": "Ateljen",
         "date_setup": 1566714693,
         "last_setup": 1566714693,
         "type": "NAMain",
@@ -431,7 +431,7 @@
       },
       {
         "_id": "12:34:56:80:bb:26",
-        "station_name": "MYHOME (Palier)",
+        "station_name": "MYspencer (Palier)",
         "date_setup": 1558709904,
         "last_setup": 1558709904,
         "type": "NAMain",
@@ -450,8 +450,8 @@
           "timezone": "Europe/Paris",
           "location": [6.1234567, 46.123456]
         },
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "MYHOME",
+        "spencer_id": "91763b24c43d3e344f424e8b",
+        "spencer_name": "MYspencer",
         "dashboard_data": {
           "time_utc": 1644582694,
           "Temperature": 21.1,

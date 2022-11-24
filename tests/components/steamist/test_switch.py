@@ -4,10 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
+import spencerassistant.util.dt as dt_util
 
 from . import (
     MOCK_ASYNC_GET_STATUS_ACTIVE,
@@ -18,7 +18,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
-async def test_steam_active(hass: HomeAssistant) -> None:
+async def test_steam_active(hass: spencerAssistant) -> None:
     """Test that the switches are setup with the expected values when steam is active."""
     client, _ = await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
     assert len(hass.states.async_all("switch")) == 1
@@ -37,7 +37,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.steam_active").state == STATE_OFF
 
 
-async def test_steam_inactive(hass: HomeAssistant) -> None:
+async def test_steam_inactive(hass: spencerAssistant) -> None:
     """Test that the switches are setup with the expected values when steam is not active."""
     client, _ = await _async_setup_entry_with_status(
         hass, MOCK_ASYNC_GET_STATUS_INACTIVE

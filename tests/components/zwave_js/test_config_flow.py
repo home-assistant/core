@@ -9,13 +9,13 @@ import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
-from homeassistant import config_entries
-from homeassistant.components import usb
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
-from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components import usb
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.zeroconf import ZeroconfServiceInfo
+from spencerassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
+from spencerassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -58,7 +58,7 @@ CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
 def setup_entry_fixture():
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+        "spencerassistant.components.zwave_js.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -67,7 +67,7 @@ def setup_entry_fixture():
 def mock_supervisor_fixture():
     """Mock Supervisor."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=True
+        "spencerassistant.components.zwave_js.config_flow.is_hassio", return_value=True
     ):
         yield
 
@@ -88,7 +88,7 @@ def discovery_info_side_effect_fixture():
 def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
         side_effect=discovery_info_side_effect,
         return_value=discovery_info,
     ) as get_addon_discovery_info:
@@ -107,16 +107,16 @@ def mock_get_server_version(server_version_side_effect, server_version_timeout):
     version_info = VersionInfo(
         driver_version="mock-driver-version",
         server_version="mock-server-version",
-        home_id=1234,
+        spencer_id=1234,
         min_schema_version=0,
         max_schema_version=1,
     )
     with patch(
-        "homeassistant.components.zwave_js.config_flow.get_server_version",
+        "spencerassistant.components.zwave_js.config_flow.get_server_version",
         side_effect=server_version_side_effect,
         return_value=version_info,
     ) as mock_version, patch(
-        "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
+        "spencerassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
         new=server_version_timeout,
     ):
         yield mock_version
@@ -132,7 +132,7 @@ def mock_server_version_timeout():
 def mock_addon_setup_time():
     """Mock add-on setup sleep time."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
+        "spencerassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
         yield addon_setup_time
 
@@ -155,7 +155,7 @@ def serial_port_fixture() -> ListPortInfo:
 def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
     """Mock list ports."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
+        "spencerassistant.components.zwave_js.config_flow.list_ports.comports"
     ) as mock_list_ports:
         another_port = copy(serial_port)
         another_port.device = "/new"
@@ -175,7 +175,7 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
 def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
     """Mock usb serial by id."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
+        "spencerassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
     ) as mock_usb_serial_by_id:
         mock_usb_serial_by_id.side_effect = lambda x: x
         yield mock_usb_serial_by_id
@@ -190,9 +190,9 @@ async def test_manual(hass):
     assert result["type"] == "form"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -339,9 +339,9 @@ async def test_supervisor_discovery(
     )
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -425,9 +425,9 @@ async def test_clean_discovery_on_user_create(
     assert result["step_id"] == "manual"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -594,9 +594,9 @@ async def test_usb_discovery(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -684,9 +684,9 @@ async def test_usb_discovery_addon_not_running(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -764,9 +764,9 @@ async def test_discovery_addon_not_running(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -857,9 +857,9 @@ async def test_discovery_addon_not_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -984,9 +984,9 @@ async def test_not_addon(hass, supervisor):
     assert result["step_id"] == "manual"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -1036,9 +1036,9 @@ async def test_addon_running(
     assert result["step_id"] == "on_supervisor"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -1226,9 +1226,9 @@ async def test_addon_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -1603,9 +1603,9 @@ async def test_addon_not_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -1972,11 +1972,11 @@ async def test_options_addon_running_no_changes(
 
 
 async def different_device_server_version(*args):
-    """Return server version for a device with different home id."""
+    """Return server version for a device with different spencer id."""
     return VersionInfo(
         driver_version="mock-driver-version",
         server_version="mock-server-version",
-        home_id=5678,
+        spencer_id=5678,
         min_schema_version=0,
         max_schema_version=1,
     )
@@ -2560,9 +2560,9 @@ async def test_import_addon_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
@@ -2600,7 +2600,7 @@ async def test_zeroconf(hass):
             name="mock_name",
             port=3000,
             type="_zwave-js-server._tcp.local.",
-            properties={"homeId": "1234"},
+            properties={"spencerId": "1234"},
         ),
     )
 
@@ -2608,9 +2608,9 @@ async def test_zeroconf(hass):
     assert result["step_id"] == "zeroconf_confirm"
 
     with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
+        "spencerassistant.components.zwave_js.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
+        "spencerassistant.components.zwave_js.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

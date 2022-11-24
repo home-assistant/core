@@ -13,7 +13,7 @@ import pytest
 def client_fixture() -> Generator[None, MagicMock, None]:
     """Mock balboa."""
     with patch(
-        "homeassistant.components.balboa.BalboaSpaWifi", autospec=True
+        "spencerassistant.components.balboa.BalboaSpaWifi", autospec=True
     ) as mock_balboa:
         # common attributes
         client = mock_balboa.return_value
@@ -90,5 +90,5 @@ def client_fixture() -> Generator[None, MagicMock, None]:
 @pytest.fixture(autouse=True)
 def set_temperature_wait():
     """Mock set temperature wait time."""
-    with patch("homeassistant.components.balboa.climate.SET_TEMPERATURE_WAIT", new=0):
+    with patch("spencerassistant.components.balboa.climate.SET_TEMPERATURE_WAIT", new=0):
         yield

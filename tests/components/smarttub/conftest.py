@@ -5,9 +5,9 @@ from unittest.mock import create_autospec, patch
 import pytest
 import smarttub
 
-from homeassistant.components.smarttub.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.smarttub.const import DOMAIN
+from spencerassistant.const import CONF_EMAIL, CONF_PASSWORD
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -153,7 +153,7 @@ def mock_api(account, spa):
     """Mock the SmartTub API."""
 
     with patch(
-        "homeassistant.components.smarttub.controller.SmartTub",
+        "spencerassistant.components.smarttub.controller.SmartTub",
         autospec=True,
     ) as api_class_mock:
         api_mock = api_class_mock.return_value

@@ -1,16 +1,16 @@
 """Tests for the Abode camera device."""
 from unittest.mock import patch
 
-from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
+from spencerassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_IDLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(hass: spencerAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, CAMERA_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -19,7 +19,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_attributes(hass: spencerAssistant) -> None:
     """Test the camera attributes are correct."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -27,7 +27,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.state == STATE_IDLE
 
 
-async def test_capture_image(hass: HomeAssistant) -> None:
+async def test_capture_image(hass: spencerAssistant) -> None:
     """Test the camera capture image service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -42,7 +42,7 @@ async def test_capture_image(hass: HomeAssistant) -> None:
         mock_capture.assert_called_once()
 
 
-async def test_camera_on(hass: HomeAssistant) -> None:
+async def test_camera_on(hass: spencerAssistant) -> None:
     """Test the camera turn on service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -57,7 +57,7 @@ async def test_camera_on(hass: HomeAssistant) -> None:
         mock_capture.assert_called_once_with(False)
 
 
-async def test_camera_off(hass: HomeAssistant) -> None:
+async def test_camera_off(hass: spencerAssistant) -> None:
     """Test the camera turn off service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 

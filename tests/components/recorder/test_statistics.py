@@ -10,12 +10,12 @@ from pytest import approx
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder import history, statistics
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
-from homeassistant.components.recorder.db_schema import StatisticsShortTerm
-from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.statistics import (
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import history, statistics
+from spencerassistant.components.recorder.const import SQLITE_URL_PREFIX
+from spencerassistant.components.recorder.db_schema import StatisticsShortTerm
+from spencerassistant.components.recorder.models import process_timestamp
+from spencerassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
     delete_statistics_duplicates,
@@ -26,13 +26,13 @@ from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
 )
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import TEMP_CELSIUS
+from spencerassistant.core import callback
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import recorder as recorder_helper
+from spencerassistant.setup import setup_component
+import spencerassistant.util.dt as dt_util
 
 from .common import (
     async_wait_recording_done,
@@ -41,7 +41,7 @@ from .common import (
     wait_recording_done,
 )
 
-from tests.common import get_test_home_assistant, mock_registry
+from tests.common import get_test_spencer_assistant, mock_registry
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -221,7 +221,7 @@ def mock_sensor_statistics():
         )
 
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics",
+        "spencerassistant.components.sensor.recorder.compile_statistics",
         side_effect=get_fake_stats,
     ):
         yield
@@ -241,7 +241,7 @@ def mock_from_stats():
         return real_from_stats(metadata_id, stats)
 
     with patch(
-        "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
+        "spencerassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
         side_effect=from_stats,
         autospec=True,
     ):
@@ -452,7 +452,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
     assert "Statistics already compiled" not in caplog.text
 
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics",
+        "spencerassistant.components.sensor.recorder.compile_statistics",
         return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         do_adhoc_statistics(hass, start=zero)
@@ -774,7 +774,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
         "statistic_id": "sensor.total_energy_import",
     }
     external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -784,7 +784,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "other"}
     external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -797,7 +797,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
         **_external_statistics,
         "start": period1.replace(tzinfo=None),
     }
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -807,7 +807,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     # Attempt to insert statistics for an invalid starting time
     external_metadata = {**_external_metadata}
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -820,7 +820,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
         **_external_statistics,
         "last_reset": last_reset.replace(tzinfo=None),
     }
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -861,7 +861,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
         "statistic_id": "test:total_energy_import",
     }
     external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -871,7 +871,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
     # Attempt to insert statistics for the wrong domain
     external_metadata = {**_external_metadata, "source": "sensor"}
     external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -884,7 +884,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
         **_external_statistics,
         "start": period1.replace(tzinfo=None),
     }
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -894,7 +894,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
     # Attempt to insert statistics for an invalid starting time
     external_metadata = {**_external_metadata}
     external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -907,7 +907,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
         **_external_statistics,
         "last_reset": last_reset.replace(tzinfo=None),
     }
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
     assert statistics_during_period(hass, zero, period="hour") == {}
@@ -1316,9 +1316,9 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
+        "spencerassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -1349,7 +1349,7 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
@@ -1407,9 +1407,9 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
+        "spencerassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -1442,7 +1442,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
@@ -1510,7 +1510,7 @@ def record_states(hass):
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -1524,7 +1524,7 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
@@ -1532,7 +1532,7 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))

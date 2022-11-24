@@ -83,7 +83,7 @@ def fc_data_mock():
 def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection", autospec=True
+        "spencerassistant.components.fritz.common.FritzConnection", autospec=True
     ) as result:
         result.return_value = FritzConnectionMock(fc_data)
         yield result
@@ -93,7 +93,7 @@ def fc_class_mock(fc_data):
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
     with patch(
-        "homeassistant.components.fritz.common.FritzHosts",
+        "spencerassistant.components.fritz.common.FritzHosts",
         new=FritzHostMock,
     ) as result:
         yield result

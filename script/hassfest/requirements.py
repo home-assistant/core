@@ -14,8 +14,8 @@ from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from stdlib_list import stdlib_list
 from tqdm import tqdm
 
-from homeassistant.const import REQUIRED_NEXT_PYTHON_VER, REQUIRED_PYTHON_VER
-import homeassistant.util.package as pkg_util
+from spencerassistant.const import REQUIRED_NEXT_PYTHON_VER, REQUIRED_PYTHON_VER
+import spencerassistant.util.package as pkg_util
 from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
 from .model import Config, Integration

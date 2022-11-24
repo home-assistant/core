@@ -7,9 +7,9 @@ import pytest
 
 @pytest.fixture(name="operating_system_85")
 def mock_operating_system_85():
-    """Mock running Home Assistant Operating system 8.5."""
-    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
-        "homeassistant.components.hassio.get_os_info",
+    """Mock running spencer Assistant Operating system 8.5."""
+    with patch("spencerassistant.components.hassio.is_hassio", return_value=True), patch(
+        "spencerassistant.components.hassio.get_os_info",
         return_value={
             "version": "8.5",
             "version_latest": "10.0.dev20220912",
@@ -18,17 +18,17 @@ def mock_operating_system_85():
             "boot": "B",
             "data_disk": "/dev/mmcblk1p4",
         },
-    ), patch("homeassistant.components.hassio.get_info", return_value={}), patch(
-        "homeassistant.components.hassio.get_host_info", return_value={}
+    ), patch("spencerassistant.components.hassio.get_info", return_value={}), patch(
+        "spencerassistant.components.hassio.get_host_info", return_value={}
     ):
         yield
 
 
 @pytest.fixture(name="operating_system_90")
 def mock_operating_system_90():
-    """Mock running Home Assistant Operating system 9.0."""
-    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
-        "homeassistant.components.hassio.get_os_info",
+    """Mock running spencer Assistant Operating system 9.0."""
+    with patch("spencerassistant.components.hassio.is_hassio", return_value=True), patch(
+        "spencerassistant.components.hassio.get_os_info",
         return_value={
             "version": "9.0.dev20220912",
             "version_latest": "10.0.dev20220912",
@@ -37,8 +37,8 @@ def mock_operating_system_90():
             "boot": "B",
             "data_disk": "/dev/mmcblk1p4",
         },
-    ), patch("homeassistant.components.hassio.get_info", return_value={}), patch(
-        "homeassistant.components.hassio.get_host_info", return_value={}
+    ), patch("spencerassistant.components.hassio.get_info", return_value={}), patch(
+        "spencerassistant.components.hassio.get_host_info", return_value={}
     ):
         yield
 
@@ -47,9 +47,9 @@ def mock_operating_system_90():
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
     with patch("bleak.get_platform_scanner_backend_type"), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
+        "spencerassistant.components.bluetooth.platform.system", return_value="Darwin"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "spencerassistant.components.bluetooth.scanner.platform.system",
         return_value="Darwin",
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Darwin"
@@ -71,9 +71,9 @@ def windows_adapter():
 def no_adapter_fixture():
     """Fixture that mocks no adapters on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "spencerassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "spencerassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -90,9 +90,9 @@ def no_adapter_fixture():
 def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "spencerassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "spencerassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -105,7 +105,7 @@ def one_adapter_fixture():
                 "address": "00:00:00:00:00:01",
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": True,
-                "sw_version": "homeassistant",
+                "sw_version": "spencerassistant",
             },
         },
     ):
@@ -116,9 +116,9 @@ def one_adapter_fixture():
 def two_adapters_fixture():
     """Fixture that mocks two adapters on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "spencerassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "spencerassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -131,13 +131,13 @@ def two_adapters_fixture():
                 "address": "00:00:00:00:00:01",
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
-                "sw_version": "homeassistant",
+                "sw_version": "spencerassistant",
             },
             "hci1": {
                 "address": "00:00:00:00:00:02",
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": True,
-                "sw_version": "homeassistant",
+                "sw_version": "spencerassistant",
             },
         },
     ):
@@ -148,9 +148,9 @@ def two_adapters_fixture():
 def one_adapter_old_bluez():
     """Fixture that mocks two adapters on Linux."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "spencerassistant.components.bluetooth.platform.system", return_value="Linux"
     ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
+        "spencerassistant.components.bluetooth.scanner.platform.system",
         return_value="Linux",
     ), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -163,7 +163,7 @@ def one_adapter_old_bluez():
                 "address": "00:00:00:00:00:01",
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
-                "sw_version": "homeassistant",
+                "sw_version": "spencerassistant",
             },
         },
     ):

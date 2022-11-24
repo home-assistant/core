@@ -14,7 +14,7 @@ from aiopyarr import (
 )
 import pytest
 
-from homeassistant.components.sonarr.const import (
+from spencerassistant.components.sonarr.const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
@@ -22,14 +22,14 @@ from homeassistant.components.sonarr.const import (
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -103,7 +103,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.sonarr.async_setup_entry", return_value=True):
         yield
 
 
@@ -111,7 +111,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 def mock_sonarr_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked Sonarr client."""
     with patch(
-        "homeassistant.components.sonarr.config_flow.SonarrClient", autospec=True
+        "spencerassistant.components.sonarr.config_flow.SonarrClient", autospec=True
     ) as sonarr_mock:
         client = sonarr_mock.return_value
         client.async_get_calendar.return_value = sonarr_calendar()
@@ -129,7 +129,7 @@ def mock_sonarr_config_flow() -> Generator[None, MagicMock, None]:
 def mock_sonarr() -> Generator[None, MagicMock, None]:
     """Return a mocked Sonarr client."""
     with patch(
-        "homeassistant.components.sonarr.SonarrClient", autospec=True
+        "spencerassistant.components.sonarr.SonarrClient", autospec=True
     ) as sonarr_mock:
         client = sonarr_mock.return_value
         client.async_get_calendar.return_value = sonarr_calendar()
@@ -145,7 +145,7 @@ def mock_sonarr() -> Generator[None, MagicMock, None]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_sonarr: MagicMock
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, mock_sonarr: MagicMock
 ) -> MockConfigEntry:
     """Set up the Sonarr integration for testing."""
     mock_config_entry.add_to_hass(hass)

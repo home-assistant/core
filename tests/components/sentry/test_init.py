@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.sentry import get_channel, process_before_send
-from homeassistant.components.sentry.const import (
+from spencerassistant.components.sentry import get_channel, process_before_send
+from spencerassistant.components.sentry.const import (
     CONF_DSN,
     CONF_ENVIRONMENT,
     CONF_EVENT_CUSTOM_COMPONENTS,
@@ -15,13 +15,13 @@ from homeassistant.components.sentry.const import (
     CONF_TRACING_SAMPLE_RATE,
     DOMAIN,
 )
-from homeassistant.const import __version__ as current_version
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import __version__ as current_version
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(hass: spencerAssistant) -> None:
     """Test integration setup from entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -30,13 +30,13 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.sentry.AioHttpIntegration"
+        "spencerassistant.components.sentry.AioHttpIntegration"
     ) as sentry_aiohttp_mock, patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
+        "spencerassistant.components.sentry.SqlalchemyIntegration"
     ) as sentry_sqlalchemy_mock, patch(
-        "homeassistant.components.sentry.LoggingIntegration"
+        "spencerassistant.components.sentry.LoggingIntegration"
     ) as sentry_logging_mock, patch(
-        "homeassistant.components.sentry.sentry_sdk"
+        "spencerassistant.components.sentry.sentry_sdk"
     ) as sentry_mock:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -74,7 +74,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert call_args["before_send"]
 
 
-async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
+async def test_setup_entry_with_tracing(hass: spencerAssistant) -> None:
     """Test integration setup from entry with tracing enabled."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -83,10 +83,10 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sentry.AioHttpIntegration"), patch(
-        "homeassistant.components.sentry.SqlalchemyIntegration"
-    ), patch("homeassistant.components.sentry.LoggingIntegration"), patch(
-        "homeassistant.components.sentry.sentry_sdk"
+    with patch("spencerassistant.components.sentry.AioHttpIntegration"), patch(
+        "spencerassistant.components.sentry.SqlalchemyIntegration"
+    ), patch("spencerassistant.components.sentry.LoggingIntegration"), patch(
+        "spencerassistant.components.sentry.sentry_sdk"
     ) as sentry_mock:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -113,11 +113,11 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
     ],
 )
 async def test_get_channel(version: str, channel: str) -> None:
-    """Test if channel detection works from Home Assistant version number."""
+    """Test if channel detection works from spencer Assistant version number."""
     assert get_channel(version) == channel
 
 
-async def test_process_before_send(hass: HomeAssistant) -> None:
+async def test_process_before_send(hass: spencerAssistant) -> None:
     """Test regular use of the Sentry process before sending function."""
     hass.config.components.add("puppies")
     hass.config.components.add("a_integration")
@@ -142,7 +142,7 @@ async def test_process_before_send(hass: HomeAssistant) -> None:
     assert result["contexts"]
     assert result["contexts"]
 
-    ha_context = result["contexts"]["Home Assistant"]
+    ha_context = result["contexts"]["spencer Assistant"]
     assert ha_context["channel"] == "test"
     assert ha_context["custom_components"] == "fridge_opener\nironing_robot"
     assert ha_context["integrations"] == "a_integration\npuppies"
@@ -156,7 +156,7 @@ async def test_process_before_send(hass: HomeAssistant) -> None:
     assert user["id"] == "12345"
 
 
-async def test_event_with_platform_context(hass: HomeAssistant):
+async def test_event_with_platform_context(hass: spencerAssistant):
     """Test extraction of platform context information during Sentry events."""
 
     current_platform_mock = Mock()
@@ -164,7 +164,7 @@ async def test_event_with_platform_context(hass: HomeAssistant):
     current_platform_mock.get().domain = "light"
 
     with patch(
-        "homeassistant.components.sentry.entity_platform.current_platform",
+        "spencerassistant.components.sentry.entity_platform.current_platform",
         new=current_platform_mock,
     ):
         result = process_before_send(
@@ -187,7 +187,7 @@ async def test_event_with_platform_context(hass: HomeAssistant):
     current_platform_mock.get().domain = "switch"
 
     with patch(
-        "homeassistant.components.sentry.entity_platform.current_platform",
+        "spencerassistant.components.sentry.entity_platform.current_platform",
         new=current_platform_mock,
     ):
         result = process_before_send(
@@ -212,15 +212,15 @@ async def test_event_with_platform_context(hass: HomeAssistant):
     [
         ("adguard", {"package": "adguard"}),
         (
-            "homeassistant.components.hue.coordinator",
+            "spencerassistant.components.hue.coordinator",
             {"integration": "hue", "custom_component": "no"},
         ),
         (
-            "homeassistant.components.hue.light",
+            "spencerassistant.components.hue.light",
             {"integration": "hue", "platform": "light", "custom_component": "no"},
         ),
         (
-            "homeassistant.components.ironing_robot.switch",
+            "spencerassistant.components.ironing_robot.switch",
             {
                 "integration": "ironing_robot",
                 "platform": "switch",
@@ -228,14 +228,14 @@ async def test_event_with_platform_context(hass: HomeAssistant):
             },
         ),
         (
-            "homeassistant.components.ironing_robot",
+            "spencerassistant.components.ironing_robot",
             {"integration": "ironing_robot", "custom_component": "yes"},
         ),
-        ("homeassistant.helpers.network", {"helpers": "network"}),
+        ("spencerassistant.helpers.network", {"helpers": "network"}),
         ("tuyapi.test", {"package": "tuyapi"}),
     ],
 )
-async def test_logger_event_extraction(hass: HomeAssistant, logger, tags):
+async def test_logger_event_extraction(hass: spencerAssistant, logger, tags):
     """Test extraction of information from Sentry logger events."""
 
     result = process_before_send(
@@ -267,18 +267,18 @@ async def test_logger_event_extraction(hass: HomeAssistant, logger, tags):
         ("adguard", {CONF_EVENT_THIRD_PARTY_PACKAGES: True}, True),
         ("adguard", {CONF_EVENT_THIRD_PARTY_PACKAGES: False}, False),
         (
-            "homeassistant.components.ironing_robot.switch",
+            "spencerassistant.components.ironing_robot.switch",
             {CONF_EVENT_CUSTOM_COMPONENTS: True},
             True,
         ),
         (
-            "homeassistant.components.ironing_robot.switch",
+            "spencerassistant.components.ironing_robot.switch",
             {CONF_EVENT_CUSTOM_COMPONENTS: False},
             False,
         ),
     ],
 )
-async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
+async def test_filter_log_events(hass: spencerAssistant, logger, options, event):
     """Test filtering of events based on configuration options."""
     result = process_before_send(
         hass,
@@ -306,7 +306,7 @@ async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
         ("no", {CONF_EVENT_HANDLED: True}, True),
     ],
 )
-async def test_filter_handled_events(hass: HomeAssistant, handled, options, event):
+async def test_filter_handled_events(hass: spencerAssistant, handled, options, event):
     """Tests filtering of handled events based on configuration options."""
     result = process_before_send(
         hass,

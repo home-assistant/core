@@ -2,11 +2,11 @@
 
 from json import loads
 
-from homeassistant.components.advantage_air.const import (
+from spencerassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OPEN,
 )
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -14,8 +14,8 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     CoverDeviceClass,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OPEN
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_RESPONSE,

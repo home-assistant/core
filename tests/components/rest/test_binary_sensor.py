@@ -8,9 +8,9 @@ import httpx
 import pytest
 import respx
 
-from homeassistant import config as hass_config
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import (
+from spencerassistant import config as hass_config
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONTENT_TYPE_JSON,
@@ -20,14 +20,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_setup_missing_basic_config(hass: HomeAssistant) -> None:
+async def test_setup_missing_basic_config(hass: spencerAssistant) -> None:
     """Test setup with configuration missing required entries."""
     assert await async_setup_component(
         hass, Platform.BINARY_SENSOR, {"binary_sensor": {"platform": "rest"}}
@@ -36,7 +36,7 @@ async def test_setup_missing_basic_config(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("binary_sensor")) == 0
 
 
-async def test_setup_missing_config(hass: HomeAssistant) -> None:
+async def test_setup_missing_config(hass: spencerAssistant) -> None:
     """Test setup with configuration missing required entries."""
     assert await async_setup_component(
         hass,
@@ -55,7 +55,7 @@ async def test_setup_missing_config(hass: HomeAssistant) -> None:
 
 @respx.mock
 async def test_setup_failed_connect(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup when connection error occurs."""
 
@@ -79,7 +79,7 @@ async def test_setup_failed_connect(
 
 
 @respx.mock
-async def test_setup_timeout(hass: HomeAssistant) -> None:
+async def test_setup_timeout(hass: spencerAssistant) -> None:
     """Test setup when connection timeout occurs."""
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
@@ -98,7 +98,7 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_minimum(hass: HomeAssistant) -> None:
+async def test_setup_minimum(hass: spencerAssistant) -> None:
     """Test setup with minimum configuration."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -117,7 +117,7 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_minimum_resource_template(hass: spencerAssistant) -> None:
     """Test setup with minimum configuration (resource_template)."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -135,7 +135,7 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_duplicate_resource_template(hass: spencerAssistant) -> None:
     """Test setup with duplicate resources."""
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
@@ -154,7 +154,7 @@ async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get(hass: HomeAssistant) -> None:
+async def test_setup_get(hass: spencerAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -187,7 +187,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get_template_headers_params(hass: HomeAssistant) -> None:
+async def test_setup_get_template_headers_params(hass: spencerAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
@@ -213,7 +213,7 @@ async def test_setup_get_template_headers_params(hass: HomeAssistant) -> None:
             }
         },
     )
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
 
     assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
     assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
@@ -221,7 +221,7 @@ async def test_setup_get_template_headers_params(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
+async def test_setup_get_digest_auth(hass: spencerAssistant) -> None:
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -249,7 +249,7 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_post(hass: HomeAssistant) -> None:
+async def test_setup_post(hass: spencerAssistant) -> None:
     """Test setup with valid configuration."""
     respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -277,7 +277,7 @@ async def test_setup_post(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get_off(hass: HomeAssistant) -> None:
+async def test_setup_get_off(hass: spencerAssistant) -> None:
     """Test setup with valid off configuration."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
@@ -307,7 +307,7 @@ async def test_setup_get_off(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get_on(hass: HomeAssistant) -> None:
+async def test_setup_get_on(hass: spencerAssistant) -> None:
     """Test setup with valid on configuration."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
@@ -337,7 +337,7 @@ async def test_setup_get_on(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_with_exception(hass: HomeAssistant) -> None:
+async def test_setup_with_exception(hass: spencerAssistant) -> None:
     """Test setup with exception."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
@@ -361,13 +361,13 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     respx.clear()
     respx.get("http://localhost").mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
-        "homeassistant",
+        "spencerassistant",
         "update_entity",
         {ATTR_ENTITY_ID: ["binary_sensor.foo"]},
         blocking=True,
@@ -379,7 +379,7 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_reload(hass: HomeAssistant) -> None:
+async def test_reload(hass: spencerAssistant) -> None:
     """Verify we can reload reset sensors."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -419,7 +419,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_query_params(hass: HomeAssistant) -> None:
+async def test_setup_query_params(hass: spencerAssistant) -> None:
     """Test setup with query params."""
     respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
@@ -439,7 +439,7 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(hass: spencerAssistant) -> None:
     """Test entity configuration."""
 
     config = {

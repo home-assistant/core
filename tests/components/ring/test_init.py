@@ -1,8 +1,8 @@
 """The tests for the Ring component."""
 from datetime import timedelta
 
-import homeassistant.components.ring as ring
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.ring as ring
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

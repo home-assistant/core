@@ -31,8 +31,8 @@ from zwave_js_server.model.controller import (
 from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
-from homeassistant.components.zwave_js.api import (
+from spencerassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
+from spencerassistant.components.zwave_js.api import (
     ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
     CLIENT_SIDE_AUTH,
@@ -72,12 +72,12 @@ from homeassistant.components.zwave_js.api import (
     VALUE,
     VERSION,
 )
-from homeassistant.components.zwave_js.const import (
+from spencerassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
 )
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.helpers import device_registry as dr
 
 
 def get_device(hass, node):
@@ -1334,7 +1334,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "homeassistant.components.zwave_js.api.async_parse_qr_code_string",
+        "spencerassistant.components.zwave_js.api.async_parse_qr_code_string",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
@@ -2635,7 +2635,7 @@ async def test_set_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     with patch(
-        "homeassistant.components.zwave_js.api.async_set_config_parameter",
+        "spencerassistant.components.zwave_js.api.async_set_config_parameter",
     ) as set_param_mock:
         set_param_mock.side_effect = InvalidNewValue("test")
         await ws_client.send_json(
@@ -2711,7 +2711,7 @@ async def test_set_config_parameter(
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "homeassistant.components.zwave_js.api.async_set_config_parameter",
+        "spencerassistant.components.zwave_js.api.async_set_config_parameter",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
@@ -2816,10 +2816,10 @@ async def test_firmware_upload_view(
     client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
+        "spencerassistant.components.zwave_js.api.update_firmware",
     ) as mock_cmd, patch.dict(
-        "homeassistant.components.zwave_js.api.USER_AGENT",
-        {"HomeAssistant": "0.0.0"},
+        "spencerassistant.components.zwave_js.api.USER_AGENT",
+        {"spencerAssistant": "0.0.0"},
     ):
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
@@ -2830,7 +2830,7 @@ async def test_firmware_upload_view(
             [FirmwareUpdateData("file", bytes(10))],
         )
         assert mock_cmd.call_args[1] == {
-            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
+            "additional_user_agent_components": {"spencerAssistant": "0.0.0"},
         }
         assert json.loads(await resp.text()) is None
 
@@ -2842,7 +2842,7 @@ async def test_firmware_upload_view_failed_command(
     client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
-        "homeassistant.components.zwave_js.api.update_firmware",
+        "spencerassistant.components.zwave_js.api.update_firmware",
         side_effect=FailedCommand("test", "test"),
     ):
         resp = await client.post(
@@ -3251,7 +3251,7 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "driver.enable_statistics"
-    assert args["applicationName"] == "Home Assistant"
+    assert args["applicationName"] == "spencer Assistant"
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "driver.enable_error_reporting"
     assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]

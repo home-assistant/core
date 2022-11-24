@@ -4,9 +4,9 @@ import json
 import time
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.flo.const import DOMAIN
-from homeassistant.const import CONTENT_TYPE_JSON
+from spencerassistant import config_entries
+from spencerassistant.components.flo.const import DOMAIN
+from spencerassistant.const import CONTENT_TYPE_JSON
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
@@ -21,14 +21,14 @@ async def test_form(hass, aioclient_mock_fixture):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.async_setup_entry", return_value=True
+        "spencerassistant.components.flo.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         )
 
         assert result2["type"] == "create_entry"
-        assert result2["title"] == "Home"
+        assert result2["title"] == "spencer"
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1

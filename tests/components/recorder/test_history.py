@@ -10,20 +10,20 @@ from unittest.mock import patch, sentinel
 import pytest
 from sqlalchemy import text
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder import history
-from homeassistant.components.recorder.db_schema import (
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import history
+from spencerassistant.components.recorder.db_schema import (
     Events,
     RecorderRuns,
     StateAttributes,
     States,
 )
-from homeassistant.components.recorder.models import LazyState, process_timestamp
-from homeassistant.components.recorder.util import session_scope
-import homeassistant.core as ha
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.recorder.models import LazyState, process_timestamp
+from spencerassistant.components.recorder.util import session_scope
+import spencerassistant.core as ha
+from spencerassistant.core import spencerAssistant, State
+from spencerassistant.helpers.json import JSONEncoder
+import spencerassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done, wait_recording_done
 
@@ -31,7 +31,7 @@ from tests.common import SetupRecorderInstanceT, mock_state_change_event
 
 
 async def _async_get_states(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     utc_point_in_time: datetime,
     entity_ids: list[str] | None = None,
     run: RecorderRuns | None = None,
@@ -61,7 +61,7 @@ async def _async_get_states(
 
 
 def _add_db_entries(
-    hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
+    hass: ha.spencerAssistant, point: datetime, entity_ids: list[str]
 ) -> None:
     with session_scope(hass=hass) as session:
         for idx, entity_id in enumerate(entity_ids):
@@ -99,7 +99,7 @@ def _setup_get_states(hass):
     states = []
     now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=now
     ):
         for i in range(5):
             state = ha.State(
@@ -116,7 +116,7 @@ def _setup_get_states(hass):
 
     future = now + timedelta(seconds=1)
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=future
     ):
         for i in range(5):
             state = ha.State(
@@ -213,13 +213,13 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     end = point + timedelta(seconds=1)
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("idle")
         set_state("YouTube")
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states = [
             set_state("idle"),
@@ -229,7 +229,7 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
         ]
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=end
     ):
         set_state("Netflix")
         set_state("Plex")
@@ -260,30 +260,30 @@ def test_state_changes_during_period_descending(hass_recorder):
     end = point + timedelta(seconds=1)
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("idle")
         set_state("YouTube")
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states = [set_state("idle")]
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point2
     ):
         states.append(set_state("Netflix"))
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point3
     ):
         states.append(set_state("Plex"))
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point4
     ):
         states.append(set_state("YouTube"))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=end
     ):
         set_state("Netflix")
         set_state("Plex")
@@ -315,18 +315,18 @@ def test_get_last_state_changes(hass_recorder):
     point2 = point + timedelta(minutes=1)
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("1")
 
     states = []
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states.append(set_state("2"))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point2
     ):
         states.append(set_state("3"))
 
@@ -354,12 +354,12 @@ def test_ensure_state_can_be_copied(hass_recorder):
     point = start + timedelta(minutes=1)
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("1")
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         set_state("2")
 
@@ -541,26 +541,26 @@ def test_get_significant_states_only(hass_recorder):
 
     states = []
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[2],
     ):
         # everything is different
@@ -590,7 +590,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     mp3 = "media_player.test3"
     therm = "thermostat.test"
     therm2 = "thermostat.test2"
-    zone = "zone.home"
+    zone = "zone.spencer"
     script_c = "script.can_cancel_this_one"
 
     def set_state(entity_id, state, **kwargs):
@@ -607,7 +607,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -626,7 +626,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
@@ -643,7 +643,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
@@ -661,7 +661,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
+    hass: ha.spencerAssistant,
     recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
@@ -716,7 +716,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
 async def test_get_states_query_during_migration_to_schema_25(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
+    hass: ha.spencerAssistant,
     recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
@@ -767,7 +767,7 @@ async def test_get_states_query_during_migration_to_schema_25(
 
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
+    hass: ha.spencerAssistant,
     recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
@@ -821,7 +821,7 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
 async def test_get_full_significant_states_handles_empty_last_changed(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: ha.HomeAssistant,
+    hass: ha.spencerAssistant,
 ):
     """Test getting states when last_changed is null."""
     await async_setup_recorder_instance(hass, {})

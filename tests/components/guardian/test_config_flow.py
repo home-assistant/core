@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
 
-from homeassistant import data_entry_flow
-from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.guardian import CONF_UID, DOMAIN
-from homeassistant.components.guardian.config_flow import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components import dhcp, zeroconf
+from spencerassistant.components.guardian import CONF_UID, DOMAIN
+from spencerassistant.components.guardian.config_flow import (
     async_get_pin_from_discovery_hostname,
     async_get_pin_from_uid,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from spencerassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry
 

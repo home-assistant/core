@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components.sonos.helpers import hostname_to_uid
+from spencerassistant.components.sonos.helpers import hostname_to_uid
 
 
 async def test_uid_to_hostname():

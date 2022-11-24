@@ -2,14 +2,14 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util import dt as dt_util
 
 from . import init_integration
 
@@ -17,7 +17,7 @@ from . import init_integration
 async def test_sensors(hass, nzbget_api) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
-    with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
+    with patch("spencerassistant.components.nzbget.sensor.utcnow", return_value=now):
         entry = await init_integration(hass)
 
     registry = er.async_get(hass)

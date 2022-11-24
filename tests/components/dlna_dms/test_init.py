@@ -3,15 +3,15 @@
 from typing import cast
 from unittest.mock import Mock
 
-from homeassistant.components.dlna_dms.const import (
+from spencerassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
     CONFIG_VERSION,
     DOMAIN,
 )
-from homeassistant.components.dlna_dms.dms import DlnaDmsData
-from homeassistant.const import CONF_DEVICE_ID, CONF_URL
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.dlna_dms.dms import DlnaDmsData
+from spencerassistant.const import CONF_DEVICE_ID, CONF_URL
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aiohttp_session_requester_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -74,7 +74,7 @@ async def test_resource_lifecycle(
     assert not domain_data.sources
 
 
-async def test_migrate_entry(hass: HomeAssistant) -> None:
+async def test_migrate_entry(hass: spencerAssistant) -> None:
     """Test migrating a config entry from version 1 to version 2."""
     # Create mock entry with version 1
     mock_entry = MockConfigEntry(
@@ -101,7 +101,7 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_entry_collision(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
     """Test migrating a config entry with a potentially colliding source ID."""
     # Use existing mock entry

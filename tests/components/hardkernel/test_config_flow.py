@@ -1,19 +1,19 @@
 """Test the Hardkernel config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.hardkernel.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.hardkernel.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
+async def test_config_flow(hass: spencerAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
 
     with patch(
-        "homeassistant.components.hardkernel.async_setup_entry",
+        "spencerassistant.components.hardkernel.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -32,7 +32,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == "Hardkernel"
 
 
-async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
+async def test_config_flow_single_entry(hass: spencerAssistant) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -46,7 +46,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hardkernel.async_setup_entry",
+        "spencerassistant.components.hardkernel.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(

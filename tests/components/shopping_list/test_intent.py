@@ -1,5 +1,5 @@
 """Test Shopping List intents."""
-from homeassistant.helpers import intent
+from spencerassistant.helpers import intent
 
 
 async def test_recent_items_intent(hass, sl_setup):

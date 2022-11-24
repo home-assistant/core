@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import input_boolean, switch
-from homeassistant.components.humidifier import (
+from spencerassistant.components import input_boolean, switch
+from spencerassistant.components.humidifier import (
     ATTR_HUMIDITY,
     DOMAIN,
     MODE_AWAY,
@@ -14,7 +14,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     SERVICE_TURN_OFF,
@@ -23,10 +23,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-import homeassistant.core as ha
-from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
@@ -75,7 +75,7 @@ async def test_valid_conf(hass):
 @pytest.fixture
 async def setup_comp_1(hass):
     """Initialize components."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
 
@@ -814,7 +814,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
+        "spencerassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
@@ -848,7 +848,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
+        "spencerassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
@@ -879,7 +879,7 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == "homeassistant"
+    assert call.domain == "spencerassistant"
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -908,7 +908,7 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == "homeassistant"
+    assert call.domain == "spencerassistant"
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -970,7 +970,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_com
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
+        "spencerassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
@@ -992,7 +992,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_co
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
+        "spencerassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
@@ -1024,7 +1024,7 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_co
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == "homeassistant"
+    assert call.domain == "spencerassistant"
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1058,7 +1058,7 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == "homeassistant"
+    assert call.domain == "spencerassistant"
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 

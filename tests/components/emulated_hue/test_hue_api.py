@@ -9,8 +9,8 @@ from unittest.mock import patch
 from aiohttp.hdrs import CONTENT_TYPE
 import pytest
 
-from homeassistant import const, setup
-from homeassistant.components import (
+from spencerassistant import const, setup
+from spencerassistant.components import (
     climate,
     cover,
     emulated_hue,
@@ -21,8 +21,8 @@ from homeassistant.components import (
     media_player,
     script,
 )
-from homeassistant.components.emulated_hue import Config, hue_api
-from homeassistant.components.emulated_hue.hue_api import (
+from spencerassistant.components.emulated_hue import Config, hue_api
+from spencerassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
     HUE_API_STATE_BRI_MAX,
     HUE_API_STATE_CT,
@@ -40,7 +40,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueOneLightStateView,
     HueUsernameView,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONTENT_TYPE_JSON,
@@ -49,9 +49,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import spencerAssistant, callback
+from spencerassistant.helpers.typing import ConfigType
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     async_fire_time_changed,
@@ -100,7 +100,7 @@ ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
 def patch_upnp():
     """Patch async_create_upnp_datagram_endpoint."""
     return patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+        "spencerassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
     )
 
 
@@ -112,7 +112,7 @@ async def async_get_lights(client):
     return await result.json()
 
 
-async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> None:
+async def _async_setup_emulated_hue(hass: spencerAssistant, conf: ConfigType) -> None:
     """Set up emulated_hue with a specific config."""
     with patch_upnp():
         await setup.async_setup_component(
@@ -125,9 +125,9 @@ async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> No
 
 @pytest.fixture
 async def base_setup(hass):
-    """Set up homeassistant and http."""
+    """Set up spencerassistant and http."""
     await asyncio.gather(
-        setup.async_setup_component(hass, "homeassistant", {}),
+        setup.async_setup_component(hass, "spencerassistant", {}),
         setup.async_setup_component(
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
         ),
@@ -137,9 +137,9 @@ async def base_setup(hass):
 @pytest.fixture
 async def demo_setup(hass):
     """Fixture to setup demo platforms."""
-    # We need to do this to get access to homeassistant/turn_(on,off)
+    # We need to do this to get access to spencerassistant/turn_(on,off)
     setups = [
-        setup.async_setup_component(hass, "homeassistant", {}),
+        setup.async_setup_component(hass, "spencerassistant", {}),
         setup.async_setup_component(
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
         ),
@@ -193,7 +193,7 @@ async def demo_setup(hass):
 
 @pytest.fixture
 async def hass_hue(hass, base_setup, demo_setup):
-    """Set up a Home Assistant instance for these tests."""
+    """Set up a spencer Assistant instance for these tests."""
     await _async_setup_emulated_hue(
         hass,
         {
@@ -208,7 +208,7 @@ async def hass_hue(hass, base_setup, demo_setup):
 
 @callback
 def _mock_hue_endpoints(
-    hass: HomeAssistant, conf: ConfigType, entity_numbers: dict[str, str]
+    hass: spencerAssistant, conf: ConfigType, entity_numbers: dict[str, str]
 ) -> None:
     """Override the hue config with specific entity numbers."""
     web_app = hass.http.app
@@ -1303,7 +1303,7 @@ async def test_external_ip_blocked(hue_client):
     postUrls = ["/api"]
     putUrls = ["/api/username/lights/light.ceiling_lights/state"]
     with patch(
-        "homeassistant.components.emulated_hue.hue_api.ip_address",
+        "spencerassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:

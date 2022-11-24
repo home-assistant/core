@@ -3,18 +3,18 @@ from dataclasses import dataclass
 import datetime
 from unittest.mock import patch
 
-from homeassistant.components.homeassistant import (
+from spencerassistant.components.spencerassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
-from homeassistant.components.sensor import (
+from spencerassistant.components.landisgyr_heat_meter.const import DOMAIN
+from spencerassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -22,11 +22,11 @@ from homeassistant.const import (
     ENERGY_MEGA_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import CoreState, State
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import CoreState, State
+from spencerassistant.helpers import entity_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
@@ -42,7 +42,7 @@ class MockHeatMeterResponse:
     meter_date_time: datetime.datetime
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
+@patch("spencerassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
 async def test_create_sensors(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
@@ -107,10 +107,10 @@ async def test_create_sensors(mock_heat_meter, hass):
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
+@patch("spencerassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
 async def test_restore_state(mock_heat_meter, hass):
     """Test sensor restore state."""
-    # Home assistant is not running yet
+    # spencer assistant is not running yet
     hass.state = CoreState.not_running
     last_reset = "2022-07-01T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(

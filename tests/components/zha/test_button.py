@@ -20,15 +20,15 @@ from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
-from homeassistant.const import (
+from spencerassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -40,7 +40,7 @@ from tests.common import mock_coro
 def button_platform_only():
     """Only setup the button and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
             Platform.BUTTON,

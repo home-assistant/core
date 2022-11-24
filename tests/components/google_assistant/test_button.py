@@ -4,17 +4,17 @@ from unittest.mock import patch
 
 from pytest import raises
 
-from homeassistant.components import google_assistant as ga
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import google_assistant as ga
+from spencerassistant.core import Context, spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
 
 from tests.common import MockUser
 
 
-async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser):
+async def test_sync_button(hass: spencerAssistant, hass_owner_user: MockUser):
     """Test sync button."""
 
     await async_setup_component(
@@ -43,7 +43,7 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser):
         )
         mock_sync_entities.assert_called_once_with(hass_owner_user.id)
 
-        with raises(HomeAssistantError):
+        with raises(spencerAssistantError):
             mock_sync_entities.return_value = 400
 
             await hass.services.async_call(

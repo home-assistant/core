@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
 
-from homeassistant.components.hassio.const import X_AUTH_TOKEN
+from spencerassistant.components.hassio.const import X_AUTH_TOKEN
 
 
 @pytest.mark.parametrize(

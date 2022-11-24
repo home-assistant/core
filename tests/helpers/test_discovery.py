@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import setup
-from homeassistant.const import Platform
-from homeassistant.core import callback
-from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant import setup
+from spencerassistant.const import Platform
+from spencerassistant.core import callback
+from spencerassistant.helpers import discovery
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import (
     MockModule,
@@ -20,7 +20,7 @@ from tests.common import (
 @pytest.fixture
 def mock_setup_component():
     """Mock setup component."""
-    with patch("homeassistant.setup.async_setup_component", return_value=True) as mock:
+    with patch("spencerassistant.setup.async_setup_component", return_value=True) as mock:
         yield mock
 
 

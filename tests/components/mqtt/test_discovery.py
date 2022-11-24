@@ -7,22 +7,22 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt.abbreviations import (
+from spencerassistant import config_entries
+from spencerassistant.components import mqtt
+from spencerassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.const import (
+from spencerassistant.components.mqtt.discovery import async_start
+from spencerassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import help_test_unload_config_entry
 
@@ -57,7 +57,7 @@ async def test_subscribing_config_topic(hass, mqtt_mock_entry_no_yaml_config):
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
-    discovery_topic = "homeassistant"
+    discovery_topic = "spencerassistant"
     await async_start(hass, discovery_topic, entry)
 
     call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
@@ -69,19 +69,19 @@ async def test_subscribing_config_topic(hass, mqtt_mock_entry_no_yaml_config):
     assert discovery_topic + "/+/+/+/config" in topics
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
     "topic, log",
     [
-        ("homeassistant/binary_sensor/bla/not_config", False),
-        ("homeassistant/binary_sensor/rörkrökare/config", True),
+        ("spencerassistant/binary_sensor/bla/not_config", False),
+        ("spencerassistant/binary_sensor/rörkrökare/config", True),
     ],
 )
 async def test_invalid_topic(hass, mqtt_mock_entry_no_yaml_config, caplog, topic, log):
     """Test sending to invalid topic."""
     await mqtt_mock_entry_no_yaml_config()
     with patch(
-        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+        "spencerassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
         mock_dispatcher_send = AsyncMock(return_value=None)
 
@@ -97,18 +97,18 @@ async def test_invalid_topic(hass, mqtt_mock_entry_no_yaml_config, caplog, topic
         caplog.clear()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_invalid_json(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in invalid JSON."""
     await mqtt_mock_entry_no_yaml_config()
     with patch(
-        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+        "spencerassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
 
         mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", "not json"
+            hass, "spencerassistant/binary_sensor/bla/config", "not json"
         )
         await hass.async_block_till_done()
         assert "Unable to parse JSON" in caplog.text
@@ -119,7 +119,7 @@ async def test_only_valid_components(hass, mqtt_mock_entry_no_yaml_config, caplo
     """Test for a valid component."""
     await mqtt_mock_entry_no_yaml_config()
     with patch(
-        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+        "spencerassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
 
         invalid_component = "timer"
@@ -127,7 +127,7 @@ async def test_only_valid_components(hass, mqtt_mock_entry_no_yaml_config, caplo
         mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
-            hass, f"homeassistant/{invalid_component}/bla/config", "{}"
+            hass, f"spencerassistant/{invalid_component}/bla/config", "{}"
         )
 
     await hass.async_block_till_done()
@@ -137,13 +137,13 @@ async def test_only_valid_components(hass, mqtt_mock_entry_no_yaml_config, caplo
     assert not mock_dispatcher_send.called
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_correct_config_discovery(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in correct JSON."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -155,13 +155,13 @@ async def test_correct_config_discovery(hass, mqtt_mock_entry_no_yaml_config, ca
     assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.FAN])
 async def test_discover_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test discovering an MQTT fan."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/fan/bla/config",
+        "spencerassistant/fan/bla/config",
         ('{ "name": "Beer",' '  "command_topic": "test_topic" }'),
     )
     await hass.async_block_till_done()
@@ -173,7 +173,7 @@ async def test_discover_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert ("fan", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE])
 async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test discovering an MQTT climate component."""
     await mqtt_mock_entry_no_yaml_config()
@@ -183,7 +183,7 @@ async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
         '  "temperature_command_topic": "climate/bla/target_temp" }'
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/climate/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/climate/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.ClimateTest")
@@ -193,7 +193,7 @@ async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert ("climate", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
 async def test_discover_alarm_control_panel(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
@@ -205,7 +205,7 @@ async def test_discover_alarm_control_panel(
         '  "command_topic": "test_topic" }'
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/alarm_control_panel/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.AlarmControlPanelTest")
@@ -221,140 +221,140 @@ async def test_discover_alarm_control_panel(
     "topic, config, entity_id, name, domain",
     [
         (
-            "homeassistant/alarm_control_panel/object/bla/config",
+            "spencerassistant/alarm_control_panel/object/bla/config",
             '{ "name": "Hello World 1", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "alarm_control_panel.hello_id",
             "Hello World 1",
             "alarm_control_panel",
         ),
         (
-            "homeassistant/binary_sensor/object/bla/config",
+            "spencerassistant/binary_sensor/object/bla/config",
             '{ "name": "Hello World 2", "obj_id": "hello_id", "state_topic": "test-topic" }',
             "binary_sensor.hello_id",
             "Hello World 2",
             "binary_sensor",
         ),
         (
-            "homeassistant/button/object/bla/config",
+            "spencerassistant/button/object/bla/config",
             '{ "name": "Hello World button", "obj_id": "hello_id", "command_topic": "test-topic" }',
             "button.hello_id",
             "Hello World button",
             "button",
         ),
         (
-            "homeassistant/camera/object/bla/config",
+            "spencerassistant/camera/object/bla/config",
             '{ "name": "Hello World 3", "obj_id": "hello_id", "state_topic": "test-topic", "topic": "test-topic" }',
             "camera.hello_id",
             "Hello World 3",
             "camera",
         ),
         (
-            "homeassistant/climate/object/bla/config",
+            "spencerassistant/climate/object/bla/config",
             '{ "name": "Hello World 4", "obj_id": "hello_id", "state_topic": "test-topic" }',
             "climate.hello_id",
             "Hello World 4",
             "climate",
         ),
         (
-            "homeassistant/cover/object/bla/config",
+            "spencerassistant/cover/object/bla/config",
             '{ "name": "Hello World 5", "obj_id": "hello_id", "state_topic": "test-topic" }',
             "cover.hello_id",
             "Hello World 5",
             "cover",
         ),
         (
-            "homeassistant/fan/object/bla/config",
+            "spencerassistant/fan/object/bla/config",
             '{ "name": "Hello World 6", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "fan.hello_id",
             "Hello World 6",
             "fan",
         ),
         (
-            "homeassistant/humidifier/object/bla/config",
+            "spencerassistant/humidifier/object/bla/config",
             '{ "name": "Hello World 7", "obj_id": "hello_id", "state_topic": "test-topic", "target_humidity_command_topic": "test-topic", "command_topic": "test-topic" }',
             "humidifier.hello_id",
             "Hello World 7",
             "humidifier",
         ),
         (
-            "homeassistant/number/object/bla/config",
+            "spencerassistant/number/object/bla/config",
             '{ "name": "Hello World 8", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "number.hello_id",
             "Hello World 8",
             "number",
         ),
         (
-            "homeassistant/scene/object/bla/config",
+            "spencerassistant/scene/object/bla/config",
             '{ "name": "Hello World 9", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "scene.hello_id",
             "Hello World 9",
             "scene",
         ),
         (
-            "homeassistant/select/object/bla/config",
+            "spencerassistant/select/object/bla/config",
             '{ "name": "Hello World 10", "obj_id": "hello_id", "state_topic": "test-topic", "options": [ "opt1", "opt2" ], "command_topic": "test-topic" }',
             "select.hello_id",
             "Hello World 10",
             "select",
         ),
         (
-            "homeassistant/sensor/object/bla/config",
+            "spencerassistant/sensor/object/bla/config",
             '{ "name": "Hello World 11", "obj_id": "hello_id", "state_topic": "test-topic" }',
             "sensor.hello_id",
             "Hello World 11",
             "sensor",
         ),
         (
-            "homeassistant/switch/object/bla/config",
+            "spencerassistant/switch/object/bla/config",
             '{ "name": "Hello World 12", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "switch.hello_id",
             "Hello World 12",
             "switch",
         ),
         (
-            "homeassistant/light/object/bla/config",
+            "spencerassistant/light/object/bla/config",
             '{ "name": "Hello World 13", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "light.hello_id",
             "Hello World 13",
             "light",
         ),
         (
-            "homeassistant/light/object/bla/config",
+            "spencerassistant/light/object/bla/config",
             '{ "name": "Hello World 14", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic", "schema": "json" }',
             "light.hello_id",
             "Hello World 14",
             "light",
         ),
         (
-            "homeassistant/light/object/bla/config",
+            "spencerassistant/light/object/bla/config",
             '{ "name": "Hello World 15", "obj_id": "hello_id", "state_topic": "test-topic", "command_off_template": "template", "command_on_template": "template", "command_topic": "test-topic", "schema": "template" }',
             "light.hello_id",
             "Hello World 15",
             "light",
         ),
         (
-            "homeassistant/vacuum/object/bla/config",
+            "spencerassistant/vacuum/object/bla/config",
             '{ "name": "Hello World 16", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "state" }',
             "vacuum.hello_id",
             "Hello World 16",
             "vacuum",
         ),
         (
-            "homeassistant/vacuum/object/bla/config",
+            "spencerassistant/vacuum/object/bla/config",
             '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
             "vacuum.hello_id",
             "Hello World 17",
             "vacuum",
         ),
         (
-            "homeassistant/lock/object/bla/config",
+            "spencerassistant/lock/object/bla/config",
             '{ "name": "Hello World 18", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "lock.hello_id",
             "Hello World 18",
             "lock",
         ),
         (
-            "homeassistant/device_tracker/object/bla/config",
+            "spencerassistant/device_tracker/object/bla/config",
             '{ "name": "Hello World 19", "obj_id": "hello_id", "state_topic": "test-topic" }',
             "device_tracker.hello_id",
             "Hello World 19",
@@ -377,13 +377,13 @@ async def test_discovery_with_object_id(
     assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_discovery_incl_nodeid(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in correct JSON with optional node_id included."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/my_node_id/bla/config",
+        "spencerassistant/binary_sensor/my_node_id/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -397,18 +397,18 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock_entry_no_yaml_config, caplo
     ].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_non_duplicate_discovery(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test for a non duplicate component."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -422,46 +422,46 @@ async def test_non_duplicate_discovery(hass, mqtt_mock_entry_no_yaml_config, cap
     assert "Component has already been discovered: binary_sensor bla" in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_removal(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of component through empty discovery message."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
     assert state is not None
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
     assert state is None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test rediscover of removed component."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
     assert state is not None
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
     assert state is None
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -469,7 +469,7 @@ async def test_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert state is not None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate rediscover of removed component."""
     await mqtt_mock_entry_no_yaml_config()
@@ -477,7 +477,7 @@ async def test_rapid_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -486,16 +486,16 @@ async def test_rapid_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert len(events) == 1
 
     # Removal immediately followed by rediscover
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Milk", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -519,7 +519,7 @@ async def test_rapid_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert events[4].data["old_state"] is None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_rediscover_unique(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate rediscover of removed component."""
     await mqtt_mock_entry_no_yaml_config()
@@ -534,7 +534,7 @@ async def test_rapid_rediscover_unique(hass, mqtt_mock_entry_no_yaml_config, cap
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla2/config",
+        "spencerassistant/binary_sensor/bla2/config",
         '{ "name": "Ale", "state_topic": "test-topic", "unique_id": "very_unique" }',
     )
     await hass.async_block_till_done()
@@ -545,18 +545,18 @@ async def test_rapid_rediscover_unique(hass, mqtt_mock_entry_no_yaml_config, cap
     # Duplicate unique_id, immediately followed by correct unique_id
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "very_unique" }',
     )
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
     )
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Milk", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
     )
     await hass.async_block_till_done()
@@ -579,7 +579,7 @@ async def test_rapid_rediscover_unique(hass, mqtt_mock_entry_no_yaml_config, cap
     assert events[3].data["old_state"] is None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_reconfigure(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate reconfigure of added component."""
     await mqtt_mock_entry_no_yaml_config()
@@ -593,20 +593,20 @@ async def test_rapid_reconfigure(hass, mqtt_mock_entry_no_yaml_config, caplog):
     hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
 
     # Discovery immediately followed by reconfig
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic1" }',
     )
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Milk", "state_topic": "test-topic2" }',
     )
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Wine", "state_topic": "test-topic3" }',
     )
     await hass.async_block_till_done()
@@ -632,21 +632,21 @@ async def test_rapid_reconfigure(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert events[2].data["new_state"].attributes["friendly_name"] == "Wine"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_duplicate_removal(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test for a non duplicate component."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/binary_sensor/bla/config",
+        "spencerassistant/binary_sensor/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     await hass.async_block_till_done()
     assert "Component has already been discovered: binary_sensor bla" in caplog.text
     caplog.clear()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla/config", "")
     await hass.async_block_till_done()
 
     assert "Component has already been discovered: binary_sensor bla" not in caplog.text
@@ -666,7 +666,7 @@ async def test_cleanup_device(
         '  "unique_id": "unique" }'
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
@@ -706,11 +706,11 @@ async def test_cleanup_device(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", "", 0, True
+        "spencerassistant/sensor/bla/config", "", 0, True
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_cleanup_device_mqtt(
     hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
@@ -722,7 +722,7 @@ async def test_cleanup_device_mqtt(
         '  "unique_id": "unique" }'
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
@@ -734,7 +734,7 @@ async def test_cleanup_device_mqtt(
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", "")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -753,7 +753,7 @@ async def test_cleanup_device_mqtt(
     mqtt_mock.async_publish.assert_not_called()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_cleanup_device_multiple_config_entries(
     hass, hass_ws_client, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
@@ -792,10 +792,10 @@ async def test_cleanup_device_multiple_config_entries(
     sensor_data = json.dumps(sensor_config)
     tag_data = json.dumps(tag_config)
     trigger_data = json.dumps(trigger_config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", sensor_data)
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", tag_data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", sensor_data)
+    async_fire_mqtt_message(hass, "spencerassistant/tag/bla/config", tag_data)
     async_fire_mqtt_message(
-        hass, "homeassistant/device_automation/bla/config", trigger_data
+        hass, "spencerassistant/device_automation/bla/config", trigger_data
     )
     await hass.async_block_till_done()
 
@@ -843,9 +843,9 @@ async def test_cleanup_device_multiple_config_entries(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", "", 0, True),
-            call("homeassistant/tag/bla/config", "", 0, True),
-            call("homeassistant/device_automation/bla/config", "", 0, True),
+            call("spencerassistant/sensor/bla/config", "", 0, True),
+            call("spencerassistant/tag/bla/config", "", 0, True),
+            call("spencerassistant/device_automation/bla/config", "", 0, True),
         ],
         any_order=True,
     )
@@ -885,10 +885,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     sensor_data = json.dumps(sensor_config)
     tag_data = json.dumps(tag_config)
     trigger_data = json.dumps(trigger_config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", sensor_data)
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", tag_data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", sensor_data)
+    async_fire_mqtt_message(hass, "spencerassistant/tag/bla/config", tag_data)
     async_fire_mqtt_message(
-        hass, "homeassistant/device_automation/bla/config", trigger_data
+        hass, "spencerassistant/device_automation/bla/config", trigger_data
     )
     await hass.async_block_till_done()
 
@@ -906,9 +906,9 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     assert state is not None
 
     # Send MQTT messages to remove
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", "")
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", "")
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/tag/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", "")
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -929,7 +929,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     mqtt_mock.async_publish.assert_not_called()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of abbreviated discovery payload."""
     await mqtt_mock_entry_no_yaml_config()
@@ -962,7 +962,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         "}"
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
@@ -989,7 +989,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
     assert state.state == STATE_UNAVAILABLE
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of abbreviated discovery payload."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1015,7 +1015,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         "}"
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
@@ -1031,7 +1031,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
     assert state.state == STATE_UNKNOWN
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_expansion_3(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of broken discovery payload."""
@@ -1054,7 +1054,7 @@ async def test_discovery_expansion_3(hass, mqtt_mock_entry_no_yaml_config, caplo
         "}"
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
@@ -1094,7 +1094,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
         "}"
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
@@ -1115,7 +1115,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     assert state.state == STATE_UNAVAILABLE
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion_without_encoding_and_value_template_2(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
@@ -1143,7 +1143,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
         "}"
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
@@ -1228,7 +1228,7 @@ async def test_missing_discover_abbreviations(
     assert not missing
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_no_implicit_state_topic_switch(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
@@ -1236,7 +1236,7 @@ async def test_no_implicit_state_topic_switch(
     await mqtt_mock_entry_no_yaml_config()
     data = '{ "name": "Test1",' '  "command_topic": "cmnd"' "}"
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/config", data)
     await hass.async_block_till_done()
     assert "implicit state_topic is deprecated" not in caplog.text
 
@@ -1247,13 +1247,13 @@ async def test_no_implicit_state_topic_switch(
     assert state.state == STATE_UNKNOWN
     assert state.attributes["assumed_state"] is True
 
-    async_fire_mqtt_message(hass, "homeassistant/switch/bla/state", "ON")
+    async_fire_mqtt_message(hass, "spencerassistant/switch/bla/state", "ON")
 
     state = hass.states.get("switch.Test1")
     assert state.state == STATE_UNKNOWN
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
@@ -1271,14 +1271,14 @@ async def test_complex_discovery_topic_prefix(
         mqtt.DOMAIN,
         {
             mqtt.DOMAIN: {
-                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+                mqtt.CONF_DISCOVERY_PREFIX: "my_spencer/spencerassistant/register",
             }
         },
     )
 
     async_fire_mqtt_message(
         hass,
-        ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),
+        ("my_spencer/spencerassistant/register/binary_sensor/node1/object1/config"),
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -1292,7 +1292,7 @@ async def test_complex_discovery_topic_prefix(
     ].discovery_already_discovered
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
 ):
@@ -1304,10 +1304,10 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     mqtt_mock().connected = True
 
     with patch(
-        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        "spencerassistant.components.mqtt.discovery.async_get_mqtt",
         return_value={"comp": ["comp/discovery/#"]},
     ):
-        await async_start(hass, "homeassistant", entry)
+        await async_start(hass, "spencerassistant", entry)
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1334,7 +1334,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         assert not mqtt_client_mock.unsubscribe.called
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_mqtt_discovery_unsubscribe_once(
     hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
 ):
@@ -1346,10 +1346,10 @@ async def test_mqtt_discovery_unsubscribe_once(
     mqtt_mock().connected = True
 
     with patch(
-        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        "spencerassistant.components.mqtt.discovery.async_get_mqtt",
         return_value={"comp": ["comp/discovery/#"]},
     ):
-        await async_start(hass, "homeassistant", entry)
+        await async_start(hass, "spencerassistant", entry)
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1370,7 +1370,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_clear_config_topic_disabled_entity(
     hass, mqtt_mock_entry_no_yaml_config, device_reg, caplog
 ):
@@ -1379,7 +1379,7 @@ async def test_clear_config_topic_disabled_entity(
     # discover an entity that is not enabled by default
     config = {
         "name": "sbfspot_12345",
-        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "state_topic": "spencerassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
@@ -1391,7 +1391,7 @@ async def test_clear_config_topic_disabled_entity(
     }
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
@@ -1402,7 +1402,7 @@ async def test_clear_config_topic_disabled_entity(
     config_not_unique1.pop("enabled_by_default")
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
         json.dumps(config_not_unique1),
     )
     # discover an entity that is not unique (part 2), will not be added
@@ -1410,7 +1410,7 @@ async def test_clear_config_topic_disabled_entity(
     config_not_unique2["name"] = "sbfspot_12345_2"
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
         json.dumps(config_not_unique2),
     )
     await hass.async_block_till_done()
@@ -1432,16 +1432,16 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        call("spencerassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        call("spencerassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_clean_up_registry_monitoring(
     hass, mqtt_mock_entry_no_yaml_config, device_reg, tmp_path
 ):
@@ -1451,7 +1451,7 @@ async def test_clean_up_registry_monitoring(
     # discover an entity that is not enabled by default
     config1 = {
         "name": "sbfspot_12345",
-        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "state_topic": "spencerassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
@@ -1466,7 +1466,7 @@ async def test_clean_up_registry_monitoring(
     # it should register a hook for monitoring the entiry registry
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345/config",
         json.dumps(config1),
     )
     await hass.async_block_till_done()
@@ -1475,7 +1475,7 @@ async def test_clean_up_registry_monitoring(
     # Publish it again no new monitor should be started
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345/config",
         json.dumps(config1),
     )
     await hass.async_block_till_done()
@@ -1491,7 +1491,7 @@ async def test_clean_up_registry_monitoring(
     assert len(hooks) == 0
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_unique_id_collission_has_priority(
     hass, mqtt_mock_entry_no_yaml_config, entity_reg
 ):
@@ -1499,7 +1499,7 @@ async def test_unique_id_collission_has_priority(
     await mqtt_mock_entry_no_yaml_config()
     config = {
         "name": "sbfspot_12345",
-        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "state_topic": "spencerassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
@@ -1515,7 +1515,7 @@ async def test_unique_id_collission_has_priority(
     config_not_unique1["unique_id"] = "not_unique"
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
         json.dumps(config_not_unique1),
     )
     # discover an entity that is not unique (part 2), will not be added, and the registry entry is cleared
@@ -1523,7 +1523,7 @@ async def test_unique_id_collission_has_priority(
     config_not_unique2["name"] = "sbfspot_12345_2"
     async_fire_mqtt_message(
         hass,
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        "spencerassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
         json.dumps(config_not_unique2),
     )
     await hass.async_block_till_done()

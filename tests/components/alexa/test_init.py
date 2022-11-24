@@ -1,6 +1,6 @@
 """Tests for alexa."""
-from homeassistant.components.alexa.const import EVENT_ALEXA_SMART_HOME
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.alexa.const import EVENT_ALEXA_SMART_spencer
+from spencerassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 
@@ -16,11 +16,11 @@ async def test_humanify_alexa_event(hass):
         hass,
         [
             MockRow(
-                EVENT_ALEXA_SMART_HOME,
+                EVENT_ALEXA_SMART_spencer,
                 {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
             ),
             MockRow(
-                EVENT_ALEXA_SMART_HOME,
+                EVENT_ALEXA_SMART_spencer,
                 {
                     "request": {
                         "namespace": "Alexa.PowerController",
@@ -30,7 +30,7 @@ async def test_humanify_alexa_event(hass):
                 },
             ),
             MockRow(
-                EVENT_ALEXA_SMART_HOME,
+                EVENT_ALEXA_SMART_spencer,
                 {
                     "request": {
                         "namespace": "Alexa.PowerController",

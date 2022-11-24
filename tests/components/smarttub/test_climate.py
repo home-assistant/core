@@ -1,7 +1,7 @@
 """Test the SmartTub climate platform."""
 import smarttub
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -20,8 +20,8 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
-from homeassistant.const import (
+from spencerassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,

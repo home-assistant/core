@@ -1,20 +1,20 @@
-image: homeassistant/{arch}-homeassistant
-shadow_repository: ghcr.io/home-assistant
+image: spencerassistant/{arch}-spencerassistant
+shadow_repository: ghcr.io/spencer-assistant
 build_from:
-  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2022.10.0
-  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2022.10.0
-  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2022.10.0
-  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2022.10.0
-  i386: ghcr.io/home-assistant/i386-homeassistant-base:2022.10.0
+  aarch64: ghcr.io/spencer-assistant/aarch64-spencerassistant-base:2022.10.0
+  armhf: ghcr.io/spencer-assistant/armhf-spencerassistant-base:2022.10.0
+  armv7: ghcr.io/spencer-assistant/armv7-spencerassistant-base:2022.10.0
+  amd64: ghcr.io/spencer-assistant/amd64-spencerassistant-base:2022.10.0
+  i386: ghcr.io/spencer-assistant/i386-spencerassistant-base:2022.10.0
 codenotary:
-  signer: notary@home-assistant.io
-  base_image: notary@home-assistant.io
+  signer: notary@spencer-assistant.io
+  base_image: notary@spencer-assistant.io
 labels:
   io.hass.type: core
-  org.opencontainers.image.title: Home Assistant
-  org.opencontainers.image.description: Open-source home automation platform running on Python 3
-  org.opencontainers.image.source: https://github.com/home-assistant/core
-  org.opencontainers.image.authors: The Home Assistant Authors
-  org.opencontainers.image.url: https://www.home-assistant.io/
-  org.opencontainers.image.documentation: https://www.home-assistant.io/docs/
+  org.opencontainers.image.title: spencer Assistant
+  org.opencontainers.image.description: Open-source spencer automation platform running on Python 3
+  org.opencontainers.image.source: https://github.com/spencer-assistant/core
+  org.opencontainers.image.authors: The spencer Assistant Authors
+  org.opencontainers.image.url: https://www.spencer-assistant.io/
+  org.opencontainers.image.documentation: https://www.spencer-assistant.io/docs/
   org.opencontainers.image.licenses: Apache License 2.0

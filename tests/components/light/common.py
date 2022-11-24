@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
@@ -21,14 +21,14 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.loader import bind_hass
+from spencerassistant.loader import bind_hass
 
 
 @bind_hass

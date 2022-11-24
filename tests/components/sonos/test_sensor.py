@@ -4,12 +4,12 @@ from unittest.mock import PropertyMock, patch
 
 from soco.exceptions import NotSupportedException
 
-from homeassistant.components.sensor import SCAN_INTERVAL
-from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_registry as ent_reg
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.sensor import SCAN_INTERVAL
+from spencerassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.helpers import entity_registry as ent_reg
+from spencerassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent
 
@@ -212,7 +212,7 @@ async def test_favorites_sensor(hass, async_autosetup_sonos, soco):
         soco, service, {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"}
     )
     with patch(
-        "homeassistant.components.sonos.favorites.SonosFavorites.update_cache",
+        "spencerassistant.components.sonos.favorites.SonosFavorites.update_cache",
         return_value=True,
     ):
         subscription.callback(event=favorites_updated_event)

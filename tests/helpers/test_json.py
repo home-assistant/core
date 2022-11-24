@@ -1,4 +1,4 @@
-"""Test Home Assistant remote methods and classes."""
+"""Test spencer Assistant remote methods and classes."""
 import datetime
 import json
 import time
@@ -6,15 +6,15 @@ from typing import NamedTuple
 
 import pytest
 
-from homeassistant import core
-from homeassistant.helpers.json import (
+from spencerassistant import core
+from spencerassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
     json_dumps,
     json_dumps_sorted,
 )
-from homeassistant.util import dt as dt_util
-from homeassistant.util.color import RGBColor
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.color import RGBColor
 
 
 @pytest.mark.parametrize("encoder", (JSONEncoder, ExtendedJSONEncoder))

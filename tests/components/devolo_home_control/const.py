@@ -1,6 +1,6 @@
 """Constants used for mocking data."""
 
-from homeassistant.components import zeroconf
+from spencerassistant.components import zeroconf
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="192.168.0.1",

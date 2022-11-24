@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import CallRateLimitError, KrakenAPIError
 
-from homeassistant.components.kraken.const import DOMAIN
+from spencerassistant.components.kraken.const import DOMAIN
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 

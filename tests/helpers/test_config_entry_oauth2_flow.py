@@ -7,9 +7,9 @@ from unittest.mock import patch
 import aiohttp
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.network import NoURLAvailableError
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, mock_platform
 
@@ -119,7 +119,7 @@ async def test_missing_credentials_for_domain(hass, flow_handler):
     flow = flow_handler()
     flow.hass = hass
 
-    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
+    with patch("spencerassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
         result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"

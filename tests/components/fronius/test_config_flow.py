@@ -4,12 +4,12 @@ from unittest.mock import patch
 from pyfronius import FroniusError
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.dhcp import DhcpServiceInfo
+from spencerassistant.components.fronius.const import DOMAIN
+from spencerassistant.const import CONF_HOST
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import mock_responses
 
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 def no_setup():
     """Disable setting up the whole integration in config_flow tests."""
     with patch(
-        "homeassistant.components.fronius.async_setup_entry",
+        "spencerassistant.components.fronius.async_setup_entry",
         return_value=True,
     ):
         yield
@@ -42,7 +42,7 @@ MOCK_DHCP_DATA = DhcpServiceInfo(
 )
 
 
-async def test_form_with_logger(hass: HomeAssistant) -> None:
+async def test_form_with_logger(hass: spencerAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -54,7 +54,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ), patch(
-        "homeassistant.components.fronius.async_setup_entry",
+        "spencerassistant.components.fronius.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_with_inverter(hass: HomeAssistant) -> None:
+async def test_form_with_inverter(hass: spencerAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +89,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "pyfronius.Fronius.inverter_info",
         return_value=INVERTER_INFO_RETURN_VALUE,
     ), patch(
-        "homeassistant.components.fronius.async_setup_entry",
+        "spencerassistant.components.fronius.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -109,7 +109,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -133,7 +133,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_device(hass: HomeAssistant) -> None:
+async def test_form_no_device(hass: spencerAssistant) -> None:
     """Test we handle no device found error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -157,7 +157,7 @@ async def test_form_no_device(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unexpected(hass: HomeAssistant) -> None:
+async def test_form_unexpected(hass: spencerAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -178,7 +178,7 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_existing(hass: HomeAssistant) -> None:
+async def test_form_already_existing(hass: spencerAssistant) -> None:
     """Test existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -231,7 +231,7 @@ async def test_form_updates_host(hass, aioclient_mock):
 
     mock_responses(aioclient_mock, host=new_host)
     with patch(
-        "homeassistant.components.fronius.async_unload_entry",
+        "spencerassistant.components.fronius.async_unload_entry",
         return_value=True,
     ) as mock_unload_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -257,7 +257,7 @@ async def test_form_updates_host(hass, aioclient_mock):
 async def test_dhcp(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     with patch(
-        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+        "spencerassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
     ), patch(
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
@@ -301,7 +301,7 @@ async def test_dhcp_already_configured(hass, aioclient_mock):
 async def test_dhcp_invalid(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     with patch(
-        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+        "spencerassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
     ), patch("pyfronius.Fronius.current_logger_info", side_effect=FroniusError,), patch(
         "pyfronius.Fronius.inverter_info",
         side_effect=FroniusError,

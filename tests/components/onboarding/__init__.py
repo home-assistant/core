@@ -1,6 +1,6 @@
 """Tests for the onboarding component."""
 
-from homeassistant.components import onboarding
+from spencerassistant.components import onboarding
 
 
 def mock_storage(hass_storage, data):

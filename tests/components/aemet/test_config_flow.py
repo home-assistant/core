@@ -4,11 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import requests_mock
 
-from homeassistant import data_entry_flow
-from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-import homeassistant.util.dt as dt_util
+from spencerassistant import data_entry_flow
+from spencerassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
+from spencerassistant.config_entries import SOURCE_USER, ConfigEntryState
+from spencerassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+import spencerassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
 
@@ -26,7 +26,7 @@ async def test_form(hass):
     """Test that the form is served with valid input."""
 
     with patch(
-        "homeassistant.components.aemet.async_setup_entry",
+        "spencerassistant.components.aemet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, requests_mock.mock() as _m:
         aemet_requests_mock(_m)
@@ -62,8 +62,8 @@ async def test_form_options(hass):
     """Test the form options."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
+    with patch("spencerassistant.util.dt.now", return_value=now), patch(
+        "spencerassistant.util.dt.utcnow", return_value=now
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
@@ -118,8 +118,8 @@ async def test_form_duplicated_id(hass):
     """Test setting up duplicated entry."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
+    with patch("spencerassistant.util.dt.now", return_value=now), patch(
+        "spencerassistant.util.dt.utcnow", return_value=now
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
@@ -143,7 +143,7 @@ async def test_form_api_offline(hass):
     mocked_aemet.get_conventional_observation_stations.return_value = None
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "spencerassistant.components.aemet.config_flow.AEMET",
         return_value=mocked_aemet,
     ):
         result = await hass.config_entries.flow.async_init(

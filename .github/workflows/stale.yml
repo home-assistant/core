@@ -8,7 +8,7 @@ on:
 
 jobs:
   stale:
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     runs-on: ubuntu-latest
     steps:
       # The 90 day stale policy
@@ -32,7 +32,7 @@ jobs:
             of the old issues, as many of them have already been resolved with
             the latest updates.
 
-            Please make sure to update to the latest Home Assistant version and
+            Please make sure to update to the latest spencer Assistant version and
             check if that solves the issue. Let us know if that works for you by
             adding a comment 👍
 
@@ -96,7 +96,7 @@ jobs:
             of the old issues, as many of them have already been resolved with
             the latest updates.
 
-            Please make sure to update to the latest Home Assistant version and
+            Please make sure to update to the latest spencer Assistant version and
             check if that solves the issue. Let us know if that works for you by
             adding a comment 👍
 

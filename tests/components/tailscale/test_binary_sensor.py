@@ -1,20 +1,20 @@
 """Tests for the sensors provided by the Tailscale integration."""
-from homeassistant.components.binary_sensor import (
+from spencerassistant.components.binary_sensor import (
     STATE_OFF,
     STATE_ON,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.components.tailscale.const import DOMAIN
+from spencerassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 
 
 async def test_tailscale_binary_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Tailscale binary sensors."""

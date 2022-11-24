@@ -5,9 +5,9 @@ import pathlib
 
 import pytest
 
-from homeassistant.components.blueprint import models
-from homeassistant.components.blueprint.const import BLUEPRINT_FOLDER
-from homeassistant.util import yaml
+from spencerassistant.components.blueprint import models
+from spencerassistant.components.blueprint.const import BLUEPRINT_FOLDER
+from spencerassistant.util import yaml
 
 DOMAINS = ["automation"]
 LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 @pytest.mark.parametrize("domain", DOMAINS)
 def test_default_blueprints(domain: str):
     """Validate a folder of blueprints."""
-    integration = importlib.import_module(f"homeassistant.components.{domain}")
+    integration = importlib.import_module(f"spencerassistant.components.{domain}")
     blueprint_folder = pathlib.Path(integration.__file__).parent / BLUEPRINT_FOLDER
     items = list(blueprint_folder.glob("*"))
     assert len(items) > 0, "Folder cannot be empty"

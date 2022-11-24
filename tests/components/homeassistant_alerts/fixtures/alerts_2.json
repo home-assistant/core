@@ -7,13 +7,13 @@
         "package": "darksky"
       }
     ],
-    "github_issue": "https://github.com/home-assistant/home-assistant.io/pull/12591",
-    "homeassistant": {
-      "package": "homeassistant",
+    "github_issue": "https://github.com/spencer-assistant/spencer-assistant.io/pull/12591",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.30"
     },
     "filename": "dark_sky.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#dark_sky.markdown"
   },
   {
     "title": "Hikvision Security Vulnerability",
@@ -27,9 +27,9 @@
       }
     ],
     "filename": "hikvision.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#hikvision.markdown",
-    "homeassistant": {
-      "package": "homeassistant"
+    "alert_url": "https://alerts.spencer-assistant.io/#hikvision.markdown",
+    "spencerassistant": {
+      "package": "spencerassistant"
     }
   },
   {
@@ -40,32 +40,32 @@
         "package": "hive"
       }
     ],
-    "homeassistant": {
-      "package": "homeassistant",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "2021.11.0"
     },
     "filename": "hive_us.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#hive_us.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#hive_us.markdown"
   },
   {
-    "title": "HomematicIP (EQ-3) blocks public IP addresses, if access to the Cloud is too frequent.",
+    "title": "spencermaticIP (EQ-3) blocks public IP addresses, if access to the Cloud is too frequent.",
     "created": "2020-12-20T12:00:00.000Z",
     "integrations": [
       {
-        "package": "homematicip_cloud"
+        "package": "spencermaticip_cloud"
       }
     ],
     "packages": [
       {
-        "package": "homematicip"
+        "package": "spencermaticip"
       }
     ],
-    "homeassistant": {
-      "package": "homeassistant",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.7"
     },
-    "filename": "homematicip_cloud.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#homematicip_cloud.markdown"
+    "filename": "spencermaticip_cloud.markdown",
+    "alert_url": "https://alerts.spencer-assistant.io/#spencermaticip_cloud.markdown"
   },
   {
     "title": "Logitech no longer accepting API applications",
@@ -75,13 +75,13 @@
         "package": "logi_circle"
       }
     ],
-    "github_issue": "https://github.com/home-assistant/core/issues/71945",
-    "homeassistant": {
-      "package": "homeassistant",
+    "github_issue": "https://github.com/spencer-assistant/core/issues/71945",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.92.0"
     },
     "filename": "logi_circle.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#logi_circle.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#logi_circle.markdown"
   },
   {
     "title": "New Neato Botvacs Do Not Support Existing API",
@@ -91,12 +91,12 @@
         "package": "neato"
       }
     ],
-    "homeassistant": {
-      "package": "homeassistant",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.30"
     },
     "filename": "neato.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#neato.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#neato.markdown"
   },
   {
     "title": "Nest Desktop Auth Deprecation",
@@ -106,11 +106,11 @@
         "package": "nest"
       }
     ],
-    "github_issue": "https://github.com/home-assistant/core/issues/67662#issuecomment-1144425848",
+    "github_issue": "https://github.com/spencer-assistant/core/issues/67662#issuecomment-1144425848",
     "filename": "nest.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#nest.markdown",
-    "homeassistant": {
-      "package": "homeassistant"
+    "alert_url": "https://alerts.spencer-assistant.io/#nest.markdown",
+    "spencerassistant": {
+      "package": "spencerassistant"
     }
   },
   {
@@ -122,9 +122,9 @@
       }
     ],
     "filename": "senseme.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#senseme.markdown",
-    "homeassistant": {
-      "package": "homeassistant"
+    "alert_url": "https://alerts.spencer-assistant.io/#senseme.markdown",
+    "spencerassistant": {
+      "package": "spencerassistant"
     }
   },
   {
@@ -136,9 +136,9 @@
       }
     ],
     "filename": "sochain.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#sochain.markdown",
-    "homeassistant": {
-      "package": "homeassistant"
+    "alert_url": "https://alerts.spencer-assistant.io/#sochain.markdown",
+    "spencerassistant": {
+      "package": "spencerassistant"
     }
   },
   {
@@ -149,11 +149,11 @@
         "package": "yeelight"
       }
     ],
-    "homeassistant": {
-      "package": "homeassistant",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.89"
     },
     "filename": "yeelight.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#yeelight.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#yeelight.markdown"
   }
 ]

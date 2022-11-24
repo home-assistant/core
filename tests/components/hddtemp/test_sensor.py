@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import TEMP_CELSIUS
+from spencerassistant.setup import async_setup_component
 
 VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp"}}
 

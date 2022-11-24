@@ -7,12 +7,12 @@ from unittest.mock import AsyncMock, Mock
 from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.camera import (
+from spencerassistant.components.camera import (
     CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.unifiprotect.const import (
+from spencerassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
     ATTR_FPS,
@@ -21,15 +21,15 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DEFAULT_SCAN_INTERVAL,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from .utils import (
     MockUFPFixture,
@@ -43,7 +43,7 @@ from .utils import (
 
 
 def validate_default_camera_entity(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
 ) -> str:
@@ -65,7 +65,7 @@ def validate_default_camera_entity(
 
 
 def validate_rtsps_camera_entity(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
 ) -> str:
@@ -87,7 +87,7 @@ def validate_rtsps_camera_entity(
 
 
 def validate_rtsp_camera_entity(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
 ) -> str:
@@ -109,7 +109,7 @@ def validate_rtsp_camera_entity(
 
 
 def validate_common_camera_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     channel: CameraChannel,
     entity_id: str,
     features: int = CameraEntityFeature.STREAM,
@@ -127,7 +127,7 @@ def validate_common_camera_state(
 
 
 async def validate_rtsps_camera_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
@@ -141,7 +141,7 @@ async def validate_rtsps_camera_state(
 
 
 async def validate_rtsp_camera_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
@@ -155,7 +155,7 @@ async def validate_rtsp_camera_state(
 
 
 async def validate_no_stream_camera_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
@@ -169,7 +169,7 @@ async def validate_no_stream_camera_state(
 
 
 async def test_basic_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     camera_all: ProtectCamera,
     doorbell: ProtectCamera,
@@ -270,7 +270,7 @@ async def test_basic_setup(
     await validate_no_stream_camera_state(hass, doorbell, 3, entity_id, features=0)
 
 
-async def test_adopt(hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera):
+async def test_adopt(hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera):
     """Test setting up camera with no camera channels."""
 
     camera1 = camera.copy()
@@ -303,7 +303,7 @@ async def test_adopt(hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCa
 
 
 async def test_camera_image(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Test retrieving camera image."""
 
@@ -317,7 +317,7 @@ async def test_camera_image(
 
 
 async def test_package_camera_image(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: ProtectCamera
 ):
     """Test retrieving package camera image."""
 
@@ -331,7 +331,7 @@ async def test_package_camera_image(
 
 
 async def test_camera_generic_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 
@@ -339,14 +339,14 @@ async def test_camera_generic_update(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high"
 
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "spencerassistant", {})
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
     ufp.api.update = AsyncMock(return_value=None)
     await hass.services.async_call(
-        "homeassistant",
+        "spencerassistant",
         "update_entity",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -357,7 +357,7 @@ async def test_camera_generic_update(
 
 
 async def test_camera_interval_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Interval updates updates camera entity."""
 
@@ -380,7 +380,7 @@ async def test_camera_interval_update(
 
 
 async def test_camera_bad_interval_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Interval updates marks camera unavailable."""
 
@@ -407,7 +407,7 @@ async def test_camera_bad_interval_update(
 
 
 async def test_camera_ws_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """WS update updates camera entity."""
 
@@ -442,7 +442,7 @@ async def test_camera_ws_update(
 
 
 async def test_camera_ws_update_offline(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """WS updates marks camera unavailable."""
 
@@ -484,7 +484,7 @@ async def test_camera_ws_update_offline(
 
 
 async def test_camera_enable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 
@@ -506,7 +506,7 @@ async def test_camera_enable_motion(
 
 
 async def test_camera_disable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 

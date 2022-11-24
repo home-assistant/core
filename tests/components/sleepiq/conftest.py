@@ -15,10 +15,10 @@ from asyncsleepiq import (
 )
 import pytest
 
-from homeassistant.components.sleepiq import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.sleepiq import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -84,7 +84,7 @@ def mock_asyncsleepiq_single_foundation(
     mock_bed: MagicMock,
 ) -> Generator[MagicMock, None, None]:
     """Mock an AsyncSleepIQ object with a single foundation."""
-    with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
+    with patch("spencerassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
         client.beds = {BED_ID: mock_bed}
 
@@ -115,7 +115,7 @@ def mock_asyncsleepiq_single_foundation(
 @pytest.fixture
 def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
     """Mock an AsyncSleepIQ object with a split foundation."""
-    with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
+    with patch("spencerassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
         client.beds = {BED_ID: mock_bed}
 
@@ -157,7 +157,7 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
 
 
 async def setup_platform(
-    hass: HomeAssistant, platform: str | None = None
+    hass: spencerAssistant, platform: str | None = None
 ) -> MockConfigEntry:
     """Set up the SleepIQ platform."""
     mock_entry = MockConfigEntry(
@@ -168,7 +168,7 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     if platform:
-        with patch("homeassistant.components.sleepiq.PLATFORMS", [platform]):
+        with patch("spencerassistant.components.sleepiq.PLATFORMS", [platform]):
             assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 

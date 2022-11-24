@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from aiohttp import ClientSession
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.fritz.common import AvmWrapper
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.fritz.diagnostics import TO_REDACT
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.fritz.common import AvmWrapper
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.components.fritz.diagnostics import TO_REDACT
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import MOCK_MESH_MASTER_MAC, MOCK_USER_DATA
 
@@ -18,7 +18,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: spencerAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
 ):
     """Test config entry diagnostics."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -60,7 +60,7 @@ async def test_entry_diagnostics(
                 "WANDSLInterfaceConfig1",
                 "WANIPConn1",
                 "WANPPPConnection1",
-                "X_AVM-DE_Homeauto1",
+                "X_AVM-DE_spencerauto1",
                 "X_AVM-DE_HostFilter1",
             ],
             "is_router": True,

@@ -1,8 +1,8 @@
 """Test the ThermoPro config flow."""
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.components.thermopro.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.components.thermopro.const import DOMAIN
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from . import TP357_SERVICE_INFO
 

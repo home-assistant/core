@@ -1,17 +1,17 @@
 """Test for SQL component Init."""
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(hass: spencerAssistant) -> None:
     """Test setup entry."""
     config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: spencerAssistant) -> None:
     """Test unload an entry."""
     config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED

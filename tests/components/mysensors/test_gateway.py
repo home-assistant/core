@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.mysensors.gateway import is_serial_port
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.mysensors.gateway import is_serial_port
+from spencerassistant.core import spencerAssistant
 
 
 @pytest.mark.parametrize(
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
     ],
 )
 def test_is_serial_port_windows(
-    hass: HomeAssistant, port: str, expect_valid: bool
+    hass: spencerAssistant, port: str, expect_valid: bool
 ) -> None:
     """Test windows serial port."""
 

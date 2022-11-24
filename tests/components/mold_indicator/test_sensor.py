@@ -1,18 +1,18 @@
 """The tests for the MoldIndicator sensor."""
 import pytest
 
-from homeassistant.components.mold_indicator.sensor import (
+from spencerassistant.components.mold_indicator.sensor import (
     ATTR_CRITICAL_TEMP,
     ATTR_DEWPOINT,
 )
-import homeassistant.components.sensor as sensor
-from homeassistant.const import (
+import spencerassistant.components.sensor as sensor
+from spencerassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)

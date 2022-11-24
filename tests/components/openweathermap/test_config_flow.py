@@ -3,15 +3,15 @@ from unittest.mock import MagicMock, patch
 
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
-from homeassistant import data_entry_flow
-from homeassistant.components.openweathermap.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.openweathermap.const import (
     CONF_LANGUAGE,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import SOURCE_USER, ConfigEntryState
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -164,7 +164,7 @@ async def test_form_api_offline(hass):
     mocked_owm = _create_mocked_owm(False)
 
     with patch(
-        "homeassistant.components.openweathermap.config_flow.OWM",
+        "spencerassistant.components.openweathermap.config_flow.OWM",
         return_value=mocked_owm,
     ):
         result = await hass.config_entries.flow.async_init(

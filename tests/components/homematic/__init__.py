@@ -1,1 +1,1 @@
-"""Tests for the homematic component."""
+"""Tests for the spencermatic component."""

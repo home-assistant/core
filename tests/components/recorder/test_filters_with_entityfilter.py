@@ -4,17 +4,17 @@ import json
 from sqlalchemy import select
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.db_schema import EventData, States
-from homeassistant.components.recorder.filters import (
+from spencerassistant.components.recorder import get_instance
+from spencerassistant.components.recorder.db_schema import EventData, States
+from spencerassistant.components.recorder.filters import (
     Filters,
     extract_include_exclude_filter_conf,
     sqlalchemy_filter_from_include_exclude_conf,
 )
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entityfilter import (
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.entityfilter import (
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_ENTITY_GLOBS,
@@ -27,7 +27,7 @@ from .common import async_wait_recording_done
 
 
 async def _async_get_states_and_events_with_filter(
-    hass: HomeAssistant, sqlalchemy_filter: Filters, entity_ids: set[str]
+    hass: spencerAssistant, sqlalchemy_filter: Filters, entity_ids: set[str]
 ) -> tuple[list[Row], list[Row]]:
     """Get states from the database based on a filter."""
     for entity_id in entity_ids:
@@ -133,7 +133,7 @@ async def test_included_and_excluded_simple_case_no_globs(recorder_mock, hass):
     filter_reject = {"sensor.bli"}
     conf = {
         CONF_INCLUDE: {
-            CONF_DOMAINS: ["sensor", "homeassistant"],
+            CONF_DOMAINS: ["sensor", "spencerassistant"],
             CONF_ENTITIES: ["switch.bla"],
         },
         CONF_EXCLUDE: {
@@ -336,7 +336,7 @@ async def test_included_entities_and_excluded_domain(recorder_mock, hass):
         "media_player.test",
         "media_player.test3",
         "thermostat.test",
-        "zone.home",
+        "zone.spencer",
         "script.can_cancel_this_one",
     }
     filter_reject = {
@@ -385,7 +385,7 @@ async def test_same_domain_included_excluded(recorder_mock, hass):
     filter_reject = {
         "thermostat.test2",
         "thermostat.test",
-        "zone.home",
+        "zone.spencer",
         "script.can_cancel_this_one",
     }
     conf = {
@@ -431,7 +431,7 @@ async def test_same_entity_included_excluded(recorder_mock, hass):
         "media_player.test3",
         "thermostat.test2",
         "thermostat.test",
-        "zone.home",
+        "zone.spencer",
         "script.can_cancel_this_one",
     }
     conf = {
@@ -477,7 +477,7 @@ async def test_same_entity_included_excluded_include_domain_wins(recorder_mock, 
     }
     filter_reject = {
         "thermostat.test2",
-        "zone.home",
+        "zone.spencer",
         "script.can_cancel_this_one",
     }
     conf = {
@@ -526,7 +526,7 @@ async def test_specificly_included_entity_always_wins(recorder_mock, hass):
     }
     filter_reject = {
         "binary_sensor.test2",
-        "binary_sensor.home",
+        "binary_sensor.spencer",
         "binary_sensor.can_cancel_this_one",
     }
     conf = {

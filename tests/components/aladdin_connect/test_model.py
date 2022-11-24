@@ -1,9 +1,9 @@
 """Test the Aladdin Connect model class."""
-from homeassistant.components.aladdin_connect.model import DoorDevice
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.aladdin_connect.model import DoorDevice
+from spencerassistant.core import spencerAssistant
 
 
-async def test_model(hass: HomeAssistant) -> None:
+async def test_model(hass: spencerAssistant) -> None:
     """Test model for Aladdin Connect Model."""
     test_values = {
         "device_id": "1",

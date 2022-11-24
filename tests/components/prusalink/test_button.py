@@ -5,16 +5,16 @@ from unittest.mock import patch
 from pyprusalink import Conflict
 import pytest
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
 def setup_button_platform_only():
     """Only setup button platform."""
-    with patch("homeassistant.components.prusalink.PLATFORMS", [Platform.BUTTON]):
+    with patch("spencerassistant.components.prusalink.PLATFORMS", [Platform.BUTTON]):
         yield
 
 
@@ -26,7 +26,7 @@ def setup_button_platform_only():
     ),
 )
 async def test_button_pause_cancel(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry,
     mock_api,
     hass_client,
@@ -52,7 +52,7 @@ async def test_button_pause_cancel(
     assert len(mock_meth.mock_calls) == 1
 
     # Verify it calls correct method + does error handling
-    with pytest.raises(HomeAssistantError), patch(
+    with pytest.raises(spencerAssistantError), patch(
         f"pyprusalink.PrusaLink.{method}", side_effect=Conflict
     ):
         await hass.services.async_call(
@@ -68,7 +68,7 @@ async def test_button_pause_cancel(
     (("mock_title_resume_job", "resume_job"),),
 )
 async def test_button_resume(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry,
     mock_api,
     hass_client,
@@ -84,7 +84,7 @@ async def test_button_resume(
     assert state.state == "unknown"
 
     with patch(f"pyprusalink.PrusaLink.{method}") as mock_meth, patch(
-        "homeassistant.components.prusalink.PrusaLinkUpdateCoordinator._fetch_data"
+        "spencerassistant.components.prusalink.PrusaLinkUpdateCoordinator._fetch_data"
     ):
         await hass.services.async_call(
             "button",
@@ -96,7 +96,7 @@ async def test_button_resume(
     assert len(mock_meth.mock_calls) == 1
 
     # Verify it calls correct method + does error handling
-    with pytest.raises(HomeAssistantError), patch(
+    with pytest.raises(spencerAssistantError), patch(
         f"pyprusalink.PrusaLink.{method}", side_effect=Conflict
     ):
         await hass.services.async_call(

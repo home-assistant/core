@@ -7,8 +7,8 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from spencerassistant.const import (
     STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
@@ -31,7 +31,7 @@ SET_USER_STATUS = 9
 def lock_platform_only():
     """Only setup the lock and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.LOCK,

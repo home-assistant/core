@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.androidtv.config_flow import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.androidtv.config_flow import (
     APPS_NEW_ID,
     CONF_APP_DELETE,
     CONF_APP_ID,
@@ -15,7 +15,7 @@ from homeassistant.components.androidtv.config_flow import (
     CONF_RULE_VALUES,
     RULES_NEW_ID,
 )
-from homeassistant.components.androidtv.const import (
+from spencerassistant.components.androidtv.const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
@@ -33,8 +33,8 @@ from homeassistant.components.androidtv.const import (
     PROP_ETHMAC,
     PROP_WIFIMAC,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 
 from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
 
@@ -64,7 +64,7 @@ CONFIG_ADB_SERVER = {
 }
 
 CONNECT_METHOD = (
-    "homeassistant.components.androidtv.config_flow.async_connect_androidtv"
+    "spencerassistant.components.androidtv.config_flow.async_connect_androidtv"
 )
 
 

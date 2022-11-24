@@ -6,9 +6,9 @@ import requests
 import requests_mock
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
-import homeassistant.components.tomato.device_tracker as tomato
-from homeassistant.const import (
+from spencerassistant.components.device_tracker import DOMAIN
+import spencerassistant.components.tomato.device_tracker as tomato
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PLATFORM,
@@ -51,7 +51,7 @@ def mock_session_response(*args, **kwargs):
 def mock_exception_logger():
     """Mock pyunifi."""
     with mock.patch(
-        "homeassistant.components.tomato.device_tracker._LOGGER.exception"
+        "spencerassistant.components.tomato.device_tracker._LOGGER.exception"
     ) as mock_exception_logger:
         yield mock_exception_logger
 

@@ -6,19 +6,19 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.bluetooth import (
+from spencerassistant.components.bluetooth import (
     DOMAIN,
     BluetoothChange,
     BluetoothScanningMode,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
-from homeassistant.components.bluetooth.passive_update_coordinator import (
+from spencerassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
+from spencerassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdateCoordinator,
 )
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from . import inject_bluetooth_service_info, patch_all_discovered_devices
 

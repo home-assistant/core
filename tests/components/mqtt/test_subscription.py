@@ -3,12 +3,12 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.mqtt.subscription import (
+from spencerassistant.components.mqtt.subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.core import callback
+from spencerassistant.core import callback
 
 from tests.common import async_fire_mqtt_message
 
@@ -16,7 +16,7 @@ from tests.common import async_fire_mqtt_message
 @pytest.fixture(autouse=True)
 def no_platforms():
     """Skip platform setup to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", []):
         yield
 
 

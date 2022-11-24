@@ -1,8 +1,8 @@
 """Test config flow."""
 
-from homeassistant import data_entry_flow
-from homeassistant.components.shopping_list.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from spencerassistant import data_entry_flow
+from spencerassistant.components.shopping_list.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 
 
 async def test_import(hass):

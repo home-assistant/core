@@ -6,15 +6,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import graphite
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import graphite
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="mock_gf")
 def fixture_mock_gf():
     """Mock Graphite Feeder fixture."""
-    with patch("homeassistant.components.graphite.GraphiteFeeder") as mock_gf:
+    with patch("spencerassistant.components.graphite.GraphiteFeeder") as mock_gf:
         yield mock_gf
 
 

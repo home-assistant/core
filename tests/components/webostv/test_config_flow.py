@@ -5,11 +5,11 @@ from unittest.mock import Mock, patch
 from aiowebostv import WebOsTvPairError
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import ssdp
-from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
-from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import (
+from spencerassistant import config_entries
+from spencerassistant.components import ssdp
+from spencerassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
+from spencerassistant.config_entries import SOURCE_SSDP
+from spencerassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_ICON,
@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
 from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
@@ -74,7 +74,7 @@ async def test_form(hass, client):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.webostv.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -191,7 +191,7 @@ async def test_form_ssdp(hass, client):
     """Test that the ssdp confirmation form is served."""
     assert client
 
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.webostv.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVERY_INFO
         )

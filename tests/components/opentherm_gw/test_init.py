@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
 
-from homeassistant import setup
-from homeassistant.components.opentherm_gw.const import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
-from homeassistant.helpers import device_registry as dr
+from spencerassistant import setup
+from spencerassistant.components.opentherm_gw.const import DOMAIN
+from spencerassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
+from spencerassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, mock_device_registry
 
@@ -32,7 +32,7 @@ async def test_device_registry_insert(hass):
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
+        "spencerassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
         return_value=None,
     ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS):
         await setup.async_setup_component(hass, DOMAIN, {})
@@ -60,7 +60,7 @@ async def test_device_registry_update(hass):
     )
 
     with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
+        "spencerassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
         return_value=None,
     ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD):
         await setup.async_setup_component(hass, DOMAIN, {})

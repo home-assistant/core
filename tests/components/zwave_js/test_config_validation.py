@@ -2,7 +2,7 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.zwave_js.config_validation import boolean
+from spencerassistant.components.zwave_js.config_validation import boolean
 
 
 def test_boolean_validation():

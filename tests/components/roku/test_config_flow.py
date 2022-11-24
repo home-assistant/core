@@ -5,16 +5,16 @@ from unittest.mock import MagicMock
 import pytest
 from rokuecp import RokuConnectionError
 
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_spencerKIT, SOURCE_SSDP, SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
-    HOMEKIT_HOST,
+    spencerKIT_HOST,
     HOST,
-    MOCK_HOMEKIT_DISCOVERY_INFO,
+    MOCK_spencerKIT_DISCOVERY_INFO,
     MOCK_SSDP_DISCOVERY_INFO,
     NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku_config_flow: MagicMock,
 ) -> None:
@@ -57,7 +57,7 @@ async def test_duplicate_error(
 
 
 async def test_form(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_roku_config_flow: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -85,7 +85,7 @@ async def test_form(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test we handle cannot connect roku error."""
     mock_roku_config_flow.update.side_effect = RokuConnectionError
@@ -103,7 +103,7 @@ async def test_form_cannot_connect(
 
 
 async def test_form_unknown_error(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test we handle unknown error."""
     mock_roku_config_flow.update.side_effect = Exception
@@ -121,16 +121,16 @@ async def test_form_unknown_error(
     assert result["reason"] == "unknown"
 
 
-async def test_homekit_cannot_connect(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+async def test_spencerkit_cannot_connect(
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
-    """Test we abort homekit flow on connection error."""
+    """Test we abort spencerkit flow on connection error."""
     mock_roku_config_flow.update.side_effect = RokuConnectionError
 
-    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
+    discovery_info = dataclasses.replace(MOCK_spencerKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_HOMEKIT},
+        context={CONF_SOURCE: SOURCE_spencerKIT},
         data=discovery_info,
     )
 
@@ -138,16 +138,16 @@ async def test_homekit_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_homekit_unknown_error(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+async def test_spencerkit_unknown_error(
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
-    """Test we abort homekit flow on unknown error."""
+    """Test we abort spencerkit flow on unknown error."""
     mock_roku_config_flow.update.side_effect = Exception
 
-    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
+    discovery_info = dataclasses.replace(MOCK_spencerKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_HOMEKIT},
+        context={CONF_SOURCE: SOURCE_spencerKIT},
         data=discovery_info,
     )
 
@@ -156,15 +156,15 @@ async def test_homekit_unknown_error(
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
-async def test_homekit_discovery(
-    hass: HomeAssistant,
+async def test_spencerkit_discovery(
+    hass: spencerAssistant,
     mock_roku_config_flow: MagicMock,
     mock_setup_entry: None,
 ) -> None:
-    """Test the homekit discovery flow."""
-    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
+    """Test the spencerkit discovery flow."""
+    discovery_info = dataclasses.replace(MOCK_spencerKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+        DOMAIN, context={CONF_SOURCE: SOURCE_spencerKIT}, data=discovery_info
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -180,13 +180,13 @@ async def test_homekit_discovery(
     assert result["title"] == NAME_ROKUTV
 
     assert "data" in result
-    assert result["data"][CONF_HOST] == HOMEKIT_HOST
+    assert result["data"][CONF_HOST] == spencerKIT_HOST
     assert result["data"][CONF_NAME] == NAME_ROKUTV
 
     # test abort on existing host
-    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
+    discovery_info = dataclasses.replace(MOCK_spencerKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+        DOMAIN, context={CONF_SOURCE: SOURCE_spencerKIT}, data=discovery_info
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -194,7 +194,7 @@ async def test_homekit_discovery(
 
 
 async def test_ssdp_cannot_connect(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test we abort SSDP flow on connection error."""
     mock_roku_config_flow.update.side_effect = RokuConnectionError
@@ -211,7 +211,7 @@ async def test_ssdp_cannot_connect(
 
 
 async def test_ssdp_unknown_error(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
+    hass: spencerAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test we abort SSDP flow on unknown error."""
     mock_roku_config_flow.update.side_effect = Exception
@@ -228,7 +228,7 @@ async def test_ssdp_unknown_error(
 
 
 async def test_ssdp_discovery(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_roku_config_flow: MagicMock,
     mock_setup_entry: None,
 ) -> None:

@@ -6,14 +6,14 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, HomeAssistant, State
+from spencerassistant.core import Context, spencerAssistant, State
 
 from . import DOMAIN
 
@@ -24,7 +24,7 @@ VALID_STATES = {STATE_ON, STATE_OFF}
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     state: State,
     *,
     context: Context | None = None,
@@ -69,7 +69,7 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,

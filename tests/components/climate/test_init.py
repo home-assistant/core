@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     SET_TEMPERATURE_SCHEMA,
     ClimateEntity,
     HVACMode,

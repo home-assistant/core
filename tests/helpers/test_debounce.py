@@ -1,7 +1,7 @@
 """Tests for debounce."""
 from unittest.mock import AsyncMock
 
-from homeassistant.helpers import debounce
+from spencerassistant.helpers import debounce
 
 
 async def test_immediate_works(hass):

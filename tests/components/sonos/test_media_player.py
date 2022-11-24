@@ -1,6 +1,6 @@
 """Tests for the Sonos Media Player platform."""
-from homeassistant.const import STATE_IDLE
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.const import STATE_IDLE
+from spencerassistant.helpers import device_registry as dr
 
 
 async def test_device_registry(hass, async_autosetup_sonos, soco):

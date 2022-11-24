@@ -2,16 +2,16 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.landisgyr_heat_meter.const import (
+from spencerassistant.components.landisgyr_heat_meter.const import (
     DOMAIN as LANDISGYR_HEAT_METER_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 API_HEAT_METER_SERVICE = (
-    "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
+    "spencerassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
 )
 
 

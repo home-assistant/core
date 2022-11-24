@@ -4,17 +4,17 @@ from unittest.mock import AsyncMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.exceptions import spencerAssistantError
 
 from . import init_integration
 
@@ -51,7 +51,7 @@ async def test_block_set_state_connection_error(hass, mock_block_device, monkeyp
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -164,7 +164,7 @@ async def test_rpc_set_state_errors(hass, exc, mock_rpc_device, monkeypatch):
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

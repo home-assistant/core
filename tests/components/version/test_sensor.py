@@ -4,12 +4,12 @@ from __future__ import annotations
 from pyhaversion.exceptions import HaVersionException
 import pytest
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import MOCK_VERSION, mock_get_version_update, setup_version_integration
 
 
-async def test_version_sensor(hass: HomeAssistant):
+async def test_version_sensor(hass: spencerAssistant):
     """Test the Version sensor with different sources."""
     await setup_version_integration(hass)
 
@@ -19,7 +19,7 @@ async def test_version_sensor(hass: HomeAssistant):
     assert "channel" not in state.attributes
 
 
-async def test_update(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
+async def test_update(hass: spencerAssistant, caplog: pytest.LogCaptureFixture):
     """Test updates."""
     await setup_version_integration(hass)
     assert hass.states.get("sensor.local_installation").state == MOCK_VERSION

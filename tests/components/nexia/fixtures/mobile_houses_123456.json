@@ -112,7 +112,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -123,7 +123,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -373,7 +373,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -384,7 +384,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -634,7 +634,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -645,7 +645,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -895,7 +895,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -906,7 +906,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -1527,7 +1527,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -1538,7 +1538,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -1788,7 +1788,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -1799,7 +1799,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -2049,7 +2049,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -2060,7 +2060,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -2310,7 +2310,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -2321,7 +2321,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -2635,7 +2635,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -2646,7 +2646,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -2896,7 +2896,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -2907,7 +2907,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -3520,7 +3520,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -3531,7 +3531,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -3781,7 +3781,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -3792,7 +3792,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -4109,7 +4109,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -4120,7 +4120,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -4373,7 +4373,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -4384,7 +4384,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -4637,7 +4637,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -4648,7 +4648,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -4901,7 +4901,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -4912,7 +4912,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -5165,7 +5165,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -5176,7 +5176,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -5804,7 +5804,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -5815,7 +5815,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -6068,7 +6068,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -6079,7 +6079,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -6332,7 +6332,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -6343,7 +6343,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -6596,7 +6596,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -6607,7 +6607,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -6860,7 +6860,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -6871,7 +6871,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -7188,7 +7188,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -7199,7 +7199,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -7440,7 +7440,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -7451,7 +7451,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -7701,7 +7701,7 @@
                               },
                               {
                                 "value": 1,
-                                "label": "Home"
+                                "label": "spencer"
                               },
                               {
                                 "value": 2,
@@ -7712,7 +7712,7 @@
                                 "label": "Sleep"
                               }
                             ],
-                            "labels": ["None", "Home", "Away", "Sleep"],
+                            "labels": ["None", "spencer", "Away", "Sleep"],
                             "values": [0, 1, 2, 3],
                             "_links": {
                               "self": {
@@ -8329,7 +8329,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -8340,7 +8340,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -8581,7 +8581,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -8592,7 +8592,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -8842,7 +8842,7 @@
                           },
                           {
                             "value": 1,
-                            "label": "Home"
+                            "label": "spencer"
                           },
                           {
                             "value": 2,
@@ -8853,7 +8853,7 @@
                             "label": "Sleep"
                           }
                         ],
-                        "labels": ["None", "Home", "Away", "Sleep"],
+                        "labels": ["None", "spencer", "Away", "Sleep"],
                         "values": [0, 1, 2, 3],
                         "_links": {
                           "self": {
@@ -9300,11 +9300,11 @@
               },
               {
                 "id": 3452472,
-                "name": "Home",
+                "name": "spencer",
                 "enabled": true,
                 "settings": [],
                 "triggers": [],
-                "description": "When IFTTT activates the automation Upstairs West Wing will Run Schedule AND Downstairs East Wing will Run Schedule AND Downstairs West Wing will Run Schedule AND Activate the mode named 'Home' AND Master Suite will Run Schedule",
+                "description": "When IFTTT activates the automation Upstairs West Wing will Run Schedule AND Downstairs East Wing will Run Schedule AND Downstairs West Wing will Run Schedule AND Activate the mode named 'spencer' AND Master Suite will Run Schedule",
                 "icon": [
                   {
                     "name": "gears",
@@ -9323,7 +9323,7 @@
                     "modifiers": []
                   },
                   {
-                    "name": "at_home",
+                    "name": "at_spencer",
                     "modifiers": []
                   },
                   {
@@ -9504,7 +9504,7 @@
                 "enabled": true,
                 "settings": [],
                 "triggers": [],
-                "description": "When IFTTT activates the automation Upstairs West Wing will Run Schedule AND Downstairs East Wing will Run Schedule AND Downstairs West Wing will Run Schedule AND Activate the mode named 'Home'",
+                "description": "When IFTTT activates the automation Upstairs West Wing will Run Schedule AND Downstairs East Wing will Run Schedule AND Downstairs West Wing will Run Schedule AND Activate the mode named 'spencer'",
                 "icon": [
                   {
                     "name": "gears",
@@ -9523,7 +9523,7 @@
                     "modifiers": []
                   },
                   {
-                    "name": "at_home",
+                    "name": "at_spencer",
                     "modifiers": []
                   }
                 ],
@@ -9563,9 +9563,9 @@
             "items": [
               {
                 "id": 3047801,
-                "name": "Home",
+                "name": "spencer",
                 "current_mode": false,
-                "icon": "home.png",
+                "icon": "spencer.png",
                 "settings": [],
                 "_links": {
                   "self": {

@@ -1,8 +1,8 @@
 """Tests for the ATAG integration."""
 
-from homeassistant.components.atag import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.atag import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration, mock_connection
 
@@ -10,7 +10,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test configuration entry not ready on library error."""
     mock_connection(aioclient_mock, conn_error=True)
@@ -19,7 +19,7 @@ async def test_config_entry_not_ready(
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the ATAG configuration entry unloading."""
     entry = await init_integration(hass, aioclient_mock)

@@ -1,12 +1,12 @@
 """Tests for the Goal Zero Yeti integration."""
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components import dhcp
-from homeassistant.components.goalzero import DOMAIN
-from homeassistant.components.goalzero.const import DEFAULT_NAME
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
+from spencerassistant.components import dhcp
+from spencerassistant.components.goalzero import DOMAIN
+from spencerassistant.components.goalzero.const import DEFAULT_NAME
+from spencerassistant.const import CONF_HOST, CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -26,8 +26,8 @@ CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
 )
 
 
-def create_entry(hass: HomeAssistant):
-    """Add config entry in Home Assistant."""
+def create_entry(hass: spencerAssistant):
+    """Add config entry in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
@@ -51,17 +51,17 @@ async def create_mocked_yeti():
 def patch_config_flow_yeti(mocked_yeti):
     """Patch Goal Zero config flow."""
     return patch(
-        "homeassistant.components.goalzero.config_flow.Yeti",
+        "spencerassistant.components.goalzero.config_flow.Yeti",
         return_value=mocked_yeti,
     )
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Goal Zero integration in Home Assistant."""
+    """Set up the Goal Zero integration in spencer Assistant."""
     entry = create_entry(hass)
     base_url = f"http://{HOST}/"
     aioclient_mock.get(

@@ -1,10 +1,10 @@
 """Tests for Shelly diagnostics platform."""
 from aiohttp import ClientSession
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.shelly.diagnostics import TO_REDACT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.components.shelly.diagnostics import TO_REDACT
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 from .conftest import MOCK_STATUS_COAP
@@ -15,7 +15,7 @@ RELAY_BLOCK_ID = 0
 
 
 async def test_block_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, mock_block_device
+    hass: spencerAssistant, hass_client: ClientSession, mock_block_device
 ):
     """Test config entry diagnostics for block device."""
     await init_integration(hass, 1)
@@ -41,7 +41,7 @@ async def test_block_config_entry_diagnostics(
 
 
 async def test_rpc_config_entry_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
     mock_rpc_device,
 ):

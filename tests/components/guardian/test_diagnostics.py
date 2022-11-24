@@ -1,6 +1,6 @@
 """Test Guardian diagnostics."""
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.guardian import DOMAIN, GuardianData
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.guardian import DOMAIN, GuardianData
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 

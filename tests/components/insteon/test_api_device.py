@@ -6,9 +6,9 @@ from pyinsteon.constants import DeviceAction
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import publish_topic
 
-from homeassistant.components import insteon
-from homeassistant.components.insteon.api import async_load_api
-from homeassistant.components.insteon.api.device import (
+from spencerassistant.components import insteon
+from spencerassistant.components.insteon.api import async_load_api
+from spencerassistant.components.insteon.api.device import (
     DEVICE_ID,
     HA_DEVICE_NOT_FOUND,
     ID,
@@ -16,8 +16,8 @@ from homeassistant.components.insteon.api.device import (
     TYPE,
     async_device_name,
 )
-from homeassistant.components.insteon.const import DOMAIN, MULTIPLE
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.components.insteon.const import DOMAIN, MULTIPLE
+from spencerassistant.helpers import device_registry as dr
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices

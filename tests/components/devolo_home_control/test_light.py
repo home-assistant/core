@@ -1,14 +1,14 @@
-"""Tests for the devolo Home Control light platform."""
+"""Tests for the devolo spencer Control light platform."""
 from unittest.mock import patch
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     ColorMode,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
@@ -17,19 +17,19 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import configure_integration
-from .mocks import BinarySwitchPropertyMock, HomeControlMock, HomeControlMockLight
+from .mocks import BinarySwitchPropertyMock, spencerControlMock, spencerControlMockLight
 
 
-async def test_light_without_binary_sensor(hass: HomeAssistant):
+async def test_light_without_binary_sensor(hass: spencerAssistant):
     """Test setup and state change of a light device that does not have an additional binary sensor."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockLight()
+    test_gateway = spencerControlMockLight()
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -61,7 +61,7 @@ async def test_light_without_binary_sensor(hass: HomeAssistant):
 
     # Test setting brightness
     with patch(
-        "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
+        "devolo_spencer_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as set_value:
         await hass.services.async_call(
             DOMAIN,
@@ -96,16 +96,16 @@ async def test_light_without_binary_sensor(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-async def test_light_with_binary_sensor(hass: HomeAssistant):
+async def test_light_with_binary_sensor(hass: spencerAssistant):
     """Test setup and state change of a light device that has an additional binary sensor."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockLight()
+    test_gateway = spencerControlMockLight()
     test_gateway.devices["Test"].binary_switch_property = {
         "devolo.BinarySwitch:Test": BinarySwitchPropertyMock()
     }
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -127,7 +127,7 @@ async def test_light_with_binary_sensor(hass: HomeAssistant):
 
     # Test setting brightness
     with patch(
-        "devolo_home_control_api.properties.binary_switch_property.BinarySwitchProperty.set"
+        "devolo_spencer_control_api.properties.binary_switch_property.BinarySwitchProperty.set"
     ) as set_value:
         await hass.services.async_call(
             DOMAIN,
@@ -147,13 +147,13 @@ async def test_light_with_binary_sensor(hass: HomeAssistant):
         set_value.assert_called_once_with(False)
 
 
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: spencerAssistant):
     """Test removing entity."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockLight()
+    test_gateway = spencerControlMockLight()
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

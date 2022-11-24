@@ -2,14 +2,14 @@
 import pytest
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.humidifier import DOMAIN, const, device_condition
-from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.humidifier import DOMAIN, const, device_condition
+from spencerassistant.const import ATTR_MODE, STATE_OFF, STATE_ON
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -248,7 +248,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_mode - event - test_event3"
 
-    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_HOME})
+    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_spencer})
 
     # Should not fire
     hass.bus.async_fire("test_event3")
@@ -275,13 +275,13 @@ async def test_if_state(hass, calls):
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: [const.MODE_spencer, const.MODE_AWAY]},
             {},
             "is_mode",
             [
                 {
                     "name": "mode",
-                    "options": [("home", "home"), ("away", "away")],
+                    "options": [("spencer", "spencer"), ("away", "away")],
                     "required": True,
                     "type": "select",
                 }
@@ -330,12 +330,12 @@ async def test_if_state(hass, calls):
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: [const.MODE_spencer, const.MODE_AWAY]},
             "is_mode",
             [
                 {
                     "name": "mode",
-                    "options": [("home", "home"), ("away", "away")],
+                    "options": [("spencer", "spencer"), ("away", "away")],
                     "required": True,
                     "type": "select",
                 }

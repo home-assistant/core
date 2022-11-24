@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.media_player import (
+from spencerassistant.components import automation
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaType,
 )
-from homeassistant.components.webostv.const import (
+from spencerassistant.components.webostv.const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
@@ -32,11 +32,11 @@ from homeassistant.components.webostv.const import (
     SERVICE_SELECT_SOUND_OUTPUT,
     WebOsTvCommandError,
 )
-from homeassistant.components.webostv.media_player import (
+from spencerassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_COMMAND,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -56,11 +56,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import State
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant.core import State
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
@@ -476,8 +476,8 @@ async def test_control_error_handling(hass, client, caplog, monkeypatch):
     monkeypatch.setattr(client, "play", Mock(side_effect=WebOsTvCommandError))
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
-    # Device on, raise HomeAssistantError
-    with pytest.raises(HomeAssistantError) as exc:
+    # Device on, raise spencerAssistantError
+    with pytest.raises(spencerAssistantError) as exc:
         assert await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
     assert (

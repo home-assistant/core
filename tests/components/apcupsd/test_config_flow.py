@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES, CONF_SOURCE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.apcupsd import DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES, CONF_SOURCE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS
 
@@ -17,12 +17,12 @@ from tests.common import MockConfigEntry
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.apcupsd.async_setup_entry",
+        "spencerassistant.components.apcupsd.async_setup_entry",
         return_value=True,
     )
 
 
-async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
+async def test_config_flow_cannot_connect(hass: spencerAssistant) -> None:
     """Test config flow setup with connection error."""
     with patch("apcaccess.status.get") as mock_get:
         mock_get.side_effect = OSError()
@@ -36,7 +36,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_config_flow_no_status(hass: HomeAssistant) -> None:
+async def test_config_flow_no_status(hass: spencerAssistant) -> None:
     """Test config flow setup with successful connection but no status is reported."""
     with patch(
         "apcaccess.status.parse",
@@ -50,7 +50,7 @@ async def test_config_flow_no_status(hass: HomeAssistant) -> None:
         assert result["reason"] == "no_status"
 
 
-async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
+async def test_config_flow_duplicate(hass: spencerAssistant) -> None:
     """Test duplicate config flow setup."""
     # First add an exiting config entry to hass.
     mock_entry = MockConfigEntry(
@@ -107,7 +107,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         assert result["data"] == another_host
 
 
-async def test_flow_works(hass: HomeAssistant) -> None:
+async def test_flow_works(hass: spencerAssistant) -> None:
     """Test successful creation of config entries via user configuration."""
     with patch("apcaccess.status.parse", return_value=MOCK_STATUS), patch(
         "apcaccess.status.get", return_value=b""
@@ -140,7 +140,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     ],
 )
 async def test_flow_minimal_status(
-    hass: HomeAssistant, extra_status: dict[str, str], expected_title: str
+    hass: spencerAssistant, extra_status: dict[str, str], expected_title: str
 ) -> None:
     """Test successful creation of config entries via user configuration when minimal status is reported.
 
@@ -163,7 +163,7 @@ async def test_flow_minimal_status(
         mock_setup.assert_called_once()
 
 
-async def test_flow_import(hass: HomeAssistant) -> None:
+async def test_flow_import(hass: spencerAssistant) -> None:
     """Test successful creation of config entries via YAML import."""
     with patch("apcaccess.status.parse", return_value=MOCK_STATUS), patch(
         "apcaccess.status.get", return_value=b""

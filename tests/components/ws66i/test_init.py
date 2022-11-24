@@ -1,8 +1,8 @@
 """Test the WS66i 6-Zone Amplifier init file."""
 from unittest.mock import patch
 
-from homeassistant.components.ws66i.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.components.ws66i.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from .test_media_player import (
     MOCK_CONFIG,
@@ -24,7 +24,7 @@ async def test_cannot_connect(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.ws66i.get_ws66i",
+        "spencerassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(fail_open=True),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -45,7 +45,7 @@ async def test_cannot_connect_2(hass):
 
     with patch.object(MockWs66i, "open", side_effect=ConnectionError):
         with patch(
-            "homeassistant.components.ws66i.get_ws66i",
+            "spencerassistant.components.ws66i.get_ws66i",
             new=lambda *a: ws66i,
         ):
             await hass.config_entries.async_setup(config_entry.entry_id)
@@ -63,7 +63,7 @@ async def test_unload_config_entry(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.ws66i.get_ws66i",
+        "spencerassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

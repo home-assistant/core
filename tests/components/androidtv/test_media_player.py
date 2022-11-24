@@ -6,7 +6,7 @@ from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
 
-from homeassistant.components.androidtv.const import (
+from spencerassistant.components.androidtv.const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
@@ -22,7 +22,7 @@ from homeassistant.components.androidtv.const import (
     DEVICE_FIRETV,
     DOMAIN,
 )
-from homeassistant.components.androidtv.media_player import (
+from spencerassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
     PREFIX_ANDROIDTV,
@@ -32,7 +32,7 @@ from homeassistant.components.androidtv.media_player import (
     SERVICE_LEARN_SENDEVENT,
     SERVICE_UPLOAD,
 )
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -51,22 +51,22 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_STOP,
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import slugify
+from spencerassistant.helpers.entity_component import async_update_entity
+from spencerassistant.util import slugify
 
 from . import patchers
 
@@ -171,7 +171,7 @@ def adb_device_tcp_fixture() -> None:
 def load_adbkey_fixture() -> None:
     """Patch load_adbkey."""
     with patch(
-        "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
+        "spencerassistant.components.androidtv.ADBPythonSync.load_adbkey",
         return_value="signer for testing",
     ):
         yield
@@ -181,7 +181,7 @@ def load_adbkey_fixture() -> None:
 def keygen_fixture() -> None:
     """Patch keygen."""
     with patch(
-        "homeassistant.components.androidtv.keygen",
+        "spencerassistant.components.androidtv.keygen",
         return_value=Mock(),
     ):
         yield
@@ -216,7 +216,7 @@ async def test_reconnect(hass, caplog, config):
     "Handles device/service unavailable. Log a warning once when
     unavailable, log once when reconnected."
 
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    https://developers.spencer-assistant.io/docs/en/integration_quality_scale_index.html
     """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -616,7 +616,7 @@ async def test_adb_command_key(hass):
     """Test sending a key command via the `androidtv.adb_command` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
-    command = "HOME"
+    command = "spencer"
     response = None
 
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
@@ -1068,7 +1068,7 @@ async def test_connection_closed_on_ha_stop(hass):
         await hass.async_block_till_done()
 
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_close") as adb_close:
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
             await hass.async_block_till_done()
             assert adb_close.called
 

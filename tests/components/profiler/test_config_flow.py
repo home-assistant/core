@@ -1,8 +1,8 @@
 """Test the Profiler config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.profiler.const import DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components.profiler.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,7 @@ async def test_form_user(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.profiler.async_setup_entry",
+        "spencerassistant.components.profiler.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

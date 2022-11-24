@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, switch
-from homeassistant.const import (
+from spencerassistant.components import mqtt, switch
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     STATE_OFF,
@@ -13,8 +13,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -57,7 +57,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def switch_platform_only():
     """Only setup the switch platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SWITCH]):
         yield
 
 
@@ -501,7 +501,7 @@ async def test_discovery_update_unchanged_switch(
         '  "command_topic": "test_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.switch.MqttSwitch.discovery_update"
+        "spencerassistant.components.mqtt.switch.MqttSwitch.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

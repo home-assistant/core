@@ -8,10 +8,10 @@ from typing import Any
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import CONF_SELECTOR
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.util.yaml import load_yaml
+from spencerassistant.const import CONF_SELECTOR
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import config_validation as cv, selector
+from spencerassistant.util.yaml import load_yaml
 
 from .model import Config, Integration
 
@@ -81,7 +81,7 @@ def validate_services(integration: Integration) -> None:
                 "services", "Registers services but has no services.yaml"
             )
         return
-    except HomeAssistantError:
+    except spencerAssistantError:
         integration.add_error("services", "Unable to load services.yaml")
         return
 

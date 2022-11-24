@@ -6,9 +6,9 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 
-from homeassistant import config_entries
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.unifi.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
+from spencerassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
@@ -17,9 +17,9 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import STATE_spencer, STATE_NOT_spencer, STATE_UNAVAILABLE
+from spencerassistant.helpers import entity_registry as er
+import spencerassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
 
@@ -52,31 +52,31 @@ async def test_tracked_wireless_clients(
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
-    # Updated timestamp marks client as home
+    # Updated timestamp marks client as spencer
 
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Change time to mark client as away
 
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
     # Same timestamp doesn't explicitly mark client as away
 
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
 
 async def test_tracked_clients(
@@ -133,17 +133,17 @@ async def test_tracked_clients(
     )
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
-    assert hass.states.get("device_tracker.client_1").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.client_2").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client_1").state == STATE_NOT_spencer
+    assert hass.states.get("device_tracker.client_2").state == STATE_NOT_spencer
 
     # Client on SSID not in SSID filter
     assert not hass.states.get("device_tracker.client_3")
 
     # Wireless client with wired bug, if bug active on restart mark device away
-    assert hass.states.get("device_tracker.client_4").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client_4").state == STATE_NOT_spencer
 
     # A client that has never been seen should be marked away.
-    assert hass.states.get("device_tracker.client_5").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client_5").state == STATE_NOT_spencer
 
     # State change signalling works
 
@@ -151,7 +151,7 @@ async def test_tracked_clients(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_1)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client_1").state == STATE_HOME
+    assert hass.states.get("device_tracker.client_1").state == STATE_spencer
 
 
 async def test_tracked_wireless_clients_event_source(
@@ -172,7 +172,7 @@ async def test_tracked_wireless_clients_event_source(
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
     # State change signalling works with events
 
@@ -195,7 +195,7 @@ async def test_tracked_wireless_clients_event_source(
     }
     mock_unifi_websocket(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Disconnected event
 
@@ -216,15 +216,15 @@ async def test_tracked_wireless_clients_event_source(
     }
     mock_unifi_websocket(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Change time to mark client as away
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
     # To limit false positives in client tracker
     # data sources are prioritized when available
@@ -234,7 +234,7 @@ async def test_tracked_wireless_clients_event_source(
 
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Disconnection event will be ignored
 
@@ -255,15 +255,15 @@ async def test_tracked_wireless_clients_event_source(
     }
     mock_unifi_websocket(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Change time to mark client as away
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
 
 async def test_tracked_devices(
@@ -307,8 +307,8 @@ async def test_tracked_devices(
     )
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.device_1").state == STATE_spencer
+    assert hass.states.get("device_tracker.device_2").state == STATE_NOT_spencer
 
     # State change signalling work
 
@@ -317,18 +317,18 @@ async def test_tracked_devices(
     mock_unifi_websocket(message=MessageKey.DEVICE, data=[device_1, device_2])
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    assert hass.states.get("device_tracker.device_1").state == STATE_spencer
+    assert hass.states.get("device_tracker.device_2").state == STATE_spencer
 
-    # Change of time can mark device not_home outside of expected reporting interval
+    # Change of time can mark device not_spencer outside of expected reporting interval
 
     new_time = dt_util.utcnow() + timedelta(seconds=90)
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    assert hass.states.get("device_tracker.device_1").state == STATE_NOT_spencer
+    assert hass.states.get("device_tracker.device_2").state == STATE_spencer
 
     # Disabled device is unavailable
 
@@ -337,7 +337,7 @@ async def test_tracked_devices(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.device_1").state == STATE_UNAVAILABLE
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    assert hass.states.get("device_tracker.device_2").state == STATE_spencer
 
 
 async def test_remove_clients(
@@ -413,8 +413,8 @@ async def test_controller_state_change(
     )
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
+    assert hass.states.get("device_tracker.device").state == STATE_spencer
 
     # Controller unavailable
     mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
@@ -427,8 +427,8 @@ async def test_controller_state_change(
     mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
+    assert hass.states.get("device_tracker.device").state == STATE_spencer
 
 
 async def test_option_track_clients(hass, aioclient_mock, mock_device_registry):
@@ -647,8 +647,8 @@ async def test_option_ssid_filter(
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_spencer
 
     # Setting SSID filter will remove clients outside of filter
     hass.config_entries.async_update_entry(
@@ -658,7 +658,7 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     # Not affected by SSID filter
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
 
     # Removed due to SSID filter
     assert not hass.states.get("device_tracker.client_on_ssid2")
@@ -673,7 +673,7 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     # SSID filter marks client as away
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
     # SSID still outside of filter
     assert not hass.states.get("device_tracker.client_on_ssid2")
@@ -690,24 +690,24 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=[client, client_on_ssid2])
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_spencer
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_spencer
 
     # Time pass to mark client as away
 
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_spencer
 
     client_on_ssid2["last_seen"] += 1
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
     # Client won't go away until after next update
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_spencer
 
     # Trigger update to get client marked as away
     client_on_ssid2["last_seen"] += 1
@@ -717,11 +717,11 @@ async def test_option_ssid_filter(
     new_time = (
         dt_util.utcnow() + controller.option_detection_time + timedelta(seconds=1)
     )
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_spencer
 
 
 async def test_wireless_client_go_wired_issue(
@@ -749,7 +749,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is False
 
     # Trigger wired bug
@@ -760,18 +760,18 @@ async def test_wireless_client_go_wired_issue(
 
     # Wired bug fix keeps client marked as wireless
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is False
 
     # Pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    # Marked as home according to the timer
+    # Marked as spencer according to the timer
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert client_state.state == STATE_NOT_spencer
     assert client_state.attributes["is_wired"] is False
 
     # Try to mark client as connected
@@ -781,7 +781,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Make sure it don't go online again until wired bug disappears
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert client_state.state == STATE_NOT_spencer
     assert client_state.attributes["is_wired"] is False
 
     # Make client wireless
@@ -792,7 +792,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Client is no longer affected by wired bug and can be marked online
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is False
 
 
@@ -821,7 +821,7 @@ async def test_option_ignore_wired_bug(
 
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is False
 
     # Trigger wired bug
@@ -831,18 +831,18 @@ async def test_option_ignore_wired_bug(
 
     # Wired bug in effect
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is True
 
     # pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
     # Timer marks client as away
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert client_state.state == STATE_NOT_spencer
     assert client_state.attributes["is_wired"] is True
 
     # Mark client as connected again
@@ -850,9 +850,9 @@ async def test_option_ignore_wired_bug(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
-    # Ignoring wired bug allows client to go home again even while affected
+    # Ignoring wired bug allows client to go spencer again even while affected
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is True
 
     # Make client wireless
@@ -863,7 +863,7 @@ async def test_option_ignore_wired_bug(
 
     # Client is wireless and still connected
     client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert client_state.state == STATE_spencer
     assert client_state.attributes["is_wired"] is False
 
 

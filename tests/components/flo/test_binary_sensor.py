@@ -1,13 +1,13 @@
 """Test Flo by Moen binary sensor entities."""
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 

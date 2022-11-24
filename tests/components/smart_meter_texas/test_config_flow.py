@@ -9,9 +9,9 @@ from smart_meter_texas.exceptions import (
     SmartMeterTexasAuthError,
 )
 
-from homeassistant import config_entries
-from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant import config_entries
+from spencerassistant.components.smart_meter_texas.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +28,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("smart_meter_texas.Client.authenticate", return_value=True), patch(
-        "homeassistant.components.smart_meter_texas.async_setup_entry",
+        "spencerassistant.components.smart_meter_texas.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

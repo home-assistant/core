@@ -1,335 +1,335 @@
-:mod:`homeassistant.helpers`
+:mod:`spencerassistant.helpers`
 ============================
 
-.. automodule:: homeassistant.helpers
+.. automodule:: spencerassistant.helpers
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.aiohttp\_client
+spencerassistant.helpers.aiohttp\_client
 -------------------------------------
 
-.. automodule:: homeassistant.helpers.aiohttp_client
+.. automodule:: spencerassistant.helpers.aiohttp_client
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.area\_registry
+spencerassistant.helpers.area\_registry
 ------------------------------------
 
-.. automodule:: homeassistant.helpers.area_registry
+.. automodule:: spencerassistant.helpers.area_registry
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.check\_config
+spencerassistant.helpers.check\_config
 -----------------------------------
 
-.. automodule:: homeassistant.helpers.check_config
+.. automodule:: spencerassistant.helpers.check_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.collection
+spencerassistant.helpers.collection
 --------------------------------
 
-.. automodule:: homeassistant.helpers.collection
+.. automodule:: spencerassistant.helpers.collection
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.condition
+spencerassistant.helpers.condition
 -------------------------------
 
-.. automodule:: homeassistant.helpers.condition
+.. automodule:: spencerassistant.helpers.condition
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.config\_entry\_flow
+spencerassistant.helpers.config\_entry\_flow
 -----------------------------------------
 
-.. automodule:: homeassistant.helpers.config_entry_flow
+.. automodule:: spencerassistant.helpers.config_entry_flow
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.config\_entry\_oauth2\_flow
+spencerassistant.helpers.config\_entry\_oauth2\_flow
 -------------------------------------------------
 
-.. automodule:: homeassistant.helpers.config_entry_oauth2_flow
+.. automodule:: spencerassistant.helpers.config_entry_oauth2_flow
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.config\_validation
+spencerassistant.helpers.config\_validation
 ----------------------------------------
 
-.. automodule:: homeassistant.helpers.config_validation
+.. automodule:: spencerassistant.helpers.config_validation
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.data\_entry\_flow
+spencerassistant.helpers.data\_entry\_flow
 ---------------------------------------
 
-.. automodule:: homeassistant.helpers.data_entry_flow
+.. automodule:: spencerassistant.helpers.data_entry_flow
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.debounce
+spencerassistant.helpers.debounce
 ------------------------------
 
-.. automodule:: homeassistant.helpers.debounce
+.. automodule:: spencerassistant.helpers.debounce
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.deprecation
+spencerassistant.helpers.deprecation
 ---------------------------------
 
-.. automodule:: homeassistant.helpers.deprecation
+.. automodule:: spencerassistant.helpers.deprecation
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.device\_registry
+spencerassistant.helpers.device\_registry
 --------------------------------------
 
-.. automodule:: homeassistant.helpers.device_registry
+.. automodule:: spencerassistant.helpers.device_registry
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.discovery
+spencerassistant.helpers.discovery
 -------------------------------
 
-.. automodule:: homeassistant.helpers.discovery
+.. automodule:: spencerassistant.helpers.discovery
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.dispatcher
+spencerassistant.helpers.dispatcher
 --------------------------------
 
-.. automodule:: homeassistant.helpers.dispatcher
+.. automodule:: spencerassistant.helpers.dispatcher
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entity
+spencerassistant.helpers.entity
 ----------------------------
 
-.. automodule:: homeassistant.helpers.entity
+.. automodule:: spencerassistant.helpers.entity
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entity\_component
+spencerassistant.helpers.entity\_component
 ---------------------------------------
 
-.. automodule:: homeassistant.helpers.entity_component
+.. automodule:: spencerassistant.helpers.entity_component
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entity\_platform
+spencerassistant.helpers.entity\_platform
 --------------------------------------
 
-.. automodule:: homeassistant.helpers.entity_platform
+.. automodule:: spencerassistant.helpers.entity_platform
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entity\_registry
+spencerassistant.helpers.entity\_registry
 --------------------------------------
 
-.. automodule:: homeassistant.helpers.entity_registry
+.. automodule:: spencerassistant.helpers.entity_registry
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entity\_values
+spencerassistant.helpers.entity\_values
 ------------------------------------
 
-.. automodule:: homeassistant.helpers.entity_values
+.. automodule:: spencerassistant.helpers.entity_values
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.entityfilter
+spencerassistant.helpers.entityfilter
 ----------------------------------
 
-.. automodule:: homeassistant.helpers.entityfilter
+.. automodule:: spencerassistant.helpers.entityfilter
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.event
+spencerassistant.helpers.event
 ---------------------------
 
-.. automodule:: homeassistant.helpers.event
+.. automodule:: spencerassistant.helpers.event
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.icon
+spencerassistant.helpers.icon
 --------------------------
 
-.. automodule:: homeassistant.helpers.icon
+.. automodule:: spencerassistant.helpers.icon
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.integration\_platform
+spencerassistant.helpers.integration\_platform
 -------------------------------------------
 
-.. automodule:: homeassistant.helpers.integration_platform
+.. automodule:: spencerassistant.helpers.integration_platform
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.intent
+spencerassistant.helpers.intent
 ----------------------------
 
-.. automodule:: homeassistant.helpers.intent
+.. automodule:: spencerassistant.helpers.intent
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.json
+spencerassistant.helpers.json
 --------------------------
 
-.. automodule:: homeassistant.helpers.json
+.. automodule:: spencerassistant.helpers.json
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.location
+spencerassistant.helpers.location
 ------------------------------
 
-.. automodule:: homeassistant.helpers.location
+.. automodule:: spencerassistant.helpers.location
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.logging
+spencerassistant.helpers.logging
 -----------------------------
 
-.. automodule:: homeassistant.helpers.logging
+.. automodule:: spencerassistant.helpers.logging
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.network
+spencerassistant.helpers.network
 -----------------------------
 
-.. automodule:: homeassistant.helpers.network
+.. automodule:: spencerassistant.helpers.network
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.restore\_state
+spencerassistant.helpers.restore\_state
 ------------------------------------
 
-.. automodule:: homeassistant.helpers.restore_state
+.. automodule:: spencerassistant.helpers.restore_state
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.script
+spencerassistant.helpers.script
 ----------------------------
 
-.. automodule:: homeassistant.helpers.script
+.. automodule:: spencerassistant.helpers.script
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.service
+spencerassistant.helpers.service
 -----------------------------
 
-.. automodule:: homeassistant.helpers.service
+.. automodule:: spencerassistant.helpers.service
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.signal
+spencerassistant.helpers.signal
 -----------------------------
 
-.. automodule:: homeassistant.helpers.signal
+.. automodule:: spencerassistant.helpers.signal
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.state
+spencerassistant.helpers.state
 ---------------------------
 
-.. automodule:: homeassistant.helpers.state
+.. automodule:: spencerassistant.helpers.state
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.storage
+spencerassistant.helpers.storage
 -----------------------------
 
-.. automodule:: homeassistant.helpers.storage
+.. automodule:: spencerassistant.helpers.storage
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.sun
+spencerassistant.helpers.sun
 -------------------------
 
-.. automodule:: homeassistant.helpers.sun
+.. automodule:: spencerassistant.helpers.sun
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.system\_info
+spencerassistant.helpers.system\_info
 ----------------------------------
 
-.. automodule:: homeassistant.helpers.system_info
+.. automodule:: spencerassistant.helpers.system_info
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.temperature
+spencerassistant.helpers.temperature
 ---------------------------------
 
-.. automodule:: homeassistant.helpers.temperature
+.. automodule:: spencerassistant.helpers.temperature
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.template
+spencerassistant.helpers.template
 ------------------------------
 
-.. automodule:: homeassistant.helpers.template
+.. automodule:: spencerassistant.helpers.template
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.translation
+spencerassistant.helpers.translation
 ---------------------------------
 
-.. automodule:: homeassistant.helpers.translation
+.. automodule:: spencerassistant.helpers.translation
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.typing
+spencerassistant.helpers.typing
 ----------------------------
 
-.. automodule:: homeassistant.helpers.typing
+.. automodule:: spencerassistant.helpers.typing
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.helpers.update\_coordinator
+spencerassistant.helpers.update\_coordinator
 -----------------------------------------
 
-.. automodule:: homeassistant.helpers.update_coordinator
+.. automodule:: spencerassistant.helpers.update_coordinator
    :members:
    :undoc-members:
    :show-inheritance:

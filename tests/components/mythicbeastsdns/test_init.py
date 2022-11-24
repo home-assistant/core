@@ -2,8 +2,8 @@
 import logging
 from unittest.mock import patch
 
-from homeassistant.components import mythicbeastsdns
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import mythicbeastsdns
+from spencerassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 

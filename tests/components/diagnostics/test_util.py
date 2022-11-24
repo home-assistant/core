@@ -1,5 +1,5 @@
 """Test Diagnostics utils."""
-from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from spencerassistant.components.diagnostics import REDACTED, async_redact_data
 
 
 def test_redact():

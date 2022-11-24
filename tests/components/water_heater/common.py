@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.water_heater import (
+from spencerassistant.components.water_heater import (
     _LOGGER,
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
@@ -12,7 +12,7 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
 
 
 async def async_set_away_mode(hass, away_mode, entity_id=ENTITY_MATCH_ALL):

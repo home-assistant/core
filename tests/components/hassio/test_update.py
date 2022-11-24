@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.hassio import DOMAIN
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +18,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock, request):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
@@ -27,7 +27,7 @@ def mock_all(aioclient_mock, request):
             "result": "ok",
             "data": {
                 "supervisor": "222",
-                "homeassistant": "0.110.0",
+                "spencerassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
         },
@@ -91,7 +91,7 @@ def mock_all(aioclient_mock, request):
                         "version": "2.0.0",
                         "version_latest": "2.0.1",
                         "repository": "core",
-                        "url": "https://github.com/home-assistant/addons/test",
+                        "url": "https://github.com/spencer-assistant/addons/test",
                     },
                     {
                         "name": "test2",
@@ -157,9 +157,9 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected_state, auto_update",
     [
-        ("update.home_assistant_operating_system_update", "on", False),
-        ("update.home_assistant_supervisor_update", "on", True),
-        ("update.home_assistant_core_update", "on", False),
+        ("update.spencer_assistant_operating_system_update", "on", False),
+        ("update.spencer_assistant_supervisor_update", "on", True),
+        ("update.spencer_assistant_core_update", "on", False),
         ("update.test_update", "on", True),
         ("update.test2_update", "off", False),
     ],
@@ -241,7 +241,7 @@ async def test_update_os(hass, aioclient_mock):
     assert await hass.services.async_call(
         "update",
         "install",
-        {"entity_id": "update.home_assistant_operating_system_update"},
+        {"entity_id": "update.spencer_assistant_operating_system_update"},
         blocking=True,
     )
 
@@ -268,7 +268,7 @@ async def test_update_core(hass, aioclient_mock):
     assert await hass.services.async_call(
         "update",
         "install",
-        {"entity_id": "update.home_assistant_os_update"},
+        {"entity_id": "update.spencer_assistant_os_update"},
         blocking=True,
     )
 
@@ -295,7 +295,7 @@ async def test_update_supervisor(hass, aioclient_mock):
     assert await hass.services.async_call(
         "update",
         "install",
-        {"entity_id": "update.home_assistant_supervisor_update"},
+        {"entity_id": "update.spencer_assistant_supervisor_update"},
         blocking=True,
     )
 
@@ -318,7 +318,7 @@ async def test_update_addon_with_error(hass, aioclient_mock):
         exc=HassioAPIError,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         assert not await hass.services.async_call(
             "update",
             "install",
@@ -345,11 +345,11 @@ async def test_update_os_with_error(hass, aioclient_mock):
         exc=HassioAPIError,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         assert not await hass.services.async_call(
             "update",
             "install",
-            {"entity_id": "update.home_assistant_operating_system_update"},
+            {"entity_id": "update.spencer_assistant_operating_system_update"},
             blocking=True,
         )
 
@@ -372,11 +372,11 @@ async def test_update_supervisor_with_error(hass, aioclient_mock):
         exc=HassioAPIError,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         assert not await hass.services.async_call(
             "update",
             "install",
-            {"entity_id": "update.home_assistant_supervisor_update"},
+            {"entity_id": "update.spencer_assistant_supervisor_update"},
             blocking=True,
         )
 
@@ -399,11 +399,11 @@ async def test_update_core_with_error(hass, aioclient_mock):
         exc=HassioAPIError,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         assert not await hass.services.async_call(
             "update",
             "install",
-            {"entity_id": "update.home_assistant_core_update"},
+            {"entity_id": "update.spencer_assistant_core_update"},
             blocking=True,
         )
 
@@ -414,7 +414,7 @@ async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_clie
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "spencerassistant.components.hassio.get_addons_changelogs",
         return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
     ):
         result = await async_setup_component(
@@ -446,7 +446,7 @@ async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "spencerassistant.components.hassio.get_addons_changelogs",
         return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
     ):
         result = await async_setup_component(
@@ -478,7 +478,7 @@ async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "spencerassistant.components.hassio.get_addons_changelogs",
         return_value={"test": None},
     ):
         result = await async_setup_component(
@@ -506,10 +506,10 @@ async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
 async def test_no_os_entity(hass):
     """Test handling where there is no os entity."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         return_value={
             "supervisor": "222",
-            "homeassistant": "0.110.0",
+            "spencerassistant": "0.110.0",
             "hassos": None,
         },
     ):
@@ -522,19 +522,19 @@ async def test_no_os_entity(hass):
     await hass.async_block_till_done()
 
     # Verify that the entity does not exist
-    assert not hass.states.get("update.home_assistant_operating_system_update")
+    assert not hass.states.get("update.spencer_assistant_operating_system_update")
 
 
 async def test_setting_up_core_update_when_addon_fails(hass, caplog):
     """Test setting up core update when single addon fails."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_stats",
+        "spencerassistant.components.hassio.HassIO.get_addon_stats",
         side_effect=HassioAPIError("add-on is not running"),
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_changelog",
+        "spencerassistant.components.hassio.HassIO.get_addon_changelog",
         side_effect=HassioAPIError("add-on is not running"),
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_info",
+        "spencerassistant.components.hassio.HassIO.get_addon_info",
         side_effect=HassioAPIError("add-on is not running"),
     ):
         result = await async_setup_component(
@@ -546,7 +546,7 @@ async def test_setting_up_core_update_when_addon_fails(hass, caplog):
     await hass.async_block_till_done()
 
     # Verify that the core update entity does exist
-    state = hass.states.get("update.home_assistant_core_update")
+    state = hass.states.get("update.spencer_assistant_core_update")
     assert state
     assert state.state == "on"
     assert "Could not fetch stats for test: add-on is not running" in caplog.text

@@ -8,21 +8,21 @@ from unittest.mock import patch
 import plexapi
 import requests
 
-import homeassistant.components.plex.const as const
-from homeassistant.components.plex.models import (
+import spencerassistant.components.plex.const as const
+from spencerassistant.components.plex.models import (
     LIVE_TV_SECTION,
     TRANSIENT_SECTION,
     UNKNOWN_SECTION,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
     STATE_IDLE,
     STATE_PLAYING,
 )
-import homeassistant.util.dt as dt_util
+import spencerassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -44,7 +44,7 @@ async def test_set_config_entry_unique_id(hass, entry, mock_plex_server):
 async def test_setup_config_entry_with_error(hass, entry):
     """Test setup component from config entry with errors."""
     with patch(
-        "homeassistant.components.plex.PlexServer.connect",
+        "spencerassistant.components.plex.PlexServer.connect",
         side_effect=requests.exceptions.ConnectionError,
     ):
         entry.add_to_hass(hass)
@@ -55,7 +55,7 @@ async def test_setup_config_entry_with_error(hass, entry):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
     with patch(
-        "homeassistant.components.plex.PlexServer.connect",
+        "spencerassistant.components.plex.PlexServer.connect",
         side_effect=plexapi.exceptions.BadRequest,
     ):
         next_update = dt_util.utcnow() + timedelta(seconds=30)
@@ -282,7 +282,7 @@ async def test_bad_token_with_tokenless_server(
 async def test_scan_clients_schedule(hass, setup_plex_server):
     """Test scan_clients scheduled update."""
     with patch(
-        "homeassistant.components.plex.server.PlexServer._async_update_platforms"
+        "spencerassistant.components.plex.server.PlexServer._async_update_platforms"
     ) as mock_scan_clients:
         await setup_plex_server()
         mock_scan_clients.reset_mock()

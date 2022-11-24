@@ -1,8 +1,8 @@
 """Test the sensor significant change platform."""
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass, significant_change
-from homeassistant.const import (
+from spencerassistant.components.sensor import SensorDeviceClass, significant_change
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     TEMP_CELSIUS,

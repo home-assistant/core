@@ -3,9 +3,9 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-import homeassistant.helpers.sun as sun
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+import spencerassistant.helpers.sun as sun
+import spencerassistant.util.dt as dt_util
 
 
 def test_next_events(hass):
@@ -74,7 +74,7 @@ def test_next_events(hass):
             break
         mod += 1
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with patch("spencerassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
         assert next_dawn == sun.get_astral_event_next(hass, "dawn")
         assert next_dusk == sun.get_astral_event_next(hass, "dusk")
         assert next_midnight == sun.get_astral_event_next(hass, "midnight")
@@ -129,7 +129,7 @@ def test_date_events_default_date(hass):
     sunrise = astral.sun.sunrise(location.observer, date=utc_today)
     sunset = astral.sun.sunset(location.observer, date=utc_today)
 
-    with patch("homeassistant.util.dt.now", return_value=utc_now):
+    with patch("spencerassistant.util.dt.now", return_value=utc_now):
         assert dawn == sun.get_astral_event_date(hass, "dawn", utc_today)
         assert dusk == sun.get_astral_event_date(hass, "dusk", utc_today)
         assert midnight == sun.get_astral_event_date(hass, "midnight", utc_today)
@@ -168,11 +168,11 @@ def test_date_events_accepts_datetime(hass):
 def test_is_up(hass):
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 12, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with patch("spencerassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
         assert not sun.is_up(hass)
 
     utc_now = datetime(2016, 11, 1, 18, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with patch("spencerassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
         assert sun.is_up(hass)
 
 

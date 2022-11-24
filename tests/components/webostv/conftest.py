@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.webostv.const import LIVE_TV_APP_ID
-from homeassistant.helpers import entity_registry
+from spencerassistant.components.webostv.const import LIVE_TV_APP_ID
+from spencerassistant.helpers import entity_registry
 
 from .const import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID, MOCK_APPS, MOCK_INPUTS
 
@@ -21,7 +21,7 @@ def calls(hass):
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.webostv.WebOsClient", autospec=True
+        "spencerassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": FAKE_UUID}
@@ -54,7 +54,7 @@ def client_fixture():
 def client_entity_removed_fixture(hass):
     """Patch of client library, entity removed waiting for connect."""
     with patch(
-        "homeassistant.components.webostv.WebOsClient", autospec=True
+        "spencerassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": FAKE_UUID}

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_DEVICE_ID,
@@ -13,10 +13,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv, entity_registry
-from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from spencerassistant.core import spencerAssistant, callback
+from spencerassistant.helpers import condition, config_validation as cv, entity_registry
+from spencerassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from spencerassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 
@@ -32,7 +32,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 
 async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
+    hass: spencerAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for NEW_NAME devices."""
     registry = entity_registry.async_get(hass)
@@ -59,7 +59,7 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: spencerAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_on":
@@ -68,7 +68,7 @@ def async_condition_from_config(
         state = STATE_OFF
 
     @callback
-    def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
+    def test_is_state(hass: spencerAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
         return condition.state(hass, config[ATTR_ENTITY_ID], state)
 

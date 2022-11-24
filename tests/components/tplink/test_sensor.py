@@ -2,11 +2,11 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components import tplink
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import tplink
+from spencerassistant.components.tplink.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from . import (
     MAC_ADDRESS,
@@ -19,7 +19,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
+async def test_color_light_with_an_emeter(hass: spencerAssistant) -> None:
     """Test a light with an emeter."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -59,7 +59,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         assert hass.states.get(sensor_entity_id) is None
 
 
-async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
+async def test_plug_with_an_emeter(hass: spencerAssistant) -> None:
     """Test a plug with an emeter."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -94,7 +94,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         assert hass.states.get(sensor_entity_id).state == str(value)
 
 
-async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
+async def test_color_light_no_emeter(hass: spencerAssistant) -> None:
     """Test a light without an emeter."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -123,7 +123,7 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
         assert hass.states.get(sensor_entity_id) is None
 
 
-async def test_sensor_unique_id(hass: HomeAssistant) -> None:
+async def test_sensor_unique_id(hass: spencerAssistant) -> None:
     """Test a sensor unique ids."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS

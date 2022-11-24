@@ -1,6 +1,6 @@
 """The test for sensor helpers."""
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.components.sensor.helpers import async_parse_date_datetime
 
 
 def test_async_parse_datetime(caplog):

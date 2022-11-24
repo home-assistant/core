@@ -3,8 +3,8 @@ import os
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from homeassistant.components import folder_watcher
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import folder_watcher
+from spencerassistant.setup import async_setup_component
 
 
 async def test_invalid_path_setup(hass):
@@ -29,7 +29,7 @@ async def test_valid_path_setup(hass):
 
 
 def test_event():
-    """Check that Home Assistant events are fired correctly on watchdog event."""
+    """Check that spencer Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:
         """Mock base class for the pattern matcher event handler."""
@@ -38,7 +38,7 @@ def test_event():
             pass
 
     with patch(
-        "homeassistant.components.folder_watcher.PatternMatchingEventHandler",
+        "spencerassistant.components.folder_watcher.PatternMatchingEventHandler",
         MockPatternMatchingEventHandler,
     ):
         hass = Mock()
@@ -59,7 +59,7 @@ def test_event():
 
 
 def test_move_event():
-    """Check that Home Assistant events are fired correctly on watchdog event."""
+    """Check that spencer Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:
         """Mock base class for the pattern matcher event handler."""
@@ -68,7 +68,7 @@ def test_move_event():
             pass
 
     with patch(
-        "homeassistant.components.folder_watcher.PatternMatchingEventHandler",
+        "spencerassistant.components.folder_watcher.PatternMatchingEventHandler",
         MockPatternMatchingEventHandler,
     ):
         hass = Mock()

@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import core
-from homeassistant.components import light
-from homeassistant.const import (
+from spencerassistant import core
+from spencerassistant.components import light
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
@@ -16,9 +16,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from spencerassistant.exceptions import spencerAssistantError, Unauthorized
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.color as color_util
 
 from tests.common import async_mock_service
 
@@ -1927,7 +1927,7 @@ async def test_light_service_call_color_temp_conversion(
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp": 153, "color_temp_kelvin": 6535}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
+    # spencer Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)}
 
     await hass.services.async_call(
@@ -1946,7 +1946,7 @@ async def test_light_service_call_color_temp_conversion(
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp": 500, "color_temp_kelvin": 2000}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
+    # spencer Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
     assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 0, 128)}
 
     await hass.services.async_call(
@@ -1965,7 +1965,7 @@ async def test_light_service_call_color_temp_conversion(
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp": 327, "color_temp_kelvin": 3058}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
+    # spencer Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 127, 128)}
 
     await hass.services.async_call(
@@ -2394,16 +2394,16 @@ def test_filter_supported_color_modes():
 
     # Supported color modes must not be empty
     supported = set()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         light.filter_supported_color_modes(supported)
 
     # ColorMode.WHITE must be combined with a color mode supporting color
     supported = {light.ColorMode.WHITE}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         light.filter_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.COLOR_TEMP}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         light.filter_supported_color_modes(supported)
 
     supported = {light.ColorMode.WHITE, light.ColorMode.HS}

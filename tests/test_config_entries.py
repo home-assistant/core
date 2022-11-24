@@ -8,25 +8,25 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.components import dhcp
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import (
+from spencerassistant import config_entries, data_entry_flow, loader
+from spencerassistant.components import dhcp
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.const import (
     EVENT_COMPONENT_LOADED,
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
-from homeassistant.exceptions import (
+from spencerassistant.core import CoreState, Event, spencerAssistant, callback
+from spencerassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
+from spencerassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
+    spencerAssistantError,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
-from homeassistant.util import dt
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.update_coordinator import DataUpdateCoordinator
+from spencerassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from spencerassistant.util import dt
 
 from tests.common import (
     MockConfigEntry,
@@ -87,7 +87,7 @@ async def test_call_setup_entry(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+    with patch("spencerassistant.config_entries.support_entry_unload", return_value=True):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
     assert result
@@ -116,7 +116,7 @@ async def test_call_setup_entry_without_reload_support(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=False):
+    with patch("spencerassistant.config_entries.support_entry_unload", return_value=False):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
     assert result
@@ -146,7 +146,7 @@ async def test_call_async_migrate_entry(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+    with patch("spencerassistant.config_entries.support_entry_unload", return_value=True):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
     assert result
@@ -599,7 +599,7 @@ async def test_saving_and_loading(hass):
                 title="Test 2 Title", data={"username": "bla"}
             )
 
-    with patch("homeassistant.config_entries.HANDLERS.get", return_value=Test2Flow):
+    with patch("spencerassistant.config_entries.HANDLERS.get", return_value=Test2Flow):
         await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}
         )
@@ -822,7 +822,7 @@ async def test_loading_default_config(hass):
     """Test loading the default config."""
     manager = config_entries.ConfigEntries(hass, {})
 
-    with patch("homeassistant.util.json.open", side_effect=FileNotFoundError):
+    with patch("spencerassistant.util.json.open", side_effect=FileNotFoundError):
         await manager.async_initialize()
 
     assert len(manager.async_entries()) == 0
@@ -891,7 +891,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+    with patch("spencerassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -918,7 +918,7 @@ async def test_setup_raise_not_ready_from_exception(hass, caplog):
     """Test a setup raising not ready from another exception."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
-    original_exception = HomeAssistantError("The device dropped the connection")
+    original_exception = spencerAssistantError("The device dropped the connection")
     config_entry_exception = ConfigEntryNotReady()
     config_entry_exception.__cause__ = original_exception
 
@@ -926,7 +926,7 @@ async def test_setup_raise_not_ready_from_exception(hass, caplog):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+    with patch("spencerassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
@@ -944,7 +944,7 @@ async def test_setup_retrying_during_unload(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+    with patch("spencerassistant.config_entries.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -960,7 +960,7 @@ async def test_setup_retrying_during_unload_before_started(hass):
     """Test if we unload an entry that is in retry mode before started."""
     entry = MockConfigEntry(domain="test")
     hass.state = CoreState.starting
-    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+    initial_listeners = hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED]
 
     mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -971,7 +971,7 @@ async def test_setup_retrying_during_unload_before_started(hass):
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert (
-        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+        hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED] == initial_listeners + 1
     )
 
     await entry.async_unload(hass)
@@ -979,7 +979,7 @@ async def test_setup_retrying_during_unload_before_started(hass):
 
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert (
-        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 0
+        hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED] == initial_listeners + 0
     )
 
 
@@ -1424,7 +1424,7 @@ async def test_init_custom_integration(hass):
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
     with pytest.raises(data_entry_flow.UnknownHandler), patch(
-        "homeassistant.loader.async_get_integration",
+        "spencerassistant.loader.async_get_integration",
         return_value=integration,
     ):
         await hass.config_entries.flow.async_init("bla")
@@ -1614,10 +1614,10 @@ async def test_entry_id_existing_entry(hass, manager):
             """Test user step."""
             return self.async_create_entry(title="mock-title", data={"via": "flow"})
 
-    with pytest.raises(HomeAssistantError), patch.dict(
+    with pytest.raises(spencerAssistantError), patch.dict(
         config_entries.HANDLERS, {"comp": TestFlow}
     ), patch(
-        "homeassistant.config_entries.uuid_util.random_uuid_hex",
+        "spencerassistant.config_entries.uuid_util.random_uuid_hex",
         return_value=collide_entry_id,
     ):
         await manager.flow.async_init(
@@ -1655,7 +1655,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -1700,7 +1700,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -1717,7 +1717,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
     updates["host"] = "2.2.2.2"
     entry.state = config_entries.ConfigEntryState.NOT_LOADED
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -1769,7 +1769,7 @@ async def test_unique_id_from_discovery_in_setup_retry(hass, manager):
 
     # Verify we do not reload from a user source
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -1782,7 +1782,7 @@ async def test_unique_id_from_discovery_in_setup_retry(hass, manager):
 
     # Verify do reload from a discovery source
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         discovery_result = await manager.flow.async_init(
             "comp",
@@ -1829,7 +1829,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -1988,7 +1988,7 @@ async def test_manual_add_overrides_ignored_entry(hass, manager):
             return self.async_show_form(step_id="step2")
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -2504,7 +2504,7 @@ async def test_async_setup_update_entry(hass):
         (config_entries.SOURCE_DISCOVERY, {}),
         (config_entries.SOURCE_SSDP, BaseServiceInfo()),
         (config_entries.SOURCE_USB, BaseServiceInfo()),
-        (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
+        (config_entries.SOURCE_spencerKIT, BaseServiceInfo()),
         (config_entries.SOURCE_DHCP, BaseServiceInfo()),
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
         (
@@ -2749,8 +2749,8 @@ async def test_flow_same_device_multiple_sources(hass, manager):
             """Test zeroconf step."""
             return await self._async_discovery_handler(discovery_info)
 
-        async def async_step_homekit(self, discovery_info=None):
-            """Test homekit step."""
+        async def async_step_spencerkit(self, discovery_info=None):
+            """Test spencerkit step."""
             return await self._async_discovery_handler(discovery_info)
 
         async def _async_discovery_handler(self, discovery_info=None):
@@ -2775,7 +2775,7 @@ async def test_flow_same_device_multiple_sources(hass, manager):
             "comp", context={"source": config_entries.SOURCE_ZEROCONF}
         )
         flow3 = manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_HOMEKIT}
+            "comp", context={"source": config_entries.SOURCE_spencerKIT}
         )
         result1, result2, result3 = await asyncio.gather(flow1, flow2, flow3)
 
@@ -2795,7 +2795,7 @@ async def test_flow_same_device_multiple_sources(hass, manager):
     assert entry.title == "title"
     assert entry.source in {
         config_entries.SOURCE_ZEROCONF,
-        config_entries.SOURCE_HOMEKIT,
+        config_entries.SOURCE_spencerKIT,
     }
     assert entry.unique_id == "thisid"
 
@@ -3004,7 +3004,7 @@ async def test_initialize_and_shutdown(hass):
 
     with patch.object(manager, "_async_shutdown") as mock_async_shutdown:
         await manager.async_initialize()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert mock_async_shutdown.called
@@ -3018,13 +3018,13 @@ async def test_setup_retrying_during_shutdown(hass):
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
-    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+    with patch("spencerassistant.helpers.event.async_call_later") as mock_call:
         await entry.async_setup(hass)
 
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     assert len(mock_call.return_value.mock_calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
 
     assert len(mock_call.return_value.mock_calls) == 0
@@ -3200,7 +3200,7 @@ async def test_entry_reload_concurrency(hass, manager):
 
 
 async def test_unique_id_update_while_setup_in_progress(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: spencerAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test we handle the case where the config entry is updated while setup is in progress."""
 
@@ -3250,7 +3250,7 @@ async def test_unique_id_update_while_setup_in_progress(
             )
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
+        "spencerassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -3364,7 +3364,7 @@ async def test_get_active_flows(hass):
     assert active_user_flow is None
 
 
-async def test_async_wait_component_dynamic(hass: HomeAssistant):
+async def test_async_wait_component_dynamic(hass: spencerAssistant):
     """Test async_wait_component for a config entry which is dynamically loaded."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
@@ -3384,14 +3384,14 @@ async def test_async_wait_component_dynamic(hass: HomeAssistant):
     assert await hass.config_entries.async_wait_component(entry) is True
 
 
-async def test_async_wait_component_startup(hass: HomeAssistant):
+async def test_async_wait_component_startup(hass: spencerAssistant):
     """Test async_wait_component for a config entry which is loaded at startup."""
     entry = MockConfigEntry(title="test_title", domain="test")
 
     setup_stall = asyncio.Event()
     setup_started = asyncio.Event()
 
-    async def mock_setup(hass: HomeAssistant, _) -> bool:
+    async def mock_setup(hass: spencerAssistant, _) -> bool:
         setup_started.set()
         await setup_stall.wait()
         return True

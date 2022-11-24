@@ -5,25 +5,25 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioasuswrt.asuswrt import Device
 import pytest
 
-from homeassistant.components import device_tracker, sensor
-from homeassistant.components.asuswrt.const import CONF_INTERFACE, DOMAIN
-from homeassistant.components.asuswrt.router import DEFAULT_NAME
-from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.components import device_tracker, sensor
+from spencerassistant.components.asuswrt.const import CONF_INTERFACE, DOMAIN
+from spencerassistant.components.asuswrt.router import DEFAULT_NAME
+from spencerassistant.components.device_tracker import CONF_CONSIDER_spencer
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     CONF_HOST,
     CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
-    STATE_HOME,
-    STATE_NOT_HOME,
+    STATE_spencer,
+    STATE_NOT_spencer,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import slugify
-from homeassistant.util.dt import utcnow
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.util import slugify
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -104,7 +104,7 @@ def create_device_registry_devices_fixture(hass):
 @pytest.fixture(name="connect")
 def mock_controller_connect(mock_devices, mock_available_temps):
     """Mock a successful connection."""
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
+    with patch("spencerassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -139,7 +139,7 @@ def mock_controller_connect(mock_devices, mock_available_temps):
 @pytest.fixture(name="connect_sens_fail")
 def mock_controller_connect_sens_fail():
     """Mock a successful connection with sensor fail."""
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
+    with patch("spencerassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -167,7 +167,7 @@ def _setup_entry(hass, unique_id=None):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        options={CONF_CONSIDER_HOME: 60},
+        options={CONF_CONSIDER_spencer: 60},
         unique_id=unique_id,
     )
 
@@ -226,8 +226,8 @@ async def test_sensors(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_spencer
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_spencer
     assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.0"
     assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
     assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
@@ -248,27 +248,27 @@ async def test_sensors(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    # consider home option set, all devices still home but only 1 device connected
-    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
+    # consider spencer option set, all devices still spencer but only 1 device connected
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_spencer
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_spencer
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "1"
 
     # add 2 new device, one unnamed that should be ignored but counted
     mock_devices[MOCK_MAC_3] = Device(MOCK_MAC_3, "192.168.1.4", "TestThree")
     mock_devices[MOCK_MAC_4] = Device(MOCK_MAC_4, "192.168.1.5", None)
 
-    # change consider home settings to have status not home of removed track device
+    # change consider spencer settings to have status not spencer of removed track device
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_CONSIDER_HOME: 0}
+        config_entry, options={CONF_CONSIDER_spencer: 0}
     )
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    # consider home option set to 0, device "test" not home
-    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
+    # consider spencer option set to 0, device "test" not spencer
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_spencer
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_spencer
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_spencer
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "3"
 
     # checking temperature sensors without exceptions
@@ -283,7 +283,7 @@ async def test_sensors(
 
     # change an option that require integration reload
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_CONSIDER_HOME: 60, CONF_INTERFACE: "eth1"}
+        config_entry, options={CONF_CONSIDER_spencer: 60, CONF_INTERFACE: "eth1"}
     )
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
@@ -304,7 +304,7 @@ async def test_connect_fail(hass, side_effect):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+    with patch("spencerassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=side_effect
         )

@@ -4,10 +4,10 @@ from unittest.mock import patch
 from pyopenuv.errors import InvalidApiKeyError
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -27,7 +27,7 @@ async def test_duplicate_error(hass, config, config_entry):
 async def test_invalid_api_key(hass, config):
     """Test that an invalid API key throws an error."""
     with patch(
-        "homeassistant.components.openuv.Client.uv_index",
+        "spencerassistant.components.openuv.Client.uv_index",
         side_effect=InvalidApiKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -46,7 +46,7 @@ def _get_schema_marker(data_schema: vol.Schema, key: str) -> vol.Marker:
 
 async def test_options_flow(hass, config_entry):
     """Test config flow options."""
-    with patch("homeassistant.components.openuv.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.openuv.async_setup_entry", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -88,7 +88,7 @@ async def test_step_reauth(hass, config, config_entry, setup_openuv):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("homeassistant.components.openuv.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.openuv.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
         )

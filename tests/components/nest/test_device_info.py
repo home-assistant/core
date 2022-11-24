@@ -2,8 +2,8 @@
 
 from google_nest_sdm.device import Device
 
-from homeassistant.components.nest.device_info import NestDeviceInfo
-from homeassistant.const import (
+from spencerassistant.components.nest.device_info import NestDeviceInfo
+from spencerassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,

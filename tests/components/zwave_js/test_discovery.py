@@ -1,12 +1,12 @@
 """Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
 import pytest
 
-from homeassistant.components.zwave_js.discovery import (
+from spencerassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
 )
-from homeassistant.components.zwave_js.discovery_data_template import (
+from spencerassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
 

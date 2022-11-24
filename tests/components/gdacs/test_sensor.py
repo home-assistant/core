@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components import gdacs
-from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.gdacs.sensor import (
+from spencerassistant.components import gdacs
+from spencerassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
+from spencerassistant.components.gdacs.sensor import (
     ATTR_CREATED,
     ATTR_LAST_UPDATE,
     ATTR_LAST_UPDATE_SUCCESSFUL,
@@ -13,14 +13,14 @@ from homeassistant.components.gdacs.sensor import (
     ATTR_STATUS,
     ATTR_UPDATED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_spencerASSISTANT_START,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from . import _generate_mock_feed_entry
 
@@ -61,7 +61,7 @@ async def test_setup(hass):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         # 3 geolocation and 1 sensor entities

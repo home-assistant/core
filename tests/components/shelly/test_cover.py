@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -16,8 +16,8 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration, mutate_rpc_device_status
 
@@ -83,7 +83,7 @@ async def test_block_device_no_roller_blocks(hass, mock_block_device, monkeypatc
 
 
 async def test_rpc_device_services(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: spencerAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device cover services."""
     await init_integration(hass, 2)
@@ -133,7 +133,7 @@ async def test_rpc_device_services(
 
 
 async def test_rpc_device_no_cover_keys(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: spencerAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device without cover keys."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
@@ -142,7 +142,7 @@ async def test_rpc_device_no_cover_keys(
 
 
 async def test_rpc_device_update(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: spencerAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device update."""
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
@@ -155,7 +155,7 @@ async def test_rpc_device_update(
 
 
 async def test_rpc_device_no_position_control(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: spencerAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device with no position control."""
     mutate_rpc_device_status(

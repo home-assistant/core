@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant.components.stt import (
+from spencerassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
@@ -17,7 +17,7 @@ from homeassistant.components.stt import (
     SpeechResultState,
     async_get_provider,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import mock_platform
 

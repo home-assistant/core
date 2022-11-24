@@ -5,13 +5,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
+from spencerassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.homeassistant.triggers import state as state_trigger
-from homeassistant.const import (
+from spencerassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from spencerassistant.components.spencerassistant.triggers import state as state_trigger
+from spencerassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -20,9 +20,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.typing import ConfigType
+from spencerassistant.core import CALLBACK_TYPE, spencerAssistant
+from spencerassistant.helpers import config_validation as cv, entity_registry
+from spencerassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
@@ -38,7 +38,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
+    hass: spencerAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for NEW_NAME devices."""
     registry = entity_registry.async_get(hass)
@@ -71,7 +71,7 @@ async def async_get_triggers(
 
 
 async def async_attach_trigger(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config: ConfigType,
     action: AutomationActionType,
     automation_info: AutomationTriggerInfo,

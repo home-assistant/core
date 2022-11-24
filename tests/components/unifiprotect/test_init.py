@@ -9,15 +9,15 @@ import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR, Bootstrap, Light
 
-from homeassistant.components.unifiprotect.const import (
+from spencerassistant.components.unifiprotect.const import (
     CONF_DISABLE_RTSP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.config_entries import ConfigEntry, ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from . import _patch_discovery
 from .utils import MockUFPFixture, init_entry, time_changed
@@ -41,7 +41,7 @@ async def remove_device(
     return response["success"]
 
 
-async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_setup(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test working setup of unifiprotect entry."""
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
@@ -53,7 +53,7 @@ async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture):
 
 
 async def test_setup_multiple(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     bootstrap: Bootstrap,
 ):
@@ -73,7 +73,7 @@ async def test_setup_multiple(
     ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
     with patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        "spencerassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
@@ -99,7 +99,7 @@ async def test_setup_multiple(
         assert mock_config.unique_id == ufp.api.bootstrap.nvr.mac
 
 
-async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_reload(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test updating entry reload entry."""
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
@@ -115,7 +115,7 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture):
     assert ufp.api.async_disconnect_ws.called
 
 
-async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def test_unload(hass: spencerAssistant, ufp: MockUFPFixture, light: Light):
     """Test unloading of unifiprotect entry."""
 
     await init_entry(hass, ufp, [light])
@@ -126,7 +126,7 @@ async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     assert ufp.api.async_disconnect_ws.called
 
 
-async def test_setup_too_old(hass: HomeAssistant, ufp: MockUFPFixture, old_nvr: NVR):
+async def test_setup_too_old(hass: spencerAssistant, ufp: MockUFPFixture, old_nvr: NVR):
     """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
 
     ufp.api.get_nvr.return_value = old_nvr
@@ -137,7 +137,7 @@ async def test_setup_too_old(hass: HomeAssistant, ufp: MockUFPFixture, old_nvr: 
     assert not ufp.api.update.called
 
 
-async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_setup_failed_update(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with failed update."""
 
     ufp.api.update = AsyncMock(side_effect=NvrError)
@@ -148,7 +148,7 @@ async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture):
     assert ufp.api.update.called
 
 
-async def test_setup_failed_update_reauth(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_setup_failed_update_reauth(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with update that gives unauthroized error."""
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
@@ -170,7 +170,7 @@ async def test_setup_failed_update_reauth(hass: HomeAssistant, ufp: MockUFPFixtu
     assert len(hass.config_entries.flow._progress) == 1
 
 
-async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_setup_failed_error(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with generic error."""
 
     ufp.api.get_nvr = AsyncMock(side_effect=NvrError)
@@ -181,7 +181,7 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture):
     assert not ufp.api.update.called
 
 
-async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_setup_failed_auth(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with unauthorized error."""
 
     ufp.api.get_nvr = AsyncMock(side_effect=NotAuthorized)
@@ -192,11 +192,11 @@ async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture):
 
 
 async def test_setup_starts_discovery(
-    hass: HomeAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
+    hass: spencerAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
 ):
     """Test setting up will start discovery."""
     with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        "spencerassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = ufp_client
@@ -210,11 +210,11 @@ async def test_setup_starts_discovery(
 
 
 async def test_device_remove_devices(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     light: Light,
     hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+        [spencerAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
     ],
 ) -> None:
     """Test we can only remove a device that no longer exists."""
@@ -246,10 +246,10 @@ async def test_device_remove_devices(
 
 
 async def test_device_remove_devices_nvr(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+        [spencerAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
     ],
 ) -> None:
     """Test we can only remove a NVR device that no longer exists."""

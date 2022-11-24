@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.config import YAML_CONFIG_FILE
-import homeassistant.scripts.check_config as check_config
+from spencerassistant.config import YAML_CONFIG_FILE
+import spencerassistant.scripts.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
 
 BASE_CONFIG = (
-    "homeassistant:\n"
-    "  name: Home\n"
+    "spencerassistant:\n"
+    "  name: spencer\n"
     "  latitude: -26.107361\n"
     "  longitude: 28.054500\n"
     "  elevation: 1600\n"
@@ -19,7 +19,7 @@ BASE_CONFIG = (
     "\n\n"
 )
 
-BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+BAD_CORE_CONFIG = "spencerassistant:\n  unit_system: bad\n\n\n"
 
 
 @pytest.fixture(autouse=True)
@@ -48,8 +48,8 @@ def test_bad_core_config(mock_is_file, loop):
     files = {YAML_CONFIG_FILE: BAD_CORE_CONFIG}
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
-        assert res["except"].keys() == {"homeassistant"}
-        assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
+        assert res["except"].keys() == {"spencerassistant"}
+        assert res["except"]["spencerassistant"][1] == {"unit_system": "bad"}
 
 
 def test_config_platform_valid(mock_is_file, loop):
@@ -57,7 +57,7 @@ def test_config_platform_valid(mock_is_file, loop):
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
-        assert res["components"].keys() == {"homeassistant", "light"}
+        assert res["components"].keys() == {"spencerassistant", "light"}
         assert res["components"]["light"] == [{"platform": "demo"}]
         assert res["except"] == {}
         assert res["secret_cache"] == {}
@@ -71,7 +71,7 @@ def test_component_platform_not_found(mock_is_file, loop):
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
-        assert res["components"].keys() == {"homeassistant"}
+        assert res["components"].keys() == {"spencerassistant"}
         assert res["except"] == {
             check_config.ERROR_STR: [
                 "Integration error: beer - Integration 'beer' not found."
@@ -84,7 +84,7 @@ def test_component_platform_not_found(mock_is_file, loop):
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
-        assert res["components"].keys() == {"homeassistant", "light"}
+        assert res["components"].keys() == {"spencerassistant", "light"}
         assert res["components"]["light"] == []
         assert res["except"] == {
             check_config.ERROR_STR: [
@@ -111,7 +111,7 @@ def test_secrets(mock_is_file, loop):
         res = check_config.check(get_test_config_dir(), True)
 
         assert res["except"] == {}
-        assert res["components"].keys() == {"homeassistant", "http"}
+        assert res["components"].keys() == {"spencerassistant", "http"}
         assert res["components"]["http"] == {
             "cors_allowed_origins": ["http://google.com"],
             "ip_ban_enabled": True,
@@ -135,10 +135,10 @@ def test_package_invalid(mock_is_file, loop):
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
 
-        assert res["except"].keys() == {"homeassistant.packages.p1.group"}
-        assert res["except"]["homeassistant.packages.p1.group"][1] == {"group": ["a"]}
+        assert res["except"].keys() == {"spencerassistant.packages.p1.group"}
+        assert res["except"]["spencerassistant.packages.p1.group"][1] == {"group": ["a"]}
         assert len(res["except"]) == 1
-        assert res["components"].keys() == {"homeassistant"}
+        assert res["components"].keys() == {"spencerassistant"}
         assert len(res["components"]) == 1
         assert res["secret_cache"] == {}
         assert res["secrets"] == {}

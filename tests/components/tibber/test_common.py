@@ -39,21 +39,21 @@ PRODUCTION_DATA_1 = [
 ]
 
 
-def mock_get_homes(only_active=True):
-    """Return a list of mocked Tibber homes."""
-    tibber_home = AsyncMock()
-    tibber_home.name = "Name"
-    tibber_home.home_id = "home_id"
-    tibber_home.currency = "NOK"
-    tibber_home.has_active_subscription = True
-    tibber_home.has_real_time_consumption = False
-    tibber_home.country = "NO"
-    tibber_home.last_cons_data_timestamp = dt.datetime(2016, 1, 1, 12, 44, 57)
-    tibber_home.last_data_timestamp = dt.datetime(2016, 1, 1, 12, 48, 57)
+def mock_get_spencers(only_active=True):
+    """Return a list of mocked Tibber spencers."""
+    tibber_spencer = AsyncMock()
+    tibber_spencer.name = "Name"
+    tibber_spencer.spencer_id = "spencer_id"
+    tibber_spencer.currency = "NOK"
+    tibber_spencer.has_active_subscription = True
+    tibber_spencer.has_real_time_consumption = False
+    tibber_spencer.country = "NO"
+    tibber_spencer.last_cons_data_timestamp = dt.datetime(2016, 1, 1, 12, 44, 57)
+    tibber_spencer.last_data_timestamp = dt.datetime(2016, 1, 1, 12, 48, 57)
 
     def get_historic_data(n_data, resolution="HOURLY", production=False):
         return PRODUCTION_DATA_1 if production else CONSUMPTION_DATA_1
 
-    tibber_home.get_historic_data.side_effect = get_historic_data
+    tibber_spencer.get_historic_data.side_effect = get_historic_data
 
-    return [tibber_home]
+    return [tibber_spencer]

@@ -6,10 +6,10 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import zeroconf
+from spencerassistant.components.xiaomi_miio import const
+from spencerassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
 
 from . import TEST_MAC
 
@@ -71,18 +71,18 @@ def xiaomi_miio_connect_fixture():
     mock_info = get_mock_info()
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
     ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
         return_value=TEST_CLOUD_DEVICES_1,
     ), patch(
-        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+        "spencerassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ), patch(
-        "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+        "spencerassistant.components.xiaomi_miio.async_unload_entry", return_value=True
     ):
         yield
 
@@ -123,7 +123,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         side_effect=DeviceException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -218,7 +218,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
         return_value=TEST_CLOUD_DEVICES_2,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -287,7 +287,7 @@ async def test_config_flow_gateway_cloud_login_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.login",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -304,7 +304,7 @@ async def test_config_flow_gateway_cloud_login_error(hass):
     assert result["errors"] == {"base": "cloud_login_error"}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.login",
         side_effect=MiCloudAccessDenied({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -321,7 +321,7 @@ async def test_config_flow_gateway_cloud_login_error(hass):
     assert result["errors"] == {"base": "cloud_login_error"}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.login",
         side_effect=Exception({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -348,7 +348,7 @@ async def test_config_flow_gateway_cloud_no_devices(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -365,7 +365,7 @@ async def test_config_flow_gateway_cloud_no_devices(hass):
     assert result["errors"] == {"base": "cloud_no_devices"}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
         side_effect=Exception({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -403,7 +403,7 @@ async def test_config_flow_gateway_cloud_missing_token(hass):
     ]
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
+        "spencerassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
         return_value=cloud_device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -542,7 +542,7 @@ async def test_config_flow_step_device_connect_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         side_effect=DeviceException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -577,7 +577,7 @@ async def test_config_flow_step_unknown_device(hass):
     mock_info = get_mock_info(model="UNKNOWN")
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -610,7 +610,7 @@ async def test_config_flow_step_device_manual_model_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=get_mock_info(model=None),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -623,7 +623,7 @@ async def test_config_flow_step_device_manual_model_error(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         side_effect=Exception({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -657,7 +657,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     error = DeviceException({})
     error.__cause__ = ChecksumError({})
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -672,7 +672,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     overwrite_model = const.MODELS_VACUUM[0]
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         side_effect=DeviceException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -716,7 +716,7 @@ async def config_flow_device_success(hass, model_to_test):
     mock_info = get_mock_info(model=model_to_test)
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -762,7 +762,7 @@ async def config_flow_generic_roborock(hass):
     mock_info = get_mock_info(model=dummy_model)
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -816,7 +816,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     mock_info = get_mock_info(model=model_to_test)
 
     with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
+        "spencerassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
     ):
         result = await hass.config_entries.flow.async_configure(

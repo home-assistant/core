@@ -1,8 +1,8 @@
 """Tests for the laundrify integration."""
 
-from homeassistant.components.laundrify import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.laundrify import DOMAIN
+from spencerassistant.const import CONF_ACCESS_TOKEN
+from spencerassistant.core import spencerAssistant
 
 from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
 
@@ -10,9 +10,9 @@ from tests.common import MockConfigEntry
 
 
 def create_entry(
-    hass: HomeAssistant, access_token: str = VALID_ACCESS_TOKEN
+    hass: spencerAssistant, access_token: str = VALID_ACCESS_TOKEN
 ) -> MockConfigEntry:
-    """Create laundrify entry in Home Assistant."""
+    """Create laundrify entry in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=VALID_ACCOUNT_ID,

@@ -4,20 +4,20 @@ from __future__ import annotations
 import pytest
 import voluptuous_serialize
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.select import DOMAIN
-from homeassistant.components.select.device_condition import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.select import DOMAIN
+from spencerassistant.components.select.device_condition import (
     async_get_condition_capabilities,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import (
+from spencerassistant.core import spencerAssistant, ServiceCall
+from spencerassistant.helpers import (
     config_validation as cv,
     device_registry,
     entity_registry,
 )
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -30,25 +30,25 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
+def device_reg(hass: spencerAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
+def entity_reg(hass: spencerAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
+def calls(hass: spencerAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_conditions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device_reg: device_registry.DeviceRegistry,
     entity_reg: entity_registry.EntityRegistry,
 ) -> None:
@@ -125,7 +125,7 @@ async def test_get_conditions_hidden_auxiliary(
 
 
 async def test_if_selected_option(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: spencerAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for selected_option conditions."""
     assert await async_setup_component(
@@ -200,7 +200,7 @@ async def test_if_selected_option(
     assert calls[1].data["result"] == "option2 - event - test_event2"
 
 
-async def test_get_condition_capabilities(hass: HomeAssistant) -> None:
+async def test_get_condition_capabilities(hass: spencerAssistant) -> None:
     """Test we get the expected capabilities from a select condition."""
     config = {
         "platform": "device",

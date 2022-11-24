@@ -2,14 +2,14 @@
 import asyncio
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.prusalink.config_flow import InvalidAuth
-from homeassistant.components.prusalink.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.prusalink.config_flow import InvalidAuth
+from spencerassistant.components.prusalink.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant, mock_version_api) -> None:
+async def test_form(hass: spencerAssistant, mock_version_api) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -18,7 +18,7 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.prusalink.async_setup_entry",
+        "spencerassistant.components.prusalink.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -39,14 +39,14 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(hass: spencerAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
+        "spencerassistant.components.prusalink.config_flow.PrusaLink.get_version",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -61,14 +61,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown(hass: HomeAssistant) -> None:
+async def test_form_unknown(hass: spencerAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
+        "spencerassistant.components.prusalink.config_flow.PrusaLink.get_version",
         side_effect=ValueError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -83,7 +83,7 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> None:
+async def test_form_too_low_version(hass: spencerAssistant, mock_version_api) -> None:
     """Test we handle too low API version."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -103,7 +103,7 @@ async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> No
     assert result2["errors"] == {"base": "not_supported"}
 
 
-async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> None:
+async def test_form_invalid_version_2(hass: spencerAssistant, mock_version_api) -> None:
     """Test we handle invalid version."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -123,14 +123,14 @@ async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> 
     assert result2["errors"] == {"base": "not_supported"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
+        "spencerassistant.components.prusalink.config_flow.PrusaLink.get_version",
         side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(

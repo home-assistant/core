@@ -2,11 +2,11 @@
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from .common import (
     DISABLED_LEGACY_BINARY_SENSOR,
@@ -136,7 +136,7 @@ async def test_notification_sensor(hass, multisensor_6, integration):
 
 
 async def test_notification_off_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     lock_popp_electric_strike_lock_control: Node,
 ):
     """Test the description off_state attribute of certain notification sensors."""

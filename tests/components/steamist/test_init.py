@@ -7,14 +7,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from discovery30303 import AIODiscovery30303
 import pytest
 
-from homeassistant.components import steamist
-from homeassistant.components.steamist.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.components import steamist
+from spencerassistant.components.steamist.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_HOST, CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_DATA,
@@ -35,13 +35,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def mock_single_broadcast_address():
     """Mock network's async_async_get_ipv4_broadcast_addresses."""
     with patch(
-        "homeassistant.components.network.async_get_ipv4_broadcast_addresses",
+        "spencerassistant.components.network.async_get_ipv4_broadcast_addresses",
         return_value={"10.255.255.255"},
     ):
         yield
 
 
-async def test_config_entry_reload(hass: HomeAssistant) -> None:
+async def test_config_entry_reload(hass: spencerAssistant) -> None:
     """Test that a config entry can be reloaded."""
     _, config_entry = await _async_setup_entry_with_status(
         hass, MOCK_ASYNC_GET_STATUS_ACTIVE
@@ -51,7 +51,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
+async def test_config_entry_retry_later(hass: spencerAssistant) -> None:
     """Test that a config entry retry on connection error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -59,7 +59,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.steamist.Steamist.async_get_status",
+        "spencerassistant.components.steamist.Steamist.async_get_status",
         side_effect=asyncio.TimeoutError,
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
@@ -68,7 +68,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
 
 
 async def test_config_entry_fills_unique_id_with_directed_discovery(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
@@ -92,7 +92,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     type(mock_aio_discovery).found_devices = found_devices
 
     with _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE), patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
+        "spencerassistant.components.steamist.discovery.AIODiscovery30303",
         return_value=mock_aio_discovery,
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
@@ -113,7 +113,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
 
 @pytest.mark.usefixtures("mock_single_broadcast_address")
-async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
+async def test_discovery_happens_at_interval(hass: spencerAssistant) -> None:
     """Test that discovery happens at interval."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
@@ -122,7 +122,7 @@ async def test_discovery_happens_at_interval(hass: HomeAssistant) -> None:
     mock_aio_discovery = MagicMock(auto_spec=AIODiscovery30303)
     mock_aio_discovery.async_scan = AsyncMock()
     with patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
+        "spencerassistant.components.steamist.discovery.AIODiscovery30303",
         return_value=mock_aio_discovery,
     ), _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})

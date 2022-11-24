@@ -17,18 +17,18 @@ from google_nest_sdm.event import EventMessage
 import numpy as np
 import pytest
 
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source import (
+from spencerassistant.components.media_player.errors import BrowseError
+from spencerassistant.components.media_source import (
     URI_SCHEME,
     Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.helpers.template import DATE_STR_FORMAT
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber
 
@@ -172,7 +172,7 @@ def cache_size() -> int:
 @pytest.fixture(autouse=True)
 def apply_cache_size(cache_size):
     """Fixture for patching the cache size."""
-    with patch("homeassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new=cache_size):
+    with patch("spencerassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new=cache_size):
         yield
 
 
@@ -1058,7 +1058,7 @@ async def test_multiple_devices(
 def event_store() -> Generator[None, None, None]:
     """Persist changes to event store immediately."""
     with patch(
-        "homeassistant.components.nest.media_source.STORAGE_SAVE_DELAY_SECONDS",
+        "spencerassistant.components.nest.media_source.STORAGE_SAVE_DELAY_SECONDS",
         new=0,
     ):
         yield
@@ -1172,7 +1172,7 @@ async def test_media_store_save_filesystem_error(
     # The client fetches the media from the server, but has a failure when
     # persisting the media to disk.
     client = await hass_client()
-    with patch("homeassistant.components.nest.media_source.open", side_effect=OSError):
+    with patch("spencerassistant.components.nest.media_source.open", side_effect=OSError):
         await subscriber.async_receive_event(
             create_event_message(
                 create_battery_event_data(MOTION_EVENT),
@@ -1250,7 +1250,7 @@ async def test_media_store_load_filesystem_error(
 
     # Fetch the media from the server, and simluate a failure reading from disk
     client = await hass_client()
-    with patch("homeassistant.components.nest.media_source.open", side_effect=OSError):
+    with patch("spencerassistant.components.nest.media_source.open", side_effect=OSError):
         response = await client.get(
             f"/api/nest/event_media/{device.id}/{event_identifier}"
         )
@@ -1305,7 +1305,7 @@ async def test_camera_event_media_eviction(
     ts = event_timestamp + datetime.timedelta(seconds=8)
     # Simulate a failure case removing the media on cache eviction
     with patch(
-        "homeassistant.components.nest.media_source.os.remove", side_effect=OSError
+        "spencerassistant.components.nest.media_source.os.remove", side_effect=OSError
     ) as mock_remove:
         await subscriber.async_receive_event(
             create_event_message(

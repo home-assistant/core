@@ -1607,9 +1607,9 @@
       "commandClassName": "Notification",
       "commandClass": 113,
       "endpoint": 0,
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Cover status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Cover status",
       "metadata": {
         "type": "number",
@@ -1632,9 +1632,9 @@
       "commandClassName": "Notification",
       "commandClass": 113,
       "endpoint": 0,
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Motion sensor status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Motion sensor status",
       "metadata": {
         "type": "number",

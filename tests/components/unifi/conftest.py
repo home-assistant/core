@@ -7,7 +7,7 @@ from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import pytest
 
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +48,7 @@ def mock_unifi_websocket():
 def mock_discovery():
     """No real network traffic allowed."""
     with patch(
-        "homeassistant.components.unifi.config_flow._async_discover_unifi",
+        "spencerassistant.components.unifi.config_flow._async_discover_unifi",
         return_value=None,
     ) as mock:
         yield mock

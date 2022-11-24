@@ -8,12 +8,12 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.zha import DOMAIN
-from homeassistant.const import Platform
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.zha import DOMAIN
+from spencerassistant.const import Platform
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
@@ -34,7 +34,7 @@ COMMAND_SINGLE = "single"
 def required_platforms_only():
     """Only setup the required platforms and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
             Platform.BUTTON,

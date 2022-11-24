@@ -10,13 +10,13 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.zwave_js import DOMAIN
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="connect_timeout")
 def connect_timeout_fixture():
     """Mock the connect timeout."""
-    with patch("homeassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
+    with patch("spencerassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
 
 
@@ -48,8 +48,8 @@ async def test_entry_setup_unload(hass, client, integration):
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_home_assistant_stop(hass, client, integration):
-    """Test we clean up on home assistant stop."""
+async def test_spencer_assistant_stop(hass, client, integration):
+    """Test we clean up on spencer assistant stop."""
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
@@ -172,7 +172,7 @@ async def test_on_node_added_ready(hass, multisensor_6_state, client, integratio
     dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id = f"{client.driver.controller.spencer_id}-{node.node_id}"
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
@@ -196,7 +196,7 @@ async def test_on_node_added_not_ready(
 ):
     """Test we handle a node added event with a non-ready node."""
     dev_reg = dr.async_get(hass)
-    device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
+    device_id = f"{client.driver.controller.spencer_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 0
     assert not dev_reg.devices
@@ -229,7 +229,7 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     """Test we handle a ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
     node = multisensor_6
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id = f"{client.driver.controller.spencer_id}-{node.node_id}"
     air_temperature_device_id_ext = (
         f"{air_temperature_device_id}-{node.manufacturer_id}:"
         f"{node.product_type}:{node.product_id}"
@@ -248,7 +248,7 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
 
 
 async def test_existing_node_reinterview(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     multisensor_6_state: dict,
     multisensor_6: Node,
@@ -258,7 +258,7 @@ async def test_existing_node_reinterview(
     dev_reg = dr.async_get(hass)
     node = multisensor_6
     assert client.driver is not None
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id = f"{client.driver.controller.spencer_id}-{node.node_id}"
     air_temperature_device_id_ext = (
         f"{air_temperature_device_id}-{node.manufacturer_id}:"
         f"{node.product_type}:{node.product_id}"
@@ -306,7 +306,7 @@ async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integrati
     """Test we handle a non-ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
     node = zp3111_not_ready
-    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{node.node_id}"
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device.name == f"Node {node.node_id}"
@@ -334,7 +334,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     er_reg = er.async_get(hass)
     kitchen_area = ar.async_get(hass).async_create("Kitchen")
 
-    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{zp3111.node_id}"
     device_id_ext = (
         f"{device_id}-{zp3111.manufacturer_id}:"
         f"{zp3111.product_type}:{zp3111.product_id}"
@@ -955,7 +955,7 @@ async def test_node_removed(hass, multisensor_6_state, client, integration):
     """Test that device gets removed when node gets removed."""
     dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
-    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{node.node_id}"
     event = {
         "source": "controller",
         "event": "node added",
@@ -984,7 +984,7 @@ async def test_replace_same_node(
     node_id = multisensor_6.node_id
     multisensor_6_state = deepcopy(multisensor_6_state)
 
-    device_id = f"{client.driver.controller.home_id}-{node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{node_id}"
     multisensor_6_device_id = (
         f"{device_id}-{multisensor_6.manufacturer_id}:"
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
@@ -1096,7 +1096,7 @@ async def test_replace_different_node(
     hank_binary_switch_state = deepcopy(hank_binary_switch_state)
     hank_binary_switch_state["nodeId"] = node_id
 
-    device_id = f"{client.driver.controller.home_id}-{node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{node_id}"
     multisensor_6_device_id = (
         f"{device_id}-{multisensor_6.manufacturer_id}:"
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
@@ -1209,7 +1209,7 @@ async def test_node_model_change(hass, zp3111, client, integration):
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
 
-    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id = f"{client.driver.controller.spencer_id}-{zp3111.node_id}"
     device_id_ext = (
         f"{device_id}-{zp3111.manufacturer_id}:"
         f"{zp3111.product_type}:{zp3111.product_id}"
@@ -1405,10 +1405,10 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
                 "commandClassName": "Notification",
                 "commandClass": 113,
                 "endpoint": 0,
-                "property": "Home Security",
+                "property": "spencer Security",
                 "propertyKey": "Cover status",
                 "prevValue": 0,
-                "propertyName": "Home Security",
+                "propertyName": "spencer Security",
                 "propertyKeyName": "Cover status",
             },
         },

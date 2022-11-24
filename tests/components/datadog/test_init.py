@@ -2,15 +2,15 @@
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
-import homeassistant.components.datadog as datadog
-from homeassistant.const import (
+import spencerassistant.components.datadog as datadog
+from spencerassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -28,8 +28,8 @@ async def test_datadog_setup_full(hass):
     config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
     hass.bus.listen = MagicMock()
 
-    with patch("homeassistant.components.datadog.initialize") as mock_init, patch(
-        "homeassistant.components.datadog.statsd"
+    with patch("spencerassistant.components.datadog.initialize") as mock_init, patch(
+        "spencerassistant.components.datadog.statsd"
     ):
         assert await async_setup_component(hass, datadog.DOMAIN, config)
 
@@ -45,8 +45,8 @@ async def test_datadog_setup_defaults(hass):
     """Test setup with defaults."""
     hass.bus.listen = mock.MagicMock()
 
-    with patch("homeassistant.components.datadog.initialize") as mock_init, patch(
-        "homeassistant.components.datadog.statsd"
+    with patch("spencerassistant.components.datadog.initialize") as mock_init, patch(
+        "spencerassistant.components.datadog.statsd"
     ):
         assert await async_setup_component(
             hass,
@@ -69,8 +69,8 @@ async def test_logbook_entry(hass):
     """Test event listener."""
     hass.bus.listen = mock.MagicMock()
 
-    with patch("homeassistant.components.datadog.initialize"), patch(
-        "homeassistant.components.datadog.statsd"
+    with patch("spencerassistant.components.datadog.initialize"), patch(
+        "spencerassistant.components.datadog.statsd"
     ) as mock_statsd:
         assert await async_setup_component(
             hass,
@@ -91,7 +91,7 @@ async def test_logbook_entry(hass):
 
         assert mock_statsd.event.call_count == 1
         assert mock_statsd.event.call_args == mock.call(
-            title="Home Assistant",
+            title="spencer Assistant",
             text="%%% \n **{}** {} \n %%%".format(event["name"], event["message"]),
             tags=["entity:sensor.foo.bar", "domain:automation"],
         )
@@ -103,8 +103,8 @@ async def test_state_changed(hass):
     """Test event listener."""
     hass.bus.listen = mock.MagicMock()
 
-    with patch("homeassistant.components.datadog.initialize"), patch(
-        "homeassistant.components.datadog.statsd"
+    with patch("spencerassistant.components.datadog.initialize"), patch(
+        "spencerassistant.components.datadog.statsd"
     ) as mock_statsd:
         assert await async_setup_component(
             hass,

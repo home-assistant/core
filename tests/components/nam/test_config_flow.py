@@ -5,10 +5,10 @@ from unittest.mock import patch
 from nettigo_air_monitor import ApiError, AuthFailed, CannotGetMac
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.nam.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant import data_entry_flow
+from spencerassistant.components import zeroconf
+from spencerassistant.components.nam.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 
 from tests.common import MockConfigEntry
 
@@ -37,13 +37,13 @@ async def test_form_create_entry_without_auth(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
+        "spencerassistant.components.nam.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -67,13 +67,13 @@ async def test_form_create_entry_with_auth(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG_AUTH,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
+        "spencerassistant.components.nam.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -108,10 +108,10 @@ async def test_reauth_successful(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG_AUTH,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -143,7 +143,7 @@ async def test_reauth_unsuccessful(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=ApiError("API Error"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -177,10 +177,10 @@ async def test_form_with_auth_errors(hass, error):
     """Test we handle errors when auth is required."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Auth Error"),
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -193,7 +193,7 @@ async def test_form_with_auth_errors(hass, error):
     assert result["step_id"] == "credentials"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "spencerassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -216,7 +216,7 @@ async def test_form_errors(hass, error):
     """Test we handle errors."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "spencerassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
 
@@ -232,10 +232,10 @@ async def test_form_errors(hass, error):
 async def test_form_abort(hass):
     """Test we handle abort after error."""
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=CannotGetMac("Cannot get MAC address from device"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -260,10 +260,10 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -281,10 +281,10 @@ async def test_form_already_configured(hass):
 async def test_zeroconf(hass):
     """Test we get the form."""
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -304,7 +304,7 @@ async def test_zeroconf(hass):
     assert context["confirm_only"] is True
 
     with patch(
-        "homeassistant.components.nam.async_setup_entry",
+        "spencerassistant.components.nam.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -322,10 +322,10 @@ async def test_zeroconf(hass):
 async def test_zeroconf_with_auth(hass):
     """Test that the zeroconf step with auth works."""
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Auth Error"),
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -345,13 +345,13 @@ async def test_zeroconf_with_auth(hass):
     assert context["title_placeholders"]["host"] == "10.10.2.3"
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         return_value=DEVICE_CONFIG_AUTH,
     ), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ), patch(
-        "homeassistant.components.nam.async_setup_entry", return_value=True
+        "spencerassistant.components.nam.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -395,7 +395,7 @@ async def test_zeroconf_errors(hass, error):
     """Test we handle errors."""
     exc, reason = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "spencerassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_init(

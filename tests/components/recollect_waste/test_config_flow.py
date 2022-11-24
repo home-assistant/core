@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 from aiorecollect.errors import RecollectError
 
-from homeassistant import data_entry_flow
-from homeassistant.components.recollect_waste import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.recollect_waste import (
     CONF_PLACE_ID,
     CONF_SERVICE_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_FRIENDLY_NAME
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_FRIENDLY_NAME
 
 
 async def test_duplicate_error(hass, config, config_entry):
@@ -25,7 +25,7 @@ async def test_duplicate_error(hass, config, config_entry):
 async def test_invalid_place_or_service_id(hass, config):
     """Test that an invalid Place or Service ID throws an error."""
     with patch(
-        "homeassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
+        "spencerassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
         side_effect=RecollectError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -38,7 +38,7 @@ async def test_invalid_place_or_service_id(hass, config):
 async def test_options_flow(hass, config, config_entry):
     """Test config flow options."""
     with patch(
-        "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
+        "spencerassistant.components.recollect_waste.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import airthings
 
-from homeassistant import config_entries
-from homeassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ TEST_DATA = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch("airthings.get_token", return_value="test_token",), patch(
-        "homeassistant.components.airthings.async_setup_entry",
+        "spencerassistant.components.airthings.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(hass: spencerAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -60,7 +60,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +79,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
+async def test_form_unknown_error(hass: spencerAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,7 +98,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
+async def test_flow_entry_already_exists(hass: spencerAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     first_entry = MockConfigEntry(

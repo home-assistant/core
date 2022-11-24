@@ -1,11 +1,11 @@
 """Tests for the sensors provided by the Luftdaten integration."""
-from homeassistant.components.luftdaten.const import DOMAIN
-from homeassistant.components.sensor import (
+from spencerassistant.components.luftdaten.const import DOMAIN
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -15,14 +15,14 @@ from homeassistant.const import (
     PRESSURE_PA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 async def test_luftdaten_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Luftdaten sensors."""

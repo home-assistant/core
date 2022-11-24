@@ -2,15 +2,15 @@
 
 from laundrify_aio import exceptions
 
-from homeassistant.components.laundrify.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.laundrify.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import create_entry
 
 
 async def test_setup_entry_api_unauthorized(
-    hass: HomeAssistant, laundrify_validate_token
+    hass: spencerAssistant, laundrify_validate_token
 ):
     """Test that ConfigEntryAuthFailed is thrown when authentication fails."""
     laundrify_validate_token.side_effect = exceptions.UnauthorizedException
@@ -25,7 +25,7 @@ async def test_setup_entry_api_unauthorized(
 
 
 async def test_setup_entry_api_cannot_connect(
-    hass: HomeAssistant, laundrify_validate_token
+    hass: spencerAssistant, laundrify_validate_token
 ):
     """Test that ApiConnectionException is thrown when connection fails."""
     laundrify_validate_token.side_effect = exceptions.ApiConnectionException
@@ -39,7 +39,7 @@ async def test_setup_entry_api_cannot_connect(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_setup_entry_successful(hass: HomeAssistant):
+async def test_setup_entry_successful(hass: spencerAssistant):
     """Test entry can be setup successfully."""
     config_entry = create_entry(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -49,7 +49,7 @@ async def test_setup_entry_successful(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_setup_entry_unload(hass: HomeAssistant):
+async def test_setup_entry_unload(hass: spencerAssistant):
     """Test unloading the laundrify entry."""
     config_entry = create_entry(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

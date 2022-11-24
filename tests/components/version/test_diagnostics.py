@@ -3,7 +3,7 @@
 
 from aioaseko import ClientSession
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import MOCK_VERSION, setup_version_integration
 
@@ -11,7 +11,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
 ) -> None:
     """Test diagnostic information."""

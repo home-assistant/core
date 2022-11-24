@@ -1,20 +1,20 @@
 """Constants for 1-Wire integration."""
 from pyownet.protocol import Error as ProtocolError
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.onewire.const import (
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.components.onewire.const import (
     DOMAIN,
     MANUFACTURER_EDS,
     MANUFACTURER_HOBBYBOARDS,
     MANUFACTURER_MAXIM,
     Platform,
 )
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity import EntityCategory
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
 ATTR_DEVICE_FILE = "device_file"

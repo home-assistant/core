@@ -2,20 +2,20 @@
 import pytest
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
-from homeassistant.components.climate import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.climate import (
     DOMAIN,
     HVACAction,
     HVACMode,
     const,
     device_trigger,
 )
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import TEMP_CELSIUS
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

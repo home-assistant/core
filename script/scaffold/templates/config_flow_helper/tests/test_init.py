@@ -1,16 +1,16 @@
 """Test the NEW_NAME integration."""
 import pytest
 
-from homeassistant.components.NEW_DOMAIN.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.NEW_DOMAIN.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
 async def test_setup_and_remove_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     platform: str,
 ) -> None:
     """Test setting up and removing a config entry."""

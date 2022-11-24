@@ -1,9 +1,9 @@
 """Common methods used across tests for Ecobee."""
 from unittest.mock import patch
 
-from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.const import CONF_API_KEY
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
+from spencerassistant.const import CONF_API_KEY
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def setup_platform(hass, platform):
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.ecobee.const.PLATFORMS", [platform]):
+    with patch("spencerassistant.components.ecobee.const.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()

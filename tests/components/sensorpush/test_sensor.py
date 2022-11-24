@@ -1,8 +1,8 @@
 """Test the SensorPush sensors."""
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.components.sensorpush.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.components.sensorpush.const import DOMAIN
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from . import HTPWX_SERVICE_INFO
 

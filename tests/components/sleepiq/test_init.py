@@ -5,19 +5,19 @@ from asyncsleepiq import (
     SleepIQTimeoutException,
 )
 
-from homeassistant.components.sleepiq.const import (
+from spencerassistant.components.sleepiq.const import (
     DOMAIN,
     IS_IN_BED,
     PRESSURE,
     SLEEP_NUMBER,
 )
-from homeassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_USERNAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from .conftest import (
     BED_ID,
@@ -37,7 +37,7 @@ ENTITY_SLEEP_NUMBER = (
 )
 
 
-async def test_unload_entry(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_unload_entry(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test unloading the SleepIQ entry."""
     entry = await setup_platform(hass, "sensor")
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -47,7 +47,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_entry_setup_login_error(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_entry_setup_login_error(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test when sleepiq client is unable to login."""
     mock_asyncsleepiq.login.side_effect = SleepIQLoginException
     entry = await setup_platform(hass, None)
@@ -55,7 +55,7 @@ async def test_entry_setup_login_error(hass: HomeAssistant, mock_asyncsleepiq) -
 
 
 async def test_entry_setup_timeout_error(
-    hass: HomeAssistant, mock_asyncsleepiq
+    hass: spencerAssistant, mock_asyncsleepiq
 ) -> None:
     """Test when sleepiq client timeout."""
     mock_asyncsleepiq.login.side_effect = SleepIQTimeoutException
@@ -63,7 +63,7 @@ async def test_entry_setup_timeout_error(
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_update_interval(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test update interval."""
     await setup_platform(hass, "sensor")
     assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 1
@@ -74,21 +74,21 @@ async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 2
 
 
-async def test_api_error(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_api_error(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test when sleepiq client is unable to login."""
     mock_asyncsleepiq.init_beds.side_effect = SleepIQAPIException
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_api_timeout(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test when sleepiq client timeout."""
     mock_asyncsleepiq.init_beds.side_effect = SleepIQTimeoutException
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_unique_id_migration(hass: spencerAssistant, mock_asyncsleepiq) -> None:
     """Test migration of sensor unique IDs."""
 
     mock_entry = MockConfigEntry(

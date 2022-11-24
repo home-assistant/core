@@ -4,9 +4,9 @@ from unittest.mock import patch
 import pytest
 import pywilight
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wilight import DOMAIN as WILIGHT_DOMAIN
-from homeassistant.components.wilight.switch import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.components.wilight import DOMAIN as WILIGHT_DOMAIN
+from spencerassistant.components.wilight.switch import (
     ATTR_PAUSE_TIME,
     ATTR_TRIGGER,
     ATTR_TRIGGER_1,
@@ -19,15 +19,15 @@ from homeassistant.components.wilight.switch import (
     SERVICE_SET_TRIGGER,
     SERVICE_SET_WATERING_TIME,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -62,7 +62,7 @@ def mock_dummy_device_from_host_switch():
 
 
 async def test_loading_switch(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     dummy_device_from_host_switch,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -93,7 +93,7 @@ async def test_loading_switch(
 
 
 async def test_on_off_switch_state(
-    hass: HomeAssistant, dummy_device_from_host_switch
+    hass: spencerAssistant, dummy_device_from_host_switch
 ) -> None:
     """Test the change of state of the switch."""
     await setup_integration(hass)
@@ -152,7 +152,7 @@ async def test_on_off_switch_state(
 
 
 async def test_switch_services(
-    hass: HomeAssistant, dummy_device_from_host_switch
+    hass: spencerAssistant, dummy_device_from_host_switch
 ) -> None:
     """Test the services of the switch."""
     await setup_integration(hass)

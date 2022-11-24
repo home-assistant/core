@@ -4,8 +4,8 @@ import json
 
 from freezegun import freeze_time
 
-from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from spencerassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
+from spencerassistant.helpers.device_registry import async_get as get_dev_reg
 
 from .const import (
     DEVICE_KEY_KINGSLYNN,

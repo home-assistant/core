@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
-from homeassistant.components.yeelight.const import (
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp, ssdp, zeroconf
+from spencerassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
+from spencerassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -21,9 +21,9 @@ from homeassistant.components.yeelight.const import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     CAPABILITIES,
@@ -59,7 +59,7 @@ SSDP_INFO = ssdp.SsdpServiceInfo(
 )
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: spencerAssistant):
     """Test setting up discovery."""
     with _patch_discovery(), _patch_discovery_interval():
         result = await hass.config_entries.flow.async_init(
@@ -116,7 +116,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: spencerAssistant):
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: "0x000000000099999", CONF_HOST: "4.4.4.4"}
@@ -194,7 +194,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: spencerAssistant):
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,7 +209,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass: spencerAssistant):
     """Test import from yaml."""
     config = {
         CONF_NAME: DEFAULT_NAME,
@@ -269,7 +269,7 @@ async def test_import(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual(hass: spencerAssistant):
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -339,7 +339,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass: spencerAssistant):
     """Test options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -382,7 +382,7 @@ async def test_options(hass: HomeAssistant):
     assert hass.states.get(f"light.{NAME}_nightlight") is not None
 
 
-async def test_options_unknown_model(hass: HomeAssistant):
+async def test_options_unknown_model(hass: spencerAssistant):
     """Test options flow with an unknown model."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -424,7 +424,7 @@ async def test_options_unknown_model(hass: HomeAssistant):
     assert hass.states.get(f"light.{NAME}_nightlight") is not None
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
+async def test_manual_no_capabilities(hass: spencerAssistant):
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -454,8 +454,8 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_homekit_and_dhcp(hass):
-    """Test we get the form with homekit and abort for dhcp source when we get both."""
+async def test_discovered_by_spencerkit_and_dhcp(hass):
+    """Test we get the form with spencerkit and abort for dhcp source when we get both."""
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -463,7 +463,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_HOMEKIT},
+            context={"source": config_entries.SOURCE_spencerKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
                 addresses=[IP_ADDRESS],
@@ -533,7 +533,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             ),
         ),
         (
-            config_entries.SOURCE_HOMEKIT,
+            config_entries.SOURCE_spencerKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
                 addresses=[IP_ADDRESS],
@@ -546,8 +546,8 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_homekit(hass, source, data):
-    """Test we can setup when discovered from dhcp or homekit."""
+async def test_discovered_by_dhcp_or_spencerkit(hass, source, data):
+    """Test we can setup when discovered from dhcp or spencerkit."""
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(), _patch_discovery_interval(), patch(
@@ -601,7 +601,7 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
             ),
         ),
         (
-            config_entries.SOURCE_HOMEKIT,
+            config_entries.SOURCE_spencerKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
                 addresses=[IP_ADDRESS],
@@ -614,8 +614,8 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         ),
     ],
 )
-async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data):
-    """Test we abort if we cannot get the unique id when discovered from dhcp or homekit."""
+async def test_discovered_by_dhcp_or_spencerkit_failed_to_get_id(hass, source, data):
+    """Test we abort if we cannot get the unique id when discovered from dhcp or spencerkit."""
 
     mocked_bulb = _mocked_bulb()
     with _patch_discovery(
@@ -738,7 +738,7 @@ async def test_discovered_zeroconf(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_updates_ip(hass: HomeAssistant):
+async def test_discovery_updates_ip(hass: spencerAssistant):
     """Test discovery updates ip."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.2.3"}, unique_id=ID
@@ -761,7 +761,7 @@ async def test_discovery_updates_ip(hass: HomeAssistant):
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
-async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: HomeAssistant):
+async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: spencerAssistant):
     """Test discovery updates ip does not reload if setup is an an error state."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -790,7 +790,7 @@ async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: HomeAssist
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
+async def test_discovery_adds_missing_ip_id_only(hass: spencerAssistant):
     """Test discovery adds missing ip."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_ID: ID})
     config_entry.add_to_hass(hass)
@@ -821,7 +821,7 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
             ),
         ),
         (
-            config_entries.SOURCE_HOMEKIT,
+            config_entries.SOURCE_spencerKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
                 addresses=[IP_ADDRESS],
@@ -842,7 +842,7 @@ async def test_discovered_during_onboarding(hass, source, data):
     ), patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_async_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=False
     ) as mock_is_onboarded:
 
         result = await hass.config_entries.flow.async_init(

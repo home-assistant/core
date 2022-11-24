@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.inkbird.const import DOMAIN
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.inkbird.const import DOMAIN
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import IBBQ_SERVICE_INFO, NOT_INKBIRD_SERVICE_INFO, SPS_SERVICE_INFO
 
@@ -20,7 +20,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    with patch("homeassistant.components.inkbird.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.inkbird.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -54,7 +54,7 @@ async def test_async_step_user_no_devices_found(hass):
 async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
-        "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
+        "spencerassistant.components.inkbird.config_flow.async_discovered_service_info",
         return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -63,7 +63,7 @@ async def test_async_step_user_with_found_devices(hass):
         )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.inkbird.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.inkbird.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
@@ -77,7 +77,7 @@ async def test_async_step_user_with_found_devices(hass):
 async def test_async_step_user_device_added_between_steps(hass):
     """Test the device gets added via another flow between steps."""
     with patch(
-        "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
+        "spencerassistant.components.inkbird.config_flow.async_discovered_service_info",
         return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -93,7 +93,7 @@ async def test_async_step_user_device_added_between_steps(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.inkbird.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.inkbird.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
@@ -111,7 +111,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
+        "spencerassistant.components.inkbird.config_flow.async_discovered_service_info",
         return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -169,7 +169,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
-        "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
+        "spencerassistant.components.inkbird.config_flow.async_discovered_service_info",
         return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -178,7 +178,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
         )
         assert result["type"] == FlowResultType.FORM
 
-    with patch("homeassistant.components.inkbird.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.inkbird.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},

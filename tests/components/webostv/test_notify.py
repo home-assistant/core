@@ -4,14 +4,14 @@ from unittest.mock import Mock, call
 from aiowebostv import WebOsTvPairError
 import pytest
 
-from homeassistant.components.notify import (
+from spencerassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
 )
-from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import ATTR_ICON
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.webostv import DOMAIN
+from spencerassistant.const import ATTR_ICON
+from spencerassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import TV_NAME

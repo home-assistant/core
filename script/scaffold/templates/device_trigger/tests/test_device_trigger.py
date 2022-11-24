@@ -1,12 +1,12 @@
 """The tests for NEW_NAME device triggers."""
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.components.NEW_DOMAIN import DOMAIN
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 
-from homeassistant.components.nightscout.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from spencerassistant.components.nightscout.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_URL
 
 from . import init_integration
 
@@ -35,7 +35,7 @@ async def test_async_setup_raises_entry_not_ready(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_server_status",
         side_effect=ClientError(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

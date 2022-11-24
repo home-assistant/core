@@ -6,8 +6,8 @@ mqtt:
     light:
         schema: json
         name: mqtt_json_light_1
-        state_topic: "home/rgb1"
-        command_topic: "home/rgb1/set"
+        state_topic: "spencer/rgb1"
+        command_topic: "spencer/rgb1/set"
         brightness: true
         color_temp: true
         effect: true
@@ -20,8 +20,8 @@ mqtt:
     light:
         schema: json
         name: mqtt_json_light_1
-        state_topic: "home/rgb1"
-        command_topic: "home/rgb1/set"
+        state_topic: "spencer/rgb1"
+        command_topic: "spencer/rgb1/set"
         brightness: true
         color_temp: true
         effect: true
@@ -33,8 +33,8 @@ mqtt:
     light:
         schema: json
         name: mqtt_json_light_1
-        state_topic: "home/rgb1"
-        command_topic: "home/rgb1/set"
+        state_topic: "spencer/rgb1"
+        command_topic: "spencer/rgb1/set"
         brightness: true
         rgb: true
         color_temp: true
@@ -45,8 +45,8 @@ mqtt:
     light:
         schema: json
         name: mqtt_json_light_1
-        state_topic: "home/rgb1"
-        command_topic: "home/rgb1/set"
+        state_topic: "spencer/rgb1"
+        command_topic: "spencer/rgb1/set"
         brightness: true
         rgb: true
 
@@ -56,8 +56,8 @@ mqtt:
     light:
         schema: json
         name: mqtt_json_light_1
-        state_topic: "home/rgb1"
-        command_topic: "home/rgb1/set"
+        state_topic: "spencer/rgb1"
+        command_topic: "spencer/rgb1/set"
         brightness: true
 
 Config without RGB and brightness:
@@ -65,8 +65,8 @@ Config without RGB and brightness:
 light:
   platform: mqtt_json
   name: mqtt_json_light_1
-  state_topic: "home/rgb1"
-  command_topic: "home/rgb1/set"
+  state_topic: "spencer/rgb1"
+  command_topic: "spencer/rgb1/set"
 
 Config with brightness and scale:
 
@@ -84,11 +84,11 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.light.schema_basic import (
+from spencerassistant.components import light, mqtt
+from spencerassistant.components.mqtt.light.schema_basic import (
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -96,8 +96,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -145,7 +145,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def light_platform_only():
     """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
         yield
 
 
@@ -2013,7 +2013,7 @@ async def test_discovery_update_unchanged_light(
         '  "command_topic": "test_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.light.schema_json.MqttLightJson.discovery_update"
+        "spencerassistant.components.mqtt.light.schema_json.MqttLightJson.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

@@ -2,29 +2,29 @@
 from unittest.mock import patch
 import uuid
 
-from nexia.home import NexiaHome
+from nexia.spencer import Nexiaspencer
 
-from homeassistant.components.nexia.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.nexia.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import mock_aiohttp_client
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the nexia integration in Home Assistant."""
+    """Set up the nexia integration in spencer Assistant."""
 
     house_fixture = "nexia/mobile_houses_123456.json"
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
     with mock_aiohttp_client() as mock_session, patch(
-        "nexia.home.load_or_create_uuid", return_value=uuid.uuid4()
+        "nexia.spencer.load_or_create_uuid", return_value=uuid.uuid4()
     ):
-        nexia = NexiaHome(mock_session)
+        nexia = Nexiaspencer(mock_session)
         mock_session.post(
             nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture)
         )

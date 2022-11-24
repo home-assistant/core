@@ -1,9 +1,9 @@
 """The tests for SleepIQ light platform."""
-from homeassistant.components.light import DOMAIN
-from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
+from spencerassistant.components.light import DOMAIN
+from spencerassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util.dt import utcnow
 
 from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
 

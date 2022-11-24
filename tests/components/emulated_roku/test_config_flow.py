@@ -1,6 +1,6 @@
 """Tests for emulated_roku config flow."""
-from homeassistant import config_entries
-from homeassistant.components.emulated_roku import config_flow
+from spencerassistant import config_entries
+from spencerassistant.components.emulated_roku import config_flow
 
 from tests.common import MockConfigEntry
 

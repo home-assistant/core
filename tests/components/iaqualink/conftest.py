@@ -7,8 +7,8 @@ from iaqualink.device import AqualinkDevice
 from iaqualink.system import AqualinkSystem
 import pytest
 
-from homeassistant.components.iaqualink import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.components.iaqualink import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 

@@ -1,13 +1,13 @@
-"""Test the Livisi Home Assistant config flow."""
+"""Test the Livisi spencer Assistant config flow."""
 
 from unittest.mock import patch
 
 from aiolivisi import errors as livisi_errors
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.livisi.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from spencerassistant import data_entry_flow
+from spencerassistant.components.livisi.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
 
 from . import (
     VALID_CONFIG,
@@ -48,7 +48,7 @@ async def test_create_entity_after_login_error(
 ):
     """Test the LIVISI integration can create an entity after the user had login errors."""
     with patch(
-        "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token",
+        "spencerassistant.components.livisi.config_flow.AioLivisi.async_set_token",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(

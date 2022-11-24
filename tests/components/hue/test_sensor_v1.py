@@ -4,12 +4,12 @@ from unittest.mock import Mock
 
 import aiohue
 
-from homeassistant.components import hue
-from homeassistant.components.hue.const import ATTR_HUE_EVENT
-from homeassistant.components.hue.v1 import sensor_base
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt as dt_util
+from spencerassistant.components import hue
+from spencerassistant.components.hue.const import ATTR_HUE_EVENT
+from spencerassistant.components.hue.v1 import sensor_base
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import async_get
+from spencerassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_platform
 

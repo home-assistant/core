@@ -1,14 +1,14 @@
 """Tests for 1-Wire config flow."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.onewire.const import (
+from spencerassistant.components.onewire.const import (
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
@@ -21,7 +21,7 @@ class FakeDevice:
 
 
 async def test_user_options_clear(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
 ):
@@ -50,7 +50,7 @@ async def test_user_options_clear(
 
 
 async def test_user_options_empty_selection(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
 ):
@@ -80,7 +80,7 @@ async def test_user_options_empty_selection(
 
 
 async def test_user_options_set_single(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
 ):
@@ -123,7 +123,7 @@ async def test_user_options_set_single(
 
 
 async def test_user_options_set_multiple(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
 ):
@@ -138,7 +138,7 @@ async def test_user_options_set_multiple(
 
     # Verify that first config step comes back with a selection list of all the 28-family devices
     with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_get_device",
+        "spencerassistant.helpers.device_registry.DeviceRegistry.async_get_device",
         return_value=FakeDevice(),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -151,7 +151,7 @@ async def test_user_options_set_multiple(
     # Verify that selecting two devices to configure comes back as a
     #  form with the first device to configure using it's long name as entry
     with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_get_device",
+        "spencerassistant.helpers.device_registry.DeviceRegistry.async_get_device",
         return_value=FakeDevice(),
     ):
         result = await hass.config_entries.options.async_configure(
@@ -197,7 +197,7 @@ async def test_user_options_set_multiple(
 
 
 async def test_user_options_no_devices(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
 ):

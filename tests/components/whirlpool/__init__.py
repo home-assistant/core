@@ -1,13 +1,13 @@
 """Tests for the Whirlpool Sixth Sense integration."""
-from homeassistant.components.whirlpool.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.whirlpool.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Whirlpool integration in Home Assistant."""
+async def init_integration(hass: spencerAssistant) -> MockConfigEntry:
+    """Set up the Whirlpool integration in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

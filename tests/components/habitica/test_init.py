@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components.habitica.const import (
+from spencerassistant.components.habitica.const import (
     ATTR_ARGS,
     ATTR_DATA,
     ATTR_PATH,
@@ -12,12 +12,12 @@ from homeassistant.components.habitica.const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
-from homeassistant.components.habitica.sensor import TASKS_TYPES
-from homeassistant.const import ATTR_NAME
+from spencerassistant.components.habitica.sensor import TASKS_TYPES
+from spencerassistant.const import ATTR_NAME
 
 from tests.common import MockConfigEntry, async_capture_events
 
-TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
+TEST_API_CALL_ARGS = {"text": "Use API from spencer Assistant", "type": "todo"}
 TEST_USER_NAME = "test_user"
 
 

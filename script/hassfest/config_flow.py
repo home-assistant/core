@@ -30,7 +30,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         "async_step_discovery" in config_flow
         or "async_step_bluetooth" in config_flow
         or "async_step_hassio" in config_flow
-        or "async_step_homekit" in config_flow
+        or "async_step_spencerkit" in config_flow
         or "async_step_mqtt" in config_flow
         or "async_step_ssdp" in config_flow
         or "async_step_zeroconf" in config_flow
@@ -104,7 +104,7 @@ def _populate_brand_integrations(
             "integration_type": integration.integration_type,
         }
         # Always set the config_flow key to avoid breaking the frontend
-        # https://github.com/home-assistant/frontend/issues/14376
+        # https://github.com/spencer-assistant/frontend/issues/14376
         metadata["config_flow"] = bool(integration.config_flow)
         if integration.iot_class:
             metadata["iot_class"] = integration.iot_class
@@ -204,14 +204,14 @@ def _generate_integrations(
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate config flow file."""
-    config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    integrations_path = config.root / "homeassistant/generated/integrations.json"
+    config_flow_path = config.root / "spencerassistant/generated/config_flows.py"
+    integrations_path = config.root / "spencerassistant/generated/integrations.json"
     config.cache["config_flow"] = content = _generate_and_validate(integrations, config)
 
     if config.specific_integrations:
         return
 
-    brands = Brand.load_dir(pathlib.Path(config.root / "homeassistant/brands"), config)
+    brands = Brand.load_dir(pathlib.Path(config.root / "spencerassistant/brands"), config)
     validate_brands(brands, integrations, config)
 
     with open(str(config_flow_path)) as fp:
@@ -238,8 +238,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
-    config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    integrations_path = config.root / "homeassistant/generated/integrations.json"
+    config_flow_path = config.root / "spencerassistant/generated/config_flows.py"
+    integrations_path = config.root / "spencerassistant/generated/integrations.json"
     with open(str(config_flow_path), "w") as fp:
         fp.write(f"{config.cache['config_flow']}")
     with open(str(integrations_path), "w") as fp:

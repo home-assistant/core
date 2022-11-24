@@ -7,9 +7,9 @@ from unittest.mock import patch
 import pytest
 import requests_mock
 
-from homeassistant.components import notify
-import homeassistant.components.clicksend_tts.notify as cs_tts
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import notify
+import spencerassistant.components.clicksend_tts.notify as cs_tts
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -39,7 +39,7 @@ CONFIG = {
 def mock_clicksend_tts_notify():
     """Mock Clicksend TTS notify service."""
     with patch(
-        "homeassistant.components.clicksend_tts.notify.get_service", autospec=True
+        "spencerassistant.components.clicksend_tts.notify.get_service", autospec=True
     ) as ns:
         yield ns
 

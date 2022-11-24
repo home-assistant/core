@@ -10,18 +10,18 @@ from screenlogicpy.const import (
     SL_GATEWAY_TYPE,
 )
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.screenlogic.config_flow import (
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp
+from spencerassistant.components.screenlogic.config_flow import (
     GATEWAY_MANUAL_ENTRY,
     GATEWAY_SELECT_KEY,
 )
-from homeassistant.components.screenlogic.const import (
+from spencerassistant.components.screenlogic.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from spencerassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +30,7 @@ async def test_flow_discovery(hass):
     """Test the flow works with basic discovery."""
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        "spencerassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[
             {
                 SL_GATEWAY_IP: "1.1.1.1",
@@ -50,7 +50,7 @@ async def test_flow_discovery(hass):
     assert result["step_id"] == "gateway_select"
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,7 +71,7 @@ async def test_flow_discover_none(hass):
     """Test when nothing is discovered."""
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        "spencerassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -87,7 +87,7 @@ async def test_flow_discover_error(hass):
     """Test when discovery errors."""
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        "spencerassistant.components.screenlogic.config_flow.discovery.async_discover",
         side_effect=ScreenLogicError("Fake error"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -99,10 +99,10 @@ async def test_flow_discover_error(hass):
     assert result["step_id"] == "gateway_entry"
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+        "spencerassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -140,10 +140,10 @@ async def test_dhcp(hass):
     assert result["step_id"] == "gateway_entry"
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+        "spencerassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -168,7 +168,7 @@ async def test_form_manual_entry(hass):
     """Test we get the form."""
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        "spencerassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[
             {
                 SL_GATEWAY_IP: "1.1.1.1",
@@ -195,10 +195,10 @@ async def test_form_manual_entry(hass):
     assert result2["step_id"] == "gateway_entry"
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+        "spencerassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -222,7 +222,7 @@ async def test_form_manual_entry(hass):
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        "spencerassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -230,7 +230,7 @@ async def test_form_cannot_connect(hass):
         )
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+        "spencerassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         side_effect=ScreenLogicError("Failed to connect to host at 1.1.1.1:80"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -251,7 +251,7 @@ async def test_option_flow(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -276,7 +276,7 @@ async def test_option_flow_defaults(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -302,7 +302,7 @@ async def test_option_flow_input_floor(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
+        "spencerassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

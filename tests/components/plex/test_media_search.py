@@ -4,16 +4,16 @@ from unittest.mock import patch
 from plexapi.exceptions import BadRequest, NotFound
 import pytest
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.plex.const import DOMAIN
-from homeassistant.components.plex.errors import MediaNotFound
-from homeassistant.const import ATTR_ENTITY_ID
+from spencerassistant.components.plex.const import DOMAIN
+from spencerassistant.components.plex.errors import MediaNotFound
+from spencerassistant.const import ATTR_ENTITY_ID
 
 
 async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_created):

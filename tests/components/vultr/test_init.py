@@ -3,16 +3,16 @@ from copy import deepcopy
 import json
 from unittest.mock import patch
 
-from homeassistant import setup
-from homeassistant.components import vultr
-from homeassistant.core import HomeAssistant
+from spencerassistant import setup
+from spencerassistant.components import vultr
+from spencerassistant.core import spencerAssistant
 
 from .const import VALID_CONFIG
 
 from tests.common import load_fixture
 
 
-def test_setup(hass: HomeAssistant):
+def test_setup(hass: spencerAssistant):
     """Test successful setup."""
     with patch(
         "vultr.Vultr.server_list",
@@ -22,7 +22,7 @@ def test_setup(hass: HomeAssistant):
     assert response
 
 
-async def test_setup_no_api_key(hass: HomeAssistant):
+async def test_setup_no_api_key(hass: spencerAssistant):
     """Test failed setup with missing API Key."""
     conf = deepcopy(VALID_CONFIG)
     del conf["vultr"]["api_key"]

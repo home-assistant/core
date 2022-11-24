@@ -1,22 +1,22 @@
 """The tests for Alarm control panel device conditions."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
+from spencerassistant.components.alarm_control_panel import DOMAIN, const
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_spencer,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -52,7 +52,7 @@ def calls(hass):
     [
         (False, 0, 0, []),
         (False, const.AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
-        (False, const.AlarmControlPanelEntityFeature.ARM_HOME, 0, ["is_armed_home"]),
+        (False, const.AlarmControlPanelEntityFeature.ARM_spencer, 0, ["is_armed_spencer"]),
         (False, const.AlarmControlPanelEntityFeature.ARM_NIGHT, 0, ["is_armed_night"]),
         (
             False,
@@ -68,7 +68,7 @@ def calls(hass):
         ),
         (True, 0, 0, []),
         (True, 0, const.AlarmControlPanelEntityFeature.ARM_AWAY, ["is_armed_away"]),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_HOME, ["is_armed_home"]),
+        (True, 0, const.AlarmControlPanelEntityFeature.ARM_spencer, ["is_armed_spencer"]),
         (True, 0, const.AlarmControlPanelEntityFeature.ARM_NIGHT, ["is_armed_night"]),
         (
             True,
@@ -242,13 +242,13 @@ async def test_if_state(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "alarm_control_panel.entity",
-                            "type": "is_armed_home",
+                            "type": "is_armed_spencer",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_home - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_armed_spencer - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -351,7 +351,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_disarmed - event - test_event2"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_HOME)
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_spencer)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -361,7 +361,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
     assert len(calls) == 3
-    assert calls[2].data["some"] == "is_armed_home - event - test_event3"
+    assert calls[2].data["some"] == "is_armed_spencer - event - test_event3"
 
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_AWAY)
     hass.bus.async_fire("test_event1")

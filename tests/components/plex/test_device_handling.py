@@ -1,8 +1,8 @@
 """Tests for handling the device registry."""
 
-from homeassistant.components.plex.const import DOMAIN
-from homeassistant.const import Platform
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.components.plex.const import DOMAIN
+from spencerassistant.const import Platform
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):

@@ -2,18 +2,18 @@
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.switch import (
+from spencerassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from spencerassistant.components.flo.switch import (
     ATTR_REVERT_TO_MODE,
     ATTR_SLEEP_MINUTES,
     SERVICE_RUN_HEALTH_TEST,
     SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_HOME_MODE,
+    SERVICE_SET_spencer_MODE,
     SERVICE_SET_SLEEP_MODE,
-    SYSTEM_MODE_HOME,
+    SYSTEM_MODE_spencer,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
@@ -51,7 +51,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
 
     await hass.services.async_call(
         FLO_DOMAIN,
-        SERVICE_SET_HOME_MODE,
+        SERVICE_SET_spencer_MODE,
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
@@ -63,7 +63,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         SERVICE_SET_SLEEP_MODE,
         {
             ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-            ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
+            ATTR_REVERT_TO_MODE: SYSTEM_MODE_spencer,
             ATTR_SLEEP_MINUTES: 120,
         },
         blocking=True,
@@ -77,7 +77,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         SERVICE_SET_SLEEP_MODE,
         {
             ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-            ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
+            ATTR_REVERT_TO_MODE: SYSTEM_MODE_spencer,
             ATTR_SLEEP_MINUTES: "120",
         },
         blocking=True,
@@ -92,7 +92,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
             SERVICE_SET_SLEEP_MODE,
             {
                 ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-                ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
+                ATTR_REVERT_TO_MODE: SYSTEM_MODE_spencer,
                 ATTR_SLEEP_MINUTES: "test",
             },
             blocking=True,

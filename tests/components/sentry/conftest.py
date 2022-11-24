@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sentry import DOMAIN
+from spencerassistant.components.sentry import DOMAIN
 
 from tests.common import MockConfigEntry
 

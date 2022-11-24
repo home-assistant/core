@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 
-from homeassistant.components import bluetooth
-from homeassistant.components.shelly.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
+from spencerassistant.components import bluetooth
+from spencerassistant.components.shelly.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
 
 from .. import init_integration, inject_rpc_device_event
 

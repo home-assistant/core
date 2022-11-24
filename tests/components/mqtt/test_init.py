@@ -11,27 +11,27 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config as hass_config
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
-from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import (
+from spencerassistant import config as hass_config
+from spencerassistant.components import mqtt
+from spencerassistant.components.mqtt import CONFIG_SCHEMA, debug_info
+from spencerassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from spencerassistant.components.mqtt.models import ReceiveMessage
+from spencerassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
     TEMP_CELSIUS,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, template
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+import spencerassistant.core as ha
+from spencerassistant.core import CoreState, spencerAssistant, callback
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import device_registry as dr, template
+from spencerassistant.helpers.entity import Entity
+from spencerassistant.helpers.entity_platform import async_get_platforms
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from .test_common import (
     help_test_entry_reload_with_new_config,
@@ -60,7 +60,7 @@ class RecordCallsPartial(partial):
 def sensor_platforms_only():
     """Only setup the sensor platforms to speed up tests."""
     with patch(
-        "homeassistant.components.mqtt.PLATFORMS",
+        "spencerassistant.components.mqtt.PLATFORMS",
         [Platform.SENSOR, Platform.BINARY_SENSOR],
     ):
         yield
@@ -86,7 +86,7 @@ def entity_reg(hass):
 @pytest.fixture
 def mock_mqtt():
     """Make sure connection is established."""
-    with patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
+    with patch("spencerassistant.components.mqtt.MQTT") as mock_mqtt:
         mock_mqtt.return_value.async_connect = AsyncMock(return_value=True)
         mock_mqtt.return_value.async_disconnect = AsyncMock(return_value=True)
         yield mock_mqtt
@@ -122,7 +122,7 @@ def empty_mqtt_config(hass, tmp_path):
         yield empty_config
 
 
-async def test_mqtt_connects_on_home_assistant_mqtt_setup(
+async def test_mqtt_connects_on_spencer_assistant_mqtt_setup(
     hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
 ):
     """Test if client is connected after mqtt init on bootstrap."""
@@ -130,18 +130,18 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     assert mqtt_client_mock.connect.call_count == 1
 
 
-async def test_mqtt_disconnects_on_home_assistant_stop(
+async def test_mqtt_disconnects_on_spencer_assistant_stop(
     hass, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
     """Test if client stops on HA stop."""
     await mqtt_mock_entry_no_yaml_config()
-    hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mqtt_client_mock.loop_stop.call_count == 1
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_mqtt_await_ack_at_disconnect(
     hass,
 ):
@@ -283,7 +283,7 @@ async def test_command_template_value(hass):
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SELECT])
 async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config):
     """Test the rendering of entity variables."""
     topic = "test/select"
@@ -331,7 +331,7 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
 
     # Test that TemplateStateFromEntityId is not called again
     with patch(
-        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+        "spencerassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
         await hass.services.async_call(
             "select",
@@ -386,7 +386,7 @@ async def test_value_template_value(hass):
     assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
 
     with patch(
-        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+        "spencerassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
         tpl3 = template.Template("{{ this.entity_id }}")
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
@@ -844,7 +844,7 @@ async def test_subscribe_topic(
     assert len(calls) == 1
 
     # Cannot unsubscribe twice
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         unsub()
 
 
@@ -878,7 +878,7 @@ async def test_subscribe_bad_topic(
 ):
     """Test the subscription of a topic."""
     await mqtt_mock_entry_no_yaml_config()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await mqtt.async_subscribe(hass, 55, record_calls)
 
 
@@ -1296,7 +1296,7 @@ async def test_restore_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
@@ -1331,7 +1331,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
 
@@ -1349,7 +1349,7 @@ async def test_initial_setup_logs_error(
     try:
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
-    except HomeAssistantError:
+    except spencerAssistantError:
         assert True
     assert "Failed to connect to MQTT server:" in caplog.text
 
@@ -1368,7 +1368,7 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
-@patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
+@patch("spencerassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
 async def test_handle_mqtt_on_callback(
     hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
@@ -1401,7 +1401,7 @@ async def test_publish_error(hass, caplog):
         mock_client().publish().rc = 1
         assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(spencerAssistantError):
             await mqtt.async_publish(
                 hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
             )
@@ -1415,7 +1415,7 @@ async def test_subscribe_error(
     await mqtt_mock_entry_no_yaml_config()
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         # simulate client is not connected error before subscribing
         mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
         await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
@@ -1484,7 +1484,7 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {
@@ -1504,7 +1504,7 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {mqtt.DOMAIN: {"light": {"name": "test"}}}
@@ -1516,7 +1516,7 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
     config = {mqtt.DOMAIN: {"light": []}}
@@ -1524,7 +1524,7 @@ async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_mqtt_client_protocol(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT client protocol setup."""
     with patch("paho.mqtt.client.Client") as mock_client:
@@ -1544,8 +1544,8 @@ async def test_setup_mqtt_client_protocol(hass, mqtt_mock_entry_with_yaml_config
         assert mock_client.call_args[1]["protocol"] == 3
 
 
-@patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_handle_mqtt_timeout_on_callback(hass, caplog):
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -1610,7 +1610,7 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplo
         ({"certificate": "auto", "tls_insecure": True}, True),
     ],
 )
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     hass, config, insecure_param, mqtt_mock_entry_with_yaml_config
 ):
@@ -1690,7 +1690,7 @@ async def test_custom_birth_message(
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "birth", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
@@ -1704,7 +1704,7 @@ async def test_custom_birth_message(
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {
-                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_TOPIC: "spencerassistant/status",
                 mqtt.ATTR_PAYLOAD: "online",
                 mqtt.ATTR_QOS: 0,
                 mqtt.ATTR_RETAIN: False,
@@ -1723,13 +1723,13 @@ async def test_default_birth_message(
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
-        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "spencerassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await birth.wait()
         mqtt_client_mock.publish.assert_called_with(
-            "homeassistant/status", "online", 0, False
+            "spencerassistant/status", "online", 0, False
         )
 
 
@@ -1740,7 +1740,7 @@ async def test_default_birth_message(
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config):
     """Test disabling birth message."""
     await mqtt_mock_entry_no_yaml_config()
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await asyncio.sleep(0.2)
@@ -1753,7 +1753,7 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {
-                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_TOPIC: "spencerassistant/status",
                 mqtt.ATTR_PAYLOAD: "online",
                 mqtt.ATTR_QOS: 0,
                 mqtt.ATTR_RETAIN: False,
@@ -1764,7 +1764,7 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_
 async def test_delayed_birth_message(
     hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_mock_entry_no_yaml_config
 ):
-    """Test sending birth message does not happen until Home Assistant starts."""
+    """Test sending birth message does not happen until spencer Assistant starts."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     hass.state = CoreState.starting
@@ -1792,8 +1792,8 @@ async def test_delayed_birth_message(
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
-        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+    with patch("spencerassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
+        await mqtt.async_subscribe(hass, "spencerassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         with pytest.raises(asyncio.TimeoutError):
@@ -1801,10 +1801,10 @@ async def test_delayed_birth_message(
         assert not mqtt_client_mock.publish.called
         assert not birth.is_set()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await birth.wait()
         mqtt_client_mock.publish.assert_called_with(
-            "homeassistant/status", "online", 0, False
+            "spencerassistant/status", "online", 0, False
         )
 
 
@@ -1840,7 +1840,7 @@ async def test_default_will_message(
     await mqtt_mock_entry_no_yaml_config()
 
     mqtt_client_mock.will_set.assert_called_with(
-        topic="homeassistant/status", payload="offline", qos=0, retain=False
+        topic="spencerassistant/status", payload="offline", qos=0, retain=False
     )
 
 
@@ -1872,7 +1872,7 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt_mock_entry_no_yaml_config()
 
     await mqtt.async_subscribe(hass, "topic/test", None)
-    await mqtt.async_subscribe(hass, "home/sensor", None, 2)
+    await mqtt.async_subscribe(hass, "spencer/sensor", None, 2)
     await mqtt.async_subscribe(hass, "still/pending", None)
     await mqtt.async_subscribe(hass, "still/pending", None, 1)
 
@@ -1885,7 +1885,7 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert len(hass.add_job.mock_calls) == 1
     assert set(hass.add_job.mock_calls[0][1][1]) == {
-        ("home/sensor", 2),
+        ("spencer/sensor", 2),
         ("still/pending", 1),
         ("topic/test", 0),
     }
@@ -1912,7 +1912,7 @@ async def test_setup_entry_with_config_override(
     await hass.async_block_till_done()
 
     # Discover a device to verify the entry was setup correctly
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -1920,7 +1920,7 @@ async def test_setup_entry_with_config_override(
 
 
 async def test_update_incomplete_entry(
-    hass: HomeAssistant, device_reg, mqtt_client_mock, caplog
+    hass: spencerAssistant, device_reg, mqtt_client_mock, caplog
 ):
     """Test if the MQTT component loads when config entry data is incomplete."""
     data = (
@@ -1940,7 +1940,7 @@ async def test_update_incomplete_entry(
     # Config entry data should now be updated
     assert entry.data == {
         "port": 1234,
-        "discovery_prefix": "homeassistant",
+        "discovery_prefix": "spencerassistant",
         "broker": "yaml_broker",
     }
     # Warnings about broker deprecated, but not about other keys with default values
@@ -1950,7 +1950,7 @@ async def test_update_incomplete_entry(
     )
 
     # Discover a device to verify the entry was setup correctly
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -2044,7 +2044,7 @@ async def test_dump_service(hass, mqtt_mock_entry_no_yaml_config):
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with patch("homeassistant.components.mqtt.open", mopen):
+    with patch("spencerassistant.components.mqtt.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
@@ -2068,7 +2068,7 @@ async def test_mqtt_ws_remove_discovered_device(
         '  "unique_id": "unique" }'
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device entry is created
@@ -2114,9 +2114,9 @@ async def test_mqtt_ws_get_device_debug_info(
     data_trigger = json.dumps(config_trigger)
     config_sensor["platform"] = config_trigger["platform"] = mqtt.DOMAIN
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data_sensor)
     async_fire_mqtt_message(
-        hass, "homeassistant/device_automation/bla/config", data_trigger
+        hass, "spencerassistant/device_automation/bla/config", data_trigger
     )
     await hass.async_block_till_done()
 
@@ -2137,7 +2137,7 @@ async def test_mqtt_ws_get_device_debug_info(
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
-                    "topic": "homeassistant/sensor/bla/config",
+                    "topic": "spencerassistant/sensor/bla/config",
                 },
                 "transmitted": [],
             }
@@ -2146,7 +2146,7 @@ async def test_mqtt_ws_get_device_debug_info(
             {
                 "discovery_data": {
                     "payload": config_trigger,
-                    "topic": "homeassistant/device_automation/bla/config",
+                    "topic": "spencerassistant/device_automation/bla/config",
                 },
                 "trigger_key": ["device_automation", "bla"],
             }
@@ -2155,7 +2155,7 @@ async def test_mqtt_ws_get_device_debug_info(
     assert response["result"] == expected_result
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):
@@ -2169,7 +2169,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     data = json.dumps(config)
     config["platform"] = mqtt.DOMAIN
 
-    async_fire_mqtt_message(hass, "homeassistant/camera/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/camera/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device entry is created
@@ -2210,7 +2210,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
                 ],
                 "discovery_data": {
                     "payload": config,
-                    "topic": "homeassistant/camera/bla/config",
+                    "topic": "spencerassistant/camera/bla/config",
                 },
                 "transmitted": [],
             }
@@ -2272,7 +2272,7 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock_entry_no_yaml_config)
         data = json.dumps(d["config"])
         domain = d["domain"]
         id = d["config"]["device"]["identifiers"][0]
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        async_fire_mqtt_message(hass, f"spencerassistant/{domain}/{id}/config", data)
         await hass.async_block_till_done()
 
     for d in devices:
@@ -2296,7 +2296,7 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock_entry_no_yaml_config)
             assert len(debug_info_data["triggers"]) == 1
             discovery_data = debug_info_data["triggers"][0]["discovery_data"]
 
-        assert discovery_data["topic"] == f"homeassistant/{domain}/{id}/config"
+        assert discovery_data["topic"] == f"spencerassistant/{domain}/{id}/config"
         assert discovery_data["payload"] == d["config"]
 
 
@@ -2355,7 +2355,7 @@ async def test_debug_info_multiple_entities_triggers(
         domain = c["domain"]
         # Use topic as discovery_id
         id = c["config"].get("topic", c["config"].get("state_topic"))
-        async_fire_mqtt_message(hass, f"homeassistant/{domain}/{id}/config", data)
+        async_fire_mqtt_message(hass, f"spencerassistant/{domain}/{id}/config", data)
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
@@ -2381,7 +2381,7 @@ async def test_debug_info_multiple_entities_triggers(
             discovery_data = [e["discovery_data"] for e in debug_info_data["triggers"]]
 
         assert {
-            "topic": f"homeassistant/{domain}/{id}/config",
+            "topic": f"spencerassistant/{domain}/{id}/config",
             "payload": c["config"],
         } in discovery_data
 
@@ -2431,7 +2431,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock_entry_no_yaml_config):
     registry = dr.async_get(hass)
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -2444,7 +2444,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock_entry_no_yaml_config):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("spencerassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/abc", "123")
 
@@ -2477,7 +2477,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock_entry_no_yaml_config):
     registry = dr.async_get(hass)
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -2491,7 +2491,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock_entry_no_yaml_config):
 
     dt1 = datetime(2019, 1, 1, 0, 0, 0)
     dt2 = datetime(2019, 1, 1, 0, 0, 1)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("spencerassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = dt1
         async_fire_mqtt_message(hass, "sensor/abc", "123")
         async_fire_mqtt_message(hass, "sensor/abc", "123")
@@ -2536,7 +2536,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock_entry_no_yaml_config):
     registry = dr.async_get(hass)
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -2549,7 +2549,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock_entry_no_yaml_config):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("spencerassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
 
@@ -2565,11 +2565,11 @@ async def test_debug_info_same_topic(hass, mqtt_mock_entry_no_yaml_config):
 
     config["availability_topic"] = "sensor/availability"
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("spencerassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
 
@@ -2587,7 +2587,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock_entry_no_yaml_config):
     registry = dr.async_get(hass)
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -2600,7 +2600,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock_entry_no_yaml_config):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("spencerassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=False)
         async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
@@ -2750,7 +2750,7 @@ async def test_config_schema_validation(hass):
         CONFIG_SCHEMA(config)
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_unload_config_entry(
     hass, mqtt_mock, mqtt_client_mock, tmp_path, caplog
 ) -> None:
@@ -2778,7 +2778,7 @@ async def test_unload_config_entry(
     assert "No ACK from MQTT server" not in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_with_disabled_entry(hass, caplog) -> None:
     """Test setting up the platform with a disabled config entry."""
     # Try to setup the platform with a disabled config entry
@@ -2794,18 +2794,18 @@ async def test_setup_with_disabled_entry(hass, caplog) -> None:
     assert "MQTT will be not available until the config entry is enabled" in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [])
 async def test_publish_or_subscribe_without_valid_config_entry(hass, caplog):
     """Test internal publish function with bas use cases."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await mqtt.async_publish(
             hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
         )
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await mqtt.async_subscribe(hass, "some-topic", lambda: None, qos=0)
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_reload_entry_with_new_config(hass, tmp_path):
     """Test reloading the config entry with a new yaml config."""
     # Test deprecated YAML configuration under the platform key
@@ -2826,7 +2826,7 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
     assert hass.states.get("light.test_new_modern") is not None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
     """Test disabling and enabling the config entry."""
     config_old = {
@@ -2855,7 +2855,7 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
 
         # Late discovery of a light
         config = '{"name": "abc", "command_topic": "test-topic"}'
-        async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config)
+        async_fire_mqtt_message(hass, "spencerassistant/light/abc/config", config)
 
         # Disable MQTT config entry
         await hass.config_entries.async_set_disabled_by(
@@ -2880,7 +2880,7 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
         assert hass.states.get("light.test_new_modern") is not None
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
     "config, unique",
     [
@@ -2964,7 +2964,7 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     ) in caplog.text
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_link_config_entry(hass, tmp_path, caplog):
     """Test manual and dynamically setup entities are linked to the config entry."""
     config_manual = {
@@ -2989,7 +2989,7 @@ async def test_link_config_entry(hass, tmp_path, caplog):
 
     # set up item through discovery
     async_fire_mqtt_message(
-        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+        hass, "spencerassistant/light/bla/config", json.dumps(config_discovery)
     )
     await hass.async_block_till_done()
 
@@ -3019,7 +3019,7 @@ async def test_link_config_entry(hass, tmp_path, caplog):
     assert _check_entities() == 1
     # set up item through discovery
     async_fire_mqtt_message(
-        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+        hass, "spencerassistant/light/bla/config", json.dumps(config_discovery)
     )
     await hass.async_block_till_done()
     assert _check_entities() == 2

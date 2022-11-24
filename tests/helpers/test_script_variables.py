@@ -1,7 +1,7 @@
 """Test script variables."""
 import pytest
 
-from homeassistant.helpers import config_validation as cv, template
+from spencerassistant.helpers import config_validation as cv, template
 
 
 async def test_static_vars():

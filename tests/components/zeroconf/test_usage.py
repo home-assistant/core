@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 
 import zeroconf
 
-from homeassistant.components.zeroconf import async_get_instance
-from homeassistant.components.zeroconf.usage import install_multiple_zeroconf_catcher
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.zeroconf import async_get_instance
+from spencerassistant.components.zeroconf.usage import install_multiple_zeroconf_catcher
+from spencerassistant.setup import async_setup_component
 
 DOMAIN = "zeroconf"
 
@@ -42,21 +42,21 @@ async def test_multiple_zeroconf_instances_gives_shared(
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
+        "spencerassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
-                filename="/home/dev/homeassistant/core.py",
+                filename="/spencer/dev/spencerassistant/core.py",
                 lineno="23",
                 line="do_something()",
             ),
             correct_frame,
             Mock(
-                filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                filename="/spencer/dev/spencerassistant/components/zeroconf/usage.py",
                 lineno="23",
                 line="self.light.is_on",
             ),
             Mock(
-                filename="/home/dev/mdns/lights.py",
+                filename="/spencer/dev/mdns/lights.py",
                 lineno="2",
                 line="something()",
             ),

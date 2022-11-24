@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.energy import async_get_manager, validate
-from homeassistant.const import UnitOfEnergy
-from homeassistant.helpers.json import JSON_DUMP
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.energy import async_get_manager, validate
+from spencerassistant.const import UnitOfEnergy
+from spencerassistant.helpers.json import JSON_DUMP
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def mock_is_entity_recorded():
     mocks = {}
 
     with patch(
-        "homeassistant.components.recorder.is_entity_recorded",
+        "spencerassistant.components.recorder.is_entity_recorded",
         side_effect=lambda hass, entity_id: mocks.get(entity_id, True),
     ):
         yield mocks
@@ -37,7 +37,7 @@ def mock_get_metadata():
         return result
 
     with patch(
-        "homeassistant.components.recorder.statistics.get_metadata",
+        "spencerassistant.components.recorder.statistics.get_metadata",
         wraps=_get_metadata,
     ):
         yield mocks

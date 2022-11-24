@@ -1,8 +1,8 @@
 """Test pi_hole component."""
 
-from homeassistant.components import pi_hole
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import pi_hole
+from spencerassistant.const import STATE_ON, STATE_UNKNOWN
+from spencerassistant.setup import async_setup_component
 
 from . import _create_mocked_hole, _patch_config_flow_hole, _patch_init_hole
 

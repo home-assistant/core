@@ -5,22 +5,22 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, select
-from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
-from homeassistant.components.select import (
+from spencerassistant.components import mqtt, select
+from spencerassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
+from spencerassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -68,7 +68,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def select_platform_only():
     """Only setup the select platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
         yield
 
 
@@ -469,7 +469,7 @@ async def test_discovery_update_unchanged_select(
     """Test update of discovered select."""
     data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
     with patch(
-        "homeassistant.components.mqtt.select.MqttSelect.discovery_update"
+        "spencerassistant.components.mqtt.select.MqttSelect.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

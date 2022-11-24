@@ -1,13 +1,13 @@
 """Tests for the Fronius sensor platform."""
-from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.components.fronius.coordinator import (
+from spencerassistant.components.fronius.const import DOMAIN
+from spencerassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.util import dt
 
 from . import enable_all_entities, mock_responses, setup_fronius_integration
 

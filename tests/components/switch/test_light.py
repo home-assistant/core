@@ -1,10 +1,10 @@
 """The tests for the Light Switch platform."""
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from . import common as switch_common
 

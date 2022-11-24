@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -15,8 +15,8 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.reproduce_state import async_reproduce_states
-from homeassistant.const import (
+from spencerassistant.components.media_player.reproduce_state import async_reproduce_states
+from spencerassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -32,7 +32,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import Context, State
+from spencerassistant.core import Context, State
 
 from tests.common import async_mock_service
 

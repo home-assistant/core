@@ -7,14 +7,14 @@ from unittest.mock import patch, sentinel
 
 import pytest
 
-from homeassistant.components import history
-from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
-import homeassistant.core as ha
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components import history
+from spencerassistant.components.recorder.history import get_significant_states
+from spencerassistant.components.recorder.models import process_timestamp
+from spencerassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+import spencerassistant.core as ha
+from spencerassistant.helpers.json import JSONEncoder
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
@@ -448,26 +448,26 @@ def test_get_significant_states_only(hass_history):
 
     states = []
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[2],
     ):
         # everything is different
@@ -513,7 +513,7 @@ def record_states(hass):
     mp3 = "media_player.test3"
     therm = "thermostat.test"
     therm2 = "thermostat.test2"
-    zone = "zone.home"
+    zone = "zone.spencer"
     script_c = "script.can_cancel_this_one"
 
     def set_state(entity_id, state, **kwargs):
@@ -530,7 +530,7 @@ def record_states(hass):
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -549,7 +549,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
@@ -566,7 +566,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})

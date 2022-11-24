@@ -10,8 +10,8 @@ import uuid
 import pytest
 import voluptuous as vol
 
-import homeassistant
-from homeassistant.helpers import config_validation as cv, selector, template
+import spencerassistant
+from spencerassistant.helpers import config_validation as cv, selector, template
 
 
 def test_boolean():
@@ -113,9 +113,9 @@ def test_url():
     for value in (
         "http://localhost",
         "https://localhost/test/index.html",
-        "http://home-assistant.io",
-        "http://home-assistant.io/test/",
-        "https://community.home-assistant.io/",
+        "http://spencer-assistant.io",
+        "http://spencer-assistant.io/test/",
+        "https://community.spencer-assistant.io/",
     ):
         assert schema(value)
 
@@ -126,15 +126,15 @@ def test_url_no_path():
 
     for value in (
         "https://localhost/test/index.html",
-        "http://home-assistant.io/test/",
+        "http://spencer-assistant.io/test/",
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     for value in (
         "http://localhost",
-        "http://home-assistant.io",
-        "https://community.home-assistant.io/",
+        "http://spencer-assistant.io",
+        "https://community.spencer-assistant.io/",
     ):
         assert schema(value)
 
@@ -374,7 +374,7 @@ def test_service():
     with pytest.raises(vol.MultipleInvalid):
         schema("invalid_turn_on")
 
-    schema("homeassistant.turn_on")
+    schema("spencerassistant.turn_on")
 
 
 def test_service_schema():
@@ -383,13 +383,13 @@ def test_service_schema():
         {},
         None,
         {
-            "service": "homeassistant.turn_on",
-            "service_template": "homeassistant.turn_on",
+            "service": "spencerassistant.turn_on",
+            "service_template": "spencerassistant.turn_on",
         },
         {"data": {"entity_id": "light.kitchen"}},
-        {"service": "homeassistant.turn_on", "data": None},
+        {"service": "spencerassistant.turn_on", "data": None},
         {
-            "service": "homeassistant.turn_on",
+            "service": "spencerassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
         },
     )
@@ -398,11 +398,11 @@ def test_service_schema():
             cv.SERVICE_SCHEMA(value)
 
     options = (
-        {"service": "homeassistant.turn_on"},
-        {"service": "homeassistant.turn_on", "entity_id": "light.kitchen"},
+        {"service": "spencerassistant.turn_on"},
+        {"service": "spencerassistant.turn_on", "entity_id": "light.kitchen"},
         {"service": "light.turn_on", "entity_id": "all"},
         {
-            "service": "homeassistant.turn_on",
+            "service": "spencerassistant.turn_on",
             "entity_id": ["light.kitchen", "light.ceiling"],
         },
         {
@@ -532,7 +532,7 @@ def test_string_with_no_html():
         3,
         "Hello",
         "**Hello**",
-        "This has no HTML [Link](https://home-assistant.io)",
+        "This has no HTML [Link](https://spencer-assistant.io)",
     ):
         schema(value)
 
@@ -747,7 +747,7 @@ def schema():
 @pytest.fixture
 def version(monkeypatch):
     """Patch the version used for testing to 0.5.0."""
-    monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
+    monkeypatch.setattr(spencerassistant.const, "__version__", "0.5.0")
 
 
 def test_deprecated_with_no_optionals(caplog, schema):
@@ -766,7 +766,7 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert len(caplog.records) == 1
     assert caplog.records[0].name in [
         __name__,
-        "homeassistant.helpers.config_validation",
+        "spencerassistant.helpers.config_validation",
     ]
     assert (
         "The 'mars' option is deprecated, please remove it from your configuration"

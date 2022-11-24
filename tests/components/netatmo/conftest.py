@@ -28,22 +28,22 @@ def mock_config_entry_fixture(hass):
         },
         options={
             "weather_areas": {
-                "Home avg": {
+                "spencer avg": {
                     "lat_ne": 32.2345678,
                     "lon_ne": -117.1234567,
                     "lat_sw": 32.1234567,
                     "lon_sw": -117.2345678,
                     "show_on_map": False,
-                    "area_name": "Home avg",
+                    "area_name": "spencer avg",
                     "mode": "avg",
                 },
-                "Home max": {
+                "spencer max": {
                     "lat_ne": 32.2345678,
                     "lon_ne": -117.1234567,
                     "lat_sw": 32.1234567,
                     "lon_sw": -117.2345678,
                     "show_on_map": True,
-                    "area_name": "Home max",
+                    "area_name": "spencer max",
                     "mode": "max",
                 },
             }
@@ -58,7 +58,7 @@ def mock_config_entry_fixture(hass):
 def netatmo_auth():
     """Restrict loaded platforms to list given."""
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth:
         mock_auth.return_value.async_post_request.side_effect = fake_post_request
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request

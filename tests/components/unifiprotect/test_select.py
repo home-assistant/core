@@ -21,23 +21,23 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.data.nvr import DoorbellMessage
 
-from homeassistant.components.select import ATTR_OPTIONS
-from homeassistant.components.unifiprotect.const import (
+from spencerassistant.components.select import ATTR_OPTIONS
+from spencerassistant.components.unifiprotect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,
     DEFAULT_ATTRIBUTION,
 )
-from homeassistant.components.unifiprotect.select import (
+from spencerassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
     SERVICE_SET_DOORBELL_MESSAGE,
     VIEWER_SELECTS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -50,7 +50,7 @@ from .utils import (
 
 
 async def test_select_camera_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
 ):
     """Test removing and re-adding a camera device."""
 
@@ -64,7 +64,7 @@ async def test_select_camera_remove(
 
 
 async def test_select_light_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test removing and re-adding a light device."""
 
@@ -78,7 +78,7 @@ async def test_select_light_remove(
 
 
 async def test_select_viewer_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer
+    hass: spencerAssistant, ufp: MockUFPFixture, viewer: Viewer
 ):
     """Test removing and re-adding a light device."""
 
@@ -92,7 +92,7 @@ async def test_select_viewer_remove(
 
 
 async def test_select_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test select entity setup for light devices."""
 
@@ -119,7 +119,7 @@ async def test_select_setup_light(
 
 
 async def test_select_setup_viewer(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: spencerAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test select entity setup for light devices."""
 
@@ -145,7 +145,7 @@ async def test_select_setup_viewer(
 
 
 async def test_select_setup_camera_all(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity setup for camera devices (all features)."""
 
@@ -171,7 +171,7 @@ async def test_select_setup_camera_all(
 
 
 async def test_select_setup_camera_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test select entity setup for camera devices (no features)."""
 
@@ -200,7 +200,7 @@ async def test_select_setup_camera_none(
 
 
 async def test_select_update_liveview(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: spencerAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test select entity update (new Liveview)."""
 
@@ -236,7 +236,7 @@ async def test_select_update_liveview(
 
 
 async def test_select_update_doorbell_settings(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity update (new Doorbell Message)."""
 
@@ -282,7 +282,7 @@ async def test_select_update_doorbell_settings(
 
 
 async def test_select_update_doorbell_message(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity update (change doorbell message)."""
 
@@ -316,7 +316,7 @@ async def test_select_update_doorbell_message(
 
 
 async def test_select_set_option_light_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test Light Mode select."""
 
@@ -341,7 +341,7 @@ async def test_select_set_option_light_motion(
 
 
 async def test_select_set_option_light_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, camera: Camera
 ):
     """Test Paired Camera select."""
 
@@ -375,7 +375,7 @@ async def test_select_set_option_light_camera(
 
 
 async def test_select_set_option_camera_recording(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Recording Mode select."""
 
@@ -400,7 +400,7 @@ async def test_select_set_option_camera_recording(
 
 
 async def test_select_set_option_camera_ir(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Infrared Mode select."""
 
@@ -425,7 +425,7 @@ async def test_select_set_option_camera_ir(
 
 
 async def test_select_set_option_camera_doorbell_custom(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (user defined message)."""
 
@@ -452,7 +452,7 @@ async def test_select_set_option_camera_doorbell_custom(
 
 
 async def test_select_set_option_camera_doorbell_unifi(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (unifi message)."""
 
@@ -494,7 +494,7 @@ async def test_select_set_option_camera_doorbell_unifi(
 
 
 async def test_select_set_option_camera_doorbell_default(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (default message)."""
 
@@ -522,7 +522,7 @@ async def test_select_set_option_camera_doorbell_default(
 
 
 async def test_select_set_option_viewer(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: spencerAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test Liveview select."""
 
@@ -550,7 +550,7 @@ async def test_select_set_option_viewer(
 
 
 async def test_select_service_doorbell_invalid(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text service (invalid)."""
 
@@ -564,7 +564,7 @@ async def test_select_service_doorbell_invalid(
     doorbell.__fields__["set_lcd_text"] = Mock(final=False)
     doorbell.set_lcd_text = AsyncMock()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "unifiprotect",
             SERVICE_SET_DOORBELL_MESSAGE,
@@ -576,7 +576,7 @@ async def test_select_service_doorbell_invalid(
 
 
 async def test_select_service_doorbell_success(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text service (success)."""
 
@@ -605,10 +605,10 @@ async def test_select_service_doorbell_success(
     )
 
 
-@patch("homeassistant.components.unifiprotect.select.utcnow")
+@patch("spencerassistant.components.unifiprotect.select.utcnow")
 async def test_select_service_doorbell_with_reset(
     mock_now,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,

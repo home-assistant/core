@@ -1,17 +1,17 @@
 """The tests for Shelly logbook."""
-from homeassistant.components.shelly.const import (
+from spencerassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.helpers.device_registry import (
+from spencerassistant.const import ATTR_DEVICE_ID
+from spencerassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from . import init_integration
 

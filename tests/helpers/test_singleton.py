@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.helpers import singleton
+from spencerassistant.helpers import singleton
 
 
 @pytest.fixture

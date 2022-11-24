@@ -1,18 +1,18 @@
 """Tests for the Season integration."""
 from unittest.mock import AsyncMock
 
-from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_NAME, CONF_TYPE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Season configuration entry loading/unloading."""
@@ -30,7 +30,7 @@ async def test_load_unload_config_entry(
 
 
 async def test_import_config(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test Season being set up from config via import."""

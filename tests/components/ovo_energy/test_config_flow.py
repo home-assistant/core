@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.ovo_energy.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.ovo_energy.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ FIXTURE_USER_INPUT = {CONF_USERNAME: "example@example.com", CONF_PASSWORD: "some
 UNIQUE_ID = "example@example.com"
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
+async def test_show_form(hass: spencerAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,7 +26,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_authorization_error(hass: HomeAssistant) -> None:
+async def test_authorization_error(hass: spencerAssistant) -> None:
     """Test we show user form on connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,7 +36,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +49,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(hass: spencerAssistant) -> None:
     """Test we show user form on connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,7 +59,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         side_effect=aiohttp.ClientError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -72,7 +72,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_full_flow_implementation(hass: HomeAssistant) -> None:
+async def test_full_flow_implementation(hass: spencerAssistant) -> None:
     """Test registering an integration and finishing flow works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -82,10 +82,10 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.ovo_energy.async_setup_entry",
+        "spencerassistant.components.ovo_energy.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -98,10 +98,10 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
-async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
+async def test_reauth_authorization_error(hass: spencerAssistant) -> None:
     """Test we show user form on authorization error."""
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -124,10 +124,10 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "authorization_error"}
 
 
-async def test_reauth_connection_error(hass: HomeAssistant) -> None:
+async def test_reauth_connection_error(hass: spencerAssistant) -> None:
     """Test we show user form on connection error."""
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -150,10 +150,10 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "connection_error"}
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: spencerAssistant) -> None:
     """Test reauth works."""
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=False,
     ):
         mock_config = MockConfigEntry(
@@ -172,10 +172,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "authorization_error"}
 
     with patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
+        "spencerassistant.components.ovo_energy.config_flow.OVOEnergy.username",
         return_value=FIXTURE_USER_INPUT[CONF_USERNAME],
     ):
         result2 = await hass.config_entries.flow.async_configure(

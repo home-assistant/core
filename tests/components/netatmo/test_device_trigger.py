@@ -1,19 +1,19 @@
 """The tests for Netatmo device triggers."""
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
-from homeassistant.components.netatmo.const import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
+from spencerassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
-from homeassistant.components.netatmo.device_trigger import SUBTYPES
-from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.netatmo.device_trigger import SUBTYPES
+from spencerassistant.const import ATTR_DEVICE_ID
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

@@ -23,7 +23,7 @@
 
 ## Type of change
 <!--
-  What type of change does your PR introduce to Home Assistant?
+  What type of change does your PR introduce to spencer Assistant?
   NOTE: Please, check only 1! box!
   If your PR requires multiple boxes to be checked, you'll most likely need to
   split it into multiple PRs. This makes things easier and faster to code review.
@@ -59,12 +59,12 @@
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
-- [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
+- [ ] The code has been formatted using Black (`black --fast spencerassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
 
 If user exposed functionality or configuration variables are added/changed:
 
-- [ ] Documentation added/updated for [www.home-assistant.io][docs-repository]
+- [ ] Documentation added/updated for [www.spencer-assistant.io][docs-repository]
 
 If the code communicates with devices, web services, or third-party tools:
 
@@ -96,14 +96,14 @@ To help with the load of incoming pull requests:
 
 - [ ] I have reviewed two other [open pull requests][prs] in this repository.
 
-[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
+[prs]: https://github.com/spencer-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
 
 <!--
   Thank you for contributing <3
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/en/development_checklist.html
-[manifest-docs]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
-[quality-scale]: https://developers.home-assistant.io/docs/en/next/integration_quality_scale_index.html
-[docs-repository]: https://github.com/home-assistant/home-assistant.io
+[dev-checklist]: https://developers.spencer-assistant.io/docs/en/development_checklist.html
+[manifest-docs]: https://developers.spencer-assistant.io/docs/en/creating_integration_manifest.html
+[quality-scale]: https://developers.spencer-assistant.io/docs/en/next/integration_quality_scale_index.html
+[docs-repository]: https://github.com/spencer-assistant/spencer-assistant.io

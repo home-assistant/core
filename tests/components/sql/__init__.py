@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.recorder import CONF_DB_URL
-from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.recorder import CONF_DB_URL
+from spencerassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -44,12 +44,12 @@ ENTRY_CONFIG_NO_RESULTS = {
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config: dict[str, Any] = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
-    """Set up the SQL integration in Home Assistant."""
+    """Set up the SQL integration in spencer Assistant."""
     if not config:
         config = ENTRY_CONFIG
 

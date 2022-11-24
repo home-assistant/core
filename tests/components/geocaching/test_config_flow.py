@@ -6,20 +6,20 @@ from unittest.mock import MagicMock
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.application_credentials import (
+from spencerassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.geocaching.const import (
+from spencerassistant.components.geocaching.const import (
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
+from spencerassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
@@ -30,7 +30,7 @@ CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
 
 @pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
+async def setup_credentials(hass: spencerAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
@@ -41,7 +41,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client_no_auth: Callable[[], Awaitable[TestClient]],
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
@@ -93,7 +93,7 @@ async def test_full_flow(
 
 
 async def test_existing_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client_no_auth: Callable[[], Awaitable[TestClient]],
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
@@ -140,7 +140,7 @@ async def test_existing_entry(
 
 
 async def test_oauth_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client_no_auth: Callable[[], Awaitable[TestClient]],
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
@@ -189,7 +189,7 @@ async def test_oauth_error(
 
 
 async def test_reauthentication(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client_no_auth: Callable[[], Awaitable[TestClient]],
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,

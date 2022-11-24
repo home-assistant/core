@@ -8,23 +8,23 @@ import pytest
 from pyunifiprotect.data import Camera, Chime, Light, ModelType
 from pyunifiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
-from homeassistant.components.unifiprotect.services import (
+from spencerassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from spencerassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import MockUFPFixture, init_entry
 
 
 @pytest.fixture(name="device")
-async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
+async def device_fixture(hass: spencerAssistant, ufp: MockUFPFixture):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [])
@@ -35,7 +35,7 @@ async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
 
 
 @pytest.fixture(name="subdevice")
-async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def subdevice_fixture(hass: spencerAssistant, ufp: MockUFPFixture, light: Light):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [light])
@@ -45,14 +45,14 @@ async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
-async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_global_service_bad_device(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_DOORBELL_TEXT,
@@ -63,7 +63,7 @@ async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixtur
 
 
 async def test_global_service_exception(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: spencerAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test global service, unexpected error."""
 
@@ -71,7 +71,7 @@ async def test_global_service_exception(
     nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_DOORBELL_TEXT,
@@ -82,7 +82,7 @@ async def test_global_service_exception(
 
 
 async def test_add_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: spencerAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test add_doorbell_text service."""
 
@@ -100,7 +100,7 @@ async def test_add_doorbell_text(
 
 
 async def test_remove_doorbell_text(
-    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: spencerAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test remove_doorbell_text service."""
 
@@ -118,7 +118,7 @@ async def test_remove_doorbell_text(
 
 
 async def test_set_default_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+    hass: spencerAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test set_default_doorbell_text service."""
 
@@ -136,7 +136,7 @@ async def test_set_default_doorbell_text(
 
 
 async def test_set_chime_paired_doorbells(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,

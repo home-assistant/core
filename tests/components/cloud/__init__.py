@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components import cloud
-from homeassistant.components.cloud import const
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import cloud
+from spencerassistant.components.cloud import const
+from spencerassistant.setup import async_setup_component
 
 
 async def mock_cloud(hass, config=None):

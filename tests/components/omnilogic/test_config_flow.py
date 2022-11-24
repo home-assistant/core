@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.omnilogic.const import DOMAIN
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.omnilogic.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -21,10 +21,10 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
+        "spencerassistant.components.omnilogic.config_flow.OmniLogic.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.omnilogic.async_setup_entry",
+        "spencerassistant.components.omnilogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -59,7 +59,7 @@ async def test_with_invalid_credentials(hass):
     )
 
     with patch(
-        "homeassistant.components.omnilogic.OmniLogic.connect",
+        "spencerassistant.components.omnilogic.OmniLogic.connect",
         side_effect=LoginException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.omnilogic.OmniLogic.connect",
+        "spencerassistant.components.omnilogic.OmniLogic.connect",
         side_effect=OmniLogicException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -101,7 +101,7 @@ async def test_with_unknown_error(hass):
     )
 
     with patch(
-        "homeassistant.components.omnilogic.OmniLogic.connect",
+        "spencerassistant.components.omnilogic.OmniLogic.connect",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -122,7 +122,7 @@ async def test_option_flow(hass):
     assert not entry.options
 
     with patch(
-        "homeassistant.components.omnilogic.async_setup_entry", return_value=True
+        "spencerassistant.components.omnilogic.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.options.async_init(
             entry.entry_id,

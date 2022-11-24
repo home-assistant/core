@@ -1,18 +1,18 @@
 """Tests for the Filesize config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.filesize.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_FILE_PATH
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.filesize.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_FILE_PATH
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import TEST_DIR, TEST_FILE, TEST_FILE_NAME, async_create_file
 
 from tests.common import MockConfigEntry
 
 
-async def test_full_user_flow(hass: HomeAssistant) -> None:
+async def test_full_user_flow(hass: spencerAssistant) -> None:
     """Test the full user configuration flow."""
     await async_create_file(hass, TEST_FILE)
     hass.config.allowlist_external_dirs = {TEST_DIR}
@@ -35,7 +35,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
 
 async def test_unique_path(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already setup."""
@@ -51,7 +51,7 @@ async def test_unique_path(
     assert result.get("reason") == "already_configured"
 
 
-async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
+async def test_flow_fails_on_validation(hass: spencerAssistant) -> None:
     """Test config flow errors."""
 
     hass.config.allowlist_external_dirs = {}
@@ -74,8 +74,8 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
 
     await async_create_file(hass, TEST_FILE)
 
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
-        "homeassistant.components.filesize.async_setup_entry",
+    with patch("spencerassistant.components.filesize.config_flow.pathlib.Path",), patch(
+        "spencerassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -88,8 +88,8 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "not_allowed"}
 
     hass.config.allowlist_external_dirs = {TEST_DIR}
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
-        "homeassistant.components.filesize.async_setup_entry",
+    with patch("spencerassistant.components.filesize.config_flow.pathlib.Path",), patch(
+        "spencerassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(

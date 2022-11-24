@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.netatmo import sensor
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.netatmo import sensor
+from spencerassistant.helpers import entity_registry as er
 
 from .common import TEST_TIME, selected_platforms
 
@@ -33,13 +33,13 @@ async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
 
     assert len(hass.states.async_all()) > 0
 
-    prefix = "sensor.home_max_"
+    prefix = "sensor.spencer_max_"
 
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
     assert hass.states.get(f"{prefix}humidity").state == "76"
     assert hass.states.get(f"{prefix}pressure").state == "1014.4"
 
-    prefix = "sensor.home_avg_"
+    prefix = "sensor.spencer_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
@@ -53,13 +53,13 @@ async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
         "lat_sw": 32.83336,
         "lon_sw": -117.26743,
         "show_on_map": True,
-        "area_name": "Home avg",
+        "area_name": "spencer avg",
         "mode": "max",
     }
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"new_area": "Home avg"}
+        result["flow_id"], user_input={"new_area": "spencer avg"}
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input=valid_option
@@ -160,10 +160,10 @@ async def test_process_health(health, expected):
             "baby_bedroom_wifi",
             "High",
         ),
-        ("Home-max-windangle_value", "home_max_wind_angle", "17"),
-        ("Home-max-gustangle_value", "home_max_gust_angle", "217"),
-        ("Home-max-guststrength", "home_max_gust_strength", "31"),
-        ("Home-max-sum_rain_1", "home_max_sum_rain_1", "0.2"),
+        ("spencer-max-windangle_value", "spencer_max_wind_angle", "17"),
+        ("spencer-max-gustangle_value", "spencer_max_gust_angle", "217"),
+        ("spencer-max-guststrength", "spencer_max_gust_strength", "31"),
+        ("spencer-max-sum_rain_1", "spencer_max_sum_rain_1", "0.2"),
     ],
 )
 async def test_weather_sensor_enabling(

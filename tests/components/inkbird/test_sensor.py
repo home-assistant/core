@@ -1,9 +1,9 @@
 """Test the INKBIRD config flow."""
 
 
-from homeassistant.components.inkbird.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from spencerassistant.components.inkbird.const import DOMAIN
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from . import SPS_SERVICE_INFO
 

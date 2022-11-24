@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.hassio import DOMAIN
+from spencerassistant.helpers import entity_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock, request):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
@@ -26,7 +26,7 @@ def mock_all(aioclient_mock, request):
             "result": "ok",
             "data": {
                 "supervisor": "222",
-                "homeassistant": "0.110.0",
+                "spencerassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
         },
@@ -79,7 +79,7 @@ def mock_all(aioclient_mock, request):
                         "version": "2.0.0",
                         "version_latest": "2.0.1",
                         "repository": "core",
-                        "url": "https://github.com/home-assistant/addons/test",
+                        "url": "https://github.com/spencer-assistant/addons/test",
                     },
                     {
                         "name": "test2",
@@ -144,8 +144,8 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected",
     [
-        ("sensor.home_assistant_operating_system_version", "1.0.0"),
-        ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
+        ("sensor.spencer_assistant_operating_system_version", "1.0.0"),
+        ("sensor.spencer_assistant_operating_system_newest_version", "1.0.0"),
         ("sensor.test_version", "2.0.0"),
         ("sensor.test_newest_version", "2.0.1"),
         ("sensor.test2_version", "3.1.0"),

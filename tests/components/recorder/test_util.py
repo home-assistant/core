@@ -11,23 +11,23 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import UnsupportedDialect
-from homeassistant.components.recorder.util import (
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import history, util
+from spencerassistant.components.recorder.const import SQLITE_URL_PREFIX
+from spencerassistant.components.recorder.db_schema import RecorderRuns
+from spencerassistant.components.recorder.models import UnsupportedDialect
+from spencerassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
     session_scope,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from spencerassistant.const import EVENT_spencerASSISTANT_STOP
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util import dt as dt_util
 
 from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
-from tests.common import SetupRecorderInstanceT, async_test_home_assistant
+from tests.common import SetupRecorderInstanceT, async_test_spencer_assistant
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -55,7 +55,7 @@ def test_recorder_bad_commit(hass_recorder, recorder_db_url):
         session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.core.time.sleep"
+        "spencerassistant.components.recorder.core.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -76,7 +76,7 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.core.time.sleep"
+        "spencerassistant.components.recorder.core.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
@@ -115,7 +115,7 @@ async def test_last_run_was_recently_clean(
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
-    hass = await async_test_home_assistant(None)
+    hass = await async_test_spencer_assistant(None)
 
     return_values = []
     real_last_run_was_recently_clean = util.last_run_was_recently_clean
@@ -126,7 +126,7 @@ async def test_last_run_was_recently_clean(
 
     # Test last_run_was_recently_clean is not called on new DB
     with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        "spencerassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock:
         await async_setup_recorder_instance(hass, config)
@@ -134,39 +134,39 @@ async def test_last_run_was_recently_clean(
         last_run_was_recently_clean_mock.assert_not_called()
 
     # Restart HA, last_run_was_recently_clean should return True
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_stop()
 
     with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        "spencerassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock:
-        hass = await async_test_home_assistant(None)
+        hass = await async_test_spencer_assistant(None)
         await async_setup_recorder_instance(hass, config)
         last_run_was_recently_clean_mock.assert_called_once()
         assert return_values[-1] is True
 
     # Restart HA with a long downtime, last_run_was_recently_clean should return False
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        "spencerassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
+        "spencerassistant.components.recorder.core.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        hass = await async_test_home_assistant(None)
+        hass = await async_test_spencer_assistant(None)
         await async_setup_recorder_instance(hass, config)
         last_run_was_recently_clean_mock.assert_called_once()
         assert return_values[-1] is False
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_stop()
 
@@ -586,7 +586,7 @@ def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch(
-        "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
+        "spencerassistant.components.recorder.util.basic_sanity_check", return_value=False
     ):
         caplog.clear()
         assert util.run_checks_on_open_db("fake_db_path", cursor) is None
@@ -594,21 +594,21 @@ def test_combined_checks(hass_recorder, caplog, recorder_db_url):
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
-    with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
+    with patch("spencerassistant.components.recorder.util.last_run_was_recently_clean"):
         caplog.clear()
         assert util.run_checks_on_open_db("fake_db_path", cursor) is None
         assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
     with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        "spencerassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
     with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        "spencerassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
         util.run_checks_on_open_db("fake_db_path", cursor)
@@ -666,11 +666,11 @@ def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-@patch("homeassistant.components.recorder.pool.check_loop")
+@patch("spencerassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     tmp_path,
 ):
     """Test database write lock."""
@@ -727,7 +727,7 @@ def test_build_mysqldb_conv():
     )
 
 
-@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+@patch("spencerassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 def test_execute_stmt_lambda_element(hass_recorder):
     """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()

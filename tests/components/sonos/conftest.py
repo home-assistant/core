@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.sonos import DOMAIN
-from homeassistant.const import CONF_HOSTS
+from spencerassistant.components import ssdp, zeroconf
+from spencerassistant.components.media_player import DOMAIN as MP_DOMAIN
+from spencerassistant.components.sonos import DOMAIN
+from spencerassistant.const import CONF_HOSTS
 
 from tests.common import MockConfigEntry
 
@@ -88,7 +88,7 @@ def soco_fixture(
     music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
 ):
     """Create a mock soco SoCo fixture."""
-    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
+    with patch("spencerassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
@@ -132,13 +132,13 @@ def soco_fixture(
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
+        "spencerassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("spencerassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "spencerassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "spencerassistant.components.ssdp.Server._async_start_upnp_servers"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "spencerassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -162,7 +162,7 @@ def discover_fixture(soco):
         return MagicMock()
 
     with patch(
-        "homeassistant.components.ssdp.async_register_callback", side_effect=do_callback
+        "spencerassistant.components.ssdp.async_register_callback", side_effect=do_callback
     ) as mock:
         yield mock
 

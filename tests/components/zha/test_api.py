@@ -11,9 +11,9 @@ import zigpy.types
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.websocket_api import const
-from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.api import (
+from spencerassistant.components.websocket_api import const
+from spencerassistant.components.zha import DOMAIN
+from spencerassistant.components.zha.api import (
     ATTR_DURATION,
     ATTR_INSTALL_CODE,
     ATTR_QR_CODE,
@@ -23,7 +23,7 @@ from homeassistant.components.zha.api import (
     TYPE,
     async_load_api,
 )
-from homeassistant.components.zha.core.const import (
+from spencerassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
@@ -41,8 +41,8 @@ from homeassistant.components.zha.core.const import (
     GROUP_IDS,
     GROUP_NAME,
 )
-from homeassistant.const import ATTR_NAME, Platform
-from homeassistant.core import Context
+from spencerassistant.const import ATTR_NAME, Platform
+from spencerassistant.core import Context
 
 from .conftest import (
     FIXTURE_GRP_ID,
@@ -62,7 +62,7 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 def required_platform_only():
     """Only setup the required and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.ALARM_CONTROL_PANEL,
             Platform.SELECT,

@@ -10,10 +10,10 @@ import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
 import zigpy.types
 
-from homeassistant import config_entries
-from homeassistant.components.zha import radio_manager
-from homeassistant.components.zha.core.const import DOMAIN, RadioType
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.components.zha import radio_manager
+from spencerassistant.components.zha.core.const import DOMAIN, RadioType
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -23,14 +23,14 @@ PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 @pytest.fixture(autouse=True)
 def disable_platform_only():
     """Disable platforms to speed up tests."""
-    with patch("homeassistant.components.zha.PLATFORMS", []):
+    with patch("spencerassistant.components.zha.PLATFORMS", []):
         yield
 
 
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001):
+    with patch("spencerassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001):
         yield
 
 
@@ -92,15 +92,15 @@ def mock_connect_zigpy_app() -> Generator[None, None, None]:
     )
 
     with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "spencerassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("spencerassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
@@ -153,7 +153,7 @@ async def test_migrate_matching_port(
 
 
 async def test_migrate_matching_port_config_entry_not_loaded(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
@@ -206,12 +206,12 @@ async def test_migrate_matching_port_config_entry_not_loaded(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaRadioManager.async_restore_backup_step_1",
+    "spencerassistant.components.zha.radio_manager.ZhaRadioManager.async_restore_backup_step_1",
     side_effect=OSError,
 )
 async def test_migrate_matching_port_retry(
     mock_restore_backup_step_1,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
@@ -266,7 +266,7 @@ async def test_migrate_matching_port_retry(
 
 
 async def test_migrate_non_matching_port(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""

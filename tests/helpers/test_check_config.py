@@ -2,20 +2,20 @@
 import logging
 from unittest.mock import Mock, patch
 
-from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.helpers.check_config import (
+from spencerassistant.config import YAML_CONFIG_FILE
+from spencerassistant.helpers.check_config import (
     CheckConfigError,
     async_check_ha_config_file,
 )
-from homeassistant.requirements import RequirementsNotFound
+from spencerassistant.requirements import RequirementsNotFound
 
 from tests.common import mock_platform, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
 
 BASE_CONFIG = (
-    "homeassistant:\n"
-    "  name: Home\n"
+    "spencerassistant:\n"
+    "  name: spencer\n"
     "  latitude: -26.107361\n"
     "  longitude: 28.054500\n"
     "  elevation: 1600\n"
@@ -24,7 +24,7 @@ BASE_CONFIG = (
     "\n\n"
 )
 
-BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+BAD_CORE_CONFIG = "spencerassistant:\n  unit_system: bad\n\n\n"
 
 
 def log_ha_config(conf):
@@ -46,7 +46,7 @@ async def test_bad_core_config(hass):
         log_ha_config(res)
 
         assert isinstance(res.errors[0].message, str)
-        assert res.errors[0].domain == "homeassistant"
+        assert res.errors[0].domain == "spencerassistant"
         assert res.errors[0].config == {"unit_system": "bad"}
 
         # Only 1 error expected
@@ -61,7 +61,7 @@ async def test_config_platform_valid(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant", "light"}
+        assert res.keys() == {"spencerassistant", "light"}
         assert res["light"] == [{"platform": "demo"}]
         assert not res.errors
 
@@ -74,7 +74,7 @@ async def test_component_platform_not_found(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant"}
+        assert res.keys() == {"spencerassistant"}
         assert res.errors[0] == CheckConfigError(
             "Integration error: beer - Integration 'beer' not found.", None, None
         )
@@ -89,13 +89,13 @@ async def test_component_requirement_not_found(hass):
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "test_custom_component:"}
     with patch(
-        "homeassistant.helpers.check_config.async_get_integration_with_requirements",
+        "spencerassistant.helpers.check_config.async_get_integration_with_requirements",
         side_effect=RequirementsNotFound("test_custom_component", ["any"]),
     ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant"}
+        assert res.keys() == {"spencerassistant"}
         assert res.errors[0] == CheckConfigError(
             "Integration error: test_custom_component - Requirements for test_custom_component not found: ['any'].",
             None,
@@ -116,7 +116,7 @@ async def test_component_not_found_safe_mode(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant"}
+        assert res.keys() == {"spencerassistant"}
         assert not res.errors
 
 
@@ -128,7 +128,7 @@ async def test_component_platform_not_found_2(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant", "light"}
+        assert res.keys() == {"spencerassistant", "light"}
         assert res["light"] == []
 
         assert res.errors[0] == CheckConfigError(
@@ -149,7 +149,7 @@ async def test_platform_not_found_safe_mode(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.keys() == {"homeassistant", "light"}
+        assert res.keys() == {"spencerassistant", "light"}
         assert res["light"] == []
 
         assert not res.errors
@@ -164,13 +164,13 @@ async def test_package_invalid(hass):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        assert res.errors[0].domain == "homeassistant.packages.p1.group"
+        assert res.errors[0].domain == "spencerassistant.packages.p1.group"
         assert res.errors[0].config == {"group": ["a"]}
         # Only 1 error expected
         res.errors.pop(0)
         assert not res.errors
 
-        assert res.keys() == {"homeassistant"}
+        assert res.keys() == {"spencerassistant"}
 
 
 async def test_bootstrap_error(hass):

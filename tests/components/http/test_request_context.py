@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from aiohttp import web
 
-from homeassistant.components.http.request_context import setup_request_context
+from spencerassistant.components.http.request_context import setup_request_context
 
 
 async def test_request_context_middleware(aiohttp_client):

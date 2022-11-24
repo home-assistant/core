@@ -1,10 +1,10 @@
 """Test Axis component setup process."""
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components import axis
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components import axis
+from spencerassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
@@ -14,9 +14,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.device_registry import format_mac
+from spencerassistant.setup import async_setup_component
 
 from .test_device import MAC, setup_axis_integration
 

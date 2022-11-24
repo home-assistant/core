@@ -1,4 +1,4 @@
-"""The tests for the Home Assistant HTTP component."""
+"""The tests for the spencer Assistant HTTP component."""
 from http import HTTPStatus
 
 # pylint: disable=protected-access
@@ -11,18 +11,18 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-import homeassistant.components.http as http
-from homeassistant.components.http import KEY_AUTHENTICATED
-from homeassistant.components.http.ban import (
+import spencerassistant.components.http as http
+from spencerassistant.components.http import KEY_AUTHENTICATED
+from spencerassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     IpBanManager,
     setup_bans,
 )
-from homeassistant.components.http.view import request_handler_factory
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.http.view import request_handler_factory
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
@@ -35,7 +35,7 @@ BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
 def hassio_env_fixture():
     """Fixture to inject hassio env."""
     with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
+        "spencerassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
     ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
         yield
@@ -45,7 +45,7 @@ def hassio_env_fixture():
 def gethostbyaddr_mock():
     """Fixture to mock out I/O on getting host by address."""
     with patch(
-        "homeassistant.components.http.ban.gethostbyaddr",
+        "spencerassistant.components.http.ban.gethostbyaddr",
         return_value=("example.com", ["0.0.0.0.in-addr.arpa"], ["0.0.0.0"]),
     ):
         yield
@@ -59,7 +59,7 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
     set_real_ip = mock_real_ip(app)
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         return_value={
             banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
         },
@@ -89,7 +89,7 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     data["5.3.3.3"] = {"banned_at": "garbage"}
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         return_value=data,
     ):
         client = await aiohttp_client(app)
@@ -115,7 +115,7 @@ async def test_no_ip_bans_file(hass, aiohttp_client):
     set_real_ip = mock_real_ip(app)
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         side_effect=FileNotFoundError,
     ):
         client = await aiohttp_client(app)
@@ -133,8 +133,8 @@ async def test_failure_loading_ip_bans_file(hass, aiohttp_client):
     set_real_ip = mock_real_ip(app)
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
-        side_effect=HomeAssistantError,
+        "spencerassistant.components.http.ban.load_yaml_config_file",
+        side_effect=spencerAssistantError,
     ):
         client = await aiohttp_client(app)
 
@@ -151,7 +151,7 @@ async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
     set_real_ip = mock_real_ip(app)
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         side_effect=FileNotFoundError,
     ):
         client = await aiohttp_client(app)
@@ -191,7 +191,7 @@ async def test_access_from_supervisor_ip(
     mock_real_ip(app)(remote_addr)
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         return_value={},
     ):
         client = await aiohttp_client(app)
@@ -199,7 +199,7 @@ async def test_access_from_supervisor_ip(
     manager: IpBanManager = app[KEY_BAN_MANAGER]
 
     with patch(
-        "homeassistant.components.hassio.HassIO.get_resolution_info",
+        "spencerassistant.components.hassio.HassIO.get_resolution_info",
         return_value={
             "unsupported": [],
             "unhealthy": [],
@@ -213,7 +213,7 @@ async def test_access_from_supervisor_ip(
     m_open = mock_open()
 
     with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
+        "spencerassistant.components.http.ban.open", m_open, create=True
     ):
         resp = await client.get("/")
         assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -228,7 +228,7 @@ async def test_access_from_supervisor_ip(
 
 async def test_ban_middleware_not_loaded_by_config(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("spencerassistant.components.http.setup_bans") as mock_setup:
         await async_setup_component(
             hass, "http", {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
@@ -238,7 +238,7 @@ async def test_ban_middleware_not_loaded_by_config(hass):
 
 async def test_ban_middleware_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("spencerassistant.components.http.setup_bans") as mock_setup:
         await async_setup_component(hass, "http", {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -258,7 +258,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
     mock_real_ip(app)("200.201.202.204")
 
     with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
+        "spencerassistant.components.http.ban.load_yaml_config_file",
         return_value={
             banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
         },
@@ -268,7 +268,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
     manager: IpBanManager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
-    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+    with patch("spencerassistant.components.http.ban.open", m_open, create=True):
         resp = await client.get("/example")
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS)

@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.services import (
+from spencerassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from spencerassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
     SUPPORTED_SERVICES,
 )
-from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.const import ATTR_DEVICE_ID
+from spencerassistant.helpers import device_registry as dr
 
 from .test_controller import setup_unifi_integration
 
@@ -25,8 +25,8 @@ async def test_service_setup_and_unload(hass, aioclient_mock):
         assert not hass.services.has_service(UNIFI_DOMAIN, service)
 
 
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
+@patch("spencerassistant.core.ServiceRegistry.async_remove")
+@patch("spencerassistant.core.ServiceRegistry.async_register")
 async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
     register_service_mock, remove_service_mock, hass, aioclient_mock
 ):

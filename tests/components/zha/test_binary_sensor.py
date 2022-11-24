@@ -6,7 +6,7 @@ import zigpy.profiles.zha
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 
 from .common import (
     async_enable_traffic,
@@ -40,7 +40,7 @@ DEVICE_OCCUPANCY = {
 def binary_sensor_platform_only():
     """Only setup the binary_sensor and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
             Platform.DEVICE_TRACKER,

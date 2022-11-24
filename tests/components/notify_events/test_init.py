@@ -1,6 +1,6 @@
 """The tests for notify_events."""
-from homeassistant.components.notify_events.const import DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.notify_events.const import DOMAIN
+from spencerassistant.setup import async_setup_component
 
 
 async def test_setup(hass):

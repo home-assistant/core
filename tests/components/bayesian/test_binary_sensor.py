@@ -2,13 +2,13 @@
 import json
 from unittest.mock import patch
 
-from homeassistant import config as hass_config
-from homeassistant.components.bayesian import DOMAIN, binary_sensor as bayesian
-from homeassistant.components.homeassistant import (
+from spencerassistant import config as hass_config
+from spencerassistant.components.bayesian import DOMAIN, binary_sensor as bayesian
+from spencerassistant.components.spencerassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_RELOAD,
     STATE_OFF,
@@ -16,11 +16,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, callback
-from homeassistant.helpers.entity_registry import async_get as async_get_entities
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.issue_registry import async_get
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import Context, callback
+from spencerassistant.helpers.entity_registry import async_get as async_get_entities
+from spencerassistant.helpers.event import async_track_state_change_event
+from spencerassistant.helpers.issue_registry import async_get
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 

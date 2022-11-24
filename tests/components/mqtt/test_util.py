@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt
+from spencerassistant.components import mqtt
 
 
 @pytest.fixture(autouse=True)
@@ -13,8 +13,8 @@ def mock_temp_dir():
     """Mock the certificate temp directory."""
     with patch(
         # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt" + f"-{getrandbits(10):03x}",
+        "spencerassistant.components.mqtt.util.TEMP_DIR_NAME",
+        "spencer-assistant-mqtt" + f"-{getrandbits(10):03x}",
     ) as mocked_temp_dir:
         yield mocked_temp_dir
 
@@ -45,5 +45,5 @@ async def test_async_create_certificate_temp_files(
 async def test_reading_non_exitisting_certificate_file():
     """Test reading a non existing certificate file."""
     assert (
-        mqtt.util.migrate_certificate_file_to_content("/home/file_not_exists") is None
+        mqtt.util.migrate_certificate_file_to_content("/spencer/file_not_exists") is None
     )

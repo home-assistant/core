@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.co2signal import DOMAIN, config_flow
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.co2signal import DOMAIN, config_flow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import VALID_PAYLOAD
 
 
-async def test_form_home(hass: HomeAssistant) -> None:
+async def test_form_spencer(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -21,13 +21,13 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
-        "homeassistant.components.co2signal.async_setup_entry",
+        "spencerassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "location": config_flow.TYPE_USE_HOME,
+                "location": config_flow.TYPE_USE_spencer,
                 "api_key": "api_key",
             },
         )
@@ -41,7 +41,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_coordinates(hass: HomeAssistant) -> None:
+async def test_form_coordinates(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -60,7 +60,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
-        "homeassistant.components.co2signal.async_setup_entry",
+        "spencerassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -82,7 +82,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_country(hass: HomeAssistant) -> None:
+async def test_form_country(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -101,7 +101,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
-        "homeassistant.components.co2signal.async_setup_entry",
+        "spencerassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -129,7 +129,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
         ("Something else", "unknown"),
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
+async def test_form_error_handling(hass: spencerAssistant, err_str, err_code) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,7 +142,7 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "location": config_flow.TYPE_USE_HOME,
+                "location": config_flow.TYPE_USE_spencer,
                 "api_key": "api_key",
             },
         )
@@ -151,7 +151,7 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
     assert result2["errors"] == {"base": err_code}
 
 
-async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
+async def test_form_error_unexpected_error(hass: spencerAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -164,7 +164,7 @@ async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "location": config_flow.TYPE_USE_HOME,
+                "location": config_flow.TYPE_USE_spencer,
                 "api_key": "api_key",
             },
         )
@@ -173,7 +173,7 @@ async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
+async def test_form_error_unexpected_data(hass: spencerAssistant) -> None:
     """Test we handle unexpected data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -186,7 +186,7 @@ async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "location": config_flow.TYPE_USE_HOME,
+                "location": config_flow.TYPE_USE_spencer,
                 "api_key": "api_key",
             },
         )

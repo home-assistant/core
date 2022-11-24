@@ -31,7 +31,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate bluetooth file."""
-    bluetooth_path = config.root / "homeassistant/generated/bluetooth.py"
+    bluetooth_path = config.root / "spencerassistant/generated/bluetooth.py"
     config.cache["bluetooth"] = content = generate_and_validate(integrations)
 
     if config.specific_integrations:
@@ -50,6 +50,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate bluetooth file."""
-    bluetooth_path = config.root / "homeassistant/generated/bluetooth.py"
+    bluetooth_path = config.root / "spencerassistant/generated/bluetooth.py"
     with open(str(bluetooth_path), "w") as fp:
         fp.write(f"{config.cache['bluetooth']}")

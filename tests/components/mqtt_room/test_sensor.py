@@ -3,19 +3,19 @@ import datetime
 import json
 from unittest.mock import patch
 
-from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
-import homeassistant.components.sensor as sensor
-from homeassistant.const import (
+from spencerassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
+import spencerassistant.components.sensor as sensor
+from spencerassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from tests.common import async_fire_mqtt_message
 
@@ -86,14 +86,14 @@ async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
     await assert_distance(hass, 1)
 
     time = dt.utcnow() + datetime.timedelta(seconds=7)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
+    with patch("spencerassistant.helpers.condition.dt_util.utcnow", return_value=time):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)
         await assert_distance(hass, 10)
 
 
 async def test_unique_id_is_set(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: spencerAssistant, mqtt_mock_entry_with_yaml_config
 ) -> None:
     """Test the updating between rooms."""
     unique_name = "my_unique_name_0123456789"

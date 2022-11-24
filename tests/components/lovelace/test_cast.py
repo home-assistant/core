@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.lovelace import cast as lovelace_cast
-from homeassistant.components.media_player import MediaClass
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.lovelace import cast as lovelace_cast
+from spencerassistant.components.media_player import MediaClass
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
@@ -43,7 +43,7 @@ async def mock_yaml_dashboard(hass):
     )
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={
             "title": "YAML Title",
             "views": [
@@ -54,7 +54,7 @@ async def mock_yaml_dashboard(hass):
             ],
         },
     ), patch(
-        "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+        "spencerassistant.components.lovelace.dashboard.os.path.getmtime",
         return_value=time() + 10,
     ):
         yield
@@ -75,7 +75,7 @@ async def test_root_object(hass):
     assert item.media_class == MediaClass.APP
     assert item.media_content_id == ""
     assert item.media_content_type == lovelace_cast.DOMAIN
-    assert item.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert item.thumbnail == "https://brands.spencer-assistant.io/_/lovelace/logo.png"
     assert item.can_play is False
     assert item.can_expand is True
 
@@ -84,7 +84,7 @@ async def test_browse_media_error(hass):
     """Test browse media checks valid URL."""
     assert await async_setup_component(hass, "lovelace", {})
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await lovelace_cast.async_browse_media(
             hass, "lovelace", "", lovelace_cast.CAST_TYPE_CHROMECAST
         )
@@ -110,7 +110,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
     assert child_1.media_class == MediaClass.APP
     assert child_1.media_content_id == lovelace_cast.DEFAULT_DASHBOARD
     assert child_1.media_content_type == lovelace_cast.DOMAIN
-    assert child_1.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert child_1.thumbnail == "https://brands.spencer-assistant.io/_/lovelace/logo.png"
     assert child_1.can_play is True
     assert child_1.can_expand is False
 
@@ -119,7 +119,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
     assert child_2.media_class == MediaClass.APP
     assert child_2.media_content_id == "yaml-with-views"
     assert child_2.media_content_type == lovelace_cast.DOMAIN
-    assert child_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert child_2.thumbnail == "https://brands.spencer-assistant.io/_/lovelace/logo.png"
     assert child_2.can_play is True
     assert child_2.can_expand is True
 
@@ -135,7 +135,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
     assert grandchild_1.media_content_id == "yaml-with-views/0"
     assert grandchild_1.media_content_type == lovelace_cast.DOMAIN
     assert (
-        grandchild_1.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+        grandchild_1.thumbnail == "https://brands.spencer-assistant.io/_/lovelace/logo.png"
     )
     assert grandchild_1.can_play is True
     assert grandchild_1.can_expand is False
@@ -146,12 +146,12 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
     assert grandchild_2.media_content_id == "yaml-with-views/second-view"
     assert grandchild_2.media_content_type == lovelace_cast.DOMAIN
     assert (
-        grandchild_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+        grandchild_2.thumbnail == "https://brands.spencer-assistant.io/_/lovelace/logo.png"
     )
     assert grandchild_2.can_play is True
     assert grandchild_2.can_expand is False
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await lovelace_cast.async_browse_media(
             hass,
             "lovelace",

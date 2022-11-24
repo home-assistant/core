@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch
 from arcam.fmj.client import ConnectionFailed
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.arcam_fmj.config_flow import get_entry_client
-from homeassistant.components.arcam_fmj.const import DOMAIN, DOMAIN_DATA_ENTRIES
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
+from spencerassistant import data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.arcam_fmj.config_flow import get_entry_client
+from spencerassistant.components.arcam_fmj.const import DOMAIN, DOMAIN_DATA_ENTRIES
+from spencerassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 
 from .conftest import (
     MOCK_CONFIG_ENTRY,
@@ -53,7 +53,7 @@ MOCK_DISCOVER = ssdp.SsdpServiceInfo(
 @pytest.fixture(name="dummy_client", autouse=True)
 def dummy_client_fixture(hass):
     """Mock out the real client."""
-    with patch("homeassistant.components.arcam_fmj.config_flow.Client") as client:
+    with patch("spencerassistant.components.arcam_fmj.config_flow.Client") as client:
         client.return_value.start.side_effect = AsyncMock(return_value=None)
         client.return_value.stop.side_effect = AsyncMock(return_value=None)
         yield client.return_value

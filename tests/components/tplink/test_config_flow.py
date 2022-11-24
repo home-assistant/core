@@ -3,12 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.tplink import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp
+from spencerassistant.components.tplink import DOMAIN
+from spencerassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     ALIAS,
@@ -23,7 +23,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_discovery(hass: HomeAssistant):
+async def test_discovery(hass: spencerAssistant):
     """Test setting up discovery."""
     with _patch_discovery(), _patch_single_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -87,7 +87,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+async def test_discovery_with_existing_device_present(hass: spencerAssistant):
     """Test setting up discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id="dd:dd:dd:dd:dd:dd"
@@ -161,7 +161,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_no_device(hass: HomeAssistant):
+async def test_discovery_no_device(hass: spencerAssistant):
     """Test discovery without device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -175,7 +175,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual(hass: spencerAssistant):
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -223,7 +223,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_manual_no_capabilities(hass: HomeAssistant):
+async def test_manual_no_capabilities(hass: spencerAssistant):
     """Test manually setup without successful get_capabilities."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

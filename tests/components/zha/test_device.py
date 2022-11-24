@@ -10,13 +10,13 @@ import zigpy.types
 import zigpy.zcl.clusters.general as general
 import zigpy.zdo.types as zdo_t
 
-from homeassistant.components.zha.core.const import (
+from spencerassistant.components.zha.core.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
 )
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
-import homeassistant.helpers.device_registry as dr
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+import spencerassistant.helpers.device_registry as dr
+import spencerassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -28,7 +28,7 @@ from tests.common import async_fire_time_changed
 def required_platforms_only():
     """Only setup the required platform and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.SENSOR,
@@ -123,7 +123,7 @@ def _send_time_changed(hass, seconds):
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "spencerassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_success(
@@ -177,7 +177,7 @@ async def test_check_available_success(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "spencerassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_unsuccessful(
@@ -220,7 +220,7 @@ async def test_check_available_unsuccessful(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "spencerassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_no_basic_channel(

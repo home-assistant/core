@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from serial import SerialException
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
-from homeassistant.const import CONF_PORT
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
+from spencerassistant.const import CONF_PORT
 
 from tests.common import MockConfigEntry
 

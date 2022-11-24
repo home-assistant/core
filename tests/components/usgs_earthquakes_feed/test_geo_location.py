@@ -5,9 +5,9 @@ from unittest.mock import ANY, MagicMock, call, patch
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeed
 from freezegun import freeze_time
 
-from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.usgs_earthquakes_feed.geo_location import (
+from spencerassistant.components import geo_location
+from spencerassistant.components.geo_location import ATTR_SOURCE
+from spencerassistant.components.usgs_earthquakes_feed.geo_location import (
     ATTR_ALERT,
     ATTR_EXTERNAL_ID,
     ATTR_MAGNITUDE,
@@ -19,7 +19,7 @@ from homeassistant.components.usgs_earthquakes_feed.geo_location import (
     CONF_FEED_TYPE,
     SCAN_INTERVAL,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -29,11 +29,11 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_spencerASSISTANT_START,
     LENGTH_KILOMETERS,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -63,7 +63,7 @@ CONFIG_WITH_CUSTOM_LOCATION = {
 def _generate_mock_feed_entry(
     external_id,
     title,
-    distance_to_home,
+    distance_to_spencer,
     coordinates,
     place=None,
     attribution=None,
@@ -78,7 +78,7 @@ def _generate_mock_feed_entry(
     feed_entry = MagicMock()
     feed_entry.external_id = external_id
     feed_entry.title = title
-    feed_entry.distance_to_home = distance_to_home
+    feed_entry.distance_to_spencer = distance_to_spencer
     feed_entry.coordinates = coordinates
     feed_entry.place = place
     feed_entry.attribution = attribution
@@ -125,7 +125,7 @@ async def test_setup(hass):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
             await hass.async_block_till_done()
             # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_START)
             # Collect events.
             await hass.async_block_till_done()
 
@@ -236,7 +236,7 @@ async def test_setup_with_custom_location(hass):
             await hass.async_block_till_done()
 
             # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_START)
             # Collect events.
             await hass.async_block_till_done()
 

@@ -4,14 +4,14 @@ import json
 
 import pytest
 
-import homeassistant.components.device_tracker as device_tracker
-from homeassistant.components.meraki.device_tracker import (
+import spencerassistant.components.device_tracker as device_tracker
+from spencerassistant.components.meraki.device_tracker import (
     CONF_SECRET,
     CONF_VALIDATOR,
     URL,
 )
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import CONF_PLATFORM
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -126,9 +126,9 @@ async def test_data_will_be_saved(mock_device_tracker_conf, hass, meraki_client)
     state_name = hass.states.get(
         "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a4")
     ).state
-    assert state_name == "home"
+    assert state_name == "spencer"
 
     state_name = hass.states.get(
         "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a5")
     ).state
-    assert state_name == "home"
+    assert state_name == "spencer"

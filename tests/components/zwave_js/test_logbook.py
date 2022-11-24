@@ -1,13 +1,13 @@
 """The tests for Z-Wave JS logbook."""
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.zwave_js.const import (
+from spencerassistant.components.zwave_js.const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 

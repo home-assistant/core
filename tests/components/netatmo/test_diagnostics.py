@@ -1,8 +1,8 @@
 """Test the Netatmo diagnostics."""
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.setup import async_setup_component
 
 from .common import fake_post_request
 
@@ -12,11 +12,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 async def test_entry_diagnostics(hass, hass_client, config_entry):
     """Test config entry diagnostics."""
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -46,7 +46,7 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
                     "read_camera",
                     "read_carbonmonoxidedetector",
                     "read_doorbell",
-                    "read_homecoach",
+                    "read_spencercoach",
                     "read_magellan",
                     "read_mx",
                     "read_presence",
@@ -70,8 +70,8 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
         "domain": "netatmo",
         "options": {
             "weather_areas": {
-                "Home avg": {
-                    "area_name": "Home avg",
+                "spencer avg": {
+                    "area_name": "spencer avg",
                     "lat_ne": REDACTED,
                     "lat_sw": REDACTED,
                     "lon_ne": REDACTED,
@@ -79,8 +79,8 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
                     "mode": "avg",
                     "show_on_map": False,
                 },
-                "Home max": {
-                    "area_name": "Home max",
+                "spencer max": {
+                    "area_name": "spencer max",
                     "lat_ne": REDACTED,
                     "lat_sw": REDACTED,
                     "lon_ne": REDACTED,
@@ -99,5 +99,5 @@ async def test_entry_diagnostics(hass, hass_client, config_entry):
         "webhook_registered": False,
     }
 
-    for home in result["data"]["account"]["homes"]:
-        assert home["coordinates"] == REDACTED
+    for spencer in result["data"]["account"]["spencers"]:
+        assert spencer["coordinates"] == REDACTED

@@ -9,7 +9,7 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -17,15 +17,15 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
-from homeassistant.components.zha.core.const import ZHA_EVENT
-from homeassistant.const import (
+from spencerassistant.components.zha.core.const import ZHA_EVENT
+from spencerassistant.const import (
     ATTR_COMMAND,
     STATE_CLOSED,
     STATE_OPEN,
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import CoreState, State
+from spencerassistant.core import CoreState, State
 
 from .common import (
     async_enable_traffic,
@@ -43,7 +43,7 @@ from tests.common import async_capture_events, mock_coro, mock_restore_cache
 def cover_platform_only():
     """Only setup the cover and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.COVER,
             Platform.DEVICE_TRACKER,
@@ -116,7 +116,7 @@ def zigpy_keen_vent(zigpy_device_mock):
         }
     }
     return zigpy_device_mock(
-        endpoints, manufacturer="Keen Home Inc", model="SV02-612-MP-1.3"
+        endpoints, manufacturer="Keen spencer Inc", model="SV02-612-MP-1.3"
     )
 
 

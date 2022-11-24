@@ -1,22 +1,22 @@
-"""Test the Legrand Home+ Control switch platform."""
+"""Test the Legrand spencer+ Control switch platform."""
 import datetime as dt
 from unittest.mock import patch
 
-from homepluscontrol.homeplusapi import HomePlusControlApiError
+from spencerpluscontrol.spencerplusapi import spencerPlusControlApiError
 
-from homeassistant import config_entries, setup
-from homeassistant.components.home_plus_control.const import (
+from spencerassistant import config_entries, setup
+from spencerassistant.components.spencer_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
@@ -71,14 +71,14 @@ async def test_plant_update(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -108,14 +108,14 @@ async def test_plant_topology_reduction_change(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -138,7 +138,7 @@ async def test_plant_topology_reduction_change(
     # Now we refresh the topology with one entity less
     mock_modules.pop("0000000987654321fedcba")
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
@@ -170,14 +170,14 @@ async def test_plant_topology_increase_change(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -200,7 +200,7 @@ async def test_plant_topology_increase_change(
     # Now we refresh the topology with one entity more
     mock_modules["0000000987654321fedcba"] = new_module
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
@@ -224,14 +224,14 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -260,7 +260,7 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
     mock_modules["0000000987654321fedcba"].reachable = False
 
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
@@ -296,14 +296,14 @@ async def test_module_status_available(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -331,7 +331,7 @@ async def test_module_status_available(
     # Now we refresh the topology with the module being reachable
     mock_modules["0000000987654321fedcba"].reachable = True
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
@@ -365,15 +365,15 @@ async def test_initial_api_error(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
-        side_effect=HomePlusControlApiError,
+        side_effect=spencerPlusControlApiError,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -399,14 +399,14 @@ async def test_update_with_api_error(
     # Load the entry
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -434,9 +434,9 @@ async def test_update_with_api_error(
 
     # Attempt to update the data, but API update fails
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value=mock_modules,
-        side_effect=HomePlusControlApiError,
+        side_effect=spencerPlusControlApiError,
     ) as mock_check:
         async_fire_time_changed(
             hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)

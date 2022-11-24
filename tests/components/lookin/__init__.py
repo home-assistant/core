@@ -5,11 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from spencerassistant.components.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
-MODULE = "homeassistant.components.lookin"
-MODULE_CONFIG_FLOW = "homeassistant.components.lookin.config_flow"
+MODULE = "spencerassistant.components.lookin"
+MODULE_CONFIG_FLOW = "spencerassistant.components.lookin.config_flow"
 IP_ADDRESS = "127.0.0.1"
 
 DEVICE_NAME = "Living Room"

@@ -1,10 +1,10 @@
 """Test script init."""
 from unittest.mock import patch
 
-import homeassistant.scripts as scripts
+import spencerassistant.scripts as scripts
 
 
-@patch("homeassistant.scripts.get_default_config_dir", return_value="/default")
+@patch("spencerassistant.scripts.get_default_config_dir", return_value="/default")
 def test_config_per_platform(mock_def):
     """Test config per platform method."""
     assert scripts.get_default_config_dir() == "/default"

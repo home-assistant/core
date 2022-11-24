@@ -9,15 +9,15 @@ from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
 
-from homeassistant.components.dlna_dms.const import (
+from spencerassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
     CONFIG_VERSION,
     DOMAIN,
 )
-from homeassistant.components.dlna_dms.dms import DlnaDmsData
-from homeassistant.const import CONF_DEVICE_ID, CONF_URL
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.dlna_dms.dms import DlnaDmsData
+from spencerassistant.const import CONF_DEVICE_ID, CONF_URL
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,7 @@ async def setup_media_source(hass) -> None:
 def upnp_factory_mock() -> Iterable[Mock]:
     """Mock the UpnpFactory class to construct DMS-style UPnP devices."""
     with patch(
-        "homeassistant.components.dlna_dms.dms.UpnpFactory",
+        "spencerassistant.components.dlna_dms.dms.UpnpFactory",
         autospec=True,
         spec_set=True,
     ) as upnp_factory:
@@ -84,7 +84,7 @@ def upnp_factory_mock() -> Iterable[Mock]:
 def aiohttp_session_requester_mock() -> Iterable[Mock]:
     """Mock the AiohttpSessionRequester to prevent network use."""
     with patch(
-        "homeassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
+        "spencerassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
     ) as requester_mock:
         yield requester_mock
 
@@ -110,7 +110,7 @@ def config_entry_mock() -> MockConfigEntry:
 def dms_device_mock(upnp_factory_mock: Mock) -> Iterable[Mock]:
     """Mock the async_upnp_client DMS device, initially connected."""
     with patch(
-        "homeassistant.components.dlna_dms.dms.DmsDevice", autospec=True
+        "spencerassistant.components.dlna_dms.dms.DmsDevice", autospec=True
     ) as constructor:
         device = constructor.return_value
         device.on_event = None
@@ -130,7 +130,7 @@ def dms_device_mock(upnp_factory_mock: Mock) -> Iterable[Mock]:
 @pytest.fixture(autouse=True)
 def ssdp_scanner_mock() -> Iterable[Mock]:
     """Mock the SSDP Scanner."""
-    with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+    with patch("spencerassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
@@ -139,13 +139,13 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
 @pytest.fixture(autouse=True)
 def ssdp_server_mock() -> Iterable[Mock]:
     """Mock the SSDP Server."""
-    with patch("homeassistant.components.ssdp.Server", autospec=True):
+    with patch("spencerassistant.components.ssdp.Server", autospec=True):
         yield
 
 
 @pytest.fixture
 async def device_source_mock(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,

@@ -1,7 +1,7 @@
 """Test reproduce state for Input select."""
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
+from spencerassistant.setup import async_setup_component
 
 VALID_OPTION1 = "Option A"
 VALID_OPTION2 = "Option B"

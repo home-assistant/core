@@ -5,34 +5,34 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
 def setup_sensor_platform_only():
     """Only setup sensor platform."""
     with patch(
-        "homeassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]
+        "spencerassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]
     ), patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        "spencerassistant.helpers.entity.Entity.entity_registry_enabled_default",
         PropertyMock(return_value=True),
     ):
         yield
 
 
-async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
+async def test_sensors_no_job(hass: spencerAssistant, mock_config_entry, mock_api):
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
 
@@ -75,7 +75,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
 
 
 async def test_sensors_active_job(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry,
     mock_api,
     mock_printer_api,
@@ -83,7 +83,7 @@ async def test_sensors_active_job(
 ):
     """Test sensors while active job."""
     with patch(
-        "homeassistant.components.prusalink.sensor.utcnow",
+        "spencerassistant.components.prusalink.sensor.utcnow",
         return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=timezone.utc),
     ):
         assert await async_setup_component(hass, "prusalink", {})

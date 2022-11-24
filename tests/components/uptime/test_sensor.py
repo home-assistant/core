@@ -1,18 +1,18 @@
 """The tests for the uptime sensor platform."""
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.uptime.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.components.uptime.const import DOMAIN
+from spencerassistant.const import ATTR_DEVICE_CLASS
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2022-03-01 00:00:00+00:00")
 async def test_uptime_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test Uptime sensor."""

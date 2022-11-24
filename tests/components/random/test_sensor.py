@@ -1,5 +1,5 @@
 """The test for the random number sensor platform."""
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 async def test_random_sensor(hass):

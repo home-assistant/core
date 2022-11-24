@@ -6,13 +6,13 @@ from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
-from homeassistant import setup
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from spencerassistant import setup
+from spencerassistant.components.sensor import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
 
 
-async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+async def setup_test_entities(hass: spencerAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line sensor entity."""
     assert await setup.async_setup_component(
         hass,
@@ -34,7 +34,7 @@ async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) 
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: spencerAssistant) -> None:
     """Test sensor setup."""
     await setup_test_entities(
         hass,
@@ -50,7 +50,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert entity_state.attributes["unit_of_measurement"] == "in"
 
 
-async def test_template(hass: HomeAssistant) -> None:
+async def test_template(hass: spencerAssistant) -> None:
     """Test command sensor with template."""
     await setup_test_entities(
         hass,
@@ -65,7 +65,7 @@ async def test_template(hass: HomeAssistant) -> None:
     assert float(entity_state.state) == 5
 
 
-async def test_template_render(hass: HomeAssistant) -> None:
+async def test_template_render(hass: spencerAssistant) -> None:
     """Ensure command with templates get rendered properly."""
 
     await setup_test_entities(
@@ -79,11 +79,11 @@ async def test_template_render(hass: HomeAssistant) -> None:
     assert entity_state.state == "template_value"
 
 
-async def test_template_render_with_quote(hass: HomeAssistant) -> None:
+async def test_template_render_with_quote(hass: spencerAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         return_value=b"Works\n",
     ) as check_output:
         await setup_test_entities(
@@ -101,7 +101,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
 
 
 async def test_bad_template_render(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test rendering a broken template."""
 
@@ -115,7 +115,7 @@ async def test_bad_template_render(
     assert "Error rendering command template" in caplog.text
 
 
-async def test_bad_command(hass: HomeAssistant) -> None:
+async def test_bad_command(hass: spencerAssistant) -> None:
     """Test bad command."""
     await setup_test_entities(
         hass,
@@ -128,7 +128,7 @@ async def test_bad_command(hass: HomeAssistant) -> None:
     assert entity_state.state == "unknown"
 
 
-async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_return_code(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test that an error return code is logged."""
     await setup_test_entities(
         hass,
@@ -139,7 +139,7 @@ async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> No
     assert "return code 33" in caplog.text
 
 
-async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
+async def test_update_with_json_attrs(hass: spencerAssistant) -> None:
     """Test attributes get extracted from a JSON result."""
     await setup_test_entities(
         hass,
@@ -157,7 +157,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
 
 
 async def test_update_with_json_attrs_no_data(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test attributes when no JSON result fetched."""
 
@@ -175,7 +175,7 @@ async def test_update_with_json_attrs_no_data(
 
 
 async def test_update_with_json_attrs_not_dict(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test attributes when the return value not a dict."""
 
@@ -193,7 +193,7 @@ async def test_update_with_json_attrs_not_dict(
 
 
 async def test_update_with_json_attrs_bad_json(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test attributes when the return value is invalid JSON."""
 
@@ -211,7 +211,7 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_update_with_missing_json_attrs(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test attributes when an expected key is missing."""
 
@@ -232,7 +232,7 @@ async def test_update_with_missing_json_attrs(
 
 
 async def test_update_with_unnecessary_json_attrs(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test attributes when an expected key is missing."""
 
@@ -251,7 +251,7 @@ async def test_update_with_unnecessary_json_attrs(
     assert "key_three" not in entity_state.attributes
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(hass: spencerAssistant) -> None:
     """Test unique_id option and if it only creates one sensor per id."""
     assert await setup.async_setup_component(
         hass,

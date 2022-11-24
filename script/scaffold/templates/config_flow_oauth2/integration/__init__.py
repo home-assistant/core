@@ -1,10 +1,10 @@
 """The NEW_NAME integration."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
@@ -14,7 +14,7 @@ from .const import DOMAIN
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: spencerAssistant, entry: ConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: spencerAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)

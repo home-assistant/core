@@ -1,13 +1,13 @@
 """The binary sensor tests for the QNAP QSW platform."""
 
-from homeassistant.components.qnap_qsw.const import ATTR_MESSAGE
-from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.qnap_qsw.const import ATTR_MESSAGE
+from spencerassistant.const import STATE_OFF
+from spencerassistant.core import spencerAssistant
 
 from .util import async_init_integration
 
 
-async def test_qnap_qsw_create_binary_sensors(hass: HomeAssistant) -> None:
+async def test_qnap_qsw_create_binary_sensors(hass: spencerAssistant) -> None:
     """Test creation of binary sensors."""
 
     await async_init_integration(hass)

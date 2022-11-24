@@ -5,23 +5,23 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import alarm_control_panel, mqtt
-from homeassistant.components.mqtt.alarm_control_panel import (
+from spencerassistant.components import alarm_control_panel, mqtt
+from spencerassistant.components.mqtt.alarm_control_panel import (
     MQTT_ALARM_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_spencer,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_spencer,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
@@ -32,7 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -121,7 +121,7 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
 def alarm_control_panel_platform_only():
     """Only setup the alarm_control_panel platform to speed up tests."""
     with patch(
-        "homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+        "spencerassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
     ):
         yield
 
@@ -193,7 +193,7 @@ async def test_update_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_conf
 
     for state in (
         STATE_ALARM_DISARMED,
-        STATE_ALARM_ARMED_HOME,
+        STATE_ALARM_ARMED_spencer,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
         STATE_ALARM_ARMED_VACATION,
@@ -230,7 +230,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
 @pytest.mark.parametrize(
     "service,payload",
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_spencer, "ARM_spencer"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
         (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
@@ -264,7 +264,7 @@ async def test_publish_mqtt_no_code(
 @pytest.mark.parametrize(
     "service,payload",
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_spencer, "ARM_spencer"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
         (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
@@ -317,7 +317,7 @@ async def test_publish_mqtt_with_code(
 @pytest.mark.parametrize(
     "service,payload",
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_spencer, "ARM_spencer"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
         (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
@@ -361,7 +361,7 @@ async def test_publish_mqtt_with_remote_code(
 @pytest.mark.parametrize(
     "service,payload",
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
+        (SERVICE_ALARM_ARM_spencer, "ARM_spencer"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
         (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
@@ -405,7 +405,7 @@ async def test_publish_mqtt_with_remote_code_text(
 @pytest.mark.parametrize(
     "service,payload,disable_code",
     [
-        (SERVICE_ALARM_ARM_HOME, "ARM_HOME", "code_arm_required"),
+        (SERVICE_ALARM_ARM_spencer, "ARM_spencer", "code_arm_required"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", "code_arm_required"),
         (SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT", "code_arm_required"),
         (SERVICE_ALARM_ARM_VACATION, "ARM_VACATION", "code_arm_required"),
@@ -796,7 +796,7 @@ async def test_discovery_update_unchanged_alarm(
 
     data1 = json.dumps(config1)
     with patch(
-        "homeassistant.components.mqtt.alarm_control_panel.MqttAlarm.discovery_update"
+        "spencerassistant.components.mqtt.alarm_control_panel.MqttAlarm.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
@@ -830,7 +830,7 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 @pytest.mark.parametrize(
     "topic,value",
     [
-        ("state_topic", "armed_home"),
+        ("state_topic", "armed_spencer"),
         ("state_topic", "disarmed"),
     ],
 )

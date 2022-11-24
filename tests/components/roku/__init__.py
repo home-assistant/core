@@ -1,6 +1,6 @@
 """Tests for the Roku component."""
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
+from spencerassistant.components import ssdp, zeroconf
+from spencerassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
 
 NAME = "Roku 3"
 NAME_ROKUTV = '58" Onn Roku TV'
@@ -20,11 +20,11 @@ MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
     },
 )
 
-HOMEKIT_HOST = "192.168.1.161"
+spencerKIT_HOST = "192.168.1.161"
 
-MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host=HOMEKIT_HOST,
-    addresses=[HOMEKIT_HOST],
+MOCK_spencerKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host=spencerKIT_HOST,
+    addresses=[spencerKIT_HOST],
     hostname="mock_hostname",
     name="onn._hap._tcp.local.",
     port=None,

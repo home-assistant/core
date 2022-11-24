@@ -1,5 +1,5 @@
 """Tests for Airly."""
-from homeassistant.components.airly.const import DOMAIN
+from spencerassistant.components.airly.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -10,16 +10,16 @@ API_POINT_URL = (
 
 
 async def init_integration(hass, aioclient_mock) -> MockConfigEntry:
-    """Set up the Airly integration in Home Assistant."""
+    """Set up the Airly integration in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Home",
+        title="spencer",
         unique_id="123-456",
         data={
             "api_key": "foo",
             "latitude": 123,
             "longitude": 456,
-            "name": "Home",
+            "name": "spencer",
         },
     )
 

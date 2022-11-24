@@ -1,7 +1,7 @@
 """The tests for the Modbus sensor component."""
 import pytest
 
-from homeassistant.components.modbus.const import (
+from spencerassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
@@ -18,12 +18,12 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN,
     DataType,
 )
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_DEVICE_CLASS,
@@ -36,8 +36,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -890,15 +890,15 @@ async def test_restore_state_sensor(hass, mock_test_state, mock_modbus):
     ],
 )
 async def test_service_sensor_update(hass, mock_modbus, mock_ha):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
     mock_modbus.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "27"
     mock_modbus.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "32"
 

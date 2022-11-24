@@ -4,13 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import cloud
-from homeassistant.components.cloud.const import DOMAIN
-from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
-from homeassistant.exceptions import Unauthorized
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import cloud
+from spencerassistant.components.cloud.const import DOMAIN
+from spencerassistant.components.cloud.prefs import STORAGE_KEY
+from spencerassistant.const import EVENT_spencerASSISTANT_STOP
+from spencerassistant.core import Context
+from spencerassistant.exceptions import Unauthorized
+from spencerassistant.setup import async_setup_component
 
 
 async def test_constructor_loads_info_from_config(hass):
@@ -99,7 +99,7 @@ async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
 async def test_startup_shutdown_events(hass, mock_cloud_fixture):
     """Test if the cloud will start on startup event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert mock_stop.called
@@ -151,7 +151,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 1
 
-    with patch("homeassistant.helpers.discovery.async_load_platform") as mock_load:
+    with patch("spencerassistant.helpers.discovery.async_load_platform") as mock_load:
         await cl.iot._on_connect[-1]()
         await hass.async_block_till_done()
 

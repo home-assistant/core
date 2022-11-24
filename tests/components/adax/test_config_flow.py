@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import adax_local
 
-from homeassistant import config_entries
-from homeassistant.components.adax.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.adax.const import (
     ACCOUNT_ID,
     CLOUD,
     CONNECTION_TYPE,
@@ -13,9 +13,9 @@ from homeassistant.components.adax.const import (
     WIFI_PSWD,
     WIFI_SSID,
 )
-from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.const import CONF_PASSWORD
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +25,7 @@ TEST_DATA = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
 
     with patch("adax.get_adax_token", return_value="test_token",), patch(
-        "homeassistant.components.adax.async_setup_entry",
+        "spencerassistant.components.adax.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -61,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -87,7 +87,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
+async def test_flow_entry_already_exists(hass: spencerAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     first_entry = MockConfigEntry(
@@ -146,10 +146,10 @@ async def test_local_create_entry(hass):
     }
 
     with patch(
-        "homeassistant.components.adax.async_setup_entry",
+        "spencerassistant.components.adax.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig", autospec=True
+        "spencerassistant.components.adax.config_flow.adax_local.AdaxConfig", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.configure_device.return_value = True
@@ -245,7 +245,7 @@ async def test_local_connection_error(hass):
     }
 
     with patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
+        "spencerassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -280,7 +280,7 @@ async def test_local_heater_not_available(hass):
     }
 
     with patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
+        "spencerassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.HeaterNotAvailable,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -315,7 +315,7 @@ async def test_local_heater_not_found(hass):
     }
 
     with patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
+        "spencerassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.HeaterNotFound,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -350,7 +350,7 @@ async def test_local_invalid_wifi_cred(hass):
     }
 
     with patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
+        "spencerassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.InvalidWifiCred,
     ):
         result = await hass.config_entries.flow.async_configure(

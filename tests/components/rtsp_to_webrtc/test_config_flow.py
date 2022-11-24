@@ -6,18 +6,18 @@ from unittest.mock import patch
 
 import rtsp_to_webrtc
 
-from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.rtsp_to_webrtc import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.components.rtsp_to_webrtc import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
 
 
-async def test_web_full_flow(hass: HomeAssistant) -> None:
+async def test_web_full_flow(hass: spencerAssistant) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,7 +28,7 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
     assert not result.get("errors")
     assert "flow_id" in result
     with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
-        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+        "spencerassistant.components.rtsp_to_webrtc.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
@@ -42,7 +42,7 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
         assert len(mock_setup.mock_calls) == 1
 
 
-async def test_single_config_entry(hass: HomeAssistant) -> None:
+async def test_single_config_entry(hass: spencerAssistant) -> None:
     """Test that only a single config entry is allowed."""
     old_entry = MockConfigEntry(domain=DOMAIN, data={"example": True})
     old_entry.add_to_hass(hass)
@@ -54,7 +54,7 @@ async def test_single_config_entry(hass: HomeAssistant) -> None:
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_invalid_url(hass: HomeAssistant) -> None:
+async def test_invalid_url(hass: spencerAssistant) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +73,7 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
     assert result.get("errors") == {"server_url": "invalid_url"}
 
 
-async def test_server_unreachable(hass: HomeAssistant) -> None:
+async def test_server_unreachable(hass: spencerAssistant) -> None:
     """Exercise case where the server is unreachable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,7 +94,7 @@ async def test_server_unreachable(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "server_unreachable"}
 
 
-async def test_server_failure(hass: HomeAssistant) -> None:
+async def test_server_failure(hass: spencerAssistant) -> None:
     """Exercise case where server returns a failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -135,7 +135,7 @@ async def test_hassio_discovery(hass):
     assert result.get("description_placeholders") == {"addon": "RTSPtoWebRTC"}
 
     with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
-        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+        "spencerassistant.components.rtsp_to_webrtc.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_hassio_discovery(hass):
         assert len(mock_setup.mock_calls) == 1
 
 
-async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
+async def test_hassio_single_config_entry(hass: spencerAssistant) -> None:
     """Test supervisor add-on discovery only allows a single entry."""
     old_entry = MockConfigEntry(domain=DOMAIN, data={"example": True})
     old_entry.add_to_hass(hass)
@@ -173,7 +173,7 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_hassio_ignored(hass: HomeAssistant) -> None:
+async def test_hassio_ignored(hass: spencerAssistant) -> None:
     """Test ignoring superversor add-on discovery."""
     old_entry = MockConfigEntry(domain=DOMAIN, source=config_entries.SOURCE_IGNORE)
     old_entry.add_to_hass(hass)
@@ -195,7 +195,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
+async def test_hassio_discovery_server_failure(hass: spencerAssistant) -> None:
     """Test server failure during supvervisor add-on discovery shows an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -226,13 +226,13 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test setting stun server in options flow."""
     with patch(
-        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+        "spencerassistant.components.rtsp_to_webrtc.async_setup_entry",
         return_value=True,
     ):
         await setup_integration()

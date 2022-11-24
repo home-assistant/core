@@ -1,12 +1,12 @@
-"""Test the Legrand Home+ Control integration."""
+"""Test the Legrand spencer+ Control integration."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.components.home_plus_control.const import (
+from spencerassistant import config_entries, setup
+from spencerassistant.components.spencer_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
@@ -15,14 +15,14 @@ async def test_loading(hass, mock_config_entry):
     """Test component loading."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value={},
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -47,14 +47,14 @@ async def test_unloading(hass, mock_config_entry):
     """Test component unloading."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        "spencerassistant.components.spencer_plus_control.api.spencerPlusControlAsyncApi.async_get_modules",
         return_value={},
     ) as mock_check:
         await setup.async_setup_component(
             hass,
             DOMAIN,
             {
-                "home_plus_control": {
+                "spencer_plus_control": {
                     CONF_CLIENT_ID: CLIENT_ID,
                     CONF_CLIENT_SECRET: CLIENT_SECRET,
                     CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,

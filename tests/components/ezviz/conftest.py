@@ -16,7 +16,7 @@ def mock_ffmpeg(hass):
 def ezviz_test_rtsp_config_flow(hass):
     """Mock the EzvizApi for easier testing."""
     with patch.object(TestRTSPAuth, "main", return_value=True), patch(
-        "homeassistant.components.ezviz.config_flow.TestRTSPAuth"
+        "spencerassistant.components.ezviz.config_flow.TestRTSPAuth"
     ) as mock_ezviz_test_rtsp:
         instance = mock_ezviz_test_rtsp.return_value = TestRTSPAuth(
             "test-ip",
@@ -33,7 +33,7 @@ def ezviz_test_rtsp_config_flow(hass):
 def ezviz_config_flow(hass):
     """Mock the EzvizAPI for easier config flow testing."""
     with patch.object(EzvizClient, "login", return_value=True), patch(
-        "homeassistant.components.ezviz.config_flow.EzvizClient"
+        "spencerassistant.components.ezviz.config_flow.EzvizClient"
     ) as mock_ezviz:
         instance = mock_ezviz.return_value = EzvizClient(
             "test-username",

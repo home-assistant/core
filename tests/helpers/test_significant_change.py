@@ -1,10 +1,10 @@
 """Test significant change helper."""
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import State
-from homeassistant.helpers import significant_change
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from spencerassistant.core import State
+from spencerassistant.helpers import significant_change
 
 
 @pytest.fixture(name="checker")

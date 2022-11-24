@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from zwave_js_server.event import Event
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LightEntityFeature,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,

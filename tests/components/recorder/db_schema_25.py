@@ -27,17 +27,17 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
-from homeassistant.components.recorder.const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
-from homeassistant.const import (
+from spencerassistant.components.recorder.const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
+from spencerassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_EVENT_ORIGIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from spencerassistant.helpers.typing import UNDEFINED, UndefinedType
+import spencerassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name

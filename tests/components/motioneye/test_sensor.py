@@ -5,16 +5,16 @@ from unittest.mock import AsyncMock, patch
 
 from motioneye_client.const import KEY_ACTIONS
 
-from homeassistant.components.motioneye import get_motioneye_device_identifier
-from homeassistant.components.motioneye.const import (
+from spencerassistant.components.motioneye import get_motioneye_device_identifier
+from spencerassistant.components.motioneye.const import (
     DEFAULT_SCAN_INTERVAL,
     TYPE_MOTIONEYE_ACTION_SENSOR,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+import spencerassistant.util.dt as dt_util
 
 from . import (
     TEST_CAMERA,
@@ -28,7 +28,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor_actions(hass: HomeAssistant) -> None:
+async def test_sensor_actions(hass: spencerAssistant) -> None:
     """Test the actions sensor."""
     register_test_entity(
         hass,
@@ -69,7 +69,7 @@ async def test_sensor_actions(hass: HomeAssistant) -> None:
     assert entity_state.attributes.get(KEY_ACTIONS) is None
 
 
-async def test_sensor_device_info(hass: HomeAssistant) -> None:
+async def test_sensor_device_info(hass: spencerAssistant) -> None:
     """Verify device information includes expected details."""
 
     # Enable the action sensor (it is disabled by default).
@@ -99,7 +99,7 @@ async def test_sensor_device_info(hass: HomeAssistant) -> None:
     assert TEST_SENSOR_ACTION_ENTITY_ID in entities_from_device
 
 
-async def test_sensor_actions_can_be_enabled(hass: HomeAssistant) -> None:
+async def test_sensor_actions_can_be_enabled(hass: spencerAssistant) -> None:
     """Verify the action sensor can be enabled."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -113,7 +113,7 @@ async def test_sensor_actions_can_be_enabled(hass: HomeAssistant) -> None:
     assert not entity_state
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=client,
     ):
         updated_entry = entity_registry.async_update_entity(

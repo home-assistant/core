@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from pyjuicenet import TokenError
 
-from homeassistant import config_entries
-from homeassistant.components.juicenet.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from spencerassistant import config_entries
+from spencerassistant.components.juicenet.const import DOMAIN
+from spencerassistant.const import CONF_ACCESS_TOKEN
 
 
 def _mock_juicenet_return_value(get_devices=None):
@@ -25,12 +25,12 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        "spencerassistant.components.juicenet.config_flow.Api.get_devices",
         return_value=MagicMock(),
     ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
+        "spencerassistant.components.juicenet.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        "spencerassistant.components.juicenet.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
@@ -51,7 +51,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        "spencerassistant.components.juicenet.config_flow.Api.get_devices",
         side_effect=TokenError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -69,7 +69,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        "spencerassistant.components.juicenet.config_flow.Api.get_devices",
         side_effect=aiohttp.ClientError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -87,7 +87,7 @@ async def test_form_catch_unknown_errors(hass):
     )
 
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        "spencerassistant.components.juicenet.config_flow.Api.get_devices",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -102,12 +102,12 @@ async def test_import(hass):
     """Test that import works as expected."""
 
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        "spencerassistant.components.juicenet.config_flow.Api.get_devices",
         return_value=MagicMock(),
     ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
+        "spencerassistant.components.juicenet.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        "spencerassistant.components.juicenet.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

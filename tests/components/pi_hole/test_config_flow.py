@@ -2,10 +2,10 @@
 import logging
 from unittest.mock import patch
 
-from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.pi_hole.const import CONF_STATISTICS_ONLY, DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from spencerassistant.const import CONF_API_KEY
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     CONF_CONFIG_ENTRY,
@@ -28,7 +28,7 @@ def _flow_next(hass, flow_id):
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.pi_hole.async_setup_entry",
+        "spencerassistant.components.pi_hole.async_setup_entry",
         return_value=True,
     )
 

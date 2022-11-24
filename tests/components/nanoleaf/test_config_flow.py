@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aionanoleaf import InvalidToken, Unauthorized, Unavailable
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.nanoleaf.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.components import ssdp, zeroconf
+from spencerassistant.components.nanoleaf.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_TOKEN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -38,13 +38,13 @@ def _mock_nanoleaf(
     return nanoleaf
 
 
-async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None:
+async def test_user_unavailable_user_step_link_step(hass: spencerAssistant) -> None:
     """Test we handle Unavailable in user and link step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         side_effect=Unavailable,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -59,7 +59,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
     assert not result2["last_step"]
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -72,7 +72,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
     assert result2["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         side_effect=Unavailable,
     ):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -89,14 +89,14 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
     ],
 )
 async def test_user_error_setup_finish(
-    hass: HomeAssistant, error: Exception, reason: str
+    hass: spencerAssistant, error: Exception, reason: str
 ) -> None:
     """Test abort flow if on error in setup_finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -108,9 +108,9 @@ async def test_user_error_setup_finish(
     assert result2["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
         side_effect=error,
     ):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -119,14 +119,14 @@ async def test_user_error_setup_finish(
 
 
 async def test_user_not_authorizing_new_tokens_user_step_link_step(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test we handle NotAuthorizingNewTokens in user step and link step."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(authorize_error=Unauthorized()),
     ) as mock_nanoleaf, patch(
-        "homeassistant.components.nanoleaf.async_setup_entry", return_value=True
+        "spencerassistant.components.nanoleaf.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -169,13 +169,13 @@ async def test_user_not_authorizing_new_tokens_user_step_link_step(
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_exception_user_step(hass: HomeAssistant) -> None:
+async def test_user_exception_user_step(hass: spencerAssistant) -> None:
     """Test we handle Exception errors in user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(authorize_error=Exception()),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -190,7 +190,7 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
     assert not result2["last_step"]
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(),
     ) as mock_nanoleaf:
         result3 = await hass.config_entries.flow.async_configure(
@@ -218,19 +218,19 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source, type_in_discovery_info",
     [
-        (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
+        (config_entries.SOURCE_spencerKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafapi._tcp.local."),
     ],
 )
 async def test_discovery_link_unavailable(
-    hass: HomeAssistant, source: type, type_in_discovery_info: str
+    hass: spencerAssistant, source: type, type_in_discovery_info: str
 ) -> None:
     """Test discovery and abort if device is unavailable."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "spencerassistant.components.nanoleaf.config_flow.load_json",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -258,7 +258,7 @@ async def test_discovery_link_unavailable(
     assert context["unique_id"] == TEST_NAME
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         side_effect=Unavailable,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -266,7 +266,7 @@ async def test_discovery_link_unavailable(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: spencerAssistant) -> None:
     """Test Nanoleaf reauth flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -276,10 +276,10 @@ async def test_reauth(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(),
     ), patch(
-        "homeassistant.components.nanoleaf.async_setup_entry",
+        "spencerassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -305,7 +305,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source, type_in_discovery",
     [
-        (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
+        (config_entries.SOURCE_spencerKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafapi._tcp.local"),
     ],
@@ -339,7 +339,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     ],
 )
 async def test_import_discovery_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     source: str,
     type_in_discovery: str,
     nanoleaf_conf_file: dict[str, dict[str, str]],
@@ -354,19 +354,19 @@ async def test_import_discovery_integration(
     Test updating the .nanoleaf_conf file if it was not the only device in the file.
     """
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "spencerassistant.components.nanoleaf.config_flow.load_json",
         return_value=dict(nanoleaf_conf_file),
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(TEST_HOST, TEST_TOKEN),
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.save_json",
+        "spencerassistant.components.nanoleaf.config_flow.save_json",
         return_value=None,
     ) as mock_save_json, patch(
-        "homeassistant.components.nanoleaf.config_flow.os.remove",
+        "spencerassistant.components.nanoleaf.config_flow.os.remove",
         return_value=None,
     ) as mock_remove, patch(
-        "homeassistant.components.nanoleaf.async_setup_entry",
+        "spencerassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -400,16 +400,16 @@ async def test_import_discovery_integration(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_ssdp_discovery(hass: HomeAssistant) -> None:
+async def test_ssdp_discovery(hass: spencerAssistant) -> None:
     """Test SSDP discovery."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "spencerassistant.components.nanoleaf.config_flow.load_json",
         return_value={},
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        "spencerassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=_mock_nanoleaf(TEST_HOST, TEST_TOKEN),
     ), patch(
-        "homeassistant.components.nanoleaf.async_setup_entry",
+        "spencerassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(

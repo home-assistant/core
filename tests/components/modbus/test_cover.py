@@ -3,8 +3,8 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.modbus.const import (
+from spencerassistant.components.cover import DOMAIN as COVER_DOMAIN
+from spencerassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CONF_INPUT_TYPE,
@@ -17,7 +17,7 @@ from homeassistant.components.modbus.const import (
     CONF_STATUS_REGISTER_TYPE,
     MODBUS_DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_ADDRESS,
     CONF_COVERS,
     CONF_NAME,
@@ -29,8 +29,8 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -211,14 +211,14 @@ async def test_register_cover(hass, expected, mock_do_cycle):
     ],
 )
 async def test_service_cover_update(hass, mock_modbus, mock_ha):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_CLOSED
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OPEN
 
@@ -282,7 +282,7 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
     ],
 )
 async def test_service_cover_move(hass, mock_modbus, mock_ha):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
 
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(

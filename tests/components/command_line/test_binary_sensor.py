@@ -5,14 +5,14 @@ from typing import Any
 
 from pytest import LogCaptureFixture
 
-from homeassistant import setup
-from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from spencerassistant import setup
+from spencerassistant.components.binary_sensor import DOMAIN
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
 
 
-async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+async def setup_test_entity(hass: spencerAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line binary_sensor entity."""
     assert await setup.async_setup_component(
         hass,
@@ -22,7 +22,7 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: spencerAssistant) -> None:
     """Test sensor setup."""
     await setup_test_entity(
         hass,
@@ -39,7 +39,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert entity_state.name == "Test"
 
 
-async def test_template(hass: HomeAssistant) -> None:
+async def test_template(hass: spencerAssistant) -> None:
     """Test setting the state with a template."""
 
     await setup_test_entity(
@@ -57,7 +57,7 @@ async def test_template(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_ON
 
 
-async def test_sensor_off(hass: HomeAssistant) -> None:
+async def test_sensor_off(hass: spencerAssistant) -> None:
     """Test setting the state with a template."""
     await setup_test_entity(
         hass,
@@ -72,7 +72,7 @@ async def test_sensor_off(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_OFF
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(hass: spencerAssistant) -> None:
     """Test unique_id option and if it only creates one binary sensor per id."""
     assert await setup.async_setup_component(
         hass,
@@ -116,7 +116,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
 
 
-async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_return_code(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test setting the state with a template."""
     await setup_test_entity(
         hass,

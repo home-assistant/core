@@ -5,9 +5,9 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.snips as snips
-from homeassistant.helpers.intent import ServiceIntentHandler, async_register
+from spencerassistant.bootstrap import async_setup_component
+import spencerassistant.components.snips as snips
+from spencerassistant.helpers.intent import ServiceIntentHandler, async_register
 
 from tests.common import async_fire_mqtt_message, async_mock_intent, async_mock_service
 

@@ -4,9 +4,9 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.ecobee import climate as ecobee
-import homeassistant.const as const
-from homeassistant.const import STATE_OFF
+from spencerassistant.components.ecobee import climate as ecobee
+import spencerassistant.const as const
+from spencerassistant.const import STATE_OFF
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 """Tests for emulated_roku library bindings."""
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components.emulated_roku.binding import (
+from spencerassistant.components.emulated_roku.binding import (
     ATTR_APP_ID,
     ATTR_COMMAND_TYPE,
     ATTR_KEY,
@@ -43,7 +43,7 @@ async def test_events_fired_properly(hass):
         events.append(event)
 
     with patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer", instantiate
+        "spencerassistant.components.emulated_roku.binding.EmulatedRokuServer", instantiate
     ):
         hass.bus.async_listen(EVENT_ROKU_COMMAND, listener)
 

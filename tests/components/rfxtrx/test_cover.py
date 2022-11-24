@@ -3,9 +3,9 @@ from unittest.mock import call
 
 import pytest
 
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.core import State
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.core import State
+from spencerassistant.exceptions import spencerAssistantError
 
 from .conftest import create_rfx_test_cfg
 
@@ -186,7 +186,7 @@ async def test_rfy_cover(hass, rfxtrx):
         blocking=True,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "cover",
             "open_cover_tilt",
@@ -194,7 +194,7 @@ async def test_rfy_cover(hass, rfxtrx):
             blocking=True,
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "cover",
             "close_cover_tilt",

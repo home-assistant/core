@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -16,11 +16,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
-from homeassistant.core import State
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from spencerassistant.core import State
+from spencerassistant.exceptions import spencerAssistantError
 
 from . import init_integration, register_device, register_entity
 
@@ -283,7 +283,7 @@ async def test_block_set_mode_connection_error(hass, mock_block_device, monkeypa
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

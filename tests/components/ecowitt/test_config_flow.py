@@ -1,14 +1,14 @@
 """Test the Ecowitt Weather Station config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.ecowitt.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries
+from spencerassistant.components.ecowitt.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
+from spencerassistant.setup import async_setup_component
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(hass: spencerAssistant) -> None:
     """Test we can create a config entry."""
     await async_setup_component(hass, "http", {})
 
@@ -19,7 +19,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.ecowitt.async_setup_entry",
+        "spencerassistant.components.ecowitt.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

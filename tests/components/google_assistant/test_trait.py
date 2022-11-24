@@ -4,7 +4,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components import (
+from spencerassistant.components import (
     alarm_control_panel,
     binary_sensor,
     button,
@@ -27,11 +27,11 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.google_assistant import const, error, helpers, trait
-from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
+from spencerassistant.components.google_assistant import const, error, helpers, trait
+from spencerassistant.components.google_assistant.error import SmartspencerError
+from spencerassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -55,8 +55,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
-from homeassistant.util import color
+from spencerassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
+from spencerassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
@@ -138,7 +138,7 @@ async def test_camera_stream(hass):
     assert trt.query_attributes() == {}
 
     with patch(
-        "homeassistant.components.camera.async_request_stream",
+        "spencerassistant.components.camera.async_request_stream",
         return_value="/api/streams/bla",
     ):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
@@ -382,7 +382,7 @@ async def test_locate_vacuum(hass):
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
@@ -446,11 +446,11 @@ async def test_energystorage_vacuum(hass):
         "isPluggedIn": False,
     }
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": True}, {})
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": False}, {})
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
@@ -527,14 +527,14 @@ async def test_startstop_cover(hass):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": False}
 
-    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
+    with pytest.raises(SmartspencerError, match="Cover is already stopped"):
         await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
 
-    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
+    with pytest.raises(SmartspencerError, match="Starting a cover is not supported"):
         await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
 
     with pytest.raises(
-        SmartHomeError,
+        SmartspencerError,
         match="Command action.devices.commands.PauseUnpause is not supported",
     ):
         await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
@@ -654,7 +654,7 @@ async def test_color_setting_temperature_light(hass):
     )
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(
             trait.COMMAND_COLOR_ABSOLUTE,
             BASIC_DATA,
@@ -970,7 +970,7 @@ async def test_temperature_setting_climate_range(hass):
         climate.ATTR_HVAC_MODE: climate.HVACMode.COOL,
     }
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
             BASIC_DATA,
@@ -1017,7 +1017,7 @@ async def test_temperature_setting_climate_setpoint(hass):
 
     calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
 
-    with pytest.raises(helpers.SmartHomeError):
+    with pytest.raises(helpers.SmartspencerError):
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
             BASIC_DATA,
@@ -1104,7 +1104,7 @@ async def test_temperature_control(hass):
         "temperatureSetpointCelsius": 18,
         "temperatureAmbientCelsius": 18,
     }
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
@@ -1253,7 +1253,7 @@ async def test_lock_unlock_unlock(hass):
         hass, State("lock.front_door", lock.STATE_LOCKED), BASIC_CONFIG
     )
 
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
@@ -1281,7 +1281,7 @@ async def test_arm_disarm_arm_away(hass):
             STATE_ALARM_ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
-                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME
+                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_spencer
                 | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
             },
         ),
@@ -1291,9 +1291,9 @@ async def test_arm_disarm_arm_away(hass):
         "availableArmLevels": {
             "levels": [
                 {
-                    "level_name": "armed_home",
+                    "level_name": "armed_spencer",
                     "level_values": [
-                        {"level_synonym": ["armed home", "home"], "lang": "en"}
+                        {"level_synonym": ["armed spencer", "spencer"], "lang": "en"}
                     ],
                 },
                 {
@@ -1322,7 +1322,7 @@ async def test_arm_disarm_arm_away(hass):
 
     # Test with no secure_pin configured
 
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
@@ -1385,7 +1385,7 @@ async def test_arm_disarm_arm_away(hass):
     assert len(calls) == 1
 
     # Test already armed
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
@@ -1422,7 +1422,7 @@ async def test_arm_disarm_arm_away(hass):
     )
     assert len(calls) == 2
 
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         await trt.execute(
             trait.COMMAND_ARMDISARM,
             PIN_DATA,
@@ -1480,7 +1480,7 @@ async def test_arm_disarm_disarm(hass):
     )
 
     # Test without secure_pin configured
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
@@ -1529,7 +1529,7 @@ async def test_arm_disarm_disarm(hass):
     assert len(calls) == 1
 
     # Test already disarmed
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
@@ -1544,7 +1544,7 @@ async def test_arm_disarm_disarm(hass):
     assert err.value.code == const.ERR_ALREADY_DISARMED
 
     # Cancel arming after already armed will require pin
-    with pytest.raises(error.SmartHomeError) as err:
+    with pytest.raises(error.SmartspencerError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
@@ -1995,7 +1995,7 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
         BASIC_CONFIG,
     )
 
-    with pytest.raises(SmartHomeError):
+    with pytest.raises(SmartspencerError):
         await trt.execute(
             "action.devices.commands.NextInput",
             BASIC_DATA,
@@ -2003,7 +2003,7 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
             {},
         )
 
-    with pytest.raises(SmartHomeError):
+    with pytest.raises(SmartspencerError):
         await trt.execute(
             "action.devices.commands.PreviousInput",
             BASIC_DATA,
@@ -2011,7 +2011,7 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
             {},
         )
 
-    with pytest.raises(SmartHomeError):
+    with pytest.raises(SmartspencerError):
         await trt.execute(
             "action.devices.commands.InvalidCommand",
             BASIC_DATA,
@@ -2469,7 +2469,7 @@ async def test_openclose_cover_unknown_state(hass):
 
     assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
 
-    with pytest.raises(helpers.SmartHomeError):
+    with pytest.raises(helpers.SmartspencerError):
         trt.query_attributes()
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
@@ -2477,7 +2477,7 @@ async def test_openclose_cover_unknown_state(hass):
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
-    with pytest.raises(helpers.SmartHomeError):
+    with pytest.raises(helpers.SmartspencerError):
         trt.query_attributes()
 
 
@@ -2574,7 +2574,7 @@ async def test_openclose_cover_no_position(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
     with pytest.raises(
-        SmartHomeError, match=r"Current position not know for relative command"
+        SmartspencerError, match=r"Current position not know for relative command"
     ):
         await trt.execute(
             trait.COMMAND_OPENCLOSE_RELATIVE,
@@ -2583,7 +2583,7 @@ async def test_openclose_cover_no_position(hass):
             {},
         )
 
-    with pytest.raises(SmartHomeError, match=r"No support for partial open close"):
+    with pytest.raises(SmartspencerError, match=r"No support for partial open close"):
         await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
 
 
@@ -2805,10 +2805,10 @@ async def test_volume_media_player_relative(hass):
             ATTR_ENTITY_ID: "media_player.bla",
         }
 
-    with pytest.raises(SmartHomeError):
+    with pytest.raises(SmartspencerError):
         await trt.execute(trait.COMMAND_SET_VOLUME, BASIC_DATA, {"volumeLevel": 42}, {})
 
-    with pytest.raises(SmartHomeError):
+    with pytest.raises(SmartspencerError):
         await trt.execute(trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {})
 
 
@@ -2960,7 +2960,7 @@ async def test_humidity_setting_sensor_data(hass, state, ambient):
     else:
         assert trt.query_attributes() == {}
 
-    with pytest.raises(helpers.SmartHomeError) as err:
+    with pytest.raises(helpers.SmartspencerError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
@@ -3005,7 +3005,7 @@ async def test_transport_control(hass):
     )
 
     # Patch to avoid time ticking over during the command failing the test
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with patch("spencerassistant.util.dt.utcnow", return_value=now):
         await trt.execute(
             trait.COMMAND_MEDIA_SEEK_RELATIVE,
             BASIC_DATA,
@@ -3169,13 +3169,13 @@ async def test_channel(hass):
         media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
     }
 
-    with pytest.raises(SmartHomeError, match="Channel is not available"):
+    with pytest.raises(SmartspencerError, match="Channel is not available"):
         await trt.execute(
             trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
         )
     assert len(media_player_calls) == 1
 
-    with pytest.raises(SmartHomeError, match="Unsupported command"):
+    with pytest.raises(SmartspencerError, match="Unsupported command"):
         await trt.execute("Unknown command", BASIC_DATA, {"channelNumber": "1"}, {})
     assert len(media_player_calls) == 1
 

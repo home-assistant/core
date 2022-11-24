@@ -1,7 +1,7 @@
 """The tests for Netatmo cover."""
 from unittest.mock import patch
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from spencerassistant.const import ATTR_ENTITY_ID
 
 from .common import selected_platforms
 
@@ -26,7 +26,7 @@ async def test_cover_setup_and_services(hass, config_entry, netatmo_auth):
     assert hass.states.get(switch_entity).state == "closed"
 
     # Test cover open
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -47,7 +47,7 @@ async def test_cover_setup_and_services(hass, config_entry, netatmo_auth):
         )
 
     # Test cover close
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -68,7 +68,7 @@ async def test_cover_setup_and_services(hass, config_entry, netatmo_auth):
         )
 
     # Test stop cover
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
@@ -89,7 +89,7 @@ async def test_cover_setup_and_services(hass, config_entry, netatmo_auth):
         )
 
     # Test set cover position
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,

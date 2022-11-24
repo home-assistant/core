@@ -1,13 +1,13 @@
 """The tests for the Modbus climate component."""
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import (
+from spencerassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from spencerassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     HVACMode,
 )
-from homeassistant.components.modbus.const import (
+from spencerassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
     CONF_HVAC_MODE_AUTO,
@@ -25,7 +25,7 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN,
     DataType,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_NAME,
@@ -33,8 +33,8 @@ from homeassistant.const import (
     CONF_SLAVE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -279,10 +279,10 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
 async def test_service_climate_update(
     hass, mock_modbus, mock_ha, result, register_words
 ):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
     mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == result

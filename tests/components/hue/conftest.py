@@ -10,9 +10,9 @@ import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
 import pytest
 
-from homeassistant.components import hue
-from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import hue
+from spencerassistant.components.hue.v1 import sensor_base as hue_sensor_base
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -25,7 +25,7 @@ from tests.common import (
 @pytest.fixture(autouse=True)
 def no_request_delay():
     """Make the request refresh delay 0 for instant tests."""
-    with patch("homeassistant.components.hue.const.REQUEST_REFRESH_DELAY", 0):
+    with patch("spencerassistant.components.hue.const.REQUEST_REFRESH_DELAY", 0):
         yield
 
 
@@ -121,7 +121,7 @@ def create_mock_api_v1(hass):
         apiversion="9.9.9",
         software_version="1935144040",
     )
-    api.config.name = "Home"
+    api.config.name = "spencer"
 
     api.lights = aiohue_v1.Lights(logger, {}, mock_request)
     api.groups = aiohue_v1.Groups(logger, {}, mock_request)
@@ -152,7 +152,7 @@ def create_mock_api_v2(hass):
         ),
         spec=aiohue_v2.ConfigController,
     )
-    api.config.name = "Home"
+    api.config.name = "spencer"
     api.mock_requests = []
 
     api.logger = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ async def setup_bridge(hass, mock_bridge, config_entry):
         hue.migration, "is_v2_bridge", return_value=mock_bridge.api_version == 2
     ):
         config_entry.add_to_hass(hass)
-        with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
+        with patch("spencerassistant.components.hue.HueBridge", return_value=mock_bridge):
             await hass.config_entries.async_setup(config_entry.entry_id)
 
 

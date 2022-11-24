@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.tautulli.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.tautulli.const import DOMAIN
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_URL,
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -29,7 +29,7 @@ CONF_DATA = {
 def patch_config_flow_tautulli(mocked_tautulli) -> AsyncMock:
     """Mock Tautulli config flow."""
     return patch(
-        "homeassistant.components.tautulli.config_flow.PyTautulli.async_get_server_info",
+        "spencerassistant.components.tautulli.config_flow.PyTautulli.async_get_server_info",
         return_value=mocked_tautulli,
     )
 
@@ -56,8 +56,8 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
-        f"{url}&cmd=get_home_stats",
-        text=load_fixture("tautulli/get_home_stats.json"),
+        f"{url}&cmd=get_spencer_stats",
+        text=load_fixture("tautulli/get_spencer_stats.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
@@ -68,7 +68,7 @@ def mock_connection(
 
 
 async def setup_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     url: str = URL,
     api_key: str = API_KEY,
@@ -76,7 +76,7 @@ async def setup_integration(
     skip_entry_setup: bool = False,
     invalid_auth: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Tautulli integration in Home Assistant."""
+    """Set up the Tautulli integration in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,

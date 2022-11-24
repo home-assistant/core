@@ -7,11 +7,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, core, runner
-import homeassistant.config as config_util
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from spencerassistant import bootstrap, core, runner
+import spencerassistant.config as config_util
+from spencerassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
     MockModule,
@@ -39,17 +39,17 @@ async def apply_stop_hass(stop_hass):
 def mock_http_start_stop():
     """Mock HTTP start and stop."""
     with patch(
-        "homeassistant.components.http.start_http_server_and_save_config"
-    ), patch("homeassistant.components.http.HomeAssistantHTTP.stop"):
+        "spencerassistant.components.http.start_http_server_and_save_config"
+    ), patch("spencerassistant.components.http.spencerAssistantHTTP.stop"):
         yield
 
 
-@patch("homeassistant.bootstrap.async_enable_logging", Mock())
-async def test_home_assistant_core_config_validation(hass):
+@patch("spencerassistant.bootstrap.async_enable_logging", Mock())
+async def test_spencer_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done
     result = await bootstrap.async_from_config_dict(
-        {"homeassistant": {"latitude": "some string"}}, hass
+        {"spencerassistant": {"latitude": "some string"}}, hass
     )
     assert result is None
 
@@ -57,9 +57,9 @@ async def test_home_assistant_core_config_validation(hass):
 async def test_async_enable_logging(hass, caplog):
     """Test to ensure logging is migrated to the queue handlers."""
     with patch("logging.getLogger"), patch(
-        "homeassistant.bootstrap.async_activate_log_queue_handler"
+        "spencerassistant.bootstrap.async_activate_log_queue_handler"
     ) as mock_async_activate_log_queue_handler, patch(
-        "homeassistant.bootstrap.logging.handlers.RotatingFileHandler.doRollover",
+        "spencerassistant.bootstrap.logging.handlers.RotatingFileHandler.doRollover",
         side_effect=OSError,
     ):
         bootstrap.async_enable_logging(hass)
@@ -73,7 +73,7 @@ async def test_async_enable_logging(hass, caplog):
         mock_async_activate_log_queue_handler.assert_called_once()
         for f in glob.glob("test.log*"):
             os.remove(f)
-        for f in glob.glob("testing_config/home-assistant.log*"):
+        for f in glob.glob("testing_config/spencer-assistant.log*"):
             os.remove(f)
 
     assert "Error rolling over log file" in caplog.text
@@ -99,7 +99,7 @@ async def test_empty_setup(hass):
 async def test_core_failure_loads_safe_mode(hass, caplog):
     """Test failing core setup aborts further setup."""
     with patch(
-        "homeassistant.components.homeassistant.async_setup",
+        "spencerassistant.components.spencerassistant.async_setup",
         return_value=mock_coro(False),
     ):
         await bootstrap.async_from_config_dict({"group": {}}, hass)
@@ -113,7 +113,7 @@ async def test_core_failure_loads_safe_mode(hass, caplog):
 async def test_setting_up_config(hass):
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
-        hass, {"group hello": {}, "homeassistant": {}}
+        hass, {"group hello": {}, "spencerassistant": {}}
     )
 
     assert "group" in hass.config.components
@@ -152,7 +152,7 @@ async def test_setup_after_deps_all_present(hass):
     )
 
     with patch(
-        "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
+        "spencerassistant.components.logger.async_setup", gen_domain_setup("logger")
     ):
         await bootstrap._async_set_up_integrations(
             hass, {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}}
@@ -414,7 +414,7 @@ async def test_setup_after_deps_not_present(hass):
 def mock_is_virtual_env():
     """Mock enable logging."""
     with patch(
-        "homeassistant.bootstrap.is_virtual_env", return_value=False
+        "spencerassistant.bootstrap.is_virtual_env", return_value=False
     ) as is_virtual_env:
         yield is_virtual_env
 
@@ -422,7 +422,7 @@ def mock_is_virtual_env():
 @pytest.fixture
 def mock_enable_logging():
     """Mock enable logging."""
-    with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
+    with patch("spencerassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
 
 
@@ -430,7 +430,7 @@ def mock_enable_logging():
 def mock_mount_local_lib_path():
     """Mock enable logging."""
     with patch(
-        "homeassistant.bootstrap.async_mount_local_lib_path"
+        "spencerassistant.bootstrap.async_mount_local_lib_path"
     ) as mount_local_lib_path:
         yield mount_local_lib_path
 
@@ -439,7 +439,7 @@ def mock_mount_local_lib_path():
 def mock_process_ha_config_upgrade():
     """Mock enable logging."""
     with patch(
-        "homeassistant.config.process_ha_config_upgrade"
+        "spencerassistant.config.process_ha_config_upgrade"
     ) as process_ha_config_upgrade:
         yield process_ha_config_upgrade
 
@@ -448,7 +448,7 @@ def mock_process_ha_config_upgrade():
 def mock_ensure_config_exists():
     """Mock enable logging."""
     with patch(
-        "homeassistant.config.async_ensure_config_exists", return_value=True
+        "spencerassistant.config.async_ensure_config_exists", return_value=True
     ) as ensure_config_exists:
         yield ensure_config_exists
 
@@ -469,7 +469,7 @@ async def test_setup_hass(
     log_no_color = Mock()
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml",
+        "spencerassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
     ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
@@ -524,12 +524,12 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml",
+        "spencerassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
     ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
         bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05
     ), patch(
-        "homeassistant.components.frontend.async_setup",
+        "spencerassistant.components.frontend.async_setup",
         side_effect=_async_setup_that_blocks_startup,
     ):
         await bootstrap.async_setup_hass(
@@ -557,7 +557,7 @@ async def test_setup_hass_invalid_yaml(
 ):
     """Test it works."""
     with patch(
-        "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
+        "spencerassistant.config.async_hass_config_yaml", side_effect=spencerAssistantError
     ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -611,8 +611,8 @@ async def test_setup_hass_safe_mode(
     loop,
 ):
     """Test it works."""
-    with patch("homeassistant.components.browser.setup") as browser_setup, patch(
-        "homeassistant.config_entries.ConfigEntries.async_domains",
+    with patch("spencerassistant.components.browser.setup") as browser_setup, patch(
+        "spencerassistant.config_entries.ConfigEntries.async_domains",
         return_value=["browser"],
     ):
         hass = await bootstrap.async_setup_hass(
@@ -645,8 +645,8 @@ async def test_setup_hass_invalid_core_config(
 ):
     """Test it works."""
     with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"homeassistant": {"non-existing": 1}},
+        "spencerassistant.config.async_hass_config_yaml",
+        return_value={"spencerassistant": {"non-existing": 1}},
     ):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
@@ -678,9 +678,9 @@ async def test_setup_safe_mode_if_no_frontend(
     log_no_color = Mock()
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml",
+        "spencerassistant.config.async_hass_config_yaml",
         return_value={
-            "homeassistant": {
+            "spencerassistant": {
                 "internal_url": "http://192.168.1.100:8123",
                 "external_url": "https://abcdef.ui.nabu.casa",
             },

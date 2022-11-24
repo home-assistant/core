@@ -8,20 +8,20 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
 )
-from homeassistant.components.zha.core.const import (
+from spencerassistant.components.zha.core.const import (
     CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     ZHA_OPTIONS,
 )
-from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.light import FLASH_EFFECTS
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.zha.core.group import GroupMember
+from spencerassistant.components.zha.light import FLASH_EFFECTS
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+import spencerassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
@@ -88,7 +88,7 @@ LIGHT_COLOR = {
 def light_platform_only():
     """Only setup the light and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
             Platform.DEVICE_TRACKER,
@@ -1242,7 +1242,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_off_from_hass(hass, cluster, entity_id):
-    """Test turning off the light from Home Assistant."""
+    """Test turning off the light from spencer Assistant."""
 
     # turn off via UI
     cluster.request.reset_mock()
@@ -1410,7 +1410,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "spencerassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_light_entity(

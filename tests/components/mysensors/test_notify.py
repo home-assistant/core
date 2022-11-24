@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, call
 
 from mysensors.sensor import Sensor
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def test_text_type(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     text_node: Sensor,
     transport_write: MagicMock,
     integration: MockConfigEntry,
@@ -59,7 +59,7 @@ async def test_text_type(
 
 
 async def test_text_type_discovery(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     text_node: Sensor,
     transport_write: MagicMock,
     receive_message: Callable[[str], None],

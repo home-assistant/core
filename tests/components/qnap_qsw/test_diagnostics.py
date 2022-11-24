@@ -30,10 +30,10 @@ from aioqsw.const import (
     QSD_VERSION,
 )
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.qnap_qsw.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.qnap_qsw.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from .util import (
     CONFIG,
@@ -49,7 +49,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession
+    hass: spencerAssistant, hass_client: ClientSession
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)

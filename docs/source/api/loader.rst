@@ -1,7 +1,7 @@
 .. _loader_module:
 
-:mod:`homeassistant.loader`
+:mod:`spencerassistant.loader`
 ---------------------------
 
-.. automodule:: homeassistant.loader
+.. automodule:: spencerassistant.loader
     :members:

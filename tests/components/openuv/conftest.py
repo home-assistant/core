@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.openuv import CONF_FROM_WINDOW, CONF_TO_WINDOW, DOMAIN
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -56,12 +56,12 @@ def data_uv_index_fixture():
 async def setup_openuv_fixture(hass, config, data_protection_window, data_uv_index):
     """Define a fixture to set up OpenUV."""
     with patch(
-        "homeassistant.components.openuv.Client.uv_index", return_value=data_uv_index
+        "spencerassistant.components.openuv.Client.uv_index", return_value=data_uv_index
     ), patch(
-        "homeassistant.components.openuv.Client.uv_protection_window",
+        "spencerassistant.components.openuv.Client.uv_protection_window",
         return_value=data_protection_window,
     ), patch(
-        "homeassistant.components.openuv.PLATFORMS", []
+        "spencerassistant.components.openuv.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

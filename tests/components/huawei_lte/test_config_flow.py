@@ -9,10 +9,10 @@ import requests.exceptions
 from requests.exceptions import ConnectionError
 from requests_mock import ANY
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
-from homeassistant.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
+from spencerassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -194,8 +194,8 @@ async def test_success(hass, login_requests_mock):
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text="<response>OK</response>",
     )
-    with patch("homeassistant.components.huawei_lte.async_setup"), patch(
-        "homeassistant.components.huawei_lte.async_setup_entry"
+    with patch("spencerassistant.components.huawei_lte.async_setup"), patch(
+        "spencerassistant.components.huawei_lte.async_setup_entry"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

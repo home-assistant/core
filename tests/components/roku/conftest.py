@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rokuecp import Device as RokuDevice
 
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.const import CONF_HOST
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -33,7 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.roku.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.roku.async_setup_entry", return_value=True):
         yield
 
 
@@ -56,7 +56,7 @@ def mock_roku_config_flow(
     """Return a mocked Roku client."""
 
     with patch(
-        "homeassistant.components.roku.config_flow.Roku", autospec=True
+        "spencerassistant.components.roku.config_flow.Roku", autospec=True
     ) as roku_mock:
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
@@ -71,7 +71,7 @@ def mock_roku(
     """Return a mocked Roku client."""
 
     with patch(
-        "homeassistant.components.roku.coordinator.Roku", autospec=True
+        "spencerassistant.components.roku.coordinator.Roku", autospec=True
     ) as roku_mock:
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
@@ -81,7 +81,7 @@ def mock_roku(
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_roku: MagicMock
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, mock_roku: MagicMock
 ) -> MockConfigEntry:
     """Set up the Roku integration for testing."""
     mock_config_entry.add_to_hass(hass)

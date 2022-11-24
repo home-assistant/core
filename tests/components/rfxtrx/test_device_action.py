@@ -6,11 +6,11 @@ from typing import Any, NamedTuple
 import RFXtrx
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.helpers.device_registry import DeviceRegistry
+from spencerassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
 

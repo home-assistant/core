@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.rflink import (
+from spencerassistant.bootstrap import async_setup_component
+from spencerassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
@@ -18,14 +18,14 @@ from homeassistant.components.rflink import (
     TMP_ENTITY,
     RflinkCommand,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     SERVICE_STOP_COVER,
     SERVICE_TURN_OFF,
 )
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.helpers import entity_registry as er
 
 
 async def mock_rflink(
@@ -60,7 +60,7 @@ async def mock_rflink(
 
     mock_create = Mock(wraps=create_rflink_connection)
     monkeypatch.setattr(
-        "homeassistant.components.rflink.create_rflink_connection", mock_create
+        "spencerassistant.components.rflink.create_rflink_connection", mock_create
     )
 
     await async_setup_component(hass, "rflink", config)
@@ -384,11 +384,11 @@ async def test_not_connected(hass, monkeypatch):
     """Test Error when sending commands to a disconnected device."""
     import pytest
 
-    from homeassistant.core import HomeAssistantError
+    from spencerassistant.core import spencerAssistantError
 
     test_device = RflinkCommand("DUMMY_DEVICE")
     RflinkCommand.set_rflink_protocol(None)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await test_device._async_handle_command("turn_on")
 
 

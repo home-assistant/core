@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.bluetooth import BluetoothServiceInfoBleak
+from spencerassistant.const import CONF_ADDRESS
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data
@@ -32,18 +32,18 @@ USER_INPUT_INVALID = {
 def patch_async_setup_entry(return_value=True):
     """Patch async setup entry to return True."""
     return patch(
-        "homeassistant.components.switchbot.async_setup_entry",
+        "spencerassistant.components.switchbot.async_setup_entry",
         return_value=return_value,
     )
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     *,
     data: dict = ENTRY_CONFIG,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Switchbot integration in Home Assistant."""
+    """Set up the Switchbot integration in spencer Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=data)
     entry.add_to_hass(hass)
 

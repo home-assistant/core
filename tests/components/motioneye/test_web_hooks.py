@@ -16,7 +16,7 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 
-from homeassistant.components.motioneye.const import (
+from spencerassistant.components.motioneye.const import (
     ATTR_EVENT_TYPE,
     CONF_WEBHOOK_SET_OVERWRITE,
     DEFAULT_SCAN_INTERVAL,
@@ -24,13 +24,13 @@ from homeassistant.components.motioneye.const import (
     EVENT_FILE_STORED,
     EVENT_MOTION_DETECTED,
 )
-from homeassistant.components.webhook import URL_WEBHOOK_PATH
-from homeassistant.const import ATTR_DEVICE_ID, CONF_URL, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.network import NoURLAvailableError
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.webhook import URL_WEBHOOK_PATH
+from spencerassistant.const import ATTR_DEVICE_ID, CONF_URL, CONF_WEBHOOK_ID
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.helpers.network import NoURLAvailableError
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from . import (
     TEST_CAMERA,
@@ -62,7 +62,7 @@ WEB_HOOK_FILE_STORED_QUERY_STRING = (
 )
 
 
-async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
+async def test_setup_camera_without_webhook(hass: spencerAssistant) -> None:
     """Test a camera with no webhook."""
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
@@ -93,7 +93,7 @@ async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
 
 
 async def test_setup_camera_with_wrong_webhook(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test camera with wrong web hook."""
     wrong_url = "http://wrong-url"
@@ -114,7 +114,7 @@ async def test_setup_camera_with_wrong_webhook(
 
     # Update the options, which will trigger a reload with the new behavior.
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=client,
     ):
         hass.config_entries.async_update_entry(
@@ -149,7 +149,7 @@ async def test_setup_camera_with_wrong_webhook(
 
 
 async def test_setup_camera_with_old_webhook(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Verify that webhooks are overwritten if they are from this integration.
 
@@ -202,7 +202,7 @@ async def test_setup_camera_with_old_webhook(
 
 
 async def test_setup_camera_with_correct_webhook(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Verify that webhooks are not overwritten if they are already correct."""
 
@@ -248,17 +248,17 @@ async def test_setup_camera_with_correct_webhook(
     assert not client.async_set_camera.called
 
 
-async def test_setup_camera_with_no_home_assistant_urls(
-    hass: HomeAssistant,
+async def test_setup_camera_with_no_spencer_assistant_urls(
+    hass: spencerAssistant,
     caplog: Any,
 ) -> None:
-    """Verify setup works without Home Assistant internal/external URLs."""
+    """Verify setup works without spencer Assistant internal/external URLs."""
 
     client = create_mock_motioneye_client()
     config_entry = create_mock_motioneye_config_entry(hass, data={CONF_URL: TEST_URL})
 
     with patch(
-        "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
+        "spencerassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
     ):
         await setup_mock_motioneye_config_entry(
             hass,
@@ -267,7 +267,7 @@ async def test_setup_camera_with_no_home_assistant_urls(
         )
 
     # Should log a warning ...
-    assert "Unable to get Home Assistant URL" in caplog.text
+    assert "Unable to get spencer Assistant URL" in caplog.text
 
     # ... should not set callbacks in the camera ...
     assert not client.async_set_camera.called
@@ -277,7 +277,7 @@ async def test_setup_camera_with_no_home_assistant_urls(
     assert entity_state
 
 
-async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
+async def test_good_query(hass: spencerAssistant, hass_client_no_auth: Any) -> None:
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -320,7 +320,7 @@ async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None
 
 
 async def test_bad_query_missing_parameters(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: spencerAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a query with missing parameters."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -335,7 +335,7 @@ async def test_bad_query_missing_parameters(
 
 
 async def test_bad_query_no_such_device(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: spencerAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -354,7 +354,7 @@ async def test_bad_query_no_such_device(
 
 
 async def test_bad_query_cannot_decode(
-    hass: HomeAssistant, hass_client_no_auth: Any
+    hass: spencerAssistant, hass_client_no_auth: Any
 ) -> None:
     """Test a correct query with incorrect device."""
     await async_setup_component(hass, "http", {"http": {}})
@@ -374,7 +374,7 @@ async def test_bad_query_cannot_decode(
     assert not storage_events
 
 
-async def test_event_media_data(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
+async def test_event_media_data(hass: spencerAssistant, hass_client_no_auth: Any) -> None:
     """Test an event with a file path generates media data."""
     await async_setup_component(hass, "http", {"http": {}})
 

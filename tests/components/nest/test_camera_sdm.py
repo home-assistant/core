@@ -13,15 +13,15 @@ import aiohttp
 from google_nest_sdm.event import EventMessage
 import pytest
 
-from homeassistant.components import camera
-from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
-from homeassistant.components.nest.const import DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.components import camera
+from spencerassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
+from spencerassistant.components.nest.const import DOMAIN
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.const import ATTR_FRIENDLY_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 from .conftest import FakeAuth
@@ -152,10 +152,10 @@ async def mock_create_stream(hass) -> Mock:
     """Fixture to mock out the create stream call."""
     assert await async_setup_component(hass, "stream", {})
     with patch(
-        "homeassistant.components.camera.create_stream", autospec=True
+        "spencerassistant.components.camera.create_stream", autospec=True
     ) as mock_stream:
         mock_stream.return_value.endpoint_url.return_value = (
-            "http://home.assistant/playlist.m3u8"
+            "http://spencer.assistant/playlist.m3u8"
         )
         mock_stream.return_value.async_get_image = AsyncMock()
         mock_stream.return_value.async_get_image.return_value = IMAGE_BYTES_FROM_STREAM
@@ -174,19 +174,19 @@ async def async_get_image(hass, width=None, height=None):
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 
 
-async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
+async def test_no_devices(hass: spencerAssistant, setup_platform: PlatformSetup):
     """Test configuration that returns no devices."""
     await setup_platform()
     assert len(hass.states.async_all()) == 0
 
 
 async def test_ineligible_device(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test configuration with devices that do not support cameras."""
     create_device.create(
@@ -202,7 +202,7 @@ async def test_ineligible_device(
 
 
 async def test_camera_device(
-    hass: HomeAssistant, setup_platform: PlatformSetup, camera_device: None
+    hass: spencerAssistant, setup_platform: PlatformSetup, camera_device: None
 ):
     """Test a basic camera with a live stream."""
     await setup_platform()
@@ -226,7 +226,7 @@ async def test_camera_device(
 
 
 async def test_camera_stream(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     camera_device: None,
     auth: FakeAuth,
@@ -279,7 +279,7 @@ async def test_camera_ws_stream(
     assert msg["id"] == 2
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
+    assert msg["result"]["url"] == "http://spencer.assistant/playlist.m3u8"
 
     assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
@@ -343,7 +343,7 @@ async def test_camera_stream_missing_trait(hass, setup_platform, create_device):
 
 
 async def test_refresh_expired_stream_token(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     camera_device: None,
@@ -371,7 +371,7 @@ async def test_refresh_expired_stream_token(
 
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
@@ -393,7 +393,7 @@ async def test_refresh_expired_stream_token(
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # HLS stream is not re-created, just the source is updated
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as create_stream:
         hls_url1 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"
         )
@@ -412,7 +412,7 @@ async def test_refresh_expired_stream_token(
     assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
 
     # HLS stream is still not re-created
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as create_stream:
         hls_url2 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"
         )
@@ -420,7 +420,7 @@ async def test_refresh_expired_stream_token(
 
 
 async def test_stream_response_already_expired(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     auth: FakeAuth,
     setup_platform: PlatformSetup,
     camera_device: None,
@@ -452,7 +452,7 @@ async def test_stream_response_already_expired(
 
 
 async def test_camera_removed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     auth: FakeAuth,
     camera_device: None,
     subscriber: FakeSubscriber,
@@ -483,7 +483,7 @@ async def test_camera_removed(
 
 
 async def test_camera_remove_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     auth: FakeAuth,
     camera_device: None,
     setup_platform: PlatformSetup,
@@ -513,7 +513,7 @@ async def test_camera_remove_failure(
 
 
 async def test_refresh_expired_stream_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     auth: FakeAuth,
     setup_platform: PlatformSetup,
     camera_device: None,
@@ -538,7 +538,7 @@ async def test_refresh_expired_stream_failure(
     assert cam.state == STATE_STREAMING
 
     # Request an HLS stream
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         create_stream.return_value.stop = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
@@ -558,7 +558,7 @@ async def test_refresh_expired_stream_failure(
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
     # Requesting an HLS stream will create an entirely new stream
-    with patch("homeassistant.components.camera.create_stream") as create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as create_stream:
         create_stream.return_value.start = AsyncMock()
         # The HLS stream endpoint was invalidated, with a new auth token
         hls_url2 = await camera.async_request_stream(

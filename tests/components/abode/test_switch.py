@@ -1,20 +1,20 @@
 """Tests for the Abode switch device."""
 from unittest.mock import patch
 
-from homeassistant.components.abode import (
+from spencerassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_TRIGGER_AUTOMATION,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -24,7 +24,7 @@ DEVICE_ID = "switch.test_switch"
 DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(hass: spencerAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -36,7 +36,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     assert entry.unique_id == DEVICE_UID
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_attributes(hass: spencerAssistant) -> None:
     """Test the switch attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -44,7 +44,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_switch_on(hass: HomeAssistant) -> None:
+async def test_switch_on(hass: spencerAssistant) -> None:
     """Test the switch can be turned on."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -57,7 +57,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         mock_switch_on.assert_called_once()
 
 
-async def test_switch_off(hass: HomeAssistant) -> None:
+async def test_switch_off(hass: spencerAssistant) -> None:
     """Test the switch can be turned off."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -70,7 +70,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         mock_switch_off.assert_called_once()
 
 
-async def test_automation_attributes(hass: HomeAssistant) -> None:
+async def test_automation_attributes(hass: spencerAssistant) -> None:
     """Test the automation attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -79,7 +79,7 @@ async def test_automation_attributes(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-async def test_turn_automation_off(hass: HomeAssistant) -> None:
+async def test_turn_automation_off(hass: spencerAssistant) -> None:
     """Test the automation can be turned off."""
     with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
         await setup_platform(hass, SWITCH_DOMAIN)
@@ -95,7 +95,7 @@ async def test_turn_automation_off(hass: HomeAssistant) -> None:
         mock_trigger.assert_called_once_with(False)
 
 
-async def test_turn_automation_on(hass: HomeAssistant) -> None:
+async def test_turn_automation_on(hass: spencerAssistant) -> None:
     """Test the automation can be turned on."""
     with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
         await setup_platform(hass, SWITCH_DOMAIN)
@@ -111,7 +111,7 @@ async def test_turn_automation_on(hass: HomeAssistant) -> None:
         mock_trigger.assert_called_once_with(True)
 
 
-async def test_trigger_automation(hass: HomeAssistant) -> None:
+async def test_trigger_automation(hass: spencerAssistant) -> None:
     """Test the trigger automation service."""
     await setup_platform(hass, SWITCH_DOMAIN)
 

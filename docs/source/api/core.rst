@@ -1,7 +1,7 @@
 .. _core_module:
 
-:mod:`homeassistant.core`
+:mod:`spencerassistant.core`
 -------------------------
 
-.. automodule:: homeassistant.core
+.. automodule:: spencerassistant.core
     :members:

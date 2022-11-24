@@ -9,18 +9,18 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.shelly.const import (
+from spencerassistant.components.shelly.const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import CONF_HOST
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity_registry import async_get
+from spencerassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -28,14 +28,14 @@ MOCK_MAC = "123456789ABC"
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     gen: int,
     model="SHSW-25",
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Shelly integration in Home Assistant."""
+    """Set up the Shelly integration in spencer Assistant."""
     data = {
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
@@ -78,7 +78,7 @@ def inject_rpc_device_event(
     mock_rpc_device.mock_event()
 
 
-async def mock_rest_update(hass: HomeAssistant):
+async def mock_rest_update(hass: spencerAssistant):
     """Move time to create REST sensors update event."""
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
@@ -86,7 +86,7 @@ async def mock_rest_update(hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
-async def mock_polling_rpc_update(hass: HomeAssistant):
+async def mock_polling_rpc_update(hass: spencerAssistant):
     """Move time to create polling RPC sensors update event."""
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
@@ -95,7 +95,7 @@ async def mock_polling_rpc_update(hass: HomeAssistant):
 
 
 def register_entity(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain: str,
     object_id: str,
     unique_id: str,

@@ -9,7 +9,7 @@ from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
-from homeassistant.components.bluetooth import (
+from spencerassistant.components.bluetooth import (
     DOMAIN,
     SOURCE_LOCAL,
     BluetoothServiceInfo,
@@ -17,9 +17,9 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     models,
 )
-from homeassistant.components.bluetooth.manager import BluetoothManager
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.bluetooth.manager import BluetoothManager
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -60,14 +60,14 @@ def _get_manager() -> BluetoothManager:
 
 
 def inject_advertisement(
-    hass: HomeAssistant, device: BLEDevice, adv: AdvertisementData
+    hass: spencerAssistant, device: BLEDevice, adv: AdvertisementData
 ) -> None:
     """Inject an advertisement into the manager."""
     return inject_advertisement_with_source(hass, device, adv, SOURCE_LOCAL)
 
 
 def inject_advertisement_with_source(
-    hass: HomeAssistant, device: BLEDevice, adv: AdvertisementData, source: str
+    hass: spencerAssistant, device: BLEDevice, adv: AdvertisementData, source: str
 ) -> None:
     """Inject an advertisement into the manager from a specific source."""
     inject_advertisement_with_time_and_source(
@@ -76,7 +76,7 @@ def inject_advertisement_with_source(
 
 
 def inject_advertisement_with_time_and_source(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device: BLEDevice,
     adv: AdvertisementData,
     time: float,
@@ -89,7 +89,7 @@ def inject_advertisement_with_time_and_source(
 
 
 def inject_advertisement_with_time_and_source_connectable(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device: BLEDevice,
     adv: AdvertisementData,
     time: float,
@@ -115,7 +115,7 @@ def inject_advertisement_with_time_and_source_connectable(
 
 
 def inject_bluetooth_service_info_bleak(
-    hass: HomeAssistant, info: BluetoothServiceInfoBleak
+    hass: spencerAssistant, info: BluetoothServiceInfoBleak
 ) -> None:
     """Inject an advertisement into the manager with connectable status."""
     advertisement_data = generate_advertisement_data(
@@ -141,7 +141,7 @@ def inject_bluetooth_service_info_bleak(
 
 
 def inject_bluetooth_service_info(
-    hass: HomeAssistant, info: BluetoothServiceInfo
+    hass: spencerAssistant, info: BluetoothServiceInfo
 ) -> None:
     """Inject a BluetoothServiceInfo into the manager."""
     advertisement_data = generate_advertisement_data(  # type: ignore[no-untyped-call]
@@ -175,18 +175,18 @@ def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     )
 
 
-async def async_setup_with_default_adapter(hass: HomeAssistant) -> MockConfigEntry:
+async def async_setup_with_default_adapter(hass: spencerAssistant) -> MockConfigEntry:
     """Set up the Bluetooth integration with a default adapter."""
     return await _async_setup_with_adapter(hass, DEFAULT_ADDRESS)
 
 
-async def async_setup_with_one_adapter(hass: HomeAssistant) -> MockConfigEntry:
+async def async_setup_with_one_adapter(hass: spencerAssistant) -> MockConfigEntry:
     """Set up the Bluetooth integration with one adapter."""
     return await _async_setup_with_adapter(hass, "00:00:00:00:00:01")
 
 
 async def _async_setup_with_adapter(
-    hass: HomeAssistant, address: str
+    hass: spencerAssistant, address: str
 ) -> MockConfigEntry:
     """Set up the Bluetooth integration with any adapter."""
     entry = MockConfigEntry(domain="bluetooth", unique_id=address)

@@ -3,12 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import device_automation
-import homeassistant.components.automation as automation
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import device_automation
+import spencerassistant.components.automation as automation
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -207,7 +207,7 @@ async def test_websocket_get_action_capabilities(
     )
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
-        "arm_home": {"extra_fields": []},
+        "arm_spencer": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
         "arm_vacation": {"extra_fields": []},
         "disarm": {
@@ -483,7 +483,7 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
     with patch(
-        "homeassistant.components.light.device_trigger.async_get_triggers",
+        "spencerassistant.components.light.device_trigger.async_get_triggers",
         side_effect=KeyError,
     ):
         result = await device_automation.async_get_device_automations(

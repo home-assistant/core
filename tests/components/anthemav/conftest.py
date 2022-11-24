@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.anthemav.const import CONF_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.anthemav.const import CONF_MODEL, DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -68,7 +68,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection_create: AsyncMock,
 ) -> MockConfigEntry:

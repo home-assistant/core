@@ -156,7 +156,7 @@ async def lint(files):
 
 async def main():
     """Run the main loop."""
-    # Ensure we are in the homeassistant root
+    # Ensure we are in the spencerassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
     files = await git()
@@ -184,7 +184,7 @@ async def main():
     test_files = set()
     gen_req = False
     for fname in pyfiles:
-        if fname.startswith("homeassistant/components/"):
+        if fname.startswith("spencerassistant/components/"):
             gen_req = True  # requirements script for components
         # Find test files...
         if fname.startswith("tests/"):

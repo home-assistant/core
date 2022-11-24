@@ -1,8 +1,8 @@
 """The tests for the litejet component."""
-from homeassistant.components import litejet
-from homeassistant.components.litejet.const import DOMAIN
-from homeassistant.const import CONF_PORT
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import litejet
+from spencerassistant.components.litejet.const import DOMAIN
+from spencerassistant.const import CONF_PORT
+from spencerassistant.setup import async_setup_component
 
 from . import async_init_integration
 

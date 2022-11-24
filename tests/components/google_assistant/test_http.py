@@ -3,23 +3,23 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from unittest.mock import ANY, patch
 
-from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
-from homeassistant.components.google_assistant.const import (
+from spencerassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
+from spencerassistant.components.google_assistant.const import (
     DOMAIN,
     EVENT_COMMAND_RECEIVED,
-    HOMEGRAPH_TOKEN_URL,
+    spencerGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.components.google_assistant.http import (
+from spencerassistant.components.google_assistant.http import (
     GoogleConfig,
-    _get_homegraph_jwt,
-    _get_homegraph_token,
+    _get_spencergraph_jwt,
+    _get_spencergraph_token,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
 
@@ -45,7 +45,7 @@ async def test_get_jwt(hass):
     """Test signing of key."""
 
     jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
-    res = _get_homegraph_jwt(
+    res = _get_spencergraph_jwt(
         datetime(2019, 10, 14, tzinfo=timezone.utc),
         DUMMY_CONFIG["service_account"]["client_email"],
         DUMMY_CONFIG["service_account"]["private_key"],
@@ -58,12 +58,12 @@ async def test_get_access_token(hass, aioclient_mock):
     jwt = "dummyjwt"
 
     aioclient_mock.post(
-        HOMEGRAPH_TOKEN_URL,
+        spencerGRAPH_TOKEN_URL,
         status=HTTPStatus.OK,
         json={"access_token": "1234", "expires_in": 3600},
     )
 
-    await _get_homegraph_token(hass, jwt)
+    await _get_spencergraph_token(hass, jwt)
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][3] == {
         "Authorization": f"Bearer {jwt}",
@@ -80,11 +80,11 @@ async def test_update_access_token(hass):
 
     base_time = datetime(2019, 10, 14, tzinfo=timezone.utc)
     with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_token"
+        "spencerassistant.components.google_assistant.http._get_spencergraph_token"
     ) as mock_get_token, patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_jwt"
+        "spencerassistant.components.google_assistant.http._get_spencergraph_jwt"
     ) as mock_get_jwt, patch(
-        "homeassistant.core.dt_util.utcnow"
+        "spencerassistant.core.dt_util.utcnow"
     ) as mock_utcnow:
         mock_utcnow.return_value = base_time
         mock_get_jwt.return_value = jwt
@@ -106,19 +106,19 @@ async def test_update_access_token(hass):
         mock_get_token.assert_called_once()
 
 
-async def test_call_homegraph_api(hass, aioclient_mock, hass_storage, caplog):
-    """Test the function to call the homegraph api."""
+async def test_call_spencergraph_api(hass, aioclient_mock, hass_storage, caplog):
+    """Test the function to call the spencergraph api."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
     with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_token"
+        "spencerassistant.components.google_assistant.http._get_spencergraph_token"
     ) as mock_get_token:
         mock_get_token.return_value = MOCK_TOKEN
 
         aioclient_mock.post(MOCK_URL, status=HTTPStatus.OK, json={})
 
-        res = await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        res = await config.async_call_spencergraph_api(MOCK_URL, MOCK_JSON)
         assert res == HTTPStatus.OK
 
         assert mock_get_token.call_count == 1
@@ -129,19 +129,19 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage, caplog):
         assert call[3] == MOCK_HEADER
 
 
-async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
+async def test_call_spencergraph_api_retry(hass, aioclient_mock, hass_storage):
     """Test the that the calls get retried with new token on 401."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
     with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_token"
+        "spencerassistant.components.google_assistant.http._get_spencergraph_token"
     ) as mock_get_token:
         mock_get_token.return_value = MOCK_TOKEN
 
         aioclient_mock.post(MOCK_URL, status=HTTPStatus.UNAUTHORIZED, json={})
 
-        await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        await config.async_call_spencergraph_api(MOCK_URL, MOCK_JSON)
 
         assert mock_get_token.call_count == 2
         assert aioclient_mock.call_count == 2
@@ -163,11 +163,11 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
     await config.async_connect_agent_user(agent_user_id)
     message = {"devices": {}}
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
-    with patch.object(config, "async_call_homegraph_api") as mock_call:
+    with patch.object(config, "async_call_spencergraph_api") as mock_call:
         await config.async_report_state(message, agent_user_id)
         mock_call.assert_called_once_with(
             REPORT_STATE_BASE_URL,
@@ -196,7 +196,7 @@ async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storag
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
@@ -228,7 +228,7 @@ async def test_should_expose(hass):
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
@@ -237,7 +237,7 @@ async def test_should_expose(hass):
         is False
     )
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
@@ -254,7 +254,7 @@ async def test_missing_service_account(hass):
     config = GoogleConfig(hass, incorrect_config)
     await config.async_initialize()
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
@@ -290,7 +290,7 @@ async def test_async_enable_local_sdk(hass, hass_client, hass_storage, caplog):
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
 
-    with patch.object(config, "async_call_homegraph_api"):
+    with patch.object(config, "async_call_spencergraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 

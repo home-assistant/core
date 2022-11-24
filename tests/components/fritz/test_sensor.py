@@ -6,25 +6,25 @@ from typing import Any
 
 from fritzconnection.core.exceptions import FritzConnectionException
 
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.fritz.sensor import SENSOR_TYPES
-from homeassistant.components.sensor import (
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.components.fritz.sensor import SENSOR_TYPES
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .const import MOCK_USER_DATA
 
@@ -110,7 +110,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
 }
 
 
-async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_setup(hass: spencerAssistant, fc_class_mock, fh_class_mock):
     """Test setup of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -132,7 +132,7 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
                 assert sensor.attributes.get(key) == val
 
 
-async def test_sensor_update_fail(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_update_fail(hass: spencerAssistant, fc_class_mock, fh_class_mock):
     """Test failed update of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

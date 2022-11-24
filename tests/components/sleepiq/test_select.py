@@ -1,15 +1,15 @@
 """Tests for the SleepIQ select platform."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.select import DOMAIN, SERVICE_SELECT_OPTION
-from homeassistant.const import (
+from spencerassistant.components.select import DOMAIN, SERVICE_SELECT_OPTION
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_OPTION,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .conftest import (
     BED_ID,
@@ -22,7 +22,7 @@ from .conftest import (
 
 
 async def test_split_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq: MagicMock
+    hass: spencerAssistant, mock_asyncsleepiq: MagicMock
 ) -> None:
     """Test the SleepIQ select entity for split foundation presets."""
     entry = await setup_platform(hass, DOMAIN)
@@ -78,7 +78,7 @@ async def test_split_foundation_preset(
 
 
 async def test_single_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq_single_foundation: MagicMock
+    hass: spencerAssistant, mock_asyncsleepiq_single_foundation: MagicMock
 ) -> None:
     """Test the SleepIQ select entity for single foundation presets."""
     entry = await setup_platform(hass, DOMAIN)

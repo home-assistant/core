@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.guardian import CONF_UID, DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.guardian import CONF_UID, DOMAIN
+from spencerassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -123,7 +123,7 @@ async def setup_guardian_fixture(
     ), patch(
         "aioguardian.client.Client.disconnect"
     ), patch(
-        "homeassistant.components.guardian.PLATFORMS", []
+        "spencerassistant.components.guardian.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

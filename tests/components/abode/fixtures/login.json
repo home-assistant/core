@@ -109,7 +109,7 @@
   "integrations": {
     "nest": {
       "is_connected": 0,
-      "is_home_selected": 0
+      "is_spencer_selected": 0
     }
   }
 }

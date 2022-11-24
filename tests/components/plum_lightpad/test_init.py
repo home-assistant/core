@@ -4,14 +4,14 @@ from unittest.mock import Mock, patch
 from aiohttp import ContentTypeError
 from requests.exceptions import HTTPError
 
-from homeassistant.components.plum_lightpad.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.plum_lightpad.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_no_domain_config(hass: HomeAssistant):
+async def test_async_setup_no_domain_config(hass: spencerAssistant):
     """Test setup without configuration is noop."""
     result = await async_setup_component(hass, DOMAIN, {})
 
@@ -19,12 +19,12 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     assert DOMAIN not in hass.data
 
 
-async def test_async_setup_imports_from_config(hass: HomeAssistant):
+async def test_async_setup_imports_from_config(hass: spencerAssistant):
     """Test that specifying config will setup an entry."""
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData"
     ) as mock_loadCloudData, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry",
+        "spencerassistant.components.plum_lightpad.async_setup_entry",
         return_value=True,
     ) as mock_async_setup_entry:
         result = await async_setup_component(
@@ -44,7 +44,7 @@ async def test_async_setup_imports_from_config(hass: HomeAssistant):
     assert len(mock_async_setup_entry.mock_calls) == 1
 
 
-async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
+async def test_async_setup_entry_sets_up_light(hass: spencerAssistant):
     """Test that configuring entry sets up light domain."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -53,9 +53,9 @@ async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData"
     ) as mock_loadCloudData, patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        "spencerassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
         result = await hass.config_entries.async_setup(config_entry.entry_id)
         assert result is True
@@ -66,7 +66,7 @@ async def test_async_setup_entry_sets_up_light(hass: HomeAssistant):
     assert len(mock_light_async_setup_entry.mock_calls) == 1
 
 
-async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
+async def test_async_setup_entry_handles_auth_error(hass: spencerAssistant):
     """Test that configuring entry handles Plum Cloud authentication error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -75,10 +75,10 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData",
         side_effect=ContentTypeError(Mock(), None),
     ), patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        "spencerassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
         result = await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -86,7 +86,7 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant):
     assert len(mock_light_async_setup_entry.mock_calls) == 0
 
 
-async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
+async def test_async_setup_entry_handles_http_error(hass: spencerAssistant):
     """Test that configuring entry handles HTTP error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -95,10 +95,10 @@ async def test_async_setup_entry_handles_http_error(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData",
         side_effect=HTTPError,
     ), patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        "spencerassistant.components.plum_lightpad.light.async_setup_entry"
     ) as mock_light_async_setup_entry:
         result = await hass.config_entries.async_setup(config_entry.entry_id)
 

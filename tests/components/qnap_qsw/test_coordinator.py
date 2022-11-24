@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 from aioqsw.exceptions import APIError, QswError
 
-from homeassistant.components.qnap_qsw.const import DOMAIN
-from homeassistant.components.qnap_qsw.coordinator import (
+from spencerassistant.components.qnap_qsw.const import DOMAIN
+from spencerassistant.components.qnap_qsw.coordinator import (
     DATA_SCAN_INTERVAL,
     FW_SCAN_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util.dt import utcnow
 
 from .util import (
     CONFIG,
@@ -31,44 +31,44 @@ from .util import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
+async def test_coordinator_client_connector_error(hass: spencerAssistant) -> None:
     """Test ClientConnectorError on coordinator update."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_condition",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_firmware_condition",
         return_value=FIRMWARE_CONDITION_MOCK,
     ) as mock_firmware_condition, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_info",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_firmware_info",
         return_value=FIRMWARE_INFO_MOCK,
     ) as mock_firmware_info, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
         return_value=FIRMWARE_UPDATE_CHECK_MOCK,
     ) as mock_firmware_update_check, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
         return_value=LACP_INFO_MOCK,
     ) as mock_lacp_info, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
         return_value=PORTS_STATISTICS_MOCK,
     ) as mock_ports_statistics, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_status",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_ports_status",
         return_value=PORTS_STATUS_MOCK,
     ) as mock_ports_status, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_system_board",
         return_value=SYSTEM_BOARD_MOCK,
     ) as mock_system_board, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_sensor",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_system_sensor",
         return_value=SYSTEM_SENSOR_MOCK,
     ) as mock_system_sensor, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_time",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_system_time",
         return_value=SYSTEM_TIME_MOCK,
     ) as mock_system_time, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
         return_value=USERS_VERIFICATION_MOCK,
     ) as mock_users_verification, patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.post_users_login",
         return_value=USERS_LOGIN_MOCK,
     ) as mock_users_login:
         await hass.config_entries.async_setup(entry.entry_id)

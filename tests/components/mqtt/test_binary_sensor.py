@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import binary_sensor, mqtt
-from homeassistant.const import (
+from spencerassistant.components import binary_sensor, mqtt
+from spencerassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -15,9 +15,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -67,7 +67,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def binary_sensor_platform_only():
     """Only setup the binary_sensor platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
@@ -137,7 +137,7 @@ async def expires_helper(hass):
     """Run the basic expiry code."""
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "ON")
         await hass.async_block_till_done()
@@ -156,7 +156,7 @@ async def expires_helper(hass):
     assert state.state == STATE_ON
 
     # Next message resets timer
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "OFF")
         await hass.async_block_till_done()
@@ -201,10 +201,10 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
+            hass, "spencerassistant/binary_sensor/bla/config", config_msg
         )
         await hass.async_block_till_done()
 
@@ -213,7 +213,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_UNAVAILABLE
 
     # Publish state message
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_mqtt_message(hass, "test-topic", "ON")
         await hass.async_block_till_done()
 
@@ -223,7 +223,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 
     # Advance +3 seconds
     now = now + timedelta(seconds=3)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
@@ -232,10 +232,10 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_ON
 
     # Resend config message to update discovery
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
+            hass, "spencerassistant/binary_sensor/bla/config", config_msg
         )
         await hass.async_block_till_done()
 
@@ -245,7 +245,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 
     # Add +2 seconds
     now = now + timedelta(seconds=2)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
@@ -254,9 +254,9 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_UNAVAILABLE
 
     # Resend config message to update discovery
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
+            hass, "spencerassistant/binary_sensor/bla/config", config_msg
         )
         await hass.async_block_till_done()
 
@@ -904,7 +904,7 @@ async def test_discovery_update_unchanged_binary_sensor(
 
     data1 = json.dumps(config1)
     with patch(
-        "homeassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
+        "spencerassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

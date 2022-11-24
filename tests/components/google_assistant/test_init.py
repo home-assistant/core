@@ -1,16 +1,16 @@
 """The tests for google-assistant init."""
 from http import HTTPStatus
 
-from homeassistant.components import google_assistant as ga
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import google_assistant as ga
+from spencerassistant.core import Context, spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
 
 from tests.common import MockConfigEntry
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass: spencerAssistant):
     """Test import."""
 
     await async_setup_component(
@@ -24,7 +24,7 @@ async def test_import(hass: HomeAssistant):
     assert entries[0].data[ga.const.CONF_PROJECT_ID] == "1234"
 
 
-async def test_import_changed(hass: HomeAssistant):
+async def test_import_changed(hass: spencerAssistant):
     """Test import with changed project id."""
 
     old_entry = MockConfigEntry(
@@ -47,7 +47,7 @@ async def test_import_changed(hass: HomeAssistant):
 async def test_request_sync_service(aioclient_mock, hass):
     """Test that it posts to the request_sync url."""
     aioclient_mock.post(
-        ga.const.HOMEGRAPH_TOKEN_URL,
+        ga.const.spencerGRAPH_TOKEN_URL,
         status=HTTPStatus.OK,
         json={"access_token": "1234", "expires_in": 3600},
     )

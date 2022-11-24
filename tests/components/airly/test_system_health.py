@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 from aiohttp import ClientError
 
-from homeassistant.components.airly.const import DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.airly.const import DOMAIN
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
 

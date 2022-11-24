@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.advantage_air.const import DOMAIN
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.advantage_air.const import DOMAIN
 
 from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
 
@@ -24,7 +24,7 @@ async def test_form(hass, aioclient_mock):
     assert result1["errors"] == {}
 
     with patch(
-        "homeassistant.components.advantage_air.async_setup_entry",
+        "spencerassistant.components.advantage_air.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

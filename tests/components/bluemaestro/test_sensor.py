@@ -1,9 +1,9 @@
 """Test the BlueMaestro sensors."""
 
 
-from homeassistant.components.bluemaestro.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from spencerassistant.components.bluemaestro.const import DOMAIN
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from . import BLUEMAESTRO_SERVICE_INFO
 

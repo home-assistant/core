@@ -1,14 +1,14 @@
 """Test the Rachio config flow."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.rachio.const import (
+from spencerassistant import config_entries
+from spencerassistant.components import zeroconf
+from spencerassistant.components.rachio.const import (
     CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY
+from spencerassistant.const import CONF_API_KEY
 
 from tests.common import MockConfigEntry
 
@@ -37,9 +37,9 @@ async def test_form(hass):
     )
 
     with patch(
-        "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
+        "spencerassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ), patch(
-        "homeassistant.components.rachio.async_setup_entry",
+        "spencerassistant.components.rachio.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -73,7 +73,7 @@ async def test_form_invalid_auth(hass):
         info=({"status": 412}, {"error": "auth fail"}),
     )
     with patch(
-        "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
+        "spencerassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass):
         info=({"status": 200}, {"id": "myid"}),
     )
     with patch(
-        "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
+        "spencerassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -106,12 +106,12 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_homekit(hass):
-    """Test that we abort from homekit if rachio is already setup."""
+async def test_form_spencerkit(hass):
+    """Test that we abort from spencerkit if rachio is already setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="mock_host",
             addresses=["mock_host"],
@@ -136,7 +136,7 @@ async def test_form_homekit(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="mock_host",
             addresses=["mock_host"],
@@ -151,8 +151,8 @@ async def test_form_homekit(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_homekit_ignored(hass):
-    """Test that we abort from homekit if rachio is ignored."""
+async def test_form_spencerkit_ignored(hass):
+    """Test that we abort from spencerkit if rachio is ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AA:BB:CC:DD:EE:FF",
@@ -162,7 +162,7 @@ async def test_form_homekit_ignored(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="mock_host",
             addresses=["mock_host"],

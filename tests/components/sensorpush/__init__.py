@@ -1,7 +1,7 @@
 """Tests for the SensorPush integration."""
 
 
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from spencerassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",

@@ -1,9 +1,9 @@
 """Test Slack config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.slack.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.slack.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from . import CONF_DATA, CONF_INPUT, TEAM_NAME, create_entry, mock_connection
 
@@ -11,7 +11,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_flow_user(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test user initialized flow."""
     mock_connection(aioclient_mock)
@@ -29,7 +29,7 @@ async def test_flow_user(
 
 
 async def test_flow_user_already_configured(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test user initialized flow with duplicate server."""
     create_entry(hass)
@@ -47,7 +47,7 @@ async def test_flow_user_already_configured(
 
 
 async def test_flow_user_invalid_auth(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test user initialized flow with invalid token."""
     mock_connection(aioclient_mock, "invalid_auth")
@@ -62,7 +62,7 @@ async def test_flow_user_invalid_auth(
 
 
 async def test_flow_user_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test user initialized flow with unreachable server."""
     mock_connection(aioclient_mock, "cannot_connect")
@@ -76,10 +76,10 @@ async def test_flow_user_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
+async def test_flow_user_unknown_error(hass: spencerAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     with patch(
-        "homeassistant.components.slack.config_flow.WebClient.auth_test"
+        "spencerassistant.components.slack.config_flow.WebClient.auth_test"
     ) as mock:
         mock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
@@ -93,7 +93,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_flow_import(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test an import flow."""
     mock_connection(aioclient_mock)
@@ -109,7 +109,7 @@ async def test_flow_import(
 
 
 async def test_flow_import_no_name(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test import flow with no name in config."""
     mock_connection(aioclient_mock)
@@ -125,7 +125,7 @@ async def test_flow_import_no_name(
 
 
 async def test_flow_import_already_configured(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test an import flow already configured."""
     create_entry(hass)

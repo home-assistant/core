@@ -5,16 +5,16 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from homeassistant.components import feedreader
-from homeassistant.components.feedreader import (
+from spencerassistant.components import feedreader
+from spencerassistant.components.feedreader import (
     CONF_MAX_ENTRIES,
     CONF_URLS,
     DEFAULT_SCAN_INTERVAL,
     EVENT_FEEDREADER,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import CONF_SCAN_INTERVAL, EVENT_spencerASSISTANT_START
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_capture_events, async_fire_time_changed, load_fixture
 
@@ -72,14 +72,14 @@ async def fixture_events(hass):
 @pytest.fixture(name="feed_storage", autouse=True)
 def fixture_feed_storage():
     """Mock builtins.open for feedreader storage."""
-    with patch("homeassistant.components.feedreader.open", mock_open(), create=True):
+    with patch("spencerassistant.components.feedreader.open", mock_open(), create=True):
         yield
 
 
 async def test_setup_one_feed(hass):
     """Test the general setup of this component."""
     with patch(
-        "homeassistant.components.feedreader.track_time_interval"
+        "spencerassistant.components.feedreader.track_time_interval"
     ) as track_method:
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_1)
         await hass.async_block_till_done()
@@ -90,7 +90,7 @@ async def test_setup_one_feed(hass):
 async def test_setup_scan_interval(hass):
     """Test the setup of this component with scan interval."""
     with patch(
-        "homeassistant.components.feedreader.track_time_interval"
+        "spencerassistant.components.feedreader.track_time_interval"
     ) as track_method:
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
         await hass.async_block_till_done()
@@ -112,7 +112,7 @@ async def test_feed(hass, events, feed_one_event):
     ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -135,7 +135,7 @@ async def test_atom_feed(hass, events, feed_atom_event):
     ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_5)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -161,7 +161,7 @@ async def test_feed_updates(hass, events, feed_one_event, feed_two_event):
     with patch("feedparser.http.get", side_effect=side_effect):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         assert len(events) == 1
@@ -186,7 +186,7 @@ async def test_feed_default_max_length(hass, events, feed_21_events):
     with patch("feedparser.http.get", return_value=feed_21_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 20
@@ -197,7 +197,7 @@ async def test_feed_max_length(hass, events, feed_21_events):
     with patch("feedparser.http.get", return_value=feed_21_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_4)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 5
@@ -208,7 +208,7 @@ async def test_feed_without_publication_date_and_title(hass, events, feed_three_
     with patch("feedparser.http.get", return_value=feed_three_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 3
@@ -221,7 +221,7 @@ async def test_feed_with_unrecognized_publication_date(hass, events):
     ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -233,7 +233,7 @@ async def test_feed_invalid_data(hass, events):
     with patch("feedparser.http.get", return_value=invalid_data):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(events) == 0
@@ -246,7 +246,7 @@ async def test_feed_parsing_failed(hass, events, caplog):
     with patch("feedparser.parse", return_value=None):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert "Error fetching feed data" in caplog.text

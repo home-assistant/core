@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 from aiohttp import ClientSession
 
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.components.update import DOMAIN as UPDATE_DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import (
     MOCK_FIRMWARE,
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_update_entities_initialized(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: spencerAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
 ):
     """Test update entities."""
 
@@ -37,12 +37,12 @@ async def test_update_entities_initialized(
 
 
 async def test_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: spencerAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
 ):
     """Test update entities."""
 
     with patch(
-        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        "spencerassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -61,7 +61,7 @@ async def test_update_available(
 
 
 async def test_no_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: spencerAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
 ):
     """Test update entities."""
 
@@ -80,15 +80,15 @@ async def test_no_update_available(
 
 
 async def test_available_update_can_be_installed(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: spencerAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
 ):
     """Test update entities."""
 
     with patch(
-        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
+        "spencerassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
     ), patch(
-        "homeassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
+        "spencerassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
         return_value=True,
     ) as mocked_update_call:
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

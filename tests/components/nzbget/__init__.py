@@ -1,8 +1,8 @@
 """Tests for the NZBGet integration."""
 from unittest.mock import patch
 
-from homeassistant.components.nzbget.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.nzbget.const import DOMAIN
+from spencerassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -64,7 +64,7 @@ async def init_integration(
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
 ) -> MockConfigEntry:
-    """Set up the NZBGet integration in Home Assistant."""
+    """Set up the NZBGet integration in spencer Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
     entry.add_to_hass(hass)
 
@@ -76,27 +76,27 @@ async def init_integration(
 
 def _patch_async_setup_entry(return_value=True):
     return patch(
-        "homeassistant.components.nzbget.async_setup_entry",
+        "spencerassistant.components.nzbget.async_setup_entry",
         return_value=return_value,
     )
 
 
 def _patch_history(return_value=MOCK_HISTORY):
     return patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.history",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.history",
         return_value=return_value,
     )
 
 
 def _patch_status(return_value=MOCK_STATUS):
     return patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.status",
         return_value=return_value,
     )
 
 
 def _patch_version(return_value=MOCK_VERSION):
     return patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.version",
         return_value=return_value,
     )

@@ -1,11 +1,11 @@
-"""Tests for HomematicIP Cloud switch."""
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.generic_entity import (
+"""Tests for spencermaticIP Cloud switch."""
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.components.spencermaticip_cloud.generic_entity import (
     ATTR_GROUP_MEMBER_UNREACHABLE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -19,7 +19,7 @@ async def test_manually_configured_platform(hass):
 
 
 async def test_hmip_switch(hass, default_mock_hap_factory):
-    """Test HomematicipSwitch."""
+    """Test spencermaticipSwitch."""
     entity_id = "switch.schrank"
     entity_name = "Schrank"
     device_model = "HMIP-PS"
@@ -56,7 +56,7 @@ async def test_hmip_switch(hass, default_mock_hap_factory):
 
 
 async def test_hmip_switch_input(hass, default_mock_hap_factory):
-    """Test HomematicipSwitch."""
+    """Test spencermaticipSwitch."""
     entity_id = "switch.wohnzimmer_beleuchtung"
     entity_name = "Wohnzimmer Beleuchtung"
     device_model = "HmIP-FSI16"
@@ -93,7 +93,7 @@ async def test_hmip_switch_input(hass, default_mock_hap_factory):
 
 
 async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
-    """Test HomematicipSwitchMeasuring."""
+    """Test spencermaticipSwitchMeasuring."""
     entity_id = "switch.pc"
     entity_name = "Pc"
     device_model = "HMIP-PSM"
@@ -131,7 +131,7 @@ async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
 
 
 async def test_hmip_group_switch(hass, default_mock_hap_factory):
-    """Test HomematicipGroupSwitch."""
+    """Test spencermaticipGroupSwitch."""
     entity_id = "switch.strom_group"
     entity_name = "Strom Group"
     device_model = None
@@ -171,7 +171,7 @@ async def test_hmip_group_switch(hass, default_mock_hap_factory):
 
 
 async def test_hmip_multi_switch(hass, default_mock_hap_factory):
-    """Test HomematicipMultiSwitch."""
+    """Test spencermaticipMultiSwitch."""
     entity_id = "switch.jalousien_1_kizi_2_schlazi_channel1"
     entity_name = "Jalousien - 1 KiZi, 2 SchlaZi Channel1"
     device_model = "HmIP-PCBS2"
@@ -224,7 +224,7 @@ async def test_hmip_multi_switch(hass, default_mock_hap_factory):
 
 
 async def test_hmip_wired_multi_switch(hass, default_mock_hap_factory):
-    """Test HomematicipMultiSwitch."""
+    """Test spencermaticipMultiSwitch."""
     entity_id = "switch.fernseher_wohnzimmer"
     entity_name = "Fernseher (Wohnzimmer)"
     device_model = "HmIPW-DRS8"

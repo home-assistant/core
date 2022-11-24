@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     SERVICE_TURN_OFF,
@@ -12,8 +12,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -21,7 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
@@ -48,7 +48,7 @@ async def test_switch_state(
 
 
 async def test_switch_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the change of state of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
@@ -101,7 +101,7 @@ async def test_switch_change_state(
 
 
 async def test_switch_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test error handling of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
@@ -109,7 +109,7 @@ async def test_switch_error(
     aioclient_mock.clear_requests()
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"):
+    with patch("spencerassistant.components.modern_forms.ModernFormsDevice.update"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -124,13 +124,13 @@ async def test_switch_error(
 
 
 async def test_switch_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test error handling of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.away",
+    with patch("spencerassistant.components.modern_forms.ModernFormsDevice.update"), patch(
+        "spencerassistant.components.modern_forms.ModernFormsDevice.away",
         side_effect=ModernFormsConnectionError,
     ):
         await hass.services.async_call(

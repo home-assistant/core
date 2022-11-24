@@ -5,17 +5,17 @@ from unittest.mock import AsyncMock, patch
 import pyatmo
 import pytest
 
-from homeassistant.components import camera
-from homeassistant.components.camera import STATE_STREAMING
-from homeassistant.components.netatmo.const import (
+from spencerassistant.components import camera
+from spencerassistant.components.camera import STATE_STREAMING
+from spencerassistant.components.netatmo.const import (
     NETATMO_EVENT,
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
-    SERVICE_SET_PERSONS_HOME,
+    SERVICE_SET_PERSONS_spencer,
 )
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from spencerassistant.const import CONF_WEBHOOK_ID
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.util import dt
 
 from .common import fake_post_request, selected_platforms, simulate_webhook
 
@@ -93,7 +93,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
 
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             "camera", "turn_off", service_data={"entity_id": "camera.hall"}
         )
@@ -109,7 +109,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
             }
         )
 
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             "camera", "turn_on", service_data={"entity_id": "camera.hall"}
         )
@@ -193,7 +193,7 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
         "person": "Richard Doe",
     }
 
-    with patch("pyatmo.home.Home.async_set_persons_away") as mock_set_persons_away:
+    with patch("pyatmo.spencer.spencer.async_set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
         )
@@ -206,7 +206,7 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
         "entity_id": "camera.hall",
     }
 
-    with patch("pyatmo.home.Home.async_set_persons_away") as mock_set_persons_away:
+    with patch("pyatmo.spencer.spencer.async_set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
         )
@@ -230,7 +230,7 @@ async def test_service_set_person_away_invalid_person(hass, config_entry, netatm
         "person": "Batman",
     }
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_PERSON_AWAY,
@@ -242,10 +242,10 @@ async def test_service_set_person_away_invalid_person(hass, config_entry, netatm
     assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
-async def test_service_set_persons_home_invalid_person(
+async def test_service_set_persons_spencer_invalid_person(
     hass, config_entry, netatmo_auth
 ):
-    """Test service to set invalid persons as home."""
+    """Test service to set invalid persons as spencer."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -258,10 +258,10 @@ async def test_service_set_persons_home_invalid_person(
         "persons": "Batman",
     }
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         await hass.services.async_call(
             "netatmo",
-            SERVICE_SET_PERSONS_HOME,
+            SERVICE_SET_PERSONS_spencer,
             service_data=data,
             blocking=True,
         )
@@ -270,8 +270,8 @@ async def test_service_set_persons_home_invalid_person(
     assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
-async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
-    """Test service to set persons as home."""
+async def test_service_set_persons_spencer(hass, config_entry, netatmo_auth):
+    """Test service to set persons as spencer."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -284,12 +284,12 @@ async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
         "persons": "John Doe",
     }
 
-    with patch("pyatmo.home.Home.async_set_persons_home") as mock_set_persons_home:
+    with patch("pyatmo.spencer.spencer.async_set_persons_spencer") as mock_set_persons_spencer:
         await hass.services.async_call(
-            "netatmo", SERVICE_SET_PERSONS_HOME, service_data=data
+            "netatmo", SERVICE_SET_PERSONS_spencer, service_data=data
         )
         await hass.async_block_till_done()
-        mock_set_persons_home.assert_called_once_with(
+        mock_set_persons_spencer.assert_called_once_with(
             person_ids=["91827374-7e04-5298-83ad-a0cb8372dff1"],
         )
 
@@ -316,7 +316,7 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
             },
         ],
     }
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_CAMERA_LIGHT, service_data=data
         )
@@ -338,8 +338,8 @@ async def test_service_set_camera_light_invalid_type(hass, config_entry, netatmo
         "camera_light_mode": "on",
     }
 
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state, pytest.raises(
-        HomeAssistantError
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state, pytest.raises(
+        spencerAssistantError
     ) as excinfo:
         await hass.services.async_call(
             "netatmo",
@@ -364,13 +364,13 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         return await fake_post_request(*args, **kwargs)
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
+        "spencerassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -435,7 +435,7 @@ async def test_webhook_person_event(hass, config_entry, netatmo_auth):
         "camera_id": "12:34:56:00:f1:62",
         "device_id": "12:34:56:00:f1:62",
         "event_id": "1234567890",
-        "message": "MYHOME: John Doe has been seen by Indoor Camera ",
+        "message": "MYspencer: John Doe has been seen by Indoor Camera ",
         "push_type": "NACamera-person",
     }
 
@@ -456,13 +456,13 @@ async def test_setup_component_no_devices(hass, config_entry):
         return await fake_post_request(*args, **kwargs)
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", ["camera"]
+        "spencerassistant.components.netatmo.PLATFORMS", ["camera"]
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_no_data
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -494,13 +494,13 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         return await fake_post_request(*args, **kwargs)
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
+        "spencerassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_get_image.side_effect = fake_post

@@ -1,7 +1,7 @@
 """Test init."""
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 

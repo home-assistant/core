@@ -1,9 +1,9 @@
 """Test the Antifurto365 iAlarm config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.ialarm.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.ialarm.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -22,13 +22,13 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+        "spencerassistant.components.ialarm.config_flow.IAlarm.get_status",
         return_value=1,
     ), patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+        "spencerassistant.components.ialarm.config_flow.IAlarm.get_mac",
         return_value=TEST_MAC,
     ), patch(
-        "homeassistant.components.ialarm.async_setup_entry",
+        "spencerassistant.components.ialarm.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +49,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+        "spencerassistant.components.ialarm.config_flow.IAlarm.get_mac",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -67,7 +67,7 @@ async def test_form_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+        "spencerassistant.components.ialarm.config_flow.IAlarm.get_mac",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -93,7 +93,7 @@ async def test_form_already_exists(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+        "spencerassistant.components.ialarm.config_flow.IAlarm.get_mac",
         return_value=TEST_MAC,
     ):
         result2 = await hass.config_entries.flow.async_configure(

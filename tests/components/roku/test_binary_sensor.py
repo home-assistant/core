@@ -4,12 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 from rokuecp import Device as RokuDevice
 
-from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.components.binary_sensor import STATE_OFF, STATE_ON
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from . import UPNP_SERIAL
 
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_roku_binary_sensors(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: spencerAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test the Roku binary sensors."""
     entity_registry = er.async_get(hass)
@@ -86,7 +86,7 @@ async def test_roku_binary_sensors(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_binary_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,

@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
 
@@ -168,7 +168,7 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
     ],
 )
 async def test_switch_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     expected_wifi_names: list[str],
     fc_class_mock,
     fh_class_mock,

@@ -5,14 +5,14 @@ from unittest.mock import patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.homeautomation as homeautomation
+import zigpy.zcl.clusters.spencerautomation as spencerautomation
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
-import homeassistant.config as config_util
-from homeassistant.const import (
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
+import spencerassistant.config as config_util
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_SYSTEM,
@@ -34,9 +34,9 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     Platform,
 )
-from homeassistant.helpers import restore_state
-from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt as dt_util
+from spencerassistant.helpers import restore_state
+from spencerassistant.helpers.entity_component import async_update_entity
+from spencerassistant.util import dt as dt_util
 
 from .common import (
     async_enable_traffic,
@@ -55,7 +55,7 @@ ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 def sensor_platform_only():
     """Only setup the sensor and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.SENSOR,
@@ -73,7 +73,7 @@ async def elec_measurement_zigpy_dev(hass, zigpy_device_mock):
             1: {
                 SIG_EP_INPUT: [
                     general.Basic.cluster_id,
-                    homeautomation.ElectricalMeasurement.cluster_id,
+                    spencerautomation.ElectricalMeasurement.cluster_id,
                 ],
                 SIG_EP_OUTPUT: [],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR,
@@ -338,7 +338,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             {"instaneneous_demand"},
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             "active_power",
             async_test_electrical_measurement,
             7,
@@ -346,7 +346,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             {"apparent_power", "rms_current", "rms_voltage"},
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             "apparent_power",
             async_test_em_apparent_power,
             7,
@@ -354,7 +354,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             {"active_power", "rms_current", "rms_voltage"},
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             "rms_current",
             async_test_em_rms_current,
             7,
@@ -362,7 +362,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             {"active_power", "apparent_power", "rms_voltage"},
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             "rms_voltage",
             async_test_em_rms_voltage,
             7,
@@ -431,7 +431,7 @@ async def test_sensor(
             cluster.add_unsupported_attribute(attr)
     if cluster_id in (
         smartenergy.Metering.cluster_id,
-        homeautomation.ElectricalMeasurement.cluster_id,
+        spencerautomation.ElectricalMeasurement.cluster_id,
     ):
         # this one is mains powered
         zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
@@ -585,7 +585,7 @@ async def test_electrical_measurement_init(
 ):
     """Test proper initialization of the electrical measurement cluster."""
 
-    cluster_id = homeautomation.ElectricalMeasurement.cluster_id
+    cluster_id = spencerautomation.ElectricalMeasurement.cluster_id
     zigpy_device = zigpy_device_mock(
         {
             1: {
@@ -639,7 +639,7 @@ async def test_electrical_measurement_init(
     "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
     (
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
             {
                 "active_power",
@@ -653,7 +653,7 @@ async def test_electrical_measurement_init(
             },
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_current", "ac_frequency", "power_factor"},
             {"rms_voltage", "active_power"},
             {
@@ -664,7 +664,7 @@ async def test_electrical_measurement_init(
             },
         ),
         (
-            homeautomation.ElectricalMeasurement.cluster_id,
+            spencerautomation.ElectricalMeasurement.cluster_id,
             set(),
             {
                 "rms_voltage",

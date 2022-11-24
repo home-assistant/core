@@ -1,14 +1,14 @@
 """The tests for Device tracker device conditions."""
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import STATE_HOME
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_tracker import DOMAIN
+from spencerassistant.const import STATE_spencer
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -57,7 +57,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": False},
         }
-        for condition in ["is_not_home", "is_home"]
+        for condition in ["is_not_spencer", "is_spencer"]
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -105,7 +105,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": True},
         }
-        for condition in ["is_not_home", "is_home"]
+        for condition in ["is_not_spencer", "is_spencer"]
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -115,7 +115,7 @@ async def test_get_conditions_hidden_auxiliary(
 
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("device_tracker.entity", STATE_HOME)
+    hass.states.async_set("device_tracker.entity", STATE_spencer)
 
     assert await async_setup_component(
         hass,
@@ -130,13 +130,13 @@ async def test_if_state(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "device_tracker.entity",
-                            "type": "is_home",
+                            "type": "is_spencer",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_home - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_spencer - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -148,13 +148,13 @@ async def test_if_state(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "device_tracker.entity",
-                            "type": "is_not_home",
+                            "type": "is_not_spencer",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_not_home - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_not_spencer - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -165,11 +165,11 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "is_home - event - test_event1"
+    assert calls[0].data["some"] == "is_spencer - event - test_event1"
 
     hass.states.async_set("device_tracker.entity", "school")
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "is_not_home - event - test_event2"
+    assert calls[1].data["some"] == "is_not_spencer - event - test_event2"

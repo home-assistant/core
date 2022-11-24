@@ -3,15 +3,15 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from spencerassistant import config_entries
+from spencerassistant.components.tibber.const import DOMAIN
+from spencerassistant.const import CONF_ACCESS_TOKEN
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
     """Patch tibber setup entry."""
-    with patch("homeassistant.components.tibber.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.tibber.async_setup_entry", return_value=True):
         yield
 
 

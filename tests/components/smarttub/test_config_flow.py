@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from smarttub import LoginFailed
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.smarttub.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.smarttub.const import DOMAIN
+from spencerassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.smarttub.async_setup_entry",
+        "spencerassistant.components.smarttub.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(

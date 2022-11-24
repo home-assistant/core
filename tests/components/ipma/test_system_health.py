@@ -1,8 +1,8 @@
 """Test ipma system health."""
 import asyncio
 
-from homeassistant.components.ipma.system_health import IPMA_API_URL
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.ipma.system_health import IPMA_API_URL
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
 

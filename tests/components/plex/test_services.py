@@ -7,8 +7,8 @@ from plexapi.exceptions import NotFound
 import plexapi.playqueue
 import pytest
 
-from homeassistant.components.media_player import MediaType
-from homeassistant.components.plex.const import (
+from spencerassistant.components.media_player import MediaType
+from spencerassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DOMAIN,
@@ -17,9 +17,9 @@ from homeassistant.components.plex.const import (
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
-from homeassistant.components.plex.services import process_plex_payload
-from homeassistant.const import CONF_URL
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.plex.services import process_plex_payload
+from spencerassistant.const import CONF_URL
+from spencerassistant.exceptions import spencerAssistantError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
 
@@ -42,7 +42,7 @@ async def test_refresh_library(
     )
 
     # Test with non-existent server
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
@@ -93,7 +93,7 @@ async def test_refresh_library(
     await setup_plex_server(config_entry=entry_2)
 
     # Test multiple servers available but none specified
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_LIBRARY,
@@ -139,19 +139,19 @@ async def test_lookup_media_for_other_integrations(
     )
 
     # Test with no Plex integration available
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID)
     assert "Plex integration not configured" in str(excinfo.value)
 
     with patch(
-        "homeassistant.components.plex.PlexServer.connect", side_effect=NotFound
+        "spencerassistant.components.plex.PlexServer.connect", side_effect=NotFound
     ):
         # Initialize Plex integration without setting up a server
         with pytest.raises(AssertionError):
             await setup_plex_server()
 
         # Test with no Plex servers available
-        with pytest.raises(HomeAssistantError) as excinfo:
+        with pytest.raises(spencerAssistantError) as excinfo:
             process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID)
         assert "No Plex servers available" in str(excinfo.value)
 
@@ -189,7 +189,7 @@ async def test_lookup_media_for_other_integrations(
 
     # Test with media not found
     with patch("plexapi.library.LibrarySection.search", return_value=None):
-        with pytest.raises(HomeAssistantError) as excinfo:
+        with pytest.raises(spencerAssistantError) as excinfo:
             process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_MEDIA)
         assert f"No {MediaType.MUSIC} results in 'Music' for" in str(excinfo.value)
 
@@ -202,7 +202,7 @@ async def test_lookup_media_for_other_integrations(
     requests_mock.get(
         "https://1.2.3.4:32400/playQueues/1235", status_code=HTTPStatus.NOT_FOUND
     )
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_BAD_PLAYQUEUE)
     assert "PlayQueue '1235' could not be found" in str(excinfo.value)
 

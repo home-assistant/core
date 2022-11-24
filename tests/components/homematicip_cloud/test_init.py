@@ -1,10 +1,10 @@
-"""Test HomematicIP Cloud setup process."""
+"""Test spencermaticIP Cloud setup process."""
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from homematicip.base.base_connection import HmipConnectionError
+from spencermaticip.base.base_connection import HmipConnectionError
 
-from homeassistant.components.homematicip_cloud.const import (
+from spencerassistant.components.spencermaticip_cloud.const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
     DOMAIN as HMIPC_DOMAIN,
@@ -12,16 +12,16 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
-from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.spencermaticip_cloud.hap import spencermaticipHAP
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_NAME
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(
-    hass, mock_connection, simple_mock_home
+    hass, mock_connection, simple_mock_spencer
 ):
     """Test that config for a accesspoint are loaded via config entry."""
 
@@ -36,7 +36,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(
     assert not hass.data.get(HMIPC_DOMAIN)
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
+        "spencerassistant.components.spencermaticip_cloud.hap.spencermaticipHAP.async_connect",
     ):
         assert await async_setup_component(
             hass, HMIPC_DOMAIN, {HMIPC_DOMAIN: entry_config}
@@ -51,11 +51,11 @@ async def test_config_with_accesspoint_passed_to_config_entry(
         "name": "name",
     }
     # defined access_point created for config_entry
-    assert isinstance(hass.data[HMIPC_DOMAIN]["ABC123"], HomematicipHAP)
+    assert isinstance(hass.data[HMIPC_DOMAIN]["ABC123"], spencermaticipHAP)
 
 
 async def test_config_already_registered_not_passed_to_config_entry(
-    hass, simple_mock_home
+    hass, simple_mock_spencer
 ):
     """Test that an already registered accesspoint does not get imported."""
 
@@ -80,7 +80,7 @@ async def test_config_already_registered_not_passed_to_config_entry(
     }
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
+        "spencerassistant.components.spencermaticip_cloud.hap.spencermaticipHAP.async_connect",
     ):
         assert await async_setup_component(
             hass, HMIPC_DOMAIN, {HMIPC_DOMAIN: entry_config}
@@ -105,7 +105,7 @@ async def test_load_entry_fails_due_to_connection_error(
     hmip_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
+        "spencerassistant.components.spencermaticip_cloud.hap.Asyncspencer.get_current_state",
         side_effect=HmipConnectionError,
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
@@ -119,10 +119,10 @@ async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry
     hmip_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
+        "spencerassistant.components.spencermaticip_cloud.hap.Asyncspencer.get_current_state",
         side_effect=Exception,
     ), patch(
-        "homematicip.aio.connection.AsyncConnection.init",
+        "spencermaticip.aio.connection.AsyncConnection.init",
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
@@ -135,14 +135,14 @@ async def test_unload_entry(hass):
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config).add_to_hass(hass)
 
-    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+    with patch("spencerassistant.components.spencermaticip_cloud.spencermaticipHAP") as mock_hap:
         instance = mock_hap.return_value
         instance.async_setup = AsyncMock(return_value=True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.label = "mock-label"
-        instance.home.currentAPVersion = "mock-ap-version"
+        instance.spencer.id = "1"
+        instance.spencer.modelType = "mock-type"
+        instance.spencer.name = "mock-name"
+        instance.spencer.label = "mock-label"
+        instance.spencer.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
@@ -165,11 +165,11 @@ async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
 
     with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
         await hass.services.async_call(
-            "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
+            "spencermaticip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
         )
-        home = mock_hap_with_service.home
-        assert home.mock_calls[-1][0] == "download_configuration"
-        assert home.mock_calls
+        spencer = mock_hap_with_service.spencer
+        assert spencer.mock_calls[-1][0] == "download_configuration"
+        assert spencer.mock_calls
         assert write_mock.mock_calls
 
 
@@ -178,14 +178,14 @@ async def test_setup_services_and_unload_services(hass):
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config).add_to_hass(hass)
 
-    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+    with patch("spencerassistant.components.spencermaticip_cloud.spencermaticipHAP") as mock_hap:
         instance = mock_hap.return_value
         instance.async_setup = AsyncMock(return_value=True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.label = "mock-label"
-        instance.home.currentAPVersion = "mock-ap-version"
+        instance.spencer.id = "1"
+        instance.spencer.modelType = "mock-type"
+        instance.spencer.name = "mock-name"
+        instance.spencer.label = "mock-label"
+        instance.spencer.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
@@ -212,14 +212,14 @@ async def test_setup_two_haps_unload_one_by_one(hass):
     mock_config2 = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC1234", HMIPC_NAME: "name2"}
     MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config2).add_to_hass(hass)
 
-    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+    with patch("spencerassistant.components.spencermaticip_cloud.spencermaticipHAP") as mock_hap:
         instance = mock_hap.return_value
         instance.async_setup = AsyncMock(return_value=True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.label = "mock-label"
-        instance.home.currentAPVersion = "mock-ap-version"
+        instance.spencer.id = "1"
+        instance.spencer.modelType = "mock-type"
+        instance.spencer.name = "mock-name"
+        instance.spencer.label = "mock-label"
+        instance.spencer.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})

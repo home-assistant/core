@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.device_tracker import (
+from spencerassistant.components.device_tracker import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
     ATTR_DEV_ID,
@@ -15,15 +15,15 @@ from homeassistant.components.device_tracker import (
     DOMAIN,
     SERVICE_SEE,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import GPSType
-from homeassistant.loader import bind_hass
+from spencerassistant.core import spencerAssistant, callback
+from spencerassistant.helpers.typing import GPSType
+from spencerassistant.loader import bind_hass
 
 
 @callback
 @bind_hass
 def async_see(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mac: str = None,
     dev_id: str = None,
     host_name: str = None,

@@ -1,5 +1,5 @@
 """The lock tests for the august platform."""
-from homeassistant.components.climate import HVACMode
+from spencerassistant.components.climate import HVACMode
 
 from .util import async_init_integration
 
@@ -27,7 +27,7 @@ async def test_climate_zones(hass):
         "min_humidity": 35.0,
         "min_temp": 12.8,
         "preset_mode": "None",
-        "preset_modes": ["None", "Home", "Away", "Sleep"],
+        "preset_modes": ["None", "spencer", "Away", "Sleep"],
         "supported_features": 31,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
@@ -59,7 +59,7 @@ async def test_climate_zones(hass):
         "min_humidity": 35.0,
         "min_temp": 12.8,
         "preset_mode": "None",
-        "preset_modes": ["None", "Home", "Away", "Sleep"],
+        "preset_modes": ["None", "spencer", "Away", "Sleep"],
         "supported_features": 31,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,

@@ -1,4 +1,4 @@
-"""The tests for the Home Assistant HTTP component."""
+"""The tests for the spencer Assistant HTTP component."""
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -8,11 +8,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import homeassistant.components.http as http
-from homeassistant.helpers.network import NoURLAvailableError
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import server_context_intermediate, server_context_modern
+import spencerassistant.components.http as http
+from spencerassistant.helpers.network import NoURLAvailableError
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
 
@@ -41,20 +41,20 @@ def _setup_empty_ssl_pem_files(tmpdir):
 def mock_stack():
     """Mock extract stack."""
     with patch(
-        "homeassistant.components.http.extract_stack",
+        "spencerassistant.components.http.extract_stack",
         return_value=[
             Mock(
-                filename="/home/paulus/core/homeassistant/core.py",
+                filename="/spencer/paulus/core/spencerassistant/core.py",
                 lineno="23",
                 line="do_something()",
             ),
             Mock(
-                filename="/home/paulus/core/homeassistant/components/hue/light.py",
+                filename="/spencer/paulus/core/spencerassistant/components/hue/light.py",
                 lineno="23",
                 line="self.light.is_on",
             ),
             Mock(
-                filename="/home/paulus/core/homeassistant/components/http/__init__.py",
+                filename="/spencer/paulus/core/spencerassistant/components/http/__init__.py",
                 lineno="157",
                 line="base_url",
             ),
@@ -63,7 +63,7 @@ def mock_stack():
         yield
 
 
-class TestView(http.HomeAssistantView):
+class TestView(http.spencerAssistantView):
     """Test the HTTP views."""
 
     name = "test"
@@ -148,7 +148,7 @@ async def test_ssl_profile_defaults_modern(hass, tmpdir):
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
+        "spencerassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
         assert (
@@ -173,7 +173,7 @@ async def test_ssl_profile_change_intermediate(hass, tmpdir):
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_intermediate",
+        "spencerassistant.util.ssl.server_context_intermediate",
         side_effect=server_context_intermediate,
     ) as mock_context:
         assert (
@@ -204,7 +204,7 @@ async def test_ssl_profile_change_modern(hass, tmpdir):
     )
 
     with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
+        "spencerassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
         assert (
@@ -236,7 +236,7 @@ async def test_peer_cert(hass, tmpdir):
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "ssl.SSLContext.load_verify_locations"
     ) as mock_load_verify_locations, patch(
-        "homeassistant.util.ssl.server_context_modern",
+        "spencerassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
     ) as mock_context:
         assert (
@@ -283,7 +283,7 @@ async def test_emergency_ssl_certificate_when_invalid(hass, tmpdir, caplog):
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "spencer Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
@@ -320,7 +320,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     hass.config.safe_mode = True
 
     with patch(
-        "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
+        "spencerassistant.components.http.get_url", side_effect=NoURLAvailableError
     ) as mock_get_url:
         assert (
             await async_setup_component(
@@ -337,7 +337,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     assert len(mock_get_url.mock_calls) == 1
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "spencer Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
@@ -353,7 +353,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(hass, tmpdir, caplog
     hass.config.safe_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "spencerassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
         assert (
             await async_setup_component(
@@ -390,7 +390,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     hass.config.safe_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "spencerassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
         assert (
             await async_setup_component(
@@ -414,11 +414,11 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
 
 async def test_cors_defaults(hass):
     """Test the CORS default settings."""
-    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+    with patch("spencerassistant.components.http.setup_cors") as mock_setup:
         assert await async_setup_component(hass, "http", {})
 
     assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
+    assert mock_setup.mock_calls[0][1][1] == ["https://cast.spencer-assistant.io"]
 
 
 async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):

@@ -9,12 +9,12 @@ import aiohttp
 import pytest
 import requests
 
-from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import update_coordinator
-from homeassistant.util.dt import utcnow
+from spencerassistant import config_entries
+from spencerassistant.const import EVENT_spencerASSISTANT_STOP
+from spencerassistant.core import CoreState
+from spencerassistant.exceptions import ConfigEntryNotReady
+from spencerassistant.helpers import update_coordinator
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -285,7 +285,7 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
     assert entity.available is True
 
     with patch(
-        "homeassistant.helpers.entity.Entity.async_on_remove"
+        "spencerassistant.helpers.entity.Entity.async_on_remove"
     ) as mock_async_on_remove:
         await entity.async_added_to_hass()
 
@@ -293,7 +293,7 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
 
     # Verify we do not update if the entity is disabled
     crd.last_update_success = False
-    with patch("homeassistant.helpers.entity.Entity.enabled", False):
+    with patch("spencerassistant.helpers.entity.Entity.enabled", False):
         await entity.async_update()
     assert entity.available is False
 
@@ -335,7 +335,7 @@ async def test_async_set_updated_data(crd):
 
 
 async def test_stop_refresh_on_ha_stop(hass, crd):
-    """Test no update interval refresh when Home Assistant is stopping."""
+    """Test no update interval refresh when spencer Assistant is stopping."""
     # Add subscriber
     update_callback = Mock()
     crd.async_add_listener(update_callback)
@@ -347,8 +347,8 @@ async def test_stop_refresh_on_ha_stop(hass, crd):
     await hass.async_block_till_done()
     assert crd.data == 1
 
-    # Fire Home Assistant stop event
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    # Fire spencer Assistant stop event
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     hass.state = CoreState.stopping
     await hass.async_block_till_done()
 

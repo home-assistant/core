@@ -1,16 +1,16 @@
 """Tests for the SolarEdge coordinator services."""
 from unittest.mock import patch
 
-from homeassistant.components.solaredge.const import (
+from spencerassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DEFAULT_NAME,
     DOMAIN,
     OVERVIEW_UPDATE_DELAY,
     SENSOR_TYPES,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+import spencerassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -18,9 +18,9 @@ SITE_ID = "1a2b3c4d5e6f7g8h"
 API_KEY = "a1b2c3d4e5f6g7h8"
 
 
-@patch("homeassistant.components.solaredge.Solaredge")
+@patch("spencerassistant.components.solaredge.Solaredge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
-    mock_solaredge, hass: HomeAssistant
+    mock_solaredge, hass: spencerAssistant
 ):
     """Test overview energy data validity."""
     mock_config_entry = MockConfigEntry(

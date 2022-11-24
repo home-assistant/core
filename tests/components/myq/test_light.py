@@ -1,6 +1,6 @@
 """The scene tests for the myq platform."""
-from homeassistant.components.light import ColorMode
-from homeassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.components.light import ColorMode
+from spencerassistant.const import STATE_OFF, STATE_ON
 
 from .util import async_init_integration
 

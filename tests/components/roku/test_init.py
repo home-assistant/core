@@ -3,19 +3,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from rokuecp import RokuConnectionError
 
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
 @patch(
-    "homeassistant.components.roku.coordinator.Roku._request",
+    "spencerassistant.components.roku.coordinator.Roku._request",
     side_effect=RokuConnectionError,
 )
 async def test_config_entry_not_ready(
-    mock_request: MagicMock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    mock_request: MagicMock, hass: spencerAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the Roku configuration entry not ready."""
     mock_config_entry.add_to_hass(hass)
@@ -27,7 +27,7 @@ async def test_config_entry_not_ready(
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku: AsyncMock,
 ) -> None:

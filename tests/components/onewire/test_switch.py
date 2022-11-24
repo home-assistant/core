@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     SERVICE_TOGGLE,
@@ -14,8 +14,8 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import ensure_list
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.config_validation import ensure_list
 
 from . import (
     check_and_enable_disabled_entities,
@@ -31,12 +31,12 @@ from tests.common import mock_device_registry, mock_registry
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
+    with patch("spencerassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
         yield
 
 
 async def test_switches(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     device_id: str,
@@ -54,7 +54,7 @@ async def test_switches(
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
     setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
+    with caplog.at_level(logging.WARNING, logger="spencerassistant.components.onewire"):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         if mock_device.get(ATTR_UNKNOWN_DEVICE):

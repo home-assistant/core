@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout
 
-from homeassistant import config_entries
-from homeassistant.components.plum_lightpad.const import DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components.plum_lightpad.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -19,11 +19,11 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData"
     ), patch(
-        "homeassistant.components.plum_lightpad.async_setup", return_value=True
+        "spencerassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry",
+        "spencerassistant.components.plum_lightpad.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +49,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData",
         side_effect=ConnectTimeout,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,9 +74,9 @@ async def test_form_one_entry_per_email_allowed(hass):
     )
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
-    ), patch("homeassistant.components.plum_lightpad.async_setup") as mock_setup, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry"
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+    ), patch("spencerassistant.components.plum_lightpad.async_setup") as mock_setup, patch(
+        "spencerassistant.components.plum_lightpad.async_setup_entry"
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -93,11 +93,11 @@ async def test_import(hass):
     """Test configuring the flow using configuration.yaml."""
 
     with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+        "spencerassistant.components.plum_lightpad.utils.Plum.loadCloudData"
     ), patch(
-        "homeassistant.components.plum_lightpad.async_setup", return_value=True
+        "spencerassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry",
+        "spencerassistant.components.plum_lightpad.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(

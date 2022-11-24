@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from nsw_fuel import FuelCheckError
 
-from homeassistant.components import sensor
-from homeassistant.components.nsw_fuel_station import DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import sensor
+from spencerassistant.components.nsw_fuel_station import DOMAIN
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -70,7 +70,7 @@ MOCK_FUEL_PRICES_RESPONSE = MockGetFuelPricesResponse(
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    "spencerassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
 async def test_setup(get_fuel_prices, hass):
@@ -92,7 +92,7 @@ def raise_fuel_check_error():
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    "spencerassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     side_effect=raise_fuel_check_error,
 )
 async def test_setup_error(get_fuel_prices, hass):
@@ -109,7 +109,7 @@ async def test_setup_error(get_fuel_prices, hass):
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    "spencerassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
 async def test_setup_error_no_station(get_fuel_prices, hass):
@@ -140,7 +140,7 @@ async def test_setup_error_no_station(get_fuel_prices, hass):
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    "spencerassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
     return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
 async def test_sensor_values(get_fuel_prices, hass):

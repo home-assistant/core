@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from pymyq.errors import InvalidCredentialsError, MyQError
 
-from homeassistant import config_entries
-from homeassistant.components.myq.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant import config_entries
+from spencerassistant.components.myq.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -20,10 +20,10 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.myq.async_setup_entry",
+        "spencerassistant.components.myq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -48,7 +48,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         side_effect=InvalidCredentialsError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -67,7 +67,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         side_effect=MyQError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -86,7 +86,7 @@ async def test_form_unknown_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -119,7 +119,7 @@ async def test_reauth(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         side_effect=InvalidCredentialsError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -133,7 +133,7 @@ async def test_reauth(hass):
     assert result2["errors"] == {"password": "invalid_auth"}
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         side_effect=MyQError,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -147,10 +147,10 @@ async def test_reauth(hass):
     assert result3["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login",
+        "spencerassistant.components.myq.config_flow.pymyq.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.myq.async_setup_entry",
+        "spencerassistant.components.myq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(

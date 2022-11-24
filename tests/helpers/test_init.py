@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 from collections import OrderedDict
 
-from homeassistant import helpers
+from spencerassistant import helpers
 
 
 def test_extract_domain_configs():

@@ -3,21 +3,21 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import media_player
-from homeassistant.components.denonavr.config_flow import (
+from spencerassistant.components import media_player
+from spencerassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.media_player import (
+from spencerassistant.components.denonavr.media_player import (
     ATTR_COMMAND,
     ATTR_DYNAMIC_EQ,
     SERVICE_GET_COMMAND,
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
+from spencerassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
 
 from tests.common import MockConfigEntry
 
@@ -40,10 +40,10 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR",
+        "spencerassistant.components.denonavr.receiver.DenonAVR",
         autospec=True,
     ) as mock_client_class, patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.async_discover"
+        "spencerassistant.components.denonavr.config_flow.denonavr.async_discover"
     ):
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL

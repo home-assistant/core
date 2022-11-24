@@ -5,11 +5,11 @@ from unittest.mock import patch
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
 
-from homeassistant import config_entries
-from homeassistant.components.whirlpool.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.whirlpool.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -23,11 +23,11 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+    with patch("spencerassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
     ), patch(
-        "homeassistant.components.whirlpool.async_setup_entry",
+        "spencerassistant.components.whirlpool.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,8 +53,8 @@ async def test_form_invalid_auth(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+    with patch("spencerassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.do_auth",
+        "spencerassistant.components.whirlpool.config_flow.Auth.do_auth",
         side_effect=aiohttp.ClientConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -94,7 +94,7 @@ async def test_form_auth_timeout(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.do_auth",
+        "spencerassistant.components.whirlpool.config_flow.Auth.do_auth",
         side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -114,7 +114,7 @@ async def test_form_generic_auth_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.do_auth",
+        "spencerassistant.components.whirlpool.config_flow.Auth.do_auth",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -144,8 +144,8 @@ async def test_form_already_configured(hass):
     assert result["type"] == "form"
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+    with patch("spencerassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -161,7 +161,7 @@ async def test_form_already_configured(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: spencerAssistant) -> None:
     """Test a successful reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -186,10 +186,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry",
+        "spencerassistant.components.whirlpool.async_setup_entry",
         return_value=True,
-    ), patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+    ), patch("spencerassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -206,7 +206,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_auth_error(hass: spencerAssistant) -> None:
     """Test an authorization error reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -230,10 +230,10 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry",
+        "spencerassistant.components.whirlpool.async_setup_entry",
         return_value=True,
-    ), patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+    ), patch("spencerassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -246,7 +246,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_connnection_error(hass: spencerAssistant) -> None:
     """Test a connection error reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -271,13 +271,13 @@ async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry",
+        "spencerassistant.components.whirlpool.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.do_auth",
+        "spencerassistant.components.whirlpool.config_flow.Auth.do_auth",
         side_effect=ClientConnectionError,
     ), patch(
-        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+        "spencerassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(

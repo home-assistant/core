@@ -7,7 +7,7 @@ from aiohttp import web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
 
-from homeassistant.components.http.forwarded import async_setup_forwarded
+from spencerassistant.components.http.forwarded import async_setup_forwarded
 
 
 async def mock_handler(request):

@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, siren
-from homeassistant.components.siren import ATTR_VOLUME_LEVEL
-from homeassistant.const import (
+from spencerassistant.components import mqtt, siren
+from spencerassistant.components.siren import ATTR_VOLUME_LEVEL
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -59,7 +59,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def siren_platform_only():
     """Only setup the siren platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
         yield
 
 
@@ -811,7 +811,7 @@ async def test_discovery_update_unchanged_siren(
         '  "command_topic": "test_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.siren.MqttSiren.discovery_update"
+        "spencerassistant.components.mqtt.siren.MqttSiren.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

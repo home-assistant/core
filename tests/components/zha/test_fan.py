@@ -8,7 +8,7 @@ from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, hvac
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.fan import (
+from spencerassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
@@ -17,14 +17,14 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     NotValidPresetModeError,
 )
-from homeassistant.components.zha.core.discovery import GROUP_PROBE
-from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.fan import (
+from spencerassistant.components.zha.core.discovery import GROUP_PROBE
+from spencerassistant.components.zha.core.group import GroupMember
+from spencerassistant.components.zha.fan import (
     PRESET_MODE_AUTO,
     PRESET_MODE_ON,
     PRESET_MODE_SMART,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -54,7 +54,7 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 def fan_platform_only():
     """Only setup the fan and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BUTTON,
             Platform.BINARY_SENSOR,
@@ -271,7 +271,7 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     new=AsyncMock(return_value=zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "spencerassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
@@ -383,7 +383,7 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     new=AsyncMock(side_effect=ZigbeeException),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "spencerassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity_failure_state(
@@ -495,11 +495,11 @@ async def test_fan_update_entity(
     else:
         assert cluster.read_attributes.await_count == 4
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OFF
     if zha_device_joined_restored.name == "zha_device_joined":
@@ -509,7 +509,7 @@ async def test_fan_update_entity(
 
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_ON
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
@@ -671,11 +671,11 @@ async def test_fan_ikea_update_entity(
     else:
         assert cluster.read_attributes.await_count == 6
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OFF
     if zha_device_joined_restored.name == "zha_device_joined":
@@ -685,7 +685,7 @@ async def test_fan_ikea_update_entity(
 
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_ON
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 10

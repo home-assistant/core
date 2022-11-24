@@ -2,8 +2,8 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import vultr as base_vultr
-from homeassistant.components.vultr import (
+from spencerassistant.components import vultr as base_vultr
+from spencerassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH,
     ATTR_AUTO_BACKUPS,
     ATTR_COST_PER_MONTH,
@@ -13,8 +13,8 @@ from homeassistant.components.vultr import (
     CONF_SUBSCRIPTION,
     binary_sensor as vultr,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_NAME, CONF_PLATFORM
+from spencerassistant.core import spencerAssistant
 
 CONFIGS = [
     {CONF_SUBSCRIPTION: "576965", CONF_NAME: "A Server"},
@@ -24,7 +24,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_binary_sensor(hass: HomeAssistant):
+def test_binary_sensor(hass: spencerAssistant):
     """Test successful instance."""
     hass_devices = []
 
@@ -82,7 +82,7 @@ def test_invalid_sensor_config():
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: spencerAssistant):
     """Test the VultrBinarySensor fails."""
     hass_devices = []
 

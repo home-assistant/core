@@ -4,8 +4,8 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.nina.const import (
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.components.nina.const import (
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
@@ -16,10 +16,10 @@ from homeassistant.components.nina.const import (
     ATTR_START,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import mocked_request_function
 
@@ -38,7 +38,7 @@ ENTRY_DATA_NO_CORONA: dict[str, Any] = {
 }
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: spencerAssistant) -> None:
     """Test the creation and values of the NINA sensors."""
 
     with patch(
@@ -142,7 +142,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
+async def test_sensors_without_corona_filter(hass: spencerAssistant) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
     with patch(

@@ -1,16 +1,16 @@
 """Test the Ondilo ICO config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.ondilo_ico.const import (
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components.ondilo_ico.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_CLIENTID,
     OAUTH2_CLIENTSECRET,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 
@@ -76,7 +76,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.ondilo_ico.async_setup_entry", return_value=True
+        "spencerassistant.components.ondilo_ico.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 

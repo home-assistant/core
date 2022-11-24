@@ -13,16 +13,16 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.structure import Structure
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.application_credentials import (
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp
+from spencerassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.data_entry_flow import FlowResult
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from .common import (
     APP_AUTH_DOMAIN,
@@ -158,7 +158,7 @@ class OAuthFixture:
     ) -> ConfigEntry:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
-            "homeassistant.components.nest.async_setup_entry", return_value=True
+            "spencerassistant.components.nest.async_setup_entry", return_value=True
         ) as mock_setup:
             await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1
@@ -670,8 +670,8 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_config_entry_title_from_home(hass, oauth, setup_platform, subscriber):
-    """Test that the Google Home name is used for the config entry title."""
+async def test_config_entry_title_from_spencer(hass, oauth, setup_platform, subscriber):
+    """Test that the Google spencer name is used for the config entry title."""
 
     device_manager = await subscriber.async_get_device_manager()
     device_manager.add_structure(
@@ -680,7 +680,7 @@ async def test_config_entry_title_from_home(hass, oauth, setup_platform, subscri
                 "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
                 "traits": {
                     "sdm.structures.traits.Info": {
-                        "customName": "Example Home",
+                        "customName": "Example spencer",
                     },
                 },
             }
@@ -695,17 +695,17 @@ async def test_config_entry_title_from_home(hass, oauth, setup_platform, subscri
     await oauth.async_app_creds_flow(result)
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
-    assert entry.title == "Example Home"
+    assert entry.title == "Example spencer"
     assert "token" in entry.data
     assert "subscriber_id" in entry.data
     assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_config_entry_title_multiple_homes(
+async def test_config_entry_title_multiple_spencers(
     hass, oauth, setup_platform, subscriber
 ):
-    """Test handling of multiple Google Homes authorized."""
+    """Test handling of multiple Google spencers authorized."""
 
     device_manager = await subscriber.async_get_device_manager()
     device_manager.add_structure(
@@ -714,7 +714,7 @@ async def test_config_entry_title_multiple_homes(
                 "name": f"enterprise/{PROJECT_ID}/structures/id-1",
                 "traits": {
                     "sdm.structures.traits.Info": {
-                        "customName": "Example Home #1",
+                        "customName": "Example spencer #1",
                     },
                 },
             }
@@ -726,7 +726,7 @@ async def test_config_entry_title_multiple_homes(
                 "name": f"enterprise/{PROJECT_ID}/structures/id-2",
                 "traits": {
                     "sdm.structures.traits.Info": {
-                        "customName": "Example Home #2",
+                        "customName": "Example spencer #2",
                     },
                 },
             }
@@ -741,7 +741,7 @@ async def test_config_entry_title_multiple_homes(
     await oauth.async_app_creds_flow(result)
 
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
-    assert entry.title == "Example Home #1, Example Home #2"
+    assert entry.title == "Example spencer #1, Example spencer #2"
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])

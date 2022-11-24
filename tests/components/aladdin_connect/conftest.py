@@ -7,7 +7,7 @@ import pytest
 DEVICE_CONFIG_OPEN = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "open",
     "link_status": "Connected",
     "serial": "12345",
@@ -19,7 +19,7 @@ DEVICE_CONFIG_OPEN = {
 def fixture_mock_aladdinconnect_api():
     """Set up aladdin connect API fixture."""
     with mock.patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient"
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient"
     ) as mock_opener:
         mock_opener.login = AsyncMock(return_value=True)
         mock_opener.close = AsyncMock(return_value=True)

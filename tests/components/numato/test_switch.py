@@ -1,13 +1,13 @@
 """Tests for the numato switch platform."""
-from homeassistant.components import switch
-from homeassistant.const import (
+from spencerassistant.components import switch
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
 )
-from homeassistant.helpers import discovery
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers import discovery
+from spencerassistant.setup import async_setup_component
 
 from .common import NUMATO_CFG, mockup_raise
 
@@ -27,7 +27,7 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
 
 
 async def test_regular_hass_operations(hass, numato_fixture):
-    """Test regular operations from within Home Assistant."""
+    """Test regular operations from within spencer Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
     await hass.services.async_call(
@@ -65,7 +65,7 @@ async def test_regular_hass_operations(hass, numato_fixture):
 
 
 async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
-    """Test failing operations called from within Home Assistant.
+    """Test failing operations called from within spencer Assistant.
 
     Switches remain in their initial 'off' state when the device can't
     be written to.

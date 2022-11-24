@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 from aiohttp import ClientError
 
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from tests.common import get_system_health_info
 

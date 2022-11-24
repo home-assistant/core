@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioridwell.model import EventState, RidwellPickup, RidwellPickupEvent
 import pytest
 
-from homeassistant.components.ridwell.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.ridwell.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -67,12 +67,12 @@ def config_fixture(hass):
 async def setup_ridwell_fixture(hass, client, config):
     """Define a fixture to set up Ridwell."""
     with patch(
-        "homeassistant.components.ridwell.config_flow.async_get_client",
+        "spencerassistant.components.ridwell.config_flow.async_get_client",
         return_value=client,
     ), patch(
-        "homeassistant.components.ridwell.async_get_client", return_value=client
+        "spencerassistant.components.ridwell.async_get_client", return_value=client
     ), patch(
-        "homeassistant.components.ridwell.PLATFORMS", []
+        "spencerassistant.components.ridwell.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

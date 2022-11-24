@@ -1,5 +1,5 @@
 """Test reproduce state for Water heater."""
-from homeassistant.components.water_heater import (
+from spencerassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
@@ -9,9 +9,9 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_GAS,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 

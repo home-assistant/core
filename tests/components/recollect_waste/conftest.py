@@ -5,12 +5,12 @@ from unittest.mock import patch
 from aiorecollect.client import PickupEvent, PickupType
 import pytest
 
-from homeassistant.components.recollect_waste.const import (
+from spencerassistant.components.recollect_waste.const import (
     CONF_PLACE_ID,
     CONF_SERVICE_ID,
     DOMAIN,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -44,13 +44,13 @@ async def setup_recollect_waste_fixture(hass, config):
     )
 
     with patch(
-        "homeassistant.components.recollect_waste.Client.async_get_pickup_events",
+        "spencerassistant.components.recollect_waste.Client.async_get_pickup_events",
         return_value=[pickup_event],
     ), patch(
-        "homeassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
+        "spencerassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
         return_value=[pickup_event],
     ), patch(
-        "homeassistant.components.recollect_waste.PLATFORMS", []
+        "spencerassistant.components.recollect_waste.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

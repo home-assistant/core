@@ -3,24 +3,24 @@ from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANConnectionError
 
-from homeassistant import data_entry_flow
-from homeassistant.components.bsblan import config_flow
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.bsblan import config_flow
+from spencerassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.device_registry import format_mac
+from spencerassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_bsblan_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -61,7 +61,7 @@ async def test_full_user_flow_implementation(
     assert len(mock_bsblan_config_flow.device.mock_calls) == 1
 
 
-async def test_show_user_form(hass: HomeAssistant) -> None:
+async def test_show_user_form(hass: spencerAssistant) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
@@ -73,7 +73,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
 
 async def test_connection_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_bsblan_config_flow: MagicMock,
 ) -> None:
     """Test we show user form on BSBLan connection error."""
@@ -97,7 +97,7 @@ async def test_connection_error(
 
 
 async def test_user_device_exists_abort(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_bsblan_config_flow: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

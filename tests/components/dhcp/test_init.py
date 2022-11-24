@@ -8,9 +8,9 @@ from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.device_tracker import (
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp
+from spencerassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
     ATTR_MAC,
@@ -18,17 +18,17 @@ from homeassistant.components.device_tracker import (
     CONNECTED_DEVICE_REGISTERED,
     SourceType,
 )
-from homeassistant.components.dhcp.const import DOMAIN
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_HOME,
-    STATE_NOT_HOME,
+from spencerassistant.components.dhcp.const import DOMAIN
+from spencerassistant.const import (
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
+    STATE_spencer,
+    STATE_NOT_spencer,
 )
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.helpers.device_registry as dr
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -146,7 +146,7 @@ async def _async_get_handle_dhcp_packet(hass, integration_matchers):
         async_handle_dhcp_packet = _async_handle_dhcp_packet
         return MagicMock()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup",), patch(
+    with patch("spencerassistant.components.dhcp._verify_l2socket_setup",), patch(
         "scapy.arch.common.compile_filter"
     ), patch("scapy.sendrecv.AsyncSniffer", _mock_sniffer):
         await dhcp_watcher.async_start()
@@ -506,14 +506,14 @@ async def test_setup_and_stop(hass):
     await hass.async_block_till_done()
 
     with patch("scapy.sendrecv.AsyncSniffer.start") as start_call, patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
+        "spencerassistant.components.dhcp._verify_l2socket_setup",
     ), patch("scapy.arch.common.compile_filter"), patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover"
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
 
     start_call.assert_called_once()
@@ -532,13 +532,13 @@ async def test_setup_fails_as_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
+        "spencerassistant.components.dhcp._verify_l2socket_setup",
         side_effect=Scapy_Exception,
-    ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    ), patch("spencerassistant.components.dhcp.DiscoverHosts.async_discover"):
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     wait_event.set()
     assert "Cannot watch for dhcp packets" in caplog.text
@@ -555,12 +555,12 @@ async def test_setup_fails_non_root(hass, caplog):
     await hass.async_block_till_done()
 
     with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
+        "spencerassistant.components.dhcp._verify_l2socket_setup",
         side_effect=Scapy_Exception,
-    ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    ), patch("spencerassistant.components.dhcp.DiscoverHosts.async_discover"):
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert "Cannot watch for dhcp packets without root or CAP_NET_RAW" in caplog.text
@@ -576,15 +576,15 @@ async def test_setup_fails_with_broken_libpcap(hass, caplog):
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup"), patch(
+    with patch("spencerassistant.components.dhcp._verify_l2socket_setup"), patch(
         "scapy.arch.common.compile_filter",
         side_effect=ImportError,
     ) as compile_filter, patch("scapy.sendrecv.AsyncSniffer") as async_sniffer, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover"
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert compile_filter.called
@@ -599,7 +599,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
     """Test matching based on hostname and macaddress before start."""
     hass.states.async_set(
         "device_tracker.august_connect",
-        STATE_HOME,
+        STATE_spencer,
         {
             ATTR_HOST_NAME: "Connect",
             ATTR_IP: "192.168.210.56",
@@ -697,7 +697,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
-            STATE_HOME,
+            STATE_spencer,
             {
                 ATTR_HOST_NAME: "Connect",
                 ATTR_IP: "192.168.210.56",
@@ -721,8 +721,8 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     )
 
 
-async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass):
-    """Test matching based on hostname and macaddress after start but not home."""
+async def test_device_tracker_hostname_and_macaddress_after_start_not_spencer(hass):
+    """Test matching based on hostname and macaddress after start but not spencer."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = dhcp.DeviceTrackerWatcher(
@@ -734,7 +734,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
-            STATE_NOT_HOME,
+            STATE_NOT_spencer,
             {
                 ATTR_HOST_NAME: "connect",
                 ATTR_IP: "192.168.210.56",
@@ -762,7 +762,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(has
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
-            STATE_HOME,
+            STATE_spencer,
             {
                 ATTR_HOST_NAME: "connect",
                 ATTR_IP: "192.168.210.56",
@@ -792,7 +792,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
-            STATE_HOME,
+            STATE_spencer,
             {
                 ATTR_IP: "192.168.210.56",
                 ATTR_SOURCE_TYPE: SourceType.ROUTER,
@@ -810,7 +810,7 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
     """Test matching ignores self assigned ip address."""
     hass.states.async_set(
         "device_tracker.august_connect",
-        STATE_HOME,
+        STATE_spencer,
         {
             ATTR_HOST_NAME: "connect",
             ATTR_IP: "169.254.210.56",
@@ -836,7 +836,7 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
 async def test_aiodiscover_finds_new_hosts(hass):
     """Test aiodiscover finds new host."""
     with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
                 dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
@@ -875,7 +875,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
     reject shorter ones.
     """
     with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
                 dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
@@ -934,7 +934,7 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
 async def test_aiodiscover_finds_new_hosts_after_interval(hass):
     """Test aiodiscover finds new host after interval."""
     with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[],
     ):
         device_tracker_watcher = dhcp.NetworkWatcher(
@@ -948,7 +948,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
     assert len(mock_init.mock_calls) == 0
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+        "spencerassistant.components.dhcp.DiscoverHosts.async_discover",
         return_value=[
             {
                 dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",

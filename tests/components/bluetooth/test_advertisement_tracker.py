@@ -6,20 +6,20 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import (
+from spencerassistant.components.bluetooth import (
     BaseHaScanner,
     async_register_scanner,
     async_track_unavailable,
 )
-from homeassistant.components.bluetooth.advertisement_tracker import (
+from spencerassistant.components.bluetooth.advertisement_tracker import (
     ADVERTISING_TIMES_NEEDED,
 )
-from homeassistant.components.bluetooth.const import (
+from spencerassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import callback
+from spencerassistant.util import dt as dt_util
 
 from . import (
     generate_advertisement_data,
@@ -64,7 +64,7 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
 
     monotonic_now = start_monotonic_time + ((ADVERTISING_TIMES_NEEDED - 1) * 2)
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -110,7 +110,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -165,7 +165,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -214,7 +214,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -279,7 +279,7 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -359,7 +359,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         (ADVERTISING_TIMES_NEEDED - 1) * ONE_HOUR_SECONDS
     )
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -372,7 +372,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
     # Now that the scanner is gone we should go back to the stack default timeout
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
@@ -420,7 +420,7 @@ async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeou
 
     monotonic_now = start_monotonic_time + UNAVAILABLE_TRACK_SECONDS + 1
     with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(

@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, patch
 from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.meater import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.meater import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +20,7 @@ def mock_client():
 @pytest.fixture
 def mock_meater(mock_client):
     """Mock the meater library."""
-    with patch("homeassistant.components.meater.MeaterApi.authenticate") as mock_:
+    with patch("spencerassistant.components.meater.MeaterApi.authenticate") as mock_:
         mock_.side_effect = mock_client
         yield mock_
 
@@ -87,7 +87,7 @@ async def test_user_flow(hass, mock_meater):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.meater.async_setup_entry",
+        "spencerassistant.components.meater.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)

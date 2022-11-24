@@ -3,7 +3,7 @@
 
 from bleak.backends.device import BLEDevice
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from spencerassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from tests.components.bluetooth import generate_advertisement_data
 

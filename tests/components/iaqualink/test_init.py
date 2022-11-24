@@ -14,15 +14,15 @@ from iaqualink.systems.iaqua.device import (
 )
 from iaqualink.systems.iaqua.system import IaquaSystem
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from spencerassistant.components.iaqualink.const import UPDATE_INTERVAL
+from spencerassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
 
@@ -40,7 +40,7 @@ async def test_setup_login_exception(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         side_effect=AqualinkServiceException,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -54,7 +54,7 @@ async def test_setup_login_timeout(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         side_effect=asyncio.TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -68,10 +68,10 @@ async def test_setup_systems_exception(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         side_effect=AqualinkServiceException,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -85,10 +85,10 @@ async def test_setup_no_systems_recognized(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value={},
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -105,10 +105,10 @@ async def test_setup_devices_exception(hass, config_entry, client):
     systems = {system.serial: system}
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ), patch.object(
         system, "get_devices"
@@ -131,10 +131,10 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
     devices = {device.name: device}
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ), patch.object(
         system, "get_devices"
@@ -176,10 +176,10 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
     system.get_devices = AsyncMock(return_value=devices)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -211,10 +211,10 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     caplog.set_level(logging.WARNING)
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -318,10 +318,10 @@ async def test_entity_assumed_and_available(hass, config_entry, client):
     system.update = AsyncMock()
 
     with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.AqualinkClient.login",
         return_value=None,
     ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        "spencerassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

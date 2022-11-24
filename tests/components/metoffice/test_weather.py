@@ -5,10 +5,10 @@ import json
 
 from freezegun import freeze_time
 
-from homeassistant.components.metoffice.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.util import utcnow
+from spencerassistant.components.metoffice.const import DOMAIN
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.helpers.device_registry import async_get as get_dev_reg
+from spencerassistant.util import utcnow
 
 from .const import (
     DEVICE_KEY_KINGSLYNN,

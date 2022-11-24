@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailed
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
-from homeassistant.components.nam.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from spencerassistant.components.nam.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -35,7 +35,7 @@ async def test_config_not_ready(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "spencerassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=ApiError("API Error"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -52,8 +52,8 @@ async def test_config_not_ready_while_checking_credentials(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+    with patch("spencerassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=ApiError("API Error"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -71,7 +71,7 @@ async def test_config_auth_failed(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "spencerassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Authorization has failed"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

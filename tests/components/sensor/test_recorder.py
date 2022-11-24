@@ -8,24 +8,24 @@ from unittest.mock import patch
 import pytest
 from pytest import approx
 
-from homeassistant import loader
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, history
-from homeassistant.components.recorder.db_schema import StatisticsMeta
-from homeassistant.components.recorder.models import (
+from spencerassistant import loader
+from spencerassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, history
+from spencerassistant.components.recorder.db_schema import StatisticsMeta
+from spencerassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
     process_timestamp,
 )
-from homeassistant.components.recorder.statistics import (
+from spencerassistant.components.recorder.statistics import (
     async_import_statistics,
     get_metadata,
     list_statistic_ids,
 )
-from homeassistant.components.recorder.util import get_instance, session_scope
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.setup import async_setup_component, setup_component
-import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from spencerassistant.components.recorder.util import get_instance, session_scope
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.setup import async_setup_component, setup_component
+import spencerassistant.util.dt as dt_util
+from spencerassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
@@ -200,7 +200,7 @@ def test_compile_hourly_statistics_purged_state_changes(
 
     # Purge all states from the database
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=four
     ):
         hass.services.call("recorder", "purge", {"keep_days": 0})
         hass.block_till_done()
@@ -879,7 +879,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "energy",
             0,
             "",
-            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue",
+            "bug report at https://github.com/spencer-assistant/core/issues?q=is%3Aopen+is%3Aissue",
         ),
         (
             "sensor.power_consumption",
@@ -890,7 +890,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "power",
             15,
             "from integration demo ",
-            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
+            "bug report at https://github.com/spencer-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
         ),
         (
             "sensor.custom_sensor",
@@ -1255,7 +1255,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         "Entity sensor.test1 has state class total_increasing, but its state is not "
         f"strictly increasing. Triggered by state {state} ({previous_state}) with "
         f"last_updated set to {last_updated}. Please create a bug report at "
-        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+        "https://github.com/spencer-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1738,7 +1738,7 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics",
+        "spencerassistant.components.sensor.recorder.compile_statistics",
         side_effect=Exception,
     ):
         do_adhoc_statistics(hass, start=zero)
@@ -2784,7 +2784,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
     )
     with patch(
-        "homeassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
+        "spencerassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
@@ -3207,21 +3207,21 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[1]), attributes=attributes)
         )
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[2]), attributes=attributes)
@@ -3679,7 +3679,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
         ],
     }
     with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+        "spencerassistant.components.sensor.recorder.is_entity_recorded",
         return_value=False,
     ):
         await assert_validation_result(client, expected)
@@ -3730,7 +3730,7 @@ async def test_validate_statistics_sensor_not_recorded(
         ],
     }
     with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+        "spencerassistant.components.sensor.recorder.is_entity_recorded",
         return_value=False,
     ):
         hass.states.async_set("sensor.test", 10, attributes=attributes)
@@ -4172,22 +4172,22 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=zero
     ):
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(set_state(entity_id, seq[1], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(set_state(entity_id, seq[2], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(set_state(entity_id, seq[3], attributes=attributes))
 
@@ -4196,27 +4196,27 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
         attributes["last_reset"] = four.isoformat()
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=four
     ):
         states[entity_id].append(set_state(entity_id, seq[4], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=five
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=five
     ):
         states[entity_id].append(set_state(entity_id, seq[5], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=six
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=six
     ):
         states[entity_id].append(set_state(entity_id, seq[6], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=seven
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=seven
     ):
         states[entity_id].append(set_state(entity_id, seq[7], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=eight
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=eight
     ):
         states[entity_id].append(set_state(entity_id, seq[8], attributes=attributes))
 
@@ -4237,7 +4237,7 @@ def record_meter_state(hass, zero, entity_id, attributes, seq):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=zero
     ):
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
@@ -4263,17 +4263,17 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(
             set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)

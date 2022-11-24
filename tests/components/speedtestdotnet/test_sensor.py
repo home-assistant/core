@@ -1,14 +1,14 @@
 """Tests for SpeedTest sensors."""
 from unittest.mock import MagicMock
 
-from homeassistant.components import speedtestdotnet
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.speedtestdotnet.const import (
+from spencerassistant.components import speedtestdotnet
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.speedtestdotnet.const import (
     CONF_MANUAL,
     DEFAULT_NAME,
     SENSOR_TYPES,
 )
-from homeassistant.core import HomeAssistant, State
+from spencerassistant.core import spencerAssistant, State
 
 from . import MOCK_RESULTS, MOCK_SERVERS, MOCK_STATES
 
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_speedtestdotnet_sensors(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test sensors created for speedtestdotnet integration."""
     entry = MockConfigEntry(domain=speedtestdotnet.DOMAIN, data={})
@@ -36,7 +36,7 @@ async def test_speedtestdotnet_sensors(
         assert sensor.state == MOCK_STATES[description.key]
 
 
-async def test_restore_last_state(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_restore_last_state(hass: spencerAssistant, mock_api: MagicMock) -> None:
     """Test restoring last state for sensors."""
     mock_restore_cache(
         hass,

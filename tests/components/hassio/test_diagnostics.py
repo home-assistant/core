@@ -6,9 +6,9 @@ from unittest.mock import patch
 from aiohttp import ClientSession
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.hassio import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -19,7 +19,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock, request):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
@@ -28,7 +28,7 @@ def mock_all(aioclient_mock, request):
             "result": "ok",
             "data": {
                 "supervisor": "222",
-                "homeassistant": "0.110.0",
+                "spencerassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
         },
@@ -91,7 +91,7 @@ def mock_all(aioclient_mock, request):
                         "version": "2.0.0",
                         "version_latest": "2.0.1",
                         "repository": "core",
-                        "url": "https://github.com/home-assistant/addons/test",
+                        "url": "https://github.com/spencer-assistant/addons/test",
                     },
                     {
                         "name": "test2",
@@ -155,7 +155,7 @@ def mock_all(aioclient_mock, request):
 
 
 async def test_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
 ) -> None:
     """Test diagnostic information."""

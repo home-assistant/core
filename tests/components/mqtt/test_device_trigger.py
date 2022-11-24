@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
-from homeassistant.const import Platform
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.trigger import async_initialize_triggers
-from homeassistant.setup import async_setup_component
+from spencerassistant import config as hass_config
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
+from spencerassistant.const import Platform
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.helpers.trigger import async_initialize_triggers
+from spencerassistant.setup import async_setup_component
 
 from .test_common import help_test_unload_config_entry
 
@@ -48,7 +48,7 @@ def calls(hass):
 def binary_sensor_and_sensor_only():
     """Only setup the binary_sensor and sensor platform to speed up tests."""
     with patch(
-        "homeassistant.components.mqtt.PLATFORMS",
+        "spencerassistant.components.mqtt.PLATFORMS",
         [Platform.BINARY_SENSOR, Platform.SENSOR],
     ):
         yield
@@ -67,7 +67,7 @@ async def test_get_triggers(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -99,7 +99,7 @@ async def test_get_unknown_triggers(
         '  "state_topic": "foobar/sensor",'
         '  "unique_id": "unique" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -144,7 +144,7 @@ async def test_get_non_existing_triggers(
         '  "state_topic": "foobar/sensor",'
         '  "unique_id": "unique" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -169,7 +169,7 @@ async def test_discover_bad_triggers(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data0)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data0)
     await hass.async_block_till_done()
     assert device_reg.async_get_device({("mqtt", "0AFFD2")}) is None
 
@@ -182,7 +182,7 @@ async def test_discover_bad_triggers(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -230,7 +230,7 @@ async def test_update_remove_triggers(
     config2["topic"] = "foobar/tag_scanned2"
     data2 = json.dumps(config2)
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -254,7 +254,7 @@ async def test_update_remove_triggers(
     assert_lists_same(triggers, expected_triggers1)
 
     # Update trigger
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data2)
     await hass.async_block_till_done()
 
     triggers = await async_get_device_automations(
@@ -263,7 +263,7 @@ async def test_update_remove_triggers(
     assert_lists_same(triggers, expected_triggers2)
 
     # Remove trigger
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", "")
     await hass.async_block_till_done()
 
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
@@ -291,8 +291,8 @@ async def test_if_fires_on_mqtt_message(
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -369,8 +369,8 @@ async def test_if_fires_on_mqtt_message_template(
         '  "subtype": "button_2",'
         '  "value_template": "{{ value_json.button }}"}'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -450,7 +450,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -491,8 +491,8 @@ async def test_if_fires_on_mqtt_message_late_discover(
         },
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
 
     # Fake short press.
@@ -527,7 +527,7 @@ async def test_if_fires_on_mqtt_message_after_update(
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -561,7 +561,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     assert len(calls) == 1
 
     # Update the trigger with different topic
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data2)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
@@ -573,7 +573,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     assert len(calls) == 2
 
     # Update the trigger with same topic
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data2)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
@@ -597,7 +597,7 @@ async def test_no_resubscribe_same_topic(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -625,7 +625,7 @@ async def test_no_resubscribe_same_topic(
     )
 
     call_count = mqtt_mock.async_subscribe.call_count
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     assert mqtt_mock.async_subscribe.call_count == call_count
 
@@ -642,7 +642,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -676,7 +676,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     assert len(calls) == 1
 
     # Remove the trigger
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
@@ -684,7 +684,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     assert len(calls) == 1
 
     # Rediscover the trigger
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
@@ -710,7 +710,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -772,7 +772,7 @@ async def test_attach_remove(hass, device_reg, mqtt_mock_entry_no_yaml_config):
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -831,7 +831,7 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock_entry_no_yaml_conf
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -858,7 +858,7 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock_entry_no_yaml_conf
         _LOGGER.log,
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
 
     # Fake short press.
@@ -893,7 +893,7 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock_entry_no_yaml_con
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -924,7 +924,7 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock_entry_no_yaml_con
     remove()
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
 
     # Verify the triggers are no longer active
@@ -954,7 +954,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
             },
         }
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device(
@@ -990,7 +990,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
             },
         }
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -1024,7 +1024,7 @@ async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     }
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -1033,7 +1033,7 @@ async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
 
     config["device"]["name"] = "Milk"
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})
@@ -1058,7 +1058,7 @@ async def test_cleanup_trigger(
     }
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1091,7 +1091,7 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", "", 0, True
+        "spencerassistant/device_automation/bla/config", "", 0, True
     )
 
 
@@ -1109,7 +1109,7 @@ async def test_cleanup_device(
     }
 
     data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1121,7 +1121,7 @@ async def test_cleanup_device(
     )
     assert triggers[0]["type"] == "foo"
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
@@ -1152,9 +1152,9 @@ async def test_cleanup_device_several_triggers(
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1168,7 +1168,7 @@ async def test_cleanup_device_several_triggers(
     assert triggers[0]["type"] == "foo"
     assert triggers[1]["type"] == "foo2"
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
@@ -1181,7 +1181,7 @@ async def test_cleanup_device_several_triggers(
     assert len(triggers) == 1
     assert triggers[0]["type"] == "foo2"
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
@@ -1214,9 +1214,9 @@ async def test_cleanup_device_with_entity1(
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla2/config", data2)
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1228,7 +1228,7 @@ async def test_cleanup_device_with_entity1(
     )
     assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
@@ -1240,7 +1240,7 @@ async def test_cleanup_device_with_entity1(
     )
     assert len(triggers) == 2  # 2 binary_sensor triggers
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla2/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla2/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
@@ -1273,9 +1273,9 @@ async def test_cleanup_device_with_entity2(
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla2/config", data2)
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla2/config", data2)
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1287,7 +1287,7 @@ async def test_cleanup_device_with_entity2(
     )
     assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla2/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/binary_sensor/bla2/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
@@ -1299,7 +1299,7 @@ async def test_cleanup_device_with_entity2(
     )
     assert len(triggers) == 1  # device trigger
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
@@ -1340,9 +1340,9 @@ async def test_trigger_debug_info(hass, mqtt_mock_entry_no_yaml_config):
         },
     }
     data = json.dumps(config1)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data)
     data = json.dumps(config2)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla2/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device(
@@ -1354,8 +1354,8 @@ async def test_trigger_debug_info(hass, mqtt_mock_entry_no_yaml_config):
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 2
     topic_map = {
-        "homeassistant/device_automation/bla1/config": config1,
-        "homeassistant/device_automation/bla2/config": config2,
+        "spencerassistant/device_automation/bla1/config": config1,
+        "spencerassistant/device_automation/bla2/config": config2,
     }
     assert (
         topic_map[debug_info_data["triggers"][0]["discovery_data"]["topic"]]
@@ -1370,14 +1370,14 @@ async def test_trigger_debug_info(hass, mqtt_mock_entry_no_yaml_config):
         == topic_map[debug_info_data["triggers"][1]["discovery_data"]["topic"]]
     )
 
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 1
     assert (
         debug_info_data["triggers"][0]["discovery_data"]["topic"]
-        == "homeassistant/device_automation/bla2/config"
+        == "spencerassistant/device_automation/bla2/config"
     )
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
 
@@ -1392,7 +1392,7 @@ async def test_unload_entry(hass, calls, device_reg, mqtt_mock, tmp_path) -> Non
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
@@ -1427,7 +1427,7 @@ async def test_unload_entry(hass, calls, device_reg, mqtt_mock, tmp_path) -> Non
     await help_test_unload_config_entry(hass, tmp_path, {})
 
     # Rediscover message and fake short press 2 (non impact)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
@@ -1442,7 +1442,7 @@ async def test_unload_entry(hass, calls, device_reg, mqtt_mock, tmp_path) -> Non
         await hass.config_entries.async_setup(mqtt_entry.entry_id)
 
     # Rediscover and fake short press 3
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "spencerassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()

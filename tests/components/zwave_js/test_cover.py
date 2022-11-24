@@ -7,7 +7,7 @@ from zwave_js_server.const import (
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     DOMAIN,
@@ -15,8 +15,8 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     CoverDeviceClass,
 )
-from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import (
+from spencerassistant.components.zwave_js.helpers import ZwaveValueMatcher
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_CLOSED,
     STATE_CLOSING,

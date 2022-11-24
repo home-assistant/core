@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import frontend
-from homeassistant.components.lovelace import const, dashboard
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import frontend
+from spencerassistant.components.lovelace import const, dashboard
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
 
@@ -132,7 +132,7 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"hello": "yo"},
     ):
         await client.send_json({"id": 7, "type": "lovelace/config"})
@@ -145,7 +145,7 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"hello": "yo2"},
     ):
         await client.send_json({"id": 8, "type": "lovelace/config", "force": True})
@@ -234,7 +234,7 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"hello": "yo"},
     ):
         await client.send_json(
@@ -249,7 +249,7 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"hello": "yo2"},
     ):
         await client.send_json(

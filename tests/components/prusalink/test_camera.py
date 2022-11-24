@@ -4,20 +4,20 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
 def setup_camera_platform_only():
     """Only setup camera platform."""
-    with patch("homeassistant.components.prusalink.PLATFORMS", [Platform.CAMERA]):
+    with patch("spencerassistant.components.prusalink.PLATFORMS", [Platform.CAMERA]):
         yield
 
 
 async def test_camera_no_job(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry,
     mock_api,
     hass_client,
@@ -34,7 +34,7 @@ async def test_camera_no_job(
 
 
 async def test_camera_active_job(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry,
     mock_api,
     mock_job_api_printing,

@@ -5,7 +5,7 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import (
+from spencerassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -18,8 +18,8 @@ from homeassistant.components.modbus.const import (
     CONF_WRITE_TYPE,
     MODBUS_DOMAIN,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -33,9 +33,9 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -352,14 +352,14 @@ async def test_switch_service_turn(hass, caplog, mock_modbus):
     ],
 )
 async def test_service_switch_update(hass, mock_modbus, mock_ha):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     mock_modbus.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -392,7 +392,7 @@ async def test_delay_switch(hass, mock_modbus):
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     now = now + timedelta(seconds=2)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    with mock.patch("spencerassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON

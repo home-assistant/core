@@ -1,12 +1,12 @@
 """Axis binary sensor platform tests."""
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import (
+from spencerassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from spencerassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
 

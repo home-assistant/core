@@ -1,5 +1,5 @@
 """The tests for the Open Hardware Monitor platform."""
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

@@ -2,7 +2,7 @@
 from collections import OrderedDict
 from typing import Final
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.const import CONF_HOST, CONF_PORT
 
 CONF_DATA: Final = {CONF_HOST: "test", CONF_PORT: 1234}
 

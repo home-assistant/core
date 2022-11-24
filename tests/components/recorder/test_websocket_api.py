@@ -10,18 +10,18 @@ from freezegun import freeze_time
 import pytest
 from pytest import approx
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
-from homeassistant.components.recorder.statistics import (
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
+from spencerassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
     get_metadata,
     list_statistic_ids,
 )
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from spencerassistant.helpers import recorder as recorder_helper
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
+from spencerassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
@@ -837,7 +837,7 @@ async def test_statistic_during_period_calendar(
 
     # Try requesting data for the current hour
     with patch(
-        "homeassistant.components.recorder.websocket_api.statistic_during_period",
+        "spencerassistant.components.recorder.websocket_api.statistic_during_period",
         return_value={},
     ) as statistic_during_period:
         await client.send_json(
@@ -1932,7 +1932,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
 
     client = await hass_ws_client()
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("spencerassistant.components.recorder.migration.migrate_schema"):
         recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
@@ -1964,15 +1964,15 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
         migration_done.wait()
         return real_migration(*args)
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics"
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.Recorder.async_periodic_statistics"
     ), patch(
-        "homeassistant.components.recorder.core.create_engine",
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch.object(
         recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
+        "spencerassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
     ):
         recorder_helper.async_initialize_recorder(hass)

@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import vultr as base_vultr
-from homeassistant.components.vultr import (
+from spencerassistant.components import vultr as base_vultr
+from spencerassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH,
     ATTR_AUTO_BACKUPS,
     ATTR_COST_PER_MONTH,
@@ -18,8 +18,8 @@ from homeassistant.components.vultr import (
     CONF_SUBSCRIPTION,
     switch as vultr,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_NAME, CONF_PLATFORM
+from spencerassistant.core import spencerAssistant
 
 from tests.common import load_fixture
 
@@ -31,7 +31,7 @@ CONFIGS = [
 
 
 @pytest.fixture(name="hass_devices")
-def load_hass_devices(hass: HomeAssistant):
+def load_hass_devices(hass: spencerAssistant):
     """Load a valid config."""
     hass_devices = []
 
@@ -49,7 +49,7 @@ def load_hass_devices(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_switch(hass: spencerAssistant, hass_devices: list[vultr.VultrSwitch]):
     """Test successful instance."""
 
     assert len(hass_devices) == 3
@@ -96,7 +96,7 @@ def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_on(hass: spencerAssistant, hass_devices: list[vultr.VultrSwitch]):
     """Test turning a subscription on."""
     with patch(
         "vultr.Vultr.server_list",
@@ -112,7 +112,7 @@ def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_off(hass: spencerAssistant, hass_devices: list[vultr.VultrSwitch]):
     """Test turning a subscription off."""
     with patch(
         "vultr.Vultr.server_list",
@@ -134,7 +134,7 @@ def test_invalid_switch_config():
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_switches(hass: HomeAssistant):
+def test_invalid_switches(hass: spencerAssistant):
     """Test the VultrSwitch fails."""
     hass_devices = []
 

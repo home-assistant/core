@@ -3,16 +3,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.NEW_DOMAIN.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.NEW_DOMAIN.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
-async def test_config_flow(hass: HomeAssistant, platform) -> None:
+async def test_config_flow(hass: spencerAssistant, platform) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
 
@@ -23,7 +23,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
+        "spencerassistant.components.NEW_DOMAIN.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -62,7 +62,7 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize("platform", ("sensor",))
-async def test_options(hass: HomeAssistant, platform) -> None:
+async def test_options(hass: spencerAssistant, platform) -> None:
     """Test reconfiguring."""
     input_sensor_1_entity_id = "sensor.input1"
     input_sensor_2_entity_id = "sensor.input2"

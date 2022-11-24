@@ -10,35 +10,35 @@ BASE = """
 # https://github.com/blog/2392-introducing-code-owners
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# Home Assistant Core
-setup.cfg @home-assistant/core
-pyproject.toml @home-assistant/core
-/homeassistant/*.py @home-assistant/core
-/homeassistant/helpers/ @home-assistant/core
-/homeassistant/util/ @home-assistant/core
+# spencer Assistant Core
+setup.cfg @spencer-assistant/core
+pyproject.toml @spencer-assistant/core
+/spencerassistant/*.py @spencer-assistant/core
+/spencerassistant/helpers/ @spencer-assistant/core
+/spencerassistant/util/ @spencer-assistant/core
 
-# Home Assistant Supervisor
-build.json @home-assistant/supervisor
-/machine/ @home-assistant/supervisor
-/rootfs/ @home-assistant/supervisor
-/Dockerfile @home-assistant/supervisor
+# spencer Assistant Supervisor
+build.json @spencer-assistant/supervisor
+/machine/ @spencer-assistant/supervisor
+/rootfs/ @spencer-assistant/supervisor
+/Dockerfile @spencer-assistant/supervisor
 
 # Other code
-/homeassistant/scripts/check_config.py @kellerza
-/homeassistant/const.py @epenet
-/homeassistant/util/ @epenet
+/spencerassistant/scripts/check_config.py @kellerza
+/spencerassistant/const.py @epenet
+/spencerassistant/util/ @epenet
 
 # Integrations
 """.strip()
 
 INDIVIDUAL_FILES = """
 # Individual files
-/homeassistant/components/demo/weather.py @fabaff
+/spencerassistant/components/demo/weather.py @fabaff
 """
 
 REMOVE_CODEOWNERS = """
 # Remove codeowners from files
-/homeassistant/components/*/translations/
+/spencerassistant/components/*/translations/
 """
 
 
@@ -66,7 +66,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config) 
                     "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append(f"/homeassistant/components/{domain}/ {' '.join(codeowners)}")
+        parts.append(f"/spencerassistant/components/{domain}/ {' '.join(codeowners)}")
 
         if (config.root / "tests/components" / domain / "__init__.py").exists():
             parts.append(f"/tests/components/{domain}/ {' '.join(codeowners)}")

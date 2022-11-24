@@ -8,18 +8,18 @@ from unittest.mock import Mock
 from pyunifiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
 from pyunifiprotect.data.nvr import EventMetadata
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.unifiprotect.binary_sensor import (
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
     LIGHT_SENSORS,
     MOTION_SENSORS,
     SENSE_SENSORS,
 )
-from homeassistant.components.unifiprotect.const import (
+from spencerassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
     DEFAULT_ATTRIBUTION,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     STATE_OFF,
@@ -27,8 +27,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -44,7 +44,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
 
 
 async def test_binary_sensor_camera_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
 ):
     """Test removing and re-adding a camera device."""
 
@@ -58,7 +58,7 @@ async def test_binary_sensor_camera_remove(
 
 
 async def test_binary_sensor_light_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test removing and re-adding a light device."""
 
@@ -72,7 +72,7 @@ async def test_binary_sensor_light_remove(
 
 
 async def test_binary_sensor_sensor_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test removing and re-adding a light device."""
 
@@ -86,7 +86,7 @@ async def test_binary_sensor_sensor_remove(
 
 
 async def test_binary_sensor_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test binary_sensor entity setup for light devices."""
 
@@ -111,7 +111,7 @@ async def test_binary_sensor_setup_light(
 
 
 async def test_binary_sensor_setup_camera_all(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
@@ -171,7 +171,7 @@ async def test_binary_sensor_setup_camera_all(
 
 
 async def test_binary_sensor_setup_camera_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test binary_sensor entity setup for camera devices (no features)."""
 
@@ -197,7 +197,7 @@ async def test_binary_sensor_setup_camera_none(
 
 
 async def test_binary_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor entity setup for sensor devices."""
 
@@ -222,7 +222,7 @@ async def test_binary_sensor_setup_sensor(
 
 
 async def test_binary_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor: Sensor
 ):
     """Test binary_sensor entity setup for sensor with most sensors disabled."""
 
@@ -254,7 +254,7 @@ async def test_binary_sensor_setup_sensor_none(
 
 
 async def test_binary_sensor_update_motion(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
@@ -301,7 +301,7 @@ async def test_binary_sensor_update_motion(
 
 
 async def test_binary_sensor_update_light_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, fixed_now: datetime
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, fixed_now: datetime
 ):
     """Test binary_sensor motion entity."""
 
@@ -344,7 +344,7 @@ async def test_binary_sensor_update_light_motion(
 
 
 async def test_binary_sensor_update_mount_type_window(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor motion entity."""
 
@@ -376,7 +376,7 @@ async def test_binary_sensor_update_mount_type_window(
 
 
 async def test_binary_sensor_update_mount_type_garage(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor motion entity."""
 

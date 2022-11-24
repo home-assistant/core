@@ -4,11 +4,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from transmissionrpc.error import TransmissionError
 
-from homeassistant import config_entries
-from homeassistant.components import transmission
-from homeassistant.components.transmission.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components import transmission
+from spencerassistant.components.transmission.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG_DATA
 
@@ -22,7 +22,7 @@ def mock_api():
         yield api
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.transmission.async_setup_entry",
+        "spencerassistant.components.transmission.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_device_already_configured(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test aborting if the device is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
@@ -88,7 +88,7 @@ async def test_name_already_configured(hass):
     assert result["errors"] == {"name": "name_exists"}
 
 
-async def test_options(hass: HomeAssistant) -> None:
+async def test_options(hass: spencerAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
@@ -98,7 +98,7 @@ async def test_options(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.transmission.async_setup_entry",
+        "spencerassistant.components.transmission.async_setup_entry",
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -118,7 +118,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
 
 async def test_error_on_wrong_credentials(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test we handle invalid credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -138,7 +138,7 @@ async def test_error_on_wrong_credentials(
 
 
 async def test_error_on_connection_failure(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -155,7 +155,7 @@ async def test_error_on_connection_failure(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_success(hass: HomeAssistant) -> None:
+async def test_reauth_success(hass: spencerAssistant) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
@@ -177,7 +177,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert result["description_placeholders"] == {"username": "user"}
 
     with patch(
-        "homeassistant.components.transmission.async_setup_entry",
+        "spencerassistant.components.transmission.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -192,7 +192,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_reauth_failed(hass: spencerAssistant, mock_api: MagicMock) -> None:
     """Test we can't reauth due to invalid password."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
@@ -226,7 +226,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
 
 async def test_reauth_failed_connection_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test we can't reauth due to connection error."""
     entry = MockConfigEntry(

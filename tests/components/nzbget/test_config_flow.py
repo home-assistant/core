@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
 
-from homeassistant.components.nzbget.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.nzbget.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     ENTRY_CONFIG,
@@ -78,7 +78,7 @@ async def test_user_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.version",
         side_effect=NZBGetAPIException(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_user_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.version",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.version",
         side_effect=Exception(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -132,7 +132,7 @@ async def test_options_flow(hass, nzbget_api):
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nzbget.PLATFORMS", []):
+    with patch("spencerassistant.components.nzbget.PLATFORMS", []):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

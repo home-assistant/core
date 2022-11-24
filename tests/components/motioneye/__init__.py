@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from motioneye_client.const import DEFAULT_PORT
 
-from homeassistant.components.motioneye import get_motioneye_entity_unique_id
-from homeassistant.components.motioneye.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.motioneye import get_motioneye_entity_unique_id
+from spencerassistant.components.motioneye.const import DOMAIN
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import CONF_URL
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -154,7 +154,7 @@ def create_mock_motioneye_client() -> AsyncMock:
 
 
 def create_mock_motioneye_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
@@ -171,7 +171,7 @@ def create_mock_motioneye_config_entry(
 
 
 async def setup_mock_motioneye_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry | None = None,
     client: Mock | None = None,
 ) -> ConfigEntry:
@@ -189,7 +189,7 @@ async def setup_mock_motioneye_config_entry(
     client = client or create_mock_motioneye_client()
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=client,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -198,7 +198,7 @@ async def setup_mock_motioneye_config_entry(
 
 
 def register_test_entity(
-    hass: HomeAssistant, platform: str, camera_id: int, type_name: str, entity_id: str
+    hass: spencerAssistant, platform: str, camera_id: int, type_name: str, entity_id: str
 ) -> None:
     """Register a test entity."""
 

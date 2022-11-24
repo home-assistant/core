@@ -173,8 +173,8 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.light.schema_basic import (
+from spencerassistant.components import light, mqtt
+from spencerassistant.components.mqtt.light.schema_basic import (
     CONF_BRIGHTNESS_COMMAND_TOPIC,
     CONF_COLOR_TEMP_COMMAND_TOPIC,
     CONF_EFFECT_COMMAND_TOPIC,
@@ -186,15 +186,15 @@ from homeassistant.components.mqtt.light.schema_basic import (
     CONF_XY_COMMAND_TOPIC,
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -237,7 +237,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def light_platform_only():
     """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
         yield
 
 
@@ -2224,7 +2224,7 @@ async def test_discovery_deprecated(hass, mqtt_mock_entry_no_yaml_config, caplog
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )
-    async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")
     assert state is not None
@@ -2709,7 +2709,7 @@ async def test_discovery_update_unchanged_light(
         '  "command_topic": "test_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.light.schema_basic.MqttLight.discovery_update"
+        "spencerassistant.components.mqtt.light.schema_basic.MqttLight.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

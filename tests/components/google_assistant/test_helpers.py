@@ -5,18 +5,18 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import (
+from spencerassistant.components.google_assistant import helpers
+from spencerassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     NOT_EXPOSE_LOCAL,
     SOURCE_CLOUD,
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from . import MockConfig
 
@@ -63,7 +63,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
-            "homeassistant.components.google_assistant.helpers.get_google_type",
+            "spencerassistant.components.google_assistant.helpers.get_google_type",
             return_value=device_type,
         ):
             serialized = entity.sync_serialize(None, "mock-uuid")
@@ -123,7 +123,7 @@ async def test_config_local_sdk(hass, hass_client):
 
     assert config.is_local_connected is True
     with patch(
-        "homeassistant.components.google_assistant.helpers.utcnow",
+        "spencerassistant.components.google_assistant.helpers.utcnow",
         return_value=dt.utcnow() + timedelta(seconds=90),
     ):
         assert config.is_local_connected is False
@@ -440,7 +440,7 @@ def test_is_supported_cached():
         )
 
     with patch(
-        "homeassistant.components.google_assistant.helpers.GoogleEntity.traits",
+        "spencerassistant.components.google_assistant.helpers.GoogleEntity.traits",
         return_value=[1],
     ) as mock_traits:
         assert entity(1).is_supported() is True

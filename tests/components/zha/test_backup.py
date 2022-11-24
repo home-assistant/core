@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.zha.backup import async_post_backup, async_pre_backup
+from spencerassistant.components.zha.backup import async_post_backup, async_pre_backup
 
 
 async def test_pre_backup(hass, setup_zha):

@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from homeassistant.components.counter import (
+from spencerassistant.components.counter import (
     ATTR_EDITABLE,
     ATTR_INITIAL,
     ATTR_MAXIMUM,
@@ -19,10 +19,10 @@ from homeassistant.components.counter import (
     DEFAULT_STEP,
     DOMAIN,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
-from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
+from spencerassistant.core import Context, CoreState, State
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
 

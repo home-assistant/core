@@ -12,8 +12,8 @@ from aiohttp.streams import StreamReader
 from multidict import CIMultiDict
 from yarl import URL
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.helpers.json import json_dumps, json_loads
+from spencerassistant.const import EVENT_spencerASSISTANT_CLOSE
+from spencerassistant.helpers.json import json_dumps, json_loads
 
 RETYPE = type(re.compile(""))
 
@@ -286,12 +286,12 @@ def mock_aiohttp_client():
             """Close session."""
             await session.close()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
+        hass.bus.async_listen_once(EVENT_spencerASSISTANT_CLOSE, close_session)
 
         return session
 
     with mock.patch(
-        "homeassistant.helpers.aiohttp_client._async_create_clientsession",
+        "spencerassistant.helpers.aiohttp_client._async_create_clientsession",
         side_effect=create_session,
     ):
         yield mocker

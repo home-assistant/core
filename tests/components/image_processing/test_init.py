@@ -3,11 +3,11 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.http as http
-import homeassistant.components.image_processing as ip
-from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.http as http
+import spencerassistant.components.image_processing as ip
+from spencerassistant.const import ATTR_ENTITY_PICTURE
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from . import common
 
@@ -79,7 +79,7 @@ async def test_setup_component_with_service(hass):
 
 
 @patch(
-    "homeassistant.components.demo.camera.Path.read_bytes",
+    "spencerassistant.components.demo.camera.Path.read_bytes",
     return_value=b"Test",
 )
 async def test_get_image_from_camera(
@@ -99,8 +99,8 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.camera.async_get_image",
-    side_effect=HomeAssistantError(),
+    "spencerassistant.components.camera.async_get_image",
+    side_effect=spencerAssistantError(),
 )
 async def test_get_image_without_exists_camera(
     mock_image, hass, aiohttp_unused_port, enable_custom_integrations
@@ -165,7 +165,7 @@ async def test_alpr_event_double_call(hass, aioclient_mock):
 
 
 @patch(
-    "homeassistant.components.demo.image_processing.DemoImageProcessingAlpr.confidence",
+    "spencerassistant.components.demo.image_processing.DemoImageProcessingAlpr.confidence",
     new_callable=PropertyMock(return_value=95),
 )
 async def test_alpr_event_single_call_confidence(confidence_mock, hass, aioclient_mock):
@@ -215,7 +215,7 @@ async def test_face_event_call(hass, aioclient_mock):
 
 
 @patch(
-    "homeassistant.components.demo.image_processing."
+    "spencerassistant.components.demo.image_processing."
     "DemoImageProcessingFace.confidence",
     new_callable=PropertyMock(return_value=None),
 )

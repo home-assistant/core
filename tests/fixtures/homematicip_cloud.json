@@ -1,13 +1,13 @@
 {
   "clients": {
     "00000000-0000-0000-0000-000000000000": {
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000000",
       "label": "TEST-Client",
       "clientType": "APP"
     },
     "AA000000-0000-0000-0000-000000000000": {
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "AA000000-0000-0000-0000-000000000000",
       "label": "REMOVE_ME",
       "clientType": "APP"
@@ -77,7 +77,7 @@
           "raining": true
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000RAIN_SENSOR",
       "label": "Regensensor",
       "lastStatusUpdate": 1610893608747,
@@ -157,7 +157,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110DIN_RAIL_SWITCH",
       "label": "Schaltaktor f\u00fcr Hutschienenmontage \u2013 1-fach",
       "lastStatusUpdate": 0,
@@ -240,7 +240,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711PUSH_BUTTON_FLAT",
       "label": "Wandtaster",
       "lastStatusUpdate": 1610331234765,
@@ -311,7 +311,7 @@
           "unreach": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711A000000BAD0CAAAA",
       "label": "AP1",
       "lastStatusUpdate": 1604522238580,
@@ -322,7 +322,7 @@
       "oem": "eQ-3",
       "permanentlyReachable": true,
       "serializedGlobalTradeItemNumber": "3014F711A000000BAD0CAAAA",
-      "type": "HOME_CONTROL_ACCESS_POINT",
+      "type": "spencer_CONTROL_ACCESS_POINT",
       "updateState": "BACKGROUND_UPDATE_NOT_SUPPORTED"
     },
     "3014F711A000000BAD0C0DED": {
@@ -382,9 +382,9 @@
           "unreach": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711A000000BAD0C0DED",
-      "label": "HOME_CONTROL_ACCESS_POINT",
+      "label": "spencer_CONTROL_ACCESS_POINT",
       "lastStatusUpdate": 1604522238580,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -393,7 +393,7 @@
       "oem": "eQ-3",
       "permanentlyReachable": true,
       "serializedGlobalTradeItemNumber": "3014F711A000000BAD0C0DED",
-      "type": "HOME_CONTROL_ACCESS_POINT",
+      "type": "spencer_CONTROL_ACCESS_POINT",
       "updateState": "BACKGROUND_UPDATE_NOT_SUPPORTED"
     },
     "3014F71100BLIND_MODULE00": {
@@ -480,7 +480,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100BLIND_MODULE00",
       "label": "Sonnenschutz Balkont\u00fcr",
       "lastStatusUpdate": 1600002124559,
@@ -561,7 +561,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110TILTVIBRATIONSENSOR",
       "label": "Garage Neigungs- und Ersch\u00fctterungssensor",
       "lastStatusUpdate": 1598610615630,
@@ -705,7 +705,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000WIREDSWITCH8",
       "label": "Wired Schaltaktor \u2013 8-fach",
       "lastStatusUpdate": 1595225535806,
@@ -818,7 +818,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000WIREDDIMMER3",
       "label": "Wired Dimmaktor \u2013 3-fach (K\u00fcche)",
       "lastStatusUpdate": 1595225686220,
@@ -1322,7 +1322,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000WIREDINPUT32",
       "label": "Wired Eingangsmodul \u2013 32-fach",
       "lastStatusUpdate": 1595222885844,
@@ -1393,7 +1393,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110SHUTTER_OPTICAL",
       "label": "Sitzplatzt\u00fcre",
       "lastStatusUpdate": 1589401621441,
@@ -1462,7 +1462,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000HmIPFSI16",
       "label": "Wohnzimmer Beleuchtung",
       "lastStatusUpdate": 1587233145096,
@@ -1527,7 +1527,7 @@
           "ventilationPositionSupported": true
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000HOERMANN",
       "label": "Garage door",
       "lastStatusUpdate": 1584029477755,
@@ -1595,7 +1595,7 @@
           "vaporAmount": 10.662700840292974
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000BBBB000000000",
       "label": "Raumbedienger\u00e4t",
       "lastStatusUpdate": 1579383507353,
@@ -1659,7 +1659,7 @@
           "temperatureOffset": 0.0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000000BBBB000005",
       "label": "Raumbedienger\u00e4t Analog",
       "lastStatusUpdate": 1579384126279,
@@ -1727,7 +1727,7 @@
           "vaporAmount": 5.710127947243264
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000000000000AAA5",
       "label": "Thermostat Schlafen Tal",
       "lastStatusUpdate": 1578954498192,
@@ -1790,7 +1790,7 @@
           "powerMainsFailure": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000ABCD50",
       "label": "Netzausfall\u00fcberwachung",
       "lastStatusUpdate": 1577487207542,
@@ -1984,7 +1984,7 @@
           "valveState": "ADJUSTMENT_TOO_SMALL"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000049",
       "label": "Fu\u00dfbodenheizungsaktor OG motorisch",
       "lastStatusUpdate": 1577486092047,
@@ -2065,7 +2065,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000148",
       "label": "Heizungsaktor",
       "lastStatusUpdate": 1577482332693,
@@ -2128,7 +2128,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000ABCDABCD0033",
       "label": "Alarmsirene \u2013 au\u00dfen",
       "lastStatusUpdate": 1573078567665,
@@ -2197,7 +2197,7 @@
           "notificationSoundTypeLowToHigh": "SOUND_LONG"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000031",
       "label": "Garagentor",
       "lastStatusUpdate": 1567850423788,
@@ -2314,7 +2314,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000052",
       "label": "Alarm-Melder",
       "lastStatusUpdate": 1564733931898,
@@ -2460,7 +2460,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000FAL24C10",
       "label": "Fu\u00dfbodenheizungsaktor",
       "lastStatusUpdate": 1558461135830,
@@ -2524,7 +2524,7 @@
           "userDesiredProfileMode": "MANUAL"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000000BBL24",
       "label": "Jalousie Schiebet\u00fcr",
       "lastStatusUpdate": 1558464454532,
@@ -2584,7 +2584,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000BCBB11",
       "label": "Jalousien - 1 KiZi, 2 SchlaZi",
       "lastStatusUpdate": 1555621612744,
@@ -2669,7 +2669,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711ABCD0ABCD000002",
       "label": "Multi IO Box",
       "lastStatusUpdate": 1552508702220,
@@ -2722,7 +2722,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000ABCDEF10",
       "label": "Wohnzimmer 3",
       "lastStatusUpdate": 1550912664486,
@@ -2776,7 +2776,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000000TEST1",
       "label": "Remote",
       "lastStatusUpdate": 1550512733995,
@@ -2849,7 +2849,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000064",
       "label": "Schlie\u00dfer Magnet",
       "lastStatusUpdate": 1524515854304,
@@ -2913,7 +2913,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711BADCAFE000000001",
       "label": "Sofa links",
       "lastStatusUpdate": 1548616026922,
@@ -2980,7 +2980,7 @@
           "valveProtectionSwitchingInterval": 14
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000055",
       "label": "BWTH 1",
       "lastStatusUpdate": 1547283716818,
@@ -3050,7 +3050,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711ABCDEF0000000014",
       "label": "FFB 1",
       "lastStatusUpdate": 0,
@@ -3125,7 +3125,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711BSL0000000000050",
       "label": "Treppe",
       "lastStatusUpdate": 1548431183264,
@@ -3175,7 +3175,7 @@
           "lowestIllumination": 785.2
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711SLO0000000000026",
       "label": "Lichtsensor Nord",
       "lastStatusUpdate": 1548494235548,
@@ -3229,7 +3229,7 @@
           "rightCounter": 802
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000054",
       "label": "SPDR_1",
       "lastStatusUpdate": 1547282742305,
@@ -3304,7 +3304,7 @@
           "numberOfBrightnessMeasurements": 7
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000000000AAAAA25",
       "label": "Bewegungsmelder für 55er Rahmen – innen",
       "lastStatusUpdate": 1546776387401,
@@ -3366,7 +3366,7 @@
           "yesterdaySunshineDuration": 0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000038",
       "label": "Weather Sensor – plus",
       "lastStatusUpdate": 1546789939739,
@@ -3483,7 +3483,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000BBBBB1",
       "label": "Fußbodenheizungsaktor",
       "lastStatusUpdate": 1545746610807,
@@ -3530,7 +3530,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000BBBBB8",
       "label": "Alarmsirene",
       "lastStatusUpdate": 1544480290322,
@@ -3583,7 +3583,7 @@
           "numberOfBrightnessMeasurements": 7
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000000000000BB11",
       "label": "Wohnzimmer",
       "lastStatusUpdate": 1544480290322,
@@ -3635,7 +3635,7 @@
           "numberOfBrightnessMeasurements": 7
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000000BBB17",
       "label": "Außen Küche",
       "lastStatusUpdate": 1546776559553,
@@ -3689,7 +3689,7 @@
           "waterlevelDetected": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000050",
       "label": "Wassersensor",
       "lastStatusUpdate": 1530802738493,
@@ -3745,7 +3745,7 @@
           "windowState": "OPEN"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000000",
       "label": "Balkontüre",
       "lastStatusUpdate": 1524516526498,
@@ -3796,7 +3796,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000005551",
       "label": "Eingangst\u00fcrkontakt",
       "lastStatusUpdate": 1524515854304,
@@ -3852,7 +3852,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000001",
       "label": "Fenster",
       "lastStatusUpdate": 1524515854304,
@@ -3908,7 +3908,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000002",
       "label": "Balkonfenster",
       "lastStatusUpdate": 1524516088763,
@@ -3964,7 +3964,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000003",
       "label": "Küche",
       "lastStatusUpdate": 1524514836466,
@@ -4020,7 +4020,7 @@
           "windowState": "OPEN"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000004",
       "label": "Fenster",
       "lastStatusUpdate": 1524512404032,
@@ -4076,7 +4076,7 @@
           "windowState": "OPEN"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000005",
       "label": "Wohnzimmer",
       "lastStatusUpdate": 0,
@@ -4131,7 +4131,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000006",
       "label": "Wohnungstüre",
       "lastStatusUpdate": 1524516489316,
@@ -4186,7 +4186,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000007",
       "label": "Vorzimmer",
       "lastStatusUpdate": 1524515489257,
@@ -4252,7 +4252,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000108",
       "label": "Flur oben",
       "lastStatusUpdate": 1570365990392,
@@ -4318,7 +4318,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000109",
       "label": "Ausschalter Terrasse Bewegungsmelder",
       "lastStatusUpdate": 1570366291250,
@@ -4369,7 +4369,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000008",
       "label": "Pc",
       "lastStatusUpdate": 1524516554056,
@@ -4420,7 +4420,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000009",
       "label": "Brunnen",
       "lastStatusUpdate": 1524515786303,
@@ -4471,7 +4471,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000010",
       "label": "Büro",
       "lastStatusUpdate": 1524513613922,
@@ -4520,7 +4520,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000110",
       "label": "Schrank",
       "lastStatusUpdate": 1524513613922,
@@ -4573,7 +4573,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000011",
       "label": "Heizung",
       "lastStatusUpdate": 1524516360178,
@@ -4626,7 +4626,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000012",
       "label": "Heizkörperthermostat",
       "lastStatusUpdate": 1524514105832,
@@ -4679,7 +4679,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000013",
       "label": "Heizkörperthermostat2",
       "lastStatusUpdate": 1524514007132,
@@ -4732,7 +4732,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000014",
       "label": "Küche-Heizung",
       "lastStatusUpdate": 1524513898337,
@@ -4785,7 +4785,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000015",
       "label": "Wohnzimmer-Heizung",
       "lastStatusUpdate": 1524513950325,
@@ -4838,7 +4838,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000016",
       "label": "Heizkörperthermostat3",
       "lastStatusUpdate": 1524514626157,
@@ -4891,7 +4891,7 @@
           "valveState": "ADAPTION_DONE"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000017",
       "label": "Balkon-Heizung",
       "lastStatusUpdate": 1524511331830,
@@ -4944,7 +4944,7 @@
           "smokeDetectorAlarmType": "IDLE_OFF"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000018",
       "label": "Rauchwarnmelder",
       "lastStatusUpdate": 1524461072721,
@@ -4997,7 +4997,7 @@
           "smokeDetectorAlarmType": "IDLE_OFF"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000019",
       "label": "Rauchwarnmelder2",
       "lastStatusUpdate": 1524480981494,
@@ -5050,7 +5050,7 @@
           "smokeDetectorAlarmType": "IDLE_OFF"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000020",
       "label": "Rauchwarnmelder3",
       "lastStatusUpdate": 1524456324824,
@@ -5103,7 +5103,7 @@
           "smokeDetectorAlarmType": "IDLE_OFF"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000021",
       "label": "Rauchwarnmelder4",
       "lastStatusUpdate": 1524443129876,
@@ -5157,7 +5157,7 @@
           "temperatureOffset": 0.0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000022",
       "label": "Wandthermostat",
       "lastStatusUpdate": 1524516534382,
@@ -5211,7 +5211,7 @@
           "temperatureOffset": 0.0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000023",
       "label": "Wandthermostat4",
       "lastStatusUpdate": 1524516454116,
@@ -5265,7 +5265,7 @@
           "temperatureOffset": 0.0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000024",
       "label": "Wandthermostat2",
       "lastStatusUpdate": 1524516436601,
@@ -5319,7 +5319,7 @@
           "temperatureOffset": 0.0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000025",
       "label": "Wandthermostat3",
       "lastStatusUpdate": 1524516556479,
@@ -5368,7 +5368,7 @@
           "windowState": "CLOSED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000029",
       "label": "Kontakt-Schnittstelle Unterputz – 1-fach",
       "lastStatusUpdate": 1547923306429,
@@ -5433,7 +5433,7 @@
           "yesterdaySunshineDuration": 0
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000001",
       "label": "Wettersensor - pro",
       "lastStatusUpdate": 1524513950325,
@@ -5482,7 +5482,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000002",
       "label": "Temperatur- und Luftfeuchtigkeitssensor - außen",
       "lastStatusUpdate": 1524513950325,
@@ -5540,7 +5540,7 @@
           "yesterdaySunshineDuration": 3
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000003",
       "label": "Wettersensor",
       "lastStatusUpdate": 1524513950325,
@@ -5589,7 +5589,7 @@
           "windowState": "TILTED"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000004",
       "label": "Fenstergriffsensor",
       "lastStatusUpdate": 1524816385462,
@@ -5638,7 +5638,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000005",
       "label": "Schlafzimmerlicht",
       "lastStatusUpdate": 1524816385462,
@@ -5724,7 +5724,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711BBBBBBBBBBBBB017",
       "label": "Wandtaster - 6-fach",
       "lastStatusUpdate": 1544475961687,
@@ -5826,7 +5826,7 @@
           "label": ""
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711BBBBBBBBBBBBB016",
       "label": "Fernbedienung - 8 Tasten",
       "lastStatusUpdate": 1544479483638,
@@ -5885,7 +5885,7 @@
           "presenceDetected": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAAAAAAAAAAAA51",
       "label": "SPI_1",
       "lastStatusUpdate": 1542758692234,
@@ -5948,7 +5948,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711ACBCDABCADCA66",
       "label": "BROLL_1",
       "lastStatusUpdate": 1542756558785,
@@ -6077,7 +6077,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711BBBBBBBBBBBBB18",
       "label": "ioBroker",
       "lastStatusUpdate": 1543746604446,
@@ -6142,7 +6142,7 @@
           "ventilationPositionSupported": true
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F0000000000000FAF9B4",
       "label": "Garage Door Module",
       "lastStatusUpdate": 1574878451970,
@@ -6261,7 +6261,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000005521",
       "label": "Schaltaktor Verteiler",
       "lastStatusUpdate": 1605271783993,
@@ -6460,7 +6460,7 @@
           "userDesiredProfileMode": "AUTOMATIC"
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000022311",
       "label": "Jalousieaktor 1 f\u00fcr Hutschienenmontage \u2013 4-fach",
       "lastStatusUpdate": 1604414124509,
@@ -6618,7 +6618,7 @@
           "windowState": null
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000056775",
       "label": "Licht Flur",
       "lastStatusUpdate": 0,
@@ -6712,7 +6712,7 @@
           "temperatureExternalTwo": 25.4
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000STE2015",
       "label": "STE2",
       "lastStatusUpdate": 1645012379988,
@@ -6817,7 +6817,7 @@
           "processing": false
         }
       },
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000WGC",
       "label": "Garagentor",
       "lastStatusUpdate": 1630920800279,
@@ -6851,7 +6851,7 @@
       "configPending": false,
       "dutyCycle": false,
       "groups": ["00000000-0000-0000-0000-000000000021"],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000020",
       "incorrectPositioned": null,
       "label": "Badezimmer",
@@ -6893,7 +6893,7 @@
       "externalClockEnabled": false,
       "externalClockHeatingTemperature": 19.0,
       "floorHeatingMode": "FLOOR_HEATING_STANDARD",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": 43,
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
@@ -6997,7 +6997,7 @@
       ],
       "configPending": false,
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000016",
       "ignorableDeviceChannels": [],
       "label": "INTERNAL",
@@ -7031,7 +7031,7 @@
       "configPending": false,
       "dutyCycle": false,
       "groups": ["00000000-0000-0000-0000-000000000018"],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000017",
       "incorrectPositioned": null,
       "label": "Strom",
@@ -7045,7 +7045,7 @@
     "00000000-0000-0000-0000-000000000029": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000029",
       "label": "HEATING_TEMPERATURE_LIMITER",
       "lastStatusUpdate": 0,
@@ -7061,7 +7061,7 @@
       "dutyCycle": null,
       "heatDemand": null,
       "heatDemandRuleEnabled": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000030",
       "label": "HEATING_COOLING_DEMAND_BOILER",
       "lastStatusUpdate": 0,
@@ -7103,7 +7103,7 @@
       "externalClockEnabled": false,
       "externalClockHeatingTemperature": 19.0,
       "floorHeatingMode": "FLOOR_HEATING_STANDARD",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": 46,
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
@@ -7194,7 +7194,7 @@
       ],
       "dimLevel": null,
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000018",
       "label": "Strom",
       "lastStatusUpdate": 1524516554056,
@@ -7223,7 +7223,7 @@
         }
       ],
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000009",
       "label": "Büro",
       "lastStatusUpdate": 1524515854304,
@@ -7252,7 +7252,7 @@
         }
       ],
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000013",
       "label": "Schlafzimmer",
       "lastStatusUpdate": 1524512404032,
@@ -7331,7 +7331,7 @@
       ],
       "configPending": false,
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000005",
       "ignorableDeviceChannels": [],
       "label": "EXTERNAL",
@@ -7369,7 +7369,7 @@
       ],
       "dimLevel": null,
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000022",
       "label": "SIREN",
       "lastStatusUpdate": 1524480981494,
@@ -7387,9 +7387,9 @@
       "channels": [],
       "dimLevel": null,
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000037",
-      "label": "COMING_HOME",
+      "label": "COMING_spencer",
       "lastStatusUpdate": 0,
       "lowBat": null,
       "metaGroupId": null,
@@ -7424,7 +7424,7 @@
       "externalClockEnabled": false,
       "externalClockHeatingTemperature": 19.0,
       "floorHeatingMode": "FLOOR_HEATING_STANDARD",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": 47,
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
@@ -7522,7 +7522,7 @@
         }
       ],
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000006",
       "label": "Wohnzimmer",
       "lastStatusUpdate": 1524516526498,
@@ -7542,7 +7542,7 @@
     "00000000-0000-0000-0000-000000000044": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000044",
       "label": "INBOX",
       "lastStatusUpdate": 0,
@@ -7554,7 +7554,7 @@
     "00000000-0000-0000-0000-000000000045": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000045",
       "label": "HEATING_HUMIDITY_LIMITER",
       "lastStatusUpdate": 0,
@@ -7588,7 +7588,7 @@
         "00000000-0000-0000-0000-000000000010",
         "00000000-0000-0000-0000-000000000009"
       ],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000008",
       "incorrectPositioned": null,
       "label": "Büro",
@@ -7624,7 +7624,7 @@
         "00000000-0000-0000-0000-000000000012",
         "00000000-0000-0000-0000-000000000013"
       ],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000011",
       "incorrectPositioned": null,
       "label": "Schlafzimmer",
@@ -7638,7 +7638,7 @@
     "00000000-0000-0000-0000-000000000046": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000046",
       "label": "HEATING_CHANGEOVER",
       "lastStatusUpdate": 0,
@@ -7673,7 +7673,7 @@
         "00000000-0000-0000-0000-000000000015",
         "00000000-0000-0000-0000-000000000019"
       ],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000014",
       "incorrectPositioned": null,
       "label": "Vorzimmer",
@@ -7735,7 +7735,7 @@
       "externalClockEnabled": false,
       "externalClockHeatingTemperature": 19.0,
       "floorHeatingMode": "FLOOR_HEATING_STANDARD",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": 45,
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
@@ -7813,7 +7813,7 @@
       "channels": [],
       "dimLevel": null,
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000053",
       "label": "PANIC",
       "lastStatusUpdate": 0,
@@ -7826,7 +7826,7 @@
     "00000000-0000-0000-0000-000000000054": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000054",
       "label": "HEATING_EXTERNAL_CLOCK",
       "lastStatusUpdate": 0,
@@ -7838,7 +7838,7 @@
     "00000000-0000-0000-0000-000000000055": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000055",
       "label": "HEATING_DEHUMIDIFIER",
       "lastStatusUpdate": 0,
@@ -7853,7 +7853,7 @@
       "channels": [],
       "dimLevel": null,
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000056",
       "label": "ALARM",
       "lastStatusUpdate": 0,
@@ -7871,7 +7871,7 @@
       "channels": [],
       "dutyCycle": null,
       "heatDemand": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000057",
       "label": "HEATING_COOLING_DEMAND_PUMP",
       "lastStatusUpdate": 0,
@@ -7901,7 +7901,7 @@
         }
       ],
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000015",
       "label": "Vorzimmer",
       "lastStatusUpdate": 1524516489316,
@@ -7963,7 +7963,7 @@
         "00000000-0000-0000-0000-000000000006",
         "00000000-0000-0000-0000-000000000007"
       ],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000004",
       "incorrectPositioned": null,
       "label": "Wohnzimmer",
@@ -7997,7 +7997,7 @@
       "externalClockEnabled": false,
       "externalClockHeatingTemperature": 19.0,
       "floorHeatingMode": "FLOOR_HEATING_STANDARD",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": null,
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
@@ -8087,7 +8087,7 @@
           "deviceId": "3014F711AAAA000000000001"
         }
       ],
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidity": 65,
       "id": "00000000-AAAA-0000-0000-000000000001",
       "illumination": 4703.0,
@@ -8106,7 +8106,7 @@
       "dutyCycle": null,
       "enabled": true,
       "heatingFailureValidationResult": "NO_HEATING_FAILURE",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-BBBB-0000-0000-000000000052",
       "label": "HEATING_FAILURE_ALERT_RULE_GROUP",
       "lastExecutionTimestamp": 1550773800084,
@@ -8123,7 +8123,7 @@
       "channels": [],
       "dimLevel": null,
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-AAAA-0000-0000-000000000068",
       "label": "BACKUP_ALARM_SIREN",
       "lastStatusUpdate": 0,
@@ -8146,7 +8146,7 @@
       ],
       "dutyCycle": false,
       "enabled": true,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidityLowerThreshold": 40,
       "humidityUpperThreshold": 60,
       "humidityValidationResult": "LESSER_LOWER_THRESHOLD",
@@ -8175,7 +8175,7 @@
       ],
       "dutyCycle": false,
       "enabled": true,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "humidityLowerThreshold": 30,
       "humidityUpperThreshold": 60,
       "humidityValidationResult": null,
@@ -8200,7 +8200,7 @@
       "channels": [],
       "dutyCycle": false,
       "groupVisibility": "VISIBLE",
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000050",
       "label": "Rollos",
       "lastStatusUpdate": 1573078054795,
@@ -8222,7 +8222,7 @@
     "00000000-0000-0000-0000-000000000067": {
       "channels": [],
       "dutyCycle": null,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000067",
       "label": "HOT_WATER",
       "lastStatusUpdate": 0,
@@ -8238,7 +8238,7 @@
     "00000000-0000-0000-0000-000000000093": {
       "channels": [],
       "dutyCycle": false,
-      "homeId": "00000000-0000-0000-0000-000000000001",
+      "spencerId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000093",
       "label": "Rollladen Schiebet\u00fcr",
       "lastStatusUpdate": 1577488124150,
@@ -8257,7 +8257,7 @@
       "unreach": false
     }
   },
-  "home": {
+  "spencer": {
     "accessPointUpdateStates": {
       "3014F711A000000BAD0CAAAA": {
         "accessPointUpdateState": "UP_TO_DATE",
@@ -8279,7 +8279,7 @@
     "currentAPVersion": "1.2.4",
     "deviceUpdateStrategy": "AUTOMATICALLY_IF_POSSIBLE",
     "dutyCycle": 8.0,
-    "functionalHomes": {
+    "functionalspencers": {
       "INDOOR_CLIMATE": {
         "absenceEndTime": null,
         "absenceType": "NOT_ABSENT",
@@ -8335,7 +8335,7 @@
         "securitySwitchingGroups": {
           "ALARM": "00000000-0000-0000-0000-000000000056",
           "BACKUP_ALARM_SIREN": "00000000-AAAA-0000-0000-000000000068",
-          "COMING_HOME": "00000000-0000-0000-0000-000000000037",
+          "COMING_spencer": "00000000-0000-0000-0000-000000000037",
           "PANIC": "00000000-0000-0000-0000-000000000053",
           "SIREN": "00000000-0000-0000-0000-000000000022"
         },
@@ -8379,7 +8379,7 @@
     "ruleMetaDatas": {
       "00000000-0000-0000-0000-000000000065": {
         "active": true,
-        "homeId": "00000000-0000-0000-0000-000000000001",
+        "spencerId": "00000000-0000-0000-0000-000000000001",
         "id": "00000000-0000-0000-0000-000000000065",
         "label": "Alarmanlage",
         "ruleErrorCategories": [],

@@ -1,10 +1,10 @@
 """Test the CO2Signal diagnostics."""
 from unittest.mock import patch
 
-from homeassistant.components.co2signal import DOMAIN
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import CONF_API_KEY
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.co2signal import DOMAIN
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.const import CONF_API_KEY
+from spencerassistant.setup import async_setup_component
 
 from . import VALID_PAYLOAD
 

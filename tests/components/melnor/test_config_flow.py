@@ -3,10 +3,10 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.melnor.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_MAC
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.melnor.const import DOMAIN
+from spencerassistant.const import CONF_ADDRESS, CONF_MAC
+from spencerassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
     FAKE_ADDRESS_1,

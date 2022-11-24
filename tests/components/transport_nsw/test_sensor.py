@@ -1,7 +1,7 @@
 """The tests for the Transport NSW (AU) sensor platform."""
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 VALID_CONFIG = {
     "sensor": {

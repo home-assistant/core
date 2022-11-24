@@ -5,12 +5,12 @@ from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.zwave_js.const import (
+from spencerassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
@@ -18,8 +18,8 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
 )
-from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.const import (
+from spencerassistant.components.zwave_js.helpers import get_valueless_base_unique_id
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -31,8 +31,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,

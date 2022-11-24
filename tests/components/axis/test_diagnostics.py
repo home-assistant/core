@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
-from homeassistant.components.diagnostics import REDACTED
+from spencerassistant.components.diagnostics import REDACTED
 
 from .test_device import (
     API_DISCOVERY_BASIC_DEVICE_INFO,

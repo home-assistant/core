@@ -1,13 +1,13 @@
 """Sensor tests for the Goalzero integration."""
 from unittest.mock import AsyncMock
 
-from homeassistant.components.goalzero.const import DEFAULT_NAME
-from homeassistant.components.sensor import (
+from spencerassistant.components.goalzero.const import DEFAULT_NAME
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     ELECTRIC_CURRENT_AMPERE,
@@ -20,7 +20,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import async_init_integration
 
@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry_enabled_by_default: AsyncMock,
 ):

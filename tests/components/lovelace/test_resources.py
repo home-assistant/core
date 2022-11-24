@@ -3,8 +3,8 @@ import copy
 from unittest.mock import patch
 import uuid
 
-from homeassistant.components.lovelace import dashboard, resources
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.lovelace import dashboard, resources
+from spencerassistant.setup import async_setup_component
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},
@@ -30,7 +30,7 @@ async def test_yaml_resources(hass, hass_ws_client):
 async def test_yaml_resources_backwards(hass, hass_ws_client):
     """Test defining resources in YAML ll config (legacy)."""
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
         assert await async_setup_component(

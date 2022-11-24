@@ -4,9 +4,9 @@ from unittest.mock import patch
 from alarmdecoder.util import NoDeviceError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.alarmdecoder import config_flow
-from homeassistant.components.alarmdecoder.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.alarmdecoder import config_flow
+from spencerassistant.components.alarmdecoder.const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
@@ -27,9 +27,9 @@ from homeassistant.components.alarmdecoder.const import (
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +55,7 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
-async def test_setups(hass: HomeAssistant, protocol, connection, title):
+async def test_setups(hass: spencerAssistant, protocol, connection, title):
     """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
@@ -73,10 +73,10 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "protocol"
 
-    with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
+    with patch("spencerassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
+        "spencerassistant.components.alarmdecoder.config_flow.AdExt.close"
     ), patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry",
+        "spencerassistant.components.alarmdecoder.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -93,7 +93,7 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_connection_error(hass: HomeAssistant):
+async def test_setup_connection_error(hass: spencerAssistant):
     """Test flow for setup with a connection error."""
 
     port = 1001
@@ -117,9 +117,9 @@ async def test_setup_connection_error(hass: HomeAssistant):
     assert result["step_id"] == "protocol"
 
     with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+        "spencerassistant.components.alarmdecoder.config_flow.AdExt.open",
         side_effect=NoDeviceError,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    ), patch("spencerassistant.components.alarmdecoder.config_flow.AdExt.close"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )
@@ -127,9 +127,9 @@ async def test_setup_connection_error(hass: HomeAssistant):
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+        "spencerassistant.components.alarmdecoder.config_flow.AdExt.open",
         side_effect=Exception,
-    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+    ), patch("spencerassistant.components.alarmdecoder.config_flow.AdExt.close"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], connection_settings
         )
@@ -137,7 +137,7 @@ async def test_setup_connection_error(hass: HomeAssistant):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_options_arm_flow(hass: HomeAssistant):
+async def test_options_arm_flow(hass: spencerAssistant):
     """Test arm options flow."""
     user_input = {
         CONF_ALT_NIGHT_MODE: True,
@@ -164,7 +164,7 @@ async def test_options_arm_flow(hass: HomeAssistant):
     assert result["step_id"] == "arm_settings"
 
     with patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry", return_value=True
+        "spencerassistant.components.alarmdecoder.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -178,7 +178,7 @@ async def test_options_arm_flow(hass: HomeAssistant):
     }
 
 
-async def test_options_zone_flow(hass: HomeAssistant):
+async def test_options_zone_flow(hass: spencerAssistant):
     """Test options flow for adding/deleting zones."""
     zone_number = "2"
     zone_settings = {
@@ -210,7 +210,7 @@ async def test_options_zone_flow(hass: HomeAssistant):
     )
 
     with patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry", return_value=True
+        "spencerassistant.components.alarmdecoder.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -243,7 +243,7 @@ async def test_options_zone_flow(hass: HomeAssistant):
     )
 
     with patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry", return_value=True
+        "spencerassistant.components.alarmdecoder.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -257,7 +257,7 @@ async def test_options_zone_flow(hass: HomeAssistant):
     }
 
 
-async def test_options_zone_flow_validation(hass: HomeAssistant):
+async def test_options_zone_flow_validation(hass: spencerAssistant):
     """Test input validation for zone options flow."""
     zone_number = "2"
     zone_settings = {
@@ -365,7 +365,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
 
     # All valid settings
     with patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry", return_value=True
+        "spencerassistant.components.alarmdecoder.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

@@ -2,18 +2,18 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow, setup
-from homeassistant.components import zeroconf
-from homeassistant.components.smappee.const import (
+from spencerassistant import data_entry_flow, setup
+from spencerassistant.components import zeroconf
+from spencerassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
     DOMAIN,
     ENV_CLOUD,
     ENV_LOCAL,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 
@@ -445,7 +445,7 @@ async def test_full_user_flow(
     )
 
     with patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
+        "spencerassistant.components.smappee.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -464,7 +464,7 @@ async def test_full_zeroconf_flow(hass):
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
+        "spencerassistant.components.smappee.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -506,7 +506,7 @@ async def test_full_user_local_flow(hass):
         "pysmappee.api.SmappeeLocalApi.load_instantaneous",
         return_value=[{"key": "phase0ActivePower", "value": 0}],
     ), patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
+        "spencerassistant.components.smappee.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

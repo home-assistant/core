@@ -1,5 +1,5 @@
 """Tests for the humidifier intents."""
-from homeassistant.components.humidifier import (
+from spencerassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     DOMAIN,
@@ -7,7 +7,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_MODE,
     intent,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.intent import IntentHandleError, async_handle
+from spencerassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 
@@ -91,8 +91,8 @@ async def test_intent_set_mode(hass):
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
-            ATTR_AVAILABLE_MODES: ["home", "away"],
-            ATTR_MODE: "home",
+            ATTR_AVAILABLE_MODES: ["spencer", "away"],
+            ATTR_MODE: "spencer",
         },
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
@@ -129,8 +129,8 @@ async def test_intent_set_mode_and_turn_on(hass):
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
-            ATTR_AVAILABLE_MODES: ["home", "away"],
-            ATTR_MODE: "home",
+            ATTR_AVAILABLE_MODES: ["spencer", "away"],
+            ATTR_MODE: "spencer",
         },
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
@@ -193,8 +193,8 @@ async def test_intent_set_unknown_mode(hass):
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
-            ATTR_AVAILABLE_MODES: ["home", "away"],
-            ATTR_MODE: "home",
+            ATTR_AVAILABLE_MODES: ["spencer", "away"],
+            ATTR_MODE: "spencer",
         },
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)

@@ -5,15 +5,15 @@ from unittest.mock import patch
 from pyprusalink import InvalidAuth, PrusaLinkError
 import pytest
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
+from spencerassistant.config_entries import ConfigEntry, ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
 
 
 async def test_unloading(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: ConfigEntry,
     mock_api,
 ):
@@ -32,17 +32,17 @@ async def test_unloading(
 
 @pytest.mark.parametrize("exception", [InvalidAuth, PrusaLinkError])
 async def test_failed_update(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_api, exception
+    hass: spencerAssistant, mock_config_entry: ConfigEntry, mock_api, exception
 ):
     """Test failed update marks prusalink unavailable."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.prusalink.PrusaLink.get_printer",
+        "spencerassistant.components.prusalink.PrusaLink.get_printer",
         side_effect=exception,
     ), patch(
-        "homeassistant.components.prusalink.PrusaLink.get_job",
+        "spencerassistant.components.prusalink.PrusaLink.get_job",
         side_effect=exception,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30), fire_all=True)

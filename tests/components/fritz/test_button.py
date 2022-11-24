@@ -3,19 +3,19 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
 
-async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_button_setup(hass: spencerAssistant, fc_class_mock, fh_class_mock):
     """Test setup of Fritz!Tools buttons."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -42,7 +42,7 @@ async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
     ],
 )
 async def test_buttons(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_id: str,
     wrapper_method: str,
     fc_class_mock,
@@ -60,7 +60,7 @@ async def test_buttons(
     assert button
     assert button.state == STATE_UNKNOWN
     with patch(
-        f"homeassistant.components.fritz.common.AvmWrapper.{wrapper_method}"
+        f"spencerassistant.components.fritz.common.AvmWrapper.{wrapper_method}"
     ) as mock_press_action:
         await hass.services.async_call(
             BUTTON_DOMAIN,

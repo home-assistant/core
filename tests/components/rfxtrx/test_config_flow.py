@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch, sentinel
 
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.rfxtrx import DOMAIN, config_flow
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.rfxtrx import DOMAIN, config_flow
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +45,7 @@ async def start_options_flow(hass, entry):
     return await hass.config_entries.options.async_init(entry.entry_id)
 
 
-@patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
+@patch("spencerassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
 async def test_setup_network(transport_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +65,7 @@ async def test_setup_network(transport_mock, hass):
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "10.10.0.1", "port": 1234}
         )
@@ -83,11 +83,11 @@ async def test_setup_network(transport_mock, hass):
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
 )
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
     return_value=None,
 )
 async def test_setup_serial(com_mock, connect_mock, hass):
@@ -111,7 +111,7 @@ async def test_setup_serial(com_mock, connect_mock, hass):
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"device": port.device}
         )
@@ -129,11 +129,11 @@ async def test_setup_serial(com_mock, connect_mock, hass):
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
 )
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
     return_value=None,
 )
 async def test_setup_serial_manual(com_mock, connect_mock, hass):
@@ -163,7 +163,7 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"device": "/dev/ttyUSB0"}
         )
@@ -180,7 +180,7 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
 
 
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport",
     autospec=True,
     side_effect=OSError,
 )
@@ -214,7 +214,7 @@ async def test_setup_network_fail(transport_mock, hass):
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     side_effect=serial.serialutil.SerialException,
 )
 async def test_setup_serial_fail(com_mock, connect_mock, hass):
@@ -249,7 +249,7 @@ async def test_setup_serial_fail(com_mock, connect_mock, hass):
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
+    "spencerassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect_fail,
 )
 async def test_setup_serial_manual_fail(com_mock, hass):
@@ -303,7 +303,7 @@ async def test_options_global(hass):
         },
         unique_id=DOMAIN,
     )
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
@@ -338,7 +338,7 @@ async def test_no_protocols(hass):
         },
         unique_id=DOMAIN,
     )
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"

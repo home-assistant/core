@@ -7,10 +7,10 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from homeassistant.components import zone
-import homeassistant.components.device_tracker as device_tracker
-from homeassistant.components.device_tracker import SourceType, const, legacy
-from homeassistant.const import (
+from spencerassistant.components import zone
+import spencerassistant.components.device_tracker as device_tracker
+from spencerassistant.components.device_tracker import SourceType, const, legacy
+from spencerassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
@@ -18,15 +18,15 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_PLATFORM,
-    STATE_HOME,
-    STATE_NOT_HOME,
+    STATE_spencer,
+    STATE_NOT_spencer,
 )
-from homeassistant.core import State, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import State, callback
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import discovery
+from spencerassistant.helpers.json import JSONEncoder
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from . import common
 
@@ -58,11 +58,11 @@ async def test_is_on(hass):
     """Test is_on method."""
     entity_id = f"{const.DOMAIN}.test"
 
-    hass.states.async_set(entity_id, STATE_HOME)
+    hass.states.async_set(entity_id, STATE_spencer)
 
     assert device_tracker.is_on(hass, entity_id)
 
-    hass.states.async_set(entity_id, STATE_NOT_HOME)
+    hass.states.async_set(entity_id, STATE_NOT_spencer)
 
     assert not device_tracker.is_on(hass, entity_id)
 
@@ -77,7 +77,7 @@ async def test_reading_broken_yaml_config(hass):
         "allok.yaml": "My Device:\n  name: Device",
         "oneok.yaml": ("My Device!:\n  name: Device\nbad_device:\n  nme: Device"),
     }
-    args = {"hass": hass, "consider_home": timedelta(seconds=60)}
+    args = {"hass": hass, "consider_spencer": timedelta(seconds=60)}
     with patch_yaml_files(files):
         assert await legacy.async_load_config("empty.yaml", **args) == []
         assert await legacy.async_load_config("nodict.yaml", **args) == []
@@ -112,19 +112,19 @@ async def test_reading_yaml_config(hass, yaml_devices, enable_custom_integration
         legacy.update_config, yaml_devices, dev_id, device
     )
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
-    config = (await legacy.async_load_config(yaml_devices, hass, device.consider_home))[
+    config = (await legacy.async_load_config(yaml_devices, hass, device.consider_spencer))[
         0
     ]
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
     assert device.config_picture == config.config_picture
-    assert device.consider_home == config.consider_home
+    assert device.consider_spencer == config.consider_spencer
     assert device.icon == config.icon
     assert f"{device_tracker.DOMAIN}.test" in hass.config.components
 
 
-@patch("homeassistant.components.device_tracker.const.LOGGER.warning")
+@patch("spencerassistant.components.device_tracker.const.LOGGER.warning")
 async def test_duplicate_mac_dev_id(mock_warning, hass):
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
     devices = [
@@ -208,11 +208,11 @@ async def test_gravatar_and_picture(hass):
     assert device.config_picture == gravatar_url
 
 
-@patch("homeassistant.components.device_tracker.legacy.DeviceTracker.see")
-@patch("homeassistant.components.demo.device_tracker.setup_scanner", autospec=True)
+@patch("spencerassistant.components.device_tracker.legacy.DeviceTracker.see")
+@patch("spencerassistant.components.demo.device_tracker.setup_scanner", autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+    with patch("spencerassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
         )
@@ -232,14 +232,14 @@ async def test_update_stale(hass, mock_device_tracker_conf, enable_custom_integr
 
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
-    scanner.come_home("DEV1")
+    scanner.come_spencer("DEV1")
 
     now = dt_util.utcnow()
     register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
     scan_time = datetime(now.year + 1, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+        "spencerassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
     ), assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(
@@ -248,24 +248,24 @@ async def test_update_stale(hass, mock_device_tracker_conf, enable_custom_integr
             {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: "test",
-                    device_tracker.CONF_CONSIDER_HOME: 59,
+                    device_tracker.CONF_CONSIDER_spencer: 59,
                 }
             },
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.dev1").state == STATE_HOME
+    assert hass.states.get("device_tracker.dev1").state == STATE_spencer
 
-    scanner.leave_home("DEV1")
+    scanner.leave_spencer("DEV1")
 
     with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+        "spencerassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=scan_time,
     ):
         async_fire_time_changed(hass, scan_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.dev1").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.dev1").state == STATE_NOT_spencer
 
 
 async def test_entity_attributes(
@@ -301,7 +301,7 @@ async def test_entity_attributes(
     assert picture == attrs.get(ATTR_ENTITY_PICTURE)
 
 
-@patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
+@patch("spencerassistant.components.device_tracker.legacy.DeviceTracker.async_see")
 async def test_see_service(mock_see, hass, enable_custom_integrations):
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -457,7 +457,7 @@ async def test_see_passive_zone_state(
 
     with assert_setup_component(1, zone.DOMAIN):
         zone_info = {
-            "name": "Home",
+            "name": "spencer",
             "latitude": 1,
             "longitude": 2,
             "radius": 250,
@@ -468,10 +468,10 @@ async def test_see_passive_zone_state(
 
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
-    scanner.come_home("dev1")
+    scanner.come_spencer("dev1")
 
     with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+        "spencerassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
     ), assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(
@@ -480,7 +480,7 @@ async def test_see_passive_zone_state(
             {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: "test",
-                    device_tracker.CONF_CONSIDER_HOME: 59,
+                    device_tracker.CONF_CONSIDER_spencer: 59,
                 }
             },
         )
@@ -488,7 +488,7 @@ async def test_see_passive_zone_state(
 
     state = hass.states.get("device_tracker.dev1")
     attrs = state.attributes
-    assert state.state == STATE_HOME
+    assert state.state == STATE_spencer
     assert state.object_id == "dev1"
     assert state.name == "dev1"
     assert attrs.get("friendly_name") == "dev1"
@@ -497,10 +497,10 @@ async def test_see_passive_zone_state(
     assert attrs.get("gps_accuracy") == 0
     assert attrs.get("source_type") == SourceType.ROUTER
 
-    scanner.leave_home("dev1")
+    scanner.leave_spencer("dev1")
 
     with patch(
-        "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
+        "spencerassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=scan_time,
     ):
         async_fire_time_changed(hass, scan_time)
@@ -508,7 +508,7 @@ async def test_see_passive_zone_state(
 
     state = hass.states.get("device_tracker.dev1")
     attrs = state.attributes
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_NOT_spencer
     assert state.object_id == "dev1"
     assert state.name == "dev1"
     assert attrs.get("friendly_name") == "dev1"
@@ -518,7 +518,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("source_type") == SourceType.ROUTER
 
 
-@patch("homeassistant.components.device_tracker.const.LOGGER.warning")
+@patch("spencerassistant.components.device_tracker.const.LOGGER.warning")
 async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     """Test that the device tracker see failures."""
     devices = mock_device_tracker_conf
@@ -528,7 +528,7 @@ async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     await tracker.async_see(mac=567, host_name="Number MAC")
 
     # No device id or MAC(not added)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await tracker.async_see()
     assert mock_warning.call_count == 0
 
@@ -551,7 +551,7 @@ async def test_async_added_to_hass(hass):
         ATTR_GPS_ACCURACY: 2,
         const.ATTR_BATTERY: 100,
     }
-    mock_restore_cache(hass, [State("device_tracker.jk", "home", attr)])
+    mock_restore_cache(hass, [State("device_tracker.jk", "spencer", attr)])
 
     path = hass.config.path(legacy.YAML_DEVICES)
 
@@ -561,7 +561,7 @@ async def test_async_added_to_hass(hass):
 
     state = hass.states.get("device_tracker.jk")
     assert state
-    assert state.state == "home"
+    assert state.state == "spencer"
 
     for key, val in attr.items():
         atr = state.attributes.get(key)
@@ -583,7 +583,7 @@ async def test_adding_unknown_device_to_config(
     """Test the adding of unknown devices to configuration file."""
     scanner = getattr(hass.components, "test.device_tracker").SCANNER
     scanner.reset()
-    scanner.come_home("DEV1")
+    scanner.come_spencer("DEV1")
 
     await async_setup_component(
         hass, device_tracker.DOMAIN, {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}

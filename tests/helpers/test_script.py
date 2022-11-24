@@ -15,33 +15,33 @@ import pytest
 import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
-from homeassistant import exceptions
-import homeassistant.components.scene as scene
-from homeassistant.const import (
+from spencerassistant import exceptions
+import spencerassistant.components.scene as scene
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import (
+from spencerassistant.core import (
     SERVICE_CALL_LIMIT,
     Context,
     CoreState,
-    HomeAssistant,
+    spencerAssistant,
     ServiceCall,
     callback,
 )
-from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
-from homeassistant.helpers import (
+from spencerassistant.exceptions import ConditionError, spencerAssistantError, ServiceNotFound
+from spencerassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     script,
     template,
     trace,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.helpers.dispatcher import async_dispatcher_connect
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     async_capture_events,
@@ -1219,13 +1219,13 @@ async def test_wait_template_with_utcnow(hass):
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with patch("spencerassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         match_time = start_time.replace(hour=12)
-        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+        with patch("spencerassistant.util.dt.utcnow", return_value=match_time):
             async_fire_time_changed(hass, match_time)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
@@ -1251,14 +1251,14 @@ async def test_wait_template_with_utcnow_no_match(hass):
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with patch("spencerassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         second_non_matching_time = start_time.replace(hour=4)
         with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
+            "spencerassistant.util.dt.utcnow", return_value=second_non_matching_time
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
@@ -1364,7 +1364,7 @@ async def test_wait_for_trigger_bad(hass, caplog):
         return None
 
     with mock.patch(
-        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        "spencerassistant.components.spencerassistant.triggers.state.async_attach_trigger",
         wraps=async_attach_trigger_mock,
     ):
         hass.async_create_task(script_obj.async_run())
@@ -1396,7 +1396,7 @@ async def test_wait_for_trigger_generated_exception(hass, caplog):
         raise ValueError("something bad")
 
     with mock.patch(
-        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        "spencerassistant.components.spencerassistant.triggers.state.async_attach_trigger",
         wraps=async_attach_trigger_mock,
     ):
         hass.async_create_task(script_obj.async_run())
@@ -1720,7 +1720,7 @@ async def test_condition_validation(hass, caplog):
     )
 
 
-@patch("homeassistant.helpers.script.condition.async_from_config")
+@patch("spencerassistant.helpers.script.condition.async_from_config")
 async def test_condition_created_once(async_from_config, hass):
     """Test that the conditions do not get created multiple times."""
     sequence = cv.SCRIPT_SCHEMA(
@@ -1870,7 +1870,7 @@ async def test_repeat_count_0(hass, caplog):
 
 
 async def test_repeat_for_each(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test repeat action using for each."""
     events = async_capture_events(hass, "test_event")
@@ -1968,7 +1968,7 @@ async def test_repeat_for_each(
     )
 
 
-async def test_repeat_for_each_template(hass: HomeAssistant) -> None:
+async def test_repeat_for_each_template(hass: spencerAssistant) -> None:
     """Test repeat action using for each template."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -2029,7 +2029,7 @@ async def test_repeat_for_each_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
+async def test_repeat_for_each_non_list_template(hass: spencerAssistant) -> None:
     """Test repeat action using for each with a template not resulting in a list."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -2062,7 +2062,7 @@ async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> None:
+async def test_repeat_for_each_invalid_template(hass: spencerAssistant, caplog) -> None:
     """Test repeat action using for each with an invalid template."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -2371,7 +2371,7 @@ async def test_repeat_var_in_condition(hass, condition):
     )
 
     with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
+        "spencerassistant.helpers.condition._LOGGER.error",
         side_effect=AssertionError("Template Error"),
     ):
         await script_obj.async_run(context=Context())
@@ -2508,7 +2508,7 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
+        "spencerassistant.helpers.condition._LOGGER.error",
         side_effect=AssertionError("Template Error"),
     ):
         await script_obj.async_run(variables, Context())
@@ -2826,7 +2826,7 @@ async def test_multiple_runs_repeat_choose(hass, caplog, action):
 
 
 async def test_if_warning(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning on if."""
     event = "test_event"
@@ -2866,7 +2866,7 @@ async def test_if_warning(
     "var,if_result,choice", [(1, True, "then"), (2, False, "else")]
 )
 async def test_if(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
     var: int,
     if_result: bool,
@@ -2915,7 +2915,7 @@ async def test_if(
 
 
 async def test_if_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if we can use conditions in if actions which validate late."""
     registry = er.async_get(hass)
@@ -2991,7 +2991,7 @@ async def test_if_condition_validation(
     )
 
 
-async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+async def test_parallel(hass: spencerAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test parallel action."""
     events = async_capture_events(hass, "test_event")
     hass.states.async_set("switch.trigger", "off")
@@ -3094,7 +3094,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
 
 async def test_parallel_loop(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test parallel loops do not affect each other."""
     events_loop1 = async_capture_events(hass, "loop1")
@@ -3238,7 +3238,7 @@ async def test_parallel_loop(
 
 
 async def test_parallel_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test parallel action failure handling."""
     events = async_capture_events(hass, "test_event")
@@ -3286,7 +3286,7 @@ async def test_last_triggered(hass):
     assert script_obj.last_triggered is None
 
     time = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.script.utcnow", return_value=time):
+    with mock.patch("spencerassistant.helpers.script.utcnow", return_value=time):
         await script_obj.async_run(context=Context())
         await hass.async_block_till_done()
 
@@ -4104,7 +4104,7 @@ async def test_shutdown_at(hass, caplog):
         await script_obj.async_stop()
         raise
     else:
-        hass.bus.async_fire("homeassistant_stop")
+        hass.bus.async_fire("spencerassistant_stop")
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
@@ -4124,7 +4124,7 @@ async def test_shutdown_after(hass, caplog):
     delay_started_flag = async_watch_for_action(script_obj, delay_alias)
 
     hass.state = CoreState.stopping
-    hass.bus.async_fire("homeassistant_stop")
+    hass.bus.async_fire("spencerassistant_stop")
     await hass.async_block_till_done()
 
     try:
@@ -4160,7 +4160,7 @@ async def test_start_script_after_shutdown(hass, caplog):
 
     # Trigger 1st stage script shutdown
     hass.state = CoreState.stopping
-    hass.bus.async_fire("homeassistant_stop")
+    hass.bus.async_fire("spencerassistant_stop")
     await hass.async_block_till_done()
     # Trigger 2nd stage script shutdown
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
@@ -4169,7 +4169,7 @@ async def test_start_script_after_shutdown(hass, caplog):
     # Attempt to spawn additional script run
     await script_obj.async_run(context=Context())
     assert not script_obj.is_running
-    assert "Home Assistant is shutting down, starting script blocked" in caplog.text
+    assert "spencer Assistant is shutting down, starting script blocked" in caplog.text
 
 
 async def test_update_logger(hass, caplog):
@@ -4385,7 +4385,7 @@ async def test_validate_action_config(hass):
 
     # Verify we raise if we don't know the action type
     with patch(
-        "homeassistant.helpers.config_validation.determine_script_action",
+        "spencerassistant.helpers.config_validation.determine_script_action",
         return_value="non-existing",
     ), pytest.raises(ValueError):
         await script.async_validate_action_config(hass, {})
@@ -4634,7 +4634,7 @@ async def test_platform_async_validate_action_config(hass):
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
     platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.action.async_get_device_automation_platform",
+        "spencerassistant.components.device_automation.action.async_get_device_automation_platform",
         return_value=platform,
     ):
         platform.async_validate_action_config.return_value = config
@@ -4774,14 +4774,14 @@ async def test_stop_action_with_error(hass, caplog):
     )
 
 
-async def test_continue_on_error(hass: HomeAssistant) -> None:
+async def test_continue_on_error(hass: spencerAssistant) -> None:
     """Test if automation continue when a step fails."""
     events = async_capture_events(hass, "test_event")
 
     @callback
     def broken_service(service: ServiceCall) -> None:
         """Break this service with an error."""
-        raise HomeAssistantError("It is not working!")
+        raise spencerAssistantError("It is not working!")
 
     hass.services.async_register("broken", "service", broken_service)
 
@@ -4802,7 +4802,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(exceptions.HomeAssistantError, match="It is not working!"):
+    with pytest.raises(exceptions.spencerAssistantError, match="It is not working!"):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 2
@@ -4827,7 +4827,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
             "3": [
                 {
-                    "error_type": HomeAssistantError,
+                    "error_type": spencerAssistantError,
                     "result": {
                         "limit": 10,
                         "params": {
@@ -4845,7 +4845,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
     )
 
 
-async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
+async def test_continue_on_error_with_stop(hass: spencerAssistant) -> None:
     """Test continue on error doesn't work with explicit an stop."""
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -4867,7 +4867,7 @@ async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
     )
 
 
-async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
+async def test_continue_on_error_automation_issue(hass: spencerAssistant) -> None:
     """Test continue on error doesn't block action automation errors."""
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -4904,7 +4904,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
     )
 
 
-async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
+async def test_continue_on_error_unknown_error(hass: spencerAssistant) -> None:
     """Test continue on error doesn't block unknown errors from e.g., libraries."""
 
     class MyLibraryError(Exception):
@@ -4953,7 +4953,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_disabled_actions(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test disabled action steps."""
     events = async_capture_events(hass, "test_event")
@@ -4961,7 +4961,7 @@ async def test_disabled_actions(
     @callback
     def broken_service(service: ServiceCall) -> None:
         """Break this service with an error."""
-        raise HomeAssistantError("This service should not be called")
+        raise spencerAssistantError("This service should not be called")
 
     hass.services.async_register("broken", "service", broken_service)
 

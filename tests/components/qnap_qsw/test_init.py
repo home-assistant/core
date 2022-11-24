@@ -4,16 +4,16 @@ from unittest.mock import patch
 
 from aioqsw.exceptions import APIError
 
-from homeassistant.components.qnap_qsw.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.qnap_qsw.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from .util import CONFIG
 
 from tests.common import MockConfigEntry
 
 
-async def test_firmware_check_error(hass: HomeAssistant) -> None:
+async def test_firmware_check_error(hass: spencerAssistant) -> None:
     """Test firmware update check error."""
 
     config_entry = MockConfigEntry(
@@ -22,13 +22,13 @@ async def test_firmware_check_error(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.check_firmware",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.check_firmware",
         side_effect=APIError,
     ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.validate",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.validate",
         return_value=None,
     ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.update",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.update",
         return_value=None,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -36,7 +36,7 @@ async def test_firmware_check_error(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: spencerAssistant) -> None:
     """Test unload."""
 
     config_entry = MockConfigEntry(
@@ -45,13 +45,13 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.check_firmware",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.check_firmware",
         return_value=None,
     ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.validate",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.validate",
         return_value=None,
     ), patch(
-        "homeassistant.components.qnap_qsw.QnapQswApi.update",
+        "spencerassistant.components.qnap_qsw.QnapQswApi.update",
         return_value=None,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

@@ -11,16 +11,16 @@ from kasa import (
     SmartStrip,
 )
 from kasa.exceptions import SmartDeviceException
-from kasa.protocol import TPLinkSmartHomeProtocol
+from kasa.protocol import TPLinkSmartspencerProtocol
 
-from homeassistant.components.tplink import CONF_HOST
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.tplink import CONF_HOST
+from spencerassistant.components.tplink.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
-MODULE = "homeassistant.components.tplink"
-MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
+MODULE = "spencerassistant.components.tplink"
+MODULE_CONFIG_FLOW = "spencerassistant.components.tplink.config_flow"
 IP_ADDRESS = "127.0.0.1"
 ALIAS = "My Bulb"
 MODEL = "HS100"
@@ -28,8 +28,8 @@ MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 
 
-def _mock_protocol() -> TPLinkSmartHomeProtocol:
-    protocol = MagicMock(auto_spec=TPLinkSmartHomeProtocol)
+def _mock_protocol() -> TPLinkSmartspencerProtocol:
+    protocol = MagicMock(auto_spec=TPLinkSmartspencerProtocol)
     protocol.close = AsyncMock()
     return protocol
 
@@ -196,7 +196,7 @@ def _patch_discovery(device=None, no_device=False):
             return {}
         return {IP_ADDRESS: _mocked_bulb()}
 
-    return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
+    return patch("spencerassistant.components.tplink.Discover.discover", new=_discovery)
 
 
 def _patch_single_discovery(device=None, no_device=False):
@@ -206,12 +206,12 @@ def _patch_single_discovery(device=None, no_device=False):
         return device if device else _mocked_bulb()
 
     return patch(
-        "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
+        "spencerassistant.components.tplink.Discover.discover_single", new=_discover_single
     )
 
 
 async def initialize_config_entry_for_device(
-    hass: HomeAssistant, dev: SmartDevice
+    hass: spencerAssistant, dev: SmartDevice
 ) -> MockConfigEntry:
     """Create a mocked configuration entry for the given device.
 

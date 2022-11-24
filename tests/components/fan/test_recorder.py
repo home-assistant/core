@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components import fan
-from homeassistant.components.fan import ATTR_PRESET_MODES
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components import fan
+from spencerassistant.components.fan import ATTR_PRESET_MODES
+from spencerassistant.components.recorder.db_schema import StateAttributes, States
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import ATTR_FRIENDLY_NAME
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done

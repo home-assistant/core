@@ -5,8 +5,8 @@ import pytest
 import voluptuous as vol
 from zwave_js_server.exceptions import FailedZWaveCommand
 
-from homeassistant.components.group import Group
-from homeassistant.components.zwave_js.const import (
+from spencerassistant.components.group import Group
+from spencerassistant.components.zwave_js.const import (
     ATTR_BROADCAST,
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -30,16 +30,16 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.area_registry import async_get as async_get_area_reg
-from homeassistant.helpers.device_registry import (
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.area_registry import async_get as async_get_area_reg
+from spencerassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from spencerassistant.setup import async_setup_component
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
@@ -375,7 +375,7 @@ async def test_set_config_parameter_gather(
     """Test the set_config_parameter service gather functionality."""
     # Test setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -623,7 +623,7 @@ async def test_bulk_set_config_parameters_gather(
     """Test the bulk_set_partial_config_parameters service gather functionality."""
     # Test bulk setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -852,7 +852,7 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     # Test that when a command fails we raise an exception
     client.async_send_command.return_value = {"success": False}
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
@@ -968,7 +968,7 @@ async def test_set_value_gather(
     """Test the set_value service gather functionality."""
     # Test setting value by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
@@ -1215,7 +1215,7 @@ async def test_multicast_set_value(
     # Test that when a command fails we raise an exception
     client.async_send_command.return_value = {"success": False}
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1232,14 +1232,14 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
-    # Create a fake node with a different home ID from a real node and patch it into
+    # Create a fake node with a different spencer ID from a real node and patch it into
     # return of helper function to check the validation for two nodes having different
-    # home IDs
+    # spencer IDs
     diff_network_node = MagicMock()
-    diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
+    diff_network_node.client.driver.controller.spencer_id.return_value = "diff_spencer_id"
 
     with pytest.raises(vol.MultipleInvalid), patch(
-        "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+        "spencerassistant.components.zwave_js.helpers.async_get_node_from_device_id",
         side_effect=(climate_danfoss_lc_13, diff_network_node),
     ):
         await hass.services.async_call(
@@ -1618,7 +1618,7 @@ async def test_invoke_cc_api(
         "test", 12, "test"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INVOKE_CC_API,

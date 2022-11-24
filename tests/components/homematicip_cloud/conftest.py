@@ -1,29 +1,29 @@
-"""Initializer helpers for HomematicIP fake server."""
+"""Initializer helpers for spencermaticIP fake server."""
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from homematicip.aio.auth import AsyncAuth
-from homematicip.aio.connection import AsyncConnection
-from homematicip.aio.home import AsyncHome
-from homematicip.base.enums import WeatherCondition, WeatherDayTime
+from spencermaticip.aio.auth import AsyncAuth
+from spencermaticip.aio.connection import AsyncConnection
+from spencermaticip.aio.spencer import Asyncspencer
+from spencermaticip.base.enums import WeatherCondition, WeatherDayTime
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.homematicip_cloud import (
+from spencerassistant import config_entries
+from spencerassistant.components.spencermaticip_cloud import (
     DOMAIN as HMIPC_DOMAIN,
     async_setup as hmip_async_setup,
 )
-from homeassistant.components.homematicip_cloud.const import (
+from spencerassistant.components.spencermaticip_cloud.const import (
     HMIPC_AUTHTOKEN,
     HMIPC_HAPID,
     HMIPC_NAME,
     HMIPC_PIN,
 )
-from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from spencerassistant.components.spencermaticip_cloud.hap import spencermaticipHAP
+from spencerassistant.config_entries import SOURCE_IMPORT
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.typing import ConfigType
 
-from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
+from .helper import AUTH_TOKEN, HAPID, HAPPIN, spencerFactory
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -48,7 +48,7 @@ def mock_connection_fixture() -> AsyncConnection:
 
 @pytest.fixture(name="hmip_config_entry")
 def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
-    """Create a mock config entry for homematic ip cloud."""
+    """Create a mock config entry for spencermatic ip cloud."""
     entry_data = {
         HMIPC_HAPID: HAPID,
         HMIPC_AUTHTOKEN: AUTH_TOKEN,
@@ -58,7 +58,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
     config_entry = MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
-        title="Home Test SN",
+        title="spencer Test SN",
         unique_id=HAPID,
         data=entry_data,
         source=SOURCE_IMPORT,
@@ -69,15 +69,15 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
 
 @pytest.fixture(name="default_mock_hap_factory")
 async def default_mock_hap_factory_fixture(
-    hass: HomeAssistant, mock_connection, hmip_config_entry
-) -> HomematicipHAP:
-    """Create a mocked homematic access point."""
-    return HomeFactory(hass, mock_connection, hmip_config_entry)
+    hass: spencerAssistant, mock_connection, hmip_config_entry
+) -> spencermaticipHAP:
+    """Create a mocked spencermatic access point."""
+    return spencerFactory(hass, mock_connection, hmip_config_entry)
 
 
 @pytest.fixture(name="hmip_config")
 def hmip_config_fixture() -> ConfigType:
-    """Create a config for homematic ip cloud."""
+    """Create a config for spencermatic ip cloud."""
 
     entry_data = {
         HMIPC_HAPID: HAPID,
@@ -97,9 +97,9 @@ def dummy_config_fixture() -> ConfigType:
 
 @pytest.fixture(name="mock_hap_with_service")
 async def mock_hap_with_service_fixture(
-    hass: HomeAssistant, default_mock_hap_factory, dummy_config
-) -> HomematicipHAP:
-    """Create a fake homematic access point with hass services."""
+    hass: spencerAssistant, default_mock_hap_factory, dummy_config
+) -> spencermaticipHAP:
+    """Create a fake spencermatic access point with hass services."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
     await hmip_async_setup(hass, dummy_config)
     await hass.async_block_till_done()
@@ -107,12 +107,12 @@ async def mock_hap_with_service_fixture(
     return mock_hap
 
 
-@pytest.fixture(name="simple_mock_home")
-def simple_mock_home_fixture():
+@pytest.fixture(name="simple_mock_spencer")
+def simple_mock_spencer_fixture():
     """Return a simple mocked connection."""
 
-    mock_home = Mock(
-        spec=AsyncHome,
+    mock_spencer = Mock(
+        spec=Asyncspencer,
         name="Demo",
         devices=[],
         groups=[],
@@ -135,9 +135,9 @@ def simple_mock_home_fixture():
     )
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+        "spencerassistant.components.spencermaticip_cloud.hap.Asyncspencer",
         autospec=True,
-        return_value=mock_home,
+        return_value=mock_spencer,
     ):
         yield
 
@@ -147,10 +147,10 @@ def mock_connection_init_fixture():
     """Return a simple mocked connection."""
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
+        "spencerassistant.components.spencermaticip_cloud.hap.Asyncspencer.init",
         return_value=None,
     ), patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
+        "spencerassistant.components.spencermaticip_cloud.hap.AsyncAuth.init",
         return_value=None,
     ):
         yield

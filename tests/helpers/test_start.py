@@ -1,7 +1,7 @@
 """Test starting HA helpers."""
-from homeassistant import core
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.helpers import start
+from spencerassistant import core
+from spencerassistant.const import EVENT_spencerASSISTANT_START, EVENT_spencerASSISTANT_STARTED
+from spencerassistant.helpers import start
 
 
 async def test_at_start_when_running_awaitable(hass):
@@ -12,7 +12,7 @@ async def test_at_start_when_running_awaitable(hass):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_start(hass, cb_at_start)
@@ -36,7 +36,7 @@ async def test_at_start_when_running_callback(hass, caplog):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_start(hass, cb_at_start)()
@@ -61,14 +61,14 @@ async def test_at_start_when_starting_awaitable(hass):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_start(hass, cb_at_start)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -82,14 +82,14 @@ async def test_at_start_when_starting_callback(hass, caplog):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     cancel = start.async_at_start(hass, cb_at_start)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -108,7 +108,7 @@ async def test_cancelling_at_start_when_running(hass, caplog):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_start(hass, cb_at_start)()
@@ -129,14 +129,14 @@ async def test_cancelling_at_start_when_starting(hass):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_start(hass, cb_at_start)()
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
@@ -148,7 +148,7 @@ async def test_at_started_when_running_awaitable(hass):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_started(hass, cb_at_start)
@@ -171,7 +171,7 @@ async def test_at_started_when_running_callback(hass, caplog):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_started(hass, cb_at_start)()
@@ -195,18 +195,18 @@ async def test_at_started_when_starting_awaitable(hass):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_started(hass, cb_at_start)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -219,18 +219,18 @@ async def test_at_started_when_starting_callback(hass, caplog):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     cancel = start.async_at_started(hass, cb_at_start)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -249,7 +249,7 @@ async def test_cancelling_at_started_when_running(hass, caplog):
     calls = []
 
     async def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_started(hass, cb_at_start)()
@@ -270,17 +270,17 @@ async def test_cancelling_at_started_when_starting(hass):
 
     @core.callback
     def cb_at_start(hass):
-        """Home Assistant is started."""
+        """spencer Assistant is started."""
         calls.append(1)
 
     start.async_at_started(hass, cb_at_start)()
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert len(calls) == 0

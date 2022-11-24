@@ -8,12 +8,12 @@ from aiohue.v1 import HueBridgeV1
 from aiohue.v2 import HueBridgeV2
 import pytest
 
-from homeassistant.components.hue import bridge
-from homeassistant.components.hue.const import (
+from spencerassistant.components.hue import bridge
+from spencerassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from spencerassistant.exceptions import ConfigEntryNotReady
 
 
 async def test_bridge_setup_v1(hass, mock_api_v1):

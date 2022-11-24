@@ -8,30 +8,30 @@ import pytest
 import voluptuous as vol
 
 # To prevent circular import when running just this file
-from homeassistant import core as ha, exceptions
-from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401, pylint: disable=unused-import
-from homeassistant.const import (
+from spencerassistant import core as ha, exceptions
+from spencerassistant.auth.permissions import PolicyPermissions
+import spencerassistant.components  # noqa: F401, pylint: disable=unused-import
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import (
+from spencerassistant.helpers import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
     template,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
+import spencerassistant.helpers.config_validation as cv
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockEntity,
     async_mock_service,
-    get_test_home_assistant,
+    get_test_spencer_assistant,
     mock_device_registry,
     mock_registry,
     mock_service,
@@ -46,7 +46,7 @@ SUPPORT_C = 4
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call",
+        "spencerassistant.helpers.service._handle_entity_call",
         return_value=None,
     ) as mock_call:
         yield mock_call
@@ -225,11 +225,11 @@ def area_mock(hass):
 
 
 class TestServiceHelpers(unittest.TestCase):
-    """Test the Home Assistant service helpers."""
+    """Test the spencer Assistant service helpers."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        self.hass = get_test_spencer_assistant()
         self.calls = mock_service(self.hass, "test_domain", "test_service")
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -388,7 +388,7 @@ class TestServiceHelpers(unittest.TestCase):
         service.call_from_config(self.hass, config, validate_config=False)
         assert orig == config
 
-    @patch("homeassistant.helpers.service._LOGGER.error")
+    @patch("spencerassistant.helpers.service._LOGGER.error")
     def test_fail_silently_if_no_service(self, mock_log):
         """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
@@ -571,7 +571,7 @@ async def test_call_with_required_features(hass, mock_entities):
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
-    with pytest.raises(exceptions.HomeAssistantError):
+    with pytest.raises(exceptions.spencerAssistantError):
         await service.entity_service_call(
             hass,
             [Mock(entities=mock_entities)],
@@ -672,7 +672,7 @@ async def test_call_context_user_not_exist(hass):
 async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entities):
     """Check we only target allowed entities if targeting all."""
     with patch(
-        "homeassistant.auth.AuthManager.async_get_user",
+        "spencerassistant.auth.AuthManager.async_get_user",
         return_value=Mock(
             permissions=PolicyPermissions(
                 {"entities": {"entity_ids": {"light.kitchen": True}}}, None
@@ -700,7 +700,7 @@ async def test_call_context_target_specific(
 ):
     """Check targeting specific entities."""
     with patch(
-        "homeassistant.auth.AuthManager.async_get_user",
+        "spencerassistant.auth.AuthManager.async_get_user",
         return_value=Mock(
             permissions=PolicyPermissions(
                 {"entities": {"entity_ids": {"light.kitchen": True}}}, None
@@ -728,7 +728,7 @@ async def test_call_context_target_specific_no_auth(
 ):
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
-        "homeassistant.auth.AuthManager.async_get_user",
+        "spencerassistant.auth.AuthManager.async_get_user",
         return_value=Mock(permissions=PolicyPermissions({}, None)),
     ):
         await service.entity_service_call(
@@ -887,7 +887,7 @@ async def test_domain_control_not_async(hass, mock_entities):
         """Define a protected service."""
         calls.append(call)
 
-    with pytest.raises(exceptions.HomeAssistantError):
+    with pytest.raises(exceptions.spencerAssistantError):
         service.verify_domain_control(hass, "test_domain")(mock_service_log)
 
 
@@ -900,7 +900,7 @@ async def test_domain_control_unknown(hass, mock_entities):
         calls.append(call)
 
     with patch(
-        "homeassistant.helpers.entity_registry.async_get",
+        "spencerassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
         protected_mock_service = service.verify_domain_control(hass, "test_domain")(
@@ -1191,7 +1191,7 @@ async def test_async_extract_config_entry_ids(hass):
     )
 
     call = ha.ServiceCall(
-        "homeassistant",
+        "spencerassistant",
         "reload_config_entry",
         {
             "device_id": "device-no-entities",

@@ -7,12 +7,12 @@ import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import Platform
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import Platform
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .common import async_enable_traffic
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -41,7 +41,7 @@ LONG_RELEASE = "remote_button_long_release"
 @pytest.fixture(autouse=True)
 def sensor_platforms_only():
     """Only setup the sensor platform and required base platforms to speed up tests."""
-    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
+    with patch("spencerassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
         yield
 
 

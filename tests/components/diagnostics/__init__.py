@@ -1,7 +1,7 @@
 """Tests for the Diagnostics integration."""
 from http import HTTPStatus
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 async def _get_diagnostics_for_config_entry(hass, hass_client, config_entry):

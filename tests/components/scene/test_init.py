@@ -4,18 +4,18 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import light, scene
-from homeassistant.const import (
+from spencerassistant.components import light, scene
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-from homeassistant.util.yaml import loader as yaml_loader
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.yaml import loader as yaml_loader
 
 from tests.common import async_mock_service, mock_restore_cache
 
@@ -124,7 +124,7 @@ async def test_activate_scene(hass, entities, enable_custom_integrations):
     assert hass.states.get("scene.test").state == STATE_UNKNOWN
 
     now = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
+    with patch("spencerassistant.core.dt_util.utcnow", return_value=now):
         await activate(hass, "scene.test")
 
     assert hass.states.get("scene.test").state == now.isoformat()
@@ -138,7 +138,7 @@ async def test_activate_scene(hass, entities, enable_custom_integrations):
     calls = async_mock_service(hass, "light", "turn_on")
 
     now = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
+    with patch("spencerassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
         )

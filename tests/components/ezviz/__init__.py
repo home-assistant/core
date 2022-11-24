@@ -1,7 +1,7 @@
 """Tests for the EZVIZ integration."""
 from unittest.mock import patch
 
-from homeassistant.components.ezviz.const import (
+from spencerassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
@@ -9,7 +9,7 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_TIMEOUT,
@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -62,19 +62,19 @@ TEST = {
 
 def _patch_async_setup_entry(return_value=True):
     return patch(
-        "homeassistant.components.ezviz.async_setup_entry",
+        "spencerassistant.components.ezviz.async_setup_entry",
         return_value=return_value,
     )
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the EZVIZ integration in Home Assistant."""
+    """Set up the EZVIZ integration in spencer Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
     entry.add_to_hass(hass)
 

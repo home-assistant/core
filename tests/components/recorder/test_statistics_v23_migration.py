@@ -13,20 +13,20 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, statistics
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import SQLITE_URL_PREFIX, statistics
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.helpers import recorder as recorder_helper
+from spencerassistant.setup import setup_component
+import spencerassistant.util.dt as dt_util
 
 from .common import wait_recording_done
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_spencer_assistant
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
-CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
+CREATE_ENGINE_TARGET = "spencerassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_23_with_newer_columns"
 
 
@@ -180,7 +180,7 @@ def test_delete_duplicates(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -208,7 +208,7 @@ def test_delete_duplicates(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
@@ -350,7 +350,7 @@ def test_delete_duplicates_many(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -384,7 +384,7 @@ def test_delete_duplicates_many(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
@@ -497,7 +497,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -520,7 +520,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     hass.config.config_dir = tmpdir
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
@@ -599,7 +599,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
-        hass = get_test_home_assistant()
+        hass = get_test_spencer_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -621,7 +621,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     hass.config.config_dir = tmpdir
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})

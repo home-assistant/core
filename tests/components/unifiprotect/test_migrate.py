@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock
 from pyunifiprotect.data import Light
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.unifiprotect.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -22,7 +22,7 @@ from .utils import (
 
 
 async def test_migrate_reboot_button(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test migrating unique ID of reboot button."""
 
@@ -73,7 +73,7 @@ async def test_migrate_reboot_button(
     assert light.unique_id == f"{light2.mac}_reboot"
 
 
-async def test_migrate_nvr_mac(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def test_migrate_nvr_mac(hass: spencerAssistant, ufp: MockUFPFixture, light: Light):
     """Test migrating unique ID of NVR to use MAC address."""
 
     light1 = light.copy()
@@ -113,7 +113,7 @@ async def test_migrate_nvr_mac(hass: HomeAssistant, ufp: MockUFPFixture, light: 
 
 
 async def test_migrate_reboot_button_no_device(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test migrating unique ID of reboot button if UniFi Protect device ID changed."""
 
@@ -143,7 +143,7 @@ async def test_migrate_reboot_button_no_device(
 
 
 async def test_migrate_reboot_button_fail(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test migrating unique ID of reboot button."""
 
@@ -176,7 +176,7 @@ async def test_migrate_reboot_button_fail(
 
 
 async def test_migrate_device_mac_button_fail(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test migrating unique ID to MAC format."""
 
@@ -209,7 +209,7 @@ async def test_migrate_device_mac_button_fail(
 
 
 async def test_migrate_device_mac_bootstrap_fail(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test migrating with a network error."""
 

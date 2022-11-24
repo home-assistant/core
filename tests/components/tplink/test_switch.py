@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock
 from kasa import SmartDeviceException
 import pytest
 
-from homeassistant.components import tplink
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, slugify
+from spencerassistant.components import tplink
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.components.tplink.const import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util, slugify
 
 from . import (
     MAC_ADDRESS,
@@ -27,7 +27,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_plug(hass: HomeAssistant) -> None:
+async def test_plug(hass: spencerAssistant) -> None:
     """Test a smart plug."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -63,7 +63,7 @@ async def test_plug(hass: HomeAssistant) -> None:
         (_mocked_dimmer(), "light"),
     ],
 )
-async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
+async def test_led_switch(hass: spencerAssistant, dev, domain: str) -> None:
     """Test LED setting for plugs, strips and dimmers."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -93,7 +93,7 @@ async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
     dev.set_led.reset_mock()
 
 
-async def test_plug_unique_id(hass: HomeAssistant) -> None:
+async def test_plug_unique_id(hass: spencerAssistant) -> None:
     """Test a plug unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -109,7 +109,7 @@ async def test_plug_unique_id(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_plug_update_fails(hass: HomeAssistant) -> None:
+async def test_plug_update_fails(hass: spencerAssistant) -> None:
     """Test a smart plug update failure."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -131,7 +131,7 @@ async def test_plug_update_fails(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_strip(hass: HomeAssistant) -> None:
+async def test_strip(hass: spencerAssistant) -> None:
     """Test a smart strip."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -164,7 +164,7 @@ async def test_strip(hass: HomeAssistant) -> None:
         strip.children[plug_id].turn_on.reset_mock()
 
 
-async def test_strip_unique_ids(hass: HomeAssistant) -> None:
+async def test_strip_unique_ids(hass: spencerAssistant) -> None:
     """Test a strip unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS

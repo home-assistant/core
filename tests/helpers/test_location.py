@@ -1,7 +1,7 @@
-"""Tests Home Assistant location helpers."""
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import State
-from homeassistant.helpers import location
+"""Tests spencer Assistant location helpers."""
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
+from spencerassistant.core import State
+from spencerassistant.helpers import location
 
 
 def test_has_location_with_invalid_states():
@@ -62,11 +62,11 @@ async def test_coordinates_function_as_state(hass):
 async def test_coordinates_function_device_tracker_in_zone(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "zone.home",
+        "zone.spencer",
         "zoning",
         {"latitude": 32.87336, "longitude": -117.22943},
     )
-    hass.states.async_set("device_tracker.device", "home")
+    hass.states.async_set("device_tracker.device", "spencer")
     assert (
         location.find_coordinates(hass, "device_tracker.device")
         == "32.87336,-117.22943"
@@ -76,16 +76,16 @@ async def test_coordinates_function_device_tracker_in_zone(hass):
 async def test_coordinates_function_zone_friendly_name(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "zone.home",
+        "zone.spencer",
         "zoning",
-        {"latitude": 32.87336, "longitude": -117.22943, ATTR_FRIENDLY_NAME: "my_home"},
+        {"latitude": 32.87336, "longitude": -117.22943, ATTR_FRIENDLY_NAME: "my_spencer"},
     )
     hass.states.async_set(
         "test.object",
-        "my_home",
+        "my_spencer",
     )
     assert location.find_coordinates(hass, "test.object") == "32.87336,-117.22943"
-    assert location.find_coordinates(hass, "my_home") == "32.87336,-117.22943"
+    assert location.find_coordinates(hass, "my_spencer") == "32.87336,-117.22943"
 
 
 async def test_coordinates_function_device_tracker_from_input_select(hass):

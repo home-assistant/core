@@ -5,8 +5,8 @@ from unittest.mock import Mock
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.data_validator import RequestDataValidator
+from spencerassistant.components.http import spencerAssistantView
+from spencerassistant.components.http.data_validator import RequestDataValidator
 
 
 async def get_client(aiohttp_client, validator):
@@ -15,7 +15,7 @@ async def get_client(aiohttp_client, validator):
     app["hass"] = Mock(is_stopping=False)
     app["allow_configured_cors"] = lambda _: None
 
-    class TestView(HomeAssistantView):
+    class TestView(spencerAssistantView):
         url = "/"
         name = "test"
         requires_auth = False

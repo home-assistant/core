@@ -2,10 +2,10 @@
 import aiohttp
 from pyipp import IPPConnectionUpgradeRequired, IPPError
 
-from homeassistant.components import zeroconf
-from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from spencerassistant.components import zeroconf
+from spencerassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, get_fixture_path
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -108,7 +108,7 @@ def mock_connection(
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
     host: str = HOST,
@@ -119,7 +119,7 @@ async def init_integration(
     unique_id: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
     conn_error: bool = False,
 ) -> MockConfigEntry:
-    """Set up the IPP integration in Home Assistant."""
+    """Set up the IPP integration in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,

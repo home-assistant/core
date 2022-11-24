@@ -3,7 +3,7 @@ import ast
 
 import pytest
 
-from homeassistant.components.media_source import (
+from spencerassistant.components.media_source import (
     DOMAIN as MS_DOMAIN,
     URI_SCHEME,
     BrowseError,
@@ -11,8 +11,8 @@ from homeassistant.components.media_source import (
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

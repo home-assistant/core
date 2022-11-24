@@ -1,8 +1,8 @@
 """Common stuff for Fritz!Tools tests."""
-from homeassistant.components import ssdp
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.const import (
+from spencerassistant.components import ssdp
+from spencerassistant.components.fritz.const import DOMAIN
+from spencerassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
+from spencerassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PASSWORD,
@@ -150,7 +150,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
         "GetPortMappingNumberOfEntries": {},
     },
-    "X_AVM-DE_Homeauto1": {
+    "X_AVM-DE_spencerauto1": {
         "GetGenericDeviceInfos": [
             {
                 "NewSwitchIsValid": "VALID",
@@ -799,4 +799,4 @@ MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
     },
 )
 
-MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>HomeAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'
+MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>spencerAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'

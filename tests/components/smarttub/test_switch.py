@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.const import STATE_OFF, STATE_ON
 
 
 @pytest.mark.parametrize(

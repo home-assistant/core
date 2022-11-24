@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v2 as aiohue_v2
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import hue
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries
+from spencerassistant.components import hue
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 

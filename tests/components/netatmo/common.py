@@ -3,8 +3,8 @@ from contextlib import contextmanager
 import json
 from unittest.mock import patch
 
-from homeassistant.components.webhook import async_handle_webhook
-from homeassistant.util.aiohttp import MockRequest
+from spencerassistant.components.webhook import async_handle_webhook
+from spencerassistant.util.aiohttp import MockRequest
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -14,8 +14,8 @@ CLIENT_SECRET = "5678"
 
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
-    "home_id": "91763b24c43d3e344f424e8b",
-    "home_name": "MYHOME",
+    "spencer_id": "91763b24c43d3e344f424e8b",
+    "spencer_name": "MYspencer",
     "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
 }
 
@@ -40,17 +40,17 @@ async def fake_post_request(*args, **kwargs):
 
     if endpoint in [
         "setpersonsaway",
-        "setpersonshome",
+        "setpersonsspencer",
         "setstate",
         "setroomthermpoint",
         "setthermmode",
-        "switchhomeschedule",
+        "switchspencerschedule",
     ]:
         payload = {f"{endpoint}": True, "status": "ok"}
 
-    elif endpoint == "homestatus":
-        home_id = kwargs.get("params", {}).get("home_id")
-        payload = json.loads(load_fixture(f"netatmo/{endpoint}_{home_id}.json"))
+    elif endpoint == "spencerstatus":
+        spencer_id = kwargs.get("params", {}).get("spencer_id")
+        payload = json.loads(load_fixture(f"netatmo/{endpoint}_{spencer_id}.json"))
 
     else:
         payload = json.loads(load_fixture(f"netatmo/{endpoint}.json"))
@@ -91,7 +91,7 @@ async def simulate_webhook(hass, webhook_id, response):
 @contextmanager
 def selected_platforms(platforms):
     """Restrict loaded platforms to list given."""
-    with patch("homeassistant.components.netatmo.PLATFORMS", platforms), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.netatmo.webhook_generate_url"):
+    with patch("spencerassistant.components.netatmo.PLATFORMS", platforms), patch(
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch("spencerassistant.components.netatmo.webhook_generate_url"):
         yield

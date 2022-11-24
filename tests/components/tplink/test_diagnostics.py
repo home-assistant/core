@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from kasa import SmartDevice
 import pytest
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import _mocked_bulb, _mocked_plug, initialize_config_entry_for_device
 
@@ -29,7 +29,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
     ],
 )
 async def test_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
     mocked_dev: SmartDevice,
     fixture_file: str,

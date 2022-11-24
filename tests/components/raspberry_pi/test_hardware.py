@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.raspberry_pi.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.raspberry_pi.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_hardware_info(hass: spencerAssistant, hass_ws_client) -> None:
     """Test we can get the board info."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -22,7 +22,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.raspberry_pi.get_os_info",
+        "spencerassistant.components.raspberry_pi.get_os_info",
         return_value={"board": "rpi"},
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -31,7 +31,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.raspberry_pi.hardware.get_os_info",
+        "spencerassistant.components.raspberry_pi.hardware.get_os_info",
         return_value={"board": "rpi"},
     ):
         await client.send_json({"id": 1, "type": "hardware/info"})
@@ -58,7 +58,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
 
 
 @pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
-async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) -> None:
+async def test_hardware_info_fail(hass: spencerAssistant, hass_ws_client, os_info) -> None:
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -71,7 +71,7 @@ async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) 
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.raspberry_pi.get_os_info",
+        "spencerassistant.components.raspberry_pi.get_os_info",
         return_value={"board": "rpi"},
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -80,7 +80,7 @@ async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) 
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.raspberry_pi.hardware.get_os_info",
+        "spencerassistant.components.raspberry_pi.hardware.get_os_info",
         return_value=os_info,
     ):
         await client.send_json({"id": 1, "type": "hardware/info"})

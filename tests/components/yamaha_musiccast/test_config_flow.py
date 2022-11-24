@@ -5,11 +5,11 @@ from unittest.mock import patch
 from aiomusiccast import MusicCastConnectionException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.yamaha_musiccast.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.yamaha_musiccast.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -18,13 +18,13 @@ from tests.common import MockConfigEntry
 async def silent_ssdp_scanner(hass):
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
+        "spencerassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("spencerassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "spencerassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "spencerassistant.components.ssdp.Server._async_start_upnp_servers"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "spencerassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -33,7 +33,7 @@ async def silent_ssdp_scanner(hass):
 def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
+        "spencerassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
     ):
         yield
 
@@ -96,7 +96,7 @@ def mock_ssdp_no_yamaha():
 def mock_valid_discovery_information():
     """Mock that the ssdp scanner returns a useful upnp description."""
     with patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+        "spencerassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[
             ssdp.SsdpServiceInfo(
                 ssdp_usn="mock_usn",
@@ -116,7 +116,7 @@ def mock_valid_discovery_information():
 def mock_empty_discovery_information():
     """Mock that the ssdp scanner returns no upnp description."""
     with patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st", return_value=[]
+        "spencerassistant.components.ssdp.async_get_discovery_info_by_st", return_value=[]
     ):
         yield
 

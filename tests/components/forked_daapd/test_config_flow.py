@@ -3,17 +3,17 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.forked_daapd.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components import zeroconf
+from spencerassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from spencerassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -65,10 +65,10 @@ async def test_show_form(hass):
 async def test_config_flow(hass, config_entry):
     """Test that the user step works."""
     with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+        "spencerassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
         new=AsyncMock(),
     ) as mock_test_connection, patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+        "spencerassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
         autospec=True,
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG
@@ -120,7 +120,7 @@ async def test_zeroconf_updates_title(hass, config_entry):
 async def test_config_flow_no_websocket(hass, config_entry):
     """Test config flow setup without websocket enabled on server."""
     with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+        "spencerassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
         new=AsyncMock(),
     ) as mock_test_connection:
         # test invalid config data
@@ -220,7 +220,7 @@ async def test_options_flow(hass, config_entry):
     """Test config flow options."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+        "spencerassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
         autospec=True,
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG

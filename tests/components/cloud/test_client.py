@@ -6,22 +6,22 @@ import aiohttp
 from aiohttp import web
 import pytest
 
-from homeassistant.components.cloud import DOMAIN
-from homeassistant.components.cloud.client import CloudClient
-from homeassistant.components.cloud.const import (
+from spencerassistant.components.cloud import DOMAIN
+from spencerassistant.components.cloud.client import CloudClient
+from spencerassistant.components.cloud.const import (
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.const import CONTENT_TYPE_JSON
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from . import mock_cloud, mock_cloud_prefs
 
 from tests.common import async_fire_time_changed
-from tests.components.alexa import test_smart_home as test_alexa
+from tests.components.alexa import test_smart_spencer as test_alexa
 
 
 @pytest.fixture
@@ -63,10 +63,10 @@ async def test_handler_alexa(hass):
     assert len(endpoints) == 1
     device = endpoints[0]
 
-    assert device["description"] == "Config description via Home Assistant"
+    assert device["description"] == "Config description via spencer Assistant"
     assert device["friendlyName"] == "Config name"
     assert device["displayCategories"] == ["LIGHT"]
-    assert device["manufacturerName"] == "Home Assistant"
+    assert device["manufacturerName"] == "spencer Assistant"
 
 
 async def test_handler_alexa_disabled(hass, mock_cloud_fixture):

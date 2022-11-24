@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.components.blueprint import importer
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.blueprint import importer
+from spencerassistant.exceptions import spencerAssistantError
 
 from tests.common import load_fixture
 
@@ -85,16 +85,16 @@ def test_get_community_post_import_url():
     """Test variations of generating import forum url."""
     assert (
         importer._get_community_post_import_url(
-            "https://community.home-assistant.io/t/test-topic/123"
+            "https://community.spencer-assistant.io/t/test-topic/123"
         )
-        == "https://community.home-assistant.io/t/test-topic/123.json"
+        == "https://community.spencer-assistant.io/t/test-topic/123.json"
     )
 
     assert (
         importer._get_community_post_import_url(
-            "https://community.home-assistant.io/t/test-topic/123/2"
+            "https://community.spencer-assistant.io/t/test-topic/123/2"
         )
-        == "https://community.home-assistant.io/t/test-topic/123.json"
+        == "https://community.spencer-assistant.io/t/test-topic/123.json"
     )
 
 
@@ -102,16 +102,16 @@ def test_get_github_import_url():
     """Test getting github import url."""
     assert (
         importer._get_github_import_url(
-            "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml"
+            "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml"
         )
-        == "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml"
+        == "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml"
     )
 
     assert (
         importer._get_github_import_url(
-            "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml"
+            "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml"
         )
-        == "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml"
+        == "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml"
     )
 
 
@@ -127,7 +127,7 @@ def test_extract_blueprint_from_community_topic(community_post):
 
 def test_extract_blueprint_from_community_topic_invalid_yaml():
     """Test extracting blueprint with invalid YAML."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         importer._extract_blueprint_from_community_topic(
             "http://example.com",
             {
@@ -142,7 +142,7 @@ def test_extract_blueprint_from_community_topic_invalid_yaml():
 
 def test_extract_blueprint_from_community_topic_wrong_lang():
     """Test extracting blueprint with invalid YAML."""
-    with pytest.raises(importer.HomeAssistantError):
+    with pytest.raises(importer.spencerAssistantError):
         assert importer._extract_blueprint_from_community_topic(
             "http://example.com",
             {
@@ -158,10 +158,10 @@ def test_extract_blueprint_from_community_topic_wrong_lang():
 async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, community_post):
     """Test fetching blueprint from url."""
     aioclient_mock.get(
-        "https://community.home-assistant.io/t/test-topic/123.json", text=community_post
+        "https://community.spencer-assistant.io/t/test-topic/123.json", text=community_post
     )
     imported_blueprint = await importer.fetch_blueprint_from_url(
-        hass, "https://community.home-assistant.io/t/test-topic/123/2"
+        hass, "https://community.spencer-assistant.io/t/test-topic/123/2"
     )
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
@@ -172,7 +172,7 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
     )
     assert (
         imported_blueprint.blueprint.metadata["source_url"]
-        == "https://community.home-assistant.io/t/test-topic/123/2"
+        == "https://community.spencer-assistant.io/t/test-topic/123/2"
     )
     assert "gt;" not in imported_blueprint.raw_data
 
@@ -180,14 +180,14 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
 @pytest.mark.parametrize(
     "url",
     (
-        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
-        "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml",
+        "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
     ),
 )
 async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     """Test fetching blueprint from url."""
     aioclient_mock.get(
-        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
+        "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
         ).read_text(),

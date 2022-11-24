@@ -1,6 +1,6 @@
 """The scene tests for the myq platform."""
 
-from homeassistant.const import STATE_ON
+from spencerassistant.const import STATE_ON
 
 from .util import async_init_integration
 

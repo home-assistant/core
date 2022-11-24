@@ -1,6 +1,6 @@
 """Test intent_script component."""
-from homeassistant.bootstrap import async_setup_component
-from homeassistant.helpers import intent
+from spencerassistant.bootstrap import async_setup_component
+from spencerassistant.helpers import intent
 
 from tests.common import async_mock_service
 

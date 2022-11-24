@@ -1,22 +1,22 @@
 """Test reproduce state for Alarm control panel."""
-from homeassistant.const import (
+from spencerassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_spencer,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_spencer,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -32,7 +32,7 @@ async def test_reproducing_states(hass, caplog):
         {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_HOME, {}
+        "alarm_control_panel.entity_armed_spencer", STATE_ALARM_ARMED_spencer, {}
     )
     hass.states.async_set(
         "alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_NIGHT, {}
@@ -53,8 +53,8 @@ async def test_reproducing_states(hass, caplog):
     arm_custom_bypass_calls = async_mock_service(
         hass, "alarm_control_panel", SERVICE_ALARM_ARM_CUSTOM_BYPASS
     )
-    arm_home_calls = async_mock_service(
-        hass, "alarm_control_panel", SERVICE_ALARM_ARM_HOME
+    arm_spencer_calls = async_mock_service(
+        hass, "alarm_control_panel", SERVICE_ALARM_ARM_spencer
     )
     arm_night_calls = async_mock_service(
         hass, "alarm_control_panel", SERVICE_ALARM_ARM_NIGHT
@@ -76,7 +76,7 @@ async def test_reproducing_states(hass, caplog):
                 "alarm_control_panel.entity_armed_custom_bypass",
                 STATE_ALARM_ARMED_CUSTOM_BYPASS,
             ),
-            State("alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_HOME),
+            State("alarm_control_panel.entity_armed_spencer", STATE_ALARM_ARMED_spencer),
             State("alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_NIGHT),
             State(
                 "alarm_control_panel.entity_armed_vacation", STATE_ALARM_ARMED_VACATION
@@ -88,7 +88,7 @@ async def test_reproducing_states(hass, caplog):
 
     assert len(arm_away_calls) == 0
     assert len(arm_custom_bypass_calls) == 0
-    assert len(arm_home_calls) == 0
+    assert len(arm_spencer_calls) == 0
     assert len(arm_night_calls) == 0
     assert len(arm_vacation_calls) == 0
     assert len(disarm_calls) == 0
@@ -102,7 +102,7 @@ async def test_reproducing_states(hass, caplog):
     assert "not_supported" in caplog.text
     assert len(arm_away_calls) == 0
     assert len(arm_custom_bypass_calls) == 0
-    assert len(arm_home_calls) == 0
+    assert len(arm_spencer_calls) == 0
     assert len(arm_night_calls) == 0
     assert len(arm_vacation_calls) == 0
     assert len(disarm_calls) == 0
@@ -117,9 +117,9 @@ async def test_reproducing_states(hass, caplog):
                 "alarm_control_panel.entity_armed_custom_bypass", STATE_ALARM_ARMED_AWAY
             ),
             State(
-                "alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_CUSTOM_BYPASS
+                "alarm_control_panel.entity_armed_spencer", STATE_ALARM_ARMED_CUSTOM_BYPASS
             ),
-            State("alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_HOME),
+            State("alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_spencer),
             State("alarm_control_panel.entity_armed_vacation", STATE_ALARM_ARMED_NIGHT),
             State("alarm_control_panel.entity_disarmed", STATE_ALARM_ARMED_VACATION),
             State("alarm_control_panel.entity_triggered", STATE_ALARM_DISARMED),
@@ -137,12 +137,12 @@ async def test_reproducing_states(hass, caplog):
     assert len(arm_custom_bypass_calls) == 1
     assert arm_custom_bypass_calls[0].domain == "alarm_control_panel"
     assert arm_custom_bypass_calls[0].data == {
-        "entity_id": "alarm_control_panel.entity_armed_home"
+        "entity_id": "alarm_control_panel.entity_armed_spencer"
     }
 
-    assert len(arm_home_calls) == 1
-    assert arm_home_calls[0].domain == "alarm_control_panel"
-    assert arm_home_calls[0].data == {
+    assert len(arm_spencer_calls) == 1
+    assert arm_spencer_calls[0].domain == "alarm_control_panel"
+    assert arm_spencer_calls[0].data == {
         "entity_id": "alarm_control_panel.entity_armed_night"
     }
 

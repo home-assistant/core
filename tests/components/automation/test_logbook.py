@@ -1,7 +1,7 @@
 """Test automation logbook."""
-from homeassistant.components import automation
-from homeassistant.core import Context
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.core import Context
+from spencerassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 

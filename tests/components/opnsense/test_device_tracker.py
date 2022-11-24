@@ -4,10 +4,10 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components import opnsense
-from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import opnsense
+from spencerassistant.components.opnsense import CONF_API_SECRET, DOMAIN
+from spencerassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="mocked_opnsense")
@@ -59,6 +59,6 @@ async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
     assert result
     device_1 = hass.states.get("device_tracker.desktop")
     assert device_1 is not None
-    assert device_1.state == "home"
+    assert device_1.state == "spencer"
     device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
-    assert device_2.state == "home"
+    assert device_2.state == "spencer"

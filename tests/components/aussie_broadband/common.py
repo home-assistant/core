@@ -1,11 +1,11 @@
 """Aussie Broadband common helpers for tests."""
 from unittest.mock import patch
 
-from homeassistant.components.aussie_broadband.const import (
+from spencerassistant.components.aussie_broadband.const import (
     CONF_SERVICES,
     DOMAIN as AUSSIE_BROADBAND_DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,7 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.aussie_broadband.PLATFORMS", platforms), patch(
+    with patch("spencerassistant.components.aussie_broadband.PLATFORMS", platforms), patch(
         "aussiebb.asyncio.AussieBB.__init__", return_value=None
     ), patch(
         "aussiebb.asyncio.AussieBB.login",

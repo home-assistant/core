@@ -1,10 +1,10 @@
 """Test reproduce state for Light."""
 import pytest
 
-from homeassistant.components import light
-from homeassistant.components.light.reproduce_state import DEPRECATION_WARNING
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.components import light
+from spencerassistant.components.light.reproduce_state import DEPRECATION_WARNING
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 

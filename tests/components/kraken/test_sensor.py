@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import KrakenAPIError
 
-from homeassistant.components.kraken.const import (
+from spencerassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TRACKED_ASSET_PAIR,
     DOMAIN,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import CONF_SCAN_INTERVAL, EVENT_spencerASSISTANT_START
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+import spencerassistant.util.dt as dt_util
 
 from .const import (
     MISSING_PAIR_TICKER_INFORMATION_RESPONSE,
@@ -28,7 +28,7 @@ async def test_sensor(hass):
     """Test that sensor has a value."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with patch("spencerassistant.util.dt.utcnow", return_value=utcnow), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
     ), patch(
@@ -155,7 +155,7 @@ async def test_sensor(hass):
 
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         xbt_usd_sensor = hass.states.get("sensor.xbt_usd_ask")
@@ -233,7 +233,7 @@ async def test_sensors_available_after_restart(hass):
     """Test that all sensors are added again after a restart."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with patch("spencerassistant.util.dt.utcnow", return_value=utcnow), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
     ), patch(
@@ -262,7 +262,7 @@ async def test_sensors_available_after_restart(hass):
 
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.xbt_usd_ask")
@@ -273,7 +273,7 @@ async def test_sensors_added_after_config_update(hass):
     """Test that sensors are added when another tracked asset pair is added."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with patch("spencerassistant.util.dt.utcnow", return_value=utcnow), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
     ), patch(
@@ -294,7 +294,7 @@ async def test_sensors_added_after_config_update(hass):
 
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.xbt_usd_ask")
@@ -319,7 +319,7 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
     """Test that a missing tradable asset pair marks the sensor unavailable."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with patch("spencerassistant.util.dt.utcnow", return_value=utcnow), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
     ) as tradeable_asset_pairs_mock, patch(
@@ -339,7 +339,7 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
 
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.xbt_usd_ask")

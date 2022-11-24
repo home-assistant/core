@@ -2,15 +2,15 @@
 import pytest
 import yarl
 
-import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player import (
+import spencerassistant.components.media_player as media_player
+from spencerassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.notify as notify
-import homeassistant.components.tts as tts
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.notify as notify
+import spencerassistant.components.tts as tts
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
 

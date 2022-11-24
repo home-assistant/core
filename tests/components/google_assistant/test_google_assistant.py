@@ -7,8 +7,8 @@ import json
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
 
-from homeassistant import const, core, setup
-from homeassistant.components import (
+from spencerassistant import const, core, setup
+from spencerassistant.components import (
     alarm_control_panel,
     climate,
     cover,
@@ -20,9 +20,9 @@ from homeassistant.components import (
     media_player,
     switch,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
 
@@ -67,8 +67,8 @@ def assistant_client(loop, hass, hass_client_no_auth):
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Set up a Home Assistant instance for these tests."""
-    # We need to do this to get access to homeassistant/turn_(on,off)
+    """Set up a spencer Assistant instance for these tests."""
+    # We need to do this to get access to spencerassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
     loop.run_until_complete(
@@ -389,7 +389,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
         "on": True,
         "online": True,
         "humiditySetpointPercent": 50,
-        "currentModeSettings": {"mode": "home"},
+        "currentModeSettings": {"mode": "spencer"},
     }
 
 

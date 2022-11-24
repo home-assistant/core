@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.switch import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.switch import DOMAIN
+from spencerassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -230,7 +230,7 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
 
     ent1, ent2, ent3 = platform.ENTITIES
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+    with patch("spencerassistant.core.dt_util.utcnow") as mock_utcnow:
         mock_utcnow.return_value = point1
         assert await async_setup_component(
             hass,

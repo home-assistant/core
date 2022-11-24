@@ -4,9 +4,9 @@ from unittest.mock import patch
 import pytest
 from synology_dsm.exceptions import SynologyDSMLoginInvalidException
 
-from homeassistant import data_entry_flow
-from homeassistant.components.synology_dsm.const import DOMAIN, SERVICES
-from homeassistant.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.synology_dsm.const import DOMAIN, SERVICES
+from spencerassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
@@ -22,10 +22,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.no_bypass_setup
-async def test_services_registered(hass: HomeAssistant):
+async def test_services_registered(hass: spencerAssistant):
     """Test if all services are registered."""
-    with patch("homeassistant.components.synology_dsm.common.SynologyDSM"), patch(
-        "homeassistant.components.synology_dsm.PLATFORMS", return_value=[]
+    with patch("spencerassistant.components.synology_dsm.common.SynologyDSM"), patch(
+        "spencerassistant.components.synology_dsm.PLATFORMS", return_value=[]
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -45,13 +45,13 @@ async def test_services_registered(hass: HomeAssistant):
 
 
 @pytest.mark.no_bypass_setup
-async def test_reauth_triggered(hass: HomeAssistant):
+async def test_reauth_triggered(hass: spencerAssistant):
     """Test if reauthentication flow is triggered."""
     with patch(
-        "homeassistant.components.synology_dsm.SynoApi.async_setup",
+        "spencerassistant.components.synology_dsm.SynoApi.async_setup",
         side_effect=SynologyDSMLoginInvalidException(USERNAME),
     ), patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
+        "spencerassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
         return_value={"type": data_entry_flow.FlowResultType.FORM},
     ) as mock_async_step_reauth:
         entry = MockConfigEntry(

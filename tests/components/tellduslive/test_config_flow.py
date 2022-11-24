@@ -5,16 +5,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.tellduslive import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.tellduslive import (
     APPLICATION_NAME,
     DOMAIN,
     KEY_SCAN_INTERVAL,
     SCAN_INTERVAL,
     config_flow,
 )
-from homeassistant.config_entries import SOURCE_DISCOVERY
-from homeassistant.const import CONF_HOST
+from spencerassistant.config_entries import SOURCE_DISCOVERY
+from spencerassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -44,9 +44,9 @@ def authorize():
 def mock_tellduslive(supports_local_api, authorize):
     """Mock tellduslive."""
     with patch(
-        "homeassistant.components.tellduslive.config_flow.Session"
+        "spencerassistant.components.tellduslive.config_flow.Session"
     ) as Session, patch(
-        "homeassistant.components.tellduslive.config_flow.supports_local_api"
+        "spencerassistant.components.tellduslive.config_flow.supports_local_api"
     ) as tellduslive_supports_local_api:
         tellduslive_supports_local_api.return_value = supports_local_api
         Session().authorize.return_value = authorize
@@ -136,7 +136,7 @@ async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json",
+        "spencerassistant.components.tellduslive.config_flow.load_json",
         return_value={"tellduslive": {}},
     ), patch("os.path.isfile"):
         result = await flow.async_step_import(
@@ -151,7 +151,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json",
+        "spencerassistant.components.tellduslive.config_flow.load_json",
         return_value={"localhost": {}},
     ), patch("os.path.isfile"):
         result = await flow.async_step_import(

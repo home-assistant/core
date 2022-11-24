@@ -2,7 +2,7 @@
   "status": "ok",
   "time_server": 1559292039,
   "body": {
-    "home": {
+    "spencer": {
       "modules": [
         {
           "id": "12:34:56:00:f1:62",
@@ -69,7 +69,7 @@
           "connection": "wifi",
           "firmware_name": "2.18.0",
           "firmware_revision": 2018000,
-          "homekit_status": "configured",
+          "spencerkit_status": "configured",
           "max_peers_reached": false,
           "sd_status": 4,
           "wifi_strength": 66,
@@ -81,7 +81,7 @@
           "monitoring": "on",
           "sd_status": 4,
           "connection": "wifi",
-          "homekit_status": "upgradable",
+          "spencerkit_status": "upgradable",
           "floodlight": "auto",
           "timelapse_available": true,
           "id": "12:34:56:10:b9:0e",
@@ -323,7 +323,7 @@
           "therm_setpoint_temperature": 22,
           "therm_setpoint_start_time": 1647462737,
           "therm_setpoint_end_time": null,
-          "therm_setpoint_mode": "home"
+          "therm_setpoint_mode": "spencer"
         }
       ],
       "id": "91763b24c43d3e344f424e8b",

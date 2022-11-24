@@ -1,11 +1,11 @@
 """Test reproduce state for Cover."""
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -15,8 +15,8 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 

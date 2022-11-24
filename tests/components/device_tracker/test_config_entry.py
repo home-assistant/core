@@ -1,8 +1,8 @@
 """Test Device Tracker config entry things."""
-from homeassistant.components.device_tracker import DOMAIN, config_entry as ce
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from spencerassistant.components.device_tracker import DOMAIN, config_entry as ce
+from spencerassistant.core import callback
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
     MockConfigEntry,

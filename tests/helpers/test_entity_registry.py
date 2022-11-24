@@ -4,12 +4,12 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
-from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant import config_entries
+from spencerassistant.const import EVENT_spencerASSISTANT_START, STATE_UNAVAILABLE
+from spencerassistant.core import CoreState, spencerAssistant, callback
+from spencerassistant.exceptions import MaxLengthExceeded
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from tests.common import (
     MockConfigEntry,
@@ -18,7 +18,7 @@ from tests.common import (
     mock_registry,
 )
 
-YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
+YAML__OPEN_PATH = "spencerassistant.util.yaml.loader.open"
 
 
 @pytest.fixture
@@ -616,7 +616,7 @@ async def test_update_entity_entity_id(registry):
     assert registry.async_get(new_entity_id) is not None
 
 
-async def test_update_entity_entity_id_entity_id(hass: HomeAssistant, registry):
+async def test_update_entity_entity_id_entity_id(hass: spencerAssistant, registry):
     """Test update raises when entity_id already in use."""
     entry = registry.async_get_or_create("light", "hue", "5678")
     entry2 = registry.async_get_or_create("light", "hue", "1234")
@@ -768,7 +768,7 @@ async def test_restore_states(hass):
         original_icon="hass:original-icon",
     )
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START, {})
     await hass.async_block_till_done()
 
     simple = hass.states.get("light.simple")

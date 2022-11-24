@@ -5,7 +5,7 @@ from unittest.mock import patch
 from aiohttp import ClientSession
 from pyuptimerobot import UptimeRobotException
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import (
     MOCK_UPTIMEROBOT_ACCOUNT,
@@ -20,7 +20,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
 ) -> None:
     """Test config entry diagnostics."""
@@ -58,7 +58,7 @@ async def test_entry_diagnostics(
 
 
 async def test_entry_diagnostics_exception(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
 ) -> None:
     """Test config entry diagnostics with exception."""

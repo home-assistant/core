@@ -1,12 +1,12 @@
-"""Tests for the devolo_home_control integration."""
+"""Tests for the devolo_spencer_control integration."""
 
-from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.devolo_spencer_control.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
-def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
+def configure_integration(hass: spencerAssistant) -> MockConfigEntry:
     """Configure the integration."""
     config = {
         "username": "test-username",

@@ -3,12 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.components.webostv import DOMAIN
+from spencerassistant.const import SERVICE_RELOAD
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.device_registry import async_get as get_dev_reg
+from spencerassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import ENTITY_ID, FAKE_UUID
@@ -57,12 +57,12 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("spencerassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     calls.clear()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "media_player",
             "turn_on",

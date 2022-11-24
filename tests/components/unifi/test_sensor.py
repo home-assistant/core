@@ -6,19 +6,19 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.unifi.const import (
+from spencerassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
-import homeassistant.util.dt as dt_util
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant.helpers.entity import EntityCategory
+import spencerassistant.util.dt as dt_util
 
 from .test_controller import setup_unifi_integration
 
@@ -170,7 +170,7 @@ async def test_uptime_sensors(
     }
 
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with patch("spencerassistant.util.dt.now", return_value=now):
         config_entry = await setup_unifi_integration(
             hass,
             aioclient_mock,
@@ -193,7 +193,7 @@ async def test_uptime_sensors(
 
     uptime_client["uptime"] = event_uptime
     now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with patch("spencerassistant.util.dt.now", return_value=now):
         mock_unifi_websocket(message=MessageKey.CLIENT, data=uptime_client)
         await hass.async_block_till_done()
 
@@ -204,7 +204,7 @@ async def test_uptime_sensors(
 
     uptime_client["uptime"] = new_uptime
     now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with patch("spencerassistant.util.dt.now", return_value=now):
         mock_unifi_websocket(message=MessageKey.CLIENT, data=uptime_client)
         await hass.async_block_till_done()
 
@@ -223,7 +223,7 @@ async def test_uptime_sensors(
     # Enable option
 
     options[CONF_ALLOW_UPTIME_SENSORS] = True
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with patch("spencerassistant.util.dt.now", return_value=now):
         hass.config_entries.async_update_entry(config_entry, options=options.copy())
         await hass.async_block_till_done()
 

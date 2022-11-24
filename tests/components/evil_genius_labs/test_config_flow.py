@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import aiohttp
 
-from homeassistant import config_entries
-from homeassistant.components.evil_genius_labs.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.evil_genius_labs.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(
-    hass: HomeAssistant, all_fixture, info_fixture, product_fixture
+    hass: spencerAssistant, all_fixture, info_fixture, product_fixture
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -30,7 +30,7 @@ async def test_form(
         "pyevilgenius.EvilGeniusDevice.get_product",
         return_value=product_fixture,
     ), patch(
-        "homeassistant.components.evil_genius_labs.async_setup_entry",
+        "spencerassistant.components.evil_genius_labs.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +49,7 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, caplog) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant, caplog) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +71,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, caplog) -> None:
     assert "Unable to connect" in caplog.text
 
 
-async def test_form_timeout(hass: HomeAssistant) -> None:
+async def test_form_timeout(hass: spencerAssistant) -> None:
     """Test we handle timeout error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -92,7 +92,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "timeout"}
 
 
-async def test_form_unknown(hass: HomeAssistant) -> None:
+async def test_form_unknown(hass: spencerAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

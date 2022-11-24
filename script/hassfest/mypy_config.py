@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Final
 
-from homeassistant.const import REQUIRED_PYTHON_VER
+from spencerassistant.const import REQUIRED_PYTHON_VER
 
 from .model import Config, Integration
 
@@ -20,12 +20,12 @@ IGNORED_MODULES: Final[list[str]] = []
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
-    "homeassistant.components",
-    "homeassistant.components.application_credentials.*",
-    "homeassistant.components.diagnostics.*",
-    "homeassistant.components.spotify.*",
-    "homeassistant.components.stream.*",
-    "homeassistant.components.update.*",
+    "spencerassistant.components",
+    "spencerassistant.components.application_credentials.*",
+    "spencerassistant.components.diagnostics.*",
+    "spencerassistant.components.spotify.*",
+    "spencerassistant.components.stream.*",
+    "spencerassistant.components.update.*",
 }
 
 HEADER: Final = """
@@ -139,7 +139,7 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
     strict_modules: list[str] = []
     strict_core_modules: list[str] = []
     for module in parsed_modules:
-        if module.startswith("homeassistant.components"):
+        if module.startswith("spencerassistant.components"):
             strict_modules.append(module)
         else:
             strict_core_modules.append(module)
@@ -147,8 +147,8 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
         if (
-            not module.startswith("homeassistant.components.")
-            and module != "homeassistant.components"
+            not module.startswith("spencerassistant.components.")
+            and module != "spencerassistant.components"
         ):
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
@@ -193,9 +193,9 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
 
-    # By default enable no_implicit_reexport only for homeassistant.*
+    # By default enable no_implicit_reexport only for spencerassistant.*
     # Disable it afterwards for all components
-    components_section = "mypy-homeassistant.*"
+    components_section = "mypy-spencerassistant.*"
     mypy_config.add_section(components_section)
     mypy_config.set(components_section, "no_implicit_reexport", "true")
 
@@ -206,7 +206,7 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
             mypy_config.set(core_section, key, "true")
 
     # By default strict checks are disabled for components.
-    components_section = "mypy-homeassistant.components.*"
+    components_section = "mypy-spencerassistant.components.*"
     mypy_config.add_section(components_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(components_section, key, "false")

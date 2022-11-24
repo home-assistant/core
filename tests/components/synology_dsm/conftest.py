@@ -18,6 +18,6 @@ def bypass_setup_fixture(request):
         yield
     else:
         with patch(
-            "homeassistant.components.synology_dsm.async_setup_entry", return_value=True
+            "spencerassistant.components.synology_dsm.async_setup_entry", return_value=True
         ):
             yield

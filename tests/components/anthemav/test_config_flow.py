@@ -3,16 +3,16 @@ from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
 
-from homeassistant.components.anthemav.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.anthemav.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
 async def test_form_with_valid_connection(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
+    hass: spencerAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -22,7 +22,7 @@ async def test_form_with_valid_connection(
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.anthemav.async_setup_entry",
+        "spencerassistant.components.anthemav.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -46,7 +46,7 @@ async def test_form_with_valid_connection(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_device_info_error(hass: HomeAssistant) -> None:
+async def test_form_device_info_error(hass: spencerAssistant) -> None:
     """Test we handle DeviceError from library."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -70,7 +70,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: spencerAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_device_already_configured(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
     mock_config_entry: MockConfigEntry,

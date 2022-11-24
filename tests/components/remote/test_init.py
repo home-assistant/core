@@ -1,7 +1,7 @@
 """The tests for the Remote component, adapted from Light Test."""
 
-import homeassistant.components.remote as remote
-from homeassistant.components.remote import (
+import spencerassistant.components.remote as remote
+from spencerassistant.components.remote import (
     ATTR_ALTERNATIVE,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
@@ -11,7 +11,7 @@ from homeassistant.components.remote import (
     ATTR_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TURN_OFF,

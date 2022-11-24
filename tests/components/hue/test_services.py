@@ -1,10 +1,10 @@
 """Test Hue services."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components import hue
-from homeassistant.components.hue import bridge
-from homeassistant.components.hue.const import (
+from spencerassistant import config_entries
+from spencerassistant.components import hue
+from spencerassistant.components.hue import bridge
+from spencerassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
 )

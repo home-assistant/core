@@ -5,9 +5,9 @@ from unittest.mock import PropertyMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import media_source, tts
-from homeassistant.components.demo.tts import DemoProvider
-from homeassistant.components.media_player import (
+from spencerassistant.components import media_source, tts
+from spencerassistant.components.demo.tts import DemoProvider
+from spencerassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -15,10 +15,10 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
-from homeassistant.util.network import normalize_url
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.network import normalize_url
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -52,7 +52,7 @@ async def internal_url_mock(hass):
 @pytest.fixture
 async def setup_tts(hass):
     """Mock TTS."""
-    with patch("homeassistant.components.demo.async_setup", return_value=True):
+    with patch("spencerassistant.components.demo.async_setup", return_value=True):
         assert await async_setup_component(
             hass, tts.DOMAIN, {"tts": {"platform": "demo"}}
         )
@@ -145,7 +145,7 @@ async def test_setup_component_and_test_service_with_config_language_special(
     hass, empty_cache_dir
 ):
     """Set up the demo platform and call service with extend language."""
-    import homeassistant.components.demo.tts as demo_tts
+    import spencerassistant.components.demo.tts as demo_tts
 
     demo_tts.SUPPORT_LANGUAGES.append("en_US")
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -228,7 +228,7 @@ async def test_setup_component_test_service_with_wrong_service_language(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             tts.DOMAIN,
             "demo_say",
@@ -289,7 +289,7 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
     config = {tts.DOMAIN: {"platform": "demo"}}
 
     with assert_setup_component(1, tts.DOMAIN), patch(
-        "homeassistant.components.demo.tts.DemoProvider.default_options",
+        "spencerassistant.components.demo.tts.DemoProvider.default_options",
         new_callable=PropertyMock(return_value={"voice": "alex"}),
     ):
         assert await async_setup_component(hass, tts.DOMAIN, config)
@@ -330,7 +330,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             tts.DOMAIN,
             "demo_say",
@@ -601,7 +601,7 @@ async def test_setup_component_test_with_cache_dir(
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
     with patch(
-        "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
+        "spencerassistant.components.demo.tts.DemoProvider.get_tts_audio",
         return_value=(None, None),
     ):
         await hass.services.async_call(
@@ -625,7 +625,7 @@ async def test_setup_component_test_with_error_on_get_tts(hass):
     config = {tts.DOMAIN: {"platform": "demo"}}
 
     with assert_setup_component(1, tts.DOMAIN), patch(
-        "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
+        "spencerassistant.components.demo.tts.DemoProvider.get_tts_audio",
         return_value=(None, None),
     ):
         assert await async_setup_component(hass, tts.DOMAIN, config)
@@ -788,5 +788,5 @@ async def test_generate_media_source_id_invalid_options(
     hass, setup_tts, engine, language, options
 ):
     """Test generating a media source ID."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         tts.generate_media_source_id(hass, "msg", engine, language, options, None)

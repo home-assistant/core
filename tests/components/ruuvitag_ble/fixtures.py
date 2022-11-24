@@ -1,5 +1,5 @@
 """Fixtures for testing RuuviTag BLE."""
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from spencerassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_RUUVITAG_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",

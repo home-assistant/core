@@ -1,6 +1,6 @@
 """The tests for the litejet component."""
-from homeassistant.components import switch
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from spencerassistant.components import switch
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
 from . import async_init_integration
 

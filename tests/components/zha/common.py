@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, Mock, patch
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.zha.core.const as zha_const
-from homeassistant.components.zha.core.helpers import async_get_zha_config_value
-from homeassistant.helpers import entity_registry
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.zha.core.const as zha_const
+from spencerassistant.components.zha.core.helpers import async_get_zha_config_value
+from spencerassistant.helpers import entity_registry
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -259,6 +259,6 @@ def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
             )
 
     return patch(
-        f"homeassistant.components.zha.{component}.async_get_zha_config_value",
+        f"spencerassistant.components.zha.{component}.async_get_zha_config_value",
         side_effect=new_get_config,
     )

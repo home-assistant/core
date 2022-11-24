@@ -3,11 +3,11 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.image_processing as ip
-import homeassistant.components.microsoft_face as mf
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.image_processing as ip
+import spencerassistant.components.microsoft_face as mf
+from spencerassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
+from spencerassistant.core import callback
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture
 from tests.components.image_processing import common
@@ -17,7 +17,7 @@ from tests.components.image_processing import common
 def store_mock():
     """Mock update store."""
     with patch(
-        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
+        "spencerassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=None,
     ) as mock_update_store:
         yield mock_update_store
@@ -27,7 +27,7 @@ def store_mock():
 def poll_mock():
     """Disable polling."""
     with patch(
-        "homeassistant.components.microsoft_face_identify.image_processing."
+        "spencerassistant.components.microsoft_face_identify.image_processing."
         "MicrosoftFaceIdentifyEntity.should_poll",
         new_callable=PropertyMock(return_value=False),
     ):

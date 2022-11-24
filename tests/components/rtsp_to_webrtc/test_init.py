@@ -11,10 +11,10 @@ import aiohttp
 import pytest
 import rtsp_to_webrtc
 
-from homeassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
@@ -28,7 +28,7 @@ ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
 
 
 async def test_setup_success(
-    hass: HomeAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
+    hass: spencerAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()
@@ -40,7 +40,7 @@ async def test_setup_success(
 
 @pytest.mark.parametrize("config_entry_data", [{}])
 async def test_invalid_config_entry(
-    hass: HomeAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
+    hass: spencerAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
 ) -> None:
     """Test a config entry with missing required fields."""
     await setup_integration()
@@ -51,7 +51,7 @@ async def test_invalid_config_entry(
 
 
 async def test_setup_server_failure(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: spencerAssistant, setup_integration: ComponentSetup
 ) -> None:
     """Test server responds with a failure on startup."""
     with patch(
@@ -66,7 +66,7 @@ async def test_setup_server_failure(
 
 
 async def test_setup_communication_failure(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: spencerAssistant, setup_integration: ComponentSetup
 ) -> None:
     """Test unable to talk to server on startup."""
     with patch(
@@ -81,7 +81,7 @@ async def test_setup_communication_failure(
 
 
 async def test_offer_for_stream_source(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
     mock_camera: Any,
@@ -122,7 +122,7 @@ async def test_offer_for_stream_source(
 
 
 async def test_offer_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
     mock_camera: Any,
@@ -158,7 +158,7 @@ async def test_offer_failure(
 
 
 async def test_no_stun_server(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
     hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
@@ -184,7 +184,7 @@ async def test_no_stun_server(
     "config_entry_options", [{CONF_STUN_SERVER: "example.com:1234"}]
 )
 async def test_stun_server(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,

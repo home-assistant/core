@@ -1,30 +1,30 @@
-"""Tests for the devolo Home Control binary sensors."""
+"""Tests for the devolo spencer Control binary sensors."""
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.siren import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.siren import DOMAIN
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import configure_integration
-from .mocks import HomeControlMock, HomeControlMockSiren
+from .mocks import spencerControlMock, spencerControlMockSiren
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren(hass: HomeAssistant):
+async def test_siren(hass: spencerAssistant):
     """Test setup and state change of a siren device."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockSiren()
+    test_gateway = spencerControlMockSiren()
     test_gateway.devices["Test"].status = 0
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -47,14 +47,14 @@ async def test_siren(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_switching(hass: HomeAssistant):
+async def test_siren_switching(hass: spencerAssistant):
     """Test setup and state change via switching of a siren device."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockSiren()
+    test_gateway = spencerControlMockSiren()
     test_gateway.devices["Test"].status = 0
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -64,7 +64,7 @@ async def test_siren_switching(hass: HomeAssistant):
     assert state.state == STATE_OFF
 
     with patch(
-        "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
+        "devolo_spencer_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as set:
         await hass.services.async_call(
             "siren",
@@ -80,7 +80,7 @@ async def test_siren_switching(hass: HomeAssistant):
         set.assert_called_once_with(1)
 
     with patch(
-        "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
+        "devolo_spencer_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as set:
         await hass.services.async_call(
             "siren",
@@ -98,14 +98,14 @@ async def test_siren_switching(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_change_default_tone(hass: HomeAssistant):
+async def test_siren_change_default_tone(hass: spencerAssistant):
     """Test changing the default tone on message."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockSiren()
+    test_gateway = spencerControlMockSiren()
     test_gateway.devices["Test"].status = 0
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -114,7 +114,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
     assert state is not None
 
     with patch(
-        "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
+        "devolo_spencer_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as set:
         test_gateway.publisher.dispatch("Test", ("mss:Test", 2))
         await hass.services.async_call(
@@ -127,13 +127,13 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: spencerAssistant):
     """Test removing entity."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockSiren()
+    test_gateway = spencerControlMockSiren()
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

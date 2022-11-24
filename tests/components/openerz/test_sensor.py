@@ -1,8 +1,8 @@
 """Tests for OpenERZ component."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.setup import async_setup_component
 
 MOCK_CONFIG = {
     "sensor": {
@@ -17,7 +17,7 @@ MOCK_CONFIG = {
 async def test_sensor_state(hass):
     """Test whether default waste type set properly."""
     with patch(
-        "homeassistant.components.openerz.sensor.OpenERZConnector"
+        "spencerassistant.components.openerz.sensor.OpenERZConnector"
     ) as patched_connector:
         pickup_instance = MagicMock()
         pickup_instance.find_next_pickup.return_value = "2020-12-12"

@@ -1,15 +1,15 @@
 """Tests for the Lidarr component."""
 from aiopyarr.lidarr_client import LidarrClient
 
-from homeassistant.components.lidarr.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.lidarr.const import DOMAIN
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_URL,
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -42,8 +42,8 @@ def mock_connection(
     )
 
 
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create Efergy entry in Home Assistant."""
+def create_entry(hass: spencerAssistant) -> MockConfigEntry:
+    """Create Efergy entry in spencer Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,

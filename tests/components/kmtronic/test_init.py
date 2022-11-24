@@ -1,8 +1,8 @@
 """The tests for the KMtronic component."""
 import asyncio
 
-from homeassistant.components.kmtronic.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.components.kmtronic.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 

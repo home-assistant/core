@@ -5,7 +5,7 @@ from hass_nabucasa import voice
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.cloud import const, tts
+from spencerassistant.components.cloud import const, tts
 
 
 @pytest.fixture()

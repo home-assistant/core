@@ -4,17 +4,17 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.event import Event
 
-from homeassistant.components.zwave_js.diagnostics import (
+from spencerassistant.components.zwave_js.diagnostics import (
     ZwaveValueMatcher,
     async_get_device_diagnostics,
 )
-from homeassistant.components.zwave_js.discovery import async_discover_node_values
-from homeassistant.components.zwave_js.helpers import (
+from spencerassistant.components.zwave_js.discovery import async_discover_node_values
+from spencerassistant.components.zwave_js.helpers import (
     get_device_id,
     get_value_id_from_unique_id,
 )
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from spencerassistant.helpers.device_registry import async_get as async_get_dev_reg
+from spencerassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import PROPERTY_ULTRAVIOLET
 
@@ -33,7 +33,7 @@ async def test_config_entry_diagnostics(
 ):
     """Test the config entry level diagnostics data dump."""
     with patch(
-        "homeassistant.components.zwave_js.diagnostics.dump_msgs",
+        "spencerassistant.components.zwave_js.diagnostics.dump_msgs",
         return_value=config_entry_diagnostics,
     ):
         diagnostics = await get_diagnostics_for_config_entry(

@@ -7,11 +7,11 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.homeassistant_alerts import DOMAIN, UPDATE_INTERVAL
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.spencerassistant_alerts import DOMAIN, UPDATE_INTERVAL
+from spencerassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -20,7 +20,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 def stub_alert(aioclient_mock, filename):
     """Stub an alert."""
     aioclient_mock.get(
-        f"https://alerts.home-assistant.io/alerts/{filename}",
+        f"https://alerts.spencer-assistant.io/alerts/{filename}",
         text=f"""---
 title: Title for {filename}
 ---
@@ -46,7 +46,7 @@ async def setup_repairs(hass):
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -61,7 +61,7 @@ async def setup_repairs(hass):
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -76,7 +76,7 @@ async def setup_repairs(hass):
                 ("dark_sky.markdown", "darksky"),
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -87,7 +87,7 @@ async def setup_repairs(hass):
     ),
 )
 async def test_alerts(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
@@ -97,8 +97,8 @@ async def test_alerts(
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture("alerts_1.json", "homeassistant_alerts"),
+        "https://alerts.spencer-assistant.io/alerts.json",
+        text=load_fixture("alerts_1.json", "spencerassistant_alerts"),
     )
     for alert in expected_alerts:
         stub_alert(aioclient_mock, alert[0])
@@ -109,7 +109,7 @@ async def test_alerts(
         "hikvision",
         "hikvisioncam",
         "hive",
-        "homematicip_cloud",
+        "spencermaticip_cloud",
         "logi_circle",
         "neato",
         "nest",
@@ -120,7 +120,7 @@ async def test_alerts(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
+        "spencerassistant.components.spencerassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -136,7 +136,7 @@ async def test_alerts(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": "spencerassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
@@ -175,7 +175,7 @@ async def test_alerts(
     ),
 )
 async def test_bad_alerts(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
@@ -183,10 +183,10 @@ async def test_bad_alerts(
     expected_alerts,
 ) -> None:
     """Test creating issues based on alerts."""
-    fixture_content = load_fixture(fixture, "homeassistant_alerts")
+    fixture_content = load_fixture(fixture, "spencerassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        "https://alerts.home-assistant.io/alerts.json",
+        "https://alerts.spencer-assistant.io/alerts.json",
         text=fixture_content,
     )
     for alert in json.loads(fixture_content):
@@ -201,7 +201,7 @@ async def test_bad_alerts(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
+        "spencerassistant.components.spencerassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -217,7 +217,7 @@ async def test_bad_alerts(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": "spencerassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
@@ -236,7 +236,7 @@ async def test_bad_alerts(
 
 
 async def test_no_alerts(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -244,7 +244,7 @@ async def test_no_alerts(
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        "https://alerts.home-assistant.io/alerts.json",
+        "https://alerts.spencer-assistant.io/alerts.json",
         text="",
     )
 
@@ -270,7 +270,7 @@ async def test_no_alerts(
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -283,7 +283,7 @@ async def test_no_alerts(
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -299,7 +299,7 @@ async def test_no_alerts(
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -313,7 +313,7 @@ async def test_no_alerts(
                 ("hikvision.markdown", "hikvision"),
                 ("hikvision.markdown", "hikvisioncam"),
                 ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
+                ("spencermaticip_cloud.markdown", "spencermaticip_cloud"),
                 ("logi_circle.markdown", "logi_circle"),
                 ("neato.markdown", "neato"),
                 ("nest.markdown", "nest"),
@@ -324,7 +324,7 @@ async def test_no_alerts(
     ),
 )
 async def test_alerts_change(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
     ha_version: str,
@@ -334,10 +334,10 @@ async def test_alerts_change(
     expected_alerts_2: list[tuple(str, str)],
 ) -> None:
     """Test creating issues based on alerts."""
-    fixture_1_content = load_fixture(fixture_1, "homeassistant_alerts")
+    fixture_1_content = load_fixture(fixture_1, "spencerassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        "https://alerts.home-assistant.io/alerts.json",
+        "https://alerts.spencer-assistant.io/alerts.json",
         text=fixture_1_content,
     )
     for alert in json.loads(fixture_1_content):
@@ -349,7 +349,7 @@ async def test_alerts_change(
         "hikvision",
         "hikvisioncam",
         "hive",
-        "homematicip_cloud",
+        "spencermaticip_cloud",
         "logi_circle",
         "neato",
         "nest",
@@ -360,7 +360,7 @@ async def test_alerts_change(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
+        "spencerassistant.components.spencerassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -379,7 +379,7 @@ async def test_alerts_change(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": "spencerassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
@@ -396,10 +396,10 @@ async def test_alerts_change(
         ],
     )
 
-    fixture_2_content = load_fixture(fixture_2, "homeassistant_alerts")
+    fixture_2_content = load_fixture(fixture_2, "spencerassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        "https://alerts.home-assistant.io/alerts.json",
+        "https://alerts.spencer-assistant.io/alerts.json",
         text=fixture_2_content,
     )
     for alert in json.loads(fixture_2_content):
@@ -419,7 +419,7 @@ async def test_alerts_change(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": "spencerassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",

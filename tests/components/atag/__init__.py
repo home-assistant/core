@@ -1,8 +1,8 @@
 """Tests for the Atag integration."""
 
-from homeassistant.components.atag import DOMAIN, AtagException
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.atag import DOMAIN, AtagException
+from spencerassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -89,11 +89,11 @@ def mock_connection(
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Atag integration in Home Assistant."""
+    """Set up the Atag integration in spencer Assistant."""
     mock_connection(aioclient_mock)
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
     entry.add_to_hass(hass)

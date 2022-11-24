@@ -1,13 +1,13 @@
-"""Test the Home Assistant Yellow integration."""
+"""Test the spencer Assistant Yellow integration."""
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import zha
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.homeassistant_yellow.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components import zha
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.spencerassistant_yellow.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
     "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
 )
 async def test_setup_entry(
-    hass: HomeAssistant, onboarded, num_entries, num_flows, addon_store_info
+    hass: spencerAssistant, onboarded, num_entries, num_flows, addon_store_info
 ) -> None:
     """Test setup of a config entry, including setup of zha."""
     mock_integration(hass, MockModule("hassio"))
@@ -26,14 +26,14 @@ async def test_setup_entry(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=onboarded
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -58,7 +58,7 @@ async def test_setup_entry(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
+async def test_setup_zha(hass: spencerAssistant, addon_store_info) -> None:
     """Test zha gets the right config."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -67,14 +67,14 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -105,7 +105,7 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
 
 
 async def test_setup_zha_multipan(
-    hass: HomeAssistant, addon_info, addon_running
+    hass: spencerAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
     mock_integration(hass, MockModule("hassio"))
@@ -115,14 +115,14 @@ async def test_setup_zha_multipan(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -152,7 +152,7 @@ async def test_setup_zha_multipan(
     assert config_entry.title == "Yellow Multi-PAN"
 
 
-async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
+async def test_setup_entry_wrong_board(hass: spencerAssistant) -> None:
     """Test setup of a config entry with wrong board type."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -161,11 +161,11 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "generic-x86-64"},
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -173,7 +173,7 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
         assert len(mock_get_os_info.mock_calls) == 1
 
 
-async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
+async def test_setup_entry_wait_hassio(hass: spencerAssistant) -> None:
     """Test setup of a config entry when hassio has not fetched os_info."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -182,11 +182,11 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value=None,
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -196,7 +196,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_addon_info_fails(
-    hass: HomeAssistant, addon_store_info
+    hass: spencerAssistant, addon_store_info
 ) -> None:
     """Test setup of a config entry when fetching addon info fails."""
     mock_integration(hass, MockModule("hassio"))
@@ -207,14 +207,14 @@ async def test_setup_entry_addon_info_fails(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
     ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -222,7 +222,7 @@ async def test_setup_entry_addon_info_fails(
 
 
 async def test_setup_entry_addon_not_running(
-    hass: HomeAssistant, addon_installed, start_addon
+    hass: spencerAssistant, addon_installed, start_addon
 ) -> None:
     """Test the addon is started if it is not running."""
     mock_integration(hass, MockModule("hassio"))
@@ -232,14 +232,14 @@ async def test_setup_entry_addon_not_running(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
+        "spencerassistant.components.spencerassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
     ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "spencerassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

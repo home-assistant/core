@@ -3,16 +3,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import sensor
-import homeassistant.components.geo_rss_events.sensor as geo_rss_events
-from homeassistant.const import (
+from spencerassistant.components import sensor
+import spencerassistant.components.geo_rss_events.sensor as geo_rss_events
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_spencerASSISTANT_START,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -35,21 +35,21 @@ VALID_CONFIG = {
 
 @pytest.fixture
 def mock_feed():
-    """Pytest fixture for homeassistant.components.geo_rss_events.sensor.GenericFeed."""
+    """Pytest fixture for spencerassistant.components.geo_rss_events.sensor.GenericFeed."""
     with patch(
-        "homeassistant.components.geo_rss_events.sensor.GenericFeed"
+        "spencerassistant.components.geo_rss_events.sensor.GenericFeed"
     ) as mock_feed:
         yield mock_feed
 
 
 def _generate_mock_feed_entry(
-    external_id, title, distance_to_home, coordinates, category
+    external_id, title, distance_to_spencer, coordinates, category
 ):
     """Construct a mock feed entry for testing purposes."""
     feed_entry = MagicMock()
     feed_entry.external_id = external_id
     feed_entry.title = title
-    feed_entry.distance_to_home = distance_to_home
+    feed_entry.distance_to_spencer = distance_to_spencer
     feed_entry.coordinates = coordinates
     feed_entry.category = category
     return feed_entry
@@ -69,11 +69,11 @@ async def test_setup(hass, mock_feed):
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=utcnow
+        "spencerassistant.util.dt.utcnow", return_value=utcnow
     ), assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(hass, sensor.DOMAIN, VALID_CONFIG)
         # Artificially trigger update.
-        hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.fire(EVENT_spencerASSISTANT_START)
         # Collect events.
         await hass.async_block_till_done()
 
@@ -135,7 +135,7 @@ async def test_setup_with_categories(hass, mock_feed):
             hass, sensor.DOMAIN, VALID_CONFIG_WITH_CATEGORIES
         )
         # Artificially trigger update.
-        hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.fire(EVENT_spencerASSISTANT_START)
         # Collect events.
         await hass.async_block_till_done()
 

@@ -1,8 +1,8 @@
 """Test evil genius labs init."""
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.evil_genius_labs import PLATFORMS
+from spencerassistant import config_entries
+from spencerassistant.components.evil_genius_labs import PLATFORMS
 
 
 @pytest.mark.parametrize("platforms", [PLATFORMS])

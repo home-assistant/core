@@ -1,14 +1,14 @@
 """Test the NZBGet switches."""
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity_component import async_update_entity
 
 from . import init_integration
 

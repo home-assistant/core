@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import ensure_list
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.config_validation import ensure_list
 
 from . import (
     check_and_enable_disabled_entities,
@@ -23,12 +23,12 @@ from tests.common import mock_device_registry, mock_registry
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
+    with patch("spencerassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
 async def test_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     device_id: str,
@@ -50,7 +50,7 @@ async def test_sensors(
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
     setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
+    with caplog.at_level(logging.WARNING, logger="spencerassistant.components.onewire"):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         if mock_device.get(ATTR_UNKNOWN_DEVICE):

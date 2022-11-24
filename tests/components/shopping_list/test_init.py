@@ -1,20 +1,20 @@
 """Test shopping list component."""
 from http import HTTPStatus
 
-from homeassistant.components.shopping_list.const import (
+from spencerassistant.components.shopping_list.const import (
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
 )
-from homeassistant.components.websocket_api.const import (
+from spencerassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
-from homeassistant.const import ATTR_NAME
-from homeassistant.helpers import intent
+from spencerassistant.const import ATTR_NAME
+from spencerassistant.helpers import intent
 
 from tests.common import async_capture_events
 

@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.nextbus.sensor as nextbus
-import homeassistant.components.sensor as sensor
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.nextbus.sensor as nextbus
+import spencerassistant.components.sensor as sensor
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -58,7 +58,7 @@ async def assert_setup_sensor(hass, config, count=1):
 def mock_nextbus():
     """Create a mock py_nextbus module."""
     with patch(
-        "homeassistant.components.nextbus.sensor.NextBusClient"
+        "spencerassistant.components.nextbus.sensor.NextBusClient"
     ) as NextBusClient:
         yield NextBusClient
 

@@ -2,11 +2,11 @@
 import asyncio
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.baf.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components import zeroconf
+from spencerassistant.components.baf.const import DOMAIN
+from spencerassistant.const import CONF_IP_ADDRESS
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_NAME, MOCK_UUID, MockBAFDevice
 
@@ -19,7 +19,7 @@ def _patch_device_config_flow(side_effect=None):
     def _create_mock_baf(*args, **kwargs):
         return MockBAFDevice(side_effect)
 
-    return patch("homeassistant.components.baf.config_flow.Device", _create_mock_baf)
+    return patch("spencerassistant.components.baf.config_flow.Device", _create_mock_baf)
 
 
 async def test_form_user(hass):
@@ -32,7 +32,7 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
+        "spencerassistant.components.baf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_zeroconf_discovery(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.baf.async_setup_entry",
+        "spencerassistant.components.baf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -181,7 +181,7 @@ async def test_user_flow_is_not_blocked_by_discovery(hass):
     assert result["errors"] == {}
 
     with _patch_device_config_flow(), patch(
-        "homeassistant.components.baf.async_setup_entry",
+        "spencerassistant.components.baf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

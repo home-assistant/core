@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
 
-from homeassistant.components import pi_hole, switch
-from homeassistant.components.pi_hole.const import (
+from spencerassistant.components import pi_hole, switch
+from spencerassistant.components.pi_hole.const import (
     CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -14,7 +14,7 @@ from homeassistant.components.pi_hole.const import (
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from . import (
     CONF_CONFIG_ENTRY,

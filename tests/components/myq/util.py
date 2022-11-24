@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 from pymyq.const import ACCOUNTS_ENDPOINT, DEVICES_ENDPOINT
 
-from homeassistant.components.myq.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.myq.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -15,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the myq integration in Home Assistant."""
+    """Set up the myq integration in spencer Assistant."""
 
     devices_fixture = "myq/devices.json"
     devices_json = load_fixture(devices_fixture)

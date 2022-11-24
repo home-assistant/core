@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 from pyownet.protocol import ConnError
 import pytest
 
-from homeassistant.components.onewire.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.onewire.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER, ConfigEntry
+from spencerassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.core import spencerAssistant
 
 from .const import MOCK_OWPROXY_DEVICES
 
@@ -21,7 +21,7 @@ def get_device_id(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture(name="config_entry")
-def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
+def get_config_entry(hass: spencerAssistant) -> ConfigEntry:
     """Create and register mock config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,7 +45,7 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 @pytest.fixture(name="owproxy")
 def get_owproxy() -> MagicMock:
     """Mock owproxy."""
-    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
+    with patch("spencerassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
         yield owproxy
 
 
@@ -53,7 +53,7 @@ def get_owproxy() -> MagicMock:
 def get_owproxy_with_connerror() -> MagicMock:
     """Mock owproxy."""
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "spencerassistant.components.onewire.onewirehub.protocol.proxy",
         side_effect=ConnError,
     ) as owproxy:
         yield owproxy

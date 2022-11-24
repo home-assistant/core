@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, Mock
 
 from pyunifiprotect.data import Doorlock, LockStatusType
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.const import (
+from spencerassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
     STATE_JAMMED,
@@ -18,8 +18,8 @@ from homeassistant.const import (
     STATE_UNLOCKING,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -31,7 +31,7 @@ from .utils import (
 
 
 async def test_lock_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+    hass: spencerAssistant, ufp: MockUFPFixture, doorlock: Doorlock
 ):
     """Test removing and re-adding a lock device."""
 
@@ -44,7 +44,7 @@ async def test_lock_remove(
 
 
 async def test_lock_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -69,7 +69,7 @@ async def test_lock_setup(
 
 
 async def test_lock_locked(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -96,7 +96,7 @@ async def test_lock_locked(
 
 
 async def test_lock_unlocking(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -123,7 +123,7 @@ async def test_lock_unlocking(
 
 
 async def test_lock_locking(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -150,7 +150,7 @@ async def test_lock_locking(
 
 
 async def test_lock_jammed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -177,7 +177,7 @@ async def test_lock_jammed(
 
 
 async def test_lock_unavailable(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -204,7 +204,7 @@ async def test_lock_unavailable(
 
 
 async def test_lock_do_lock(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -228,7 +228,7 @@ async def test_lock_do_lock(
 
 
 async def test_lock_do_unlock(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,

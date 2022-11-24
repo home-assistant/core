@@ -1,7 +1,7 @@
 """Test websocket API."""
 import pytest
 
-from homeassistant.components.hassio.const import (
+from spencerassistant.components.hassio.const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -12,9 +12,9 @@ from homeassistant.components.hassio.const import (
     WS_TYPE_API,
     WS_TYPE_SUBSCRIBE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_mock_signal
 
@@ -22,14 +22,14 @@ from tests.common import async_mock_signal
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
         json={
             "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+            "data": {"supervisor": "222", "spencerassistant": "0.110.0", "hassos": None},
         },
     )
     aioclient_mock.get(
@@ -76,7 +76,7 @@ def mock_all(aioclient_mock):
     )
 
 
-async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
+async def test_ws_subscription(hassio_env, hass: spencerAssistant, hass_ws_client):
     """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
     client = await hass_ws_client(hass)
@@ -112,7 +112,7 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
 
 
 async def test_websocket_supervisor_api(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+    hassio_env, hass: spencerAssistant, hass_ws_client, aioclient_mock
 ):
     """Test Supervisor websocket api."""
     assert await async_setup_component(hass, "hassio", {})
@@ -148,7 +148,7 @@ async def test_websocket_supervisor_api(
 
 
 async def test_websocket_supervisor_api_error(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+    hassio_env, hass: spencerAssistant, hass_ws_client, aioclient_mock
 ):
     """Test Supervisor websocket api error."""
     assert await async_setup_component(hass, "hassio", {})
@@ -172,7 +172,7 @@ async def test_websocket_supervisor_api_error(
 
 
 async def test_websocket_non_admin_user(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock, hass_admin_user
+    hassio_env, hass: spencerAssistant, hass_ws_client, aioclient_mock, hass_admin_user
 ):
     """Test Supervisor websocket api error."""
     hass_admin_user.groups = []

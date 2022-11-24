@@ -5,9 +5,9 @@ from unittest.mock import patch
 from google_nest_sdm.exceptions import SubscriberException
 import pytest
 
-from homeassistant.components.nest.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.components.nest.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.helpers import device_registry as dr
 
 from .common import TEST_CONFIG_LEGACY
 
@@ -127,7 +127,7 @@ async def test_setup_susbcriber_failure(
 ):
     """Test configuration error."""
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=SubscriberException(),
     ):
         await setup_base_platform()
@@ -143,7 +143,7 @@ async def test_legacy_config_entry_diagnostics(
 ):
     """Test config entry diagnostics for legacy integration doesn't fail."""
 
-    with patch("homeassistant.components.nest.legacy.Nest"):
+    with patch("spencerassistant.components.nest.legacy.Nest"):
         await setup_base_platform()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}

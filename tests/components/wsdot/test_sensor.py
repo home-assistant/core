@@ -2,8 +2,8 @@
 from datetime import datetime, timedelta, timezone
 import re
 
-import homeassistant.components.wsdot.sensor as wsdot
-from homeassistant.components.wsdot.sensor import (
+import spencerassistant.components.wsdot.sensor as wsdot
+from spencerassistant.components.wsdot.sensor import (
     ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED,
     CONF_API_KEY,
@@ -13,7 +13,7 @@ from homeassistant.components.wsdot.sensor import (
     RESOURCE,
     SCAN_INTERVAL,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

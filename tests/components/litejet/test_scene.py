@@ -1,7 +1,7 @@
 """The tests for the litejet component."""
-from homeassistant.components import scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components import scene
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from spencerassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 

@@ -2,9 +2,9 @@
 
 import requests_mock
 
-from homeassistant.components.aemet import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.aemet import DOMAIN
+from spencerassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -69,10 +69,10 @@ def aemet_requests_mock(mock):
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     skip_setup: bool = False,
 ):
-    """Set up the AEMET OpenData integration in Home Assistant."""
+    """Set up the AEMET OpenData integration in spencer Assistant."""
 
     with requests_mock.mock() as _m:
         aemet_requests_mock(_m)

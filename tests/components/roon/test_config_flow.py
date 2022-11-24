@@ -1,8 +1,8 @@
 """Test the roon config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.roon.const import DOMAIN
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.roon.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -72,13 +72,13 @@ async def test_successful_discovery_and_auth(hass):
     """Test when discovery and auth both work ok."""
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
+        "spencerassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMock(),
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        "spencerassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryMock(),
     ), patch(
-        "homeassistant.components.roon.async_setup_entry",
+        "spencerassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
 
@@ -111,13 +111,13 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
     """Test unsuccessful discover, user adding the host via the form and then successful auth."""
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
+        "spencerassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMock(),
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        "spencerassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryFailedMock(),
     ), patch(
-        "homeassistant.components.roon.async_setup_entry",
+        "spencerassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
 
@@ -160,10 +160,10 @@ async def test_duplicate_config(hass):
     )
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
+        "spencerassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMock(),
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        "spencerassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryFailedMock(),
     ):
 
@@ -193,19 +193,19 @@ async def test_successful_discovery_no_auth(hass):
     """Test successful discover, but failed auth."""
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
+        "spencerassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMockNoToken(),
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        "spencerassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryMock(),
     ), patch(
-        "homeassistant.components.roon.config_flow.TIMEOUT",
+        "spencerassistant.components.roon.config_flow.TIMEOUT",
         0,
     ), patch(
-        "homeassistant.components.roon.config_flow.AUTHENTICATE_TIMEOUT",
+        "spencerassistant.components.roon.config_flow.AUTHENTICATE_TIMEOUT",
         0.01,
     ), patch(
-        "homeassistant.components.roon.async_setup_entry",
+        "spencerassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
 
@@ -231,13 +231,13 @@ async def test_unexpected_exception(hass):
     """Test successful discover, and unexpected exception during auth."""
 
     with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
+        "spencerassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMockException(),
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        "spencerassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryMock(),
     ), patch(
-        "homeassistant.components.roon.async_setup_entry",
+        "spencerassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
 

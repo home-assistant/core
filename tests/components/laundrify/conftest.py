@@ -13,7 +13,7 @@ from tests.common import load_fixture
 def laundrify_setup_entry_fixture():
     """Mock laundrify setup entry function."""
     with patch(
-        "homeassistant.components.laundrify.async_setup_entry", return_value=True
+        "spencerassistant.components.laundrify.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -1,32 +1,32 @@
-"""Tests for the devolo Home Control climate."""
+"""Tests for the devolo spencer Control climate."""
 from unittest.mock import patch
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_HVAC_MODE,
     DOMAIN,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import configure_integration
-from .mocks import HomeControlMock, HomeControlMockClimate
+from .mocks import spencerControlMock, spencerControlMockClimate
 
 
-async def test_climate(hass: HomeAssistant):
+async def test_climate(hass: spencerAssistant):
     """Test setup and state change of a climate device."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockClimate()
+    test_gateway = spencerControlMockClimate()
     test_gateway.devices["Test"].value = 20
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -46,7 +46,7 @@ async def test_climate(hass: HomeAssistant):
 
     # Test setting temperature
     with patch(
-        "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
+        "devolo_spencer_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
     ) as set_value:
         await hass.services.async_call(
             DOMAIN,
@@ -67,13 +67,13 @@ async def test_climate(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: spencerAssistant):
     """Test removing entity."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockClimate()
+    test_gateway = spencerControlMockClimate()
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

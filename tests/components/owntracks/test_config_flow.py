@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.owntracks import config_flow
-from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
-from homeassistant.components.owntracks.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.owntracks import config_flow
+from spencerassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
+from spencerassistant.components.owntracks.const import DOMAIN
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import CONF_WEBHOOK_ID
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ WEBHOOK_URL = f"{BASE_URL}/api/webhook/webhook_id"
 def mock_webhook_id():
     """Mock webhook_id."""
     with patch(
-        "homeassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
+        "spencerassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
     ):
         yield
 
@@ -42,7 +42,7 @@ def mock_secret():
 def mock_not_supports_encryption():
     """Mock non successful nacl import."""
     with patch(
-        "homeassistant.components.owntracks.config_flow.supports_encryption",
+        "spencerassistant.components.owntracks.config_flow.supports_encryption",
         return_value=False,
     ):
         yield
@@ -122,7 +122,7 @@ async def test_unload(hass):
     )
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
+        "spencerassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
@@ -136,7 +136,7 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        "spencerassistant.config_entries.ConfigEntries.async_unload_platforms",
         return_value=True,
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
@@ -152,11 +152,11 @@ async def test_with_cloud_sub(hass):
     assert await async_setup_component(hass, "cloud", {})
 
     with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
+        "spencerassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
@@ -179,11 +179,11 @@ async def test_with_cloud_sub_not_connected(hass):
     assert await async_setup_component(hass, "cloud", {})
 
     with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=False
+        "spencerassistant.components.cloud.async_is_connected", return_value=False
     ), patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},

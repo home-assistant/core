@@ -3,20 +3,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.input_select import ATTR_OPTIONS, DOMAIN
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import ATTR_EDITABLE
-from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.input_select import ATTR_OPTIONS, DOMAIN
+from spencerassistant.components.recorder.db_schema import StateAttributes, States
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import ATTR_EDITABLE
+from spencerassistant.core import spencerAssistant, State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock, hass: HomeAssistant, enable_custom_integrations: None
+    recorder_mock, hass: spencerAssistant, enable_custom_integrations: None
 ):
     """Test attributes to be excluded."""
     assert await async_setup_component(

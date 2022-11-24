@@ -10,7 +10,7 @@
       "name": "Happy place",
       "device_platform": "myq",
       "state": {
-        "homekit_enabled": false,
+        "spencerkit_enabled": false,
         "pending_bootload_abandoned": false,
         "online": true,
         "last_status": "2020-03-30T02:49:46.4121303Z",
@@ -18,7 +18,7 @@
         "firmware_version": "1.6",
         "learn_mode": false,
         "learn": "http://api.myqdevice.com/api/v5/accounts/account_id/devices/gateway_serial/learn",
-        "homekit_capable": false,
+        "spencerkit_capable": false,
         "updated_date": "2020-03-30T02:49:46.4171299Z"
       },
       "serial_number": "gateway_serial"

@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 
-from homeassistant.components import tplink
-from homeassistant.components.light import (
+from spencerassistant.components import tplink
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
@@ -22,12 +22,12 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.tplink.const import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from . import (
     MAC_ADDRESS,
@@ -40,7 +40,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_light_unique_id(hass: HomeAssistant) -> None:
+async def test_light_unique_id(hass: spencerAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -61,7 +61,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     "bulb, transition", [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
 )
 async def test_color_light(
-    hass: HomeAssistant, bulb: MagicMock, transition: float | None
+    hass: spencerAssistant, bulb: MagicMock, transition: float | None
 ) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
@@ -142,7 +142,7 @@ async def test_color_light(
     bulb.set_hsv.reset_mock()
 
 
-async def test_color_light_no_temp(hass: HomeAssistant) -> None:
+async def test_color_light_no_temp(hass: spencerAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -201,7 +201,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     "bulb, is_color", [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
 )
 async def test_color_temp_light(
-    hass: HomeAssistant, bulb: MagicMock, is_color: bool
+    hass: spencerAssistant, bulb: MagicMock, is_color: bool
 ) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
@@ -265,7 +265,7 @@ async def test_color_temp_light(
     bulb.set_color_temp.reset_mock()
 
 
-async def test_brightness_only_light(hass: HomeAssistant) -> None:
+async def test_brightness_only_light(hass: spencerAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -309,7 +309,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     bulb.set_brightness.reset_mock()
 
 
-async def test_on_off_light(hass: HomeAssistant) -> None:
+async def test_on_off_light(hass: spencerAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -343,7 +343,7 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
 
 
-async def test_off_at_start_light(hass: HomeAssistant) -> None:
+async def test_off_at_start_light(hass: spencerAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -367,7 +367,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
 
-async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
+async def test_dimmer_turn_on_fix(hass: spencerAssistant) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -393,7 +393,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
 
 
-async def test_smart_strip_effects(hass: HomeAssistant) -> None:
+async def test_smart_strip_effects(hass: spencerAssistant) -> None:
     """Test smart strip effects."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -471,7 +471,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT_LIST] is None
 
 
-async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
+async def test_smart_strip_custom_random_effect(hass: spencerAssistant) -> None:
     """Test smart strip custom random effects."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -628,7 +628,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     strip.set_custom_effect.reset_mock()
 
 
-async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
+async def test_smart_strip_custom_random_effect_at_start(hass: spencerAssistant) -> None:
     """Test smart strip custom random effects at startup."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -661,7 +661,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     strip.turn_on.reset_mock()
 
 
-async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
+async def test_smart_strip_custom_sequence_effect(hass: spencerAssistant) -> None:
     """Test smart strip custom sequence effects."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS

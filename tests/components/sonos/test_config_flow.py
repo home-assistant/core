@@ -3,16 +3,16 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, core
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
-from homeassistant.const import CONF_HOSTS
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries, core
+from spencerassistant.components import ssdp, zeroconf
+from spencerassistant.components.media_player import DOMAIN as MP_DOMAIN
+from spencerassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
+from spencerassistant.const import CONF_HOSTS
+from spencerassistant.setup import async_setup_component
 
 
 async def test_user_form(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: core.spencerAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
 ):
     """Test we get the user initiated form."""
 
@@ -40,10 +40,10 @@ async def test_user_form(
     assert result["type"] == "form"
     assert result["errors"] is None
     with patch(
-        "homeassistant.components.sonos.async_setup",
+        "spencerassistant.components.sonos.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -59,7 +59,7 @@ async def test_user_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_already_created(hass: core.HomeAssistant):
+async def test_user_form_already_created(hass: core.spencerAssistant):
     """Ensure we abort a flow if the entry is already created from config."""
     config = {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: "192.168.4.2"}}}
     await async_setup_component(hass, DOMAIN, config)
@@ -73,7 +73,7 @@ async def test_user_form_already_created(hass: core.HomeAssistant):
 
 
 async def test_zeroconf_form(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: core.spencerAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
 ):
     """Test we pass Zeroconf discoveries to the manager."""
 
@@ -87,10 +87,10 @@ async def test_zeroconf_form(
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.sonos.async_setup",
+        "spencerassistant.components.sonos.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_zeroconf_form(
     assert len(mock_manager.mock_calls) == 2
 
 
-async def test_ssdp_discovery(hass: core.HomeAssistant, soco):
+async def test_ssdp_discovery(hass: core.spencerAssistant, soco):
     """Test that SSDP discoveries create a config flow."""
 
     await hass.config_entries.flow.async_init(
@@ -129,10 +129,10 @@ async def test_ssdp_discovery(hass: core.HomeAssistant, soco):
     flow = flows[0]
 
     with patch(
-        "homeassistant.components.sonos.async_setup",
+        "spencerassistant.components.sonos.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -149,7 +149,7 @@ async def test_ssdp_discovery(hass: core.HomeAssistant, soco):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
+async def test_zeroconf_sonos_v1(hass: core.spencerAssistant):
     """Test we pass sonos devices to the discovery manager with v1 firmware devices."""
 
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
@@ -179,10 +179,10 @@ async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.sonos.async_setup",
+        "spencerassistant.components.sonos.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -201,7 +201,7 @@ async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
 
 
 async def test_zeroconf_form_not_sonos(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: core.spencerAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
 ):
     """Test we abort on non-sonos devices."""
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()

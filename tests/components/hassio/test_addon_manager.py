@@ -9,20 +9,20 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
-from homeassistant.components.hassio.addon_manager import (
+from spencerassistant.components.hassio.addon_manager import (
     AddonError,
     AddonInfo,
     AddonManager,
     AddonState,
 )
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.core import spencerAssistant
 
 LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="addon_manager")
-def addon_manager_fixture(hass: HomeAssistant) -> AddonManager:
+def addon_manager_fixture(hass: spencerAssistant) -> AddonManager:
     """Return an AddonManager instance."""
     return AddonManager(hass, LOGGER, "Test", "test_addon")
 
@@ -55,7 +55,7 @@ def mock_addon_installed(
 def get_addon_discovery_info_fixture() -> Generator[AsyncMock, None, None]:
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info"
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_discovery_info"
     ) as get_addon_discovery_info:
         yield get_addon_discovery_info
 
@@ -64,7 +64,7 @@ def get_addon_discovery_info_fixture() -> Generator[AsyncMock, None, None]:
 def addon_store_info_fixture() -> Generator[AsyncMock, None, None]:
     """Mock Supervisor add-on store info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
             "installed": None,
@@ -78,7 +78,7 @@ def addon_store_info_fixture() -> Generator[AsyncMock, None, None]:
 def addon_info_fixture() -> Generator[AsyncMock, None, None]:
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
             "hostname": None,
@@ -94,7 +94,7 @@ def addon_info_fixture() -> Generator[AsyncMock, None, None]:
 def set_addon_options_fixture() -> Generator[AsyncMock, None, None]:
     """Mock set add-on options."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_set_addon_options"
+        "spencerassistant.components.hassio.addon_manager.async_set_addon_options"
     ) as set_options:
         yield set_options
 
@@ -103,7 +103,7 @@ def set_addon_options_fixture() -> Generator[AsyncMock, None, None]:
 def install_addon_fixture() -> Generator[AsyncMock, None, None]:
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon"
+        "spencerassistant.components.hassio.addon_manager.async_install_addon"
     ) as install_addon:
         yield install_addon
 
@@ -112,7 +112,7 @@ def install_addon_fixture() -> Generator[AsyncMock, None, None]:
 def uninstall_addon_fixture() -> Generator[AsyncMock, None, None]:
     """Mock uninstall add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
+        "spencerassistant.components.hassio.addon_manager.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
 
@@ -121,7 +121,7 @@ def uninstall_addon_fixture() -> Generator[AsyncMock, None, None]:
 def start_addon_fixture() -> Generator[AsyncMock, None, None]:
     """Mock start add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon"
+        "spencerassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon
 
@@ -130,7 +130,7 @@ def start_addon_fixture() -> Generator[AsyncMock, None, None]:
 def restart_addon_fixture() -> Generator[AsyncMock, None, None]:
     """Mock restart add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_restart_addon"
+        "spencerassistant.components.hassio.addon_manager.async_restart_addon"
     ) as restart_addon:
         yield restart_addon
 
@@ -139,7 +139,7 @@ def restart_addon_fixture() -> Generator[AsyncMock, None, None]:
 def stop_addon_fixture() -> Generator[AsyncMock, None, None]:
     """Mock stop add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_stop_addon"
+        "spencerassistant.components.hassio.addon_manager.async_stop_addon"
     ) as stop_addon:
         yield stop_addon
 
@@ -148,7 +148,7 @@ def stop_addon_fixture() -> Generator[AsyncMock, None, None]:
 def create_backup_fixture() -> Generator[AsyncMock, None, None]:
     """Mock create backup."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_create_backup"
+        "spencerassistant.components.hassio.addon_manager.async_create_backup"
     ) as create_backup:
         yield create_backup
 
@@ -157,7 +157,7 @@ def create_backup_fixture() -> Generator[AsyncMock, None, None]:
 def mock_update_addon() -> Generator[AsyncMock, None, None]:
     """Mock update add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_update_addon"
+        "spencerassistant.components.hassio.addon_manager.async_update_addon"
     ) as update_addon:
         yield update_addon
 
@@ -279,7 +279,7 @@ async def test_get_addon_info_error(
 
 
 async def test_set_addon_options(
-    hass: HomeAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
+    hass: spencerAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
 ) -> None:
     """Test set addon options."""
     await addon_manager.async_set_addon_options({"test_key": "test"})
@@ -291,7 +291,7 @@ async def test_set_addon_options(
 
 
 async def test_set_addon_options_error(
-    hass: HomeAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
+    hass: spencerAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
 ) -> None:
     """Test set addon options raises error."""
     set_addon_options.side_effect = HassioAPIError("Boom")
@@ -598,7 +598,7 @@ async def test_stop_addon_error(
 
 
 async def test_update_addon(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
@@ -636,7 +636,7 @@ async def test_update_addon_no_update(
 
 
 async def test_update_addon_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
@@ -661,7 +661,7 @@ async def test_update_addon_error(
 
 
 async def test_schedule_update_addon(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
@@ -800,7 +800,7 @@ async def test_schedule_update_addon_logs_error(
 
 
 async def test_create_backup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
@@ -817,7 +817,7 @@ async def test_create_backup(
 
 
 async def test_create_backup_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,

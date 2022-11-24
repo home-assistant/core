@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectionError, RequestException
 
-from homeassistant.components.plex.const import (
+from spencerassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -12,7 +12,7 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     SERVERS,
 )
-from homeassistant.const import Platform
+from spencerassistant.const import Platform
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -109,7 +109,7 @@ async def test_network_error_during_refresh(hass, caplog, mock_plex_server):
 async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
     """Test connection failure to a GDM discovered client."""
     with patch(
-        "homeassistant.components.plex.server.PlexClient", side_effect=ConnectionError
+        "spencerassistant.components.plex.server.PlexClient", side_effect=ConnectionError
     ):
         mock_plex_server = await setup_plex_server(disable_gdm=False)
         await hass.async_block_till_done()

@@ -3,7 +3,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import HumidityControlMode
 from zwave_js_server.event import Event
 
-from homeassistant.components.humidifier import (
+from spencerassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -13,7 +13,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,

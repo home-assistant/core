@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.bluemaestro.const import DOMAIN
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.bluemaestro.const import DOMAIN
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import BLUEMAESTRO_SERVICE_INFO, NOT_BLUEMAESTRO_SERVICE_INFO
 
@@ -21,7 +21,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
-        "homeassistant.components.bluemaestro.async_setup_entry", return_value=True
+        "spencerassistant.components.bluemaestro.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -56,7 +56,7 @@ async def test_async_step_user_no_devices_found(hass):
 async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
-        "homeassistant.components.bluemaestro.config_flow.async_discovered_service_info",
+        "spencerassistant.components.bluemaestro.config_flow.async_discovered_service_info",
         return_value=[BLUEMAESTRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -66,7 +66,7 @@ async def test_async_step_user_with_found_devices(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch(
-        "homeassistant.components.bluemaestro.async_setup_entry", return_value=True
+        "spencerassistant.components.bluemaestro.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -81,7 +81,7 @@ async def test_async_step_user_with_found_devices(hass):
 async def test_async_step_user_device_added_between_steps(hass):
     """Test the device gets added via another flow between steps."""
     with patch(
-        "homeassistant.components.bluemaestro.config_flow.async_discovered_service_info",
+        "spencerassistant.components.bluemaestro.config_flow.async_discovered_service_info",
         return_value=[BLUEMAESTRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -98,7 +98,7 @@ async def test_async_step_user_device_added_between_steps(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.bluemaestro.async_setup_entry", return_value=True
+        "spencerassistant.components.bluemaestro.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -117,7 +117,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.bluemaestro.config_flow.async_discovered_service_info",
+        "spencerassistant.components.bluemaestro.config_flow.async_discovered_service_info",
         return_value=[BLUEMAESTRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -175,7 +175,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
-        "homeassistant.components.bluemaestro.config_flow.async_discovered_service_info",
+        "spencerassistant.components.bluemaestro.config_flow.async_discovered_service_info",
         return_value=[BLUEMAESTRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -185,7 +185,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
         assert result["type"] == FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.bluemaestro.async_setup_entry", return_value=True
+        "spencerassistant.components.bluemaestro.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

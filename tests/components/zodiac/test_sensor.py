@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.zodiac.const import (
+from spencerassistant.components.zodiac.const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
     DOMAIN,
@@ -17,8 +17,8 @@ from homeassistant.components.zodiac.const import (
     SIGN_SCORPIO,
     SIGN_TAURUS,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 DAY1 = datetime(2020, 11, 15, tzinfo=dt_util.UTC)
 DAY2 = datetime(2020, 4, 20, tzinfo=dt_util.UTC)
@@ -38,7 +38,7 @@ async def test_zodiac_day(hass, now, sign, element, modality):
     hass.config.set_time_zone("UTC")
     config = {DOMAIN: {}}
 
-    with patch("homeassistant.components.zodiac.sensor.utcnow", return_value=now):
+    with patch("spencerassistant.components.zodiac.sensor.utcnow", return_value=now):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 

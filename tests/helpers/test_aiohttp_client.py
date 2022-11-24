@@ -5,21 +5,21 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
-from homeassistant.components.mjpeg.const import (
+from spencerassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     DOMAIN as MJPEG_DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_AUTHENTICATION,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
-import homeassistant.helpers.aiohttp_client as client
-from homeassistant.util.color import RGBColor
+from spencerassistant.core import EVENT_spencerASSISTANT_CLOSE
+import spencerassistant.helpers.aiohttp_client as client
+from spencerassistant.util.color import RGBColor
 
 from tests.common import MockConfigEntry
 
@@ -87,7 +87,7 @@ async def test_get_clientsession_cleanup(hass):
     assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
     assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
     assert hass.data[client.DATA_CLIENTSESSION].closed
@@ -103,7 +103,7 @@ async def test_get_clientsession_cleanup_without_ssl(hass):
     )
     assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
     assert hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
@@ -124,24 +124,24 @@ async def test_get_clientsession_patched_close(hass):
         assert mock_close.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
+@patch("spencerassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(hass, caplog):
     """Test log warning message when closing the session from integration context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
+        "spencerassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
-                filename="/home/paulus/homeassistant/core.py",
+                filename="/spencer/paulus/spencerassistant/core.py",
                 lineno="23",
                 line="do_something()",
             ),
             Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
+                filename="/spencer/paulus/spencerassistant/components/hue/light.py",
                 lineno="23",
                 line="await session.close()",
             ),
             Mock(
-                filename="/home/paulus/aiohue/lights.py",
+                filename="/spencer/paulus/aiohue/lights.py",
                 lineno="2",
                 line="something()",
             ),
@@ -150,30 +150,30 @@ async def test_warning_close_session_integration(hass, caplog):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. "
+        "Detected integration that closes the spencer Assistant aiohttp session. "
         "Please report issue for hue using this method at "
-        "homeassistant/components/hue/light.py, line 23: await session.close()"
+        "spencerassistant/components/hue/light.py, line 23: await session.close()"
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
+@patch("spencerassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(hass, caplog):
     """Test log warning message when closing the session from custom context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
+        "spencerassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
-                filename="/home/paulus/homeassistant/core.py",
+                filename="/spencer/paulus/spencerassistant/core.py",
                 lineno="23",
                 line="do_something()",
             ),
             Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
+                filename="/spencer/paulus/config/custom_components/hue/light.py",
                 lineno="23",
                 line="await session.close()",
             ),
             Mock(
-                filename="/home/paulus/aiohue/lights.py",
+                filename="/spencer/paulus/aiohue/lights.py",
                 lineno="2",
                 line="something()",
             ),
@@ -182,7 +182,7 @@ async def test_warning_close_session_custom(hass, caplog):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. "
+        "Detected integration that closes the spencer Assistant aiohttp session. "
         "Please report issue to the custom integration author for hue using this method at "
         "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )

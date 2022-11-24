@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
@@ -25,7 +25,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaType,
 )
-from homeassistant.components.roku.const import (
+from spencerassistant.components.roku.const import (
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
     ATTR_KEYWORD,
@@ -33,10 +33,10 @@ from homeassistant.components.roku.const import (
     DOMAIN,
     SERVICE_SEARCH,
 )
-from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
+from spencerassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -56,10 +56,10 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -67,7 +67,7 @@ MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 
-async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
+async def test_setup(hass: spencerAssistant, init_integration: MockConfigEntry) -> None:
     """Test setup with basic config."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -99,7 +99,7 @@ async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> 
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
 async def test_idle_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -111,7 +111,7 @@ async def test_idle_setup(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -149,7 +149,7 @@ async def test_tv_setup(
     [RokuConnectionTimeoutError, RokuConnectionError, RokuError],
 )
 async def test_availability(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_roku: MagicMock,
     mock_config_entry: MockConfigEntry,
     error: RokuError,
@@ -159,11 +159,11 @@ async def test_availability(
     future = now + timedelta(minutes=1)
 
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with patch("spencerassistant.util.dt.utcnow", return_value=now):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with patch("spencerassistant.util.dt.utcnow", return_value=future):
         mock_roku.update.side_effect = error
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -171,7 +171,7 @@ async def test_availability(
 
     future += timedelta(minutes=1)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with patch("spencerassistant.util.dt.utcnow", return_value=future):
         mock_roku.update.side_effect = None
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -179,7 +179,7 @@ async def test_availability(
 
 
 async def test_supported_features(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -204,7 +204,7 @@ async def test_supported_features(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_supported_features(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -228,7 +228,7 @@ async def test_tv_supported_features(
 
 
 async def test_attributes(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: spencerAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test attributes."""
     state = hass.states.get(MAIN_ENTITY_ID)
@@ -243,7 +243,7 @@ async def test_attributes(
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-app.json"], indirect=True)
 async def test_attributes_app(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -262,7 +262,7 @@ async def test_attributes_app(
     "mock_device", ["roku/roku3-media-playing.json"], indirect=True
 )
 async def test_attributes_app_media_playing(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -281,7 +281,7 @@ async def test_attributes_app_media_playing(
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-media-paused.json"], indirect=True)
 async def test_attributes_app_media_paused(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -300,7 +300,7 @@ async def test_attributes_app_media_paused(
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-screensaver.json"], indirect=True)
 async def test_attributes_screensaver(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -317,7 +317,7 @@ async def test_attributes_screensaver(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_attributes(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: spencerAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test attributes for Roku TV."""
     state = hass.states.get(TV_ENTITY_ID)
@@ -333,7 +333,7 @@ async def test_tv_attributes(
 
 
 async def test_services(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -405,12 +405,12 @@ async def test_services(
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Home"},
+        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "spencer"},
         blocking=True,
     )
 
     assert mock_roku.remote.call_count == 8
-    mock_roku.remote.assert_called_with("home")
+    mock_roku.remote.assert_called_with("spencer")
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -472,7 +472,7 @@ async def test_services(
 
 
 async def test_services_play_media(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -523,7 +523,7 @@ async def test_services_play_media(
     ],
 )
 async def test_services_play_media_audio(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
     content_type: str,
@@ -548,7 +548,7 @@ async def test_services_play_media_audio(
             "t": "a",
             "songName": resolved_name,
             "songFormat": resolved_format,
-            "artistName": "Home Assistant",
+            "artistName": "spencer Assistant",
         },
     )
 
@@ -568,7 +568,7 @@ async def test_services_play_media_audio(
     ],
 )
 async def test_services_play_media_video(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
     content_type: str,
@@ -597,7 +597,7 @@ async def test_services_play_media_video(
 
 
 async def test_services_camera_play_stream(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -624,7 +624,7 @@ async def test_services_camera_play_stream(
 
 
 async def test_services_play_media_local_source(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -661,7 +661,7 @@ async def test_services_play_media_local_source(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_services(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
@@ -785,7 +785,7 @@ async def test_media_browse_internal(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "spencerassistant.helpers.network._get_request_host", return_value="example.local"
     ):
         await client.send_json(
             {
@@ -1052,7 +1052,7 @@ async def test_tv_media_browse(
 
 
 async def test_integration_services(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:

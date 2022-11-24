@@ -10,12 +10,12 @@ from typing import Any
 from google_nest_sdm.event import EventMessage
 import pytest
 
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -23,8 +23,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
@@ -42,7 +42,7 @@ def device_traits() -> dict[str, Any]:
 
 
 async def test_thermostat_device(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
     """Test a thermostat with temperature and humidity sensors."""
     create_device.create(
@@ -92,7 +92,7 @@ async def test_thermostat_device(
 
 
 async def test_thermostat_device_available(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
     """Test a thermostat with temperature and humidity sensors that is Online."""
     create_device.create(
@@ -118,7 +118,7 @@ async def test_thermostat_device_available(
 
 
 async def test_thermostat_device_unavailable(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
     """Test a thermostat with temperature and humidity sensors that is Offline."""
     create_device.create(
@@ -143,7 +143,7 @@ async def test_thermostat_device_unavailable(
     assert humidity.state == STATE_UNAVAILABLE
 
 
-async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
+async def test_no_devices(hass: spencerAssistant, setup_platform: PlatformSetup):
     """Test no devices returned by the api."""
     await setup_platform()
 
@@ -155,7 +155,7 @@ async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
 
 
 async def test_device_no_sensor_traits(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device with applicable sensor traits."""
     create_device.create({})
@@ -170,7 +170,7 @@ async def test_device_no_sensor_traits(
 
 @pytest.mark.parametrize("device_traits", [{}])  # Disable default name
 async def test_device_name_from_structure(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
     create_device.create(
@@ -193,7 +193,7 @@ async def test_device_name_from_structure(
 
 
 async def test_event_updates_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     subscriber: FakeSubscriber,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
@@ -238,7 +238,7 @@ async def test_event_updates_sensor(
 
 @pytest.mark.parametrize("device_type", ["some-unknown-type"])
 async def test_device_with_unknown_type(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
     create_device.create(
@@ -268,7 +268,7 @@ async def test_device_with_unknown_type(
 
 
 async def test_temperature_rounding(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test the rounding of overly precise temperatures."""
     create_device.create(

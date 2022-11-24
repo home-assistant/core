@@ -12,14 +12,14 @@ from motioneye_client.const import (
     KEY_VIDEO_STREAMING,
 )
 
-from homeassistant.components.motioneye import get_motioneye_device_identifier
-from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.motioneye import get_motioneye_device_identifier
+from spencerassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+import spencerassistant.util.dt as dt_util
 
 from . import (
     TEST_CAMERA,
@@ -34,7 +34,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
-async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
+async def test_switch_turn_on_off(hass: spencerAssistant) -> None:
     """Test turning the switch on and off."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -94,7 +94,7 @@ async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
     assert entity_state.state == "on"
 
 
-async def test_switch_state_update_from_coordinator(hass: HomeAssistant) -> None:
+async def test_switch_state_update_from_coordinator(hass: spencerAssistant) -> None:
     """Test that coordinator data impacts state."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -117,7 +117,7 @@ async def test_switch_state_update_from_coordinator(hass: HomeAssistant) -> None
     assert entity_state.state == "off"
 
 
-async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:
+async def test_switch_has_correct_entities(hass: spencerAssistant) -> None:
     """Test that the correct switch entities are created."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -144,7 +144,7 @@ async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:
         assert not entity_state
 
 
-async def test_disabled_switches_can_be_enabled(hass: HomeAssistant) -> None:
+async def test_disabled_switches_can_be_enabled(hass: spencerAssistant) -> None:
     """Verify disabled switches can be enabled."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -165,7 +165,7 @@ async def test_disabled_switches_can_be_enabled(hass: HomeAssistant) -> None:
         assert not entity_state
 
         with patch(
-            "homeassistant.components.motioneye.MotionEyeClient",
+            "spencerassistant.components.motioneye.MotionEyeClient",
             return_value=client,
         ):
             updated_entry = entity_registry.async_update_entity(
@@ -184,7 +184,7 @@ async def test_disabled_switches_can_be_enabled(hass: HomeAssistant) -> None:
         assert entity_state
 
 
-async def test_switch_device_info(hass: HomeAssistant) -> None:
+async def test_switch_device_info(hass: spencerAssistant) -> None:
     """Verify device information includes expected details."""
     config_entry = await setup_mock_motioneye_config_entry(hass)
 

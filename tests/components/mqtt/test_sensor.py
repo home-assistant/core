@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import mqtt, sensor
-from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
+from spencerassistant.components import mqtt, sensor
+from spencerassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
+from spencerassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -16,10 +16,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -76,7 +76,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def sensor_platform_only():
     """Only setup the sensor platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
@@ -234,7 +234,7 @@ async def expires_helper(hass, caplog):
     """Run the basic expiry code."""
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
         await hass.async_block_till_done()
@@ -253,7 +253,7 @@ async def expires_helper(hass, caplog):
     assert state.state == "100"
 
     # Next message resets timer
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with patch(("spencerassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "101")
         await hass.async_block_till_done()
@@ -923,7 +923,7 @@ async def test_discovery_update_unchanged_sensor(
     """Test update of discovered sensor."""
     data1 = '{ "name": "Beer", "state_topic": "test_topic" }'
     with patch(
-        "homeassistant.components.mqtt.sensor.MqttSensor.discovery_update"
+        "spencerassistant.components.mqtt.sensor.MqttSensor.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
@@ -1007,7 +1007,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock_entry_no_yaml_config)
             "unique_id": "veryunique",
         }
     )
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device({("mqtt", "helloworld")})

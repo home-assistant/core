@@ -1,9 +1,9 @@
 """Test the lg_soundbar config flow."""
 from unittest.mock import DEFAULT, MagicMock, Mock, call, patch
 
-from homeassistant import config_entries
-from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant import config_entries
+from spencerassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -18,13 +18,13 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal",
+        "spencerassistant.components.lg_soundbar.config_flow.temescal",
         return_value=MagicMock(),
     ), patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
+        "spencerassistant.components.lg_soundbar.config_flow.test_connect",
         return_value={"uuid": "uuid", "name": "name"},
     ), patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        "spencerassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -53,9 +53,9 @@ async def test_form_uuid_missing_from_mac_info(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "spencerassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        "spencerassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         tmock = mock_temescal.temescal
         tmock.return_value = Mock()
@@ -103,12 +103,12 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "spencerassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
+        "spencerassistant.components.lg_soundbar.config_flow.Queue",
         return_value=MagicMock(),
     ) as mock_q, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        "spencerassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         mock_q.side_effect = [mock_uuid_q, mock_name_q]
         mock_uuid_q.empty.return_value = True
@@ -165,12 +165,12 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
     mock_name_q = MagicMock()
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+        "spencerassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
     ) as mock_temescal, patch(
-        "homeassistant.components.lg_soundbar.config_flow.Queue",
+        "spencerassistant.components.lg_soundbar.config_flow.Queue",
         return_value=MagicMock(),
     ) as mock_q, patch(
-        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+        "spencerassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         mock_q.side_effect = [mock_uuid_q, mock_name_q]
         mock_uuid_q.empty.return_value = False
@@ -216,7 +216,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
+        "spencerassistant.components.lg_soundbar.config_flow.test_connect",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -247,7 +247,7 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.test_connect",
+        "spencerassistant.components.lg_soundbar.config_flow.test_connect",
         return_value={"uuid": "uuid", "name": "name"},
     ):
         result2 = await hass.config_entries.flow.async_configure(

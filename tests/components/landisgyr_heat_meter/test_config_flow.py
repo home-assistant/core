@@ -5,14 +5,14 @@ from unittest.mock import patch
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries
-from homeassistant.components.landisgyr_heat_meter import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.landisgyr_heat_meter import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+API_HEAT_METER_SERVICE = "spencerassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
 
 
 def mock_serial_port():
@@ -37,7 +37,7 @@ class MockUltraheatRead:
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
+async def test_manual_entry(mock_heat_meter, hass: spencerAssistant) -> None:
     """Test manual entry."""
 
     mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
@@ -58,7 +58,7 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
+        "spencerassistant.components.landisgyr_heat_meter.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -76,7 +76,7 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
 
 @patch(API_HEAT_METER_SERVICE)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
-async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
+async def test_list_entry(mock_port, mock_heat_meter, hass: spencerAssistant) -> None:
     """Test select from list entry."""
 
     mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
@@ -102,7 +102,7 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
+async def test_manual_entry_fail(mock_heat_meter, hass: spencerAssistant) -> None:
     """Test manual entry fails."""
 
     mock_heat_meter().read.side_effect = serial.serialutil.SerialException
@@ -123,7 +123,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
+        "spencerassistant.components.landisgyr_heat_meter.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -137,7 +137,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
 
 @patch(API_HEAT_METER_SERVICE)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
-async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
+async def test_list_entry_fail(mock_port, mock_heat_meter, hass: spencerAssistant) -> None:
     """Test select from list entry fails."""
 
     mock_heat_meter().read.side_effect = serial.serialutil.SerialException
@@ -161,7 +161,7 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
 @patch(API_HEAT_METER_SERVICE)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
 async def test_already_configured(
-    mock_port, mock_heat_meter, hass: HomeAssistant
+    mock_port, mock_heat_meter, hass: spencerAssistant
 ) -> None:
     """Test we abort if the Heat Meter is already configured."""
 

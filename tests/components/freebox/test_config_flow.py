@@ -7,12 +7,12 @@ from freebox_api.exceptions import (
     InvalidTokenError,
 )
 
-from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from spencerassistant import data_entry_flow
+from spencerassistant.components import zeroconf
+from spencerassistant.components.freebox.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.core import spencerAssistant
 
 from .const import MOCK_HOST, MOCK_PORT
 
@@ -39,7 +39,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 )
 
 
-async def test_user(hass: HomeAssistant):
+async def test_user(hass: spencerAssistant):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -57,7 +57,7 @@ async def test_user(hass: HomeAssistant):
     assert result["step_id"] == "link"
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass: spencerAssistant):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -68,7 +68,7 @@ async def test_import(hass: HomeAssistant):
     assert result["step_id"] == "link"
 
 
-async def test_zeroconf(hass: HomeAssistant):
+async def test_zeroconf(hass: spencerAssistant):
     """Test zeroconf step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -79,12 +79,12 @@ async def test_zeroconf(hass: HomeAssistant):
     assert result["step_id"] == "link"
 
 
-async def test_link(hass: HomeAssistant, router: Mock):
+async def test_link(hass: spencerAssistant, router: Mock):
     """Test linking."""
     with patch(
-        "homeassistant.components.freebox.async_setup", return_value=True
+        "spencerassistant.components.freebox.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.freebox.async_setup_entry",
+        "spencerassistant.components.freebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -104,7 +104,7 @@ async def test_link(hass: HomeAssistant, router: Mock):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant):
+async def test_abort_if_already_setup(hass: spencerAssistant):
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -131,7 +131,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_on_link_failed(hass: HomeAssistant):
+async def test_on_link_failed(hass: spencerAssistant):
     """Test when we have errors during linking the router."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -140,7 +140,7 @@ async def test_on_link_failed(hass: HomeAssistant):
     )
 
     with patch(
-        "homeassistant.components.freebox.router.Freepybox.open",
+        "spencerassistant.components.freebox.router.Freepybox.open",
         side_effect=AuthorizationError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -148,7 +148,7 @@ async def test_on_link_failed(hass: HomeAssistant):
         assert result["errors"] == {"base": "register_failed"}
 
     with patch(
-        "homeassistant.components.freebox.router.Freepybox.open",
+        "spencerassistant.components.freebox.router.Freepybox.open",
         side_effect=HttpRequestError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -156,7 +156,7 @@ async def test_on_link_failed(hass: HomeAssistant):
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.freebox.router.Freepybox.open",
+        "spencerassistant.components.freebox.router.Freepybox.open",
         side_effect=InvalidTokenError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

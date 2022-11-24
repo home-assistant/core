@@ -5,16 +5,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.const import CONF_API_KEY
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -24,9 +24,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        "spencerassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
     ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+        "spencerassistant.components.trafikverket_weatherstation.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -69,7 +69,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, error_message: str, base_error: str
+    hass: spencerAssistant, error_message: str, base_error: str
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
@@ -80,7 +80,7 @@ async def test_flow_fails(
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        "spencerassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
         side_effect=ValueError(error_message),
     ):
         result4 = await hass.config_entries.flow.async_configure(

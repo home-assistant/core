@@ -6,9 +6,9 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.core import HomeAssistant
-from homeassistant.util.decorator import Registry
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util.decorator import Registry
 
 from tests.common import async_capture_events
 
@@ -452,7 +452,7 @@ async def test_async_get_unknown_flow(manager):
 
 
 async def test_async_has_matching_flow(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+    hass: spencerAssistant, manager: data_entry_flow.FlowManager
 ):
     """Test we can check for matching flows."""
     manager.hass = hass
@@ -469,7 +469,7 @@ async def test_async_has_matching_flow(
 
     result = await manager.async_init(
         "test",
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
@@ -481,7 +481,7 @@ async def test_async_has_matching_flow(
     assert (
         manager.async_has_matching_flow(
             "test",
-            {"source": config_entries.SOURCE_HOMEKIT},
+            {"source": config_entries.SOURCE_spencerKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
         is True
@@ -497,7 +497,7 @@ async def test_async_has_matching_flow(
     assert (
         manager.async_has_matching_flow(
             "other",
-            {"source": config_entries.SOURCE_HOMEKIT},
+            {"source": config_entries.SOURCE_spencerKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
         is False

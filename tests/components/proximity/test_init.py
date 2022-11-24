@@ -1,14 +1,14 @@
 """The tests for the Proximity component."""
 
-from homeassistant.components.proximity import DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.proximity import DOMAIN
+from spencerassistant.setup import async_setup_component
 
 
 async def test_proximities(hass):
     """Test a list of proximities."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
@@ -19,7 +19,7 @@ async def test_proximities(hass):
 
     assert await async_setup_component(hass, DOMAIN, config)
 
-    proximities = ["home", "work"]
+    proximities = ["spencer", "work"]
 
     for prox in proximities:
         state = hass.states.get(f"proximity.{prox}")
@@ -37,7 +37,7 @@ async def test_proximities_setup(hass):
     """Test a list of proximities with missing devices."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
@@ -53,7 +53,7 @@ async def test_proximity(hass):
     """Test the proximity."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
@@ -63,14 +63,14 @@ async def test_proximity(hass):
 
     assert await async_setup_component(hass, DOMAIN, config)
 
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.state == "not set"
     assert state.attributes.get("nearest") == "not set"
     assert state.attributes.get("dir_of_travel") == "not set"
 
-    hass.states.async_set("proximity.home", "0")
+    hass.states.async_set("proximity.spencer", "0")
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.state == "0"
 
 
@@ -78,7 +78,7 @@ async def test_device_tracker_test1_in_zone(hass):
     """Test for tracker in zone."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -90,11 +90,11 @@ async def test_device_tracker_test1_in_zone(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "home",
+        "spencer",
         {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.state == "0"
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "arrived"
@@ -104,7 +104,7 @@ async def test_device_trackers_in_zone(hass):
     """Test for trackers in zone."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1", "device_tracker.test2"],
                 "tolerance": "1",
@@ -116,17 +116,17 @@ async def test_device_trackers_in_zone(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "home",
+        "spencer",
         {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
     )
     await hass.async_block_till_done()
     hass.states.async_set(
         "device_tracker.test2",
-        "home",
+        "spencer",
         {"friendly_name": "test2", "latitude": 2.1, "longitude": 1.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.state == "0"
     assert (state.attributes.get("nearest") == "test1, test2") or (
         state.attributes.get("nearest") == "test2, test1"
@@ -138,7 +138,7 @@ async def test_device_tracker_test1_away(hass):
     """Test for tracker state away."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -150,12 +150,12 @@ async def test_device_tracker_test1_away(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -168,7 +168,7 @@ async def test_device_tracker_test1_awayfurther(hass):
 
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -180,21 +180,21 @@ async def test_device_tracker_test1_awayfurther(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 40.1, "longitude": 20.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "away_from"
 
@@ -206,7 +206,7 @@ async def test_device_tracker_test1_awaycloser(hass):
 
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -218,21 +218,21 @@ async def test_device_tracker_test1_awaycloser(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 40.1, "longitude": 20.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "towards"
 
@@ -241,7 +241,7 @@ async def test_all_device_trackers_in_ignored_zone(hass):
     """Test for tracker in ignored zone."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -253,7 +253,7 @@ async def test_all_device_trackers_in_ignored_zone(hass):
 
     hass.states.async_set("device_tracker.test1", "work", {"friendly_name": "test1"})
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.state == "not set"
     assert state.attributes.get("nearest") == "not set"
     assert state.attributes.get("dir_of_travel") == "not set"
@@ -263,7 +263,7 @@ async def test_device_tracker_test1_no_coordinates(hass):
     """Test for tracker with no coordinates."""
     config = {
         "proximity": {
-            "home": {
+            "spencer": {
                 "ignored_zones": ["work"],
                 "devices": ["device_tracker.test1"],
                 "tolerance": "1",
@@ -274,10 +274,10 @@ async def test_device_tracker_test1_no_coordinates(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "not set"
     assert state.attributes.get("dir_of_travel") == "not set"
 
@@ -288,11 +288,11 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+        "device_tracker.test2", "not_spencer", {"friendly_name": "test2"}
     )
     await hass.async_block_till_done()
 
@@ -301,11 +301,11 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1", "device_tracker.test2"],
                     "tolerance": "1",
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -313,21 +313,21 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test1(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test2",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test2", "latitude": 40.1, "longitude": 20.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -338,11 +338,11 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+        "device_tracker.test2", "not_spencer", {"friendly_name": "test2"}
     )
     await hass.async_block_till_done()
     assert await async_setup_component(
@@ -350,10 +350,10 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -361,21 +361,21 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
 
     hass.states.async_set(
         "device_tracker.test2",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test2", "latitude": 40.1, "longitude": 20.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test2"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -383,7 +383,7 @@ async def test_device_tracker_test1_awayfurther_than_test2_first_test2(hass):
 async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(hass):
     """Test for tracker states."""
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
     hass.states.async_set("device_tracker.test2", "work", {"friendly_name": "test2"})
@@ -393,10 +393,10 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -404,11 +404,11 @@ async def test_device_tracker_test1_awayfurther_test2_in_ignored_zone(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -419,11 +419,11 @@ async def test_device_tracker_test1_awayfurther_test2_first(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+        "device_tracker.test2", "not_spencer", {"friendly_name": "test2"}
     )
     await hass.async_block_till_done()
 
@@ -432,10 +432,10 @@ async def test_device_tracker_test1_awayfurther_test2_first(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -443,28 +443,28 @@ async def test_device_tracker_test1_awayfurther_test2_first(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 10.1, "longitude": 5.1},
     )
     await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test2",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test2", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 40.1, "longitude": 20.1},
     )
     await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 35.1, "longitude": 15.1},
     )
     await hass.async_block_till_done()
@@ -472,7 +472,7 @@ async def test_device_tracker_test1_awayfurther_test2_first(hass):
     hass.states.async_set("device_tracker.test1", "work", {"friendly_name": "test1"})
     await hass.async_block_till_done()
 
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test2"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -484,11 +484,11 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1"],
                     "tolerance": 1000,
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -496,21 +496,21 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1000001, "longitude": 10.1000001},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1000002, "longitude": 10.1000002},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "stationary"
 
@@ -521,11 +521,11 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "device_tracker.test1", "not_home", {"friendly_name": "test1"}
+        "device_tracker.test1", "not_spencer", {"friendly_name": "test1"}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        "device_tracker.test2", "not_home", {"friendly_name": "test2"}
+        "device_tracker.test2", "not_spencer", {"friendly_name": "test2"}
     )
     await hass.async_block_till_done()
 
@@ -534,10 +534,10 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(hass):
         DOMAIN,
         {
             "proximity": {
-                "home": {
+                "spencer": {
                     "ignored_zones": ["work"],
                     "devices": ["device_tracker.test1", "device_tracker.test2"],
-                    "zone": "home",
+                    "zone": "spencer",
                 }
             }
         },
@@ -545,21 +545,21 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(hass):
 
     hass.states.async_set(
         "device_tracker.test1",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test1", "latitude": 20.1, "longitude": 10.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
     hass.states.async_set(
         "device_tracker.test2",
-        "not_home",
+        "not_spencer",
         {"friendly_name": "test2", "latitude": 10.1, "longitude": 5.1},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test2"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -569,7 +569,7 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(hass):
         {"friendly_name": "test2", "latitude": 12.6, "longitude": 7.6},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("proximity.home")
+    state = hass.states.get("proximity.spencer")
     assert state.attributes.get("nearest") == "test1"
     assert state.attributes.get("dir_of_travel") == "unknown"
 
@@ -578,9 +578,9 @@ def config_zones(hass):
     """Set up zones for test."""
     hass.config.components.add("zone")
     hass.states.async_set(
-        "zone.home",
+        "zone.spencer",
         "zoning",
-        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+        {"name": "spencer", "latitude": 2.1, "longitude": 1.1, "radius": 10},
     )
     hass.states.async_set(
         "zone.work",

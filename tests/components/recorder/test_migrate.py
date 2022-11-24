@@ -18,17 +18,17 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
-from homeassistant.bootstrap import async_setup_component
-from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import db_schema, migration
-from homeassistant.components.recorder.db_schema import (
+from spencerassistant.bootstrap import async_setup_component
+from spencerassistant.components import persistent_notification as pn, recorder
+from spencerassistant.components.recorder import db_schema, migration
+from spencerassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     RecorderRuns,
     States,
 )
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.helpers import recorder as recorder_helper
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.helpers import recorder as recorder_helper
+import spencerassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done, create_engine_test
 
@@ -49,11 +49,11 @@ async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
+        "spencerassistant.components.recorder.migration._apply_update",
         wraps=migration._apply_update,
     ) as update:
         recorder_helper.async_initialize_recorder(hass)
@@ -78,8 +78,8 @@ async def test_migration_in_progress(hass):
     """Test that we can check for migration in progress."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):
         recorder_helper.async_initialize_recorder(hass)
@@ -98,16 +98,16 @@ async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
+        "spencerassistant.components.recorder.migration._apply_update",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.persistent_notification.create", side_effect=pn.create
+        "spencerassistant.components.persistent_notification.create", side_effect=pn.create
     ) as mock_create, patch(
-        "homeassistant.components.persistent_notification.dismiss",
+        "spencerassistant.components.persistent_notification.dismiss",
         side_effect=pn.dismiss,
     ) as mock_dismiss:
         recorder_helper.async_initialize_recorder(hass)
@@ -133,16 +133,16 @@ async def test_database_migration_encounters_corruption(hass):
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration._schema_is_current",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.migration._schema_is_current",
         side_effect=[False],
     ), patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "spencerassistant.components.recorder.migration.migrate_schema",
         side_effect=sqlite3_exception,
     ), patch(
-        "homeassistant.components.recorder.core.move_away_broken_database"
+        "spencerassistant.components.recorder.core.move_away_broken_database"
     ) as move_away, patch(
-        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        "spencerassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
     ):
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
@@ -160,18 +160,18 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration._schema_is_current",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.migration._schema_is_current",
         side_effect=[False],
     ), patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "spencerassistant.components.recorder.migration.migrate_schema",
         side_effect=DatabaseError("statement", {}, []),
     ), patch(
-        "homeassistant.components.recorder.core.move_away_broken_database"
+        "spencerassistant.components.recorder.core.move_away_broken_database"
     ) as move_away, patch(
-        "homeassistant.components.persistent_notification.create", side_effect=pn.create
+        "spencerassistant.components.persistent_notification.create", side_effect=pn.create
     ) as mock_create, patch(
-        "homeassistant.components.persistent_notification.dismiss",
+        "spencerassistant.components.persistent_notification.dismiss",
         side_effect=pn.dismiss,
     ) as mock_dismiss:
         recorder_helper.async_initialize_recorder(hass)
@@ -195,8 +195,8 @@ async def test_events_during_migration_are_queued(hass):
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):
         recorder_helper.async_initialize_recorder(hass)
@@ -226,8 +226,8 @@ async def test_events_during_migration_queue_exhausted(hass):
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1):
         recorder_helper.async_initialize_recorder(hass)
@@ -327,21 +327,21 @@ async def test_schema_migrate(hass, start_version, live):
         migration_stall.wait()
         real_apply_update(*args)
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.core.create_engine",
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "spencerassistant.components.recorder.core.create_engine",
         new=_create_engine_test,
     ), patch(
-        "homeassistant.components.recorder.Recorder._setup_run",
+        "spencerassistant.components.recorder.Recorder._setup_run",
         side_effect=_mock_setup_run,
         autospec=True,
     ) as setup_run, patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "spencerassistant.components.recorder.migration.migrate_schema",
         wraps=_instrument_migrate_schema,
     ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
+        "spencerassistant.components.recorder.migration._apply_update",
         wraps=_instrument_apply_update,
     ), patch(
-        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        "spencerassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(
@@ -439,7 +439,7 @@ def test_forgiving_add_index_with_other_db_types(caplog, exception_type):
     type(mocked_table).indexes = PropertyMock(return_value=[mocked_index])
 
     with patch(
-        "homeassistant.components.recorder.migration.Table", return_value=mocked_table
+        "spencerassistant.components.recorder.migration.Table", return_value=mocked_table
     ):
         migration._create_index(Mock(), "states", "ix_states_context_id")
 

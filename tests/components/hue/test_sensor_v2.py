@@ -1,8 +1,8 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
 
-from homeassistant.components import hue
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import hue
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY

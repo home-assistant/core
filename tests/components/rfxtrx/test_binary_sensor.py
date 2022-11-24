@@ -1,10 +1,10 @@
 """The tests for the Rfxtrx sensor platform."""
 import pytest
 
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.components.rfxtrx.const import ATTR_EVENT
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import State
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.components.rfxtrx.const import ATTR_EVENT
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.core import State
 
 from .conftest import create_rfx_test_cfg
 

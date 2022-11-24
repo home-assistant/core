@@ -10,8 +10,8 @@ from typing import Any
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+import spencerassistant.helpers.config_validation as cv
+from spencerassistant.util import slugify
 from script.translations import upload
 
 from .model import Config, Integration
@@ -30,7 +30,7 @@ ALLOW_NAME_TRANSLATION = {
     "faa_delays",
     "garages_amsterdam",
     "google_travel_time",
-    "homekit_controller",
+    "spencerkit_controller",
     "islamic_prayer_times",
     "local_ip",
     "nmap_tracker",
@@ -40,14 +40,14 @@ ALLOW_NAME_TRANSLATION = {
 
 REMOVED_TITLE_MSG = (
     "config.title key has been moved out of config and into the root of strings.json. "
-    "Starting Home Assistant 0.109 you only need to define this key in the root "
+    "Starting spencer Assistant 0.109 you only need to define this key in the root "
     "if the title needs to be different than the name of your integration in the "
     "manifest."
 )
 
 MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "The '.translations' directory has been moved, the new name is 'translations', "
-    "starting with Home Assistant 0.112 your translations will no longer "
+    "starting with spencer Assistant 0.112 your translations will no longer "
     "load if you do not move/rename this "
 )
 
@@ -295,7 +295,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
         """
         if not value.startswith(f"{integration.domain}__"):
             raise vol.Invalid(
-                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid. See https://developers.home-assistant.io/docs/internationalization/core#stringssensorjson"
+                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid. See https://developers.spencer-assistant.io/docs/internationalization/core#stringssensorjson"
             )
 
         slug_friendly = value.replace("__", "_", 1)

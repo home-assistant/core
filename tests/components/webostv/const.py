@@ -1,6 +1,6 @@
 """Constants for LG webOS Smart TV tests."""
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.webostv.const import LIVE_TV_APP_ID
+from spencerassistant.components.media_player import DOMAIN as MP_DOMAIN
+from spencerassistant.components.webostv.const import LIVE_TV_APP_ID
 
 FAKE_UUID = "some-fake-uuid"
 TV_NAME = "fake_webos"

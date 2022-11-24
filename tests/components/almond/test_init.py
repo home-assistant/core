@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, core
-from homeassistant.components.almond import const
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant import config_entries, core
+from spencerassistant.components.almond import const
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import EVENT_spencerASSISTANT_START
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -34,18 +34,18 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ):
         assert await async_setup_component(hass, "almond", {})
 
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
     hass.config.components.add("cloud")
-    with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
-        "homeassistant.helpers.network.get_url",
+    with patch("spencerassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
+        "spencerassistant.helpers.network.get_url",
         return_value="https://example.nabu.casa",
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow())
         await hass.async_block_till_done()
@@ -67,7 +67,7 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 

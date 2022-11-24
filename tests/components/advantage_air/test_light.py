@@ -1,18 +1,18 @@
 """Test the Advantage Air Switch Platform."""
 from json import loads
 
-from homeassistant.components.advantage_air.const import (
+from spencerassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
 )
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_LIGHT_URL,

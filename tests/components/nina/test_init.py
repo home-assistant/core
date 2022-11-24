@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from pynina import ApiError
 
-from homeassistant.components.nina.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.nina.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from . import mocked_request_function
 
@@ -21,7 +21,7 @@ ENTRY_DATA: dict[str, Any] = {
 
 
 async def init_integration(hass) -> MockConfigEntry:
-    """Set up the NINA integration in Home Assistant."""
+    """Set up the NINA integration in spencer Assistant."""
 
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
@@ -38,14 +38,14 @@ async def init_integration(hass) -> MockConfigEntry:
         return entry
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_config_entry_not_ready(hass: spencerAssistant) -> None:
     """Test the configuration entry."""
     entry: MockConfigEntry = await init_integration(hass)
 
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_sensors_connection_error(hass: HomeAssistant) -> None:
+async def test_sensors_connection_error(hass: spencerAssistant) -> None:
     """Test the creation and values of the NINA sensors with no connected."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",

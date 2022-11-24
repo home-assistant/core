@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, callback
-from homeassistant.exceptions import RequiredParameterMissing
-from homeassistant.helpers import device_registry, entity_registry
+from spencerassistant import config_entries
+from spencerassistant.const import EVENT_spencerASSISTANT_STARTED
+from spencerassistant.core import CoreState, callback
+from spencerassistant.exceptions import RequiredParameterMissing
+from spencerassistant.helpers import device_registry, entity_registry
 
 from tests.common import (
     MockConfigEntry,
@@ -852,7 +852,7 @@ async def test_no_unnecessary_changes(registry):
         identifiers={("hue", "456"), ("bla", "123")},
     )
     with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
+        "spencerassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
     ) as mock_save:
         entry2 = registry.async_get_or_create(
             config_entry_id="1234", identifiers={("hue", "456")}
@@ -1164,9 +1164,9 @@ async def test_cleanup_startup(hass):
     hass.state = CoreState.not_running
 
     with patch(
-        "homeassistant.helpers.device_registry.Debouncer.async_call"
+        "spencerassistant.helpers.device_registry.Debouncer.async_call"
     ) as mock_call:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_call.mock_calls) == 1
@@ -1184,7 +1184,7 @@ async def test_cleanup_entity_registry_change(hass):
     ent_reg = entity_registry.async_get(hass)
 
     with patch(
-        "homeassistant.helpers.device_registry.Debouncer.async_call"
+        "spencerassistant.helpers.device_registry.Debouncer.async_call"
     ) as mock_call:
         entity = ent_reg.async_get_or_create("light", "hue", "e1")
         await hass.async_block_till_done()

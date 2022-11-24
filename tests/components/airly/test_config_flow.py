@@ -3,17 +3,17 @@ from http import HTTPStatus
 
 from airly.exceptions import AirlyError
 
-from homeassistant import data_entry_flow
-from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from spencerassistant import data_entry_flow
+from spencerassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
 CONFIG = {
-    CONF_NAME: "Home",
+    CONF_NAME: "spencer",
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 123,
     CONF_LONGITUDE: 456,
@@ -79,7 +79,7 @@ async def test_create_entry(hass, aioclient_mock):
     """Test that the user step works."""
     aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
 
-    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
@@ -101,7 +101,7 @@ async def test_create_entry_with_nearest_method(hass, aioclient_mock):
         API_NEAREST_URL, text=load_fixture("valid_station.json", "airly")
     )
 
-    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )

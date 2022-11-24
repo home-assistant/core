@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
@@ -21,8 +21,8 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 
@@ -44,7 +44,7 @@ HVAC_SETTINGS = [
 ENTITY_CLIMATE = "climate.fakespa_climate"
 
 
-async def test_spa_defaults(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_defaults(hass: spencerAssistant, client: MagicMock) -> None:
     """Test supported features flags."""
     await init_integration(hass)
 
@@ -62,7 +62,7 @@ async def test_spa_defaults(hass: HomeAssistant, client: MagicMock) -> None:
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
-async def test_spa_defaults_fake_tscale(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_defaults_fake_tscale(hass: spencerAssistant, client: MagicMock) -> None:
     """Test supported features flags."""
     client.get_tempscale.return_value = 1
 
@@ -82,7 +82,7 @@ async def test_spa_defaults_fake_tscale(hass: HomeAssistant, client: MagicMock) 
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
-async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_with_blower(hass: spencerAssistant, client: MagicMock) -> None:
     """Test supported features flags."""
     client.have_blower.return_value = True
 
@@ -115,7 +115,7 @@ async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
         assert state.attributes[ATTR_FAN_MODE] == FAN_OFF
 
 
-async def test_spa_temperature(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_temperature(hass: spencerAssistant, client: MagicMock) -> None:
     """Test spa temperature settings."""
 
     config_entry = await init_integration(hass)
@@ -127,7 +127,7 @@ async def test_spa_temperature(hass: HomeAssistant, client: MagicMock) -> None:
     assert state.attributes.get(ATTR_TEMPERATURE) == 38.0
 
 
-async def test_spa_temperature_unit(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_temperature_unit(hass: spencerAssistant, client: MagicMock) -> None:
     """Test temperature unit conversions."""
 
     with patch.object(hass.config.units, "temperature_unit", TEMP_FAHRENHEIT):
@@ -138,7 +138,7 @@ async def test_spa_temperature_unit(hass: HomeAssistant, client: MagicMock) -> N
         assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
 
 
-async def test_spa_hvac_modes(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_hvac_modes(hass: spencerAssistant, client: MagicMock) -> None:
     """Test hvac modes."""
 
     config_entry = await init_integration(hass)
@@ -155,7 +155,7 @@ async def test_spa_hvac_modes(hass: HomeAssistant, client: MagicMock) -> None:
         await _patch_spa_heatmode(hass, config_entry, 2, client)
 
 
-async def test_spa_hvac_action(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_hvac_action(hass: spencerAssistant, client: MagicMock) -> None:
     """Test setting of the HVAC action."""
 
     config_entry = await init_integration(hass)
@@ -169,7 +169,7 @@ async def test_spa_hvac_action(hass: HomeAssistant, client: MagicMock) -> None:
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
-async def test_spa_preset_modes(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_spa_preset_modes(hass: spencerAssistant, client: MagicMock) -> None:
     """Test the various preset modes."""
 
     await init_integration(hass)

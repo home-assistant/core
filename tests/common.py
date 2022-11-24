@@ -22,29 +22,29 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import voluptuous as vol
 
-from homeassistant import auth, config_entries, core as ha, loader
-from homeassistant.auth import (
+from spencerassistant import auth, config_entries, core as ha, loader
+from spencerassistant.auth import (
     auth_store,
     models as auth_models,
     permissions as auth_permissions,
     providers as auth_providers,
 )
-from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation, recorder
-from homeassistant.components.device_automation import (  # noqa: F401
+from spencerassistant.auth.permissions import system_policies
+from spencerassistant.components import device_automation, recorder
+from spencerassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.config import async_process_component_config
-from homeassistant.const import (
+from spencerassistant.components.mqtt.models import ReceiveMessage
+from spencerassistant.config import async_process_component_config
+from spencerassistant.const import (
     DEVICE_DEFAULT_NAME,
-    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_spencerASSISTANT_CLOSE,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, ServiceCall, State
-from homeassistant.helpers import (
+from spencerassistant.core import BLOCK_LOG_TIMEOUT, spencerAssistant, ServiceCall, State
+from spencerassistant.helpers import (
     area_registry,
     device_registry,
     entity,
@@ -56,15 +56,15 @@ from homeassistant.helpers import (
     restore_state,
     storage,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import setup_component
-from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as date_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.uuid as uuid_util
-import homeassistant.util.yaml.loader as yaml_loader
+from spencerassistant.helpers.dispatcher import async_dispatcher_connect
+from spencerassistant.helpers.json import JSONEncoder
+from spencerassistant.helpers.typing import ConfigType
+from spencerassistant.setup import setup_component
+from spencerassistant.util.async_ import run_callback_threadsafe
+import spencerassistant.util.dt as date_util
+from spencerassistant.util.unit_system import METRIC_SYSTEM
+import spencerassistant.util.uuid as uuid_util
+import spencerassistant.util.yaml.loader as yaml_loader
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -73,7 +73,7 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 async def async_get_device_automations(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     automation_type: device_automation.DeviceAutomationType,
     device_id: str,
 ) -> Any:
@@ -123,11 +123,11 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant():
-    """Return a Home Assistant object pointing at test config directory."""
+def get_test_spencer_assistant():
+    """Return a spencer Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass = loop.run_until_complete(async_test_spencer_assistant(loop))
 
     loop_stop_event = threading.Event()
 
@@ -160,9 +160,9 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop, load_registries=True):
-    """Return a Home Assistant object pointing at test config dir."""
-    hass = ha.HomeAssistant()
+async def async_test_spencer_assistant(loop, load_registries=True):
+    """Return a spencer Assistant object pointing at test config dir."""
+    hass = ha.spencerAssistant()
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -210,7 +210,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     async def async_wait_for_task_count(self, max_remaining_tasks: int = 0) -> None:
         """Block until at most max_remaining_tasks remain.
 
-        Based on HomeAssistant.async_block_till_done
+        Based on spencerAssistant.async_block_till_done
         """
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
@@ -250,7 +250,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     ) -> Collection[Awaitable[Any]]:
         """Block at most max_remaining_tasks remain and log tasks that take a long time.
 
-        Based on HomeAssistant._await_and_log_pending
+        Based on spencerAssistant._await_and_log_pending
         """
         wait_time = 0
 
@@ -280,7 +280,7 @@ async def async_test_home_assistant(loop, load_registries=True):
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
-    hass.config.location_name = "test home"
+    hass.config.location_name = "test spencer"
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
@@ -325,13 +325,13 @@ async def async_test_home_assistant(loop, load_registries=True):
         """Clear global instance."""
         INSTANCES.remove(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
+    hass.bus.async_listen_once(EVENT_spencerASSISTANT_CLOSE, clear_instance)
 
     return hass
 
 
 def async_mock_service(
-    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+    hass: spencerAssistant, domain: str, service: str, schema: vol.Schema | None = None
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -381,7 +381,7 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 @ha.callback
 def async_fire_time_changed_exact(
-    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+    hass: spencerAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
     """Fire a time changed event at an exact microsecond.
 
@@ -400,7 +400,7 @@ def async_fire_time_changed_exact(
 
 @ha.callback
 def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+    hass: spencerAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
     """Fire a time changed event.
 
@@ -429,7 +429,7 @@ def async_fire_time_changed(
 
 @ha.callback
 def _async_fire_time_changed(
-    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+    hass: spencerAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
     timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
@@ -443,10 +443,10 @@ def _async_fire_time_changed(
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.time_tracker_utcnow",
+                "spencerassistant.helpers.event.time_tracker_utcnow",
                 return_value=utc_datetime,
             ), patch(
-                "homeassistant.helpers.event.time_tracker_timestamp",
+                "spencerassistant.helpers.event.time_tracker_timestamp",
                 return_value=timestamp,
             ):
                 task._run()
@@ -475,7 +475,7 @@ def load_fixture(filename: str, integration: str | None = None) -> str:
 
 
 def mock_state_change_event(
-    hass: HomeAssistant, new_state: State, old_state: State | None = None
+    hass: spencerAssistant, new_state: State, old_state: State | None = None
 ) -> None:
     """Mock state change envent."""
     event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
@@ -487,7 +487,7 @@ def mock_state_change_event(
 
 
 @ha.callback
-def mock_component(hass: HomeAssistant, component: str) -> None:
+def mock_component(hass: spencerAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
         AssertionError(f"Integration {component} is already setup")
@@ -496,7 +496,7 @@ def mock_component(hass: HomeAssistant, component: str) -> None:
 
 
 def mock_registry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
 ) -> entity_registry.EntityRegistry:
     """Mock the Entity Registry."""
@@ -512,7 +512,7 @@ def mock_registry(
 
 
 def mock_area_registry(
-    hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
+    hass: spencerAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
 ) -> area_registry.AreaRegistry:
     """Mock the Area Registry."""
     registry = area_registry.AreaRegistry(hass)
@@ -523,7 +523,7 @@ def mock_area_registry(
 
 
 def mock_device_registry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
 ) -> device_registry.DeviceRegistry:
     """Mock the Device Registry."""
@@ -540,7 +540,7 @@ def mock_device_registry(
 
 
 class MockGroup(auth_models.Group):
-    """Mock a group in Home Assistant."""
+    """Mock a group in spencer Assistant."""
 
     def __init__(self, id=None, name="Mock Group", policy=system_policies.ADMIN_POLICY):
         """Mock a group."""
@@ -562,7 +562,7 @@ class MockGroup(auth_models.Group):
 
 
 class MockUser(auth_models.User):
-    """Mock a user in Home Assistant."""
+    """Mock a user in spencer Assistant."""
 
     def __init__(
         self,
@@ -602,7 +602,7 @@ class MockUser(auth_models.User):
 
 
 async def register_auth_provider(
-    hass: HomeAssistant, config: ConfigType
+    hass: spencerAssistant, config: ConfigType
 ) -> auth_providers.AuthProvider:
     """Register an auth provider."""
     provider = await auth_providers.auth_provider_from_config(
@@ -649,8 +649,8 @@ class MockModule:
         async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
-        self.__name__ = f"homeassistant.components.{domain}"
-        self.__file__ = f"homeassistant/components/{domain}"
+        self.__name__ = f"spencerassistant.components.{domain}"
+        self.__file__ = f"spencerassistant/components/{domain}"
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -702,8 +702,8 @@ class MockModule:
 class MockPlatform:
     """Provide a fake platform."""
 
-    __name__ = "homeassistant.components.light.bla"
-    __file__ = "homeassistant/components/blah/light"
+    __name__ = "spencerassistant.components.light.bla"
+    __file__ = "spencerassistant/components/blah/light"
 
     # pylint: disable=invalid-name
     def __init__(
@@ -753,7 +753,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
     ):
         """Initialize a mock entity platform."""
         if logger is None:
-            logger = logging.getLogger("homeassistant.helpers.entity_platform")
+            logger = logging.getLogger("spencerassistant.helpers.entity_platform")
 
         # Otherwise the constructor will blow up.
         if isinstance(platform, Mock) and isinstance(platform.PARALLEL_UPDATES, Mock):
@@ -899,7 +899,7 @@ def patch_yaml_files(files_dict, endswith=True):
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)
-        if "homeassistant/components" in fname:
+        if "spencerassistant/components" in fname:
             _LOGGER.debug("patch_yaml_files using real file: %s", fname)
             return open(fname, encoding="utf-8")
 
@@ -948,7 +948,7 @@ def assert_setup_component(count, domain=None):
         return res
 
     assert isinstance(config, dict)
-    with patch("homeassistant.config.async_process_component_config", mock_psc):
+    with patch("spencerassistant.config.async_process_component_config", mock_psc):
         yield config
 
     if domain is None:
@@ -975,7 +975,7 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+    with patch("spencerassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
@@ -1173,15 +1173,15 @@ def mock_storage(data=None):
         data.pop(store.key, None)
 
     with patch(
-        "homeassistant.helpers.storage.Store._async_load",
+        "spencerassistant.helpers.storage.Store._async_load",
         side_effect=mock_async_load,
         autospec=True,
     ), patch(
-        "homeassistant.helpers.storage.Store._write_data",
+        "spencerassistant.helpers.storage.Store._write_data",
         side_effect=mock_write_data,
         autospec=True,
     ), patch(
-        "homeassistant.helpers.storage.Store.async_remove",
+        "spencerassistant.helpers.storage.Store.async_remove",
         side_effect=mock_remove,
         autospec=True,
     ):

@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 import aiohttp
 import pytest
 
-from homeassistant.components.analytics.analytics import Analytics
-from homeassistant.components.analytics.const import (
+from spencerassistant.components.analytics.analytics import Analytics
+from spencerassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_BASE,
@@ -14,10 +14,10 @@ from homeassistant.components.analytics.const import (
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
-from homeassistant.components.api import ATTR_UUID
-from homeassistant.const import ATTR_DOMAIN
-from homeassistant.loader import IntegrationNotFound
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.api import ATTR_UUID
+from spencerassistant.const import ATTR_DOMAIN
+from spencerassistant.loader import IntegrationNotFound
+from spencerassistant.setup import async_setup_component
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -29,7 +29,7 @@ async def test_no_send(hass, caplog, aioclient_mock):
     """Test send when no preferences are defined."""
     analytics = Analytics(hass)
     with patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=False),
     ):
         assert not analytics.preferences[ATTR_BASE]
@@ -45,10 +45,10 @@ async def test_load_with_supervisor_diagnostics(hass):
     analytics = Analytics(hass)
     assert not analytics.preferences[ATTR_DIAGNOSTICS]
     with patch(
-        "homeassistant.components.hassio.get_supervisor_info",
+        "spencerassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(return_value={"diagnostics": True}),
     ), patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         await analytics.load()
@@ -63,10 +63,10 @@ async def test_load_with_supervisor_without_diagnostics(hass):
     assert analytics.preferences[ATTR_DIAGNOSTICS]
 
     with patch(
-        "homeassistant.components.hassio.get_supervisor_info",
+        "spencerassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(return_value={"diagnostics": False}),
     ), patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         await analytics.load()
@@ -81,7 +81,7 @@ async def test_failed_to_send(hass, caplog, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert (
         f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL}"
@@ -96,7 +96,7 @@ async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert "Error sending analytics" in caplog.text
 
@@ -110,7 +110,7 @@ async def test_send_base(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_BASE]
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ):
         hex.return_value = MOCK_UUID
         await analytics.send_analytics()
@@ -131,26 +131,26 @@ async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_BASE]
 
     with patch(
-        "homeassistant.components.hassio.get_supervisor_info",
+        "spencerassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(
             return_value={"supported": True, "healthy": True, "arch": "amd64"}
         ),
     ), patch(
-        "homeassistant.components.hassio.get_os_info",
+        "spencerassistant.components.hassio.get_os_info",
         side_effect=Mock(return_value={"board": "blue", "version": "123"}),
     ), patch(
-        "homeassistant.components.hassio.get_info",
+        "spencerassistant.components.hassio.get_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.get_host_info",
+        "spencerassistant.components.hassio.get_host_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
         "uuid.UUID.hex", new_callable=PropertyMock
     ) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ):
         hex.return_value = MOCK_UUID
         await analytics.load()
@@ -180,7 +180,7 @@ async def test_send_usage(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_USAGE]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
     assert "'integrations': ['default_config']" in caplog.text
@@ -199,7 +199,7 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     hass.config.components = ["default_config"]
 
     with patch(
-        "homeassistant.components.hassio.get_supervisor_info",
+        "spencerassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(
             return_value={
                 "healthy": True,
@@ -209,16 +209,16 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.hassio.get_os_info",
+        "spencerassistant.components.hassio.get_os_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.get_info",
+        "spencerassistant.components.hassio.get_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.get_host_info",
+        "spencerassistant.components.hassio.get_host_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.async_get_addon_info",
+        "spencerassistant.components.hassio.async_get_addon_info",
         side_effect=AsyncMock(
             return_value={
                 "slug": "test_addon",
@@ -228,10 +228,10 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ):
         await analytics.send_analytics()
     assert (
@@ -250,7 +250,7 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_STATISTICS]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert (
         "'state_count': 0, 'automation_count': 0, 'integration_count': 1, 'user_count': 0"
@@ -269,9 +269,9 @@ async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_moc
     hass.config.components = ["default_config"]
 
     with patch(
-        "homeassistant.components.analytics.analytics.async_get_integrations",
+        "spencerassistant.components.analytics.analytics.async_get_integrations",
         return_value={"any": IntegrationNotFound("any")},
-    ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    ), patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
     post_call = aioclient_mock.mock_calls[0]
@@ -291,9 +291,9 @@ async def test_send_statistics_async_get_integration_unknown_exception(
     hass.config.components = ["default_config"]
 
     with pytest.raises(ValueError), patch(
-        "homeassistant.components.analytics.analytics.async_get_integrations",
+        "spencerassistant.components.analytics.analytics.async_get_integrations",
         return_value={"any": ValueError()},
-    ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    ), patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
 
@@ -306,7 +306,7 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_STATISTICS]
 
     with patch(
-        "homeassistant.components.hassio.get_supervisor_info",
+        "spencerassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(
             return_value={
                 "healthy": True,
@@ -316,16 +316,16 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.hassio.get_os_info",
+        "spencerassistant.components.hassio.get_os_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.get_info",
+        "spencerassistant.components.hassio.get_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.get_host_info",
+        "spencerassistant.components.hassio.get_host_info",
         side_effect=Mock(return_value={}),
     ), patch(
-        "homeassistant.components.hassio.async_get_addon_info",
+        "spencerassistant.components.hassio.async_get_addon_info",
         side_effect=AsyncMock(
             return_value={
                 "slug": "test_addon",
@@ -335,10 +335,10 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.hassio.is_hassio",
+        "spencerassistant.components.hassio.is_hassio",
         side_effect=Mock(return_value=True),
     ), patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ):
         await analytics.send_analytics()
     assert "'addon_count': 1" in caplog.text
@@ -354,7 +354,7 @@ async def test_reusing_uuid(hass, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ):
         # This is not actually called but that in itself prove the test
         hex.return_value = MOCK_UUID
@@ -371,7 +371,7 @@ async def test_custom_integrations(hass, aioclient_mock, enable_custom_integrati
     assert await async_setup_component(hass, "test_package", {"test_package": {}})
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0][2]
@@ -385,7 +385,7 @@ async def test_dev_url(hass, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True})
 
     with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
     ):
         await analytics.send_analytics()
 
@@ -400,7 +400,7 @@ async def test_dev_url_error(hass, aioclient_mock, caplog):
     await analytics.save_preferences({ATTR_BASE: True})
 
     with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
     ):
 
         await analytics.send_analytics()
@@ -420,7 +420,7 @@ async def test_nightly_endpoint(hass, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True})
 
     with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_NIGHTLY
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_NIGHTLY
     ):
 
         await analytics.send_analytics()
@@ -438,9 +438,9 @@ async def test_send_with_no_energy(hass, aioclient_mock):
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ), patch(
-        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+        "spencerassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
     ) as energy_is_configured:
         energy_is_configured.return_value = False
         hex.return_value = MOCK_UUID
@@ -460,9 +460,9 @@ async def test_send_with_no_energy_config(recorder_mock, hass, aioclient_mock):
     assert await async_setup_component(hass, "energy", {})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ), patch(
-        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+        "spencerassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
     ) as energy_is_configured:
         energy_is_configured.return_value = False
         hex.return_value = MOCK_UUID
@@ -482,9 +482,9 @@ async def test_send_with_energy_config(recorder_mock, hass, aioclient_mock):
     assert await async_setup_component(hass, "energy", {})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+        "spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
     ), patch(
-        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+        "spencerassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
     ) as energy_is_configured:
         energy_is_configured.return_value = True
         hex.return_value = MOCK_UUID
@@ -506,7 +506,7 @@ async def test_send_usage_with_certificate(hass, caplog, aioclient_mock):
     assert analytics.preferences[ATTR_USAGE]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
     assert "'certificate': True" in caplog.text

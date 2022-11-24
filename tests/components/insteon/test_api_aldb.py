@@ -8,15 +8,15 @@ from pyinsteon.address import Address
 from pyinsteon.topics import ALDB_STATUS_CHANGED, DEVICE_LINK_CONTROLLER_CREATED
 import pytest
 
-from homeassistant.components import insteon
-from homeassistant.components.insteon.api import async_load_api
-from homeassistant.components.insteon.api.aldb import (
+from spencerassistant.components import insteon
+from spencerassistant.components.insteon.api import async_load_api
+from spencerassistant.components.insteon.api.aldb import (
     ALDB_RECORD,
     DEVICE_ADDRESS,
     ID,
     TYPE,
 )
-from homeassistant.components.insteon.api.device import INSTEON_DEVICE_NOT_FOUND
+from spencerassistant.components.insteon.api.device import INSTEON_DEVICE_NOT_FOUND
 
 from .mock_devices import MockDevices
 

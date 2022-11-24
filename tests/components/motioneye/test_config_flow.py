@@ -7,9 +7,9 @@ from motioneye_client.client import (
     MotionEyeClientRequestError,
 )
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.motioneye.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_STREAM_URL_TEMPLATE,
@@ -19,15 +19,15 @@ from homeassistant.components.motioneye.const import (
     CONF_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
-from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_URL, CONF_WEBHOOK_ID
+from spencerassistant.core import spencerAssistant
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
 from tests.common import MockConfigEntry
 
 
-async def test_user_success(hass: HomeAssistant) -> None:
+async def test_user_success(hass: spencerAssistant) -> None:
     """Test successful user flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -39,10 +39,10 @@ async def test_user_success(hass: HomeAssistant) -> None:
     mock_client = create_mock_motioneye_client()
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -70,7 +70,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_hassio_success(hass: HomeAssistant) -> None:
+async def test_hassio_success(hass: spencerAssistant) -> None:
     """Test successful Supervisor flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -96,10 +96,10 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
     mock_client = create_mock_motioneye_client()
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -126,7 +126,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_user_invalid_auth(hass: HomeAssistant) -> None:
+async def test_user_invalid_auth(hass: spencerAssistant) -> None:
     """Test invalid auth is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -138,7 +138,7 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -158,7 +158,7 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_user_invalid_url(hass: HomeAssistant) -> None:
+async def test_user_invalid_url(hass: spencerAssistant) -> None:
     """Test invalid url is handled correctly."""
 
     result = await hass.config_entries.flow.async_init(
@@ -167,7 +167,7 @@ async def test_user_invalid_url(hass: HomeAssistant) -> None:
 
     mock_client = create_mock_motioneye_client()
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -186,7 +186,7 @@ async def test_user_invalid_url(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_url"}
 
 
-async def test_user_cannot_connect(hass: HomeAssistant) -> None:
+async def test_user_cannot_connect(hass: spencerAssistant) -> None:
     """Test connection failure is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -198,7 +198,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -218,7 +218,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_user_request_error(hass: HomeAssistant) -> None:
+async def test_user_request_error(hass: spencerAssistant) -> None:
     """Test a request error is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -228,7 +228,7 @@ async def test_user_request_error(hass: HomeAssistant) -> None:
     mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientRequestError)
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -248,7 +248,7 @@ async def test_user_request_error(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: spencerAssistant) -> None:
     """Test a reauth."""
     config_data = {
         CONF_URL: TEST_URL,
@@ -279,10 +279,10 @@ async def test_reauth(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -299,7 +299,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_duplicate(hass: HomeAssistant) -> None:
+async def test_duplicate(hass: spencerAssistant) -> None:
     """Test that a duplicate entry (same URL) is rejected."""
     config_data = {
         CONF_URL: TEST_URL,
@@ -332,7 +332,7 @@ async def test_duplicate(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -346,7 +346,7 @@ async def test_duplicate(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
-async def test_hassio_already_configured(hass: HomeAssistant) -> None:
+async def test_hassio_already_configured(hass: spencerAssistant) -> None:
     """Test we don't discover when already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -366,7 +366,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-async def test_hassio_ignored(hass: HomeAssistant) -> None:
+async def test_hassio_ignored(hass: spencerAssistant) -> None:
     """Test Supervisor discovered instance can be ignored."""
     MockConfigEntry(domain=DOMAIN, source=config_entries.SOURCE_IGNORE).add_to_hass(
         hass
@@ -385,7 +385,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
+async def test_hassio_abort_if_already_in_progress(hass: spencerAssistant) -> None:
     """Test Supervisor discovered flow aborts if user flow in progress."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -405,7 +405,7 @@ async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
     assert result2.get("reason") == "already_in_progress"
 
 
-async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
+async def test_hassio_clean_up_on_user_flow(hass: spencerAssistant) -> None:
     """Test Supervisor discovered flow is clean up when doing user flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -428,10 +428,10 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
     mock_client = create_mock_motioneye_client()
 
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -453,17 +453,17 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
     assert len(flows) == 0
 
 
-async def test_options(hass: HomeAssistant) -> None:
+async def test_options(hass: spencerAssistant) -> None:
     """Check an options flow."""
 
     config_entry = create_mock_motioneye_config_entry(hass)
 
     client = create_mock_motioneye_client()
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=client,
     ), patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ):
         await hass.async_block_till_done()
@@ -486,17 +486,17 @@ async def test_options(hass: HomeAssistant) -> None:
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
 
 
-async def test_advanced_options(hass: HomeAssistant) -> None:
+async def test_advanced_options(hass: spencerAssistant) -> None:
     """Check an options flow with advanced options."""
 
     config_entry = create_mock_motioneye_config_entry(hass)
 
     mock_client = create_mock_motioneye_client()
     with patch(
-        "homeassistant.components.motioneye.MotionEyeClient",
+        "spencerassistant.components.motioneye.MotionEyeClient",
         return_value=mock_client,
     ) as mock_setup, patch(
-        "homeassistant.components.motioneye.async_setup_entry",
+        "spencerassistant.components.motioneye.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()

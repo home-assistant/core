@@ -6,15 +6,15 @@ from unittest.mock import patch
 import pytest
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
-from homeassistant import config_entries
-from homeassistant.components.yale_smart_alarm.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.yale_smart_alarm.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -24,9 +24,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
     ), patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -60,7 +60,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ],
 )
 async def test_form_invalid_auth(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str
+    hass: spencerAssistant, sideeffect: Exception, p_error: str
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -68,7 +68,7 @@ async def test_form_invalid_auth(
     )
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
         side_effect=sideeffect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -85,9 +85,9 @@ async def test_form_invalid_auth(
     assert result2["errors"] == {"base": p_error}
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
     ), patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,7 +110,7 @@ async def test_form_invalid_auth(
     }
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: spencerAssistant) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -138,9 +138,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
     ) as mock_yale, patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -175,7 +175,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     ],
 )
 async def test_reauth_flow_error(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str
+    hass: spencerAssistant, sideeffect: Exception, p_error: str
 ) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
@@ -201,7 +201,7 @@ async def test_reauth_flow_error(
     )
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
         side_effect=sideeffect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -218,10 +218,10 @@ async def test_reauth_flow_error(
     assert result2["errors"] == {"base": p_error}
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        "spencerassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
         return_value="",
     ), patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -243,7 +243,7 @@ async def test_reauth_flow_error(
     }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(hass: spencerAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -253,7 +253,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -273,7 +273,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {"code": "123456", "lock_code_digits": 6}
 
 
-async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
+async def test_options_flow_format_mismatch(hass: spencerAssistant) -> None:
     """Test options config flow with a code format mismatch error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -283,7 +283,7 @@ async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        "spencerassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

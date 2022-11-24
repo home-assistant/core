@@ -6,17 +6,17 @@ from unittest.mock import AsyncMock, Mock
 
 from _pytest.logging import LogCaptureFixture
 
-from homeassistant.components import notify
-from homeassistant.components.slack import DOMAIN
-from homeassistant.components.slack.notify import (
+from spencerassistant.components import notify
+from spencerassistant.components.slack import DOMAIN
+from spencerassistant.components.slack.notify import (
     CONF_DEFAULT_CHANNEL,
     SlackNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFORM
+from spencerassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 
 from . import CONF_DATA
 
-MODULE_PATH = "homeassistant.components.slack.notify"
+MODULE_PATH = "spencerassistant.components.slack.notify"
 SERVICE_NAME = f"notify_{DOMAIN}"
 
 DEFAULT_CONFIG = {

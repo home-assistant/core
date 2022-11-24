@@ -4,11 +4,11 @@ from unittest.mock import Mock, patch
 import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant import data_entry_flow
-from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant
+from spencerassistant import data_entry_flow
+from spencerassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
+from spencerassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
+from spencerassistant.const import CONF_API_KEY, CONF_NAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ def mock_controller():
         yield api
 
 
-async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
+async def test_user(hass: spencerAssistant, test_api: Mock) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -49,7 +49,7 @@ async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
     assert data[CONF_API_KEY] == API_KEY
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, test_api: str) -> None:
+async def test_abort_if_already_setup(hass: spencerAssistant, test_api: str) -> None:
     """Test we abort if the site_id is already setup."""
     MockConfigEntry(
         domain="solaredge",
@@ -67,7 +67,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_api: str) -> Non
 
 
 async def test_ignored_entry_does_not_cause_error(
-    hass: HomeAssistant, test_api: str
+    hass: spencerAssistant, test_api: str
 ) -> None:
     """Test an ignored entry does not cause and error and we can still create an new entry."""
     MockConfigEntry(
@@ -91,7 +91,7 @@ async def test_ignored_entry_does_not_cause_error(
     assert data[CONF_API_KEY] == "test"
 
 
-async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
+async def test_asserts(hass: spencerAssistant, test_api: Mock) -> None:
     """Test the _site_in_configuration_exists method."""
 
     # test with inactive site

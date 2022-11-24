@@ -1,9 +1,9 @@
 """The tests for an update of the Twitch component."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components import sensor
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import sensor
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.setup import async_setup_component
 
 ENTITY_ID = "sensor.channel123"
 CONFIG = {
@@ -58,7 +58,7 @@ async def test_init(hass):
     twitch_mock.has_required_auth.return_value = False
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch", return_value=twitch_mock
+        "spencerassistant.components.twitch.sensor.Twitch", return_value=twitch_mock
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_offline(hass):
     twitch_mock.has_required_auth.return_value = False
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch",
+        "spencerassistant.components.twitch.sensor.Twitch",
         return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
@@ -103,7 +103,7 @@ async def test_streaming(hass):
     twitch_mock.has_required_auth.return_value = False
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch",
+        "spencerassistant.components.twitch.sensor.Twitch",
         return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
@@ -134,7 +134,7 @@ async def test_oauth_without_sub_and_follow(hass):
     twitch_mock.check_user_subscription.return_value = {"status": 404}
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch",
+        "spencerassistant.components.twitch.sensor.Twitch",
         return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
@@ -165,7 +165,7 @@ async def test_oauth_with_sub(hass):
     twitch_mock.check_user_subscription.return_value = make_data([SUB_ACTIVE])
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch",
+        "spencerassistant.components.twitch.sensor.Twitch",
         return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
@@ -195,7 +195,7 @@ async def test_oauth_with_follow(hass):
     twitch_mock.check_user_subscription.return_value = {"status": 404}
 
     with patch(
-        "homeassistant.components.twitch.sensor.Twitch",
+        "spencerassistant.components.twitch.sensor.Twitch",
         return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)

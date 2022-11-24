@@ -13,11 +13,11 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp
-from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import dhcp
+from spencerassistant.components.overkiz.const import DOMAIN
+from spencerassistant.components.zeroconf import ZeroconfServiceInfo
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,7 @@ FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
 )
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -61,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
     ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+        "spencerassistant.components.overkiz.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -95,7 +95,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ],
 )
 async def test_form_invalid_auth(
-    hass: HomeAssistant, side_effect: Exception, error: str
+    hass: spencerAssistant, side_effect: Exception, error: str
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -120,7 +120,7 @@ async def test_form_invalid_auth(
     ],
 )
 async def test_form_invalid_cozytouch_auth(
-    hass: HomeAssistant, side_effect: Exception, error: str
+    hass: spencerAssistant, side_effect: Exception, error: str
 ) -> None:
     """Test we handle invalid auth from CozyTouch."""
     result = await hass.config_entries.flow.async_init(
@@ -142,7 +142,7 @@ async def test_form_invalid_cozytouch_auth(
     assert result2["errors"] == {"base": error}
 
 
-async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_abort_on_duplicate_entry(hass: spencerAssistant) -> None:
     """Test config flow aborts Config Flow on duplicate entries."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -157,7 +157,7 @@ async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways",
         return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
+    ), patch("spencerassistant.components.overkiz.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -167,7 +167,7 @@ async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
+async def test_allow_multiple_unique_entries(hass: spencerAssistant) -> None:
     """Test config flow allows Config Flow unique entries."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -182,7 +182,7 @@ async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways",
         return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
+    ), patch("spencerassistant.components.overkiz.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
@@ -197,7 +197,7 @@ async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     }
 
 
-async def test_dhcp_flow(hass: HomeAssistant) -> None:
+async def test_dhcp_flow(hass: spencerAssistant) -> None:
     """Test that DHCP discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -215,7 +215,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
     ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+        "spencerassistant.components.overkiz.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -233,7 +233,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_dhcp_flow_already_configured(hass: spencerAssistant) -> None:
     """Test that DHCP doesn't setup already configured gateways."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -270,7 +270,7 @@ async def test_zeroconf_flow(hass):
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
     ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
+        "spencerassistant.components.overkiz.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

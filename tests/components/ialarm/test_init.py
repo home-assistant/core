@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.ialarm.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.components.ialarm.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="ialarm_api")
 def ialarm_api_fixture():
     """Set up IAlarm API fixture."""
-    with patch("homeassistant.components.ialarm.IAlarm") as mock_ialarm_api:
+    with patch("spencerassistant.components.ialarm.IAlarm") as mock_ialarm_api:
         yield mock_ialarm_api
 
 

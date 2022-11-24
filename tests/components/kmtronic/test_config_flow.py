@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 
@@ -21,10 +21,10 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
+        "spencerassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         return_value=[Mock()],
     ), patch(
-        "homeassistant.components.kmtronic.async_setup_entry",
+        "spencerassistant.components.kmtronic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -91,7 +91,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
+        "spencerassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         side_effect=ClientResponseError(None, None, status=HTTPStatus.BAD_REQUEST),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -114,7 +114,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
+        "spencerassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         side_effect=ClientConnectorError(None, Mock()),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -137,7 +137,7 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
+        "spencerassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(

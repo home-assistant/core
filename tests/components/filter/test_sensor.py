@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
-from homeassistant.components.filter.sensor import (
+from spencerassistant import config as hass_config
+from spencerassistant.components.filter.sensor import (
     DOMAIN,
     LowPassFilter,
     OutlierFilter,
@@ -14,21 +14,21 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_fixture_path
 
@@ -120,10 +120,10 @@ async def test_chain_history(recorder_mock, hass, values, missing):
         }
 
     with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
+        "spencerassistant.components.recorder.history.state_changes_during_period",
         return_value=fake_states,
     ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
+        "spencerassistant.components.recorder.history.get_last_state_changes",
         return_value=fake_states,
     ):
         with assert_setup_component(1, "sensor"):
@@ -224,10 +224,10 @@ async def test_history_time(recorder_mock, hass):
         ]
     }
     with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
+        "spencerassistant.components.recorder.history.state_changes_during_period",
         return_value=fake_states,
     ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
+        "spencerassistant.components.recorder.history.get_last_state_changes",
         return_value=fake_states,
     ):
         with assert_setup_component(1, "sensor"):

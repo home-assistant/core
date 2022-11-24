@@ -1,10 +1,10 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 from aiohue.v2.models.button import ButtonEvent
 
-from homeassistant.components import hue
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.hue.v2.device import async_setup_devices
-from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
+from spencerassistant.components import hue
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.hue.v2.device import async_setup_devices
+from spencerassistant.components.hue.v2.hue_event import async_setup_hue_events
 
 from .conftest import setup_platform
 

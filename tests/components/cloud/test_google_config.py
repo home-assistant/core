@@ -5,14 +5,14 @@ from unittest.mock import Mock, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.cloud import GACTIONS_SCHEMA
-from homeassistant.components.cloud.google_config import CloudGoogleConfig
-from homeassistant.components.google_assistant import helpers as ga_helpers
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util.dt import utcnow
+from spencerassistant.components.cloud import GACTIONS_SCHEMA
+from spencerassistant.components.cloud.google_config import CloudGoogleConfig
+from spencerassistant.components.google_assistant import helpers as ga_helpers
+from spencerassistant.const import EVENT_spencerASSISTANT_STARTED
+from spencerassistant.core import CoreState, State
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_registry
 
@@ -37,7 +37,7 @@ async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
     mock_conf._cloud.subscription_expired = False
 
     with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
-        "homeassistant.components.google_assistant.report_state.async_enable_report_state"
+        "spencerassistant.components.google_assistant.report_state.async_enable_report_state"
     ) as mock_report_state:
         await cloud_prefs.async_update(google_report_state=True)
         await hass.async_block_till_done()
@@ -56,7 +56,7 @@ async def test_google_update_report_state_subscription_expired(
     assert mock_conf._cloud.subscription_expired
 
     with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
-        "homeassistant.components.google_assistant.report_state.async_enable_report_state"
+        "spencerassistant.components.google_assistant.report_state.async_enable_report_state"
     ) as mock_report_state:
         await cloud_prefs.async_update(google_report_state=True)
         await hass.async_block_till_done()
@@ -262,8 +262,8 @@ async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud_prefs):
-    """Test Google config syncs when home assistant started."""
+async def test_sync_google_on_spencer_assistant_start(hass, mock_cloud_login, cloud_prefs):
+    """Test Google config syncs when spencer assistant started."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
@@ -273,7 +273,7 @@ async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud
         await config.async_connect_agent_user("mock-user-id")
         assert len(mock_sync.mock_calls) == 0
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
@@ -390,7 +390,7 @@ async def test_google_handle_logout(hass, cloud_prefs, mock_cloud_login):
     await gconf.async_initialize()
 
     with patch(
-        "homeassistant.components.google_assistant.report_state.async_enable_report_state",
+        "spencerassistant.components.google_assistant.report_state.async_enable_report_state",
     ) as mock_enable:
         gconf.async_enable_report_state()
 

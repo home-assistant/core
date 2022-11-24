@@ -8,8 +8,8 @@ import plexapi.exceptions
 import pytest
 import requests.exceptions
 
-from homeassistant.components.plex import config_flow
-from homeassistant.components.plex.const import (
+from spencerassistant.components.plex import config_flow
+from spencerassistant.components.plex.const import (
     AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
@@ -22,13 +22,13 @@ from homeassistant.components.plex.const import (
     PLEX_SERVER_CONFIG,
     SERVERS,
 )
-from homeassistant.config_entries import (
+from spencerassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntryState,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -603,7 +603,7 @@ async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
     assert result["errors"]["base"] == "ssl_error"
 
     with patch(
-        "homeassistant.components.plex.PlexServer.connect",
+        "spencerassistant.components.plex.PlexServer.connect",
         side_effect=requests.exceptions.SSLError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -614,8 +614,8 @@ async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
     assert result["step_id"] == "manual_setup"
     assert result["errors"]["base"] == "ssl_error"
 
-    with patch("homeassistant.components.plex.PlexWebsocket", autospec=True), patch(
-        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    with patch("spencerassistant.components.plex.PlexWebsocket", autospec=True), patch(
+        "spencerassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
@@ -655,8 +655,8 @@ async def test_manual_config_with_token(
     assert result["step_id"] == "manual_setup"
 
     with patch(
-        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
+        "spencerassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    ), patch("spencerassistant.components.plex.PlexWebsocket", autospec=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
@@ -701,7 +701,7 @@ async def test_integration_discovery(hass):
     """Test integration self-discovery."""
     mock_gdm = MockGDM()
 
-    with patch("homeassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
+    with patch("spencerassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
         await config_flow.async_discover(hass)
         await hass.async_block_till_done()
 
@@ -854,7 +854,7 @@ async def test_client_header_issues(hass, current_request_with_host):
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=None
     ), patch(
-        "homeassistant.components.http.current_request.get", return_value=MockRequest()
+        "spencerassistant.components.http.current_request.get", return_value=MockRequest()
     ):
         with pytest.raises(RuntimeError):
             result = await hass.config_entries.flow.async_configure(

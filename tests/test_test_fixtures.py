@@ -4,7 +4,7 @@ import socket
 import pytest
 import pytest_socket
 
-from homeassistant.core import async_get_hass
+from spencerassistant.core import async_get_hass
 
 
 def test_sockets_disabled():

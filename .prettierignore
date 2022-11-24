@@ -2,5 +2,5 @@
 .strict-typing
 azure-*.yml
 docs/source/_templates/*
-homeassistant/components/*/translations/*.json
-homeassistant/generated/*
+spencerassistant/components/*/translations/*.json
+spencerassistant/generated/*

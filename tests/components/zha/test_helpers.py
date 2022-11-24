@@ -9,12 +9,12 @@ from zigpy.types.basic import uint16_t
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
-from homeassistant.components.zha.core.helpers import (
+from spencerassistant.components.zha.core.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
 )
-from homeassistant.const import Platform
-import homeassistant.helpers.config_validation as cv
+from spencerassistant.const import Platform
+import spencerassistant.helpers.config_validation as cv
 
 from .common import async_enable_traffic
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 def light_platform_only():
     """Only setup the light and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BUTTON,
             Platform.LIGHT,

@@ -5,12 +5,12 @@ from unittest.mock import patch
 from aioflo.errors import RequestError
 import pytest
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from spencerassistant.components.flo.device import FloDeviceDataUpdateCoordinator
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.helpers.update_coordinator import UpdateFailed
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
@@ -34,8 +34,8 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     assert valve.consumption_today == 3.674
     assert valve.current_flow_rate == 0
     assert valve.current_psi == 54.20000076293945
-    assert valve.current_system_mode == "home"
-    assert valve.target_system_mode == "home"
+    assert valve.current_system_mode == "spencer"
+    assert valve.target_system_mode == "spencer"
     assert valve.firmware_version == "6.1.1"
     assert valve.device_type == "flo_device_v2"
     assert valve.id == "98765"
@@ -83,7 +83,7 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
 
     # test error sending device ping
     with patch(
-        "homeassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
+        "spencerassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
         side_effect=RequestError,
     ):
         with pytest.raises(UpdateFailed):

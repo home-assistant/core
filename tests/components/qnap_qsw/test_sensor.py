@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.qnap_qsw.const import ATTR_MAX
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.qnap_qsw.const import ATTR_MAX
+from spencerassistant.core import spencerAssistant
 
 from .util import async_init_integration
 
 
 async def test_qnap_qsw_create_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_registry_enabled_by_default: AsyncMock,
 ) -> None:
     """Test creation of sensors."""

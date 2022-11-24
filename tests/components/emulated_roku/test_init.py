@@ -1,14 +1,14 @@
 """Test emulated_roku component setup process."""
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components import emulated_roku
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import emulated_roku
+from spencerassistant.setup import async_setup_component
 
 
 async def test_config_required_fields(hass, mock_get_source_ip):
     """Test that configuration is successful with required fields."""
     with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+        "spencerassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
         assert (
@@ -33,7 +33,7 @@ async def test_config_required_fields(hass, mock_get_source_ip):
 async def test_config_already_registered_not_configured(hass, mock_get_source_ip):
     """Test that an already registered name causes the entry to be ignored."""
     with patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+        "spencerassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate, patch.object(
         emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
@@ -72,7 +72,7 @@ async def test_setup_entry_successful(hass):
     }
 
     with patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+        "spencerassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate:
         assert await emulated_roku.async_setup_entry(hass, entry) is True
@@ -100,7 +100,7 @@ async def test_unload_entry(hass):
     }
 
     with patch(
-        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
+        "spencerassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
         assert await emulated_roku.async_setup_entry(hass, entry) is True

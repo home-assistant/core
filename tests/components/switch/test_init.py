@@ -1,10 +1,10 @@
 """The tests for the Switch component."""
 import pytest
 
-from homeassistant import core
-from homeassistant.components import switch
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.setup import async_setup_component
+from spencerassistant import core
+from spencerassistant.components import switch
+from spencerassistant.const import CONF_PLATFORM
+from spencerassistant.setup import async_setup_component
 
 from . import common
 

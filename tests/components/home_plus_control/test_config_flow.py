@@ -1,16 +1,16 @@
-"""Test the Legrand Home+ Control config flow."""
+"""Test the Legrand spencer+ Control config flow."""
 from http import HTTPStatus
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.home_plus_control.const import (
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components.spencer_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
 
@@ -23,9 +23,9 @@ async def test_full_flow(
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
-        "home_plus_control",
+        "spencer_plus_control",
         {
-            "home_plus_control": {
+            "spencer_plus_control": {
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -33,7 +33,7 @@ async def test_full_flow(
         },
     )
     result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
+        "spencer_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
@@ -68,14 +68,14 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.home_plus_control.async_setup_entry",
+        "spencerassistant.components.spencer_plus_control.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home+ Control"
+    assert result["title"] == "spencer+ Control"
     config_data = result["data"]
     assert config_data["token"]["refresh_token"] == "mock-refresh-token"
     assert config_data["token"]["access_token"] == "mock-access-token"
@@ -87,9 +87,9 @@ async def test_abort_if_entry_in_progress(hass, current_request_with_host):
     """Check flow abort when an entry is already in progress."""
     assert await setup.async_setup_component(
         hass,
-        "home_plus_control",
+        "spencer_plus_control",
         {
-            "home_plus_control": {
+            "spencer_plus_control": {
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -99,12 +99,12 @@ async def test_abort_if_entry_in_progress(hass, current_request_with_host):
 
     # Start one flow
     result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
+        "spencer_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
     # Attempt to start another flow
     result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
+        "spencer_plus_control", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -117,9 +117,9 @@ async def test_abort_if_entry_exists(hass, current_request_with_host):
 
     assert await setup.async_setup_component(
         hass,
-        "home_plus_control",
+        "spencer_plus_control",
         {
-            "home_plus_control": {
+            "spencer_plus_control": {
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -129,7 +129,7 @@ async def test_abort_if_entry_exists(hass, current_request_with_host):
     )
 
     result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
+        "spencer_plus_control", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -141,9 +141,9 @@ async def test_abort_if_invalid_token(
     """Check flow abort when the token has an invalid value."""
     assert await setup.async_setup_component(
         hass,
-        "home_plus_control",
+        "spencer_plus_control",
         {
-            "home_plus_control": {
+            "spencer_plus_control": {
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
@@ -151,7 +151,7 @@ async def test_abort_if_invalid_token(
         },
     )
     result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
+        "spencer_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access

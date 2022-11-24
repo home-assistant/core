@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import requests_mock
 
-from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.aemet.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+import spencerassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
 
@@ -25,8 +25,8 @@ async def test_unload_entry(hass):
     """Test that the options form."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
+    with patch("spencerassistant.util.dt.now", return_value=now), patch(
+        "spencerassistant.util.dt.utcnow", return_value=now
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 

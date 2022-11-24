@@ -3,14 +3,14 @@ import json
 
 from aiohttp import ClientSession
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: ClientSession,
     init_integration: MockConfigEntry,
 ):

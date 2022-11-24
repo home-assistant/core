@@ -1,7 +1,7 @@
 """The tests for Kira sensor platform."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.kira import remote as kira
+from spencerassistant.components.kira import remote as kira
 
 SERVICE_SEND_COMMAND = "send_command"
 

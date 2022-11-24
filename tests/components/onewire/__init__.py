@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -17,9 +17,9 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.device_registry import DeviceRegistry
+from spencerassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from .const import (
     ATTR_DEFAULT_DISABLED,
@@ -68,7 +68,7 @@ def check_device_registry(
 
 
 def check_entities(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_registry: EntityRegistry,
     expected_entities: MappingProxyType,
 ) -> None:

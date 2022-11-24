@@ -7,7 +7,7 @@ import subprocess
 
 from packaging.version import Version
 
-from homeassistant import const
+from spencerassistant import const
 
 
 def _bump_release(release, bump_type):
@@ -100,8 +100,8 @@ def bump_version(version, bump_type):
 
 
 def write_version(version):
-    """Update Home Assistant constant file with new version."""
-    with open("homeassistant/const.py") as fil:
+    """Update spencer Assistant constant file with new version."""
+    with open("spencerassistant/const.py") as fil:
         content = fil.read()
 
     major, minor, patch = str(version).split(".", 2)
@@ -116,7 +116,7 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "w") as fil:
+    with open("spencerassistant/const.py", "w") as fil:
         fil.write(content)
 
 
@@ -150,7 +150,7 @@ def write_ci_workflow(version: Version) -> None:
 
 def main():
     """Execute script."""
-    parser = argparse.ArgumentParser(description="Bump version of Home Assistant")
+    parser = argparse.ArgumentParser(description="Bump version of spencer Assistant")
     parser.add_argument(
         "type",
         help="The type of the bump the version to.",

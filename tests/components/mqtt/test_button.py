@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import button, mqtt
-from homeassistant.const import (
+from spencerassistant.components import button, mqtt
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -49,7 +49,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def button_platform_only():
     """Only setup the button platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BUTTON]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.BUTTON]):
         yield
 
 
@@ -311,7 +311,7 @@ async def test_discovery_update_unchanged_button(
         '  "command_topic": "test_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.button.MqttButton.discovery_update"
+        "spencerassistant.components.mqtt.button.MqttButton.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

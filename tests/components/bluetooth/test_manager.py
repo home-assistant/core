@@ -7,13 +7,13 @@ from bleak.backends.scanner import BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 import pytest
 
-from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BaseHaScanner
-from homeassistant.components.bluetooth.manager import (
+from spencerassistant.components import bluetooth
+from spencerassistant.components.bluetooth import BaseHaScanner
+from spencerassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from . import (
     generate_advertisement_data,
@@ -24,7 +24,7 @@ from . import (
 
 
 @pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> None:
+def register_hci0_scanner(hass: spencerAssistant) -> None:
     """Register an hci0 scanner."""
     hci0_scanner = BaseHaScanner(hass, "hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
@@ -33,7 +33,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> None:
+def register_hci1_scanner(hass: spencerAssistant) -> None:
     """Register an hci1 scanner."""
     hci1_scanner = BaseHaScanner(hass, "hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)

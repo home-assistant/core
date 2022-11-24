@@ -5,15 +5,15 @@ from unittest.mock import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components import fan, mqtt
-from homeassistant.components.fan import (
+from spencerassistant.components import fan, mqtt
+from spencerassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     NotValidPresetModeError,
 )
-from homeassistant.components.mqtt.fan import (
+from spencerassistant.components.mqtt.fan import (
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
     CONF_PERCENTAGE_COMMAND_TOPIC,
@@ -22,7 +22,7 @@ from homeassistant.components.mqtt.fan import (
     CONF_PRESET_MODE_STATE_TOPIC,
     MQTT_FAN_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -79,7 +79,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def fan_platform_only():
     """Only setup the fan platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
         yield
 
 
@@ -1780,7 +1780,7 @@ async def test_discovery_update_unchanged_fan(
     """Test update of discovered fan."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
     with patch(
-        "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
+        "spencerassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

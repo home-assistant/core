@@ -4,19 +4,19 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-from homeassistant.components.sql.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.sql.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_NAME, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.entity_component import async_update_entity
+from spencerassistant.setup import async_setup_component
 
 from . import init_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_query(hass: HomeAssistant) -> None:
+async def test_query(hass: spencerAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -31,7 +31,7 @@ async def test_query(hass: HomeAssistant) -> None:
     assert state.attributes["value"] == 5
 
 
-async def test_import_query(hass: HomeAssistant) -> None:
+async def test_import_query(hass: spencerAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "sensor": {
@@ -55,7 +55,7 @@ async def test_import_query(hass: HomeAssistant) -> None:
     assert options[CONF_NAME] == "count_tables"
 
 
-async def test_query_value_template(hass: HomeAssistant) -> None:
+async def test_query_value_template(hass: spencerAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -70,7 +70,7 @@ async def test_query_value_template(hass: HomeAssistant) -> None:
     assert state.state == "5"
 
 
-async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
+async def test_query_value_template_invalid(hass: spencerAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -85,7 +85,7 @@ async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
     assert state.state == "5.01"
 
 
-async def test_query_limit(hass: HomeAssistant) -> None:
+async def test_query_limit(hass: spencerAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
     config = {
         "db_url": "sqlite://",
@@ -101,7 +101,7 @@ async def test_query_limit(hass: HomeAssistant) -> None:
 
 
 async def test_query_no_value(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -120,7 +120,7 @@ async def test_query_no_value(
 
 
 async def test_query_mssql_no_result(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -129,8 +129,8 @@ async def test_query_mssql_no_result(
         "column": "value",
         "name": "count_tables",
     }
-    with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.text",
+    with patch("spencerassistant.components.sql.sensor.sqlalchemy"), patch(
+        "spencerassistant.components.sql.sensor.sqlalchemy.text",
         return_value="SELECT TOP 1 5 as value where 1=2",
     ):
         await init_integration(hass, config)
@@ -146,19 +146,19 @@ async def test_query_mssql_no_result(
     "url,expected_patterns,not_expected_patterns",
     [
         (
-            "sqlite://homeassistant:hunter2@homeassistant.local",
-            ["sqlite://****:****@homeassistant.local"],
-            ["sqlite://homeassistant:hunter2@homeassistant.local"],
+            "sqlite://spencerassistant:hunter2@spencerassistant.local",
+            ["sqlite://****:****@spencerassistant.local"],
+            ["sqlite://spencerassistant:hunter2@spencerassistant.local"],
         ),
         (
-            "sqlite://homeassistant.local",
-            ["sqlite://homeassistant.local"],
+            "sqlite://spencerassistant.local",
+            ["sqlite://spencerassistant.local"],
             [],
         ),
     ],
 )
 async def test_invalid_url_setup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,
     expected_patterns: str,
@@ -182,7 +182,7 @@ async def test_invalid_url_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        "spencerassistant.components.sql.sensor.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -195,7 +195,7 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test invalid db url with redacted credentials on retry."""
@@ -219,12 +219,12 @@ async def test_invalid_url_on_update(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
+        "spencerassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
-            "sqlite://homeassistant:hunter2@homeassistant.local"
+            "sqlite://spencerassistant:hunter2@spencerassistant.local"
         ),
     ):
         await async_update_entity(hass, "sensor.count_tables")
 
-    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
-    assert "sqlite://****:****@homeassistant.local" in caplog.text
+    assert "sqlite://spencerassistant:hunter2@spencerassistant.local" not in caplog.text
+    assert "sqlite://****:****@spencerassistant.local" in caplog.text

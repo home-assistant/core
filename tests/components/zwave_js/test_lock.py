@@ -8,18 +8,18 @@ from zwave_js_server.const.command_class.lock import (
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node, NodeStatus
 
-from homeassistant.components.lock import (
+from spencerassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.components.zwave_js.const import DOMAIN as ZWAVE_JS_DOMAIN
-from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.components.zwave_js.lock import (
+from spencerassistant.components.zwave_js.const import DOMAIN as ZWAVE_JS_DOMAIN
+from spencerassistant.components.zwave_js.helpers import ZwaveValueMatcher
+from spencerassistant.components.zwave_js.lock import (
     SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_SET_LOCK_USERCODE,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     STATE_LOCKED,
     STATE_UNAVAILABLE,
@@ -164,7 +164,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
 
 
-async def test_only_one_lock(hass, client, lock_home_connect_620, integration):
+async def test_only_one_lock(hass, client, lock_spencer_connect_620, integration):
     """Test node with both Door Lock and Lock CC values only gets one lock entity."""
     assert len(hass.states.async_entity_ids("lock")) == 1
 

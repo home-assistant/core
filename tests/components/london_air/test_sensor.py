@@ -1,8 +1,8 @@
 """The tests for the london_air platform."""
 from http import HTTPStatus
 
-from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.london_air.sensor import CONF_LOCATIONS, URL
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

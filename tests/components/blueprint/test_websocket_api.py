@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml import parse_yaml
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.yaml import parse_yaml
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
     ).read_text()
 
     aioclient_mock.get(
-        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
+        "https://raw.githubusercontent.com/balloob/spencer-assistant-config/main/blueprints/automation/motion_light.yaml",
         text=raw_data,
     )
 
@@ -93,7 +93,7 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
         {
             "id": 5,
             "type": "blueprint/import",
-            "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            "url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }
     )
 
@@ -113,7 +113,7 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
                     "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
                 },
                 "name": "Call service based on event",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             },
         },
         "validation_errors": None,
@@ -135,7 +135,7 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
                 "path": "test_save",
                 "yaml": raw_data,
                 "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             }
         )
 
@@ -150,9 +150,9 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
         output_yaml = write_mock.call_args[0][0]
         assert output_yaml in (
             # pure python dumper will quote the value after !input
-            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input 'trigger_event'\naction:\n  service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
+            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input 'trigger_event'\naction:\n  service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
             # c dumper will not quote the value after !input
-            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input trigger_event\naction:\n  service: !input service_to_call\n  entity_id: light.kitchen\n"
+            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input trigger_event\naction:\n  service: !input service_to_call\n  entity_id: light.kitchen\n"
         )
         # Make sure ita parsable and does not raise
         assert len(parse_yaml(output_yaml)) > 1
@@ -169,7 +169,7 @@ async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
             "path": "test_event_service",
             "yaml": 'blueprint: {name: "name", domain: "automation"}',
             "domain": "automation",
-            "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }
     )
 
@@ -191,7 +191,7 @@ async def test_save_file_error(hass, aioclient_mock, hass_ws_client):
                 "path": "test_save",
                 "yaml": "raw_data",
                 "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             }
         )
 
@@ -212,7 +212,7 @@ async def test_save_invalid_blueprint(hass, aioclient_mock, hass_ws_client):
             "path": "test_wrong",
             "yaml": "wrong_blueprint",
             "domain": "automation",
-            "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }
     )
 

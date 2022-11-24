@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.util.dt as dt_util
+import spencerassistant.util.dt as dt_util
 
 
 @pytest.fixture

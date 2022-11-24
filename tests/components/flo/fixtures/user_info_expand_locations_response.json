@@ -41,12 +41,12 @@
       "occupants": 2,
       "stories": 2,
       "isProfileComplete": true,
-      "nickname": "Home",
+      "nickname": "spencer",
       "irrigationSchedule": {
         "isEnabled": false
       },
       "systemMode": {
-        "target": "home"
+        "target": "spencer"
       },
       "locationType": "sfh",
       "locationSize": "lte_4000_sq_ft",

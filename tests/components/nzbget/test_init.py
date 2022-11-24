@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
 
-from homeassistant.components.nzbget.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.components.nzbget.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from . import ENTRY_CONFIG, _patch_version, init_integration
 
@@ -31,7 +31,7 @@ async def test_async_setup_raises_entry_not_ready(hass):
     config_entry.add_to_hass(hass)
 
     with _patch_version(), patch(
-        "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
+        "spencerassistant.components.nzbget.coordinator.NZBGetAPI.status",
         side_effect=NZBGetAPIException(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

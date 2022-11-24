@@ -1,8 +1,8 @@
 """Tests for senseme light platform."""
 from aiosenseme import SensemeDevice
 
-from homeassistant.components import senseme
-from homeassistant.components.light import (
+from spencerassistant.components import senseme
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
@@ -12,18 +12,18 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     ColorMode,
 )
-from homeassistant.components.senseme.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.senseme.const import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from . import _mock_device, _patch_device, _patch_discovery
 
 from tests.common import MockConfigEntry
 
 
-async def _setup_mocked_entry(hass: HomeAssistant, device: SensemeDevice) -> None:
+async def _setup_mocked_entry(hass: spencerAssistant, device: SensemeDevice) -> None:
     """Set up a mocked entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -36,7 +36,7 @@ async def _setup_mocked_entry(hass: HomeAssistant, device: SensemeDevice) -> Non
         await hass.async_block_till_done()
 
 
-async def test_light_unique_id(hass: HomeAssistant) -> None:
+async def test_light_unique_id(hass: spencerAssistant) -> None:
     """Test a light unique id."""
     device = _mock_device()
     await _setup_mocked_entry(hass, device)
@@ -47,7 +47,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-async def test_fan_light(hass: HomeAssistant) -> None:
+async def test_fan_light(hass: spencerAssistant) -> None:
     """Test a fan light."""
     device = _mock_device()
     await _setup_mocked_entry(hass, device)
@@ -71,7 +71,7 @@ async def test_fan_light(hass: HomeAssistant) -> None:
     assert device.light_on is True
 
 
-async def test_fan_light_no_brightness(hass: HomeAssistant) -> None:
+async def test_fan_light_no_brightness(hass: spencerAssistant) -> None:
     """Test a fan light without brightness."""
     device = _mock_device()
     device.brightness = None
@@ -86,7 +86,7 @@ async def test_fan_light_no_brightness(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
 
 
-async def test_standalone_light(hass: HomeAssistant) -> None:
+async def test_standalone_light(hass: spencerAssistant) -> None:
     """Test a standalone light."""
     device = _mock_device()
     device.is_light = True

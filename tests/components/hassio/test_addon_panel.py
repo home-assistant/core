@@ -4,17 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
-        "http://127.0.0.1/homeassistant/info",
+        "http://127.0.0.1/spencerassistant/info",
         json={"result": "ok", "data": {"last_version": "10.0"}},
     )
 
@@ -47,7 +47,7 @@ async def test_hassio_addon_panel_startup(hass, aioclient_mock, hassio_env):
     assert aioclient_mock.call_count == 0
 
     with patch(
-        "homeassistant.components.hassio.addon_panel._register_panel",
+        "spencerassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
@@ -89,7 +89,7 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env, hass_cli
     assert aioclient_mock.call_count == 0
 
     with patch(
-        "homeassistant.components.hassio.addon_panel._register_panel",
+        "spencerassistant.components.hassio.addon_panel._register_panel",
     ) as mock_panel:
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()

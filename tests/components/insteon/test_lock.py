@@ -4,22 +4,22 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import insteon
-from homeassistant.components.insteon import (
+from spencerassistant.components import insteon
+from spencerassistant.components.insteon import (
     DOMAIN,
     insteon_entity,
     utils as insteon_utils,
 )
-from homeassistant.components.lock import (  # SERVICE_LOCK,; SERVICE_UNLOCK,
+from spencerassistant.components.lock import (  # SERVICE_LOCK,; SERVICE_UNLOCK,
     DOMAIN as LOCK_DOMAIN,
 )
-from homeassistant.const import (  # ATTR_ENTITY_ID,;
-    EVENT_HOMEASSISTANT_STOP,
+from spencerassistant.const import (  # ATTR_ENTITY_ID,;
+    EVENT_spencerASSISTANT_STOP,
     STATE_LOCKED,
     STATE_UNLOCKED,
     Platform,
 )
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.helpers import entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
@@ -33,7 +33,7 @@ devices = MockDevices()
 def lock_platform_only():
     """Only setup the lock and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.insteon.INSTEON_PLATFORMS",
+        "spencerassistant.components.insteon.INSTEON_PLATFORMS",
         (Platform.LOCK,),
     ):
         yield
@@ -78,7 +78,7 @@ async def test_lock_lock(hass):
         )
         assert devices["55.55.55"].async_lock.call_count == 1
     finally:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
 
@@ -105,5 +105,5 @@ async def test_lock_unlock(hass):
         )
         assert devices["55.55.55"].async_unlock.call_count == 1
     finally:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()

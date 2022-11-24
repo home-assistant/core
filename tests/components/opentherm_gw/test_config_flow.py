@@ -5,8 +5,8 @@ from unittest.mock import patch
 from pyotgw.vars import OTGW, OTGW_ABOUT
 from serial import SerialException
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.opentherm_gw.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
     CONF_READ_PRECISION,
@@ -14,7 +14,7 @@ from homeassistant.components.opentherm_gw.const import (
     CONF_TEMPORARY_OVRD_MODE,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_DEVICE,
     CONF_ID,
     CONF_NAME,
@@ -37,10 +37,10 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
+        "spencerassistant.components.opentherm_gw.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
+        "spencerassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
         "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
@@ -71,10 +71,10 @@ async def test_form_import(hass):
     """Test import from existing config."""
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
+        "spencerassistant.components.opentherm_gw.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
+        "spencerassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
         "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
@@ -115,10 +115,10 @@ async def test_form_duplicate_entries(hass):
     )
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
+        "spencerassistant.components.opentherm_gw.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
+        "spencerassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
         "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
@@ -206,10 +206,10 @@ async def test_options_migration(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
+        "spencerassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
         return_value=True,
     ), patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+        "spencerassistant.components.opentherm_gw.async_setup", return_value=True
     ), patch(
         "pyotgw.status.StatusManager._process_updates", return_value=None
     ):
@@ -249,9 +249,9 @@ async def test_options_form(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+        "spencerassistant.components.opentherm_gw.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True
+        "spencerassistant.components.opentherm_gw.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

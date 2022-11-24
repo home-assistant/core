@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.backup.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.backup.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from .common import setup_backup_integration
 
 
 async def test_setup_with_hassio(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setup of the integration with hassio enabled."""
@@ -22,13 +22,13 @@ async def test_setup_with_hassio(
 
 
 async def test_create_service(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test generate backup."""
     await setup_backup_integration(hass)
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.generate_backup",
+        "spencerassistant.components.backup.websocket.BackupManager.generate_backup",
     ) as generate_backup:
         await hass.services.async_call(
             DOMAIN,

@@ -5,14 +5,14 @@ from unittest.mock import patch
 import pytest
 from pywilight.const import DOMAIN
 
-from homeassistant.components.wilight.config_flow import (
+from spencerassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
-from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.config_entries import SOURCE_SSDP
+from spencerassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     CONF_COMPONENTS,
@@ -50,7 +50,7 @@ def mock_dummy_get_components_from_model_wrong():
         yield components
 
 
-async def test_show_ssdp_form(hass: HomeAssistant) -> None:
+async def test_show_ssdp_form(hass: spencerAssistant) -> None:
     """Test that the ssdp confirmation form is served."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO_P_B)
@@ -66,7 +66,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     }
 
 
-async def test_ssdp_not_wilight_abort_1(hass: HomeAssistant) -> None:
+async def test_ssdp_not_wilight_abort_1(hass: spencerAssistant) -> None:
     """Test that the ssdp aborts not_wilight."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTURER)
@@ -78,7 +78,7 @@ async def test_ssdp_not_wilight_abort_1(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_wilight_device"
 
 
-async def test_ssdp_not_wilight_abort_2(hass: HomeAssistant) -> None:
+async def test_ssdp_not_wilight_abort_2(hass: spencerAssistant) -> None:
     """Test that the ssdp aborts not_wilight."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTURER)
@@ -91,7 +91,7 @@ async def test_ssdp_not_wilight_abort_2(hass: HomeAssistant) -> None:
 
 
 async def test_ssdp_not_wilight_abort_3(
-    hass: HomeAssistant, dummy_get_components_from_model_clear
+    hass: spencerAssistant, dummy_get_components_from_model_clear
 ) -> None:
     """Test that the ssdp aborts not_wilight."""
 
@@ -105,7 +105,7 @@ async def test_ssdp_not_wilight_abort_3(
 
 
 async def test_ssdp_not_supported_abort(
-    hass: HomeAssistant, dummy_get_components_from_model_wrong
+    hass: spencerAssistant, dummy_get_components_from_model_wrong
 ) -> None:
     """Test that the ssdp aborts not_supported."""
 
@@ -118,7 +118,7 @@ async def test_ssdp_not_supported_abort(
     assert result["reason"] == "not_supported_device"
 
 
-async def test_ssdp_device_exists_abort(hass: HomeAssistant) -> None:
+async def test_ssdp_device_exists_abort(hass: spencerAssistant) -> None:
     """Test abort SSDP flow if WiLight already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -143,7 +143,7 @@ async def test_ssdp_device_exists_abort(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
+async def test_full_ssdp_flow_implementation(hass: spencerAssistant) -> None:
     """Test the full SSDP flow from start to finish."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO_P_B)

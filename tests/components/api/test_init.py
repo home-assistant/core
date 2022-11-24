@@ -1,4 +1,4 @@
-"""The tests for the Home Assistant API component."""
+"""The tests for the spencer Assistant API component."""
 # pylint: disable=protected-access
 from http import HTTPStatus
 import json
@@ -8,17 +8,17 @@ from aiohttp import web
 import pytest
 import voluptuous as vol
 
-from homeassistant import const
-from homeassistant.bootstrap import DATA_LOGGING
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+from spencerassistant import const
+from spencerassistant.bootstrap import DATA_LOGGING
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
 
 @pytest.fixture
 def mock_api_client(hass, hass_client):
-    """Start the Home Assistant HTTP component and return admin API client."""
+    """Start the spencer Assistant HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
     return hass.loop.run_until_complete(hass_client())
 

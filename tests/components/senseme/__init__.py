@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosenseme import SensemeDevice, SensemeDiscovery
 
-from homeassistant.components.senseme import config_flow
+from spencerassistant.components.senseme import config_flow
 
 MOCK_NAME = "Haiku Fan"
 MOCK_UUID = "77a6b7b3-925d-4695-a415-76d76dca4444"
@@ -121,7 +121,7 @@ def _patch_discovery(device=None, no_device=None):
     def _patcher():
 
         with patch.object(config_flow, "DISCOVER_TIMEOUT", 0), patch(
-            "homeassistant.components.senseme.discovery.SensemeDiscovery",
+            "spencerassistant.components.senseme.discovery.SensemeDiscovery",
             return_value=mock_senseme_discovery,
         ):
             yield
@@ -138,6 +138,6 @@ def _patch_device(device=None, no_device=False):
         return True, _mock_device()
 
     return patch(
-        "homeassistant.components.senseme.async_get_device_by_device_info",
+        "spencerassistant.components.senseme.async_get_device_by_device_info",
         new=_device_mocker,
     )

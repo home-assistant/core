@@ -5,8 +5,8 @@ from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 from yarl import URL
 
-from homeassistant.components.unifi.const import CONF_SITE_ID
-from homeassistant.components.update import (
+from spencerassistant.components.unifi.const import CONF_SITE_ID
+from spencerassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -15,7 +15,7 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntityFeature,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,

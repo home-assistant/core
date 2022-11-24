@@ -10,7 +10,7 @@ from pyezviz.exceptions import (
     PyEzvizError,
 )
 
-from homeassistant.components.ezviz.const import (
+from spencerassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
@@ -19,8 +19,8 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
-from homeassistant.const import (
+from spencerassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
+from spencerassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     DISCOVERY_INFO,
@@ -129,7 +129,7 @@ async def test_async_step_integration_discovery(
     hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
 ):
     """Test discovery and confirm step."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("spencerassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -240,7 +240,7 @@ async def test_discover_exception_step1(
     ezviz_config_flow,
 ):
     """Test we handle unexpected exception on discovery."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("spencerassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -315,7 +315,7 @@ async def test_discover_exception_step3(
     ezviz_test_rtsp_config_flow,
 ):
     """Test we handle unexpected exception on discovery."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("spencerassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(

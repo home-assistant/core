@@ -3,8 +3,8 @@ from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
-from homeassistant.components.sonos.switch import (
+from spencerassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
+from spencerassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
     ATTR_INCLUDE_LINKED_ZONES,
@@ -12,10 +12,10 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_VOLUME,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_registry as ent_reg
-from homeassistant.util import dt
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
+from spencerassistant.helpers import entity_registry as ent_reg
+from spencerassistant.util import dt
 
 from .conftest import SonosMockEvent
 

@@ -12,8 +12,8 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
-import homeassistant.config as config_util
-from homeassistant.const import (
+import spencerassistant.config as config_util
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     CONF_AUTH_MFA_MODULES,
@@ -27,18 +27,18 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
-from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-import homeassistant.helpers.check_config as check_config
-from homeassistant.helpers.entity import Entity
-from homeassistant.loader import async_get_integration
-from homeassistant.util.unit_system import (
+from spencerassistant.core import ConfigSource, spencerAssistant, spencerAssistantError
+from spencerassistant.helpers import config_validation as cv, issue_registry as ir
+import spencerassistant.helpers.check_config as check_config
+from spencerassistant.helpers.entity import Entity
+from spencerassistant.loader import async_get_integration
+from spencerassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-from homeassistant.util.yaml import SECRET_YAML
+from spencerassistant.util.yaml import SECRET_YAML
 
 from tests.common import get_test_config_dir, patch_yaml_files
 
@@ -146,7 +146,7 @@ def test_load_yaml_config_raises_error_if_not_dict():
     with open(YAML_PATH, "w") as fp:
         fp.write("5")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
 
 
@@ -155,7 +155,7 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
     with open(YAML_PATH, "w") as fp:
         fp.write(":-")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
 
 
@@ -165,7 +165,7 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
         fp.write("- !!python/object/apply:os.system []")
 
     with patch.object(os, "system") as system_mock, contextlib.suppress(
-        HomeAssistantError
+        spencerAssistantError
     ):
         config_util.load_yaml_config_file(YAML_PATH)
 
@@ -291,15 +291,15 @@ async def test_entity_customization(hass):
     assert state.attributes["hidden"]
 
 
-@patch("homeassistant.config.shutil")
-@patch("homeassistant.config.os")
-@patch("homeassistant.config.is_docker_env", return_value=False)
+@patch("spencerassistant.config.shutil")
+@patch("spencerassistant.config.os")
+@patch("spencerassistant.config.is_docker_env", return_value=False)
 def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
     """Test removal of library on upgrade from before 0.50."""
     ha_version = "0.49.0"
     mock_os.path.isdir = mock.Mock(return_value=True)
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True):
+    with patch("spencerassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -313,15 +313,15 @@ def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
         assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
 
-@patch("homeassistant.config.shutil")
-@patch("homeassistant.config.os")
-@patch("homeassistant.config.is_docker_env", return_value=True)
+@patch("spencerassistant.config.shutil")
+@patch("spencerassistant.config.os")
+@patch("spencerassistant.config.is_docker_env", return_value=True)
 def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
     """Test removal of library on upgrade from before 0.94 and in Docker."""
     ha_version = "0.93.0.dev0"
     mock_os.path.isdir = mock.Mock(return_value=True)
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True):
+    with patch("spencerassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -340,7 +340,7 @@ def test_process_config_upgrade(hass):
     ha_version = "0.92.0"
 
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True), patch.object(
+    with patch("spencerassistant.config.open", mock_open, create=True), patch.object(
         config_util, "__version__", "0.91.0"
     ):
         opened_file = mock_open.return_value
@@ -358,7 +358,7 @@ def test_config_upgrade_same_version(hass):
     ha_version = __version__
 
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True):
+    with patch("spencerassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -372,7 +372,7 @@ def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
     mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT, mock.DEFAULT]
-    with patch("homeassistant.config.open", mock_open, create=True):
+    with patch("spencerassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         config_util.process_ha_config_upgrade(hass)
@@ -386,7 +386,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
         "data": {
             "elevation": 10,
             "latitude": 55,
-            "location_name": "Home",
+            "location_name": "spencer",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
@@ -404,7 +404,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.latitude == 55
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
-    assert hass.config.location_name == "Home"
+    assert hass.config.location_name == "spencer"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
@@ -421,7 +421,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
         "data": {
             "elevation": 10,
             "latitude": 55,
-            "location_name": "Home",
+            "location_name": "spencer",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
@@ -436,7 +436,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.latitude == 55
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
-    assert hass.config.location_name == "Home"
+    assert hass.config.location_name == "spencer"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
@@ -451,7 +451,7 @@ async def test_migration_and_updating_configuration(hass, hass_storage):
         "data": {
             "elevation": 10,
             "latitude": 55,
-            "location_name": "Home",
+            "location_name": "spencer",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "imperial",
@@ -487,7 +487,7 @@ async def test_override_stored_configuration(hass, hass_storage):
         "data": {
             "elevation": 10,
             "latitude": 55,
-            "location_name": "Home",
+            "location_name": "spencer",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
@@ -502,7 +502,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.latitude == 60
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
-    assert hass.config.location_name == "Home"
+    assert hass.config.location_name == "spencer"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
@@ -549,7 +549,7 @@ async def test_loading_configuration(hass):
 
 async def test_loading_configuration_default_media_dirs_docker(hass):
     """Test loading core config onto hass object."""
-    with patch("homeassistant.config.is_docker_env", return_value=True):
+    with patch("spencerassistant.config.is_docker_env", return_value=True):
         await config_util.async_process_ha_core_config(
             hass,
             {
@@ -612,7 +612,7 @@ async def test_loading_configuration_from_packages(hass):
     ],
 )
 async def test_loading_configuration_unit_system(
-    hass: HomeAssistant, unit_system_name: str, expected_unit_system: UnitSystem
+    hass: spencerAssistant, unit_system_name: str, expected_unit_system: UnitSystem
 ) -> None:
     """Test backward compatibility when loading core config."""
     await config_util.async_process_ha_core_config(
@@ -632,23 +632,23 @@ async def test_loading_configuration_unit_system(
     assert hass.config.units is expected_unit_system
 
 
-@patch("homeassistant.helpers.check_config.async_check_ha_config_file")
+@patch("spencerassistant.helpers.check_config.async_check_ha_config_file")
 async def test_check_ha_config_file_correct(mock_check, hass):
     """Check that restart propagates to stop."""
-    mock_check.return_value = check_config.HomeAssistantConfig()
+    mock_check.return_value = check_config.spencerAssistantConfig()
     assert await config_util.async_check_ha_config_file(hass) is None
 
 
-@patch("homeassistant.helpers.check_config.async_check_ha_config_file")
+@patch("spencerassistant.helpers.check_config.async_check_ha_config_file")
 async def test_check_ha_config_file_wrong(mock_check, hass):
     """Check that restart with a bad config doesn't propagate to stop."""
-    mock_check.return_value = check_config.HomeAssistantConfig()
+    mock_check.return_value = check_config.spencerAssistantConfig()
     mock_check.return_value.add_error("bad")
 
     assert await config_util.async_check_ha_config_file(hass) == "bad"
 
 
-@patch("homeassistant.config.os.path.isfile", mock.Mock(return_value=True))
+@patch("spencerassistant.config.os.path.isfile", mock.Mock(return_value=True))
 async def test_async_hass_config_yaml_merge(merge_log_err, hass):
     """Test merge during async config reload."""
     config = {
@@ -674,7 +674,7 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass):
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""
-    with patch("homeassistant.config._LOGGER.error") as logerr:
+    with patch("spencerassistant.config._LOGGER.error") as logerr:
         yield logerr
 
 
@@ -885,7 +885,7 @@ async def test_merge_customize(hass):
         "time_zone": "GMT",
         "customize": {"a.a": {"friendly_name": "A"}},
         "packages": {
-            "pkg1": {"homeassistant": {"customize": {"b.b": {"friendly_name": "BB"}}}}
+            "pkg1": {"spencerassistant": {"customize": {"b.b": {"friendly_name": "BB"}}}}
         },
     }
     await config_util.async_process_ha_core_config(hass, core_config)
@@ -903,7 +903,7 @@ async def test_auth_provider_config(hass):
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
-            {"type": "homeassistant"},
+            {"type": "spencerassistant"},
             {"type": "legacy_api_password", "api_password": "some-pass"},
         ],
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp", "id": "second"}],
@@ -913,7 +913,7 @@ async def test_auth_provider_config(hass):
     await config_util.async_process_ha_core_config(hass, core_config)
 
     assert len(hass.auth.auth_providers) == 2
-    assert hass.auth.auth_providers[0].type == "homeassistant"
+    assert hass.auth.auth_providers[0].type == "spencerassistant"
     assert hass.auth.auth_providers[1].type == "legacy_api_password"
     assert len(hass.auth.auth_mfa_modules) == 2
     assert hass.auth.auth_mfa_modules[0].id == "totp"
@@ -935,7 +935,7 @@ async def test_auth_provider_config_default(hass):
     await config_util.async_process_ha_core_config(hass, core_config)
 
     assert len(hass.auth.auth_providers) == 1
-    assert hass.auth.auth_providers[0].type == "homeassistant"
+    assert hass.auth.auth_providers[0].type == "spencerassistant"
     assert len(hass.auth.auth_mfa_modules) == 1
     assert hass.auth.auth_mfa_modules[0].id == "totp"
 
@@ -975,7 +975,7 @@ async def test_disallowed_duplicated_auth_provider_config(hass):
         "name": "Huis",
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
-        CONF_AUTH_PROVIDERS: [{"type": "homeassistant"}, {"type": "homeassistant"}],
+        CONF_AUTH_PROVIDERS: [{"type": "spencerassistant"}, {"type": "spencerassistant"}],
     }
     with pytest.raises(Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
@@ -1100,7 +1100,7 @@ async def test_component_config_exceptions(hass, caplog):
     # platform.PLATFORM_SCHEMA
     caplog.clear()
     with patch(
-        "homeassistant.config.async_get_integration_with_requirements",
+        "spencerassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
             get_platform=Mock(
                 return_value=Mock(  # platform
@@ -1131,7 +1131,7 @@ async def test_component_config_exceptions(hass, caplog):
             hass,
             {"test_domain": {}},
             integration=Mock(
-                pkg_path="homeassistant.components.test_domain",
+                pkg_path="spencerassistant.components.test_domain",
                 domain="test_domain",
                 get_platform=Mock(
                     side_effect=ImportError(
@@ -1155,7 +1155,7 @@ async def test_component_config_exceptions(hass, caplog):
             hass,
             {"test_domain": {}},
             integration=Mock(
-                pkg_path="homeassistant.components.test_domain",
+                pkg_path="spencerassistant.components.test_domain",
                 domain="test_domain",
                 get_component=Mock(
                     side_effect=FileNotFoundError(
@@ -1212,7 +1212,7 @@ async def test_core_config_schema_historic_currency(hass):
     await config_util.async_process_ha_core_config(hass, {"currency": "LTT"})
 
     issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    issue = issue_registry.async_get_issue("spencerassistant", "historic_currency")
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
@@ -1231,6 +1231,6 @@ async def test_core_store_historic_currency(hass, hass_storage):
     await config_util.async_process_ha_core_config(hass, {})
 
     issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    issue = issue_registry.async_get_issue("spencerassistant", "historic_currency")
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}

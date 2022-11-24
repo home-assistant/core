@@ -15,8 +15,8 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 import pytest
 
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.dt import utcnow
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.util.dt import utcnow
 
 from .common import CreateDevice
 
@@ -442,14 +442,14 @@ async def test_structure_update_event(hass, subscriber, setup_platform):
         },
         auth=None,
     )
-    with patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
+    with patch("spencerassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
+        "spencerassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
         await subscriber.async_receive_event(message)
         await hass.async_block_till_done()
 
-    # No home assistant events published
+    # No spencer assistant events published
     assert not events
 
     assert registry.async_get("camera.front")

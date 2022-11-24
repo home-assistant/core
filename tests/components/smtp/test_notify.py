@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
-from homeassistant.components.smtp import DOMAIN
-from homeassistant.components.smtp.notify import MailNotificationService
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.setup import async_setup_component
+from spencerassistant import config as hass_config
+import spencerassistant.components.notify as notify
+from spencerassistant.components.smtp import DOMAIN
+from spencerassistant.components.smtp.notify import MailNotificationService
+from spencerassistant.const import SERVICE_RELOAD
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
@@ -26,7 +26,7 @@ async def test_reload_notify(hass):
     """Verify we can reload the notify service."""
 
     with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+        "spencerassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
     ):
         assert await async_setup_component(
             hass,
@@ -48,7 +48,7 @@ async def test_reload_notify(hass):
 
     yaml_path = get_fixture_path("configuration.yaml", "smtp")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+        "spencerassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -74,7 +74,7 @@ def message():
         "testuser",
         "testpass",
         ["recip1@example.com", "testrecip@test.com"],
-        "Home Assistant",
+        "spencer Assistant",
         0,
         True,
     )
@@ -144,10 +144,10 @@ def test_send_text_message(hass, message):
         '^Content-Type: text/plain; charset="us-ascii"\n'
         "MIME-Version: 1.0\n"
         "Content-Transfer-Encoding: 7bit\n"
-        "Subject: Home Assistant\n"
+        "Subject: spencer Assistant\n"
         "To: recip1@example.com,testrecip@test.com\n"
-        "From: Home Assistant <test@test.com>\n"
-        "X-Mailer: Home Assistant\n"
+        "From: spencer Assistant <test@test.com>\n"
+        "X-Mailer: spencer Assistant\n"
         "Date: [^\n]+\n"
         "Message-Id: <[^@]+@[^>]+>\n"
         "\n"

@@ -1,10 +1,10 @@
 """Tests for the DirecTV component."""
 from http import HTTPStatus
 
-from homeassistant.components import ssdp
-from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
-from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON
-from homeassistant.core import HomeAssistant
+from spencerassistant.components import ssdp
+from spencerassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
+from spencerassistant.const import CONF_HOST, CONTENT_TYPE_JSON
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -25,7 +25,7 @@ MOCK_USER_INPUT = {CONF_HOST: HOST}
 
 
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the DirecTV connection for Home Assistant."""
+    """Mock the DirecTV connection for spencer Assistant."""
     aioclient_mock.get(
         f"http://{HOST}:8080/info/getVersion",
         text=load_fixture("directv/info-get-version.json"),
@@ -101,12 +101,12 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 
 
 async def setup_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_entry_setup: bool = False,
     setup_error: bool = False,
 ) -> MockConfigEntry:
-    """Set up the DirecTV integration in Home Assistant."""
+    """Set up the DirecTV integration in spencer Assistant."""
     if setup_error:
         aioclient_mock.get(
             f"http://{HOST}:8080/info/getVersion",

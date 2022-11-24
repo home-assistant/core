@@ -3,12 +3,12 @@ import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.almond import config_flow
-from homeassistant.components.almond.const import DOMAIN
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components.almond import config_flow
+from spencerassistant.components.almond.const import DOMAIN
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 
@@ -63,7 +63,7 @@ async def test_hassio(hass):
     assert result["step_id"] == "hassio_confirm"
 
     with patch(
-        "homeassistant.components.almond.async_setup_entry", return_value=True
+        "spencerassistant.components.almond.async_setup_entry", return_value=True
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -151,7 +151,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.almond.async_setup_entry", return_value=True
+        "spencerassistant.components.almond.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

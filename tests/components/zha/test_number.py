@@ -8,11 +8,11 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from spencerassistant.const import STATE_UNAVAILABLE, Platform
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -30,7 +30,7 @@ from tests.common import mock_coro
 def number_platform_only():
     """Only setup the number and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BUTTON,
             Platform.DEVICE_TRACKER,
@@ -175,11 +175,11 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     # validate the entity still contains old value
     assert hass.states.get(entity_id).state == "30.0"
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == "40.0"
     assert cluster.read_attributes.call_count == 10
@@ -285,11 +285,11 @@ async def test_level_control_number(
     assert state.state == str(new_value)
 
     level_control_cluster.read_attributes.reset_mock()
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
     assert hass.states.get(entity_id).state == str(initial_value)
@@ -395,11 +395,11 @@ async def test_color_number(
     assert state.state == str(new_value)
 
     color_cluster.read_attributes.reset_mock()
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
     assert hass.states.get(entity_id).state == str(initial_value)

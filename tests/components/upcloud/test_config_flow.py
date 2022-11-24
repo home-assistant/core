@@ -4,9 +4,9 @@ import requests.exceptions
 from requests_mock import ANY
 from upcloud_api import UpCloudAPIError
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.upcloud.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.upcloud.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 

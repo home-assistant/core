@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Home-Assistant documentation build configuration file, created by
+# spencer-Assistant documentation build configuration file, created by
 # sphinx-quickstart on Sun Aug 28 13:13:10 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -20,28 +20,28 @@ import inspect
 import os
 import sys
 
-from homeassistant.const import __short_version__, __version__
+from spencerassistant.const import __short_version__, __version__
 
-PROJECT_NAME = "Home Assistant"
-PROJECT_PACKAGE_NAME = "homeassistant"
-PROJECT_AUTHOR = "The Home Assistant Authors"
+PROJECT_NAME = "spencer Assistant"
+PROJECT_PACKAGE_NAME = "spencerassistant"
+PROJECT_AUTHOR = "The spencer Assistant Authors"
 PROJECT_COPYRIGHT = f" 2013-2020, {PROJECT_AUTHOR}"
 PROJECT_LONG_DESCRIPTION = (
-    "Home Assistant is an open-source "
-    "home automation platform running on Python 3. "
-    "Track and control all devices at home and "
+    "spencer Assistant is an open-source "
+    "spencer automation platform running on Python 3. "
+    "Track and control all devices at spencer and "
     "automate control. "
     "Installation in less than a minute."
 )
-PROJECT_GITHUB_USERNAME = "home-assistant"
-PROJECT_GITHUB_REPOSITORY = "home-assistant"
+PROJECT_GITHUB_USERNAME = "spencer-assistant"
+PROJECT_GITHUB_REPOSITORY = "spencer-assistant"
 
 GITHUB_PATH = f"{PROJECT_GITHUB_USERNAME}/{PROJECT_GITHUB_REPOSITORY}"
 GITHUB_URL = f"https://github.com/{GITHUB_PATH}"
 
 
 sys.path.insert(0, os.path.abspath("_ext"))
-sys.path.insert(0, os.path.abspath("../homeassistant"))
+sys.path.insert(0, os.path.abspath("../spencerassistant"))
 
 # -- General configuration ------------------------------------------------
 
@@ -126,7 +126,7 @@ def linkcode_resolve(domain, info):
         linespec = "#L%d" % (lineno + 1)
     else:
         linespec = ""
-    index = fn.find("/homeassistant/")
+    index = fn.find("/spencerassistant/")
     if index == -1:
         index = 0
 
@@ -217,7 +217,7 @@ html_theme_options = {
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = 'Home-Assistant v0.27.0'
+# html_title = 'spencer-Assistant v0.27.0'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -327,7 +327,7 @@ html_sidebars = {
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "Home-Assistantdoc"
+htmlhelp_basename = "spencer-Assistantdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -352,9 +352,9 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "home-assistant.tex",
-        "Home Assistant Documentation",
-        "Home Assistant Team",
+        "spencer-assistant.tex",
+        "spencer Assistant Documentation",
+        "spencer Assistant Team",
         "manual",
     )
 ]
@@ -397,7 +397,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "home-assistant", "Home Assistant Documentation", [author], 1)
+    (master_doc, "spencer-assistant", "spencer Assistant Documentation", [author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -413,11 +413,11 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        "Home-Assistant",
-        "Home Assistant Documentation",
+        "spencer-Assistant",
+        "spencer Assistant Documentation",
         author,
-        "Home Assistant",
-        "Open-source home automation platform.",
+        "spencer Assistant",
+        "Open-source spencer automation platform.",
         "Miscellaneous",
     )
 ]

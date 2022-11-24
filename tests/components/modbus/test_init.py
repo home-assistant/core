@@ -21,9 +21,9 @@ from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.modbus.const import (
+from spencerassistant import config as hass_config
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
@@ -60,14 +60,14 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
-from homeassistant.components.modbus.validators import (
+from spencerassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
     number_validator,
     struct_validator,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.const import (
     ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -83,14 +83,14 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_STOP,
     SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -574,13 +574,13 @@ async def mock_modbus_read_pymodbus_fixture(
         ],
     }
     now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    with mock.patch("spencerassistant.helpers.event.dt_util.utcnow", return_value=now):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
     now = now + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    with mock.patch("spencerassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
     yield mock_pymodbus
@@ -640,7 +640,7 @@ async def test_pymodbus_constructor_fail(hass, caplog):
         ]
     }
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+        "spencerassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
@@ -721,7 +721,7 @@ async def test_delay(hass, mock_pymodbus):
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
     start_time = dt_util.utcnow()
     with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=start_time
+        "spencerassistant.helpers.event.dt_util.utcnow", return_value=start_time
     ):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
@@ -738,7 +738,7 @@ async def test_delay(hass, mock_pymodbus):
         # we use 999999 microseconds to simulate the real world.
         now += timedelta(seconds=1, microseconds=999999)
         with mock.patch(
-            "homeassistant.helpers.event.dt_util.utcnow",
+            "spencerassistant.helpers.event.dt_util.utcnow",
             return_value=now,
             autospec=True,
         ):
@@ -771,7 +771,7 @@ async def test_delay(hass, mock_pymodbus):
 )
 async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
     """Run test for shutdown."""
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mock_pymodbus.close.called

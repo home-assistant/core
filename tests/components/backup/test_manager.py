@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.backup import BackupManager
-from homeassistant.components.backup.manager import BackupPlatformProtocol
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.backup import BackupManager
+from spencerassistant.components.backup.manager import BackupPlatformProtocol
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from .common import TEST_BACKUP
 
@@ -46,15 +46,15 @@ async def _mock_backup_generation(manager: BackupManager):
         "pathlib.Path.mkdir",
         MagicMock(),
     ), patch(
-        "homeassistant.components.backup.manager.json_util.save_json"
+        "spencerassistant.components.backup.manager.json_util.save_json"
     ) as mocked_json_util, patch(
-        "homeassistant.components.backup.manager.HAVERSION",
+        "spencerassistant.components.backup.manager.HAVERSION",
         "2025.1.0",
     ):
         await manager.generate_backup()
 
         assert mocked_json_util.call_count == 1
-        assert mocked_json_util.call_args[0][1]["homeassistant"] == {
+        assert mocked_json_util.call_args[0][1]["spencerassistant"] == {
             "version": "2025.1.0"
         }
 
@@ -65,7 +65,7 @@ async def _mock_backup_generation(manager: BackupManager):
 
 
 async def _setup_mock_domain(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     platform: BackupPlatformProtocol | None = None,
 ) -> None:
     """Set up a mock domain."""
@@ -73,13 +73,13 @@ async def _setup_mock_domain(
     assert await async_setup_component(hass, "some_domain", {})
 
 
-async def test_constructor(hass: HomeAssistant) -> None:
+async def test_constructor(hass: spencerAssistant) -> None:
     """Test BackupManager constructor."""
     manager = BackupManager(hass)
     assert manager.backup_dir.as_posix() == hass.config.path("backups")
 
 
-async def test_load_backups(hass: HomeAssistant) -> None:
+async def test_load_backups(hass: spencerAssistant) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
     with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
@@ -100,7 +100,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
 
 
 async def test_load_backups_with_exception(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backups with exception."""
@@ -115,7 +115,7 @@ async def test_load_backups_with_exception(
 
 
 async def test_removing_backup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removing backup."""
@@ -129,7 +129,7 @@ async def test_removing_backup(
 
 
 async def test_removing_non_existing_backup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removing not existing backup."""
@@ -140,7 +140,7 @@ async def test_removing_non_existing_backup(
 
 
 async def test_getting_backup_that_does_not_exist(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test getting backup that does not exist."""
@@ -158,16 +158,16 @@ async def test_getting_backup_that_does_not_exist(
         )
 
 
-async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
+async def test_generate_backup_when_backing_up(hass: spencerAssistant) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
     manager.backing_up = True
-    with pytest.raises(HomeAssistantError, match="Backup already in progress"):
+    with pytest.raises(spencerAssistantError, match="Backup already in progress"):
         await manager.generate_backup()
 
 
 async def test_generate_backup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test generate backup."""
@@ -182,7 +182,7 @@ async def test_generate_backup(
 
 
 async def test_loading_platforms(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backup platforms."""
@@ -207,7 +207,7 @@ async def test_loading_platforms(
 
 
 async def test_not_loading_bad_platforms(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test loading backup platforms."""
@@ -229,13 +229,13 @@ async def test_not_loading_bad_platforms(
     )
 
 
-async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
+async def test_exception_plaform_pre(hass: spencerAssistant) -> None:
     """Test exception in pre step."""
     manager = BackupManager(hass)
     manager.loaded_backups = True
 
-    async def _mock_step(hass: HomeAssistant) -> None:
-        raise HomeAssistantError("Test exception")
+    async def _mock_step(hass: spencerAssistant) -> None:
+        raise spencerAssistantError("Test exception")
 
     await _setup_mock_domain(
         hass,
@@ -245,17 +245,17 @@ async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
         ),
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await _mock_backup_generation(manager)
 
 
-async def test_exception_plaform_post(hass: HomeAssistant) -> None:
+async def test_exception_plaform_post(hass: spencerAssistant) -> None:
     """Test exception in post step."""
     manager = BackupManager(hass)
     manager.loaded_backups = True
 
-    async def _mock_step(hass: HomeAssistant) -> None:
-        raise HomeAssistantError("Test exception")
+    async def _mock_step(hass: spencerAssistant) -> None:
+        raise spencerAssistantError("Test exception")
 
     await _setup_mock_domain(
         hass,
@@ -265,5 +265,5 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
         ),
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await _mock_backup_generation(manager)

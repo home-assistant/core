@@ -2,21 +2,21 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import speedtestdotnet
-from homeassistant.components.speedtestdotnet.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import speedtestdotnet
+from spencerassistant.components.speedtestdotnet.const import (
     CONF_MANUAL,
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_SCAN_INTERVAL
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass: HomeAssistant) -> None:
+async def test_flow_works(hass: spencerAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         speedtestdotnet.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -30,7 +30,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_options(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_options(hass: spencerAssistant, mock_api: MagicMock) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -105,7 +105,7 @@ async def test_options(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert hass.data[DOMAIN].update_interval == timedelta(minutes=30)
 
 
-async def test_integration_already_configured(hass: HomeAssistant) -> None:
+async def test_integration_already_configured(hass: spencerAssistant) -> None:
     """Test integration is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -9,11 +9,11 @@ from unittest.mock import patch
 import pytest
 import rtsp_to_webrtc
 
-from homeassistant.components import camera
-from homeassistant.components.rtsp_to_webrtc import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import camera
+from spencerassistant.components.rtsp_to_webrtc import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -46,13 +46,13 @@ async def mock_camera(hass) -> AsyncGenerator[None, None]:
     )
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes",
+        "spencerassistant.components.demo.camera.Path.read_bytes",
         return_value=b"Test",
     ), patch(
-        "homeassistant.components.camera.Camera.stream_source",
+        "spencerassistant.components.camera.Camera.stream_source",
         return_value=STREAM_SOURCE,
     ), patch(
-        "homeassistant.components.camera.Camera.supported_features",
+        "spencerassistant.components.camera.Camera.supported_features",
         return_value=camera.SUPPORT_STREAM,
     ):
         yield
@@ -90,7 +90,7 @@ async def rtsp_to_webrtc_client() -> None:
 
 @pytest.fixture
 async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: spencerAssistant, config_entry: MockConfigEntry
 ) -> YieldFixture[ComponentSetup]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)

@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from pyfronius import FroniusError
 
-from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.components.fronius.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from . import mock_responses, setup_fronius_integration
 

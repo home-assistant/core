@@ -1,10 +1,10 @@
 """Test UniFi Network integration setup process."""
 from unittest.mock import patch
 
-from homeassistant.components import unifi
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import unifi
+from spencerassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from spencerassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from spencerassistant.setup import async_setup_component
 
 from .test_controller import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
 
@@ -26,7 +26,7 @@ async def test_successful_config_entry(hass, aioclient_mock):
 async def test_setup_entry_fails_config_entry_not_ready(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "spencerassistant.components.unifi.get_unifi_controller",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -37,7 +37,7 @@ async def test_setup_entry_fails_config_entry_not_ready(hass):
 async def test_setup_entry_fails_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "spencerassistant.components.unifi.get_unifi_controller",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)

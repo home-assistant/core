@@ -2,16 +2,16 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.schema_config_entry_flow import (
+from spencerassistant import data_entry_flow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     wrapped_entity_config_entry_title,
 )
-from homeassistant.util.decorator import Registry
+from spencerassistant.util.decorator import Registry
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,7 @@ def manager():
     return mgr
 
 
-async def test_name(hass: HomeAssistant) -> None:
+async def test_name(hass: spencerAssistant) -> None:
     """Test the config flow name is copied from registry entry, with fallback to state."""
     registry = er.async_get(hass)
     entity_id = "switch.ceiling"
@@ -83,7 +83,7 @@ async def test_name(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_config_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
+    hass: spencerAssistant, manager: data_entry_flow.FlowManager, marker
 ):
     """Test handling of advanced options in config flow."""
     manager.hass = hass
@@ -178,7 +178,7 @@ async def test_config_flow_advanced_option(
 
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_options_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
+    hass: spencerAssistant, manager: data_entry_flow.FlowManager, marker
 ):
     """Test handling of advanced options in options flow."""
     manager.hass = hass

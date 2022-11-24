@@ -5,7 +5,7 @@ from aiohttp import web
 import pytest
 import urllib3
 
-from homeassistant.components.http.security_filter import setup_security_filter
+from spencerassistant.components.http.security_filter import setup_security_filter
 
 
 async def mock_handler(request):

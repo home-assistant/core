@@ -2,10 +2,10 @@
 
 import requests_mock
 
-from homeassistant.components.climate import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.climate import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PLATFORM
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 
@@ -43,10 +43,10 @@ def mock_venstar_devices(f):
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     skip_setup: bool = False,
 ):
-    """Set up the venstar integration in Home Assistant."""
+    """Set up the venstar integration in spencer Assistant."""
     platform_config = []
     for model in TEST_MODELS:
         platform_config.append(

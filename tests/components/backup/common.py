@@ -4,11 +4,11 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from homeassistant.components.backup import DOMAIN
-from homeassistant.components.backup.manager import Backup
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.backup import DOMAIN
+from spencerassistant.components.backup.manager import Backup
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.typing import ConfigType
+from spencerassistant.setup import async_setup_component
 
 TEST_BACKUP = Backup(
     slug="abc123",
@@ -20,10 +20,10 @@ TEST_BACKUP = Backup(
 
 
 async def setup_backup_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     with_hassio: bool = False,
     configuration: ConfigType | None = None,
 ) -> bool:
     """Set up the Backup integration."""
-    with patch("homeassistant.components.backup.is_hassio", return_value=with_hassio):
+    with patch("spencerassistant.components.backup.is_hassio", return_value=with_hassio):
         return await async_setup_component(hass, DOMAIN, configuration or {})

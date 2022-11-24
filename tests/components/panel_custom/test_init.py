@@ -1,8 +1,8 @@
 """The tests for the panel_custom component."""
 from unittest.mock import Mock, patch
 
-from homeassistant import setup
-from homeassistant.components import frontend
+from spencerassistant import setup
+from spencerassistant.components import frontend
 
 
 async def test_webcomponent_custom_path_not_found(hass):

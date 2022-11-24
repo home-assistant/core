@@ -5,9 +5,9 @@ from decimal import Decimal
 import pytest
 from pytest import approx
 
-from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
+from spencerassistant.components.number import NumberDeviceClass
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
@@ -33,12 +33,12 @@ from homeassistant.const import (
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
 )
-from homeassistant.core import State
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from spencerassistant.core import State
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import mock_restore_cache_with_extra_data
 

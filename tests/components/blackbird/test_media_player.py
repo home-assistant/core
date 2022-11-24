@@ -5,18 +5,18 @@ from unittest import mock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
-from homeassistant.components.blackbird.media_player import (
+from spencerassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
+from spencerassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD,
     PLATFORM_SCHEMA,
     setup_platform,
 )
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.const import STATE_OFF, STATE_ON
 
 
 class AttrDict(dict):
@@ -177,7 +177,7 @@ def mock_blackbird():
 async def setup_blackbird(hass, mock_blackbird):
     """Set up blackbird."""
     with mock.patch(
-        "homeassistant.components.blackbird.media_player.get_blackbird",
+        "spencerassistant.components.blackbird.media_player.get_blackbird",
         new=lambda *a: mock_blackbird,
     ):
         await hass.async_add_executor_job(

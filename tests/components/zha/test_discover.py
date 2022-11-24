@@ -14,21 +14,21 @@ import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.zha.binary_sensor
-import homeassistant.components.zha.core.channels as zha_channels
-import homeassistant.components.zha.core.channels.base as base_channels
-import homeassistant.components.zha.core.const as zha_const
-import homeassistant.components.zha.core.discovery as disc
-import homeassistant.components.zha.core.registries as zha_regs
-import homeassistant.components.zha.cover
-import homeassistant.components.zha.device_tracker
-import homeassistant.components.zha.fan
-import homeassistant.components.zha.light
-import homeassistant.components.zha.lock
-import homeassistant.components.zha.sensor
-import homeassistant.components.zha.switch
-from homeassistant.const import Platform
-import homeassistant.helpers.entity_registry
+import spencerassistant.components.zha.binary_sensor
+import spencerassistant.components.zha.core.channels as zha_channels
+import spencerassistant.components.zha.core.channels.base as base_channels
+import spencerassistant.components.zha.core.const as zha_const
+import spencerassistant.components.zha.core.discovery as disc
+import spencerassistant.components.zha.core.registries as zha_regs
+import spencerassistant.components.zha.cover
+import spencerassistant.components.zha.device_tracker
+import spencerassistant.components.zha.fan
+import spencerassistant.components.zha.light
+import spencerassistant.components.zha.lock
+import spencerassistant.components.zha.sensor
+import spencerassistant.components.zha.switch
+from spencerassistant.const import Platform
+import spencerassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -93,7 +93,7 @@ def channels_mock(zha_device_mock):
 # added to HA. So we ensure that they are all enabled even though they won't necessarily be in reality
 # at runtime
 @patch(
-    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
+    "spencerassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
     new=Mock(return_value=True),
 )
 @pytest.mark.parametrize("device", DEVICES)
@@ -104,7 +104,7 @@ async def test_devices(
     zha_device_joined_restored,
 ):
     """Test device discovery."""
-    entity_registry = homeassistant.helpers.entity_registry.async_get(
+    entity_registry = spencerassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 
@@ -214,10 +214,10 @@ def _get_first_identify_cluster(zigpy_device):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint.discover_by_device_type"
+    "spencerassistant.components.zha.core.discovery.ProbeEndpoint.discover_by_device_type"
 )
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint.discover_by_cluster_id"
+    "spencerassistant.components.zha.core.discovery.ProbeEndpoint.discover_by_cluster_id"
 )
 def test_discover_entities(m1, m2):
     """Test discover endpoint class method."""
@@ -251,7 +251,7 @@ def test_discover_by_device_type(device_type, component, hit):
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
     with mock.patch(
-        "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
+        "spencerassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
         disc.PROBE.discover_by_device_type(ep_channels)
@@ -278,7 +278,7 @@ def test_discover_by_device_type_override():
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
     with mock.patch(
-        "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
+        "spencerassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
         disc.PROBE.discover_by_device_type(ep_channels)
@@ -304,7 +304,7 @@ def test_discover_probe_single_cluster():
     )
     channel_mock = mock.MagicMock(spec_set=base_channels.ZigbeeChannel)
     with mock.patch(
-        "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
+        "spencerassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
         disc.PROBE.probe_single_cluster(Platform.SWITCH, channel_mock, ep_channels)
@@ -323,7 +323,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
     """Test device discovery."""
 
     with mock.patch(
-        "homeassistant.components.zha.core.channels.Channels.async_new_entity"
+        "spencerassistant.components.zha.core.channels.Channels.async_new_entity"
     ) as new_ent:
         channels = channels_mock(
             device_info[SIG_ENDPOINTS],
@@ -375,12 +375,12 @@ def _ch_mock(cluster):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint"
+    "spencerassistant.components.zha.core.discovery.ProbeEndpoint"
     ".handle_on_off_output_cluster_exception",
     new=mock.MagicMock(),
 )
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint.probe_single_cluster"
+    "spencerassistant.components.zha.core.discovery.ProbeEndpoint.probe_single_cluster"
 )
 def _test_single_input_cluster_device_class(probe_mock):
     """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
@@ -493,7 +493,7 @@ async def test_group_probe_cleanup_called(
     new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
-    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
+    "spencerassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
     new=Mock(return_value=True),
 )
 async def test_channel_with_empty_ep_attribute_cluster(
@@ -502,7 +502,7 @@ async def test_channel_with_empty_ep_attribute_cluster(
     zha_device_joined_restored,
 ):
     """Test device discovery for cluster which does not have em_attribute."""
-    entity_registry = homeassistant.helpers.entity_registry.async_get(
+    entity_registry = spencerassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 

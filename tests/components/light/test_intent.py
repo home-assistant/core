@@ -1,8 +1,8 @@
 """Tests for the light intents."""
-from homeassistant.components import light
-from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.helpers.intent import IntentHandleError, async_handle
+from spencerassistant.components import light
+from spencerassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from spencerassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 

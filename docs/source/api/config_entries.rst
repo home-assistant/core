@@ -1,7 +1,7 @@
 .. _config_entries_module:
 
-:mod:`homeassistant.config_entries`
+:mod:`spencerassistant.config_entries`
 -----------------------------------
 
-.. automodule:: homeassistant.config_entries
+.. automodule:: spencerassistant.config_entries
     :members:

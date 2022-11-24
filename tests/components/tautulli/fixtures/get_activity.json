@@ -126,7 +126,7 @@
           "email": "user1@test.com",
           "is_active": 1,
           "is_admin": 1,
-          "is_home_user": 1,
+          "is_spencer_user": 1,
           "is_allow_sync": 1,
           "is_restricted": 0,
           "do_notify": 1,

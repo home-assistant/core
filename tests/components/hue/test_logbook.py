@@ -1,17 +1,17 @@
 """The tests for hue logbook."""
 
-from homeassistant.components.hue.const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
-from homeassistant.components.hue.v1.hue_event import CONF_LAST_UPDATED
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from spencerassistant.components.hue.const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
+from spencerassistant.components.hue.v1.hue_event import CONF_LAST_UPDATED
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import (
     CONF_DEVICE_ID,
     CONF_EVENT,
     CONF_ID,
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
 
 from .conftest import setup_platform
 

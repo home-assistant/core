@@ -15,9 +15,9 @@ from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
-from homeassistant.components.application_credentials import ClientCredential
-from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.const import SDM_SCOPES
+from spencerassistant.components.application_credentials import ClientCredential
+from spencerassistant.components.nest import DOMAIN
+from spencerassistant.components.nest.const import SDM_SCOPES
 
 from tests.common import MockConfigEntry
 
@@ -63,7 +63,7 @@ def create_token_entry(token_expiration_time=None):
 
 
 def create_config_entry(token_expiration_time=None) -> MockConfigEntry:
-    """Create a ConfigEntry and add it to Home Assistant."""
+    """Create a ConfigEntry and add it to spencer Assistant."""
     config_entry_data = {
         "sdm": {},  # Indicates new SDM API, not legacy API
         "auth_implementation": "nest",
@@ -169,7 +169,7 @@ class FakeSubscriber(GoogleNestSubscriber):
         self._device_manager = DeviceManager()
 
     def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
-        """Capture the callback set by Home Assistant."""
+        """Capture the callback set by spencer Assistant."""
         self._device_manager.set_update_callback(callback)
 
     async def create_subscription(self):
@@ -199,7 +199,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     async def async_receive_event(self, event_message: EventMessage):
         """Simulate a received pubsub message, invoked by tests."""
-        # Update device state, then invoke HomeAssistant to refresh
+        # Update device state, then invoke spencerAssistant to refresh
         await self._device_manager.async_handle_event(event_message)
 
 

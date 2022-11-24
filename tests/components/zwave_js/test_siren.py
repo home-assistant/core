@@ -1,12 +1,12 @@
 """Test the Z-Wave JS siren platform."""
 from zwave_js_server.event import Event
 
-from homeassistant.components.siren import (
+from spencerassistant.components.siren import (
     ATTR_AVAILABLE_TONES,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 SIREN_ENTITY = "siren.indoor_siren_6_2"
 

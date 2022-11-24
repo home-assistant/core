@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyatmo.const import ALL_SCOPES
 
-from homeassistant import config_entries
-from homeassistant.components.netatmo import DOMAIN
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CoreState
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant import config_entries
+from spencerassistant.components.netatmo import DOMAIN
+from spencerassistant.const import CONF_WEBHOOK_ID
+from spencerassistant.core import CoreState
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -26,9 +26,9 @@ from tests.components.cloud import mock_cloud
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {
     "room_id": "2746182631",
-    "home": {
+    "spencer": {
         "id": "91763b24c43d3e344f424e8b",
-        "name": "MYHOME",
+        "name": "MYspencer",
         "country": "DE",
         "rooms": [
             {
@@ -52,11 +52,11 @@ FAKE_WEBHOOK = {
 async def test_setup_component(hass, config_entry):
     """Test setup and teardown of the netatmo component."""
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -92,13 +92,13 @@ async def test_setup_component_with_config(hass, config_entry):
         return await fake_post_request(*args, **kwargs)
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook, patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["sensor"]
+        "spencerassistant.components.netatmo.data_handler.PLATFORMS", ["sensor"]
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -151,14 +151,14 @@ async def test_setup_without_https(hass, config_entry, caplog):
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
     with patch(
-        "homeassistant.helpers.network.get_url",
+        "spencerassistant.helpers.network.get_url",
         return_value="http://example.nabu.casa",
     ), patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_async_generate_url:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_async_generate_url.return_value = "http://example.com"
@@ -179,24 +179,24 @@ async def test_setup_with_cloud(hass, config_entry):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
+        "spencerassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
+        "spencerassistant.components.cloud.async_create_cloudhook",
         return_value="https://hooks.nabu.casa/ABCD",
     ) as fake_create_cloudhook, patch(
-        "homeassistant.components.cloud.async_delete_cloudhook"
+        "spencerassistant.components.cloud.async_delete_cloudhook"
     ) as fake_delete_cloudhook, patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", []
+        "spencerassistant.components.netatmo.PLATFORMS", []
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         assert await async_setup_component(
@@ -245,24 +245,24 @@ async def test_setup_with_cloudhook(hass):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
+        "spencerassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
+        "spencerassistant.components.cloud.async_create_cloudhook",
         return_value="https://hooks.nabu.casa/ABCD",
     ) as fake_create_cloudhook, patch(
-        "homeassistant.components.cloud.async_delete_cloudhook"
+        "spencerassistant.components.cloud.async_delete_cloudhook"
     ) as fake_delete_cloudhook, patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", []
+        "spencerassistant.components.netatmo.PLATFORMS", []
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -296,13 +296,13 @@ async def test_setup_component_with_delay(hass, config_entry):
     ) as mock_addwebhook, patch(
         "pyatmo.AbstractAsyncAuth.async_dropwebhook", side_effect=AsyncMock()
     ) as mock_dropwebhook, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook, patch(
         "pyatmo.AbstractAsyncAuth.async_post_api_request", side_effect=fake_post_request
     ) as mock_post_api_request, patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
+        "spencerassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
     ):
 
         assert await async_setup_component(
@@ -368,11 +368,11 @@ async def test_setup_component_invalid_token_scope(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -409,13 +409,13 @@ async def test_setup_component_invalid_token(hass, config_entry):
         )
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
+        "spencerassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
     ) as mock_session:
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()

@@ -5,9 +5,9 @@ import json
 
 from aiomodernforms.const import COMMAND_QUERY_STATIC_DATA
 
-from homeassistant.components.modern_forms.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.modern_forms.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
@@ -50,13 +50,13 @@ async def modern_forms_timers_set_mock(method, url, data):
 
 
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     rgbw: bool = False,
     skip_setup: bool = False,
     mock_type: Callable = modern_forms_call_mock,
 ) -> MockConfigEntry:
-    """Set up the Modern Forms integration in Home Assistant."""
+    """Set up the Modern Forms integration in spencer Assistant."""
 
     aioclient_mock.post(
         "http://192.168.1.123:80/mf",

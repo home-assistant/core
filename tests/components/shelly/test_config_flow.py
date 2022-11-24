@@ -10,15 +10,15 @@ from aioshelly.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
-from homeassistant.components.shelly.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import zeroconf
+from spencerassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
     BLEScannerMode,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.setup import async_setup_component
+from spencerassistant.config_entries import SOURCE_REAUTH
+from spencerassistant.setup import async_setup_component
 
 from . import init_integration
 
@@ -75,9 +75,9 @@ async def test_form(hass, gen):
             )
         ),
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -123,9 +123,9 @@ async def test_title_without_name(hass):
             )
         ),
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -192,9 +192,9 @@ async def test_form_auth(hass, test_data):
             )
         ),
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -416,9 +416,9 @@ async def test_user_setup_ignored_device(hass):
             )
         ),
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
 
@@ -552,9 +552,9 @@ async def test_zeroconf(hass):
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
         assert context["confirm_only"] is True
     with patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -617,9 +617,9 @@ async def test_zeroconf_sleeping_device(hass):
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
     with patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -736,9 +736,9 @@ async def test_zeroconf_require_auth(hass):
             )
         ),
     ), patch(
-        "homeassistant.components.shelly.async_setup", return_value=True
+        "spencerassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.shelly.async_setup_entry",
+        "spencerassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

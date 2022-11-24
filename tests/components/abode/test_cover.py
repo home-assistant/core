@@ -1,24 +1,24 @@
 """Tests for the Abode cover device."""
 from unittest.mock import patch
 
-from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.abode import ATTR_DEVICE_ID
+from spencerassistant.components.cover import DOMAIN as COVER_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     STATE_CLOSED,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 DEVICE_ID = "cover.garage_door"
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(hass: spencerAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, COVER_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -27,7 +27,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     assert entry.unique_id == "61cbz3b542d2o33ed2fz02721bda3324"
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_attributes(hass: spencerAssistant) -> None:
     """Test the cover attributes are correct."""
     await setup_platform(hass, COVER_DOMAIN)
 
@@ -40,7 +40,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Garage Door"
 
 
-async def test_open(hass: HomeAssistant) -> None:
+async def test_open(hass: spencerAssistant) -> None:
     """Test the cover can be opened."""
     await setup_platform(hass, COVER_DOMAIN)
 
@@ -52,7 +52,7 @@ async def test_open(hass: HomeAssistant) -> None:
         mock_open.assert_called_once()
 
 
-async def test_close(hass: HomeAssistant) -> None:
+async def test_close(hass: spencerAssistant) -> None:
     """Test the cover can be closed."""
     await setup_platform(hass, COVER_DOMAIN)
 

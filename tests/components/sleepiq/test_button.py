@@ -1,7 +1,7 @@
 """The tests for SleepIQ binary sensor platform."""
-from homeassistant.components.button import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.button import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from spencerassistant.helpers import entity_registry as er
 
 from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
 

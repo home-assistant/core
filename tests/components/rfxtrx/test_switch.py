@@ -3,10 +3,10 @@ from unittest.mock import call
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import State
+from spencerassistant import config_entries
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.core import State
 
 from .conftest import create_rfx_test_cfg
 

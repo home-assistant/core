@@ -1,9 +1,9 @@
 """Test the switchbot sensors."""
 
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.components.switchbot.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.components.switchbot.const import DOMAIN
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from . import WOHAND_SERVICE_INFO
 

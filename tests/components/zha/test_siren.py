@@ -9,18 +9,18 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.siren import (
+from spencerassistant.components.siren import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
 )
-from homeassistant.components.zha.core.const import (
+from spencerassistant.components.zha.core.const import (
     WARNING_DEVICE_MODE_EMERGENCY_PANIC,
     WARNING_DEVICE_SOUND_MEDIUM,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+import spencerassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -32,7 +32,7 @@ from tests.common import async_fire_time_changed, mock_coro
 def siren_platform_only():
     """Only setup the siren and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.NUMBER,

@@ -1,16 +1,16 @@
 """The tests for WebOS TV device triggers."""
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.webostv import DOMAIN, device_trigger
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.webostv import DOMAIN, device_trigger
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.device_registry import async_get as get_dev_reg
+from spencerassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import ENTITY_ID, FAKE_UUID
@@ -103,7 +103,7 @@ async def test_failure_scenarios(hass, client):
     await setup_webostv(hass)
 
     # Test wrong trigger platform type
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass, {"type": "wrong.type", "device_id": "invalid_device_id"}, None, {}
         )

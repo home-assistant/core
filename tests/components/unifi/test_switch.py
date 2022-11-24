@@ -6,33 +6,33 @@ from datetime import timedelta
 from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 
-from homeassistant import config_entries
-from homeassistant.components.switch import (
+from spencerassistant import config_entries
+from spencerassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SwitchDeviceClass,
 )
-from homeassistant.components.unifi.const import (
+from spencerassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import (
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.util import dt
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryDisabler
+from spencerassistant.util import dt
 
 from .test_controller import (
     CONTROLLER_HOST,

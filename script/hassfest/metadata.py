@@ -1,7 +1,7 @@
 """Package metadata validation."""
 import sys
 
-from homeassistant.const import REQUIRED_PYTHON_VER, __version__
+from spencerassistant.const import REQUIRED_PYTHON_VER, __version__
 
 from .model import Config, Integration
 

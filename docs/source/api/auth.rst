@@ -1,29 +1,29 @@
-:mod:`homeassistant.auth`
+:mod:`spencerassistant.auth`
 =========================
 
-.. automodule:: homeassistant.auth
+.. automodule:: spencerassistant.auth
     :members:
 
-homeassistant.auth.auth\_store
+spencerassistant.auth.auth\_store
 ------------------------------
 
-.. automodule:: homeassistant.auth.auth_store
+.. automodule:: spencerassistant.auth.auth_store
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.auth.const
+spencerassistant.auth.const
 ------------------------
 
-.. automodule:: homeassistant.auth.const
+.. automodule:: spencerassistant.auth.const
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.auth.models
+spencerassistant.auth.models
 -------------------------
 
-.. automodule:: homeassistant.auth.models
+.. automodule:: spencerassistant.auth.models
    :members:
    :undoc-members:
    :show-inheritance:

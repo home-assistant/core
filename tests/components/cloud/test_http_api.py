@@ -10,12 +10,12 @@ from hass_nabucasa.const import STATE_CONNECTED
 from jose import jwt
 import pytest
 
-from homeassistant.components.alexa import errors as alexa_errors
-from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.cloud.const import DOMAIN
-from homeassistant.components.google_assistant.helpers import GoogleEntity
-from homeassistant.core import State
-from homeassistant.util.location import LocationInfo
+from spencerassistant.components.alexa import errors as alexa_errors
+from spencerassistant.components.alexa.entities import LightCapabilities
+from spencerassistant.components.cloud.const import DOMAIN
+from spencerassistant.components.google_assistant.helpers import GoogleEntity
+from spencerassistant.core import State
+from spencerassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -36,7 +36,7 @@ def mock_cloud_login_fixture(hass, setup_api):
     """Mock cloud is logged in."""
     hass.data[DOMAIN].id_token = jwt.encode(
         {
-            "email": "hello@home-assistant.io",
+            "email": "hello@spencer-assistant.io",
             "custom:sub-exp": "2018-01-03",
             "cognito:username": "abcdefghjkl",
         },
@@ -207,7 +207,7 @@ async def test_logout_view_unknown_error(hass, cloud_client):
 async def test_register_view_no_location(mock_cognito, cloud_client):
     """Test register without location."""
     with patch(
-        "homeassistant.components.cloud.http_api.async_detect_location_info",
+        "spencerassistant.components.cloud.http_api.async_detect_location_info",
         return_value=None,
     ):
         req = await cloud_client.post(
@@ -226,7 +226,7 @@ async def test_register_view_no_location(mock_cognito, cloud_client):
 async def test_register_view_with_location(mock_cognito, cloud_client):
     """Test register with location."""
     with patch(
-        "homeassistant.components.cloud.http_api.async_detect_location_info",
+        "spencerassistant.components.cloud.http_api.async_detect_location_info",
         return_value=LocationInfo(
             **{
                 "country_code": "XX",
@@ -378,11 +378,11 @@ async def test_websocket_status(
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
+        "spencerassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
         {"light": None},
         clear=True,
     ), patch.dict(
-        "homeassistant.components.alexa.entities.ENTITY_ADAPTERS",
+        "spencerassistant.components.alexa.entities.ENTITY_ADAPTERS",
         {"switch": None},
         clear=True,
     ):
@@ -390,7 +390,7 @@ async def test_websocket_status(
         response = await client.receive_json()
     assert response["result"] == {
         "logged_in": True,
-        "email": "hello@home-assistant.io",
+        "email": "hello@spencer-assistant.io",
         "cloud": "connected",
         "cloud_last_disconnect_reason": None,
         "prefs": {
@@ -525,10 +525,10 @@ async def test_websocket_update_preferences_alexa_report_state(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
     ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -547,11 +547,11 @@ async def test_websocket_update_preferences_require_relink(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.RequireRelink,
     ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -571,11 +571,11 @@ async def test_websocket_update_preferences_no_token(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.NoTokenAvailable,
     ), patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -652,7 +652,7 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
         State("cover.garage", "open", {"device_class": "garage"}),
     )
     with patch(
-        "homeassistant.components.google_assistant.helpers.async_get_entities",
+        "spencerassistant.components.google_assistant.helpers.async_get_entities",
         return_value=[entity, entity2],
     ):
         await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
@@ -724,7 +724,7 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
         hass, MagicMock(entity_config={}), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.alexa.entities.async_get_entities",
+        "spencerassistant.components.alexa.entities.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/alexa/entities"})
@@ -777,7 +777,7 @@ async def test_sync_alexa_entities_timeout(
     """Test that timeout syncing Alexa entities."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=asyncio.TimeoutError,
     ):
@@ -794,7 +794,7 @@ async def test_sync_alexa_entities_no_token(
     """Test sync Alexa entities when we have no token."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=alexa_errors.NoTokenAvailable,
     ):
@@ -811,7 +811,7 @@ async def test_enable_alexa_state_report_fail(
     """Test enable Alexa entities state reporting when no token available."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+        "spencerassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=alexa_errors.NoTokenAvailable,
     ):
@@ -827,7 +827,7 @@ async def test_thingtalk_convert(hass, hass_ws_client, setup_api):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        "spencerassistant.components.cloud.http_api.thingtalk.async_convert",
         return_value={"hello": "world"},
     ):
         await client.send_json(
@@ -844,7 +844,7 @@ async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        "spencerassistant.components.cloud.http_api.thingtalk.async_convert",
         side_effect=asyncio.TimeoutError,
     ):
         await client.send_json(
@@ -861,7 +861,7 @@ async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        "spencerassistant.components.cloud.http_api.thingtalk.async_convert",
         side_effect=thingtalk.ThingTalkConversionError("Did not understand"),
     ):
         await client.send_json(
@@ -882,7 +882,7 @@ async def test_tts_info(hass, hass_ws_client, setup_api):
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        "homeassistant.components.cloud.http_api.MAP_VOICE",
+        "spencerassistant.components.cloud.http_api.MAP_VOICE",
         {
             ("en-US", voice.Gender.MALE): "GuyNeural",
             ("en-US", voice.Gender.FEMALE): "JennyNeural",

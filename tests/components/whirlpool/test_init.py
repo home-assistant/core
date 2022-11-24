@@ -3,21 +3,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 
-from homeassistant.components.whirlpool.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.whirlpool.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 
 
-async def test_setup(hass: HomeAssistant):
+async def test_setup(hass: spencerAssistant):
     """Test setup."""
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_http_exception(hass: HomeAssistant, mock_auth_api: MagicMock):
+async def test_setup_http_exception(hass: spencerAssistant, mock_auth_api: MagicMock):
     """Test setup with an http exception."""
     mock_auth_api.return_value.do_auth = AsyncMock(
         side_effect=aiohttp.ClientConnectionError()
@@ -27,7 +27,7 @@ async def test_setup_http_exception(hass: HomeAssistant, mock_auth_api: MagicMoc
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_failed(hass: HomeAssistant, mock_auth_api: MagicMock):
+async def test_setup_auth_failed(hass: spencerAssistant, mock_auth_api: MagicMock):
     """Test setup with failed auth."""
     mock_auth_api.return_value.do_auth = AsyncMock()
     mock_auth_api.return_value.is_access_token_valid.return_value = False
@@ -37,7 +37,7 @@ async def test_setup_auth_failed(hass: HomeAssistant, mock_auth_api: MagicMock):
 
 
 async def test_setup_fetch_appliances_failed(
-    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+    hass: spencerAssistant, mock_appliances_manager_api: MagicMock
 ):
     """Test setup with failed fetch_appliances."""
     mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
@@ -46,7 +46,7 @@ async def test_setup_fetch_appliances_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: spencerAssistant):
     """Test successful unload of entry."""
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

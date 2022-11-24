@@ -1,13 +1,13 @@
 """The tests for SleepIQ binary sensor platform."""
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
-from homeassistant.const import (
+from spencerassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.helpers import entity_registry as er
 
 from .conftest import (
     BED_NAME,

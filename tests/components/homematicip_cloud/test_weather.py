@@ -1,14 +1,14 @@
-"""Tests for HomematicIP Cloud weather."""
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.weather import (
+"""Tests for spencermaticIP Cloud weather."""
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_ATTRIBUTION
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -22,7 +22,7 @@ async def test_manually_configured_platform(hass):
 
 
 async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipWeatherSensor."""
+    """Test spencermaticipWeatherSensor."""
     entity_id = "weather.weather_sensor_plus"
     entity_name = "Weather Sensor – plus"
     device_model = "HmIP-SWO-PL"
@@ -38,7 +38,7 @@ async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 4.3
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 97
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0
-    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by spencermatic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
@@ -46,7 +46,7 @@ async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
-    """Test HomematicipWeatherSensorPro."""
+    """Test spencermaticipWeatherSensorPro."""
     entity_id = "weather.wettersensor_pro"
     entity_name = "Wettersensor - pro"
     device_model = "HmIP-SWO-PR"
@@ -63,15 +63,15 @@ async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 65
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 2.6
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 295.0
-    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by spencermatic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
 
 
-async def test_hmip_home_weather(hass, default_mock_hap_factory):
-    """Test HomematicipHomeWeather."""
+async def test_hmip_spencer_weather(hass, default_mock_hap_factory):
+    """Test spencermaticipspencerWeather."""
     entity_id = "weather.weather_1010_wien_osterreich"
     entity_name = "Weather 1010  Wien, Österreich"
     device_model = None
@@ -86,10 +86,10 @@ async def test_hmip_home_weather(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 54
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.6
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 294
-    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by spencermatic IP"
 
     await async_manipulate_test_data(
-        hass, mock_hap.home.weather, "temperature", 28.3, fire_device=mock_hap.home
+        hass, mock_hap.spencer.weather, "temperature", 28.3, fire_device=mock_hap.spencer
     )
 
     ha_state = hass.states.get(entity_id)

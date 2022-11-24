@@ -7,22 +7,22 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.zwave_js import DOMAIN, device_action
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.zwave_js import DOMAIN, device_action
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations
 
 
 async def test_get_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
@@ -93,7 +93,7 @@ async def test_get_actions(
 
 
 async def test_get_actions_meter(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     aeon_smart_switch_6: Node,
     integration: ConfigEntry,
@@ -113,7 +113,7 @@ async def test_get_actions_meter(
 
 
 async def test_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     climate_radio_thermostat_ct100_plus: Node,
     integration: ConfigEntry,
@@ -222,7 +222,7 @@ async def test_actions(
         assert args[1] == 1
 
     with patch(
-        "homeassistant.components.zwave_js.services.async_set_config_parameter"
+        "spencerassistant.components.zwave_js.services.async_set_config_parameter"
     ) as mock_call:
         hass.bus.async_fire("test_event_set_config_parameter")
         await hass.async_block_till_done()
@@ -235,7 +235,7 @@ async def test_actions(
 
 
 async def test_actions_multiple_calls(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     climate_radio_thermostat_ct100_plus: Node,
     integration: ConfigEntry,
@@ -282,7 +282,7 @@ async def test_actions_multiple_calls(
 
 
 async def test_lock_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
@@ -332,7 +332,7 @@ async def test_lock_actions(
         },
     )
 
-    with patch("homeassistant.components.zwave_js.lock.clear_usercode") as mock_call:
+    with patch("spencerassistant.components.zwave_js.lock.clear_usercode") as mock_call:
         hass.bus.async_fire("test_event_clear_lock_usercode")
         await hass.async_block_till_done()
         mock_call.assert_called_once()
@@ -341,7 +341,7 @@ async def test_lock_actions(
         assert args[0].node_id == node.node_id
         assert args[1] == 1
 
-    with patch("homeassistant.components.zwave_js.lock.set_usercode") as mock_call:
+    with patch("spencerassistant.components.zwave_js.lock.set_usercode") as mock_call:
         hass.bus.async_fire("test_event_set_lock_usercode")
         await hass.async_block_till_done()
         mock_call.assert_called_once()
@@ -353,7 +353,7 @@ async def test_lock_actions(
 
 
 async def test_reset_meter_action(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     aeon_smart_switch_6: Node,
     integration: ConfigEntry,
@@ -401,7 +401,7 @@ async def test_reset_meter_action(
 
 
 async def test_get_action_capabilities(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     climate_radio_thermostat_ct100_plus: Node,
     integration: ConfigEntry,
@@ -567,7 +567,7 @@ async def test_get_action_capabilities(
 
 
 async def test_get_action_capabilities_lock_triggers(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
@@ -617,7 +617,7 @@ async def test_get_action_capabilities_lock_triggers(
 
 
 async def test_get_action_capabilities_meter_triggers(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     aeon_smart_switch_6: Node,
     integration: ConfigEntry,
@@ -647,7 +647,7 @@ async def test_get_action_capabilities_meter_triggers(
 
 
 async def test_failure_scenarios(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     hank_binary_switch: Node,
     integration: ConfigEntry,
@@ -658,7 +658,7 @@ async def test_failure_scenarios(
         dev_reg, integration.entry_id
     )[0]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_action.async_call_action_from_config(
             hass, {"type": "failed.test", "device_id": device.id}, {}, None
         )
@@ -672,13 +672,13 @@ async def test_failure_scenarios(
 
 
 async def test_unavailable_entity_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
 ) -> None:
     """Test unavailable entities are not included in actions list."""
-    entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_home_security_intrusion"
+    entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_spencer_security_intrusion"
     hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE, force_update=True)
     await hass.async_block_till_done()
     node = lock_schlage_be469

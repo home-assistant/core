@@ -6,10 +6,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.generated import config_flows
-from homeassistant.helpers import translation
-from homeassistant.loader import async_get_integration
-from homeassistant.setup import async_setup_component
+from spencerassistant.generated import config_flows
+from spencerassistant.helpers import translation
+from spencerassistant.loader import async_get_integration
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -129,13 +129,13 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 1"
 
     with patch(
-        "homeassistant.helpers.translation.component_translation_path",
+        "spencerassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "spencerassistant.helpers.translation.load_translations_files",
         return_value={"component1": {"title": "world"}},
     ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
+        "spencerassistant.helpers.translation.async_get_integrations",
         return_value={"component1": integration},
     ):
         translations = await translation.async_get_translations(
@@ -158,13 +158,13 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 2"
 
     with patch(
-        "homeassistant.helpers.translation.component_translation_path",
+        "spencerassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "spencerassistant.helpers.translation.load_translations_files",
         return_value={"component2": {"title": "world"}},
     ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
+        "spencerassistant.helpers.translation.async_get_integrations",
         return_value={"component2": integration},
     ):
         translations = await translation.async_get_translations(
@@ -206,13 +206,13 @@ async def test_get_translations_while_loading_components(hass):
         return {"component1": {"title": "world"}}
 
     with patch(
-        "homeassistant.helpers.translation.component_translation_path",
+        "spencerassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "spencerassistant.helpers.translation.load_translations_files",
         mock_load_translation_files,
     ), patch(
-        "homeassistant.helpers.translation.async_get_integrations",
+        "spencerassistant.helpers.translation.async_get_integrations",
         return_value={"component1": integration},
     ):
         tasks = [
@@ -262,7 +262,7 @@ async def test_translation_merging(hass, caplog):
         return result
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "spencerassistant.helpers.translation.load_translations_files",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
@@ -299,18 +299,18 @@ async def test_translation_merging_loaded_apart(hass, caplog):
 async def test_translation_merging_loaded_together(hass, caplog):
     """Test we merge translations of two integrations when they are loaded at the same time."""
     hass.config.components.add("hue")
-    hass.config.components.add("homekit")
+    hass.config.components.add("spencerkit")
     hue_translations = await translation.async_get_translations(
         hass, "en", "config", integrations={"hue"}
     )
-    homekit_translations = await translation.async_get_translations(
-        hass, "en", "config", integrations={"homekit"}
+    spencerkit_translations = await translation.async_get_translations(
+        hass, "en", "config", integrations={"spencerkit"}
     )
 
     translations = await translation.async_get_translations(
-        hass, "en", "config", integrations={"hue", "homekit"}
+        hass, "en", "config", integrations={"hue", "spencerkit"}
     )
-    assert translations == hue_translations | homekit_translations
+    assert translations == hue_translations | spencerkit_translations
 
 
 async def test_caching(hass):
@@ -320,7 +320,7 @@ async def test_caching(hass):
 
     # Patch with same method so we can count invocations
     with patch(
-        "homeassistant.helpers.translation._merge_resources",
+        "spencerassistant.helpers.translation._merge_resources",
         side_effect=translation._merge_resources,
     ) as mock_merge:
         load1 = await translation.async_get_translations(hass, "en", "state")
@@ -354,7 +354,7 @@ async def test_caching(hass):
 
     # Patch with same method so we can count invocations
     with patch(
-        "homeassistant.helpers.translation._build_resources",
+        "spencerassistant.helpers.translation._build_resources",
         side_effect=translation._build_resources,
     ) as mock_build:
         load_sensor_only = await translation.async_get_translations(

@@ -6,33 +6,33 @@ import logging
 import time
 from unittest.mock import MagicMock, patch
 
-from home_assistant_bluetooth import BluetoothServiceInfo
+from spencer_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
-from homeassistant.components.binary_sensor import (
+from spencerassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.bluetooth import (
+from spencerassistant.components.bluetooth import (
     DOMAIN,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
-from homeassistant.components.bluetooth.passive_update_processor import (
+from spencerassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
+from spencerassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import CoreState, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from spencerassistant.const import TEMP_CELSIUS
+from spencerassistant.core import CoreState, callback
+from spencerassistant.helpers.entity import DeviceInfo
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from . import (
     inject_bluetooth_service_info,
@@ -389,7 +389,7 @@ async def test_exception_from_update_method(
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        "spencerassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -454,7 +454,7 @@ async def test_bad_data_from_update_method(
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        "spencerassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)

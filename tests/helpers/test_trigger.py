@@ -4,15 +4,15 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.trigger import (
+from spencerassistant.core import Context, spencerAssistant, ServiceCall, callback
+from spencerassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
@@ -33,7 +33,7 @@ async def test_bad_trigger_platform(hass):
 async def test_trigger_subtype(hass):
     """Test trigger subtypes."""
     with patch(
-        "homeassistant.helpers.trigger.async_get_integration", return_value=MagicMock()
+        "spencerassistant.helpers.trigger.async_get_integration", return_value=MagicMock()
     ) as integration_mock:
         await _async_get_trigger_platform(hass, {"platform": "test.subtype"})
         assert integration_mock.call_args == call(hass, "test")
@@ -73,7 +73,7 @@ async def test_if_fires_on_event(hass, calls):
 
 
 async def test_if_disabled_trigger_not_firing(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: spencerAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test disabled triggers don't fire."""
     assert await async_setup_component(
@@ -109,7 +109,7 @@ async def test_if_disabled_trigger_not_firing(
 
 
 async def test_trigger_alias(
-    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test triggers support aliases."""
     assert await async_setup_component(
@@ -143,7 +143,7 @@ async def test_trigger_alias(
 
 
 async def test_async_initialize_triggers(
-    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_initialize_triggers with different action types."""
 
@@ -201,7 +201,7 @@ async def test_async_initialize_triggers(
         unsub()
 
 
-async def test_pluggable_action(hass: HomeAssistant, calls: list[ServiceCall]):
+async def test_pluggable_action(hass: spencerAssistant, calls: list[ServiceCall]):
     """Test normal behavior of pluggable actions."""
     update_1 = MagicMock()
     update_2 = MagicMock()

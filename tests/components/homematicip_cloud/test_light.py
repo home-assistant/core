@@ -1,8 +1,8 @@
-"""Tests for HomematicIP Cloud light."""
-from homematicip.base.enums import RGBColorState
+"""Tests for spencermaticIP Cloud light."""
+from spencermaticip.base.enums import RGBColorState
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.light import (
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
@@ -11,8 +11,8 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -26,7 +26,7 @@ async def test_manually_configured_platform(hass):
 
 
 async def test_hmip_light(hass, default_mock_hap_factory):
-    """Test HomematicipLight."""
+    """Test spencermaticipLight."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
     device_model = "HmIP-BSL"
@@ -71,7 +71,7 @@ async def test_hmip_light(hass, default_mock_hap_factory):
 
 
 async def test_hmip_notification_light(hass, default_mock_hap_factory):
-    """Test HomematicipNotificationLight."""
+    """Test spencermaticipNotificationLight."""
     entity_id = "light.alarm_status"
     entity_name = "Alarm Status"
     device_model = "HmIP-BSL"
@@ -168,7 +168,7 @@ async def test_hmip_notification_light(hass, default_mock_hap_factory):
 
 
 async def test_hmip_dimmer(hass, default_mock_hap_factory):
-    """Test HomematicipDimmer."""
+    """Test spencermaticipDimmer."""
     entity_id = "light.schlafzimmerlicht"
     entity_name = "Schlafzimmerlicht"
     device_model = "HmIP-BDT"
@@ -226,7 +226,7 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
 
 
 async def test_hmip_light_measuring(hass, default_mock_hap_factory):
-    """Test HomematicipLightMeasuring."""
+    """Test spencermaticipLightMeasuring."""
     entity_id = "light.flur_oben"
     entity_name = "Flur oben"
     device_model = "HmIP-BSM"
@@ -270,7 +270,7 @@ async def test_hmip_light_measuring(hass, default_mock_hap_factory):
 
 
 async def test_hmip_wired_multi_dimmer(hass, default_mock_hap_factory):
-    """Test HomematicipMultiDimmer."""
+    """Test spencermaticipMultiDimmer."""
     entity_id = "light.raumlich_kuche"
     entity_name = "Raumlich (Küche)"
     device_model = "HmIPW-DRD3"

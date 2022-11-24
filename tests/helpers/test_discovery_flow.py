@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState
-from homeassistant.helpers import discovery_flow
+from spencerassistant import config_entries
+from spencerassistant.core import EVENT_spencerASSISTANT_STARTED, CoreState
+from spencerassistant.helpers import discovery_flow
 
 
 @pytest.fixture
@@ -23,13 +23,13 @@ async def test_async_create_flow(hass, mock_flow_init):
     discovery_flow.async_create_flow(
         hass,
         "hue",
-        {"source": config_entries.SOURCE_HOMEKIT},
+        {"source": config_entries.SOURCE_spencerKIT},
         {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert mock_flow_init.mock_calls == [
         call(
             "hue",
-            context={"source": "homekit"},
+            context={"source": "spencerkit"},
             data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
     ]
@@ -41,16 +41,16 @@ async def test_async_create_flow_deferred_until_started(hass, mock_flow_init):
     discovery_flow.async_create_flow(
         hass,
         "hue",
-        {"source": config_entries.SOURCE_HOMEKIT},
+        {"source": config_entries.SOURCE_spencerKIT},
         {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert not mock_flow_init.mock_calls
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert mock_flow_init.mock_calls == [
         call(
             "hue",
-            context={"source": "homekit"},
+            context={"source": "spencerkit"},
             data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
     ]
@@ -59,13 +59,13 @@ async def test_async_create_flow_deferred_until_started(hass, mock_flow_init):
 async def test_async_create_flow_checks_existing_flows(hass, mock_flow_init):
     """Test existing flows prevent an identical one from being creates."""
     with patch(
-        "homeassistant.data_entry_flow.FlowManager.async_has_matching_flow",
+        "spencerassistant.data_entry_flow.FlowManager.async_has_matching_flow",
         return_value=True,
     ):
         discovery_flow.async_create_flow(
             hass,
             "hue",
-            {"source": config_entries.SOURCE_HOMEKIT},
+            {"source": config_entries.SOURCE_spencerKIT},
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
         assert not mock_flow_init.mock_calls

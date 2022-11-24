@@ -6,7 +6,7 @@ from typing import Any
 
 from zwave_js_server.model.node.data_model import NodeDataType
 
-from homeassistant.components.zwave_js.helpers import (
+from spencerassistant.components.zwave_js.helpers import (
     ZwaveValueMatcher,
     value_matches_matcher,
 )

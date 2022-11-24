@@ -1,5 +1,5 @@
 """Test the NEW_NAME significant change platform."""
-from homeassistant.components.NEW_DOMAIN.significant_change import (
+from spencerassistant.components.NEW_DOMAIN.significant_change import (
     async_check_significant_change,
 )
 

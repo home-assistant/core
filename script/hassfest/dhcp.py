@@ -31,7 +31,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate dhcp file."""
-    dhcp_path = config.root / "homeassistant/generated/dhcp.py"
+    dhcp_path = config.root / "spencerassistant/generated/dhcp.py"
     config.cache["dhcp"] = content = generate_and_validate(integrations)
 
     if config.specific_integrations:
@@ -50,6 +50,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate dhcp file."""
-    dhcp_path = config.root / "homeassistant/generated/dhcp.py"
+    dhcp_path = config.root / "spencerassistant/generated/dhcp.py"
     with open(str(dhcp_path), "w") as fp:
         fp.write(f"{config.cache['dhcp']}")

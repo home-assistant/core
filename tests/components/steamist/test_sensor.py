@@ -1,8 +1,8 @@
 """Tests for the steamist sensos."""
 from __future__ import annotations
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TIME_MINUTES
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TIME_MINUTES
+from spencerassistant.core import spencerAssistant
 
 from . import (
     MOCK_ASYNC_GET_STATUS_ACTIVE,
@@ -11,7 +11,7 @@ from . import (
 )
 
 
-async def test_steam_active(hass: HomeAssistant) -> None:
+async def test_steam_active(hass: spencerAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
     state = hass.states.get("sensor.steam_temperature")
@@ -22,7 +22,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TIME_MINUTES
 
 
-async def test_steam_inactive(hass: HomeAssistant) -> None:
+async def test_steam_inactive(hass: spencerAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is not active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_INACTIVE)
     state = hass.states.get("sensor.steam_temperature")

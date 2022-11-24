@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import mqtt, scene
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def scene_platform_only():
     """Only setup the scene platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SCENE]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.SCENE]):
         yield
 
 
@@ -194,7 +194,7 @@ async def test_discovery_update_unchanged_scene(
     """Test update of discovered scene."""
     data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
     with patch(
-        "homeassistant.components.mqtt.scene.MqttScene.discovery_update"
+        "spencerassistant.components.mqtt.scene.MqttScene.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

@@ -10,10 +10,10 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
-from homeassistant.components.synology_dsm.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
+from spencerassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
@@ -25,8 +25,8 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import (
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from spencerassistant.const import (
     CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
@@ -38,7 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .consts import (
     DEVICE_TOKEN,
@@ -60,7 +60,7 @@ from tests.common import MockConfigEntry
 def mock_controller_service():
     """Mock a successful service."""
     with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+        "spencerassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
@@ -74,7 +74,7 @@ def mock_controller_service():
 def mock_controller_service_2sa():
     """Mock a successful service with 2SA login."""
     with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+        "spencerassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.login = Mock(
             side_effect=SynologyDSMLogin2SARequiredException(USERNAME)
@@ -91,7 +91,7 @@ def mock_controller_service_2sa():
 def mock_controller_service_vdsm():
     """Mock a successful service."""
     with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+        "spencerassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
@@ -105,7 +105,7 @@ def mock_controller_service_vdsm():
 def mock_controller_service_failed():
     """Mock a failed service."""
     with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+        "spencerassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.information.serial = None
         service_mock.return_value.utilisation.cpu_user_load = None
@@ -115,7 +115,7 @@ def mock_controller_service_failed():
         yield service_mock
 
 
-async def test_user(hass: HomeAssistant, service: MagicMock):
+async def test_user(hass: spencerAssistant, service: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -178,7 +178,7 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
+async def test_user_2sa(hass: spencerAssistant, service_2sa: MagicMock):
     """Test user with 2sa authentication config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -221,7 +221,7 @@ async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
+async def test_user_vdsm(hass: spencerAssistant, service_vdsm: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -257,7 +257,7 @@ async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_reauth(hass: HomeAssistant, service: MagicMock):
+async def test_reauth(hass: spencerAssistant, service: MagicMock):
     """Test reauthentication."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -271,7 +271,7 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
+        "spencerassistant.config_entries.ConfigEntries.async_reload",
         return_value=True,
     ):
 
@@ -302,7 +302,7 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
         assert result["reason"] == "reauth_successful"
 
 
-async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
+async def test_reconfig_user(hass: spencerAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by user."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -315,7 +315,7 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
+        "spencerassistant.config_entries.ConfigEntries.async_reload",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -327,7 +327,7 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
         assert result["reason"] == "reconfigure_successful"
 
 
-async def test_login_failed(hass: HomeAssistant, service: MagicMock):
+async def test_login_failed(hass: spencerAssistant, service: MagicMock):
     """Test when we have errors during login."""
     service.return_value.login = Mock(
         side_effect=(SynologyDSMLoginInvalidException(USERNAME))
@@ -342,7 +342,7 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock):
     assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
-async def test_connection_failed(hass: HomeAssistant, service: MagicMock):
+async def test_connection_failed(hass: spencerAssistant, service: MagicMock):
     """Test when we have errors during connection."""
     service.return_value.login = Mock(
         side_effect=SynologyDSMRequestException(IOError("arg"))
@@ -358,7 +358,7 @@ async def test_connection_failed(hass: HomeAssistant, service: MagicMock):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_unknown_failed(hass: HomeAssistant, service: MagicMock):
+async def test_unknown_failed(hass: spencerAssistant, service: MagicMock):
     """Test when we have an unknown error."""
     service.return_value.login = Mock(side_effect=SynologyDSMException(None, None))
 
@@ -372,7 +372,7 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_missing_data_after_login(hass: HomeAssistant, service_failed: MagicMock):
+async def test_missing_data_after_login(hass: spencerAssistant, service_failed: MagicMock):
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -383,7 +383,7 @@ async def test_missing_data_after_login(hass: HomeAssistant, service_failed: Mag
     assert result["errors"] == {"base": "missing_data"}
 
 
-async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
+async def test_form_ssdp(hass: spencerAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
 
     result = await hass.config_entries.flow.async_init(
@@ -422,7 +422,7 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
+async def test_reconfig_ssdp(hass: spencerAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by ssdp."""
 
     MockConfigEntry(
@@ -454,7 +454,7 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
+async def test_skip_reconfig_ssdp(hass: spencerAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by ssdp."""
 
     MockConfigEntry(
@@ -486,7 +486,7 @@ async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["reason"] == "already_configured"
 
 
-async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
+async def test_existing_ssdp(hass: spencerAssistant, service: MagicMock):
     """Test abort of already existing entry by ssdp."""
 
     MockConfigEntry(
@@ -518,7 +518,7 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistant, service: MagicMock):
+async def test_options_flow(hass: spencerAssistant, service: MagicMock):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

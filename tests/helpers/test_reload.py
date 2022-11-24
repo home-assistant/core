@@ -4,17 +4,17 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.reload import (
+from spencerassistant import config
+from spencerassistant.const import SERVICE_RELOAD
+from spencerassistant.helpers.entity_component import EntityComponent
+from spencerassistant.helpers.entity_platform import async_get_platforms
+from spencerassistant.helpers.reload import (
     async_get_platform_without_config_entry,
     async_integration_yaml_config,
     async_reload_integration_platforms,
     async_setup_reload_service,
 )
-from homeassistant.loader import async_get_integration
+from spencerassistant.loader import async_get_integration
 
 from tests.common import (
     MockModule,

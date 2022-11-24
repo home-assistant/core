@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import onboarding
-from homeassistant.components.onboarding import const, views
-from homeassistant.helpers import area_registry as ar
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import onboarding
+from spencerassistant.components.onboarding import const, views
+from spencerassistant.helpers import area_registry as ar
+from spencerassistant.setup import async_setup_component
 
 from . import mock_storage
 
@@ -20,7 +20,7 @@ from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
 def auth_active(hass):
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
+        register_auth_provider(hass, {"type": "spencerassistant"})
     )
 
 
@@ -55,7 +55,7 @@ async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(hass, aioclient_mock):
     """Mock supervisor."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/resolution/info",
@@ -71,25 +71,25 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         },
     )
     with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
+        "spencerassistant.components.hassio.HassIO.is_connected",
         return_value=True,
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         return_value={},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_host_info",
+        "spencerassistant.components.hassio.HassIO.get_host_info",
         return_value={},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_store",
+        "spencerassistant.components.hassio.HassIO.get_store",
         return_value={},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        "spencerassistant.components.hassio.HassIO.get_supervisor_info",
         return_value={"diagnostics": True},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
+        "spencerassistant.components.hassio.HassIO.get_os_info",
         return_value={},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
+        "spencerassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
         os.environ, {"SUPERVISOR_TOKEN": "123456"}
@@ -101,13 +101,13 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
     with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
+        "spencerassistant.components.rpi_power.config_flow.new_under_voltage"
     ), patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
+        "spencerassistant.components.rpi_power.binary_sensor.new_under_voltage"
     ), patch(
-        "homeassistant.components.met.async_setup_entry", return_value=True
+        "spencerassistant.components.met.async_setup_entry", return_value=True
     ), patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+        "spencerassistant.components.radio_browser.async_setup_entry", return_value=True
     ):
         yield
 
@@ -353,7 +353,7 @@ async def test_onboarding_integration_invalid_redirect_uri(
     client = await hass_client()
 
     with patch(
-        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+        "spencerassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
     ):
         resp = await client.post(
             "/api/onboarding/integration",
@@ -498,15 +498,15 @@ async def test_onboarding_installation_type(hass, hass_storage, hass_client):
     client = await hass_client()
 
     with patch(
-        "homeassistant.components.onboarding.views.async_get_system_info",
-        return_value={"installation_type": "Home Assistant Core"},
+        "spencerassistant.components.onboarding.views.async_get_system_info",
+        return_value={"installation_type": "spencer Assistant Core"},
     ):
         resp = await client.get("/api/onboarding/installation_type")
 
         assert resp.status == 200
 
         resp_content = await resp.json()
-        assert resp_content["installation_type"] == "Home Assistant Core"
+        assert resp_content["installation_type"] == "spencer Assistant Core"
 
 
 async def test_onboarding_installation_type_after_done(hass, hass_storage, hass_client):

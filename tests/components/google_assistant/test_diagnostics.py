@@ -3,16 +3,16 @@
 from typing import Any
 from unittest.mock import ANY
 
-from homeassistant import core, setup
-from homeassistant.components import google_assistant as ga, switch
-from homeassistant.setup import async_setup_component
+from spencerassistant import core, setup
+from spencerassistant.components import google_assistant as ga, switch
+from spencerassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
+async def test_diagnostics(hass: core.spencerAssistant, hass_client: Any):
     """Test diagnostics v1."""
 
     await setup.async_setup_component(

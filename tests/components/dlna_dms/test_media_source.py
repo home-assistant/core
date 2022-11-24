@@ -5,21 +5,21 @@ from async_upnp_client.exceptions import UpnpError
 from didl_lite import didl_lite
 import pytest
 
-from homeassistant.components import media_source
-from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import DidlPlayMedia
-from homeassistant.components.dlna_dms.media_source import (
+from spencerassistant.components import media_source
+from spencerassistant.components.dlna_dms.const import DOMAIN
+from spencerassistant.components.dlna_dms.dms import DidlPlayMedia
+from spencerassistant.components.dlna_dms.media_source import (
     DmsMediaSource,
     async_get_media_source,
 )
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from spencerassistant.components.media_player.errors import BrowseError
+from spencerassistant.components.media_source.error import Unresolvable
+from spencerassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSourceItem,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_URL
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_DEVICE_ID, CONF_URL
+from spencerassistant.core import spencerAssistant
 
 from .conftest import (
     MOCK_DEVICE_BASE_URL,
@@ -39,14 +39,14 @@ pytestmark = [
 ]
 
 
-async def test_get_media_source(hass: HomeAssistant) -> None:
+async def test_get_media_source(hass: spencerAssistant) -> None:
     """Test the async_get_media_source function and DmsMediaSource constructor."""
     source = await async_get_media_source(hass)
     assert isinstance(source, DmsMediaSource)
     assert source.domain == DOMAIN
 
 
-async def test_resolve_media_unconfigured(hass: HomeAssistant) -> None:
+async def test_resolve_media_unconfigured(hass: spencerAssistant) -> None:
     """Test resolve_media without any devices being configured."""
     source = DmsMediaSource(hass)
     item = MediaSourceItem(hass, DOMAIN, "source_id/media_id", None)
@@ -55,7 +55,7 @@ async def test_resolve_media_unconfigured(hass: HomeAssistant) -> None:
 
 
 async def test_resolve_media_bad_identifier(
-    hass: HomeAssistant, device_source_mock: None
+    hass: spencerAssistant, device_source_mock: None
 ) -> None:
     """Test trying to resolve an item that has an unresolvable identifier."""
     # Empty identifier
@@ -89,7 +89,7 @@ async def test_resolve_media_bad_identifier(
 
 
 async def test_resolve_media_success(
-    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
+    hass: spencerAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test resolving an item via a DmsDeviceSource."""
     object_id = "123"
@@ -113,7 +113,7 @@ async def test_resolve_media_success(
     assert result.didl_metadata is didl_item
 
 
-async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
+async def test_browse_media_unconfigured(hass: spencerAssistant) -> None:
     """Test browse_media without any devices being configured."""
     source = DmsMediaSource(hass)
     item = MediaSourceItem(hass, DOMAIN, "source_id/media_id", None)
@@ -126,7 +126,7 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
 
 
 async def test_browse_media_bad_identifier(
-    hass: HomeAssistant, device_source_mock: None
+    hass: spencerAssistant, device_source_mock: None
 ) -> None:
     """Test browse_media with a bad source_id."""
     with pytest.raises(BrowseError, match="Unknown source ID: bad-id"):
@@ -136,7 +136,7 @@ async def test_browse_media_bad_identifier(
 
 
 async def test_browse_media_single_source_no_identifier(
-    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
+    hass: spencerAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test browse_media without a source_id, with a single device registered."""
     # Fast bail-out, mock will be checked after
@@ -161,7 +161,7 @@ async def test_browse_media_single_source_no_identifier(
 
 
 async def test_browse_media_multiple_sources(
-    hass: HomeAssistant, dms_device_mock: Mock, device_source_mock: None
+    hass: spencerAssistant, dms_device_mock: Mock, device_source_mock: None
 ) -> None:
     """Test browse_media without a source_id, with multiple devices registered."""
     # Set up a second source
@@ -209,7 +209,7 @@ async def test_browse_media_multiple_sources(
 
 
 async def test_browse_media_source_id(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry_mock: MockConfigEntry,
     dms_device_mock: Mock,
 ) -> None:

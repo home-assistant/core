@@ -3,19 +3,19 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.weather import ATTR_FORECAST, DOMAIN
-from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from spencerassistant.components.recorder.db_schema import StateAttributes, States
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.components.weather import ATTR_FORECAST, DOMAIN
+from spencerassistant.core import spencerAssistant, State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(recorder_mock, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(recorder_mock, hass: spencerAssistant) -> None:
     """Test weather attributes to be excluded."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
     hass.config.units = METRIC_SYSTEM

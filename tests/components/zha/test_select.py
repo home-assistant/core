@@ -8,10 +8,10 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.const import STATE_UNKNOWN, Platform
-from homeassistant.helpers import entity_registry as er, restore_state
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt as dt_util
+from spencerassistant.const import STATE_UNKNOWN, Platform
+from spencerassistant.helpers import entity_registry as er, restore_state
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.util import dt as dt_util
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -21,7 +21,7 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 def select_select_only():
     """Only setup the select and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BUTTON,
             Platform.DEVICE_TRACKER,

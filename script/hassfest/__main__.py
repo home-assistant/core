@@ -115,7 +115,7 @@ def get_config() -> Config:
         not parsed.integration_path
         and not pathlib.Path("requirements_all.txt").is_file()
     ):
-        raise RuntimeError("Run from Home Assistant root")
+        raise RuntimeError("Run from spencer Assistant root")
 
     return Config(
         root=pathlib.Path(".").absolute(),
@@ -145,7 +145,7 @@ def main() -> int:
             integrations[integration.domain] = integration
 
     else:
-        integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+        integrations = Integration.load_dir(pathlib.Path("spencerassistant/components"))
         plugins += HASS_PLUGINS
 
     for plugin in plugins:

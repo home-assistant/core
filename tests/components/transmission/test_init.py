@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from transmissionrpc.error import TransmissionError
 
-from homeassistant.components.transmission.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.transmission.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import MOCK_CONFIG_DATA
 
@@ -21,7 +21,7 @@ def mock_api():
         yield api
 
 
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
+async def test_successful_config_entry(hass: spencerAssistant) -> None:
     """Test settings up integration from config entry."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
@@ -33,7 +33,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
 
 async def test_setup_failed_connection_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test integration failed due to connection error."""
 
@@ -47,7 +47,7 @@ async def test_setup_failed_connection_error(
 
 
 async def test_setup_failed_auth_error(
-    hass: HomeAssistant, mock_api: MagicMock
+    hass: spencerAssistant, mock_api: MagicMock
 ) -> None:
     """Test integration failed due to invalid credentials error."""
 
@@ -60,7 +60,7 @@ async def test_setup_failed_auth_error(
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: spencerAssistant) -> None:
     """Test removing integration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)

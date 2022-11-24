@@ -1,108 +1,108 @@
-# Defines a list of files that are part of main core of Home Assistant.
+# Defines a list of files that are part of main core of spencer Assistant.
 # Changes to these files/filters define how our CI test suite is ran.
 core: &core
-  - homeassistant/*.py
-  - homeassistant/auth/**
-  - homeassistant/helpers/**
-  - homeassistant/package_constraints.txt
-  - homeassistant/util/**
+  - spencerassistant/*.py
+  - spencerassistant/auth/**
+  - spencerassistant/helpers/**
+  - spencerassistant/package_constraints.txt
+  - spencerassistant/util/**
   - pyproject.toml
   - requirements.txt
   - setup.cfg
 
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
-  - homeassistant/components/air_quality/**
-  - homeassistant/components/alarm_control_panel/**
-  - homeassistant/components/binary_sensor/**
-  - homeassistant/components/button/**
-  - homeassistant/components/calendar/**
-  - homeassistant/components/camera/**
-  - homeassistant/components/climate/**
-  - homeassistant/components/cover/**
-  - homeassistant/components/device_tracker/**
-  - homeassistant/components/diagnostics/**
-  - homeassistant/components/fan/**
-  - homeassistant/components/geo_location/**
-  - homeassistant/components/humidifier/**
-  - homeassistant/components/image_processing/**
-  - homeassistant/components/light/**
-  - homeassistant/components/lock/**
-  - homeassistant/components/media_player/**
-  - homeassistant/components/notify/**
-  - homeassistant/components/number/**
-  - homeassistant/components/remote/**
-  - homeassistant/components/scene/**
-  - homeassistant/components/select/**
-  - homeassistant/components/sensor/**
-  - homeassistant/components/siren/**
-  - homeassistant/components/stt/**
-  - homeassistant/components/switch/**
-  - homeassistant/components/tts/**
-  - homeassistant/components/update/**
-  - homeassistant/components/vacuum/**
-  - homeassistant/components/water_heater/**
-  - homeassistant/components/weather/**
+  - spencerassistant/components/air_quality/**
+  - spencerassistant/components/alarm_control_panel/**
+  - spencerassistant/components/binary_sensor/**
+  - spencerassistant/components/button/**
+  - spencerassistant/components/calendar/**
+  - spencerassistant/components/camera/**
+  - spencerassistant/components/climate/**
+  - spencerassistant/components/cover/**
+  - spencerassistant/components/device_tracker/**
+  - spencerassistant/components/diagnostics/**
+  - spencerassistant/components/fan/**
+  - spencerassistant/components/geo_location/**
+  - spencerassistant/components/humidifier/**
+  - spencerassistant/components/image_processing/**
+  - spencerassistant/components/light/**
+  - spencerassistant/components/lock/**
+  - spencerassistant/components/media_player/**
+  - spencerassistant/components/notify/**
+  - spencerassistant/components/number/**
+  - spencerassistant/components/remote/**
+  - spencerassistant/components/scene/**
+  - spencerassistant/components/select/**
+  - spencerassistant/components/sensor/**
+  - spencerassistant/components/siren/**
+  - spencerassistant/components/stt/**
+  - spencerassistant/components/switch/**
+  - spencerassistant/components/tts/**
+  - spencerassistant/components/update/**
+  - spencerassistant/components/vacuum/**
+  - spencerassistant/components/water_heater/**
+  - spencerassistant/components/weather/**
 
 # Extra components that trigger the full suite
 components: &components
-  - homeassistant/components/alexa/**
-  - homeassistant/components/application_credentials/**
-  - homeassistant/components/auth/**
-  - homeassistant/components/automation/**
-  - homeassistant/components/backup/**
-  - homeassistant/components/bluetooth/**
-  - homeassistant/components/cloud/**
-  - homeassistant/components/config/**
-  - homeassistant/components/configurator/**
-  - homeassistant/components/conversation/**
-  - homeassistant/components/demo/**
-  - homeassistant/components/device_automation/**
-  - homeassistant/components/dhcp/**
-  - homeassistant/components/discovery/**
-  - homeassistant/components/energy/**
-  - homeassistant/components/ffmpeg/**
-  - homeassistant/components/frontend/**
-  - homeassistant/components/google_assistant/**
-  - homeassistant/components/group/**
-  - homeassistant/components/hassio/**
-  - homeassistant/components/homeassistant/**
-  - homeassistant/components/http/**
-  - homeassistant/components/image/**
-  - homeassistant/components/input_boolean/**
-  - homeassistant/components/input_button/**
-  - homeassistant/components/input_datetime/**
-  - homeassistant/components/input_number/**
-  - homeassistant/components/input_select/**
-  - homeassistant/components/input_text/**
-  - homeassistant/components/logbook/**
-  - homeassistant/components/logger/**
-  - homeassistant/components/lovelace/**
-  - homeassistant/components/media_source/**
-  - homeassistant/components/mjpeg/**
-  - homeassistant/components/mqtt/**
-  - homeassistant/components/network/**
-  - homeassistant/components/onboarding/**
-  - homeassistant/components/otp/**
-  - homeassistant/components/persistent_notification/**
-  - homeassistant/components/person/**
-  - homeassistant/components/recorder/**
-  - homeassistant/components/repairs/**
-  - homeassistant/components/safe_mode/**
-  - homeassistant/components/script/**
-  - homeassistant/components/shopping_list/**
-  - homeassistant/components/ssdp/**
-  - homeassistant/components/stream/**
-  - homeassistant/components/sun/**
-  - homeassistant/components/system_health/**
-  - homeassistant/components/tag/**
-  - homeassistant/components/template/**
-  - homeassistant/components/timer/**
-  - homeassistant/components/usb/**
-  - homeassistant/components/webhook/**
-  - homeassistant/components/websocket_api/**
-  - homeassistant/components/zeroconf/**
-  - homeassistant/components/zone/**
+  - spencerassistant/components/alexa/**
+  - spencerassistant/components/application_credentials/**
+  - spencerassistant/components/auth/**
+  - spencerassistant/components/automation/**
+  - spencerassistant/components/backup/**
+  - spencerassistant/components/bluetooth/**
+  - spencerassistant/components/cloud/**
+  - spencerassistant/components/config/**
+  - spencerassistant/components/configurator/**
+  - spencerassistant/components/conversation/**
+  - spencerassistant/components/demo/**
+  - spencerassistant/components/device_automation/**
+  - spencerassistant/components/dhcp/**
+  - spencerassistant/components/discovery/**
+  - spencerassistant/components/energy/**
+  - spencerassistant/components/ffmpeg/**
+  - spencerassistant/components/frontend/**
+  - spencerassistant/components/google_assistant/**
+  - spencerassistant/components/group/**
+  - spencerassistant/components/hassio/**
+  - spencerassistant/components/spencerassistant/**
+  - spencerassistant/components/http/**
+  - spencerassistant/components/image/**
+  - spencerassistant/components/input_boolean/**
+  - spencerassistant/components/input_button/**
+  - spencerassistant/components/input_datetime/**
+  - spencerassistant/components/input_number/**
+  - spencerassistant/components/input_select/**
+  - spencerassistant/components/input_text/**
+  - spencerassistant/components/logbook/**
+  - spencerassistant/components/logger/**
+  - spencerassistant/components/lovelace/**
+  - spencerassistant/components/media_source/**
+  - spencerassistant/components/mjpeg/**
+  - spencerassistant/components/mqtt/**
+  - spencerassistant/components/network/**
+  - spencerassistant/components/onboarding/**
+  - spencerassistant/components/otp/**
+  - spencerassistant/components/persistent_notification/**
+  - spencerassistant/components/person/**
+  - spencerassistant/components/recorder/**
+  - spencerassistant/components/repairs/**
+  - spencerassistant/components/safe_mode/**
+  - spencerassistant/components/script/**
+  - spencerassistant/components/shopping_list/**
+  - spencerassistant/components/ssdp/**
+  - spencerassistant/components/stream/**
+  - spencerassistant/components/sun/**
+  - spencerassistant/components/system_health/**
+  - spencerassistant/components/tag/**
+  - spencerassistant/components/template/**
+  - spencerassistant/components/timer/**
+  - spencerassistant/components/usb/**
+  - spencerassistant/components/webhook/**
+  - spencerassistant/components/websocket_api/**
+  - spencerassistant/components/zeroconf/**
+  - spencerassistant/components/zone/**
 
 # Testing related files that affect the whole test/linting suite
 tests: &tests
@@ -126,11 +126,11 @@ tests: &tests
 
 other: &other
   - .github/workflows/**
-  - homeassistant/scripts/**
+  - spencerassistant/scripts/**
 
 requirements: &requirements
   - .github/workflows/**
-  - homeassistant/package_constraints.txt
+  - spencerassistant/package_constraints.txt
   - script/pip_check
   - requirements*.txt
   - pyproject.toml

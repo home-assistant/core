@@ -3,15 +3,15 @@ requires = ["setuptools~=62.3", "wheel~=0.37.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name        = "homeassistant"
+name        = "spencerassistant"
 version     = "2022.12.0.dev0"
 license     = {text = "Apache-2.0"}
-description = "Open-source home automation platform running on Python 3."
+description = "Open-source spencer automation platform running on Python 3."
 readme      = "README.rst"
 authors     = [
-    {name = "The Home Assistant Authors", email = "hello@home-assistant.io"}
+    {name = "The spencer Assistant Authors", email = "hello@spencer-assistant.io"}
 ]
-keywords    = ["home", "automation"]
+keywords    = ["spencer", "automation"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
@@ -20,7 +20,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Topic :: Home Automation",
+    "Topic :: spencer Automation",
 ]
 requires-python = ">=3.9.0"
 dependencies    = [
@@ -28,7 +28,7 @@ dependencies    = [
     "astral==2.2",
     "async_timeout==4.0.2",
     "attrs==21.2.0",
-    "atomicwrites-homeassistant==1.4.1",
+    "atomicwrites-spencerassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
@@ -36,7 +36,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.23.0",
-    "home-assistant-bluetooth==1.8.1",
+    "spencer-assistant-bluetooth==1.8.1",
     "ifaddr==0.1.7",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
@@ -55,14 +55,14 @@ dependencies    = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/home-assistant/core"
-"Bug Reports" = "https://github.com/home-assistant/core/issues"
-"Docs: Dev"   = "https://developers.home-assistant.io/"
-"Discord"     = "https://www.home-assistant.io/join-chat/"
-"Forum"       = "https://community.home-assistant.io/"
+"Source Code" = "https://github.com/spencer-assistant/core"
+"Bug Reports" = "https://github.com/spencer-assistant/core/issues"
+"Docs: Dev"   = "https://developers.spencer-assistant.io/"
+"Discord"     = "https://www.spencer-assistant.io/join-chat/"
+"Forum"       = "https://community.spencer-assistant.io/"
 
 [project.scripts]
-hass = "homeassistant.__main__:main"
+hass = "spencerassistant.__main__:main"
 
 [tool.setuptools]
 platforms = ["any"]
@@ -70,7 +70,7 @@ zip-safe  = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["homeassistant*"]
+include = ["spencerassistant*"]
 
 [tool.black]
 target-version = ["py39", "py310"]
@@ -82,7 +82,7 @@ profile = "black"
 # will group `import x` and `from x import` of the same module.
 force_sort_within_sections = true
 known_first_party = [
-    "homeassistant",
+    "spencerassistant",
     "tests",
 ]
 forced_separate = [
@@ -208,7 +208,7 @@ expected-line-ending-format = "LF"
 overgeneral-exceptions = [
     "BaseException",
     "Exception",
-    "HomeAssistantError",
+    "spencerAssistantError",
 ]
 
 [tool.pylint.TYPING]

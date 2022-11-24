@@ -12,10 +12,10 @@ from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.unifi.const import (
+from spencerassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
@@ -30,9 +30,9 @@ from homeassistant.components.unifi.const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.controller import RETRY_TIMER, get_unifi_controller
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.const import (
+from spencerassistant.components.unifi.controller import RETRY_TIMER, get_unifi_controller
+from spencerassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -40,11 +40,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from spencerassistant.helpers.dispatcher import async_dispatcher_connect
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -215,7 +215,7 @@ async def setup_unifi_integration(
 async def test_controller_setup(hass, aioclient_mock):
     """Successful setup."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "spencerassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_unifi_integration(hass, aioclient_mock)
@@ -270,7 +270,7 @@ async def test_controller_mac(hass, aioclient_mock):
 async def test_controller_not_accessible(hass):
     """Retry to login gets scheduled when connection fails."""
     with patch(
-        "homeassistant.components.unifi.controller.get_unifi_controller",
+        "spencerassistant.components.unifi.controller.get_unifi_controller",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -280,7 +280,7 @@ async def test_controller_not_accessible(hass):
 async def test_controller_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "spencerassistant.components.unifi.get_unifi_controller",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)
@@ -291,7 +291,7 @@ async def test_controller_trigger_reauth_flow(hass):
 async def test_controller_unknown_error(hass):
     """Unknown errors are handled."""
     with patch(
-        "homeassistant.components.unifi.controller.get_unifi_controller",
+        "spencerassistant.components.unifi.controller.get_unifi_controller",
         side_effect=Exception,
     ):
         await setup_unifi_integration(hass)
@@ -336,7 +336,7 @@ async def test_reset_fails(hass, aioclient_mock):
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
+        "spencerassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=False,
     ):
         result = await controller.async_reset()
@@ -359,7 +359,7 @@ async def test_connection_state_signalling(
     await setup_unifi_integration(hass, aioclient_mock, clients_response=[client])
 
     # Controller is connected
-    assert hass.states.get("device_tracker.client").state == "home"
+    assert hass.states.get("device_tracker.client").state == "spencer"
 
     mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
@@ -371,7 +371,7 @@ async def test_connection_state_signalling(
     await hass.async_block_till_done()
 
     # Controller is once again connected
-    assert hass.states.get("device_tracker.client").state == "home"
+    assert hass.states.get("device_tracker.client").state == "spencer"
 
 
 async def test_wireless_client_event_calls_update_wireless_devices(
@@ -395,7 +395,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
     )
 
     with patch(
-        "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
+        "spencerassistant.components.unifi.controller.UniFiController.update_wireless_clients",
         return_value=None,
     ) as wireless_clients_mock:
         event = {
@@ -452,7 +452,7 @@ async def test_reconnect_mechanism_exceptions(
     await setup_unifi_integration(hass, aioclient_mock)
 
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.controller.UniFiController.reconnect"
+        "spencerassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
         mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
         await hass.async_block_till_done()

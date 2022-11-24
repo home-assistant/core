@@ -4,16 +4,16 @@ from unittest.mock import patch
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.plaato.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.plaato.const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
     DOMAIN,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
+from spencerassistant.data_entry_flow import FlowResultType
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -26,9 +26,9 @@ UNIQUE_ID = "plaato_unique_id"
 def mock_webhook_id():
     """Mock webhook_id."""
     with patch(
-        "homeassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
+        "spencerassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
     ), patch(
-        "homeassistant.components.webhook.async_generate_url", return_value="hook_id"
+        "spencerassistant.components.webhook.async_generate_url", return_value="hook_id"
     ):
         yield
 
@@ -98,11 +98,11 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
 
     assert await async_setup_component(hass, "cloud", {})
     with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
+        "spencerassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
@@ -142,11 +142,11 @@ async def test_show_config_form_validate_webhook_not_connected(hass, webhook_id)
 
     assert await async_setup_component(hass, "cloud", {})
     with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "spencerassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "spencerassistant.components.cloud.async_is_logged_in", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=False
+        "spencerassistant.components.cloud.async_is_connected", return_value=False
     ), patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
@@ -181,7 +181,7 @@ async def test_show_config_form_validate_token(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "api_method"
 
-    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.plaato.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "valid_token"}
         )
@@ -292,7 +292,7 @@ async def test_options(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plaato.async_setup_entry", return_value=True
+        "spencerassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
 
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -327,7 +327,7 @@ async def test_options_webhook(hass, webhook_id):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plaato.async_setup_entry", return_value=True
+        "spencerassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
 
         await hass.config_entries.async_setup(config_entry.entry_id)

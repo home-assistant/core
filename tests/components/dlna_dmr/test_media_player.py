@@ -19,18 +19,18 @@ from async_upnp_client.profiles.dlna import PlayMode, TransportState
 from didl_lite import didl_lite
 import pytest
 
-from homeassistant import const as ha_const
-from homeassistant.components import ssdp
-from homeassistant.components.dlna_dmr.const import (
+from spencerassistant import const as ha_const
+from spencerassistant.components import ssdp
+from spencerassistant.components.dlna_dmr.const import (
     CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DOMAIN as DLNA_DOMAIN,
 )
-from homeassistant.components.dlna_dmr.data import EventListenAddr
-from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
-from homeassistant.components.media_player import (
+from spencerassistant.components.dlna_dmr.data import EventListenAddr
+from spencerassistant.components.dlna_dmr.media_player import DlnaDmrEntity
+from spencerassistant.components.media_player import (
     ATTR_TO_PROPERTY,
     DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
@@ -39,16 +39,16 @@ from homeassistant.components.media_player import (
     RepeatMode,
     const as mp_const,
 )
-from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_dr
-from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_registry import (
+from spencerassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.device_registry import async_get as async_get_dr
+from spencerassistant.helpers.entity_component import async_update_entity
+from spencerassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as async_get_er,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .conftest import (
     LOCAL_IP,
@@ -66,7 +66,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
 
 
-async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry) -> str:
+async def setup_mock_component(hass: spencerAssistant, mock_entry: MockConfigEntry) -> str:
     """Set up a mock DlnaDmrEntity with the given configuration."""
     mock_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DLNA_DOMAIN, {}) is True
@@ -79,7 +79,7 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
     return entity_id
 
 
-async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
+async def get_attrs(hass: spencerAssistant, entity_id: str) -> Mapping[str, Any]:
     """Get updated device attributes."""
     await async_update_entity(hass, entity_id)
     entity_state = hass.states.get(entity_id)
@@ -91,7 +91,7 @@ async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
 
 @pytest.fixture
 async def mock_entity_id(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -140,7 +140,7 @@ async def mock_entity_id(
 
 @pytest.fixture
 async def mock_disconnected_entity_id(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -193,7 +193,7 @@ async def mock_disconnected_entity_id(
 
 
 async def test_setup_entry_no_options(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -256,7 +256,7 @@ async def test_setup_entry_no_options(
 
 
 async def test_setup_entry_with_options(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -325,7 +325,7 @@ async def test_setup_entry_with_options(
 
 
 async def test_event_subscribe_failure(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry, dmr_device_mock: Mock
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry, dmr_device_mock: Mock
 ) -> None:
     """Test _device_connect aborts when async_subscribe_services fails."""
     dmr_device_mock.async_subscribe_services.side_effect = UpnpError
@@ -350,7 +350,7 @@ async def test_event_subscribe_failure(
 
 
 async def test_event_subscribe_rejected(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
 ) -> None:
@@ -377,7 +377,7 @@ async def test_event_subscribe_rejected(
 
 
 async def test_available_device(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
@@ -417,7 +417,7 @@ async def test_available_device(
 
 
 async def test_feature_flags(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test feature flags of a connected DlnaDmrEntity."""
     # Check supported feature flags, one at a time.
@@ -470,7 +470,7 @@ async def test_feature_flags(
 
 
 async def test_attributes(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test attributes of a connected DlnaDmrEntity."""
     # Check attributes come directly from the device
@@ -548,7 +548,7 @@ async def test_attributes(
 
 
 async def test_services(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test service calls of a connected DlnaDmrEntity."""
     # Check interface methods interact directly with the device
@@ -618,7 +618,7 @@ async def test_services(
 
 
 async def test_play_media_stopped(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media, starting from stopped and the device can stop."""
     # play_media performs a few calls to the device for setup and play
@@ -638,20 +638,20 @@ async def test_play_media_stopped(
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
         media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
-        media_title="Home Assistant",
+        media_title="spencer Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "spencer Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
     dmr_device_mock.async_play.assert_awaited_once_with()
 
 
 async def test_play_media_playing(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media, device is already playing and can't stop."""
     dmr_device_mock.can_stop = False
@@ -670,20 +670,20 @@ async def test_play_media_playing(
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
         media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
-        media_title="Home Assistant",
+        media_title="spencer Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_not_awaited()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "spencer Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
 
 
 async def test_play_media_no_autoplay(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media with autoplay=False."""
     # play_media performs a few calls to the device for setup and play
@@ -704,20 +704,20 @@ async def test_play_media_no_autoplay(
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
         media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
-        media_title="Home Assistant",
+        media_title="spencer Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "spencer Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
 
 
 async def test_play_media_metadata(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media constructs useful metadata from user params."""
     await hass.services.async_call(
@@ -775,7 +775,7 @@ async def test_play_media_metadata(
 
 
 async def test_play_media_local_source(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media with a media_id from a local media_source."""
     # Based on roku's test_services_play_media_local_source and cast's
@@ -806,7 +806,7 @@ async def test_play_media_local_source(
 
 
 async def test_play_media_didl_metadata(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test play_media passes available DIDL-Lite metadata to the DMR."""
 
@@ -835,7 +835,7 @@ async def test_play_media_didl_metadata(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.media_source.async_resolve_media",
+        "spencerassistant.components.media_source.async_resolve_media",
         return_value=play_media,
     ):
         await hass.services.async_call(
@@ -859,7 +859,7 @@ async def test_play_media_didl_metadata(
 
 
 async def test_shuffle_repeat_modes(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test setting repeat and shuffle modes."""
     # Test shuffle with all variations of existing play mode
@@ -943,7 +943,7 @@ async def test_shuffle_repeat_modes(
 
 
 async def test_browse_media(
-    hass: HomeAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test the async_browse_media method."""
     # Based on cast's test_entity_browse_media
@@ -1045,7 +1045,7 @@ async def test_browse_media(
 
 
 async def test_browse_media_unfiltered(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_ws_client,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
@@ -1126,7 +1126,7 @@ async def test_browse_media_unfiltered(
 
 
 async def test_playback_update_state(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: spencerAssistant, dmr_device_mock: Mock, mock_entity_id: str
 ) -> None:
     """Test starting or pausing playback causes the state to be refreshed.
 
@@ -1161,7 +1161,7 @@ async def test_playback_update_state(
 
 
 async def test_unavailable_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -1171,7 +1171,7 @@ async def test_unavailable_device(
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     with patch(
-        "homeassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
+        "spencerassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
     ) as dmr_device_constructor_mock:
         mock_entity_id = await setup_mock_component(hass, config_entry_mock)
         mock_state = hass.states.get(mock_entity_id)
@@ -1275,7 +1275,7 @@ async def test_unavailable_device(
 
 
 async def test_become_available(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -1354,7 +1354,7 @@ async def test_become_available(
 
 
 async def test_alive_but_gone(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
@@ -1454,7 +1454,7 @@ async def test_alive_but_gone(
 
 
 async def test_multiple_ssdp_alive(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
@@ -1509,7 +1509,7 @@ async def test_multiple_ssdp_alive(
 
 
 async def test_ssdp_byebye(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ssdp_scanner_mock: Mock,
     mock_entity_id: str,
     dmr_device_mock: Mock,
@@ -1551,7 +1551,7 @@ async def test_ssdp_byebye(
 
 
 async def test_ssdp_update_seen_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
@@ -1678,7 +1678,7 @@ async def test_ssdp_update_seen_bootid(
 
 
 async def test_ssdp_update_missed_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
@@ -1755,7 +1755,7 @@ async def test_ssdp_update_missed_bootid(
 
 
 async def test_ssdp_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
@@ -1834,7 +1834,7 @@ async def test_ssdp_bootid(
 
 
 async def test_become_unavailable(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
@@ -1886,7 +1886,7 @@ async def test_become_unavailable(
 
 
 async def test_poll_availability(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
@@ -1936,7 +1936,7 @@ async def test_poll_availability(
 
 
 async def test_disappearing_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_disconnected_entity_id: str,
 ) -> None:
     """Test attribute update or service call as device disappears.
@@ -1976,7 +1976,7 @@ async def test_disappearing_device(
 
 
 async def test_resubscribe_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_entity_id: str,
     dmr_device_mock: Mock,
 ) -> None:
@@ -1995,7 +1995,7 @@ async def test_resubscribe_failure(
 
 
 async def test_config_update_listen_port(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
@@ -2034,7 +2034,7 @@ async def test_config_update_listen_port(
 
 
 async def test_config_update_connect_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     mock_entity_id: str,
@@ -2069,7 +2069,7 @@ async def test_config_update_connect_failure(
 
 
 async def test_config_update_callback_url(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
@@ -2108,7 +2108,7 @@ async def test_config_update_callback_url(
 
 
 async def test_config_update_poll_availability(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,

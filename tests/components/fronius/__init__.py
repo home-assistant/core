@@ -1,12 +1,12 @@
 """Tests for the Fronius integration."""
 from __future__ import annotations
 
-from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from spencerassistant.components.fronius.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import CONF_HOST
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -16,7 +16,7 @@ MOCK_UID = "123.4567890"
 
 
 async def setup_fronius_integration(
-    hass: HomeAssistant, is_logger: bool = True, unique_id: str = MOCK_UID
+    hass: spencerAssistant, is_logger: bool = True, unique_id: str = MOCK_UID
 ) -> ConfigEntry:
     """Create the Fronius integration."""
     entry = MockConfigEntry(

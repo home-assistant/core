@@ -1,8 +1,8 @@
 """Tests for the Bluetooth integration API."""
 
 
-from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BaseHaScanner, async_scanner_by_source
+from spencerassistant.components import bluetooth
+from spencerassistant.components.bluetooth import BaseHaScanner, async_scanner_by_source
 
 
 async def test_scanner_by_source(hass, enable_bluetooth):

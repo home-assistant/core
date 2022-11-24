@@ -13,15 +13,15 @@ from awesomeversion import (
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import Platform
-from homeassistant.helpers import config_validation as cv
+from spencerassistant.const import Platform
+from spencerassistant.helpers import config_validation as cv
 
 from .model import Config, Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
-DOCUMENTATION_URL_HOST = "www.home-assistant.io"
+DOCUMENTATION_URL_HOST = "www.spencer-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
-DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
+DOCUMENTATION_URL_EXCEPTIONS = {"https://www.spencer-assistant.io/hassio"}
 
 SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
 SUPPORTED_IOT_CLASSES = [
@@ -57,11 +57,11 @@ NO_IOT_CLASS = [
     "hardkernel",
     "hardware",
     "history",
-    "homeassistant",
-    "homeassistant_alerts",
-    "homeassistant_hardware",
-    "homeassistant_sky_connect",
-    "homeassistant_yellow",
+    "spencerassistant",
+    "spencerassistant_alerts",
+    "spencerassistant_hardware",
+    "spencerassistant_sky_connect",
+    "spencerassistant_yellow",
     "image",
     "input_boolean",
     "input_button",
@@ -113,7 +113,7 @@ def documentation_url(value: str) -> str:
         DOCUMENTATION_URL_PATH_PREFIX
     ):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation url does not begin with www.spencer-assistant.io/integrations"
         )
 
     return value
@@ -218,7 +218,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
+        vol.Optional("spencerkit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Optional("dhcp"): [
             vol.Schema(
                 {
@@ -265,7 +265,7 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Required("name"): str,
         vol.Required("integration_type"): "virtual",
         vol.Exclusive("iot_standards", "virtual_integration"): [
-            vol.Any("homekit", "zigbee", "zwave")
+            vol.Any("spencerkit", "zigbee", "zwave")
         ],
         vol.Exclusive("supported_by", "virtual_integration"): str,
     }
@@ -352,6 +352,6 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
-    core_components_dir = config.root / "homeassistant/components"
+    core_components_dir = config.root / "spencerassistant/components"
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)

@@ -7,17 +7,17 @@ from unittest.mock import patch
 
 import respx
 
-from homeassistant import config as hass_config
-from homeassistant.components.rest.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant import config as hass_config
+from spencerassistant.components.rest.const import DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     DATA_MEGABYTES,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from tests.common import (
     assert_setup_component,
@@ -27,9 +27,9 @@ from tests.common import (
 
 
 @respx.mock
-async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) -> None:
+async def test_setup_with_endpoint_timeout_with_recovery(hass: spencerAssistant) -> None:
     """Test setup with an endpoint that times out that recovers."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
 
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
@@ -122,7 +122,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     )
 
     await hass.services.async_call(
-        "homeassistant",
+        "spencerassistant",
         "update_entity",
         {ATTR_ENTITY_ID: ["sensor.sensor1"]},
         blocking=True,
@@ -134,7 +134,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
 
 
 @respx.mock
-async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_minimum_resource_template(hass: spencerAssistant) -> None:
     """Test setup with minimum configuration (resource_template)."""
 
     respx.get("http://localhost").respond(
@@ -192,7 +192,7 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_reload(hass: HomeAssistant) -> None:
+async def test_reload(hass: spencerAssistant) -> None:
     """Verify we can reload."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -241,7 +241,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
+async def test_reload_and_remove_all(hass: spencerAssistant) -> None:
     """Verify we can reload and remove all."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -288,7 +288,7 @@ async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
+async def test_reload_fails_to_read_configuration(hass: spencerAssistant) -> None:
     """Verify reload when configuration is missing or broken."""
 
     respx.get("http://localhost") % HTTPStatus.OK
@@ -332,7 +332,7 @@ async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
+async def test_multiple_rest_endpoints(hass: spencerAssistant) -> None:
     """Test multiple rest endpoints."""
 
     respx.get("http://date.jsontest.com").respond(
@@ -406,7 +406,7 @@ async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.binary_sensor").state == "on"
 
 
-async def test_empty_config(hass: HomeAssistant) -> None:
+async def test_empty_config(hass: spencerAssistant) -> None:
     """Test setup with empty configuration.
 
     For example (with rest.yaml an empty file):
@@ -420,7 +420,7 @@ async def test_empty_config(hass: HomeAssistant) -> None:
     assert_setup_component(0, DOMAIN)
 
 
-async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
+async def test_config_schema_via_packages(hass: spencerAssistant) -> None:
     """Test configuration via packages."""
     packages = {
         "pack_dict": {"rest": {}},

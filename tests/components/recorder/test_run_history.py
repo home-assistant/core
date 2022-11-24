@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.util import dt as dt_util
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder.db_schema import RecorderRuns
+from spencerassistant.components.recorder.models import process_timestamp
+from spencerassistant.util import dt as dt_util
 
 
 async def test_run_history(recorder_mock, hass):

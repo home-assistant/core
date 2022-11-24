@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from pynut2.nut2 import PyNUTError
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components import zeroconf
-from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components import zeroconf
+from spencerassistant.components.nut.const import DOMAIN
+from spencerassistant.const import (
     CONF_ALIAS,
     CONF_HOST,
     CONF_NAME,
@@ -54,10 +54,10 @@ async def test_form_zeroconf(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup_entry",
+        "spencerassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -92,10 +92,10 @@ async def test_form_user_one_ups(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup_entry",
+        "spencerassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -142,7 +142,7 @@ async def test_form_user_multiple_ups(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -159,10 +159,10 @@ async def test_form_user_multiple_ups(hass):
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup_entry",
+        "spencerassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -202,10 +202,10 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup_entry",
+        "spencerassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -239,7 +239,7 @@ async def test_form_cannot_connect(hass):
     mock_pynut = _get_mock_pynutclient()
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -256,10 +256,10 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient.list_ups",
+        "spencerassistant.components.nut.PyNUTClient.list_ups",
         side_effect=PyNUTError,
     ), patch(
-        "homeassistant.components.nut.PyNUTClient.list_vars",
+        "spencerassistant.components.nut.PyNUTClient.list_vars",
         side_effect=PyNUTError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -276,10 +276,10 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient.list_ups",
+        "spencerassistant.components.nut.PyNUTClient.list_ups",
         return_value=["ups1"],
     ), patch(
-        "homeassistant.components.nut.PyNUTClient.list_vars",
+        "spencerassistant.components.nut.PyNUTClient.list_vars",
         side_effect=TypeError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -318,7 +318,7 @@ async def test_abort_if_already_setup(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -356,7 +356,7 @@ async def test_abort_if_already_setup_alias(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -371,7 +371,7 @@ async def test_abort_if_already_setup_alias(hass):
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -393,7 +393,7 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.nut.async_setup_entry", return_value=True):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -408,7 +408,7 @@ async def test_options_flow(hass):
             CONF_SCAN_INTERVAL: 60,
         }
 
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.nut.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result2["type"] == data_entry_flow.FlowResultType.FORM

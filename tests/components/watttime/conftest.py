@@ -4,22 +4,22 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.watttime.config_flow import (
+from spencerassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
     LOCATION_TYPE_COORDINATES,
 )
-from homeassistant.components.watttime.const import (
+from spencerassistant.components.watttime.const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -102,12 +102,12 @@ def get_grid_region_fixture(data_grid_region):
 async def setup_watttime_fixture(hass, client, config_auth, config_coordinates):
     """Define a fixture to set up WattTime."""
     with patch(
-        "homeassistant.components.watttime.Client.async_login", return_value=client
+        "spencerassistant.components.watttime.Client.async_login", return_value=client
     ), patch(
-        "homeassistant.components.watttime.config_flow.Client.async_login",
+        "spencerassistant.components.watttime.config_flow.Client.async_login",
         return_value=client,
     ), patch(
-        "homeassistant.components.watttime.PLATFORMS", []
+        "spencerassistant.components.watttime.PLATFORMS", []
     ):
         assert await async_setup_component(
             hass, DOMAIN, {**config_auth, **config_coordinates}

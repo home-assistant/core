@@ -1,18 +1,18 @@
 """Tests for the Freebox config flow."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from spencerassistant.components.freebox.const import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
 
-async def test_reboot_button(hass: HomeAssistant, router: Mock):
+async def test_reboot_button(hass: spencerAssistant, router: Mock):
     """Test reboot button."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -28,7 +28,7 @@ async def test_reboot_button(hass: HomeAssistant, router: Mock):
     assert router().open.call_count == 1
 
     with patch(
-        "homeassistant.components.freebox.router.FreeboxRouter.reboot"
+        "spencerassistant.components.freebox.router.FreeboxRouter.reboot"
     ) as mock_service:
         await hass.services.async_call(
             BUTTON_DOMAIN,

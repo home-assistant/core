@@ -2,18 +2,18 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, State
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.restore_state import (
+from spencerassistant.const import EVENT_spencerASSISTANT_START, EVENT_spencerASSISTANT_STOP
+from spencerassistant.core import CoreState, State
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.entity import Entity
+from spencerassistant.helpers.restore_state import (
     DATA_RESTORE_STATE_TASK,
     STORAGE_KEY,
     RestoreEntity,
     RestoreStateData,
     StoredState,
 )
-from homeassistant.util import dt as dt_util
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -40,7 +40,7 @@ async def test_caching_data(hass):
 
     # Mock that only b1 is present this run
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         state = await entity.async_get_last_state()
         await hass.async_block_till_done()
@@ -66,7 +66,7 @@ async def test_periodic_write(hass):
     entity.entity_id = "input_boolean.b1"
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         await entity.async_get_last_state()
         await hass.async_block_till_done()
@@ -74,7 +74,7 @@ async def test_periodic_write(hass):
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
@@ -82,15 +82,15 @@ async def test_periodic_write(hass):
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
         await hass.async_block_till_done()
@@ -112,7 +112,7 @@ async def test_save_persistent_states(hass):
     entity.entity_id = "input_boolean.b1"
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         await entity.async_get_last_state()
         await hass.async_block_till_done()
@@ -121,7 +121,7 @@ async def test_save_persistent_states(hass):
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
@@ -130,7 +130,7 @@ async def test_save_persistent_states(hass):
     assert not mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         await RestoreStateData.async_save_persistent_states(hass)
         await hass.async_block_till_done()
@@ -138,7 +138,7 @@ async def test_save_persistent_states(hass):
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
@@ -146,9 +146,9 @@ async def test_save_persistent_states(hass):
     assert mock_write_data.called
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
     # Verify normal shutdown
     assert mock_write_data.called
@@ -180,7 +180,7 @@ async def test_hass_starting(hass):
     # Mock that only b1 is present this run
     states = [State("input_boolean.b1", "on")]
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         state = await entity.async_get_last_state()
         await hass.async_block_till_done()
@@ -194,9 +194,9 @@ async def test_hass_starting(hass):
 
     # Finish hass startup
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     # Assert that this session states were written
@@ -238,7 +238,7 @@ async def test_dump_data(hass):
     }
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         await data.async_dump_states()
 
@@ -264,7 +264,7 @@ async def test_dump_data(hass):
     await entity.async_remove()
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
+        "spencerassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         await data.async_dump_states()
 
@@ -299,8 +299,8 @@ async def test_dump_error(hass):
     data = await RestoreStateData.async_get_instance(hass)
 
     with patch(
-        "homeassistant.helpers.restore_state.Store.async_save",
-        side_effect=HomeAssistantError,
+        "spencerassistant.helpers.restore_state.Store.async_save",
+        side_effect=spencerAssistantError,
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         await data.async_dump_states()
 
@@ -314,8 +314,8 @@ async def test_load_error(hass):
     entity.entity_id = "input_boolean.b1"
 
     with patch(
-        "homeassistant.helpers.storage.Store.async_load",
-        side_effect=HomeAssistantError,
+        "spencerassistant.helpers.storage.Store.async_load",
+        side_effect=spencerAssistantError,
     ):
         state = await entity.async_get_last_state()
 

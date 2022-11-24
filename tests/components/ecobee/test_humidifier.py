@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
-from homeassistant.components.humidifier import (
+from spencerassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
+from spencerassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -18,7 +18,7 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntityFeature,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,

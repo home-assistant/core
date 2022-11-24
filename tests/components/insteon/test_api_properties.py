@@ -8,10 +8,10 @@ from pyinsteon.config.extended_property import ExtendedProperty
 from pyinsteon.constants import RelayMode, ToggleMode
 import pytest
 
-from homeassistant.components import insteon
-from homeassistant.components.insteon.api import async_load_api
-from homeassistant.components.insteon.api.device import INSTEON_DEVICE_NOT_FOUND
-from homeassistant.components.insteon.api.properties import (
+from spencerassistant.components import insteon
+from spencerassistant.components.insteon.api import async_load_api
+from spencerassistant.components.insteon.api.device import INSTEON_DEVICE_NOT_FOUND
+from spencerassistant.components.insteon.api.properties import (
     DEVICE_ADDRESS,
     ID,
     PROPERTY_NAME,

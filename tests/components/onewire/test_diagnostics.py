@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
 
 from . import setup_owproxy_mock_devices
 
@@ -16,7 +16,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
+    with patch("spencerassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
         yield
 
 
@@ -36,7 +36,7 @@ DEVICE_DETAILS = {
 
 @pytest.mark.parametrize("device_id", ["EF.111111111113"], indirect=True)
 async def test_entry_diagnostics(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     hass_client,
     owproxy: MagicMock,

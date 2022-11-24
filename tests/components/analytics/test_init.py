@@ -1,8 +1,8 @@
 """The tests for the analytics ."""
 from unittest.mock import patch
 
-from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
+from spencerassistant.setup import async_setup_component
 
 MOCK_VERSION = "1970.1.0"
 
@@ -28,7 +28,7 @@ async def test_websocket(hass, hass_ws_client, aioclient_mock):
 
     assert response["success"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch("spencerassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await ws_client.send_json(
             {"id": 2, "type": "analytics/preferences", "preferences": {"base": True}}
         )

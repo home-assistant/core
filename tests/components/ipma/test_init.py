@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from pyipma import IPMAException
 
-from homeassistant.components.ipma import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from spencerassistant.components.ipma import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 
 from .test_weather import MockLocation
 
@@ -22,7 +22,7 @@ async def test_async_setup_raises_entry_not_ready(hass):
 
         config_entry = MockConfigEntry(
             domain=DOMAIN,
-            title="Home",
+            title="spencer",
             data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
         )
 

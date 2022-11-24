@@ -7,7 +7,7 @@ import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
-from homeassistant.components.yeelight.const import (
+from spencerassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -15,8 +15,8 @@ from homeassistant.components.yeelight.const import (
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     STATE_CHANGE_TIME,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_ID,
@@ -24,10 +24,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from . import (
     CONFIG_ENTRY_DATA,
@@ -51,7 +51,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
+async def test_ip_changes_fallback_discovery(hass: spencerAssistant):
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "5.5.5.5"}, unique_id=ID
@@ -96,7 +96,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
 
 
-async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
+async def test_ip_changes_id_missing_cannot_fallback(hass: spencerAssistant):
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "5.5.5.5"})
     config_entry.add_to_hass(hass)
@@ -112,7 +112,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_discovery(hass: HomeAssistant):
+async def test_setup_discovery(hass: spencerAssistant):
     """Test setting up Yeelight by discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -153,7 +153,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 
 
 async def test_setup_discovery_with_manually_configured_network_adapter(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ):
     """Test setting up Yeelight by discovery with a manually configured network adapter."""
     config_entry = MockConfigEntry(
@@ -165,7 +165,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter(
     with _patch_discovery(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -209,7 +209,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING = [
 
 
 async def test_setup_discovery_with_manually_configured_network_adapter_one_fails(
-    hass: HomeAssistant, caplog
+    hass: spencerAssistant, caplog
 ):
     """Test setting up Yeelight by discovery with a manually configured network adapter with one that fails to bind."""
     config_entry = MockConfigEntry(
@@ -221,7 +221,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     with _patch_discovery(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -244,7 +244,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     assert f"Failed to setup listener for ('{FAIL_TO_BIND_IP}', 0)" in caplog.text
 
 
-async def test_setup_import(hass: HomeAssistant):
+async def test_setup_import(hass: spencerAssistant):
     """Test import from yaml."""
     mocked_bulb = _mocked_bulb()
     name = "yeelight"
@@ -273,7 +273,7 @@ async def test_setup_import(hass: HomeAssistant):
     assert entry.data[CONF_ID] == "0x000000000015243f"
 
 
-async def test_unique_ids_device(hass: HomeAssistant):
+async def test_unique_ids_device(hass: spencerAssistant):
     """Test Yeelight unique IDs from yeelight device IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -298,7 +298,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
     assert entity_registry.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
-async def test_unique_ids_entry(hass: HomeAssistant):
+async def test_unique_ids_entry(hass: spencerAssistant):
     """Test Yeelight unique IDs from entry IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -329,7 +329,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     )
 
 
-async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
+async def test_bulb_off_while_adding_in_ha(hass: spencerAssistant):
     """Test Yeelight off while adding to ha, for example on HA start."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_HOST: IP_ADDRESS}, unique_id=ID
@@ -429,7 +429,7 @@ async def test_unload_before_discovery(hass, caplog):
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
+async def test_async_listen_error_has_host_with_id(hass: spencerAssistant):
     """Test the async listen error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "127.0.0.1"}
@@ -446,7 +446,7 @@ async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
+async def test_async_listen_error_has_host_without_id(hass: spencerAssistant):
     """Test the async listen error but no id."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
     config_entry.add_to_hass(hass)
@@ -461,7 +461,7 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_with_missing_id(hass: HomeAssistant):
+async def test_async_setup_with_missing_id(hass: spencerAssistant):
     """Test that setting adds the missing CONF_ID from unique_id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -487,7 +487,7 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant):
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_setup_with_missing_unique_id(hass: HomeAssistant):
+async def test_async_setup_with_missing_unique_id(hass: spencerAssistant):
     """Test that setting adds the missing unique_id from CONF_ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -512,7 +512,7 @@ async def test_async_setup_with_missing_unique_id(hass: HomeAssistant):
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
+async def test_connection_dropped_resyncs_properties(hass: spencerAssistant):
     """Test handling a connection drop results in a property resync."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -542,7 +542,7 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
 
 
-async def test_oserror_on_first_update_results_in_unavailable(hass: HomeAssistant):
+async def test_oserror_on_first_update_results_in_unavailable(hass: spencerAssistant):
     """Test that an OSError on first update results in unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -565,7 +565,7 @@ async def test_oserror_on_first_update_results_in_unavailable(hass: HomeAssistan
 
 @pytest.mark.parametrize("exception", [BulbException, asyncio.TimeoutError])
 async def test_non_oserror_exception_on_first_update(
-    hass: HomeAssistant, exception: Exception
+    hass: spencerAssistant, exception: Exception
 ):
     """Test that an exceptions other than OSError on first update do not result in unavailable.
 
@@ -590,7 +590,7 @@ async def test_non_oserror_exception_on_first_update(
     assert hass.states.get("light.test_name").state != STATE_UNAVAILABLE
 
 
-async def test_async_setup_with_discovery_not_working(hass: HomeAssistant):
+async def test_async_setup_with_discovery_not_working(hass: spencerAssistant):
     """Test we can setup even if discovery is broken."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

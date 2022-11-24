@@ -10,13 +10,13 @@ from freezegun import freeze_time
 import jinja2
 import pytest
 
-from homeassistant.components import sun
-from homeassistant.const import MATCH_ALL
-import homeassistant.core as ha
-from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from homeassistant.helpers.event import (
+from spencerassistant.components import sun
+from spencerassistant.const import MATCH_ALL
+import spencerassistant.core as ha
+from spencerassistant.core import callback
+from spencerassistant.exceptions import TemplateError
+from spencerassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from spencerassistant.helpers.event import (
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -39,9 +39,9 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
     track_point_in_utc_time,
 )
-from homeassistant.helpers.template import Template, result_as_boolean
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.helpers.template import Template, result_as_boolean
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -918,14 +918,14 @@ async def test_track_template_time_change(hass, caplog):
     start_time = dt_util.utcnow() + timedelta(hours=24)
     time_that_will_not_match_right_away = start_time.replace(minute=1, second=0)
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         async_track_template(hass, template_error, error_callback)
         await hass.async_block_till_done()
         assert not calls
 
     first_time = start_time.replace(minute=2, second=0)
-    with patch("homeassistant.util.dt.utcnow", return_value=first_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=first_time):
         async_fire_time_changed(hass, first_time)
         await hass.async_block_till_done()
 
@@ -1906,7 +1906,7 @@ async def test_track_template_result_with_group(hass):
     assert specific_runs[1] == 100.1 + 200.2 + 0
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         return_value={
             "group": {
                 "power_sensors": "sensor.power_1,sensor.power_2,sensor.power_3,sensor.power_4",
@@ -2256,7 +2256,7 @@ async def test_track_template_rate_limit(hass):
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2269,7 +2269,7 @@ async def test_track_template_rate_limit(hass):
     assert refresh_runs == [0, 1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2324,7 +2324,7 @@ async def test_track_template_rate_limit_super(hass):
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2341,7 +2341,7 @@ async def test_track_template_rate_limit_super(hass):
     assert refresh_runs == [0, 1, 4]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2392,7 +2392,7 @@ async def test_track_template_rate_limit_super_2(hass):
     assert refresh_runs == [1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2408,7 +2408,7 @@ async def test_track_template_rate_limit_super_2(hass):
     assert refresh_runs == [1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2460,7 +2460,7 @@ async def test_track_template_rate_limit_super_3(hass):
     assert refresh_runs == [1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2477,7 +2477,7 @@ async def test_track_template_rate_limit_super_3(hass):
     assert refresh_runs == [1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2534,7 +2534,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2561,7 +2561,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     }
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -2775,7 +2775,7 @@ async def test_track_two_templates_with_different_rate_limits(hass):
     assert refresh_runs[template_five] == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
     with patch(
-        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+        "spencerassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
@@ -3089,7 +3089,7 @@ async def test_track_template_with_time_that_leaves_scope(hass):
     now = dt_util.utcnow()
     test_time = datetime(now.year + 1, 5, 24, 11, 59, 1, 500000, tzinfo=dt_util.UTC)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=test_time):
         hass.states.async_set("binary_sensor.washing_machine", "on")
         specific_runs = []
         template_complex = Template(
@@ -3176,7 +3176,7 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(h
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         info = async_track_template_result(
             hass,
@@ -3214,7 +3214,7 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(h
 
     refresh_runs = []
     next_time = time_that_will_not_match_right_away + timedelta(hours=25)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_time):
+    with patch("spencerassistant.util.dt.utcnow", return_value=next_time):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
 
@@ -3540,7 +3540,7 @@ async def test_async_track_time_change(hass):
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_time_change(
             hass, callback(lambda x: wildcard_runs.append(x))
@@ -3592,7 +3592,7 @@ async def test_periodic_task_minute(hass):
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_utc_time_change(
             hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
@@ -3636,7 +3636,7 @@ async def test_periodic_task_hour(hass):
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_utc_time_change(
             hass,
@@ -3714,7 +3714,7 @@ async def test_periodic_task_clock_rollback(hass):
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_utc_time_change(
             hass,
@@ -3778,7 +3778,7 @@ async def test_periodic_task_duplicate_time(hass):
     )
 
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "spencerassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
         unsub = async_track_utc_time_change(
             hass,
@@ -4054,8 +4054,8 @@ async def test_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event.async_track_point_in_utc_time"
-    ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
+        "spencerassistant.helpers.event.async_track_point_in_utc_time"
+    ) as mock, patch("spencerassistant.util.dt.utcnow", return_value=now):
         async_call_later(hass, 3, action)
 
     assert len(mock.mock_calls) == 1
@@ -4074,8 +4074,8 @@ async def test_async_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event.async_track_point_in_utc_time"
-    ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
+        "spencerassistant.helpers.event.async_track_point_in_utc_time"
+    ) as mock, patch("spencerassistant.util.dt.utcnow", return_value=now):
         remove = async_call_later(hass, 3, action)
 
     assert len(mock.mock_calls) == 1
@@ -4095,8 +4095,8 @@ async def test_async_call_later_timedelta(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event.async_track_point_in_utc_time"
-    ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
+        "spencerassistant.helpers.event.async_track_point_in_utc_time"
+    ) as mock, patch("spencerassistant.util.dt.utcnow", return_value=now):
         remove = async_call_later(hass, timedelta(seconds=3), action)
 
     assert len(mock.mock_calls) == 1

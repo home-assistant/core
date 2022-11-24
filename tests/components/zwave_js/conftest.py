@@ -26,7 +26,7 @@ def addon_info_side_effect_fixture():
 def mock_addon_info(addon_info_side_effect):
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_info",
         side_effect=addon_info_side_effect,
     ) as addon_info:
         addon_info.return_value = {
@@ -49,7 +49,7 @@ def addon_store_info_side_effect_fixture():
 def mock_addon_store_info(addon_store_info_side_effect):
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info",
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_store_info",
         side_effect=addon_store_info_side_effect,
     ) as addon_store_info:
         addon_store_info.return_value = {
@@ -113,7 +113,7 @@ def set_addon_options_side_effect_fixture(addon_options):
 def mock_set_addon_options(set_addon_options_side_effect):
     """Mock set add-on options."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_set_addon_options",
+        "spencerassistant.components.hassio.addon_manager.async_set_addon_options",
         side_effect=set_addon_options_side_effect,
     ) as set_options:
         yield set_options
@@ -140,7 +140,7 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
 def mock_install_addon(install_addon_side_effect):
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon",
+        "spencerassistant.components.hassio.addon_manager.async_install_addon",
         side_effect=install_addon_side_effect,
     ) as install_addon:
         yield install_addon
@@ -150,7 +150,7 @@ def mock_install_addon(install_addon_side_effect):
 def mock_update_addon():
     """Mock update add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_update_addon"
+        "spencerassistant.components.hassio.addon_manager.async_update_addon"
     ) as update_addon:
         yield update_addon
 
@@ -175,7 +175,7 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
 def mock_start_addon(start_addon_side_effect):
     """Mock start add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon",
+        "spencerassistant.components.hassio.addon_manager.async_start_addon",
         side_effect=start_addon_side_effect,
     ) as start_addon:
         yield start_addon
@@ -185,7 +185,7 @@ def mock_start_addon(start_addon_side_effect):
 def stop_addon_fixture():
     """Mock stop add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_stop_addon"
+        "spencerassistant.components.hassio.addon_manager.async_stop_addon"
     ) as stop_addon:
         yield stop_addon
 
@@ -200,7 +200,7 @@ def restart_addon_side_effect_fixture():
 def mock_restart_addon(restart_addon_side_effect):
     """Mock restart add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_restart_addon",
+        "spencerassistant.components.hassio.addon_manager.async_restart_addon",
         side_effect=restart_addon_side_effect,
     ) as restart_addon:
         yield restart_addon
@@ -210,7 +210,7 @@ def mock_restart_addon(restart_addon_side_effect):
 def uninstall_addon_fixture():
     """Mock uninstall add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
+        "spencerassistant.components.hassio.addon_manager.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
 
@@ -219,7 +219,7 @@ def uninstall_addon_fixture():
 def create_backup_fixture():
     """Mock create backup."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_create_backup"
+        "spencerassistant.components.hassio.addon_manager.async_create_backup"
     ) as create_backup:
         yield create_backup
 
@@ -243,7 +243,7 @@ def version_state_fixture():
         "type": "version",
         "driverVersion": "6.0.0-beta.0",
         "serverVersion": "1.0.0",
-        "homeId": 1234567890,
+        "spencerId": 1234567890,
     }
 
 
@@ -576,10 +576,10 @@ def light_express_controls_ezmultipli_state_fixture():
     return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
 
 
-@pytest.fixture(name="lock_home_connect_620_state", scope="session")
-def lock_home_connect_620_state_fixture():
-    """Load the Home Connect 620 lock node state fixture data."""
-    return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
+@pytest.fixture(name="lock_spencer_connect_620_state", scope="session")
+def lock_spencer_connect_620_state_fixture():
+    """Load the spencer Connect 620 lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_spencer_connect_620_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -587,7 +587,7 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
 
     with patch(
-        "homeassistant.components.zwave_js.ZwaveClient", autospec=True
+        "spencerassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
         client = client_class.return_value
 
@@ -1111,9 +1111,9 @@ def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_stat
     return node
 
 
-@pytest.fixture(name="lock_home_connect_620")
-def lock_home_connect_620_fixture(client, lock_home_connect_620_state):
-    """Mock a Home Connect 620 lock node."""
-    node = Node(client, copy.deepcopy(lock_home_connect_620_state))
+@pytest.fixture(name="lock_spencer_connect_620")
+def lock_spencer_connect_620_fixture(client, lock_spencer_connect_620_state):
+    """Mock a spencer Connect 620 lock node."""
+    node = Node(client, copy.deepcopy(lock_spencer_connect_620_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

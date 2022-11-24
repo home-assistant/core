@@ -4,16 +4,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.exceptions import spencerAssistantError
 
 from .const import DEFAULT_DATA, PLEX_DIRECT_URL
 
@@ -63,7 +63,7 @@ async def test_media_player_playback(
     # Test media lookup failure
     payload = '{"library_name": "Movies", "title": "Movie 1" }'
     with patch("plexapi.library.LibrarySection.search", return_value=None):
-        with pytest.raises(HomeAssistantError) as excinfo:
+        with pytest.raises(spencerAssistantError) as excinfo:
             assert await hass.services.async_call(
                 MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
@@ -176,7 +176,7 @@ async def test_media_player_playback(
     # Test multiple choices without exact match
     playmedia_mock.reset()
     movies = [movie2, movie3]
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(spencerAssistantError) as excinfo:
         payload = '{"library_name": "Movies", "title": "Movie" }'
         with patch("plexapi.library.LibrarySection.search", return_value=movies):
             assert await hass.services.async_call(
@@ -195,7 +195,7 @@ async def test_media_player_playback(
     # Test multiple choices with allow_multiple
     movies = [movie1, movie2, movie3]
     with patch("plexapi.library.LibrarySection.search", return_value=movies), patch(
-        "homeassistant.components.plex.server.PlexServer.create_playqueue"
+        "spencerassistant.components.plex.server.PlexServer.create_playqueue"
     ) as mock_create_playqueue:
         assert await hass.services.async_call(
             MP_DOMAIN,

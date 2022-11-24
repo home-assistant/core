@@ -1,14 +1,14 @@
-"""Tests Home Assistant temperature helpers."""
+"""Tests spencer Assistant temperature helpers."""
 import pytest
 
-from homeassistant.const import (
+from spencerassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.temperature import display_temp
+from spencerassistant.helpers.temperature import display_temp
 
 TEMP = 24.636626
 

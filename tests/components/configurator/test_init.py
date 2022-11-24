@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 
-import homeassistant.components.configurator as configurator
-from homeassistant.const import ATTR_FRIENDLY_NAME
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.configurator as configurator
+from spencerassistant.const import ATTR_FRIENDLY_NAME
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 

@@ -6,13 +6,13 @@ import unittest.mock as mock
 
 import pytest
 
-import homeassistant.components.google_pubsub as google_pubsub
-from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
-from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import split_entity_id
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.google_pubsub as google_pubsub
+from spencerassistant.components.google_pubsub import DateTimeJSONEncoder as victim
+from spencerassistant.const import EVENT_STATE_CHANGED
+from spencerassistant.core import split_entity_id
+from spencerassistant.setup import async_setup_component
 
-GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
+GOOGLE_PUBSUB_PATH = "spencerassistant.components.google_pubsub"
 
 
 @dataclass

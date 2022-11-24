@@ -4,15 +4,15 @@ import datetime
 import pytest
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.humidifier import DOMAIN, const, device_trigger
-from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.humidifier import DOMAIN, const, device_trigger
+from spencerassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -59,8 +59,8 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            ATTR_MODE: "spencer",
+            const.ATTR_AVAILABLE_MODES: ["spencer", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -146,8 +146,8 @@ async def test_if_fires_on_state_change(hass, calls):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            ATTR_MODE: "spencer",
+            const.ATTR_AVAILABLE_MODES: ["spencer", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -320,8 +320,8 @@ async def test_invalid_config(hass, calls):
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            ATTR_MODE: "spencer",
+            const.ATTR_AVAILABLE_MODES: ["spencer", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )

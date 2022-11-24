@@ -1,7 +1,7 @@
 """Tests for the numato binary_sensor platform."""
-from homeassistant.const import Platform
-from homeassistant.helpers import discovery
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import Platform
+from spencerassistant.helpers import discovery
+from spencerassistant.setup import async_setup_component
 
 from .common import NUMATO_CFG, mockup_raise
 
@@ -39,7 +39,7 @@ async def test_setup_callbacks(hass, numato_fixture, monkeypatch):
 
 
 async def test_hass_binary_sensor_notification(hass, numato_fixture):
-    """Test regular operations from within Home Assistant."""
+    """Test regular operations from within spencer Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
     assert (

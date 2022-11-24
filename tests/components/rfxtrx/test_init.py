@@ -5,11 +5,11 @@ from unittest.mock import ANY, call, patch
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
+from spencerassistant.core import callback
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
 

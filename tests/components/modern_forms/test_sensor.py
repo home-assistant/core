@@ -1,10 +1,10 @@
 """Tests for the Modern Forms sensor platform."""
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration, modern_forms_timers_set_mock
 
@@ -12,7 +12,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the Modern Forms sensors."""
 
@@ -36,7 +36,7 @@ async def test_sensors(
 
 
 async def test_active_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the Modern Forms sensors."""
 

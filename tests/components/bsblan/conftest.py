@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bsblan import Device, Info, State
 import pytest
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -33,7 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.bsblan.async_setup_entry", return_value=True
+        "spencerassistant.components.bsblan.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -42,7 +42,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_bsblan_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked BSBLAN client."""
     with patch(
-        "homeassistant.components.bsblan.config_flow.BSBLAN", autospec=True
+        "spencerassistant.components.bsblan.config_flow.BSBLAN", autospec=True
     ) as bsblan_mock:
         bsblan = bsblan_mock.return_value
         bsblan.device.return_value = Device.parse_raw(
@@ -56,7 +56,7 @@ def mock_bsblan_config_flow() -> Generator[None, MagicMock, None]:
 def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
     """Return a mocked BSBLAN client."""
 
-    with patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock:
+    with patch("spencerassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock:
         bsblan = bsblan_mock.return_value
         bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
         bsblan.device.return_value = Device.parse_raw(
@@ -68,7 +68,7 @@ def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, No
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_bsblan: MagicMock
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, mock_bsblan: MagicMock
 ) -> MockConfigEntry:
     """Set up the bsblan integration for testing."""
     mock_config_entry.add_to_hass(hass)

@@ -4,10 +4,10 @@ from unittest.mock import patch
 import aiopulse
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.acmeda.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from spencerassistant import data_entry_flow
+from spencerassistant.components.acmeda.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 

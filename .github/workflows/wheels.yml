@@ -16,7 +16,7 @@ on:
 jobs:
   init:
     name: Initialize wheels builder
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -26,14 +26,14 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master
+        uses: spencer-assistant/actions/helpers/info@master
 
       - name: Create requirements_diff file
         run: |
           if [[ ${{ github.event_name }} =~ (schedule|workflow_dispatch) ]]; then
             touch requirements_diff.txt
           else
-            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
+            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/spencer-assistant/core/master/requirements.txt
           fi
 
       - name: Write env-file
@@ -43,7 +43,7 @@ jobs:
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
             echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
-            # GRPC on armv7 needs -lexecinfo (issue #56669) since home assistant installs
+            # GRPC on armv7 needs -lexecinfo (issue #56669) since spencer assistant installs
             # execinfo-dev when building wheels. The setuptools build setup does not have an option for
             # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
             echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
@@ -70,7 +70,7 @@ jobs:
 
   core:
     name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for core
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -92,7 +92,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.10.1
+        uses: spencer-assistant/wheels@2022.10.1
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -101,13 +101,13 @@ jobs:
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev"
           skip-binary: aiohttp
-          constraints: "homeassistant/package_constraints.txt"
+          constraints: "spencerassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
   integrations:
     name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for integrations
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -138,7 +138,7 @@ jobs:
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
+            sed -i "s|# spencerkit|spencerkit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
             sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
@@ -154,13 +154,13 @@ jobs:
             # cmake > 3.22.2 have issue on arm
             # Tested until 3.22.5
             echo "cmake==3.22.2"
-          ) >> homeassistant/package_constraints.txt
+          ) >> spencerassistant/package_constraints.txt
 
           # Do not pin numpy in wheels building
-          sed -i "/numpy/d" homeassistant/package_constraints.txt
+          sed -i "/numpy/d" spencerassistant/package_constraints.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.10.1
+        uses: spencer-assistant/wheels@2022.10.1
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -170,6 +170,6 @@ jobs:
           apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev"
           skip-binary: aiohttp;grpcio
           legacy: true
-          constraints: "homeassistant/package_constraints.txt"
+          constraints: "spencerassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"

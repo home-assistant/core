@@ -6,9 +6,9 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
+from spencerassistant.const import CONF_ENTITY_ID
+from spencerassistant.helpers import selector
+from spencerassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,

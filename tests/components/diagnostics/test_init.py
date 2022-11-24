@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.helpers.device_registry import async_get
-from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.helpers.device_registry import async_get
+from spencerassistant.helpers.system_info import async_get_system_info
+from spencerassistant.setup import async_setup_component
 
 from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
 
@@ -83,7 +83,7 @@ async def test_download_diagnostics(hass, hass_client):
     del hass_sys_info["user"]
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "home_assistant": hass_sys_info,
+        "spencer_assistant": hass_sys_info,
         "custom_components": {},
         "integration_manifest": {
             "codeowners": [],
@@ -104,7 +104,7 @@ async def test_download_diagnostics(hass, hass_client):
     assert await _get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     ) == {
-        "home_assistant": hass_sys_info,
+        "spencer_assistant": hass_sys_info,
         "custom_components": {},
         "integration_manifest": {
             "codeowners": [],

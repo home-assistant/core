@@ -1,1 +1,1 @@
-"""Tests for the Legrand Home+ Control integration."""
+"""Tests for the Legrand spencer+ Control integration."""

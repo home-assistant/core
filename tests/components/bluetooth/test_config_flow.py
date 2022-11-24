@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 
-from homeassistant import config_entries
-from homeassistant.components.bluetooth.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
     DOMAIN,
 )
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
+from spencerassistant.data_entry_flow import FlowResultType
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -54,9 +54,9 @@ async def test_async_step_user_macos(hass, macos_adapter):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -77,9 +77,9 @@ async def test_async_step_user_linux_one_adapter(hass, one_adapter):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -100,9 +100,9 @@ async def test_async_step_user_linux_two_adapters(hass, two_adapters):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "multiple_adapters"
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADAPTER: "hci1"}
@@ -141,9 +141,9 @@ async def test_async_step_integration_discovery(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -163,11 +163,11 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
+        "spencerassistant.components.onboarding.async_is_onboarded",
         return_value=False,
     ) as mock_onboarding:
         result = await hass.config_entries.flow.async_init(
@@ -194,11 +194,11 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
+        "spencerassistant.components.onboarding.async_is_onboarded",
         return_value=False,
     ) as mock_onboarding:
         result = await hass.config_entries.flow.async_init(
@@ -230,11 +230,11 @@ async def test_async_step_integration_discovery_during_onboarding(hass, macos_ad
     )
 
     with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
+        "spencerassistant.components.bluetooth.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        "spencerassistant.components.bluetooth.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
+        "spencerassistant.components.onboarding.async_is_onboarded",
         return_value=False,
     ) as mock_onboarding:
         result = await hass.config_entries.flow.async_init(

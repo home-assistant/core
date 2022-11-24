@@ -1,15 +1,15 @@
-"""API for NEW_NAME bound to Home Assistant OAuth."""
+"""API for NEW_NAME bound to spencer Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
 
 from aiohttp import ClientSession
 import my_pypi_package
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 # TODO the following two API examples are based on our suggested best practices
 # for libraries using OAuth2 with requests or aiohttp. Delete the one you won't use.
-# For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.
+# For more info see the docs at https://developers.spencer-assistant.io/docs/api_lib_auth/#oauth2.
 
 
 class ConfigEntryAuth(my_pypi_package.AbstractAuth):
@@ -17,7 +17,7 @@ class ConfigEntryAuth(my_pypi_package.AbstractAuth):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass: spencerAssistant,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize NEW_NAME Auth."""
@@ -26,7 +26,7 @@ class ConfigEntryAuth(my_pypi_package.AbstractAuth):
         super().__init__(self.session.token)
 
     def refresh_tokens(self) -> str:
-        """Refresh and return new NEW_NAME tokens using Home Assistant OAuth2 session."""
+        """Refresh and return new NEW_NAME tokens using spencer Assistant OAuth2 session."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop
         ).result()

@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
-from homeassistant.helpers import collection
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.tag import DOMAIN, TAGS, async_scan_tag
+from spencerassistant.helpers import collection
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert "test tag" in result
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with patch("spencerassistant.util.dt.utcnow", return_value=now):
         await async_scan_tag(hass, "new tag", "some_scanner")
 
     await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})

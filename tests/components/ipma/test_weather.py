@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components.weather import (
+from spencerassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
@@ -19,21 +19,21 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import STATE_UNKNOWN
+from spencerassistant.const import STATE_UNKNOWN
 
 from . import MockLocation
 
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {
-    "name": "HomeTown",
+    "name": "spencerTown",
     "latitude": "40.00",
     "longitude": "-8.00",
     "mode": "daily",
 }
 
 TEST_CONFIG_HOURLY = {
-    "name": "HomeTown",
+    "name": "spencerTown",
     "latitude": "40.00",
     "longitude": "-8.00",
     "mode": "hourly",
@@ -63,7 +63,7 @@ async def test_setup_config_flow(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("weather.hometown")
+    state = hass.states.get("weather.spencertown")
     assert state.state == "rainy"
 
     data = state.attributes
@@ -72,7 +72,7 @@ async def test_setup_config_flow(hass):
     assert data.get(ATTR_WEATHER_PRESSURE) == 1000.0
     assert data.get(ATTR_WEATHER_WIND_SPEED) == 3.94
     assert data.get(ATTR_WEATHER_WIND_BEARING) == "NW"
-    assert state.attributes.get("friendly_name") == "HomeTown"
+    assert state.attributes.get("friendly_name") == "spencerTown"
 
 
 async def test_daily_forecast(hass):
@@ -86,7 +86,7 @@ async def test_daily_forecast(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("weather.hometown")
+    state = hass.states.get("weather.spencertown")
     assert state.state == "rainy"
 
     forecast = state.attributes.get(ATTR_FORECAST)[0]
@@ -111,7 +111,7 @@ async def test_hourly_forecast(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("weather.hometown")
+    state = hass.states.get("weather.spencertown")
     assert state.state == "rainy"
 
     forecast = state.attributes.get(ATTR_FORECAST)[0]
@@ -133,7 +133,7 @@ async def test_failed_get_observation_forecast(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("weather.hometown")
+    state = hass.states.get("weather.spencertown")
     assert state.state == STATE_UNKNOWN
 
     data = state.attributes
@@ -142,4 +142,4 @@ async def test_failed_get_observation_forecast(hass):
     assert data.get(ATTR_WEATHER_PRESSURE) is None
     assert data.get(ATTR_WEATHER_WIND_SPEED) is None
     assert data.get(ATTR_WEATHER_WIND_BEARING) is None
-    assert state.attributes.get("friendly_name") == "HomeTown"
+    assert state.attributes.get("friendly_name") == "spencerTown"

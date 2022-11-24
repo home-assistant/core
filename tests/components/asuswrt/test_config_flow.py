@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.asuswrt.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.asuswrt.const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
     CONF_REQUIRE_IP,
@@ -13,9 +13,9 @@ from homeassistant.components.asuswrt.const import (
     CONF_TRACK_UNKNOWN,
     DOMAIN,
 )
-from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
+from spencerassistant.components.device_tracker import CONF_CONSIDER_spencer
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import (
     CONF_HOST,
     CONF_MODE,
     CONF_PASSWORD,
@@ -41,12 +41,12 @@ CONFIG_DATA = {
 }
 
 PATCH_GET_HOST = patch(
-    "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+    "spencerassistant.components.asuswrt.config_flow.socket.gethostbyname",
     return_value=IP_ADDRESS,
 )
 
 PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.asuswrt.async_setup_entry",
+    "spencerassistant.components.asuswrt.async_setup_entry",
     return_value=True,
 )
 
@@ -60,7 +60,7 @@ def mock_unique_id_fixture():
 @pytest.fixture(name="connect")
 def mock_controller_connect(mock_unique_id):
     """Mock a successful connection."""
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
+    with patch("spencerassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -127,7 +127,7 @@ async def test_error_invalid_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
 
     with patch(
-        "homeassistant.components.asuswrt.config_flow.os.path.isfile",
+        "spencerassistant.components.asuswrt.config_flow.os.path.isfile",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -143,7 +143,7 @@ async def test_error_invalid_ssh(hass):
 async def test_error_invalid_host(hass):
     """Test we abort if host name is invalid."""
     with patch(
-        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        "spencerassistant.components.asuswrt.config_flow.socket.gethostbyname",
         side_effect=gaierror,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -234,7 +234,7 @@ async def test_on_connect_failed(hass, side_effect, error):
     )
 
     with PATCH_GET_HOST, patch(
-        "homeassistant.components.asuswrt.router.AsusWrt"
+        "spencerassistant.components.asuswrt.router.AsusWrt"
     ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=side_effect
@@ -268,7 +268,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CONSIDER_HOME: 20,
+                CONF_CONSIDER_spencer: 20,
                 CONF_TRACK_UNKNOWN: True,
                 CONF_INTERFACE: "aaa",
                 CONF_DNSMASQ: "bbb",
@@ -277,7 +277,7 @@ async def test_options_flow(hass):
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_CONSIDER_spencer] == 20
         assert config_entry.options[CONF_TRACK_UNKNOWN] is True
         assert config_entry.options[CONF_INTERFACE] == "aaa"
         assert config_entry.options[CONF_DNSMASQ] == "bbb"

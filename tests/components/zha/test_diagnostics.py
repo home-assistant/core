@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the ESPHome integration."""
+"""Tests for the diagnostics data provided by the ESPspencer integration."""
 
 
 from unittest.mock import patch
@@ -7,12 +7,12 @@ import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.zha.core.device import ZHADevice
-from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.zha.core.device import ZHADevice
+from spencerassistant.components.zha.diagnostics import KEYS_TO_REDACT
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.device_registry import async_get
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
@@ -33,7 +33,7 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
 def required_platforms_only():
     """Only setup the required platform and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
+        "spencerassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):
         yield
 
@@ -55,7 +55,7 @@ def zigpy_device(zigpy_device_mock):
 
 
 async def test_diagnostics_for_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client,
     config_entry,
     zha_device_joined,
@@ -73,7 +73,7 @@ async def test_diagnostics_for_config_entry(
 
 
 async def test_diagnostics_for_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client,
     config_entry,
     zha_device_joined,

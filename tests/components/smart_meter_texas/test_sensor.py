@@ -1,17 +1,17 @@
 """Test the Smart Meter Texas sensor entity."""
 from unittest.mock import patch
 
-from homeassistant.components.homeassistant import (
+from spencerassistant.components.spencerassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.smart_meter_texas.const import (
+from spencerassistant.components.smart_meter_texas.const import (
     ELECTRIC_METER,
     ESIID,
     METER_NUMBER,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, refresh_data, setup_integration
 
@@ -47,7 +47,7 @@ async def test_attributes(hass, config_entry, aioclient_mock):
 
 
 async def test_generic_entity_update_service(hass, config_entry, aioclient_mock):
-    """Test generic update entity service homeasasistant/update_entity."""
+    """Test generic update entity service spencerasasistant/update_entity."""
     await setup_integration(hass, config_entry, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
     with patch("smart_meter_texas.Meter.read_meter") as updater:

@@ -3,18 +3,18 @@ from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components import zeroconf
-from homeassistant.components.netatmo import config_flow
-from homeassistant.components.netatmo.const import (
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components import zeroconf
+from spencerassistant.components.netatmo import config_flow
+from spencerassistant.components.netatmo.const import (
     CONF_NEW_AREA,
     CONF_WEATHER_AREAS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +39,7 @@ async def test_abort_if_existing_entry(hass):
 
     result = await hass.config_entries.flow.async_init(
         "netatmo",
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
             addresses=["0.0.0.0"],
@@ -102,7 +102,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.netatmo.async_setup_entry", return_value=True
+        "spencerassistant.components.netatmo.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -118,7 +118,7 @@ async def test_option_flow(hass):
         "lat_sw": 32.83336,
         "lon_sw": -117.26743,
         "show_on_map": False,
-        "area_name": "Home",
+        "area_name": "spencer",
         "mode": "avg",
     }
 
@@ -128,7 +128,7 @@ async def test_option_flow(hass):
         "lat_sw": 32.8333601,
         "lon_sw": -117.26742990000001,
         "show_on_map": False,
-        "area_name": "Home",
+        "area_name": "spencer",
         "mode": "avg",
     }
 
@@ -146,7 +146,7 @@ async def test_option_flow(hass):
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
+        result["flow_id"], user_input={CONF_NEW_AREA: "spencer"}
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -165,7 +165,7 @@ async def test_option_flow(hass):
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
-        assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
+        assert config_entry.options[CONF_WEATHER_AREAS]["spencer"][k] == v
 
 
 async def test_option_flow_wrong_coordinates(hass):
@@ -176,7 +176,7 @@ async def test_option_flow_wrong_coordinates(hass):
         "lat_sw": 32.2345678,
         "lon_sw": -117.1234567,
         "show_on_map": False,
-        "area_name": "Home",
+        "area_name": "spencer",
         "mode": "avg",
     }
 
@@ -186,7 +186,7 @@ async def test_option_flow_wrong_coordinates(hass):
         "lat_sw": 32.1234567,
         "lon_sw": -117.2345678,
         "show_on_map": False,
-        "area_name": "Home",
+        "area_name": "spencer",
         "mode": "avg",
     }
 
@@ -204,7 +204,7 @@ async def test_option_flow_wrong_coordinates(hass):
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NEW_AREA: "Home"}
+        result["flow_id"], user_input={CONF_NEW_AREA: "spencer"}
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -223,7 +223,7 @@ async def test_option_flow_wrong_coordinates(hass):
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
-        assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
+        assert config_entry.options[CONF_WEATHER_AREAS]["spencer"][k] == v
 
 
 async def test_reauth(
@@ -274,7 +274,7 @@ async def test_reauth(
     )
 
     with patch(
-        "homeassistant.components.netatmo.async_setup_entry", return_value=True
+        "spencerassistant.components.netatmo.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -319,7 +319,7 @@ async def test_reauth(
 
     # Update entry
     with patch(
-        "homeassistant.components.netatmo.async_setup_entry", return_value=True
+        "spencerassistant.components.netatmo.async_setup_entry", return_value=True
     ) as mock_setup:
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         await hass.async_block_till_done()

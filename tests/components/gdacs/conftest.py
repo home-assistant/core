@@ -1,8 +1,8 @@
 """Configuration for GDACS tests."""
 import pytest
 
-from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
+from spencerassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,

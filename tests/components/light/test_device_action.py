@@ -1,9 +1,9 @@
 """The test for light device automation."""
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.light import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     FLASH_LONG,
@@ -11,11 +11,11 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

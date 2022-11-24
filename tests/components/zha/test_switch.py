@@ -17,10 +17,10 @@ import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.components.zha.core.group import GroupMember
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from spencerassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -45,7 +45,7 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 def switch_platform_only():
     """Only setup the switch and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.SENSOR,
@@ -257,7 +257,7 @@ async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
 
 
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "spencerassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_switch_entity(
@@ -432,11 +432,11 @@ async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_devic
         )
 
     cluster.read_attributes.reset_mock()
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     # the mocking doesn't update the attr cache so this flips back to initial value
     assert cluster.read_attributes.call_count == 2

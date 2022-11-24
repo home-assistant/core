@@ -2,16 +2,16 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import vultr as base_vultr
-from homeassistant.components.vultr import CONF_SUBSCRIPTION
-import homeassistant.components.vultr.sensor as vultr
-from homeassistant.const import (
+from spencerassistant.components import vultr as base_vultr
+from spencerassistant.components.vultr import CONF_SUBSCRIPTION
+import spencerassistant.components.vultr.sensor as vultr
+from spencerassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PLATFORM,
     DATA_GIGABYTES,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 CONFIGS = [
     {
@@ -33,7 +33,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_sensor(hass: HomeAssistant):
+def test_sensor(hass: spencerAssistant):
     """Test the Vultr sensor class and methods."""
     hass_devices = []
 
@@ -113,7 +113,7 @@ def test_invalid_sensor_config():
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: spencerAssistant):
     """Test the VultrSensor fails."""
     hass_devices = []
 

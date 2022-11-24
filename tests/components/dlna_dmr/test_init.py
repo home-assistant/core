@@ -2,17 +2,17 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components import media_player
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import media_player
+from spencerassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,

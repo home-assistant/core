@@ -8,6 +8,6 @@ import pytest
 def icloud_not_create_dir():
     """Mock component setup."""
     with patch(
-        "homeassistant.components.icloud.config_flow.os.path.exists", return_value=True
+        "spencerassistant.components.icloud.config_flow.os.path.exists", return_value=True
     ):
         yield

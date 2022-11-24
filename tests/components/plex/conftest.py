@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
-from homeassistant.const import CONF_URL
+from spencerassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
+from spencerassistant.const import CONF_URL
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
@@ -394,7 +394,7 @@ async def mock_config_entry():
 @pytest.fixture
 def mock_websocket():
     """Mock the PlexWebsocket class."""
-    with patch("homeassistant.components.plex.PlexWebsocket", autospec=True) as ws:
+    with patch("spencerassistant.components.plex.PlexWebsocket", autospec=True) as ws:
         yield ws
 
 
@@ -552,7 +552,7 @@ def setup_plex_server(
             requests_mock.get(f"{url}/clients", text=empty_payload)
 
         with patch(
-            "homeassistant.components.plex.GDM",
+            "spencerassistant.components.plex.GDM",
             return_value=MockGDM(disabled=disable_gdm),
         ):
             config_entry.add_to_hass(hass)

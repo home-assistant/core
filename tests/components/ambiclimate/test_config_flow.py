@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, patch
 import ambiclimate
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.ambiclimate import config_flow
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.setup import async_setup_component
-from homeassistant.util import aiohttp
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.ambiclimate import config_flow
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import aiohttp
 
 from tests.common import MockConfigEntry
 

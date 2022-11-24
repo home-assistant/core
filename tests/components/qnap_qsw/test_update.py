@@ -2,13 +2,13 @@
 
 from aioqsw.const import API_RESULT, API_VERSION
 
-from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import STATE_OFF
+from spencerassistant.core import spencerAssistant
 
 from .util import FIRMWARE_INFO_MOCK, FIRMWARE_UPDATE_CHECK_MOCK, async_init_integration
 
 
-async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
+async def test_qnap_qsw_update(hass: spencerAssistant) -> None:
     """Test creation of update entities."""
 
     await async_init_integration(hass)

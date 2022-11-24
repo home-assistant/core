@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -12,9 +12,9 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from spencerassistant.core import Context, spencerAssistant
+from spencerassistant.helpers import entity_registry
+import spencerassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
@@ -30,7 +30,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 
 async def async_get_actions(
-    hass: HomeAssistant, device_id: str
+    hass: spencerAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for NEW_NAME devices."""
     registry = entity_registry.async_get(hass)
@@ -63,7 +63,7 @@ async def async_get_actions(
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: spencerAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}

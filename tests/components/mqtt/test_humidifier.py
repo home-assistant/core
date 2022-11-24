@@ -5,22 +5,22 @@ from unittest.mock import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components import humidifier, mqtt
-from homeassistant.components.humidifier import (
+from spencerassistant.components import humidifier, mqtt
+from spencerassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.components.mqtt import CONFIG_SCHEMA
-from homeassistant.components.mqtt.humidifier import (
+from spencerassistant.components.mqtt import CONFIG_SCHEMA
+from spencerassistant.components.mqtt.humidifier import (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
     CONF_TARGET_HUMIDITY_STATE_TOPIC,
     MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -32,7 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -81,7 +81,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def humidifer_platform_only():
     """Only setup the humidifer platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
         yield
 
 
@@ -161,7 +161,7 @@ async def test_controlling_state_via_topic(
                     "modes": [
                         "auto",
                         "comfort",
-                        "home",
+                        "spencer",
                         "eco",
                         "sleep",
                         "baby",
@@ -1160,7 +1160,7 @@ async def test_discovery_update_unchanged_humidifier(
     """Test update of discovered humidifier."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     with patch(
-        "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
+        "spencerassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

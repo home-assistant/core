@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
-from homeassistant.const import CONF_TYPE
+from spencerassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
+from spencerassistant.const import CONF_TYPE
 
 from tests.common import MockConfigEntry
 
@@ -26,5 +26,5 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.season.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.season.async_setup_entry", return_value=True):
         yield

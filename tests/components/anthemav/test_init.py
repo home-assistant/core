@@ -5,15 +5,15 @@ from unittest.mock import ANY, AsyncMock, patch
 from anthemav.device_error import DeviceError
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
     init_integration: MockConfigEntry,
@@ -35,7 +35,7 @@ async def test_load_unload_config_entry(
 
 @pytest.mark.parametrize("error", [OSError, DeviceError])
 async def test_config_entry_not_ready_when_oserror(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, error: Exception
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, error: Exception
 ) -> None:
     """Test AnthemAV configuration entry not ready."""
     with patch(
@@ -49,7 +49,7 @@ async def test_config_entry_not_ready_when_oserror(
 
 
 async def test_anthemav_dispatcher_signal(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
     init_integration: MockConfigEntry,

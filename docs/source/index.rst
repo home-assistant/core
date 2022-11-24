@@ -1,8 +1,8 @@
 ================================
-Home Assistant API Documentation
+spencer Assistant API Documentation
 ================================
 
-Public API documentation for `Home Assistant developers`_.
+Public API documentation for `spencer Assistant developers`_.
 
 Contents:
 
@@ -19,4 +19,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _Home Assistant developers: https://developers.home-assistant.io/
+.. _spencer Assistant developers: https://developers.spencer-assistant.io/

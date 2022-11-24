@@ -1,6 +1,6 @@
 """The switch tests for the nexia platform."""
 
-from homeassistant.const import STATE_ON
+from spencerassistant.const import STATE_ON
 
 from .util import async_init_integration
 

@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.const import STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.helpers import device_registry
+from spencerassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration
 

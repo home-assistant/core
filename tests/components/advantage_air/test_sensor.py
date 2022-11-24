@@ -3,15 +3,15 @@
 from datetime import timedelta
 from json import loads
 
-from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from homeassistant.components.advantage_air.sensor import (
+from spencerassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from spencerassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util import dt
 
 from . import (
     TEST_SET_RESPONSE,

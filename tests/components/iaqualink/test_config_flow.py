@@ -6,7 +6,7 @@ from iaqualink.exception import (
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.components.iaqualink import config_flow
+from spencerassistant.components.iaqualink import config_flow
 
 
 async def test_already_configured(hass, config_entry, config_data):
@@ -41,7 +41,7 @@ async def test_with_invalid_credentials(hass, config_data):
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
         result = await flow.async_step_user(config_data)
@@ -57,7 +57,7 @@ async def test_service_exception(hass, config_data):
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceException,
     ):
         result = await flow.async_step_user(config_data)
@@ -74,7 +74,7 @@ async def test_with_existing_config(hass, config_data):
     flow.context = {}
 
     with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        "spencerassistant.components.iaqualink.config_flow.AqualinkClient.login",
         return_value=None,
     ):
         result = await flow.async_step_user(config_data)

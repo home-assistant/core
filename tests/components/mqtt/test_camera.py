@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import camera, mqtt
-from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
-from homeassistant.const import Platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import camera, mqtt
+from spencerassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from spencerassistant.const import Platform
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -47,7 +47,7 @@ DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_t
 @pytest.fixture(autouse=True)
 def camera_platform_only():
     """Only setup the camera platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
         yield
 
 
@@ -288,7 +288,7 @@ async def test_discovery_update_unchanged_camera(
     """Test update of discovered camera."""
     data1 = '{ "name": "Beer", "topic": "test_topic"}'
     with patch(
-        "homeassistant.components.mqtt.camera.MqttCamera.discovery_update"
+        "spencerassistant.components.mqtt.camera.MqttCamera.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

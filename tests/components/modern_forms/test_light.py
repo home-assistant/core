@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.modern_forms.const import (
+from spencerassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from spencerassistant.components.modern_forms.const import (
     ATTR_SLEEP_TIME,
     DOMAIN,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
@@ -18,8 +18,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -27,7 +27,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_light_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the Modern Forms lights."""
     await init_integration(hass, aioclient_mock)
@@ -46,7 +46,7 @@ async def test_light_state(
 
 
 async def test_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -75,7 +75,7 @@ async def test_change_state(
 
 
 async def test_sleep_timer_services(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -102,7 +102,7 @@ async def test_sleep_timer_services(
 
 
 async def test_light_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test error handling of the Modern Forms lights."""
 
@@ -111,7 +111,7 @@ async def test_light_error(
 
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"):
+    with patch("spencerassistant.components.modern_forms.ModernFormsDevice.update"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -125,13 +125,13 @@ async def test_light_error(
 
 
 async def test_light_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test error handling of the Moder Forms lights."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.light",
+    with patch("spencerassistant.components.modern_forms.ModernFormsDevice.update"), patch(
+        "spencerassistant.components.modern_forms.ModernFormsDevice.light",
         side_effect=ModernFormsConnectionError,
     ):
         await hass.services.async_call(

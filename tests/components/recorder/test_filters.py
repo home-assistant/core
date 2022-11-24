@@ -1,10 +1,10 @@
 """The tests for recorder filters."""
 
-from homeassistant.components.recorder.filters import (
+from spencerassistant.components.recorder.filters import (
     extract_include_exclude_filter_conf,
     merge_include_exclude_filters,
 )
-from homeassistant.helpers.entityfilter import (
+from spencerassistant.helpers.entityfilter import (
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_ENTITY_GLOBS,
@@ -21,7 +21,7 @@ EMPTY_INCLUDE_FILTER = {
 }
 SIMPLE_INCLUDE_FILTER = {
     CONF_INCLUDE: {
-        CONF_DOMAINS: ["homeassistant"],
+        CONF_DOMAINS: ["spencerassistant"],
         CONF_ENTITIES: ["sensor.one"],
         CONF_ENTITY_GLOBS: ["climate.*"],
     }
@@ -35,7 +35,7 @@ SIMPLE_INCLUDE_FILTER_DIFFERENT_ENTITIES = {
 }
 SIMPLE_EXCLUDE_FILTER = {
     CONF_EXCLUDE: {
-        CONF_DOMAINS: ["homeassistant"],
+        CONF_DOMAINS: ["spencerassistant"],
         CONF_ENTITIES: ["sensor.one"],
         CONF_ENTITY_GLOBS: ["climate.*"],
     }
@@ -53,7 +53,7 @@ def test_extract_include_exclude_filter_conf():
             CONF_ENTITY_GLOBS: set(),
         },
         CONF_INCLUDE: {
-            CONF_DOMAINS: {"homeassistant"},
+            CONF_DOMAINS: {"spencerassistant"},
             CONF_ENTITIES: {"sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*"},
         },
@@ -67,7 +67,7 @@ def test_extract_include_exclude_filter_conf():
             CONF_ENTITY_GLOBS: set(),
         },
         CONF_EXCLUDE: {
-            CONF_DOMAINS: {"homeassistant"},
+            CONF_DOMAINS: {"spencerassistant"},
             CONF_ENTITIES: {"sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*"},
         },
@@ -78,12 +78,12 @@ def test_extract_include_exclude_filter_conf():
     )
     assert include_exclude_filter == {
         CONF_INCLUDE: {
-            CONF_DOMAINS: {"homeassistant"},
+            CONF_DOMAINS: {"spencerassistant"},
             CONF_ENTITIES: {"sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*"},
         },
         CONF_EXCLUDE: {
-            CONF_DOMAINS: {"homeassistant"},
+            CONF_DOMAINS: {"spencerassistant"},
             CONF_ENTITIES: {"sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*"},
         },
@@ -122,12 +122,12 @@ def test_merge_include_exclude_filters():
     )
     assert merged_filter == {
         CONF_EXCLUDE: {
-            CONF_DOMAINS: {"homeassistant"},
+            CONF_DOMAINS: {"spencerassistant"},
             CONF_ENTITIES: {"sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*"},
         },
         CONF_INCLUDE: {
-            CONF_DOMAINS: {"other", "homeassistant"},
+            CONF_DOMAINS: {"other", "spencerassistant"},
             CONF_ENTITIES: {"not_sensor.one", "sensor.one"},
             CONF_ENTITY_GLOBS: {"climate.*", "not_climate.*"},
         },

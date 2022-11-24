@@ -5,7 +5,7 @@ from http import HTTPStatus
 from aiohttp import StreamReader
 import pytest
 
-from homeassistant.components.hassio.http import _need_auth
+from spencerassistant.components.hassio.http import _need_auth
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -24,7 +24,7 @@ async def test_forward_request(hassio_client, aioclient_mock):
 
 
 @pytest.mark.parametrize(
-    "build_type", ["supervisor/info", "homeassistant/update", "host/info"]
+    "build_type", ["supervisor/info", "spencerassistant/update", "host/info"]
 )
 async def test_auth_required_forward_request(hassio_noauth_client, build_type):
     """Test auth required for normal request."""

@@ -16,9 +16,9 @@ from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.const as zha_const
-import homeassistant.components.zha.core.device as zha_core_device
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.zha.core.const as zha_const
+import spencerassistant.components.zha.core.device as zha_core_device
+from spencerassistant.setup import async_setup_component
 
 from . import common
 

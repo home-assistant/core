@@ -2,8 +2,8 @@
 
 from pyunifiprotect.data import NVR, Light
 
-from homeassistant.components.unifiprotect.const import CONF_ALLOW_EA
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.unifiprotect.const import CONF_ALLOW_EA
+from spencerassistant.core import spencerAssistant
 
 from .utils import MockUFPFixture, init_entry
 
@@ -11,7 +11,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, hass_client
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, hass_client
 ):
     """Test generating diagnostics for a config entry."""
 

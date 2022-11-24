@@ -1,4 +1,4 @@
-"""The tests for the Home Assistant HTTP component."""
+"""The tests for the spencer Assistant HTTP component."""
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -10,11 +10,11 @@ import jwt
 import pytest
 import yarl
 
-from homeassistant.auth.const import GROUP_ID_READ_ONLY
-from homeassistant.auth.models import User
-from homeassistant.auth.providers import trusted_networks
-from homeassistant.components import websocket_api
-from homeassistant.components.http.auth import (
+from spencerassistant.auth.const import GROUP_ID_READ_ONLY
+from spencerassistant.auth.models import User
+from spencerassistant.auth.providers import trusted_networks
+from spencerassistant.components import websocket_api
+from spencerassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
     SIGN_QUERY_PARAM,
@@ -23,14 +23,14 @@ from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
-from homeassistant.components.http.const import KEY_AUTHENTICATED
-from homeassistant.components.http.forwarded import async_setup_forwarded
-from homeassistant.components.http.request_context import (
+from spencerassistant.components.http.const import KEY_AUTHENTICATED
+from spencerassistant.components.http.forwarded import async_setup_forwarded
+from spencerassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import callback
+from spencerassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH, mock_real_ip
 
@@ -100,7 +100,7 @@ def trusted_networks_auth(hass):
 
 async def test_auth_middleware_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
+    with patch("spencerassistant.components.http.async_setup_auth") as mock_setup:
         await async_setup_component(hass, "http", {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -142,13 +142,13 @@ async def test_basic_auth_does_not_work(app, aiohttp_client, hass, legacy_auth):
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get("/", auth=BasicAuth("spencerassistant", API_PASSWORD))
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     req = await client.get("/", auth=BasicAuth("wrong_username", API_PASSWORD))
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", "wrong password"))
+    req = await client.get("/", auth=BasicAuth("spencerassistant", "wrong password"))
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     req = await client.get("/", headers={"authorization": "NotBasic abcdefg"})
@@ -249,7 +249,7 @@ async def test_auth_legacy_support_api_password_cannot_access(
     resp = await client.get("/", params={"api_password": API_PASSWORD})
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get("/", auth=BasicAuth("spencerassistant", API_PASSWORD))
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 

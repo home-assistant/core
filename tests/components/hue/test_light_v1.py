@@ -4,16 +4,16 @@ from unittest.mock import Mock
 
 import aiohue
 
-from homeassistant.components import hue
-from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
-from homeassistant.components.hue.v1 import light as hue_light
-from homeassistant.components.light import ColorMode
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import color
+from spencerassistant.components import hue
+from spencerassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
+from spencerassistant.components.hue.v1 import light as hue_light
+from spencerassistant.components.light import ColorMode
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.util import color
 
 from .conftest import create_config_entry
 
-HUE_LIGHT_NS = "homeassistant.components.light.hue."
+HUE_LIGHT_NS = "spencerassistant.components.light.hue."
 GROUP_RESPONSE = {
     "1": {
         "name": "Group 1",

@@ -7,7 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.firmware import FirmwareUpdateStatus
 
-from homeassistant.components.update import (
+from spencerassistant.components.update import (
     ATTR_AUTO_UPDATE,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -18,12 +18,12 @@ from homeassistant.components.update import (
     SERVICE_INSTALL,
     SERVICE_SKIP,
 )
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
-from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from spencerassistant.components.zwave_js.helpers import get_valueless_base_unique_id
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.entity_registry import async_get
+from spencerassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -169,7 +169,7 @@ async def test_update_entity_install_raises(
     # Test failed installation by driver
     client.async_send_command.side_effect = FailedZWaveCommand("test", 12, "test")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -487,7 +487,7 @@ async def test_update_entity_install_failed(
     assert state.state == STATE_ON
 
     # validate that the install task failed
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await install_task
 
 

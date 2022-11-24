@@ -10,14 +10,14 @@ from typing import Any, Literal, cast
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
-from homeassistant import core as ha
-from homeassistant.components import recorder
-from homeassistant.components.recorder import get_instance, statistics
-from homeassistant.components.recorder.core import Recorder
-from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from spencerassistant import core as ha
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import get_instance, statistics
+from spencerassistant.components.recorder.core import Recorder
+from spencerassistant.components.recorder.db_schema import RecorderRuns
+from spencerassistant.components.recorder.tasks import RecorderTask, StatisticsTask
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util import dt as dt_util
 
 from . import db_schema_0
 
@@ -37,7 +37,7 @@ class BlockRecorderTask(RecorderTask):
         time.sleep(self.seconds)
 
 
-async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
+async def async_block_recorder(hass: spencerAssistant, seconds: float) -> None:
     """Block the recorders event loop for testing.
 
     Returns as soon as the recorder has started the block.
@@ -49,14 +49,14 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     await event.wait()
 
 
-def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
+def do_adhoc_statistics(hass: spencerAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
     get_instance(hass).queue_task(StatisticsTask(start))
 
 
-def wait_recording_done(hass: HomeAssistant) -> None:
+def wait_recording_done(hass: spencerAssistant) -> None:
     """Block till recording is done."""
     hass.block_till_done()
     trigger_db_commit(hass)
@@ -65,12 +65,12 @@ def wait_recording_done(hass: HomeAssistant) -> None:
     hass.block_till_done()
 
 
-def trigger_db_commit(hass: HomeAssistant) -> None:
+def trigger_db_commit(hass: spencerAssistant) -> None:
     """Force the recorder to commit."""
     recorder.get_instance(hass)._async_commit(dt_util.utcnow())
 
 
-async def async_wait_recording_done(hass: HomeAssistant) -> None:
+async def async_wait_recording_done(hass: spencerAssistant) -> None:
     """Async wait until recording is done."""
     await hass.async_block_till_done()
     async_trigger_db_commit(hass)
@@ -79,7 +79,7 @@ async def async_wait_recording_done(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
+async def async_wait_purge_done(hass: spencerAssistant, max: int = None) -> None:
     """Wait for max number of purge events.
 
     Because a purge may insert another PurgeTask into
@@ -94,12 +94,12 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
 
 
 @ha.callback
-def async_trigger_db_commit(hass: HomeAssistant) -> None:
+def async_trigger_db_commit(hass: spencerAssistant) -> None:
     """Force the recorder to commit. Async friendly."""
     recorder.get_instance(hass)._async_commit(dt_util.utcnow())
 
 
-async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
+async def async_recorder_block_till_done(hass: spencerAssistant) -> None:
     """Non blocking version of recorder.block_till_done()."""
     await hass.async_add_executor_job(recorder.get_instance(hass).block_till_done)
 
@@ -140,7 +140,7 @@ def run_information_with_session(
 
 
 def statistics_during_period(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,

@@ -1,11 +1,11 @@
 """The tests for the telegram.notify platform."""
 from unittest.mock import patch
 
-from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
-from homeassistant.components.telegram import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.setup import async_setup_component
+from spencerassistant import config as hass_config
+import spencerassistant.components.notify as notify
+from spencerassistant.components.telegram import DOMAIN
+from spencerassistant.const import SERVICE_RELOAD
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
@@ -13,7 +13,7 @@ from tests.common import get_fixture_path
 async def test_reload_notify(hass):
     """Verify we can reload the notify service."""
 
-    with patch("homeassistant.components.telegram_bot.async_setup", return_value=True):
+    with patch("spencerassistant.components.telegram_bot.async_setup", return_value=True):
         assert await async_setup_component(
             hass,
             notify.DOMAIN,

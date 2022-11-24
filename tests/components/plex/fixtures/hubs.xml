@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MediaContainer size="8" allowSync="1" identifier="com.plexapp.plugins.library">
-<Hub hubKey="/library/metadata/1,35" key="/hubs/home/continueWatching" title="Continue Watching" type="mixed" hubIdentifier="home.continue" context="hub.home.continue" size="2" more="1" style="hero" promoted="1">
+<Hub hubKey="/library/metadata/1,35" key="/hubs/spencer/continueWatching" title="Continue Watching" type="mixed" hubIdentifier="spencer.continue" context="hub.spencer.continue" size="2" more="1" style="hero" promoted="1">
 
 <Video ratingKey="1" key="/library/metadata/1" guid="plex://movie/5d776b85594b2b001e6dc641" studio="Studio Entertainment" type="movie" title="Movie 1" librarySectionTitle="Movies" librarySectionID="1" librarySectionKey="/library/sections/1" contentRating="R" summary="Some elaborate summary." rating="9.0" audienceRating="9.5"  viewCount="1"  lastViewedAt="1505969509" year="2000" tagline="Witty saying." thumb="/library/metadata/1/thumb/1590245989" art="/library/metadata/1/art/1590245989" duration="9000000" originallyAvailableAt="2000-01-01" addedAt="1377829261" updatedAt="1590245989" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" primaryExtraKey="/library/metadata/195540" ratingImage="rottentomatoes://image.rating.ripe">
 <Media aspectRatio="2.35" audioChannels="6" audioCodec="dca" audioProfile="dts" bitrate="7500" container="mkv" duration="9000000" height="544" id="2637" videoCodec="h264" videoFrameRate="24p" videoProfile="high" videoResolution="720" width="1280" />
@@ -29,10 +29,10 @@
 </Video>
 </Hub>
 
-<Hub key="/hubs/home/recentlyAdded?type=8" title="Recently Added Music" type="album" hubIdentifier="home.music.recent" context="hub.home.music.recent" size="0" more="0" style="shelf" promoted="1">
+<Hub key="/hubs/spencer/recentlyAdded?type=8" title="Recently Added Music" type="album" hubIdentifier="spencer.music.recent" context="hub.spencer.music.recent" size="0" more="0" style="shelf" promoted="1">
 </Hub>
 
-<Hub hubKey="/library/metadata/203184,203180,203181,203182,203183,203178" key="/hubs/home/recentlyAdded?type=13" title="Recently Added Photos" type="photo" hubIdentifier="home.photos.recent" context="hub.home.photos.recent" size="6" more="0" style="shelf" promoted="1">
+<Hub hubKey="/library/metadata/203184,203180,203181,203182,203183,203178" key="/hubs/spencer/recentlyAdded?type=13" title="Recently Added Photos" type="photo" hubIdentifier="spencer.photos.recent" context="hub.spencer.photos.recent" size="6" more="0" style="shelf" promoted="1">
 <Photo ratingKey="203184" key="/library/metadata/203184" guid="com.plexapp.agents.none://203184?lang=en" type="photo" title="tmpENmh_T" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203184/thumb/1616695947" originallyAvailableAt="2021-03-25" addedAt="1616695947" updatedAt="1616695947" createdAtAccuracy="local" createdAtTZOffset="-18000">
 </Photo>
 <Photo ratingKey="203180" key="/library/metadata/203180" parentRatingKey="203179" guid="com.plexapp.agents.none://203180?lang=en" type="photo" title="1 (1)" parentKey="/library/metadata/203179" librarySectionTitle="Photos" librarySectionID="11" librarySectionKey="/library/sections/11" summary="" index="1" year="2021" thumb="/library/metadata/203180/thumb/1616695149" originallyAvailableAt="2021-03-20" addedAt="1616694060" updatedAt="1616695149" createdAtAccuracy="local" createdAtTZOffset="-18000">
@@ -47,10 +47,10 @@
 </Photo>
 </Hub>
 
-<Hub key="/hubs/home/recentlyAdded?type=1&amp;personal=1" title="Recently Added Videos" type="clip" hubIdentifier="home.videos.recent" context="hub.home.videos.recent" size="0" more="0" style="shelf" promoted="1">
+<Hub key="/hubs/spencer/recentlyAdded?type=1&amp;personal=1" title="Recently Added Videos" type="clip" hubIdentifier="spencer.videos.recent" context="hub.spencer.videos.recent" size="0" more="0" style="shelf" promoted="1">
 </Hub>
 
-<Hub hubKey="/library/metadata/500,501" key="/playlists/all?type=15&amp;sort=lastViewedAt:desc&amp;playlistType=video,audio" title="Recent Playlists" type="playlist" hubIdentifier="home.playlists" context="hub.home.playlists" size="2" more="0" style="shelf" promoted="1">
+<Hub hubKey="/library/metadata/500,501" key="/playlists/all?type=15&amp;sort=lastViewedAt:desc&amp;playlistType=video,audio" title="Recent Playlists" type="playlist" hubIdentifier="spencer.playlists" context="hub.spencer.playlists" size="2" more="0" style="shelf" promoted="1">
 <Playlist ratingKey="500" key="/playlists/500/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 1" summary="" smart="0" playlistType="video" composite="/playlists/500/composite/1597983847" viewCount="2" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969338" updatedAt="1597983847">
 </Playlist>
 <Playlist ratingKey="501" key="/playlists/501/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 2" summary="" smart="0" playlistType="video" composite="/playlists/501/composite/1597983847" viewCount="5" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969339" updatedAt="1597983847">

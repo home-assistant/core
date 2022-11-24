@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 from aiomodernforms import ModernFormsConnectionError
 
-from homeassistant.components.modern_forms.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.modern_forms.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration, modern_forms_no_light_call_mock
 
@@ -14,11 +14,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "spencerassistant.components.modern_forms.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_config_entry_not_ready(
-    mock_update: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    mock_update: MagicMock, hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Modern Forms configuration entry not ready."""
     entry = await init_integration(hass, aioclient_mock)
@@ -26,7 +26,7 @@ async def test_config_entry_not_ready(
 
 
 async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Modern Forms configuration entry unloading."""
     entry = await init_integration(hass, aioclient_mock)

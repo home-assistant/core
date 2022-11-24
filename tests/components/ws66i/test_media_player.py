@@ -2,7 +2,7 @@
 from collections import defaultdict
 from unittest.mock import patch
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -10,15 +10,15 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.ws66i.const import (
+from spencerassistant.components.ws66i.const import (
     CONF_SOURCES,
     DOMAIN,
     INIT_OPTIONS_DEFAULT,
     MAX_VOL,
     POLL_INTERVAL,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     CONF_IP_ADDRESS,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -29,8 +29,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -125,7 +125,7 @@ async def test_setup_success(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.ws66i.get_ws66i",
+        "spencerassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -142,7 +142,7 @@ async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.ws66i.get_ws66i",
+        "spencerassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -158,7 +158,7 @@ async def _setup_ws66i_with_options(hass, ws66i) -> MockConfigEntry:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.ws66i.get_ws66i",
+        "spencerassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

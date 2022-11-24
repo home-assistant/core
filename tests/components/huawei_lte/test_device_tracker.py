@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.huawei_lte import device_tracker
+from spencerassistant.components.huawei_lte import device_tracker
 
 
 @pytest.mark.parametrize(

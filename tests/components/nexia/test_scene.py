@@ -61,7 +61,7 @@ async def test_automation_scenes(hass):
         "West Wing will Run Schedule AND Downstairs East "
         "Wing will Run Schedule AND Downstairs West Wing "
         "will Run Schedule AND Activate the mode named "
-        "'Home'",
+        "'spencer'",
         "friendly_name": "Power Restored",
         "icon": "mdi:script-text-outline",
     }

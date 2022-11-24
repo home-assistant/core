@@ -2,17 +2,17 @@
 from google_nest_sdm.event import EventMessage
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.events import NEST_EVENT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.components.nest import DOMAIN
+from spencerassistant.components.nest.events import NEST_EVENT
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
@@ -88,7 +88,7 @@ def calls(hass):
 
 
 async def test_get_triggers(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(
@@ -128,7 +128,7 @@ async def test_get_triggers(
 
 
 async def test_multiple_devices(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(
@@ -183,7 +183,7 @@ async def test_multiple_devices(
 
 
 async def test_triggers_for_invalid_device_id(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Get triggers for a device not found in the API."""
     create_device.create(
@@ -217,7 +217,7 @@ async def test_triggers_for_invalid_device_id(
 
 
 async def test_no_triggers(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: spencerAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(raw_data=make_camera(device_id=DEVICE_ID, traits={}))
@@ -306,7 +306,7 @@ async def test_trigger_for_wrong_event_type(hass, calls):
 
 
 async def test_subscriber_automation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     calls: list,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,

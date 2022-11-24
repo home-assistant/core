@@ -4,14 +4,14 @@ from unittest.mock import patch
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.ecobee import config_flow
-from homeassistant.components.ecobee.const import (
+from spencerassistant import data_entry_flow
+from spencerassistant.components.ecobee import config_flow
+from spencerassistant.components.ecobee.const import (
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY
+from spencerassistant.const import CONF_API_KEY
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -46,7 +46,7 @@ async def test_pin_request_succeeds(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+    with patch("spencerassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_pin.return_value = True
         mock_ecobee.pin = "test-pin"
@@ -64,7 +64,7 @@ async def test_pin_request_fails(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+    with patch("spencerassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_pin.return_value = False
 
@@ -81,7 +81,7 @@ async def test_token_request_succeeds(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+    with patch("spencerassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
@@ -106,7 +106,7 @@ async def test_token_request_fails(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+    with patch("spencerassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = False
         mock_ecobee.pin = "test-pin"
@@ -145,9 +145,9 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "spencerassistant.components.ecobee.config_flow.load_json",
         return_value=MOCK_ECOBEE_CONF,
-    ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+    ), patch("spencerassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.refresh_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
@@ -172,7 +172,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(hass):
     MOCK_ECOBEE_CONF = {}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "spencerassistant.components.ecobee.config_flow.load_json",
         return_value=MOCK_ECOBEE_CONF,
     ), patch.object(
         flow, "async_step_user", return_value=mock_coro()
@@ -196,10 +196,10 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "spencerassistant.components.ecobee.config_flow.load_json",
         return_value=MOCK_ECOBEE_CONF,
     ), patch(
-        "homeassistant.components.ecobee.config_flow.Ecobee"
+        "spencerassistant.components.ecobee.config_flow.Ecobee"
     ) as mock_ecobee, patch.object(
         flow, "async_step_user", return_value=mock_coro()
     ) as mock_async_step_user:

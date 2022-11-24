@@ -5,14 +5,14 @@ from unittest.mock import patch
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import TEST_BACKUP, setup_backup_integration
 
 
 async def test_info(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass: spencerAssistant,
+    hass_ws_client: Callable[[spencerAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test getting backup info."""
     await setup_backup_integration(hass)
@@ -21,7 +21,7 @@ async def test_info(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.get_backups",
+        "spencerassistant.components.backup.websocket.BackupManager.get_backups",
         return_value={TEST_BACKUP.slug: TEST_BACKUP},
     ):
 
@@ -34,8 +34,8 @@ async def test_info(
 
 
 async def test_remove(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass: spencerAssistant,
+    hass_ws_client: Callable[[spencerAssistant], Awaitable[ClientWebSocketResponse]],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removing a backup file."""
@@ -45,7 +45,7 @@ async def test_remove(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.remove_backup",
+        "spencerassistant.components.backup.websocket.BackupManager.remove_backup",
     ):
         await client.send_json({"id": 1, "type": "backup/remove", "slug": "abc123"})
         msg = await client.receive_json()
@@ -55,8 +55,8 @@ async def test_remove(
 
 
 async def test_generate(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass: spencerAssistant,
+    hass_ws_client: Callable[[spencerAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test removing a backup file."""
     await setup_backup_integration(hass)
@@ -65,7 +65,7 @@ async def test_generate(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.generate_backup",
+        "spencerassistant.components.backup.websocket.BackupManager.generate_backup",
         return_value=TEST_BACKUP,
     ):
         await client.send_json({"id": 1, "type": "backup/generate"})

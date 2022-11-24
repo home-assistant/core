@@ -1,7 +1,7 @@
 """Models for SQLAlchemy.
 
 This file contains the model definitions for schema version 18,
-used by Home Assistant Core 2021.7.0, which did a major refactoring
+used by spencer Assistant Core 2021.7.0, which did a major refactoring
 of long term statistics database models.
 It is used to test the schema migration logic.
 """
@@ -27,7 +27,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
-from homeassistant.const import (
+from spencerassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_EVENT_ORIGIN,
@@ -35,9 +35,9 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from spencerassistant.helpers.json import JSONEncoder
+import spencerassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name

@@ -2,9 +2,9 @@
 import asyncio
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.nest import DOMAIN, config_flow
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.nest import DOMAIN, config_flow
+from spencerassistant.setup import async_setup_component
 
 from .common import TEST_CONFIG_LEGACY
 
@@ -52,7 +52,7 @@ async def test_full_flow_implementation(hass):
     assert (
         result["description_placeholders"]
         .get("url")
-        .startswith("https://home.nest.com/login/oauth2?client_id=some-client-id")
+        .startswith("https://spencer.nest.com/login/oauth2?client_id=some-client-id")
     )
 
     def mock_login(auth):
@@ -60,9 +60,9 @@ async def test_full_flow_implementation(hass):
         auth.auth_callback({"access_token": "yoo"})
 
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.NestAuth.login", new=mock_login
+        "spencerassistant.components.nest.legacy.local_auth.NestAuth.login", new=mock_login
     ), patch(
-        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+        "spencerassistant.components.nest.async_setup_legacy_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
@@ -90,7 +90,7 @@ async def test_not_pick_implementation_if_only_one(hass):
 async def test_abort_if_timeout_generating_auth_url(hass):
     """Test we abort if generating authorize url fails."""
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
+        "spencerassistant.components.nest.legacy.local_auth.generate_auth_url",
         side_effect=asyncio.TimeoutError,
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
@@ -106,7 +106,7 @@ async def test_abort_if_timeout_generating_auth_url(hass):
 async def test_abort_if_exception_generating_auth_url(hass):
     """Test we abort if generating authorize url blows up."""
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
+        "spencerassistant.components.nest.legacy.local_auth.generate_auth_url",
         side_effect=ValueError,
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
@@ -131,7 +131,7 @@ async def test_verify_code_timeout(hass):
     assert result["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        "spencerassistant.components.nest.legacy.local_auth.NestAuth.login",
         side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -154,7 +154,7 @@ async def test_verify_code_invalid(hass):
     assert result["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        "spencerassistant.components.nest.legacy.local_auth.NestAuth.login",
         side_effect=config_flow.CodeInvalid,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -177,7 +177,7 @@ async def test_verify_code_unknown_error(hass):
     assert result["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        "spencerassistant.components.nest.legacy.local_auth.NestAuth.login",
         side_effect=config_flow.NestAuthError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -200,7 +200,7 @@ async def test_verify_code_exception(hass):
     assert result["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        "spencerassistant.components.nest.legacy.local_auth.NestAuth.login",
         side_effect=ValueError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -227,10 +227,10 @@ async def test_step_import(hass):
 async def test_step_import_with_token_cache(hass):
     """Test that we import existing token cache."""
     with patch("os.path.isfile", return_value=True), patch(
-        "homeassistant.components.nest.config_flow.load_json",
+        "spencerassistant.components.nest.config_flow.load_json",
         return_value={"access_token": "yo"},
     ), patch(
-        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+        "spencerassistant.components.nest.async_setup_legacy_entry", return_value=True
     ) as mock_setup:
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()

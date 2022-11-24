@@ -2,13 +2,13 @@
 import pytest
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, HVACMode, const, device_condition
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.climate import DOMAIN, HVACMode, const, device_condition
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -241,7 +241,7 @@ async def test_if_state(hass, calls):
         "climate.entity",
         HVACMode.AUTO,
         {
-            const.ATTR_PRESET_MODE: const.PRESET_HOME,
+            const.ATTR_PRESET_MODE: const.PRESET_spencer,
         },
     )
 
@@ -270,13 +270,13 @@ async def test_if_state(hass, calls):
         ),
         (
             False,
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {const.ATTR_PRESET_MODES: [const.PRESET_spencer, const.PRESET_AWAY]},
             {},
             "is_preset_mode",
             [
                 {
                     "name": "preset_mode",
-                    "options": [("home", "home"), ("away", "away")],
+                    "options": [("spencer", "spencer"), ("away", "away")],
                     "required": True,
                     "type": "select",
                 }
@@ -299,12 +299,12 @@ async def test_if_state(hass, calls):
         (
             True,
             {},
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {const.ATTR_PRESET_MODES: [const.PRESET_spencer, const.PRESET_AWAY]},
             "is_preset_mode",
             [
                 {
                     "name": "preset_mode",
-                    "options": [("home", "home"), ("away", "away")],
+                    "options": [("spencer", "spencer"), ("away", "away")],
                     "required": True,
                     "type": "select",
                 }

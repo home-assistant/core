@@ -6,8 +6,8 @@ import datetime
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTREE
 

@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 from pyuptimerobot import UptimeRobotAuthenticationException
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.uptimerobot.const import (
+from spencerassistant.components.binary_sensor import BinarySensorDeviceClass
+from spencerassistant.components.uptimerobot.const import (
     ATTRIBUTION,
     COORDINATOR_UPDATE_INTERVAL,
 )
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from spencerassistant.const import STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util import dt
 
 from .common import (
     MOCK_UPTIMEROBOT_MONITOR,
@@ -22,7 +22,7 @@ from .common import (
 from tests.common import async_fire_time_changed
 
 
-async def test_presentation(hass: HomeAssistant) -> None:
+async def test_presentation(hass: spencerAssistant) -> None:
     """Test the presenstation of UptimeRobot binary_sensors."""
     await setup_uptimerobot_integration(hass)
 
@@ -34,7 +34,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 
-async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
+async def test_unaviable_on_update_failure(hass: spencerAssistant) -> None:
     """Test entity unaviable on update failure."""
     await setup_uptimerobot_integration(hass)
 

@@ -3,16 +3,16 @@
 from copy import deepcopy
 from unittest.mock import patch
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from spencerassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_device import (
     API_DISCOVERY_RESPONSE,

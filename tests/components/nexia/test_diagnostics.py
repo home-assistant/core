@@ -161,7 +161,7 @@ async def test_diagnostics(hass, hass_client):
                 "West Wing will Run Schedule AND Downstairs "
                 "East Wing will Run Schedule AND Downstairs "
                 "West Wing will Run Schedule AND Activate the "
-                "mode named 'Home' AND Master Suite will Run "
+                "mode named 'spencer' AND Master Suite will Run "
                 "Schedule",
                 "enabled": True,
                 "icon": [
@@ -169,11 +169,11 @@ async def test_diagnostics(hass, hass_client):
                     {"modifiers": [], "name": "settings"},
                     {"modifiers": [], "name": "settings"},
                     {"modifiers": [], "name": "settings"},
-                    {"modifiers": [], "name": "at_home"},
+                    {"modifiers": [], "name": "at_spencer"},
                     {"modifiers": [], "name": "settings"},
                 ],
                 "id": 3452472,
-                "name": "Home",
+                "name": "spencer",
                 "settings": [],
                 "triggers": [],
             },
@@ -314,14 +314,14 @@ async def test_diagnostics(hass, hass_client):
                 "West Wing will Run Schedule AND Downstairs "
                 "East Wing will Run Schedule AND Downstairs "
                 "West Wing will Run Schedule AND Activate the "
-                "mode named 'Home'",
+                "mode named 'spencer'",
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
                     {"modifiers": [], "name": "settings"},
                     {"modifiers": [], "name": "settings"},
                     {"modifiers": [], "name": "settings"},
-                    {"modifiers": [], "name": "at_home"},
+                    {"modifiers": [], "name": "at_spencer"},
                 ],
                 "id": 3486091,
                 "name": "Power Restored",
@@ -546,10 +546,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -767,10 +767,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -988,10 +988,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -1209,10 +1209,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -1649,10 +1649,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -1856,10 +1856,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -2063,10 +2063,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -2270,10 +2270,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -2561,10 +2561,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -2782,10 +2782,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -3220,10 +3220,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -3427,10 +3427,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -3721,10 +3721,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -3945,10 +3945,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -4169,10 +4169,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -4393,10 +4393,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -4617,10 +4617,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -5058,10 +5058,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -5265,10 +5265,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -5472,10 +5472,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -5679,10 +5679,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -5886,10 +5886,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -6168,10 +6168,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -6389,10 +6389,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -6610,10 +6610,10 @@ async def test_diagnostics(hass, hass_client):
                                             }
                                         },
                                         "current_value": 0,
-                                        "labels": ["None", "Home", "Away", "Sleep"],
+                                        "labels": ["None", "spencer", "Away", "Sleep"],
                                         "options": [
                                             {"label": "None", "value": 0},
-                                            {"label": "Home", "value": 1},
+                                            {"label": "spencer", "value": 1},
                                             {"label": "Away", "value": 2},
                                             {"label": "Sleep", "value": 3},
                                         ],
@@ -7040,10 +7040,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -7247,10 +7247,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],
@@ -7454,10 +7454,10 @@ async def test_diagnostics(hass, hass_client):
                                     }
                                 },
                                 "current_value": 0,
-                                "labels": ["None", "Home", "Away", "Sleep"],
+                                "labels": ["None", "spencer", "Away", "Sleep"],
                                 "options": [
                                     {"label": "None", "value": 0},
-                                    {"label": "Home", "value": 1},
+                                    {"label": "spencer", "value": 1},
                                     {"label": "Away", "value": 2},
                                     {"label": "Sleep", "value": 3},
                                 ],

@@ -1,1 +1,1 @@
-"""Home Assistant scripts."""
+"""spencer Assistant scripts."""

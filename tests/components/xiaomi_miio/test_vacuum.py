@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from miio import DeviceException
 import pytest
 
-from homeassistant.components.vacuum import (
+from spencerassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
@@ -22,14 +22,14 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
-from homeassistant.components.xiaomi_miio.const import (
+from spencerassistant.components.xiaomi_miio.const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODELS_VACUUM,
 )
-from homeassistant.components.xiaomi_miio.vacuum import (
+from spencerassistant.components.xiaomi_miio.vacuum import (
     ATTR_ERROR,
     ATTR_TIMERS,
     SERVICE_CLEAN_SEGMENT,
@@ -40,7 +40,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
@@ -48,7 +48,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     STATE_UNAVAILABLE,
 )
-from homeassistant.util import dt as dt_util
+from spencerassistant.util import dt as dt_util
 
 from . import TEST_MAC
 
@@ -116,7 +116,7 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with patch(
-        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+        "spencerassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
@@ -152,7 +152,7 @@ def mirobo_old_speeds_fixture(request):
     )
 
     with patch(
-        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+        "spencerassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
@@ -214,7 +214,7 @@ def mirobo_is_on_fixture():
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with patch(
-        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+        "spencerassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
@@ -303,7 +303,7 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     await hass.services.async_call(
         DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": entity_id}, blocking=True
     )
-    mock_mirobo_is_got_error.assert_has_calls([mock.call.home()], any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls([mock.call.spencer()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 

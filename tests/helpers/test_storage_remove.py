@@ -4,17 +4,17 @@ from datetime import timedelta
 import os
 from unittest.mock import patch
 
-from homeassistant.helpers import storage
-from homeassistant.util import dt
+from spencerassistant.helpers import storage
+from spencerassistant.util import dt
 
-from tests.common import async_fire_time_changed, async_test_home_assistant
+from tests.common import async_fire_time_changed, async_test_spencer_assistant
 
 
 async def test_removing_while_delay_in_progress(tmpdir):
     """Test removing while delay in progress."""
 
     loop = asyncio.get_event_loop()
-    hass = await async_test_home_assistant(loop)
+    hass = await async_test_spencer_assistant(loop)
 
     test_dir = await hass.async_add_executor_job(tmpdir.mkdir, "storage")
 

@@ -1,7 +1,7 @@
 .. _exceptions_module:
 
-:mod:`homeassistant.exceptions`
+:mod:`spencerassistant.exceptions`
 -------------------------------
 
-.. automodule:: homeassistant.exceptions
+.. automodule:: spencerassistant.exceptions
     :members:

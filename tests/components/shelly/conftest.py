@@ -7,7 +7,7 @@ from aioshelly.block_device import BlockDevice
 from aioshelly.rpc_device import RpcDevice, UpdateType
 import pytest
 
-from homeassistant.components.shelly.const import (
+from spencerassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
@@ -189,7 +189,7 @@ MOCK_STATUS_RPC = {
 def mock_coap():
     """Mock out coap."""
     with patch(
-        "homeassistant.components.shelly.utils.COAP",
+        "spencerassistant.components.shelly.utils.COAP",
         return_value=Mock(
             initialize=AsyncMock(),
             close=Mock(),
@@ -201,7 +201,7 @@ def mock_coap():
 @pytest.fixture(autouse=True)
 def mock_ws_server():
     """Mock out ws_server."""
-    with patch("homeassistant.components.shelly.utils.get_ws_context"):
+    with patch("spencerassistant.components.shelly.utils.get_ws_context"):
         yield
 
 
@@ -282,7 +282,7 @@ async def mock_pre_ble_rpc_device():
 async def mock_rpc_device():
     """Mock rpc (Gen2, Websocket) device with BLE support."""
     with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock, patch(
-        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+        "spencerassistant.components.shelly.bluetooth.async_start_scanner"
     ):
 
         def update():

@@ -2,19 +2,19 @@
 
 from pywilight.const import DOMAIN
 
-from homeassistant.components import ssdp
-from homeassistant.components.ssdp import (
+from spencerassistant.components import ssdp
+from spencerassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_MODEL_NUMBER,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.components.wilight.config_flow import (
+from spencerassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_HOST
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -71,9 +71,9 @@ MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTURER = ssdp.SsdpServiceInfo(
 
 
 async def setup_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> MockConfigEntry:
-    """Mock ConfigEntry in Home Assistant."""
+    """Mock ConfigEntry in spencer Assistant."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,

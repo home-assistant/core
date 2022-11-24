@@ -3,11 +3,11 @@ import copy
 import dataclasses
 from unittest.mock import patch
 
-from homeassistant.components import ssdp
-from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components import ssdp
+from spencerassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_NAME
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     CONF_DATA,
@@ -50,7 +50,7 @@ def _flow_next(hass, flow_id):
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.songpal.async_setup_entry",
+        "spencerassistant.components.songpal.async_setup_entry",
         return_value=True,
     )
 

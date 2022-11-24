@@ -1,7 +1,7 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
-from homeassistant.components.light import ColorMode
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.light import ColorMode
+from spencerassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY

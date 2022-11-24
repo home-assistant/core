@@ -1,10 +1,10 @@
 """Tests for Shelly sensor platform."""
 
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import State
-from homeassistant.helpers.entity_registry import async_get
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from spencerassistant.core import State
+from spencerassistant.helpers.entity_registry import async_get
 
 from . import (
     init_integration,

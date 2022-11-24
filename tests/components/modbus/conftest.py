@@ -8,10 +8,10 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SLAVE, CONF_TYPE
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
+from spencerassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -37,15 +37,15 @@ def mock_pymodbus_fixture():
     """Mock pymodbus."""
     mock_pb = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "spencerassistant.components.modbus.modbus.ModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        "spencerassistant.components.modbus.modbus.ModbusSerialClient",
         return_value=mock_pb,
         autospec=True,
     ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient",
+        "spencerassistant.components.modbus.modbus.ModbusUdpClient",
         return_value=mock_pb,
         autospec=True,
     ):
@@ -102,13 +102,13 @@ async def mock_modbus_fixture(
     }
     mock_pb = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        "spencerassistant.components.modbus.modbus.ModbusTcpClient",
         return_value=mock_pb,
         autospec=True,
     ):
         now = dt_util.utcnow()
         with mock.patch(
-            "homeassistant.helpers.event.dt_util.utcnow",
+            "spencerassistant.helpers.event.dt_util.utcnow",
             return_value=now,
             autospec=True,
         ):
@@ -144,7 +144,7 @@ async def mock_do_cycle_fixture(hass, mock_pymodbus_exception, mock_pymodbus_ret
     """Trigger update call with time_changed event."""
     now = dt_util.utcnow() + timedelta(seconds=90)
     with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+        "spencerassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
     ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
@@ -155,7 +155,7 @@ async def do_next_cycle(hass, now, cycle):
     """Trigger update call with time_changed event."""
     now += timedelta(seconds=cycle)
     with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+        "spencerassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
     ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
@@ -171,8 +171,8 @@ async def mock_test_state_fixture(hass, request):
 
 @pytest.fixture(name="mock_ha")
 async def mock_ha_fixture(hass, mock_pymodbus_return):
-    """Load homeassistant to allow service calls."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    """Load spencerassistant to allow service calls."""
+    assert await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
 
 

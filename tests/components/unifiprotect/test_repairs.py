@@ -8,21 +8,21 @@ from unittest.mock import Mock
 
 from pyunifiprotect.data import Version
 
-from homeassistant.components.repairs.issue_handler import (
+from spencerassistant.components.repairs.issue_handler import (
     async_process_repairs_platforms,
 )
-from homeassistant.components.repairs.websocket_api import (
+from spencerassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
 )
-from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.unifiprotect.const import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from .utils import MockUFPFixture, init_entry
 
 
 async def test_ea_warning_ignore(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     hass_client,
     hass_ws_client,
@@ -71,7 +71,7 @@ async def test_ea_warning_ignore(
 
 
 async def test_ea_warning_fix(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     hass_client,
     hass_ws_client,

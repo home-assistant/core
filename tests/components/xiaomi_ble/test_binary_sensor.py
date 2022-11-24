@@ -1,7 +1,7 @@
 """Test Xiaomi binary sensors."""
 
-from homeassistant.components.xiaomi_ble.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from spencerassistant.components.xiaomi_ble.const import DOMAIN
+from spencerassistant.const import ATTR_FRIENDLY_NAME
 
 from . import make_advertisement
 

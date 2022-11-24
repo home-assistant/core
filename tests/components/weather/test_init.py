@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 from pytest import approx
 
-from homeassistant.components.weather import (
+from spencerassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     ATTR_FORECAST_PRECIPITATION,
@@ -29,7 +29,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
     round_temperature,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -47,14 +47,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
-from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.distance import convert as convert_distance
+from spencerassistant.util.pressure import convert as convert_pressure
+from spencerassistant.util.speed import convert as convert_speed
+from spencerassistant.util.temperature import convert as convert_temperature
+from spencerassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 
@@ -121,7 +121,7 @@ class MockWeatherEntityCompat(WeatherEntity):
         ]
 
 
-async def create_entity(hass: HomeAssistant, **kwargs):
+async def create_entity(hass: spencerAssistant, **kwargs):
     """Create the weather entity to run tests on."""
     kwargs = {"native_temperature": None, "native_temperature_unit": None, **kwargs}
     platform: WeatherPlatform = getattr(hass.components, "test.weather")
@@ -146,7 +146,7 @@ async def create_entity(hass: HomeAssistant, **kwargs):
     ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
 )
 async def test_temperature(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -179,7 +179,7 @@ async def test_temperature(
     ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
 )
 async def test_temperature_no_unit(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -212,7 +212,7 @@ async def test_temperature_no_unit(
     ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -240,7 +240,7 @@ async def test_pressure(
     ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure_no_unit(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -274,7 +274,7 @@ async def test_pressure_no_unit(
     ),
 )
 async def test_wind_speed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -308,7 +308,7 @@ async def test_wind_speed(
     ),
 )
 async def test_wind_speed_no_unit(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -342,7 +342,7 @@ async def test_wind_speed_no_unit(
     ),
 )
 async def test_visibility(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -373,7 +373,7 @@ async def test_visibility(
     ),
 )
 async def test_visibility_no_unit(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -404,7 +404,7 @@ async def test_visibility_no_unit(
     ),
 )
 async def test_precipitation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -435,7 +435,7 @@ async def test_precipitation(
     ),
 )
 async def test_precipitation_no_unit(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
     native_unit: str,
     state_unit: str,
@@ -458,7 +458,7 @@ async def test_precipitation_no_unit(
 
 
 async def test_wind_bearing_and_ozone(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
 ):
     """Test wind bearing."""
@@ -475,7 +475,7 @@ async def test_wind_bearing_and_ozone(
 
 
 async def test_none_forecast(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     enable_custom_integrations,
 ):
     """Test that conversion with None values succeeds."""
@@ -497,7 +497,7 @@ async def test_none_forecast(
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
 
 
-async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> None:
+async def test_custom_units(hass: spencerAssistant, enable_custom_integrations) -> None:
     """Test custom unit."""
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
@@ -605,7 +605,7 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
 
 
 async def test_backwards_compatibility(
-    hass: HomeAssistant, enable_custom_integrations
+    hass: spencerAssistant, enable_custom_integrations
 ) -> None:
     """Test backwards compatibility."""
     wind_speed_value = 5
@@ -705,7 +705,7 @@ async def test_backwards_compatibility(
 
 
 async def test_backwards_compatibility_convert_values(
-    hass: HomeAssistant, enable_custom_integrations
+    hass: spencerAssistant, enable_custom_integrations
 ) -> None:
     """Test backward compatibility for converting values."""
     wind_speed_value = 5
@@ -793,7 +793,7 @@ async def test_backwards_compatibility_convert_values(
     }
 
 
-async def test_backwards_compatibility_round_temperature(hass: HomeAssistant) -> None:
+async def test_backwards_compatibility_round_temperature(hass: spencerAssistant) -> None:
     """Test backward compatibility for rounding temperature."""
 
     assert round_temperature(20.3, PRECISION_HALVES) == 20.5
@@ -802,7 +802,7 @@ async def test_backwards_compatibility_round_temperature(hass: HomeAssistant) ->
     assert round_temperature(None, PRECISION_WHOLE) is None
 
 
-async def test_attr(hass: HomeAssistant) -> None:
+async def test_attr(hass: spencerAssistant) -> None:
     """Test the _attr attributes."""
 
     weather = MockWeatherEntity()
@@ -825,7 +825,7 @@ async def test_attr(hass: HomeAssistant) -> None:
     assert weather._wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
 
 
-async def test_attr_compatibility(hass: HomeAssistant) -> None:
+async def test_attr_compatibility(hass: spencerAssistant) -> None:
     """Test the _attr attributes in compatibility mode."""
 
     weather = MockWeatherEntityCompat()
@@ -866,7 +866,7 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
     }
 
 
-async def test_precision_for_temperature(hass: HomeAssistant) -> None:
+async def test_precision_for_temperature(hass: spencerAssistant) -> None:
     """Test the precision for temperature."""
 
     weather = MockWeatherEntityPrecision()

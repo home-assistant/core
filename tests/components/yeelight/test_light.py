@@ -21,7 +21,7 @@ from yeelight import (
 from yeelight.flow import Action, Flow
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
@@ -37,7 +37,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     LightEntityFeature,
 )
-from homeassistant.components.yeelight.const import (
+from spencerassistant.components.yeelight.const import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
@@ -57,7 +57,7 @@ from homeassistant.components.yeelight.const import (
     YEELIGHT_SLEEP_TRANSACTION,
     YEELIGHT_TEMPERATURE_TRANSACTION,
 )
-from homeassistant.components.yeelight.light import (
+from spencerassistant.components.yeelight.light import (
     ATTR_MINUTES,
     ATTR_MODE,
     EFFECT_CANDLE_FLICKER,
@@ -66,7 +66,7 @@ from homeassistant.components.yeelight.light import (
     EFFECT_FACEBOOK,
     EFFECT_FAST_RANDOM_LOOP,
     EFFECT_HAPPY_BIRTHDAY,
-    EFFECT_HOME,
+    EFFECT_spencer,
     EFFECT_MOVIE,
     EFFECT_NIGHT_MODE,
     EFFECT_ROMANCE,
@@ -87,7 +87,7 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
@@ -95,12 +95,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-from homeassistant.util.color import (
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
+from spencerassistant.util.color import (
     color_hs_to_RGB,
     color_hs_to_xy,
     color_RGB_to_hs,
@@ -138,9 +138,9 @@ SUPPORT_YEELIGHT = (
 )
 
 
-async def test_services(hass: HomeAssistant, caplog):
+async def test_services(hass: spencerAssistant, caplog):
     """Test Yeelight services."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "spencerassistant", {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -168,7 +168,7 @@ async def test_services(hass: HomeAssistant, caplog):
         method,
         payload=None,
         domain=DOMAIN,
-        failure_side_effect=HomeAssistantError,
+        failure_side_effect=spencerAssistantError,
     ):
         err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
 
@@ -486,7 +486,7 @@ async def test_services(hass: HomeAssistant, caplog):
     mocked_bulb.last_properties["power"] = "off"
     mocked_bulb.available = True
     await hass.services.async_call(
-        "homeassistant",
+        "spencerassistant",
         "update_entity",
         {ATTR_ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
@@ -495,7 +495,7 @@ async def test_services(hass: HomeAssistant, caplog):
 
     mocked_bulb.async_turn_on = AsyncMock()
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=BulbException)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
@@ -505,7 +505,7 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
@@ -515,7 +515,7 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=socket.error)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
@@ -525,9 +525,9 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_update_errors(hass: HomeAssistant, caplog):
+async def test_update_errors(hass: spencerAssistant, caplog):
     """Test update errors."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "spencerassistant", {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -552,7 +552,7 @@ async def test_update_errors(hass: HomeAssistant, caplog):
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
     mocked_bulb.async_turn_off = AsyncMock(side_effect=asyncio.TimeoutError)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "light",
             SERVICE_TURN_OFF,
@@ -565,7 +565,7 @@ async def test_update_errors(hass: HomeAssistant, caplog):
     # or lost wifi, then came back online and forced the existing
     # connection closed with a TCP RST
     mocked_bulb.async_turn_off = AsyncMock(side_effect=socket.error)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             "light",
             SERVICE_TURN_OFF,
@@ -575,7 +575,7 @@ async def test_update_errors(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
-async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
+async def test_state_already_set_avoid_ratelimit(hass: spencerAssistant):
     """Ensure we suppress state changes that will increase the rate limit when there is no change."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -766,7 +766,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb.last_properties["flowing"] = "0"
 
 
-async def test_device_types(hass: HomeAssistant, caplog):
+async def test_device_types(hass: spencerAssistant, caplog):
     """Test different device types."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -1336,7 +1336,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
     )
 
 
-async def test_effects(hass: HomeAssistant):
+async def test_effects(hass: spencerAssistant):
     """Test effects."""
     assert await async_setup_component(
         hass,
@@ -1410,7 +1410,7 @@ async def test_effects(hass: HomeAssistant):
         EFFECT_WHATSAPP: Flow(count=2, transitions=transitions.pulse(37, 211, 102)),
         EFFECT_FACEBOOK: Flow(count=2, transitions=transitions.pulse(59, 89, 152)),
         EFFECT_TWITTER: Flow(count=2, transitions=transitions.pulse(0, 172, 237)),
-        EFFECT_HOME: Flow(
+        EFFECT_spencer: Flow(
             count=0,
             action=Action.recover,
             transitions=[
@@ -1507,7 +1507,7 @@ async def test_effects(hass: HomeAssistant):
     await _async_test_effect("not_existed", called=False)
 
 
-async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
+async def test_ambilight_with_nightlight_disabled(hass: spencerAssistant):
     """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
@@ -1541,7 +1541,7 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant):
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
 
-async def test_state_fails_to_update_triggers_update(hass: HomeAssistant):
+async def test_state_fails_to_update_triggers_update(hass: spencerAssistant):
     """Ensure we call async_get_properties if the turn on/off fails to update the state."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}

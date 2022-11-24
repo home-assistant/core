@@ -1,7 +1,7 @@
 """Tests for the Atag sensor platform."""
-from homeassistant.components.atag.sensor import SENSORS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.atag.sensor import SENSORS
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import UID, init_integration
 
@@ -9,7 +9,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation of ATAG sensors."""
     entry = await init_integration(hass, aioclient_mock)

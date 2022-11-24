@@ -1,13 +1,13 @@
 """The tests for Netatmo light."""
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.netatmo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
+from spencerassistant.components.netatmo import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
 from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
@@ -53,7 +53,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
     assert hass.states.get(light_entity).state == "on"
 
     # Test turning light off
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -66,7 +66,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
         )
 
     # Test turning light on
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -94,13 +94,13 @@ async def test_setup_component_no_devices(hass, config_entry):
         )
 
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        "spencerassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", ["light"]
+        "spencerassistant.components.netatmo.PLATFORMS", ["light"]
     ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "spencerassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "spencerassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_api_request.side_effect = (
             fake_post_request_no_data
@@ -135,7 +135,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     assert hass.states.get(light_entity).state == "off"
 
     # Test turning light off
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -156,7 +156,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
         )
 
     # Test turning light on
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,

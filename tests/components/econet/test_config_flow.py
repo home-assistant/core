@@ -4,10 +4,10 @@ from unittest.mock import patch
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 
-from homeassistant.components.econet import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.econet import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_EMAIL, CONF_PASSWORD
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -24,8 +24,8 @@ async def test_bad_credentials(hass):
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         side_effect=InvalidCredentialsError(),
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
+    ), patch("spencerassistant.components.econet.async_setup", return_value=True), patch(
+        "spencerassistant.components.econet.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -54,8 +54,8 @@ async def test_generic_error_from_library(hass):
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         side_effect=PyeconetError(),
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
+    ), patch("spencerassistant.components.econet.async_setup", return_value=True), patch(
+        "spencerassistant.components.econet.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,8 +84,8 @@ async def test_auth_worked(hass):
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         return_value=EcoNetApiInterface,
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
+    ), patch("spencerassistant.components.econet.async_setup", return_value=True), patch(
+        "spencerassistant.components.econet.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -121,8 +121,8 @@ async def test_already_configured(hass):
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         return_value=EcoNetApiInterface,
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
+    ), patch("spencerassistant.components.econet.async_setup", return_value=True), patch(
+        "spencerassistant.components.econet.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -1,13 +1,13 @@
 """The tests for NEW_NAME device actions."""
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.components.NEW_DOMAIN import DOMAIN
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry, entity_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -20,19 +20,19 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
+def device_reg(hass: spencerAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
+def entity_reg(hass: spencerAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 async def test_get_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device_reg: device_registry.DeviceRegistry,
     entity_reg: entity_registry.EntityRegistry,
 ) -> None:
@@ -106,7 +106,7 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: spencerAssistant) -> None:
     """Test for turn_on and turn_off actions."""
     assert await async_setup_component(
         hass,

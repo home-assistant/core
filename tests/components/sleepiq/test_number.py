@@ -1,5 +1,5 @@
 """The tests for SleepIQ number platform."""
-from homeassistant.components.number import (
+from spencerassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -7,8 +7,8 @@ from homeassistant.components.number import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from spencerassistant.helpers import entity_registry as er
 
 from .conftest import (
     BED_ID,

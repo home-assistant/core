@@ -1,7 +1,7 @@
 """Tests for the filesize component."""
 import os
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 TEST_DIR = os.path.join(os.path.dirname(__file__))
 TEST_FILE_NAME = "mock_file_test_filesize.txt"
@@ -10,7 +10,7 @@ TEST_FILE = os.path.join(TEST_DIR, TEST_FILE_NAME)
 TEST_FILE2 = os.path.join(TEST_DIR, TEST_FILE_NAME2)
 
 
-async def async_create_file(hass: HomeAssistant, path: str) -> None:
+async def async_create_file(hass: spencerAssistant, path: str) -> None:
     """Create a test file."""
     await hass.async_add_executor_job(create_file, path)
 

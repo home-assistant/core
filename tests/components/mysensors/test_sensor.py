@@ -6,12 +6,12 @@ from collections.abc import Callable
 from mysensors.sensor import Sensor
 import pytest
 
-from homeassistant.components.sensor import (
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -20,8 +20,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import (
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_gps_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     gps_sensor: Sensor,
     receive_message: Callable[[str], None],
 ) -> None:
@@ -60,7 +60,7 @@ async def test_gps_sensor(
 
 
 async def test_power_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     power_sensor: Sensor,
     integration: MockConfigEntry,
 ) -> None:
@@ -77,7 +77,7 @@ async def test_power_sensor(
 
 
 async def test_energy_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     energy_sensor: Sensor,
     integration: MockConfigEntry,
 ) -> None:
@@ -94,7 +94,7 @@ async def test_energy_sensor(
 
 
 async def test_sound_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     sound_sensor: Sensor,
     integration: MockConfigEntry,
 ) -> None:
@@ -110,7 +110,7 @@ async def test_sound_sensor(
 
 
 async def test_distance_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     distance_sensor: Sensor,
     integration: MockConfigEntry,
 ) -> None:
@@ -131,7 +131,7 @@ async def test_distance_sensor(
     [(METRIC_SYSTEM, TEMP_CELSIUS), (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT)],
 )
 async def test_temperature_sensor(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     temperature_sensor: Sensor,
     receive_message: Callable[[str], None],
     unit_system: UnitSystem,

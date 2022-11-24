@@ -6,8 +6,8 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate, mqtt
-from homeassistant.components.climate import (
+from spencerassistant.components import climate, mqtt
+from spencerassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -22,9 +22,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_TEMPERATURE, Platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+from spencerassistant.const import ATTR_TEMPERATURE, Platform
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -79,7 +79,7 @@ DEFAULT_CONFIG = {
                 "away",
                 "boost",
                 "comfort",
-                "home",
+                "spencer",
                 "sleep",
                 "activity",
             ],
@@ -91,7 +91,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def climate_platform_only():
     """Only setup the climate platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE]):
         yield
 
 
@@ -523,7 +523,7 @@ async def test_handle_action_received(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get(ENTITY_CLIMATE)
     hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
     assert hvac_action is None
-    # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
+    # Redefine actions according to https://developers.spencer-assistant.io/docs/core/entity/climate/#hvac-action
     actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
     assert all(elem in actions for elem in HVACAction)
     for action in actions:
@@ -614,9 +614,9 @@ async def test_set_preset_mode_pessimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "none"
 
-    async_fire_mqtt_message(hass, "preset-mode-state", "home")
+    async_fire_mqtt_message(hass, "preset-mode-state", "spencer")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "home"
+    assert state.attributes.get("preset_mode") == "spencer"
 
     async_fire_mqtt_message(hass, "preset-mode-state", "nonsense")
     assert (
@@ -625,7 +625,7 @@ async def test_set_preset_mode_pessimistic(
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "home"
+    assert state.attributes.get("preset_mode") == "spencer"
 
 
 async def test_set_aux_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
@@ -1138,7 +1138,7 @@ async def test_discovery_update_unchanged_climate(
     """Test update of discovered climate."""
     data1 = '{ "name": "Beer" }'
     with patch(
-        "homeassistant.components.mqtt.climate.MqttClimate.discovery_update"
+        "spencerassistant.components.mqtt.climate.MqttClimate.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

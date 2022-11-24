@@ -2,7 +2,7 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.ecobee.util import ecobee_date, ecobee_time
+from spencerassistant.components.ecobee.util import ecobee_date, ecobee_time
 
 
 async def test_ecobee_date_with_valid_input():

@@ -1,10 +1,10 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
 import pytest
 
-from homeassistant.components.arcam_fmj.const import DOMAIN
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.arcam_fmj.const import DOMAIN
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

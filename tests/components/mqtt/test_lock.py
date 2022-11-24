@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import lock, mqtt
-from homeassistant.components.lock import (
+from spencerassistant.components import lock, mqtt
+from spencerassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
@@ -12,14 +12,14 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     LockEntityFeature,
 )
-from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
+from spencerassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -61,7 +61,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def lock_platform_only():
     """Only setup the lock platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
         yield
 
 
@@ -594,7 +594,7 @@ async def test_discovery_update_unchanged_lock(
         '  "command_topic": "command_topic" }'
     )
     with patch(
-        "homeassistant.components.mqtt.lock.MqttLock.discovery_update"
+        "spencerassistant.components.mqtt.lock.MqttLock.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.input_select import (
+from spencerassistant.components.input_select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     CONF_INITIAL,
@@ -18,7 +18,7 @@ from homeassistant.components.input_select import (
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -26,10 +26,10 @@ from homeassistant.const import (
     ATTR_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, State
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import Context, State
+from spencerassistant.exceptions import spencerAssistantError, Unauthorized
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
 
@@ -348,7 +348,7 @@ async def test_set_options_service_duplicate(hass):
         "last option",
     ]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_OPTIONS,
@@ -480,7 +480,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={
             DOMAIN: {
@@ -790,7 +790,7 @@ async def test_setup_no_config(hass, hass_admin_user):
     assert await async_setup_component(hass, DOMAIN, {})
 
     with patch(
-        "homeassistant.config.load_yaml_config_file", autospec=True, return_value={}
+        "spencerassistant.config.load_yaml_config_file", autospec=True, return_value={}
     ):
         await hass.services.async_call(
             DOMAIN,

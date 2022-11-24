@@ -6,8 +6,8 @@ import pywilight
 from pywilight.const import DOMAIN
 import requests
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import (
     HOST,
@@ -40,7 +40,7 @@ def mock_dummy_device_from_host():
         yield device
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_config_entry_not_ready(hass: spencerAssistant) -> None:
     """Test the WiLight configuration entry not ready."""
     with patch(
         "pywilight.device_from_host",
@@ -51,7 +51,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_config_entry(hass: HomeAssistant, dummy_device_from_host) -> None:
+async def test_unload_config_entry(hass: spencerAssistant, dummy_device_from_host) -> None:
     """Test the WiLight configuration entry unloading."""
     entry = await setup_integration(hass)
 

@@ -7,7 +7,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.fan import (
+from spencerassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
@@ -17,8 +17,8 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     NotValidPresetModeError,
 )
-from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
-from homeassistant.const import (
+from spencerassistant.components.zwave_js.fan import ATTR_FAN_STATE
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
@@ -28,8 +28,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import entity_registry
 
 
 async def test_generic_fan(hass, client, fan_generic, integration):
@@ -787,7 +787,7 @@ async def test_thermostat_fan_without_off(
     assert state.state == STATE_UNKNOWN
 
     # Test turning off
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_OFF,
@@ -801,7 +801,7 @@ async def test_thermostat_fan_without_off(
     client.async_send_command.reset_mock()
 
     # Test turning on
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,

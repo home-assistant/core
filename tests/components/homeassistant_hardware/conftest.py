@@ -1,4 +1,4 @@
-"""Test fixtures for the Home Assistant Hardware integration."""
+"""Test fixtures for the spencer Assistant Hardware integration."""
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -23,10 +23,10 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     with patch(
         "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
     ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "spencerassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
         return_value=mock_connect_app,
     ), patch(
-        "homeassistant.components.zha.async_setup_entry",
+        "spencerassistant.components.zha.async_setup_entry",
         return_value=True,
     ):
         yield
@@ -64,7 +64,7 @@ def mock_addon_installed(addon_store_info, addon_info):
 def addon_store_info_fixture():
     """Mock Supervisor add-on store info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
             "installed": None,
@@ -78,7 +78,7 @@ def addon_store_info_fixture():
 def addon_info_fixture():
     """Mock Supervisor add-on info."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
+        "spencerassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
             "hostname": None,
@@ -94,7 +94,7 @@ def addon_info_fixture():
 def set_addon_options_fixture():
     """Mock set add-on options."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_set_addon_options"
+        "spencerassistant.components.hassio.addon_manager.async_set_addon_options"
     ) as set_options:
         yield set_options
 
@@ -121,7 +121,7 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
 def mock_install_addon(install_addon_side_effect):
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon",
+        "spencerassistant.components.hassio.addon_manager.async_install_addon",
         side_effect=install_addon_side_effect,
     ) as install_addon:
         yield install_addon
@@ -131,6 +131,6 @@ def mock_install_addon(install_addon_side_effect):
 def start_addon_fixture():
     """Mock start add-on."""
     with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon"
+        "spencerassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon

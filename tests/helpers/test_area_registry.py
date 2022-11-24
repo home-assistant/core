@@ -1,8 +1,8 @@
 """Tests for the Area Registry."""
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.helpers import area_registry
+from spencerassistant.core import callback
+from spencerassistant.helpers import area_registry
 
 from tests.common import flush_store, mock_area_registry
 

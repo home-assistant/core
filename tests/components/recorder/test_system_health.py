@@ -4,10 +4,10 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.const import SupportedDialect
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.recorder import get_instance
+from spencerassistant.components.recorder.const import SupportedDialect
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .common import async_wait_recording_done
 
@@ -41,7 +41,7 @@ async def test_recorder_system_health_alternate_dbms(recorder_mock, hass, dialec
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
     with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+        "spencerassistant.components.recorder.core.Recorder.dialect_name", dialect_name
     ), patch(
         "sqlalchemy.orm.session.Session.execute",
         return_value=Mock(first=Mock(return_value=("1048576",))),
@@ -69,11 +69,11 @@ async def test_recorder_system_health_db_url_missing_host(
 
     instance = get_instance(hass)
     with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+        "spencerassistant.components.recorder.core.Recorder.dialect_name", dialect_name
     ), patch.object(
         instance,
         "db_url",
-        "postgresql://homeassistant:blabla@/home_assistant?host=/config/socket",
+        "postgresql://spencerassistant:blabla@/spencer_assistant?host=/config/socket",
     ), patch(
         "sqlalchemy.orm.session.Session.execute",
         return_value=Mock(first=Mock(return_value=("1048576",))),
@@ -90,7 +90,7 @@ async def test_recorder_system_health_db_url_missing_host(
 
 async def test_recorder_system_health_crashed_recorder_runs_table(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     recorder_db_url: str,
 ):
     """Test recorder system health with crashed recorder runs table."""
@@ -98,7 +98,7 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
         # This test is specific for SQLite
         return
 
-    with patch("homeassistant.components.recorder.run_history.RunHistory.load_from_db"):
+    with patch("spencerassistant.components.recorder.run_history.RunHistory.load_from_db"):
         assert await async_setup_component(hass, "system_health", {})
         instance = await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)

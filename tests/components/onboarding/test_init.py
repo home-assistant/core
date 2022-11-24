@@ -1,8 +1,8 @@
 """Tests for the init."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components import onboarding
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import onboarding
+from spencerassistant.setup import async_setup_component
 
 from . import mock_storage
 
@@ -15,7 +15,7 @@ async def test_not_setup_views_if_onboarded(hass, hass_storage):
     """Test if onboarding is done, we don't setup views."""
     mock_storage(hass_storage, {"done": onboarding.STEPS})
 
-    with patch("homeassistant.components.onboarding.views.async_setup") as mock_setup:
+    with patch("spencerassistant.components.onboarding.views.async_setup") as mock_setup:
         assert await async_setup_component(hass, "onboarding", {})
 
     assert len(mock_setup.mock_calls) == 0
@@ -26,7 +26,7 @@ async def test_not_setup_views_if_onboarded(hass, hass_storage):
 async def test_setup_views_if_not_onboarded(hass):
     """Test if onboarding is not done, we setup views."""
     with patch(
-        "homeassistant.components.onboarding.views.async_setup",
+        "spencerassistant.components.onboarding.views.async_setup",
         return_value=mock_coro(),
     ) as mock_setup:
         assert await async_setup_component(hass, "onboarding", {})
@@ -70,7 +70,7 @@ async def test_having_owner_finishes_user_step(hass, hass_storage):
     MockUser(is_owner=True).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.onboarding.views.async_setup"
+        "spencerassistant.components.onboarding.views.async_setup"
     ) as mock_setup, patch.object(onboarding, "STEPS", [onboarding.STEP_USER]):
         assert await async_setup_component(hass, "onboarding", {})
 

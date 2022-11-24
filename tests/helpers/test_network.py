@@ -3,10 +3,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import cloud
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import (
+from spencerassistant.components import cloud
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.network import (
     NoURLAvailableError,
     _get_cloud_url,
     _get_external_url,
@@ -26,13 +26,13 @@ def mock_current_request_mock():
     """Mock the current request."""
     mock_current_request = Mock(name="mock_request")
     with patch(
-        "homeassistant.helpers.network.http.current_request",
+        "spencerassistant.helpers.network.http.current_request",
         Mock(get=mock_current_request),
     ):
         yield mock_current_request
 
 
-async def test_get_url_internal(hass: HomeAssistant):
+async def test_get_url_internal(hass: spencerAssistant):
     """Test getting an instance URL when the user has set an internal URL."""
     assert hass.config.internal_url is None
 
@@ -59,7 +59,7 @@ async def test_get_url_internal(hass: HomeAssistant):
         _get_internal_url(hass, require_current_request=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "spencerassistant.helpers.network._get_request_host", return_value="example.local"
     ):
         assert (
             _get_internal_url(hass, require_current_request=True)
@@ -75,7 +75,7 @@ async def test_get_url_internal(hass: HomeAssistant):
             _get_internal_url(hass, require_current_request=True, require_ssl=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
+        "spencerassistant.helpers.network._get_request_host",
         return_value="no_match.example.local",
     ), pytest.raises(NoURLAvailableError):
         _get_internal_url(hass, require_current_request=True)
@@ -155,7 +155,7 @@ async def test_get_url_internal(hass: HomeAssistant):
         _get_internal_url(hass, allow_ip=False)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
+        "spencerassistant.helpers.network._get_request_host", return_value="192.168.0.1"
     ):
         assert (
             _get_internal_url(hass, require_current_request=True)
@@ -174,7 +174,7 @@ async def test_get_url_internal(hass: HomeAssistant):
             _get_internal_url(hass, require_current_request=True, require_ssl=True)
 
 
-async def test_get_url_internal_fallback(hass: HomeAssistant):
+async def test_get_url_internal_fallback(hass: spencerAssistant):
     """Test getting an instance URL when the user has not set an internal URL."""
     assert hass.config.internal_url is None
 
@@ -230,7 +230,7 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
         _get_internal_url(hass, require_ssl=True)
 
 
-async def test_get_url_external(hass: HomeAssistant):
+async def test_get_url_external(hass: spencerAssistant):
     """Test getting an instance URL when the user has set an external URL."""
     assert hass.config.external_url is None
 
@@ -259,7 +259,7 @@ async def test_get_url_external(hass: HomeAssistant):
         _get_external_url(hass, require_current_request=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.com"
+        "spencerassistant.helpers.network._get_request_host", return_value="example.com"
     ):
         assert (
             _get_external_url(hass, require_current_request=True)
@@ -275,7 +275,7 @@ async def test_get_url_external(hass: HomeAssistant):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
+        "spencerassistant.helpers.network._get_request_host",
         return_value="no_match.example.com",
     ), pytest.raises(NoURLAvailableError):
         _get_external_url(hass, require_current_request=True)
@@ -342,7 +342,7 @@ async def test_get_url_external(hass: HomeAssistant):
         _get_external_url(hass, require_ssl=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
+        "spencerassistant.helpers.network._get_request_host", return_value="192.168.0.1"
     ):
         assert (
             _get_external_url(hass, require_current_request=True)
@@ -356,7 +356,7 @@ async def test_get_url_external(hass: HomeAssistant):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
 
-async def test_get_cloud_url(hass: HomeAssistant):
+async def test_get_cloud_url(hass: spencerAssistant):
     """Test getting an instance URL when the user has set an external URL."""
     assert hass.config.external_url is None
     hass.config.components.add("cloud")
@@ -372,7 +372,7 @@ async def test_get_cloud_url(hass: HomeAssistant):
             _get_cloud_url(hass, require_current_request=True)
 
         with patch(
-            "homeassistant.helpers.network._get_request_host",
+            "spencerassistant.helpers.network._get_request_host",
             return_value="example.nabu.casa",
         ):
             assert (
@@ -381,7 +381,7 @@ async def test_get_cloud_url(hass: HomeAssistant):
             )
 
         with patch(
-            "homeassistant.helpers.network._get_request_host",
+            "spencerassistant.helpers.network._get_request_host",
             return_value="no_match.nabu.casa",
         ), pytest.raises(NoURLAvailableError):
             _get_cloud_url(hass, require_current_request=True)
@@ -394,7 +394,7 @@ async def test_get_cloud_url(hass: HomeAssistant):
         _get_cloud_url(hass)
 
 
-async def test_get_external_url_cloud_fallback(hass: HomeAssistant):
+async def test_get_external_url_cloud_fallback(hass: spencerAssistant):
     """Test getting an external instance URL with cloud fallback."""
     assert hass.config.external_url is None
 
@@ -454,7 +454,7 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant):
         )
 
 
-async def test_get_url(hass: HomeAssistant):
+async def test_get_url(hass: spencerAssistant):
     """Test getting an instance URL."""
     assert hass.config.external_url is None
     assert hass.config.internal_url is None
@@ -510,8 +510,8 @@ async def test_get_url(hass: HomeAssistant):
         get_url(hass, require_current_request=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.com"
-    ), patch("homeassistant.components.http.current_request"):
+        "spencerassistant.helpers.network._get_request_host", return_value="example.com"
+    ), patch("spencerassistant.components.http.current_request"):
         assert get_url(hass, require_current_request=True) == "https://example.com"
         assert (
             get_url(hass, require_current_request=True, require_ssl=True)
@@ -522,8 +522,8 @@ async def test_get_url(hass: HomeAssistant):
             get_url(hass, require_current_request=True, allow_external=False)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ), patch("homeassistant.components.http.current_request"):
+        "spencerassistant.helpers.network._get_request_host", return_value="example.local"
+    ), patch("spencerassistant.components.http.current_request"):
         assert get_url(hass, require_current_request=True) == "http://example.local"
 
         with pytest.raises(NoURLAvailableError):
@@ -533,7 +533,7 @@ async def test_get_url(hass: HomeAssistant):
             get_url(hass, require_current_request=True, require_ssl=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
+        "spencerassistant.helpers.network._get_request_host",
         return_value="no_match.example.com",
     ), pytest.raises(NoURLAvailableError):
         _get_internal_url(hass, require_current_request=True)
@@ -552,12 +552,12 @@ async def test_get_url(hass: HomeAssistant):
         assert get_url(hass, allow_internal=False)
 
 
-async def test_get_request_host(hass: HomeAssistant):
+async def test_get_request_host(hass: spencerAssistant):
     """Test getting the host of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("spencerassistant.components.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.url = "http://example.com:8123/test/request"
         mock_request_context.get = Mock(return_value=mock_request)
@@ -566,7 +566,7 @@ async def test_get_request_host(hass: HomeAssistant):
 
 
 async def test_get_current_request_url_with_known_host(
-    hass: HomeAssistant, current_request
+    hass: spencerAssistant, current_request
 ):
     """Test getting current request URL with known hosts addresses."""
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="127.0.0.1")
@@ -577,7 +577,7 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure we accept localhost
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="localhost"
+        "spencerassistant.helpers.network._get_request_host", return_value="localhost"
     ):
         assert get_url(hass, require_current_request=True) == "http://localhost:8123"
         with pytest.raises(NoURLAvailableError):
@@ -587,7 +587,7 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure we accept local loopback ip (e.g., 127.0.0.1)
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="127.0.0.8"
+        "spencerassistant.helpers.network._get_request_host", return_value="127.0.0.8"
     ):
         assert get_url(hass, require_current_request=True) == "http://127.0.0.8:8123"
         with pytest.raises(NoURLAvailableError):
@@ -597,33 +597,33 @@ async def test_get_current_request_url_with_known_host(
     mock_component(hass, "hassio")
     hass.components.hassio.is_hassio = Mock(return_value=True)
     hass.components.hassio.get_host_info = Mock(
-        return_value={"hostname": "homeassistant"}
+        return_value={"hostname": "spencerassistant"}
     )
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="homeassistant.local",
+        "spencerassistant.helpers.network._get_request_host",
+        return_value="spencerassistant.local",
     ):
         assert (
             get_url(hass, require_current_request=True)
-            == "http://homeassistant.local:8123"
+            == "http://spencerassistant.local:8123"
         )
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="homeassistant",
+        "spencerassistant.helpers.network._get_request_host",
+        return_value="spencerassistant",
     ):
         assert (
-            get_url(hass, require_current_request=True) == "http://homeassistant:8123"
+            get_url(hass, require_current_request=True) == "http://spencerassistant:8123"
         )
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="unknown.local"
+        "spencerassistant.helpers.network._get_request_host", return_value="unknown.local"
     ), pytest.raises(NoURLAvailableError):
         get_url(hass, require_current_request=True)
 
 
-async def test_is_internal_request(hass: HomeAssistant, mock_current_request):
+async def test_is_internal_request(hass: spencerAssistant, mock_current_request):
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
     await async_process_ha_core_config(
@@ -723,22 +723,22 @@ async def test_is_hass_url(hass):
 
 async def test_is_hass_url_addon_url(hass):
     """Test is_hass_url with a supervisor network URL."""
-    assert is_hass_url(hass, "http://homeassistant:8123") is False
+    assert is_hass_url(hass, "http://spencerassistant:8123") is False
 
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
     )
-    assert is_hass_url(hass, "http://homeassistant:8123") is False
+    assert is_hass_url(hass, "http://spencerassistant:8123") is False
 
     mock_component(hass, "hassio")
-    assert is_hass_url(hass, "http://homeassistant:8123")
-    assert not is_hass_url(hass, "https://homeassistant:8123")
+    assert is_hass_url(hass, "http://spencerassistant:8123")
+    assert not is_hass_url(hass, "https://spencerassistant:8123")
 
     hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
-    assert not is_hass_url(hass, "http://homeassistant:8123")
-    assert is_hass_url(hass, "https://homeassistant:8123")
+    assert not is_hass_url(hass, "http://spencerassistant:8123")
+    assert is_hass_url(hass, "https://spencerassistant:8123")
 
 
 async def test_get_supervisor_network_url(hass):
@@ -750,10 +750,10 @@ async def test_get_supervisor_network_url(hass):
     assert get_supervisor_network_url(hass) is None
 
     mock_component(hass, "hassio")
-    assert get_supervisor_network_url(hass) == "http://homeassistant:8123"
+    assert get_supervisor_network_url(hass) == "http://spencerassistant:8123"
 
     hass.config.api = Mock(use_ssl=True, port=8123, local_ip="192.168.123.123")
     assert get_supervisor_network_url(hass) is None
     assert (
-        get_supervisor_network_url(hass, allow_ssl=True) == "https://homeassistant:8123"
+        get_supervisor_network_url(hass, allow_ssl=True) == "https://spencerassistant:8123"
     )

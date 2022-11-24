@@ -2,9 +2,9 @@
 
 from unittest.mock import ANY, patch
 
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from spencerassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     SERVICE_INFO,
@@ -64,7 +64,7 @@ async def test_user_setup(hass):
     """Test the user initiated form with valid mac."""
 
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -84,7 +84,7 @@ async def test_user_setup(hass):
     assert result2["errors"] is None
 
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
+        "spencerassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
         MockMicroBotApiClient,
     ), patch_async_setup_entry() as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -112,7 +112,7 @@ async def test_user_setup_already_configured(hass):
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -125,7 +125,7 @@ async def test_user_setup_already_configured(hass):
 async def test_user_no_devices(hass):
     """Test the user initiated form with valid mac."""
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -139,7 +139,7 @@ async def test_no_link(hass):
     """Test the user initiated form with invalid response."""
 
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -157,7 +157,7 @@ async def test_no_link(hass):
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
+        "spencerassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
         MockMicroBotApiClientFail,
     ), patch_async_setup_entry() as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(

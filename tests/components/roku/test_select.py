@@ -10,24 +10,24 @@ from rokuecp import (
     RokuError,
 )
 
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.components.roku.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import (
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.components.roku.coordinator import SCAN_INTERVAL
+from spencerassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, SERVICE_SELECT_OPTION
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_ICON, SERVICE_SELECT_OPTION
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import entity_registry as er
+import spencerassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_application_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
@@ -51,7 +51,7 @@ async def test_application_state(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:application"
     assert state.attributes.get(ATTR_OPTIONS) == [
-        "Home",
+        "spencer",
         "Amazon Video on Demand",
         "Free FrameChannel Service",
         "MLB.TV" + "\u00AE",
@@ -61,7 +61,7 @@ async def test_application_state(
         "Pluto TV - It's Free TV",
         "Roku Channel Store",
     ]
-    assert state.state == "Home"
+    assert state.state == "spencer"
 
     entry = entity_registry.async_get("select.my_roku_3_application")
     assert entry
@@ -94,13 +94,13 @@ async def test_application_state(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.my_roku_3_application",
-            ATTR_OPTION: "Home",
+            ATTR_OPTION: "spencer",
         },
         blocking=True,
     )
 
     assert mock_roku.remote.call_count == 1
-    mock_roku.remote.assert_called_with("home")
+    mock_roku.remote.assert_called_with("spencer")
     mock_device.app = Application(
         app_id=None, name="Roku", version=None, screensaver=None
     )
@@ -109,7 +109,7 @@ async def test_application_state(
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
-    assert state.state == "Home"
+    assert state.state == "spencer"
 
 
 @pytest.mark.parametrize(
@@ -121,7 +121,7 @@ async def test_application_state(
     ],
 )
 async def test_application_select_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
     error: RokuError,
@@ -144,7 +144,7 @@ async def test_application_select_error(
 
     mock_roku.launch.side_effect = error
 
-    with pytest.raises(HomeAssistantError, match=error_string):
+    with pytest.raises(spencerAssistantError, match=error_string):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -157,14 +157,14 @@ async def test_application_select_error(
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
-    assert state.state == "Home"
+    assert state.state == "spencer"
     assert mock_roku.launch.call_count == 1
     mock_roku.launch.assert_called_with("12")
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_channel_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
@@ -234,14 +234,14 @@ async def test_channel_state(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_channel_select_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
     """Test error handling of the Roku selects."""
     mock_roku.tune.side_effect = RokuError
 
-    with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
+    with pytest.raises(spencerAssistantError, match="Invalid response from Roku API"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

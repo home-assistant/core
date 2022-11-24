@@ -2031,9 +2031,9 @@
       "commandClassName": "Notification",
       "commandClass": 113,
       "endpoint": 0,
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Sensor status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Sensor status",
       "metadata": {
         "type": "number",

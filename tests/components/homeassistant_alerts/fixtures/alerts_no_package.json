@@ -7,13 +7,13 @@
         "package": "darksky"
       }
     ],
-    "github_issue": "https://github.com/home-assistant/home-assistant.io/pull/12591",
-    "homeassistant": {
-      "package": "homeassistant",
+    "github_issue": "https://github.com/spencer-assistant/spencer-assistant.io/pull/12591",
+    "spencerassistant": {
+      "package": "spencerassistant",
       "affected_from_version": "0.30"
     },
     "filename": "dark_sky.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
+    "alert_url": "https://alerts.spencer-assistant.io/#dark_sky.markdown"
   },
   {
     "title": "Hikvision Security Vulnerability",
@@ -25,9 +25,9 @@
       {}
     ],
     "filename": "hikvision.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#hikvision.markdown",
-    "homeassistant": {
-      "package": "homeassistant"
+    "alert_url": "https://alerts.spencer-assistant.io/#hikvision.markdown",
+    "spencerassistant": {
+      "package": "spencerassistant"
     }
   }
 ]

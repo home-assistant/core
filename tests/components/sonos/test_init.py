@@ -1,13 +1,13 @@
 """Tests for the Sonos config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, core, data_entry_flow
-from homeassistant.components import sonos, zeroconf
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries, core, data_entry_flow
+from spencerassistant.components import sonos, zeroconf
+from spencerassistant.setup import async_setup_component
 
 
 async def test_creating_entry_sets_up_media_player(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: core.spencerAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
 ):
     """Test setting up Sonos loads the media player."""
 
@@ -19,7 +19,7 @@ async def test_creating_entry_sets_up_media_player(
     )
 
     with patch(
-        "homeassistant.components.sonos.media_player.async_setup_entry",
+        "spencerassistant.components.sonos.media_player.async_setup_entry",
     ) as mock_setup:
         result = await hass.config_entries.flow.async_init(
             sonos.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,10 +36,10 @@ async def test_creating_entry_sets_up_media_player(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_sonos_creates_entry(hass: core.HomeAssistant):
+async def test_configuring_sonos_creates_entry(hass: core.spencerAssistant):
     """Test that specifying config will create an entry."""
     with patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         await async_setup_component(
@@ -52,10 +52,10 @@ async def test_configuring_sonos_creates_entry(hass: core.HomeAssistant):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_not_configuring_sonos_not_creates_entry(hass: core.HomeAssistant):
+async def test_not_configuring_sonos_not_creates_entry(hass: core.spencerAssistant):
     """Test that no config will not create an entry."""
     with patch(
-        "homeassistant.components.sonos.async_setup_entry",
+        "spencerassistant.components.sonos.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, sonos.DOMAIN, {})

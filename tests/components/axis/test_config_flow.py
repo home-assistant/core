@@ -4,9 +4,9 @@ from unittest.mock import patch
 import pytest
 import respx
 
-from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.components.axis import config_flow
-from homeassistant.components.axis.const import (
+from spencerassistant.components import dhcp, ssdp, zeroconf
+from spencerassistant.components.axis import config_flow
+from spencerassistant.components.axis.const import (
     CONF_EVENTS,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
@@ -14,7 +14,7 @@ from homeassistant.components.axis.const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.config_entries import (
+from spencerassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     SOURCE_ZEROCONF,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_NAME,
@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.data_entry_flow import FlowResultType
 
 from .test_device import (
     DEFAULT_HOST,
@@ -92,7 +92,7 @@ async def test_manual_configuration_update_configuration(hass):
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.async_setup_entry",
+        "spencerassistant.components.axis.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, respx.mock:
         mock_default_vapix_requests(respx, "2.3.4.5")
@@ -123,7 +123,7 @@ async def test_flow_fails_faulty_credentials(hass):
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "spencerassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -149,7 +149,7 @@ async def test_flow_fails_cannot_connect(hass):
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "spencerassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -453,7 +453,7 @@ async def test_discovery_flow_updated_configuration(
     }
 
     with patch(
-        "homeassistant.components.axis.async_setup_entry",
+        "spencerassistant.components.axis.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, respx.mock:
         mock_default_vapix_requests(respx, "2.3.4.5")

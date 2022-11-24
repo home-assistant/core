@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import device_tracker, mqtt
-from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import device_tracker, mqtt
+from spencerassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
+from spencerassistant.const import STATE_spencer, STATE_NOT_spencer, STATE_UNKNOWN, Platform
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -29,7 +29,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def device_tracker_platform_only():
     """Only setup the device_tracker platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
         yield
 
 
@@ -50,7 +50,7 @@ async def test_discover_device_tracker(hass, mqtt_mock_entry_no_yaml_config, cap
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "test", "state_topic": "test_topic" }',
     )
     await hass.async_block_till_done()
@@ -68,7 +68,7 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer" }',
     )
     await hass.async_block_till_done()
@@ -78,7 +78,7 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "required-topic" }',
     )
     await hass.async_block_till_done()
@@ -95,12 +95,12 @@ async def test_non_duplicate_device_tracker_discovery(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -119,14 +119,14 @@ async def test_device_tracker_removal(hass, mqtt_mock_entry_no_yaml_config, capl
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.beer")
     assert state is not None
 
-    async_fire_mqtt_message(hass, "homeassistant/device_tracker/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_tracker/bla/config", "")
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.beer")
     assert state is None
@@ -137,21 +137,21 @@ async def test_device_tracker_rediscover(hass, mqtt_mock_entry_no_yaml_config, c
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.beer")
     assert state is not None
 
-    async_fire_mqtt_message(hass, "homeassistant/device_tracker/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_tracker/bla/config", "")
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.beer")
     assert state is None
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -166,15 +166,15 @@ async def test_duplicate_device_tracker_removal(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/device_tracker/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_tracker/bla/config", "")
     await hass.async_block_till_done()
     assert "Component has already been discovered: device_tracker bla" in caplog.text
     caplog.clear()
-    async_fire_mqtt_message(hass, "homeassistant/device_tracker/bla/config", "")
+    async_fire_mqtt_message(hass, "spencerassistant/device_tracker/bla/config", "")
     await hass.async_block_till_done()
 
     assert (
@@ -189,7 +189,7 @@ async def test_device_tracker_discovery_update(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Beer", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -200,7 +200,7 @@ async def test_device_tracker_discovery_update(
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "Cider", "state_topic": "test-topic" }',
     )
     await hass.async_block_till_done()
@@ -221,7 +221,7 @@ async def test_cleanup_device_tracker(
 
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/tracker",'
         '  "unique_id": "unique" }',
@@ -265,7 +265,7 @@ async def test_cleanup_device_tracker(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_tracker/bla/config", "", 0, True
+        "spencerassistant/device_tracker/bla/config", "", 0, True
     )
 
 
@@ -276,7 +276,7 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "test", "state_topic": "test-topic" }',
     )
 
@@ -286,13 +286,13 @@ async def test_setting_device_tracker_value_via_mqtt_message(
 
     assert state.state == STATE_UNKNOWN
 
-    async_fire_mqtt_message(hass, "test-topic", "home")
+    async_fire_mqtt_message(hass, "test-topic", "spencer")
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_HOME
+    assert state.state == STATE_spencer
 
-    async_fire_mqtt_message(hass, "test-topic", "not_home")
+    async_fire_mqtt_message(hass, "test-topic", "not_spencer")
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_NOT_spencer
 
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
@@ -302,22 +302,22 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         "{"
         '"name": "test", '
         '"state_topic": "test-topic", '
-        '"value_template": "{% if value is equalto \\"proxy_for_home\\" %}home{% else %}not_home{% endif %}" '
+        '"value_template": "{% if value is equalto \\"proxy_for_spencer\\" %}spencer{% else %}not_spencer{% endif %}" '
         "}",
     )
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "test-topic", "proxy_for_home")
+    async_fire_mqtt_message(hass, "test-topic", "proxy_for_spencer")
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_HOME
+    assert state.state == STATE_spencer
 
-    async_fire_mqtt_message(hass, "test-topic", "anything_for_not_home")
+    async_fire_mqtt_message(hass, "test-topic", "anything_for_not_spencer")
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_NOT_spencer
 
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
@@ -327,7 +327,7 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         "{"
         '"name": "test", '
         '"state_topic": "test-topic", '
@@ -339,13 +339,13 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_UNKNOWN
 
-    async_fire_mqtt_message(hass, "test-topic", "HOME")
+    async_fire_mqtt_message(hass, "test-topic", "spencer")
     state = hass.states.get("device_Tracker.test")
-    assert state.state == STATE_HOME
+    assert state.state == STATE_spencer
 
-    async_fire_mqtt_message(hass, "test-topic", "NOT_HOME")
+    async_fire_mqtt_message(hass, "test-topic", "NOT_spencer")
     state = hass.states.get("device_tracker.test")
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_NOT_spencer
 
 
 async def test_setting_device_tracker_location_via_mqtt_message(
@@ -355,7 +355,7 @@ async def test_setting_device_tracker_location_via_mqtt_message(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         '{ "name": "test", "state_topic": "test-topic", "source_type": "router" }',
     )
     await hass.async_block_till_done()
@@ -377,7 +377,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
-        "homeassistant/device_tracker/bla/config",
+        "spencerassistant/device_tracker/bla/config",
         "{ "
         '"name": "test", '
         '"state_topic": "test-topic", '
@@ -405,7 +405,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.attributes["gps_accuracy"] == 1.5
     # assert source_type is overridden by discovery
     assert state.attributes["source_type"] == "router"
-    assert state.state == STATE_HOME
+    assert state.state == STATE_spencer
 
     async_fire_mqtt_message(
         hass,
@@ -416,7 +416,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.attributes["latitude"] == 50.1
     assert state.attributes["longitude"] == -2.1
     assert state.attributes["gps_accuracy"] == 0
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_NOT_spencer
 
     async_fire_mqtt_message(hass, "attributes-topic", '{"longitude": -117.22743}')
     state = hass.states.get("device_tracker.test")

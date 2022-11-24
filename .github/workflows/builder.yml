@@ -15,7 +15,7 @@ env:
 jobs:
   init:
     name: Initialize build
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.info.outputs.architectures }}
@@ -35,16 +35,16 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master
+        uses: spencer-assistant/actions/helpers/info@master
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        uses: spencer-assistant/actions/helpers/version@master
         with:
           type: ${{ env.BUILD_TYPE }}
 
       - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master
+        uses: spencer-assistant/actions/helpers/verify-version@master
         with:
           ignore-dev: true
 
@@ -54,7 +54,7 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > OFFICIAL_IMAGE
 
       - name: Signing meta info file
-        uses: home-assistant/actions/helpers/codenotary@master
+        uses: spencer-assistant/actions/helpers/codenotary@master
         with:
           source: file://${{ github.workspace }}/OFFICIAL_IMAGE
           asset: OFFICIAL_IMAGE-${{ steps.version.outputs.version }}
@@ -64,7 +64,7 @@ jobs:
     name: Build PyPi package
     needs: init
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
+    if: github.repository_owner == 'spencer-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3.1.0
@@ -77,7 +77,7 @@ jobs:
       - name: Build package
         shell: bash
         run: |
-          # Remove dist, build, and homeassistant.egg-info
+          # Remove dist, build, and spencerassistant.egg-info
           # when build locally for testing!
           pip install twine build
           python -m build
@@ -92,7 +92,7 @@ jobs:
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
@@ -107,7 +107,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/frontend
+          repo: spencer-assistant/frontend
           branch: dev
           workflow: nightly.yaml
           workflow_conclusion: success
@@ -127,15 +127,15 @@ jobs:
           python3 -m pip install --use-deprecated=legacy-resolver .
           version="$(python3 script/version_bump.py nightly)"
 
-          if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
+          if [[ "$(ls spencer_assistant_frontend*.whl)" =~ ^spencer_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
             echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
             frontend_version="${BASH_REMATCH[1]}" yq \
               --inplace e -o json \
-              '.requirements = ["home-assistant-frontend=="+env(frontend_version)]' \
-              homeassistant/components/frontend/manifest.json
+              '.requirements = ["spencer-assistant-frontend=="+env(frontend_version)]' \
+              spencerassistant/components/frontend/manifest.json
 
-            sed -i "s|home-assistant-frontend==.*|home-assistant-frontend==${BASH_REMATCH[1]}|" \
-              homeassistant/package_constraints.txt
+            sed -i "s|spencer-assistant-frontend==.*|spencer-assistant-frontend==${BASH_REMATCH[1]}|" \
+              spencerassistant/package_constraints.txt
 
             python -m script.gen_requirements_all
           fi
@@ -159,7 +159,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.09.0
+        uses: spencer-assistant/builder@2022.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -171,7 +171,7 @@ jobs:
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
@@ -225,7 +225,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.09.0
+        uses: spencer-assistant/builder@2022.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -236,7 +236,7 @@ jobs:
 
   publish_ha:
     name: Publish version files
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
@@ -244,53 +244,53 @@ jobs:
         uses: actions/checkout@v3.1.0
 
       - name: Initialize git
-        uses: home-assistant/actions/helpers/git-init@master
+        uses: spencer-assistant/actions/helpers/git-init@master
         with:
           name: ${{ secrets.GIT_NAME }}
           email: ${{ secrets.GIT_EMAIL }}
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update version file
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: spencer-assistant/actions/helpers/version-push@master
         with:
-          key: "homeassistant[]"
-          key-description: "Home Assistant Core"
+          key: "spencerassistant[]"
+          key-description: "spencer Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: spencer-assistant/actions/helpers/version-push@master
         with:
-          key: "homeassistant[]"
-          key-description: "Home Assistant Core"
+          key: "spencerassistant[]"
+          key-description: "spencer Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: beta
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'spencer-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         registry:
-          - "ghcr.io/home-assistant"
-          - "homeassistant"
+          - "ghcr.io/spencer-assistant"
+          - "spencerassistant"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3.1.0
 
       - name: Login to DockerHub
-        if: matrix.registry == 'homeassistant'
+        if: matrix.registry == 'spencerassistant'
         uses: docker/login-action@v2.1.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        if: matrix.registry == 'ghcr.io/home-assistant'
+        if: matrix.registry == 'ghcr.io/spencer-assistant'
         uses: docker/login-action@v2.1.0
         with:
           registry: ghcr.io
@@ -298,7 +298,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install CAS tools
-        uses: home-assistant/actions/helpers/cas@master
+        uses: spencer-assistant/actions/helpers/cas@master
 
       - name: Build Meta Image
         shell: bash
@@ -309,55 +309,55 @@ jobs:
             local tag_l=${1}
             local tag_r=${2}
 
-            docker manifest create "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/amd64-homeassistant:${tag_r}" \
-              "${{ matrix.registry }}/i386-homeassistant:${tag_r}" \
-              "${{ matrix.registry }}/armhf-homeassistant:${tag_r}" \
-              "${{ matrix.registry }}/armv7-homeassistant:${tag_r}" \
-              "${{ matrix.registry }}/aarch64-homeassistant:${tag_r}"
+            docker manifest create "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/amd64-spencerassistant:${tag_r}" \
+              "${{ matrix.registry }}/i386-spencerassistant:${tag_r}" \
+              "${{ matrix.registry }}/armhf-spencerassistant:${tag_r}" \
+              "${{ matrix.registry }}/armv7-spencerassistant:${tag_r}" \
+              "${{ matrix.registry }}/aarch64-spencerassistant:${tag_r}"
 
-            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/amd64-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/amd64-spencerassistant:${tag_r}" \
               --os linux --arch amd64
 
-            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/i386-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/i386-spencerassistant:${tag_r}" \
               --os linux --arch 386
 
-            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/armhf-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/armhf-spencerassistant:${tag_r}" \
               --os linux --arch arm --variant=v6
 
-            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/armv7-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/armv7-spencerassistant:${tag_r}" \
               --os linux --arch arm --variant=v7
 
-            docker manifest annotate "${{ matrix.registry }}/home-assistant:${tag_l}" \
-              "${{ matrix.registry }}/aarch64-homeassistant:${tag_r}" \
+            docker manifest annotate "${{ matrix.registry }}/spencer-assistant:${tag_l}" \
+              "${{ matrix.registry }}/aarch64-spencerassistant:${tag_r}" \
               --os linux --arch arm64 --variant=v8
 
-            docker manifest push --purge "${{ matrix.registry }}/home-assistant:${tag_l}"
+            docker manifest push --purge "${{ matrix.registry }}/spencer-assistant:${tag_l}"
           }
 
           function validate_image() {
             local image=${1}
-            if ! cas authenticate --signerID notary@home-assistant.io "docker://${image}"; then
+            if ! cas authenticate --signerID notary@spencer-assistant.io "docker://${image}"; then
               echo "Invalid signature!"
               exit 1
             fi
           }
 
-          docker pull "${{ matrix.registry }}/amd64-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "${{ matrix.registry }}/i386-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "${{ matrix.registry }}/armhf-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "${{ matrix.registry }}/armv7-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "${{ matrix.registry }}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/amd64-spencerassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/i386-spencerassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/armhf-spencerassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/armv7-spencerassistant:${{ needs.init.outputs.version }}"
+          docker pull "${{ matrix.registry }}/aarch64-spencerassistant:${{ needs.init.outputs.version }}"
 
-          validate_image "${{ matrix.registry }}/amd64-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "${{ matrix.registry }}/i386-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "${{ matrix.registry }}/armhf-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "${{ matrix.registry }}/armv7-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "${{ matrix.registry }}/aarch64-homeassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/amd64-spencerassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/i386-spencerassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/armhf-spencerassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/armv7-spencerassistant:${{ needs.init.outputs.version }}"
+          validate_image "${{ matrix.registry }}/aarch64-spencerassistant:${{ needs.init.outputs.version }}"
 
           # Create version tag
           create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"

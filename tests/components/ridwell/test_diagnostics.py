@@ -1,5 +1,5 @@
 """Test Ridwell diagnostics."""
-from homeassistant.components.diagnostics import REDACTED
+from spencerassistant.components.diagnostics import REDACTED
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 

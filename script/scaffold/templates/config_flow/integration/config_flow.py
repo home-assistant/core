@@ -6,10 +6,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant import config_entries
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResult
+from spencerassistant.exceptions import spencerAssistantError
 
 from .const import DOMAIN
 
@@ -40,7 +40,7 @@ class PlaceholderHub:
         return True
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: spencerAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -100,9 +100,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(spencerAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
+class InvalidAuth(spencerAssistantError):
     """Error to indicate there is invalid auth."""

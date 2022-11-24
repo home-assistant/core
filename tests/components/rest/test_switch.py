@@ -5,18 +5,18 @@ from http import HTTPStatus
 import aiohttp
 import pytest
 
-from homeassistant.components.rest import DOMAIN
-from homeassistant.components.rest.switch import (
+from spencerassistant.components.rest import DOMAIN
+from spencerassistant.components.rest.switch import (
     CONF_BODY_OFF,
     CONF_BODY_ON,
     CONF_STATE_RESOURCE,
 )
-from homeassistant.components.switch import (
+from spencerassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SCAN_INTERVAL,
     SwitchDeviceClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -38,11 +38,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_PICTURE
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.template_entity import CONF_PICTURE
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from tests.common import assert_setup_component, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -54,7 +54,7 @@ STATE_RESOURCE = RESOURCE
 
 
 async def test_setup_missing_config(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with configuration missing required entries."""
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN}}
@@ -65,7 +65,7 @@ async def test_setup_missing_config(
 
 
 async def test_setup_missing_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with resource missing schema."""
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"}}
@@ -76,7 +76,7 @@ async def test_setup_missing_schema(
 
 
 async def test_setup_failed_connect(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -90,7 +90,7 @@ async def test_setup_failed_connect(
 
 
 async def test_setup_timeout(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -104,7 +104,7 @@ async def test_setup_timeout(
 
 
 async def test_setup_minimum(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with minimum configuration."""
     aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
@@ -116,7 +116,7 @@ async def test_setup_minimum(
 
 
 async def test_setup_query_params(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with query params."""
     aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
@@ -134,7 +134,7 @@ async def test_setup_query_params(
     assert aioclient_mock.call_count == 1
 
 
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_setup(hass: spencerAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
     config = {
@@ -154,7 +154,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
 
 async def test_setup_with_state_resource(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get(RESOURCE, status=HTTPStatus.NOT_FOUND)
@@ -177,7 +177,7 @@ async def test_setup_with_state_resource(
 
 
 async def test_setup_with_templated_headers_params(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
@@ -210,7 +210,7 @@ async def test_setup_with_templated_headers_params(
 
 
 async def _async_setup_test_switch(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     aioclient_mock.get(RESOURCE, status=HTTPStatus.OK)
 
@@ -232,7 +232,7 @@ async def _async_setup_test_switch(
     aioclient_mock.clear_requests()
 
 
-async def test_name(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_name(hass: spencerAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the name."""
     await _async_setup_test_switch(hass, aioclient_mock)
 
@@ -241,7 +241,7 @@ async def test_name(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
 
 
 async def test_device_class(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the device class."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -251,7 +251,7 @@ async def test_device_class(
 
 
 async def test_is_on_before_update(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test is_on in initial state."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -261,7 +261,7 @@ async def test_is_on_before_update(
 
 
 async def test_turn_on_success(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -281,7 +281,7 @@ async def test_turn_on_success(
 
 
 async def test_turn_on_status_not_ok(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when error status returned."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -300,7 +300,7 @@ async def test_turn_on_status_not_ok(
 
 
 async def test_turn_on_timeout(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_on when timeout occurs."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -318,7 +318,7 @@ async def test_turn_on_timeout(
 
 
 async def test_turn_off_success(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -339,7 +339,7 @@ async def test_turn_off_success(
 
 
 async def test_turn_off_status_not_ok(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when error status returned."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -359,7 +359,7 @@ async def test_turn_off_status_not_ok(
 
 
 async def test_turn_off_timeout(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test turn_off when timeout occurs."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -377,7 +377,7 @@ async def test_turn_off_timeout(
 
 
 async def test_update_when_on(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is on."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -390,7 +390,7 @@ async def test_update_when_on(
 
 
 async def test_update_when_off(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when switch is off."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -403,7 +403,7 @@ async def test_update_when_off(
 
 
 async def test_update_when_unknown(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when unknown status returned."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -416,7 +416,7 @@ async def test_update_when_unknown(
 
 
 async def test_update_timeout(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test update when timeout occurs."""
     await _async_setup_test_switch(hass, aioclient_mock)
@@ -429,7 +429,7 @@ async def test_update_timeout(
 
 
 async def test_entity_config(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test entity configuration."""
 

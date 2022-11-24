@@ -13,10 +13,10 @@ from pyuptimerobot import (
     UptimeRobotMonitor,
 )
 
-from homeassistant import config_entries
-from homeassistant.components.uptimerobot.const import DOMAIN
-from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries
+from spencerassistant.components.uptimerobot.const import DOMAIN
+from spencerassistant.const import STATE_ON
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -101,7 +101,7 @@ def mock_uptimerobot_api_response(
     )
 
 
-async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def setup_uptimerobot_integration(hass: spencerAssistant) -> MockConfigEntry:
     """Set up the UptimeRobot integration."""
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)

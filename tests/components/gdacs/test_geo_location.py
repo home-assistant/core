@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components import gdacs
-from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
-from homeassistant.components.gdacs.geo_location import (
+from spencerassistant.components import gdacs
+from spencerassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
+from spencerassistant.components.gdacs.geo_location import (
     ATTR_ALERT_LEVEL,
     ATTR_COUNTRY,
     ATTR_DESCRIPTION,
@@ -19,8 +19,8 @@ from homeassistant.components.gdacs.geo_location import (
     ATTR_TO_DATE,
     ATTR_VULNERABILITY,
 )
-from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.const import (
+from spencerassistant.components.geo_location import ATTR_SOURCE
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -28,13 +28,13 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_spencerASSISTANT_START,
     LENGTH_KILOMETERS,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
+from spencerassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
 
@@ -96,7 +96,7 @@ async def test_setup(hass):
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         # 3 geolocation and 1 sensor entities
@@ -231,7 +231,7 @@ async def test_setup_imperial(hass):
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
         await hass.async_block_till_done()
         # Artificially trigger update and collect events.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
         assert (

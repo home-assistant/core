@@ -5,11 +5,11 @@ from datetime import timedelta
 import pathlib
 from unittest.mock import patch
 
-from homeassistant.components import automation
-from homeassistant.components.blueprint import models
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, yaml
+from spencerassistant.components import automation
+from spencerassistant.components.blueprint import models
+from spencerassistant.core import callback
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util, yaml
 
 from tests.common import async_fire_time_changed, async_mock_service
 
@@ -32,7 +32,7 @@ def patch_blueprint(blueprint_path: str, data_path):
         )
 
     with patch(
-        "homeassistant.components.blueprint.models.DomainBlueprints._load_blueprint",
+        "spencerassistant.components.blueprint.models.DomainBlueprints._load_blueprint",
         mock_load_blueprint,
     ):
         yield
@@ -74,10 +74,10 @@ async def test_notify_leaving_zone(hass):
         )
 
     with patch(
-        "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
+        "spencerassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
         # Leaving zone to no zone
-        set_person_state("not_home")
+        set_person_state("not_spencer")
         await hass.async_block_till_done()
 
         assert len(mock_call_action.mock_calls) == 1

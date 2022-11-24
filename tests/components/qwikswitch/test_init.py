@@ -6,8 +6,8 @@ from aiohttp.client_exceptions import ClientError
 import pytest
 from yarl import URL
 
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from spencerassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
 

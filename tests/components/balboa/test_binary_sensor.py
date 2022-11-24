@@ -1,8 +1,8 @@
 """Tests of the climate entity of the balboa integration."""
 from unittest.mock import MagicMock
 
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 
@@ -16,7 +16,7 @@ FILTER_MAP = [
 ]
 
 
-async def test_filters(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_filters(hass: spencerAssistant, client: MagicMock) -> None:
     """Test spa filters."""
 
     config_entry = await init_integration(hass)
@@ -29,7 +29,7 @@ async def test_filters(hass: HomeAssistant, client: MagicMock) -> None:
             assert state.state == FILTER_MAP[filter_mode][spa_filter - 1]
 
 
-async def test_circ_pump(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_circ_pump(hass: spencerAssistant, client: MagicMock) -> None:
     """Test spa circ pump."""
     client.have_circ_pump.return_value = (True,)
     config_entry = await init_integration(hass)

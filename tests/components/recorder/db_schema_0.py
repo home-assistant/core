@@ -21,9 +21,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base
 
-from homeassistant.core import Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import Event, EventOrigin, State, split_entity_id
+from spencerassistant.helpers.json import JSONEncoder
+import spencerassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name

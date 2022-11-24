@@ -1,7 +1,7 @@
 """Test the Advantage Air Update Platform."""
 
-from homeassistant.const import STATE_ON
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import STATE_ON
+from spencerassistant.helpers import entity_registry as er
 
 from . import TEST_SYSTEM_URL, add_mock_config
 

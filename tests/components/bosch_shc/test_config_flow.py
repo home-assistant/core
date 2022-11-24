@@ -9,10 +9,10 @@ from boschshcpy.exceptions import (
 )
 from boschshcpy.information import SHCInformation
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.bosch_shc.config_flow import write_tls_asset
-from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components import zeroconf
+from spencerassistant.components.bosch_shc.config_flow import write_tls_asset
+from spencerassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -72,7 +72,7 @@ async def test_form_user(hass, mock_zeroconf):
     ), patch("os.mkdir"), patch("builtins.open"), patch(
         "boschshcpy.session.SHCSession.authenticate"
     ) as mock_authenticate, patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
+        "spencerassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -460,7 +460,7 @@ async def test_zeroconf(hass, mock_zeroconf):
     ), patch("os.mkdir"), patch("builtins.open"), patch(
         "boschshcpy.session.SHCSession.authenticate",
     ), patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
+        "spencerassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -601,7 +601,7 @@ async def test_reauth(hass, mock_zeroconf):
     ), patch("os.mkdir"), patch("builtins.open"), patch(
         "boschshcpy.session.SHCSession.authenticate"
     ), patch(
-        "homeassistant.components.bosch_shc.async_setup_entry",
+        "spencerassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(

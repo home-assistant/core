@@ -4,21 +4,21 @@ from unittest.mock import AsyncMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.update import (
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers.entity_registry import async_get
 
 from . import MOCK_MAC, init_integration, mock_rest_update
 
@@ -35,7 +35,7 @@ from . import MOCK_MAC, init_integration, mock_rest_update
     ],
 )
 async def test_remove_legacy_entities(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     gen,
     domain,
     unique_id,
@@ -61,7 +61,7 @@ async def test_remove_legacy_entities(
     assert entity_registry.async_get(entity_id) is None
 
 
-async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch):
+async def test_block_update(hass: spencerAssistant, mock_block_device, monkeypatch):
     """Test block device update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -105,7 +105,7 @@ async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch)
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeypatch):
+async def test_block_beta_update(hass: spencerAssistant, mock_block_device, monkeypatch):
     """Test block device beta update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -160,7 +160,7 @@ async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeyp
 
 
 async def test_block_update_connection_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch, caplog
+    hass: spencerAssistant, mock_block_device, monkeypatch, caplog
 ):
     """Test block device update connection error."""
     entity_registry = async_get(hass)
@@ -180,7 +180,7 @@ async def test_block_update_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -191,7 +191,7 @@ async def test_block_update_connection_error(
 
 
 async def test_block_update_auth_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: spencerAssistant, mock_block_device, monkeypatch
 ):
     """Test block device update authentication error."""
     entity_registry = async_get(hass)
@@ -234,7 +234,7 @@ async def test_block_update_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
+async def test_rpc_update(hass: spencerAssistant, mock_rpc_device, monkeypatch):
     """Test RPC device update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -284,7 +284,7 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
+async def test_rpc_beta_update(hass: spencerAssistant, mock_rpc_device, monkeypatch):
     """Test RPC device beta update entity."""
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -359,7 +359,7 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
     ],
 )
 async def test_rpc_update__errors(
-    hass: HomeAssistant, exc, error, mock_rpc_device, monkeypatch, caplog
+    hass: spencerAssistant, exc, error, mock_rpc_device, monkeypatch, caplog
 ):
     """Test RPC device update connection/call errors."""
     entity_registry = async_get(hass)
@@ -384,7 +384,7 @@ async def test_rpc_update__errors(
     )
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -395,7 +395,7 @@ async def test_rpc_update__errors(
 
 
 async def test_rpc_update_auth_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog
+    hass: spencerAssistant, mock_rpc_device, monkeypatch, caplog
 ):
     """Test RPC device update authentication error."""
     entity_registry = async_get(hass)

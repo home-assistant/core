@@ -3,10 +3,10 @@ from datetime import timedelta
 
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.components.automation as automation
+from spencerassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401

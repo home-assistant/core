@@ -9,17 +9,17 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_STOP,
 )
-import homeassistant.core as ha
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.exceptions import PlatformNotReady
+from spencerassistant.helpers import discovery
+from spencerassistant.helpers.entity_component import EntityComponent, async_update_entity
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -86,9 +86,9 @@ async def test_setup_recovers_when_setup_raises(hass):
 
 
 @patch(
-    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
+    "spencerassistant.helpers.entity_component.EntityComponent.async_setup_platform",
 )
-@patch("homeassistant.setup.async_setup_component", return_value=True)
+@patch("spencerassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -105,7 +105,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("spencerassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 
@@ -510,7 +510,7 @@ async def test_platforms_shutdown_on_stop(hass):
     with patch.object(
         component._platforms[DOMAIN], "async_shutdown"
     ) as mock_async_shutdown:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
 
     assert mock_async_shutdown.called

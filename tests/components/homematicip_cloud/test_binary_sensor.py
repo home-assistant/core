@@ -1,9 +1,9 @@
-"""Tests for HomematicIP Cloud binary sensor."""
-from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+"""Tests for spencermaticIP Cloud binary sensor."""
+from spencermaticip.base.enums import SmokeDetectorAlarmType, WindowState
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.binary_sensor import (
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.components.spencermaticip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_MODE,
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
     ATTR_ACCELERATION_SENSOR_SENSITIVITY,
@@ -15,15 +15,15 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
 )
-from homeassistant.components.homematicip_cloud.generic_entity import (
+from spencerassistant.components.spencermaticip_cloud.generic_entity import (
     ATTR_EVENT_DELAY,
     ATTR_GROUP_MEMBER_UNREACHABLE,
     ATTR_LOW_BATTERY,
     ATTR_RSSI_DEVICE,
     ATTR_SABOTAGE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -38,8 +38,8 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_home_cloud_connection_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipCloudConnectionSensor."""
+async def test_hmip_spencer_cloud_connection_sensor(hass, default_mock_hap_factory):
+    """Test spencermaticipCloudConnectionSensor."""
     entity_id = "binary_sensor.cloud_connection"
     entity_name = "Cloud Connection"
     device_model = None
@@ -53,14 +53,14 @@ async def test_hmip_home_cloud_connection_sensor(hass, default_mock_hap_factory)
 
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, mock_hap.home, "connected", False)
+    await async_manipulate_test_data(hass, mock_hap.spencer, "connected", False)
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
 
 
 async def test_hmip_acceleration_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipAccelerationSensor."""
+    """Test spencermaticipAccelerationSensor."""
     entity_id = "binary_sensor.garagentor"
     entity_name = "Garagentor"
     device_model = "HmIP-SAM"
@@ -97,7 +97,7 @@ async def test_hmip_acceleration_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_tilt_vibration_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipTiltVibrationSensor."""
+    """Test spencermaticipTiltVibrationSensor."""
     entity_id = "binary_sensor.garage_neigungs_und_erschutterungssensor"
     entity_name = "Garage Neigungs- und Erschütterungssensor"
     device_model = "HmIP-STV"
@@ -133,7 +133,7 @@ async def test_hmip_tilt_vibration_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_contact_interface(hass, default_mock_hap_factory):
-    """Test HomematicipContactInterface."""
+    """Test spencermaticipContactInterface."""
     entity_id = "binary_sensor.kontakt_schnittstelle_unterputz_1_fach"
     entity_name = "Kontakt-Schnittstelle Unterputz – 1-fach"
     device_model = "HmIP-FCI1"
@@ -156,7 +156,7 @@ async def test_hmip_contact_interface(hass, default_mock_hap_factory):
 
 
 async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
-    """Test HomematicipShutterContact."""
+    """Test spencermaticipShutterContact."""
     entity_id = "binary_sensor.fenstergriffsensor"
     entity_name = "Fenstergriffsensor"
     device_model = "HmIP-SRH"
@@ -196,7 +196,7 @@ async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
 
 
 async def test_hmip_shutter_contact_optical(hass, default_mock_hap_factory):
-    """Test HomematicipShutterContact."""
+    """Test spencermaticipShutterContact."""
     entity_id = "binary_sensor.sitzplatzture"
     entity_name = "Sitzplatzt\u00fcre"
     device_model = "HmIP-SWDO-PL"
@@ -226,7 +226,7 @@ async def test_hmip_shutter_contact_optical(hass, default_mock_hap_factory):
 
 
 async def test_hmip_motion_detector(hass, default_mock_hap_factory):
-    """Test HomematicipMotionDetector."""
+    """Test spencermaticipMotionDetector."""
     entity_id = "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen"
     entity_name = "Bewegungsmelder für 55er Rahmen – innen"
     device_model = "HmIP-SMI55"
@@ -245,7 +245,7 @@ async def test_hmip_motion_detector(hass, default_mock_hap_factory):
 
 
 async def test_hmip_presence_detector(hass, default_mock_hap_factory):
-    """Test HomematicipPresenceDetector."""
+    """Test spencermaticipPresenceDetector."""
     entity_id = "binary_sensor.spi_1"
     entity_name = "SPI_1"
     device_model = "HmIP-SPI"
@@ -271,7 +271,7 @@ async def test_hmip_presence_detector(hass, default_mock_hap_factory):
 async def test_hmip_pluggable_mains_failure_surveillance_sensor(
     hass, default_mock_hap_factory
 ):
-    """Test HomematicipPresenceDetector."""
+    """Test spencermaticipPresenceDetector."""
     entity_id = "binary_sensor.netzausfalluberwachung"
     entity_name = "Netzausfallüberwachung"
     device_model = "HmIP-PMFS"
@@ -290,7 +290,7 @@ async def test_hmip_pluggable_mains_failure_surveillance_sensor(
 
 
 async def test_hmip_smoke_detector(hass, default_mock_hap_factory):
-    """Test HomematicipSmokeDetector."""
+    """Test spencermaticipSmokeDetector."""
     entity_id = "binary_sensor.rauchwarnmelder"
     entity_name = "Rauchwarnmelder"
     device_model = "HmIP-SWSD"
@@ -322,7 +322,7 @@ async def test_hmip_smoke_detector(hass, default_mock_hap_factory):
 
 
 async def test_hmip_water_detector(hass, default_mock_hap_factory):
-    """Test HomematicipWaterDetector."""
+    """Test spencermaticipWaterDetector."""
     entity_id = "binary_sensor.wassersensor"
     entity_name = "Wassersensor"
     device_model = "HmIP-SWD"
@@ -357,7 +357,7 @@ async def test_hmip_water_detector(hass, default_mock_hap_factory):
 
 
 async def test_hmip_storm_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipStormSensor."""
+    """Test spencermaticipStormSensor."""
     entity_id = "binary_sensor.weather_sensor_plus_storm"
     entity_name = "Weather Sensor – plus Storm"
     device_model = "HmIP-SWO-PL"
@@ -376,7 +376,7 @@ async def test_hmip_storm_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_rain_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipRainSensor."""
+    """Test spencermaticipRainSensor."""
     entity_id = "binary_sensor.wettersensor_pro_raining"
     entity_name = "Wettersensor - pro Raining"
     device_model = "HmIP-SWO-PR"
@@ -395,7 +395,7 @@ async def test_hmip_rain_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_sunshine_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipSunshineSensor."""
+    """Test spencermaticipSunshineSensor."""
     entity_id = "binary_sensor.wettersensor_pro_sunshine"
     entity_name = "Wettersensor - pro Sunshine"
     device_model = "HmIP-SWO-PR"
@@ -415,7 +415,7 @@ async def test_hmip_sunshine_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_battery_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipSunshineSensor."""
+    """Test spencermaticipSunshineSensor."""
     entity_id = "binary_sensor.wohnungsture_battery"
     entity_name = "Wohnungstüre Battery"
     device_model = "HMIP-SWDO"
@@ -434,7 +434,7 @@ async def test_hmip_battery_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_security_zone_sensor_group(hass, default_mock_hap_factory):
-    """Test HomematicipSecurityZoneSensorGroup."""
+    """Test spencermaticipSecurityZoneSensorGroup."""
     entity_id = "binary_sensor.internal_securityzone"
     entity_name = "INTERNAL SecurityZone"
     device_model = "HmIP-SecurityZone"
@@ -469,7 +469,7 @@ async def test_hmip_security_zone_sensor_group(hass, default_mock_hap_factory):
 
 
 async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
-    """Test HomematicipSecuritySensorGroup."""
+    """Test spencermaticipSecuritySensorGroup."""
     entity_id = "binary_sensor.buro_sensors"
     entity_name = "Büro Sensors"
     device_model = None
@@ -541,7 +541,7 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
 
 
 async def test_hmip_multi_contact_interface(hass, default_mock_hap_factory):
-    """Test HomematicipMultiContactInterface."""
+    """Test spencermaticipMultiContactInterface."""
     entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
     entity_name = "Wired Eingangsmodul – 32-fach Channel5"
     device_model = "HmIPW-DRI32"

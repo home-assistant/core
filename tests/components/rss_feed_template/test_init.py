@@ -4,7 +4,7 @@ from http import HTTPStatus
 from defusedxml import ElementTree
 import pytest
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture

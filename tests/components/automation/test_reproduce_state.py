@@ -1,6 +1,6 @@
 """Test reproduce state for Automation."""
-from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.core import State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 

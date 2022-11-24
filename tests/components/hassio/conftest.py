@@ -4,10 +4,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.hassio.handler import HassIO, HassioAPIError
-from homeassistant.core import CoreState
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.hassio.handler import HassIO, HassioAPIError
+from spencerassistant.core import CoreState
+from spencerassistant.helpers.aiohttp_client import async_get_clientsession
+from spencerassistant.setup import async_setup_component
 
 from . import SUPERVISOR_TOKEN
 
@@ -16,10 +16,10 @@ from . import SUPERVISOR_TOKEN
 def hassio_env():
     """Fixture to inject hassio env."""
     with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
+        "spencerassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
     ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
         yield
@@ -29,13 +29,13 @@ def hassio_env():
 def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
+        "spencerassistant.components.hassio.HassIO.update_hass_api",
         return_value={"result": "ok"},
     ) as hass_api, patch(
-        "homeassistant.components.hassio.HassIO.update_hass_timezone",
+        "spencerassistant.components.hassio.HassIO.update_hass_timezone",
         return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         side_effect=HassioAPIError(),
     ):
         hass.state = CoreState.starting

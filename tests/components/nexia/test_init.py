@@ -1,10 +1,10 @@
 """The init tests for the nexia platform."""
 
 
-from homeassistant.components.nexia.const import DOMAIN
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.nexia.const import DOMAIN
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity_registry import EntityRegistry
+from spencerassistant.setup import async_setup_component
 
 from .util import async_init_integration
 

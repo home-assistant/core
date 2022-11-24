@@ -11,13 +11,13 @@ from songpal import (
     VolumeChange,
 )
 
-from homeassistant.components import media_player, songpal
-from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.songpal.const import SET_SOUND_SETTING
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components import media_player, songpal
+from spencerassistant.components.media_player import MediaPlayerEntityFeature
+from spencerassistant.components.songpal.const import SET_SOUND_SETTING
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from . import (
     CONF_DATA,
@@ -353,7 +353,7 @@ async def test_disconnected(hass, caplog):
         side_effect=[SongpalException(""), SongpalException(""), _assert_state]
     )
     notification_callbacks = mocked_device.notification_callbacks
-    with patch("homeassistant.components.songpal.media_player.INITIAL_RETRY_DELAY", 0):
+    with patch("spencerassistant.components.songpal.media_player.INITIAL_RETRY_DELAY", 0):
         await notification_callbacks[ConnectChange](connect_change)
     warning_records = [x for x in caplog.records if x.levelno == logging.WARNING]
     assert len(warning_records) == 2

@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.aladdin_connect.const import DOMAIN
-from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
+from spencerassistant.components.aladdin_connect.const import DOMAIN
+from spencerassistant.components.aladdin_connect.cover import SCAN_INTERVAL
+from spencerassistant.components.cover import DOMAIN as COVER_DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -19,9 +19,9 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -30,7 +30,7 @@ YAML_CONFIG = {"username": "test-user", "password": "test-password"}
 DEVICE_CONFIG_OPEN = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "open",
     "link_status": "Connected",
     "serial": "12345",
@@ -39,7 +39,7 @@ DEVICE_CONFIG_OPEN = {
 DEVICE_CONFIG_OPENING = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "opening",
     "link_status": "Connected",
     "serial": "12345",
@@ -48,7 +48,7 @@ DEVICE_CONFIG_OPENING = {
 DEVICE_CONFIG_CLOSED = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "closed",
     "link_status": "Connected",
     "serial": "12345",
@@ -57,7 +57,7 @@ DEVICE_CONFIG_CLOSED = {
 DEVICE_CONFIG_CLOSING = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "closing",
     "link_status": "Connected",
     "serial": "12345",
@@ -66,7 +66,7 @@ DEVICE_CONFIG_CLOSING = {
 DEVICE_CONFIG_DISCONNECTED = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "open",
     "link_status": "Disconnected",
     "serial": "12345",
@@ -75,20 +75,20 @@ DEVICE_CONFIG_DISCONNECTED = {
 DEVICE_CONFIG_BAD = {
     "device_id": 533255,
     "door_number": 1,
-    "name": "home",
+    "name": "spencer",
     "status": "open",
 }
 DEVICE_CONFIG_BAD_NO_DOOR = {
     "device_id": 533255,
     "door_number": 2,
-    "name": "home",
+    "name": "spencer",
     "status": "open",
     "link_status": "Disconnected",
 }
 
 
 async def test_cover_operation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_aladdinconnect_api: MagicMock,
 ) -> None:
     """Test Cover Operation states (open,close,opening,closing) cover."""
@@ -99,12 +99,12 @@ async def test_cover_operation(
     )
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "spencerassistant", {})
     await hass.async_block_till_done()
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_OPEN)
     mock_aladdinconnect_api.get_door_status.return_value = STATE_OPEN
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -117,23 +117,23 @@ async def test_cover_operation(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.home"},
+        {ATTR_ENTITY_ID: "cover.spencer"},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("cover.home").state == STATE_OPEN
+    assert hass.states.get("cover.spencer").state == STATE_OPEN
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_CLOSED)
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSED
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
 
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.home"},
+            {ATTR_ENTITY_ID: "cover.spencer"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -143,7 +143,7 @@ async def test_cover_operation(
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.home").state == STATE_CLOSED
+    assert hass.states.get("cover.spencer").state == STATE_CLOSED
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_CLOSING
@@ -151,7 +151,7 @@ async def test_cover_operation(
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING
 
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
         async_fire_time_changed(
@@ -159,7 +159,7 @@ async def test_cover_operation(
             utcnow() + SCAN_INTERVAL,
         )
         await hass.async_block_till_done()
-    assert hass.states.get("cover.home").state == STATE_CLOSING
+    assert hass.states.get("cover.spencer").state == STATE_CLOSING
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_OPENING
@@ -167,7 +167,7 @@ async def test_cover_operation(
     mock_aladdinconnect_api.get_door_status.return_value = STATE_OPENING
 
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
         async_fire_time_changed(
@@ -175,19 +175,19 @@ async def test_cover_operation(
             utcnow() + SCAN_INTERVAL,
         )
         await hass.async_block_till_done()
-    assert hass.states.get("cover.home").state == STATE_OPENING
+    assert hass.states.get("cover.spencer").state == STATE_OPENING
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=None)
     mock_aladdinconnect_api.get_door_status.return_value = None
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
 
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.home"},
+            {ATTR_ENTITY_ID: "cover.spencer"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -197,11 +197,11 @@ async def test_cover_operation(
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.home").state == STATE_UNKNOWN
+    assert hass.states.get("cover.spencer").state == STATE_UNKNOWN
 
 
 async def test_yaml_import(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_aladdinconnect_api: MagicMock,
 ):
@@ -209,7 +209,7 @@ async def test_yaml_import(
     assert COVER_DOMAIN not in hass.config.components
 
     with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
         await async_setup_component(
@@ -234,7 +234,7 @@ async def test_yaml_import(
 
 
 async def test_callback(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_aladdinconnect_api: MagicMock,
 ):
     """Test callback from Aladdin Connect API."""
@@ -247,7 +247,7 @@ async def test_callback(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -256,12 +256,12 @@ async def test_callback(
     mock_aladdinconnect_api.async_get_door_status.return_value = STATE_CLOSING
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING
     with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ), patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient._call_back",
+        "spencerassistant.components.aladdin_connect.AladdinConnectClient._call_back",
         AsyncMock(),
     ):
         callback = mock_aladdinconnect_api.register_callback.call_args[0][0]
         await callback()
-    assert hass.states.get("cover.home").state == STATE_CLOSING
+    assert hass.states.get("cover.spencer").state == STATE_CLOSING

@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import owntracks
-from homeassistant.const import STATE_NOT_HOME
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import owntracks
+from spencerassistant.const import STATE_NOT_spencer
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
@@ -41,7 +41,7 @@ TEST_ZONE_DEG_PER_M = 0.0000127
 FIVE_M = TEST_ZONE_DEG_PER_M * 5.0
 
 
-# Home Assistant Zones
+# spencer Assistant Zones
 INNER_ZONE = {
     "name": "zone",
     "latitude": TEST_ZONE_LAT + 0.1,
@@ -146,7 +146,7 @@ LOCATION_MESSAGE_ZERO_ACCURACY = build_message(
     LOCATION_MESSAGE,
 )
 
-LOCATION_MESSAGE_NOT_HOME = build_message(
+LOCATION_MESSAGE_NOT_spencer = build_message(
     {
         "lat": OUTER_ZONE["latitude"] - 2.0,
         "lon": INNER_ZONE["longitude"] - 2.0,
@@ -565,7 +565,7 @@ async def test_event_gps_exit_outside_zone_sets_away(hass, context):
     await send_message(hass, EVENT_TOPIC, message)
 
     # Exit forces zone change to away
-    assert_location_state(hass, STATE_NOT_HOME)
+    assert_location_state(hass, STATE_NOT_spencer)
 
 
 async def test_event_gps_entry_exit_right_order(hass, context):
@@ -645,9 +645,9 @@ async def test_event_entry_zone_loading_dash(hass, context):
 
 async def test_events_only_on(hass, context):
     """Test events_only config suppresses location updates."""
-    # Sending a location message that is not home
-    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
-    assert_location_state(hass, STATE_NOT_HOME)
+    # Sending a location message that is not spencer
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_spencer)
+    assert_location_state(hass, STATE_NOT_spencer)
 
     context().events_only = True
 
@@ -655,20 +655,20 @@ async def test_events_only_on(hass, context):
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
     assert_location_state(hass, "outer")
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
-    assert_location_state(hass, STATE_NOT_HOME)
+    assert_location_state(hass, STATE_NOT_spencer)
 
     # Sending a location message that is inside outer zone
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
 
     # Ignored location update. Location remains at previous.
-    assert_location_state(hass, STATE_NOT_HOME)
+    assert_location_state(hass, STATE_NOT_spencer)
 
 
 async def test_events_only_off(hass, context):
     """Test when events_only is False."""
-    # Sending a location message that is not home
-    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
-    assert_location_state(hass, STATE_NOT_HOME)
+    # Sending a location message that is not spencer
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_spencer)
+    assert_location_state(hass, STATE_NOT_spencer)
 
     context().events_only = False
 
@@ -676,7 +676,7 @@ async def test_events_only_off(hass, context):
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_OUTER)
     assert_location_state(hass, "outer")
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
-    assert_location_state(hass, STATE_NOT_HOME)
+    assert_location_state(hass, STATE_NOT_spencer)
 
     # Sending a location message that is inside outer zone
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -895,15 +895,15 @@ async def test_mobile_enter_move_beacon(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
     # Location update to outside of defined zones.
-    # I am now 'not home' and neither are my keys.
-    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+    # I am now 'not spencer' and neither are my keys.
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_spencer)
 
-    assert_location_state(hass, STATE_NOT_HOME)
-    assert_mobile_tracker_state(hass, STATE_NOT_HOME)
+    assert_location_state(hass, STATE_NOT_spencer)
+    assert_mobile_tracker_state(hass, STATE_NOT_spencer)
 
-    not_home_lat = LOCATION_MESSAGE_NOT_HOME["lat"]
-    assert_location_latitude(hass, not_home_lat)
-    assert_mobile_tracker_latitude(hass, not_home_lat)
+    not_spencer_lat = LOCATION_MESSAGE_NOT_spencer["lat"]
+    assert_location_latitude(hass, not_spencer_lat)
+    assert_mobile_tracker_latitude(hass, not_spencer_lat)
 
 
 async def test_mobile_enter_exit_region_beacon(hass, context):
@@ -946,7 +946,7 @@ async def test_mobile_exit_move_beacon(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
     # Move after exit should do nothing
-    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_spencer)
     assert_mobile_tracker_latitude(hass, OUTER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, "outer")
 
@@ -1080,31 +1080,31 @@ async def test_complex_movement(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
     # gps leave outer
-    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_spencer)
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
-    assert_location_latitude(hass, LOCATION_MESSAGE_NOT_HOME["lat"])
+    assert_location_latitude(hass, LOCATION_MESSAGE_NOT_spencer["lat"])
     assert_mobile_tracker_latitude(hass, lost_keys_location_message["lat"])
-    assert_location_state(hass, "not_home")
+    assert_location_state(hass, "not_spencer")
     assert_mobile_tracker_state(hass, "outer")
 
-    # location move not home
+    # location move not spencer
     location_message = build_message(
         {
-            "lat": LOCATION_MESSAGE_NOT_HOME["lat"] - FIVE_M,
-            "lon": LOCATION_MESSAGE_NOT_HOME["lon"] - FIVE_M,
+            "lat": LOCATION_MESSAGE_NOT_spencer["lat"] - FIVE_M,
+            "lon": LOCATION_MESSAGE_NOT_spencer["lon"] - FIVE_M,
         },
-        LOCATION_MESSAGE_NOT_HOME,
+        LOCATION_MESSAGE_NOT_spencer,
     )
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_latitude(hass, location_message["lat"])
     assert_mobile_tracker_latitude(hass, lost_keys_location_message["lat"])
-    assert_location_state(hass, "not_home")
+    assert_location_state(hass, "not_spencer")
     assert_mobile_tracker_state(hass, "outer")
 
 
 async def test_complex_movement_sticky_keys_beacon(hass, context):
     """Test a complex sequence which was previously broken."""
-    # I am not_home
+    # I am not_spencer
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     assert_location_state(hass, "outer")
 
@@ -1291,7 +1291,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
+        "spencerassistant.components.owntracks.messages.async_handle_not_impl_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1302,7 +1302,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
+        "spencerassistant.components.owntracks.messages.async_handle_unsupported_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1381,13 +1381,13 @@ def mock_cipher():
 def config_context(hass, setup_comp):
     """Set up the mocked context."""
     patch_load = patch(
-        "homeassistant.components.device_tracker.async_load_config",
+        "spencerassistant.components.device_tracker.async_load_config",
         return_value=mock_coro([]),
     )
     patch_load.start()
 
     patch_save = patch(
-        "homeassistant.components.device_tracker.DeviceTracker.async_update_config"
+        "spencerassistant.components.device_tracker.DeviceTracker.async_update_config"
     )
     patch_save.start()
 
@@ -1401,7 +1401,7 @@ def config_context(hass, setup_comp):
 def mock_not_supports_encryption():
     """Mock non successful nacl import."""
     with patch(
-        "homeassistant.components.owntracks.messages.supports_encryption",
+        "spencerassistant.components.owntracks.messages.supports_encryption",
         return_value=False,
     ):
         yield
@@ -1411,12 +1411,12 @@ def mock_not_supports_encryption():
 def mock_get_cipher_error():
     """Mock non successful cipher."""
     with patch(
-        "homeassistant.components.owntracks.messages.get_cipher", side_effect=OSError()
+        "spencerassistant.components.owntracks.messages.get_cipher", side_effect=OSError()
     ):
         yield
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload(hass, setup_comp):
     """Test encrypted payload."""
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
@@ -1424,7 +1424,7 @@ async def test_encrypted_payload(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload_topic_key(hass, setup_comp):
     """Test encrypted payload with a topic key."""
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: TEST_SECRET_KEY}})
@@ -1448,7 +1448,7 @@ async def test_encrypted_payload_get_cipher_error(hass, setup_comp, get_cipher_e
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload_no_key(hass, setup_comp):
     """Test encrypted payload with no key, ."""
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
@@ -1457,7 +1457,7 @@ async def test_encrypted_payload_no_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload_wrong_key(hass, setup_comp):
     """Test encrypted payload with wrong key."""
     await setup_owntracks(hass, {CONF_SECRET: "wrong key"})
@@ -1465,7 +1465,7 @@ async def test_encrypted_payload_wrong_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     """Test encrypted payload with wrong  topic key."""
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: "wrong key"}})
@@ -1473,7 +1473,7 @@ async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-@patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
+@patch("spencerassistant.components.owntracks.messages.get_cipher", mock_cipher)
 async def test_encrypted_payload_no_topic_key(hass, setup_comp):
     """Test encrypted payload with no topic key."""
     await setup_owntracks(
@@ -1609,7 +1609,7 @@ async def test_returns_array_friends(hass, hass_client):
         },
     )
     hass.states.async_set(
-        "device_tracker.person_1_tracker_1", "home", {"latitude": 10, "longitude": 20}
+        "device_tracker.person_1_tracker_1", "spencer", {"latitude": 10, "longitude": 20}
     )
 
     client = await hass_client()

@@ -3,10 +3,10 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.image_processing import DOMAIN, SERVICE_SCAN
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
+from spencerassistant.components.image_processing import DOMAIN, SERVICE_SCAN
+from spencerassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
+from spencerassistant.core import callback
+from spencerassistant.loader import bind_hass
 
 
 @bind_hass

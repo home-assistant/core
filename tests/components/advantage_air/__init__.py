@@ -1,7 +1,7 @@
 """Tests for the Advantage Air component."""
 
-from homeassistant.components.advantage_air.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from spencerassistant.components.advantage_air.const import DOMAIN
+from spencerassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry, load_fixture
 

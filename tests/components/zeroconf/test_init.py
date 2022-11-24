@@ -6,20 +6,20 @@ from unittest.mock import call, patch
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
-from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import (
+from spencerassistant.components import zeroconf
+from spencerassistant.components.zeroconf import (
     CONF_DEFAULT_INTERFACE,
     CONF_IPV6,
     _get_announced_addresses,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     EVENT_COMPONENT_LOADED,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_START,
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
 )
-from homeassistant.generated import zeroconf as zc_gen
-from homeassistant.setup import ATTR_COMPONENT, async_setup_component
+from spencerassistant.generated import zeroconf as zc_gen
+from spencerassistant.setup import ATTR_COMPONENT, async_setup_component
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -29,8 +29,8 @@ PROPERTIES = {
     NON_ASCII_KEY: None,
 }
 
-HOMEKIT_STATUS_UNPAIRED = b"1"
-HOMEKIT_STATUS_PAIRED = b"0"
+spencerKIT_STATUS_UNPAIRED = b"1"
+spencerKIT_STATUS_PAIRED = b"0"
 
 
 def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=None):
@@ -73,10 +73,10 @@ def get_service_info_mock_without_an_address(
     )
 
 
-def get_homekit_info_mock(model, pairing_status):
-    """Return homekit info for get_service_info for an homekit device."""
+def get_spencerkit_info_mock(model, pairing_status):
+    """Return spencerkit info for get_service_info for an spencerkit device."""
 
-    def mock_homekit_info(service_type, name):
+    def mock_spencerkit_info(service_type, name):
         return AsyncServiceInfo(
             service_type,
             name,
@@ -88,7 +88,7 @@ def get_homekit_info_mock(model, pairing_status):
             properties={b"md": model.encode(), b"sf": pairing_status},
         )
 
-    return mock_homekit_info
+    return mock_spencerkit_info
 
 
 def get_zeroconf_info_mock(macaddress):
@@ -162,11 +162,11 @@ async def test_setup(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -191,17 +191,17 @@ async def test_setup_with_overly_long_url_and_name(hass, mock_async_zeroconf, ca
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.get_url",
+        "spencerassistant.components.zeroconf.get_url",
         return_value="https://this.url.is.way.too.long/very/deep/path/that/will/make/us/go/over/the/maximum/string/length/and/would/cause/zeroconf/to/fail/to/startup/because/the/key/and/value/can/only/be/255/bytes/and/this/string/is/a/bit/longer/than/the/maximum/length/that/we/allow/for/a/value",
     ), patch.object(
         hass.config,
         "location_name",
         "\u00dcBER \u00dcber German Umlaut long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string",
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo.request",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo.request",
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert "https://this.url.is.way.too.long" in caplog.text
@@ -213,13 +213,13 @@ async def test_setup_with_default_interface(hass, mock_async_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: True}}
         )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_async_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
@@ -230,7 +230,7 @@ async def test_setup_without_default_interface(hass, mock_async_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(
@@ -245,13 +245,13 @@ async def test_setup_without_ipv6(hass, mock_async_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: False}}
         )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_async_zeroconf.called_with(ip_version=IPVersion.V4Only)
@@ -262,13 +262,13 @@ async def test_setup_with_ipv6(hass, mock_async_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(
             hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_IPV6: True}}
         )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_async_zeroconf.called_with()
@@ -279,11 +279,11 @@ async def test_setup_with_ipv6_default(hass, mock_async_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_async_zeroconf.called_with()
@@ -318,11 +318,11 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock("FFAADDCC11DD"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -356,11 +356,11 @@ async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock_manufacturer("Samsung Electronics"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -393,11 +393,11 @@ async def test_zeroconf_match_model(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock_model("appletv"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -430,11 +430,11 @@ async def test_zeroconf_match_manufacturer_not_present(hass, mock_async_zeroconf
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock("aabbccddeeff"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -462,11 +462,11 @@ async def test_zeroconf_no_match(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock("FFAADDCC11DD"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -498,24 +498,24 @@ async def test_zeroconf_no_match_manufacturer(hass, mock_async_zeroconf):
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_zeroconf_info_mock_manufacturer("Not Samsung Electronics"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
+async def test_spencerkit_match_partial_space(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._tcp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"LIFX": "lifx"}, clear=True,), patch.object(
+    ), patch.dict(zc_gen.spencerKIT, {"LIFX": "lifx"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -524,11 +524,11 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._tcp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("LIFX bulb", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("LIFX bulb", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -541,14 +541,14 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
     }
 
 
-async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
+async def test_spencerkit_match_partial_dash(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._udp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
     ), patch.dict(
-        zc_gen.HOMEKIT,
+        zc_gen.spencerKIT,
         {"Smart Bridge": "lutron_caseta"},
         clear=True,
     ), patch.object(
@@ -560,11 +560,11 @@ async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._udp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("Smart Bridge-001", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("Smart Bridge-001", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -572,13 +572,13 @@ async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "lutron_caseta"
 
 
-async def test_homekit_match_partial_fnmatch(hass, mock_async_zeroconf):
-    """Test matching homekit devices with fnmatch."""
+async def test_spencerkit_match_partial_fnmatch(hass, mock_async_zeroconf):
+    """Test matching spencerkit devices with fnmatch."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._tcp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"YLDP*": "yeelight"}, clear=True), patch.object(
+    ), patch.dict(zc_gen.spencerKIT, {"YLDP*": "yeelight"}, clear=True), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -587,11 +587,11 @@ async def test_homekit_match_partial_fnmatch(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._tcp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("YLDP13YL", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("YLDP13YL", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -599,13 +599,13 @@ async def test_homekit_match_partial_fnmatch(hass, mock_async_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "yeelight"
 
 
-async def test_homekit_match_full(hass, mock_async_zeroconf):
+async def test_spencerkit_match_full(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._udp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"BSB002": "hue"}, clear=True,), patch.object(
+    ), patch.dict(zc_gen.spencerKIT, {"BSB002": "hue"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -614,11 +614,11 @@ async def test_homekit_match_full(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._udp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("BSB002", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("BSB002", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -626,14 +626,14 @@ async def test_homekit_match_full(hass, mock_async_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
 
 
-async def test_homekit_already_paired(hass, mock_async_zeroconf):
-    """Test that an already paired device is sent to homekit_controller."""
+async def test_spencerkit_already_paired(hass, mock_async_zeroconf):
+    """Test that an already paired device is sent to spencerkit_controller."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._tcp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
     ), patch.dict(
-        zc_gen.HOMEKIT,
+        zc_gen.spencerKIT,
         {"AC02": "tado", "tado": "tado"},
         clear=True,
     ), patch.object(
@@ -645,27 +645,27 @@ async def test_homekit_already_paired(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._tcp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("tado", HOMEKIT_STATUS_PAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("tado", spencerKIT_STATUS_PAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "tado"
-    assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1][1][0] == "spencerkit_controller"
 
 
-async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
-    """Test that missing paring data is not sent to homekit_controller."""
+async def test_spencerkit_invalid_paring_status(hass, mock_async_zeroconf):
+    """Test that missing paring data is not sent to spencerkit_controller."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._tcp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
     ), patch.dict(
-        zc_gen.HOMEKIT,
+        zc_gen.spencerKIT,
         {"Smart Bridge": "lutron_caseta"},
         clear=True,
     ), patch.object(
@@ -677,11 +677,11 @@ async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
             *args, **kwargs, limit_service="_hap._tcp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("Smart Bridge", b"invalid"),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("Smart Bridge", b"invalid"),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
@@ -689,44 +689,44 @@ async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "lutron_caseta"
 
 
-async def test_homekit_not_paired(hass, mock_async_zeroconf):
-    """Test that an not paired device is sent to homekit_controller."""
+async def test_spencerkit_not_paired(hass, mock_async_zeroconf):
+    """Test that an not paired device is sent to spencerkit_controller."""
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._tcp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock(
-            "this_will_not_match_any_integration", HOMEKIT_STATUS_UNPAIRED
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock(
+            "this_will_not_match_any_integration", spencerKIT_STATUS_UNPAIRED
         ),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
-    assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[0][1][0] == "spencerkit_controller"
 
 
-async def test_homekit_controller_still_discovered_unpaired_for_cloud(
+async def test_spencerkit_controller_still_discovered_unpaired_for_cloud(
     hass, mock_async_zeroconf
 ):
-    """Test discovery is still passed to homekit controller when unpaired and discovered by cloud integration.
+    """Test discovery is still passed to spencerkit controller when unpaired and discovered by cloud integration.
 
     Since we prefer local control, if the integration that is being discovered
-    is cloud AND the homekit device is unpaired we still want to discovery it
+    is cloud AND the spencerkit device is unpaired we still want to discovery it
     """
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._udp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"Rachio": "rachio"}, clear=True,), patch.object(
+    ), patch.dict(zc_gen.spencerKIT, {"Rachio": "rachio"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -735,33 +735,33 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
             *args, **kwargs, limit_service="_hap._udp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("Rachio-xyz", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("Rachio-xyz", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
-    assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1][1][0] == "spencerkit_controller"
 
 
-async def test_homekit_controller_still_discovered_unpaired_for_polling(
+async def test_spencerkit_controller_still_discovered_unpaired_for_polling(
     hass, mock_async_zeroconf
 ):
-    """Test discovery is still passed to homekit controller when unpaired and discovered by polling integration.
+    """Test discovery is still passed to spencerkit controller when unpaired and discovered by polling integration.
 
     Since we prefer local push, if the integration that is being discovered
-    is polling AND the homekit device is unpaired we still want to discovery it
+    is polling AND the spencerkit device is unpaired we still want to discovery it
     """
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        {"_hap._udp.local.": [{"domain": "spencerkit_controller"}]},
         clear=True,
     ), patch.dict(
-        zc_gen.HOMEKIT,
+        zc_gen.spencerKIT,
         {"iSmartGate": "gogogate2"},
         clear=True,
     ), patch.object(
@@ -773,17 +773,17 @@ async def test_homekit_controller_still_discovered_unpaired_for_polling(
             *args, **kwargs, limit_service="_hap._udp.local."
         ),
     ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("iSmartGate", HOMEKIT_STATUS_UNPAIRED),
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_spencerkit_info_mock("iSmartGate", spencerKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "gogogate2"
-    assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1][1][0] == "spencerkit_controller"
 
 
 async def test_info_from_service_non_utf8(hass):
@@ -879,7 +879,7 @@ async def test_get_instance(hass, mock_async_zeroconf):
     assert (
         await hass.components.zeroconf.async_get_async_instance() is mock_async_zeroconf
     )
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_async_zeroconf.ha_async_close.mock_calls) == 1
 
@@ -911,11 +911,11 @@ async def test_removed_ignored(hass, mock_async_zeroconf):
     with patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ) as mock_service_info:
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_service_info.mock_calls) == 2
@@ -939,19 +939,19 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
     hass, mock_async_zeroconf
 ):
     """Test without default interface config and the route returns a non-loopback address."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
+    with patch("spencerassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
         hass.config_entries.flow, "async_init"
     ), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTER_WITH_DEFAULT_ENABLED,
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
@@ -1023,19 +1023,19 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
     hass, mock_async_zeroconf
 ):
     """Test without default interface config and the route returns nothing on linux."""
-    with patch("homeassistant.components.zeroconf.sys.platform", "linux"), patch(
-        "homeassistant.components.zeroconf.HaZeroconf"
+    with patch("spencerassistant.components.zeroconf.sys.platform", "linux"), patch(
+        "spencerassistant.components.zeroconf.HaZeroconf"
     ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
         interfaces=[
@@ -1053,19 +1053,19 @@ async def test_async_detect_interfaces_setting_empty_route_freebsd(
     hass, mock_async_zeroconf
 ):
     """Test without default interface config and the route returns nothing on freebsd."""
-    with patch("homeassistant.components.zeroconf.sys.platform", "freebsd"), patch(
-        "homeassistant.components.zeroconf.HaZeroconf"
+    with patch("spencerassistant.components.zeroconf.sys.platform", "freebsd"), patch(
+        "spencerassistant.components.zeroconf.HaZeroconf"
     ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
         interfaces=[
@@ -1121,19 +1121,19 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
     hass, mock_async_zeroconf
 ):
     """Test interfaces are explicitly set when IPv6 is present on linux."""
-    with patch("homeassistant.components.zeroconf.sys.platform", "linux"), patch(
-        "homeassistant.components.zeroconf.HaZeroconf"
+    with patch("spencerassistant.components.zeroconf.sys.platform", "linux"), patch(
+        "spencerassistant.components.zeroconf.HaZeroconf"
     ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
@@ -1146,19 +1146,19 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
     hass, mock_async_zeroconf
 ):
     """Test interfaces are explicitly set when IPv6 is present on freebsd."""
-    with patch("homeassistant.components.zeroconf.sys.platform", "freebsd"), patch(
-        "homeassistant.components.zeroconf.HaZeroconf"
+    with patch("spencerassistant.components.zeroconf.sys.platform", "freebsd"), patch(
+        "spencerassistant.components.zeroconf.HaZeroconf"
     ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.network.async_get_adapters",
+        "spencerassistant.components.zeroconf.network.async_get_adapters",
         return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        "spencerassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
@@ -1168,16 +1168,16 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
 
 
 async def test_no_name(hass, mock_async_zeroconf):
-    """Test fallback to Home for mDNS announcement if the name is missing."""
+    """Test fallback to spencer for mDNS announcement if the name is missing."""
     hass.config.location_name = ""
-    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+    with patch("spencerassistant.components.zeroconf.HaZeroconf"):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
-    assert info.name == "Home._home-assistant._tcp.local."
+    assert info.name == "spencer._spencer-assistant._tcp.local."
 
 
 async def test_setup_with_disallowed_characters_in_local_name(
@@ -1192,16 +1192,16 @@ async def test_setup_with_disallowed_characters_in_local_name(
         "My.House",
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     calls = mock_async_zeroconf.async_register_service.mock_calls
-    assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
+    assert calls[0][1][0].name == "My House._spencer-assistant._tcp.local."
 
 
 async def test_start_with_frontend(hass, mock_async_zeroconf):
     """Test we start with the frontend."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+    with patch("spencerassistant.components.zeroconf.HaZeroconf"):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
         await hass.async_block_till_done()

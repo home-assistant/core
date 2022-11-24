@@ -4,36 +4,36 @@ from unittest.mock import AsyncMock, patch
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.watttime.config_flow import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
-    LOCATION_TYPE_HOME,
+    LOCATION_TYPE_spencer,
 )
-from homeassistant.components.watttime.const import (
+from spencerassistant.components.watttime.const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
     CONF_SHOW_ON_MAP,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
     "exc,error", [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")]
 )
 async def test_auth_errors(
-    hass: HomeAssistant, config_auth, config_location_type, exc, error
+    hass: spencerAssistant, config_auth, config_location_type, exc, error
 ) -> None:
     """Test that issues with auth show the correct error."""
     with patch(
-        "homeassistant.components.watttime.config_flow.Client.async_login",
+        "spencerassistant.components.watttime.config_flow.Client.async_login",
         side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -57,7 +57,7 @@ async def test_auth_errors(
     ],
 )
 async def test_coordinate_errors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_auth,
     config_coordinates,
     config_location_type,
@@ -79,10 +79,10 @@ async def test_coordinate_errors(
 
 
 @pytest.mark.parametrize(
-    "config_location_type", [{CONF_LOCATION_TYPE: LOCATION_TYPE_HOME}]
+    "config_location_type", [{CONF_LOCATION_TYPE: LOCATION_TYPE_spencer}]
 )
 async def test_duplicate_error(
-    hass: HomeAssistant, config_auth, config_entry, config_location_type, setup_watttime
+    hass: spencerAssistant, config_auth, config_entry, config_location_type, setup_watttime
 ):
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
@@ -95,10 +95,10 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistant, config_entry):
+async def test_options_flow(hass: spencerAssistant, config_entry):
     """Test config flow options."""
     with patch(
-        "homeassistant.components.watttime.async_setup_entry", return_value=True
+        "spencerassistant.components.watttime.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -113,7 +113,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry):
 
 
 async def test_show_form_coordinates(
-    hass: HomeAssistant, config_auth, config_location_type, setup_watttime
+    hass: spencerAssistant, config_auth, config_location_type, setup_watttime
 ) -> None:
     """Test showing the form to input custom latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
@@ -131,7 +131,7 @@ async def test_show_form_coordinates(
     assert result["errors"] is None
 
 
-async def test_show_form_user(hass: HomeAssistant) -> None:
+async def test_show_form_user(hass: spencerAssistant) -> None:
     """Test showing the form to select the authentication type."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,11 +142,11 @@ async def test_show_form_user(hass: HomeAssistant) -> None:
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config_auth, config_coordinates, config_entry, setup_watttime
+    hass: spencerAssistant, config_auth, config_coordinates, config_entry, setup_watttime
 ) -> None:
     """Test a full reauth flow."""
     with patch(
-        "homeassistant.components.watttime.async_setup_entry",
+        "spencerassistant.components.watttime.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -168,7 +168,7 @@ async def test_step_reauth(
 
 
 async def test_step_user_coordinates(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_auth,
     config_location_type,
     config_coordinates,
@@ -197,12 +197,12 @@ async def test_step_user_coordinates(
 
 
 @pytest.mark.parametrize(
-    "config_location_type", [{CONF_LOCATION_TYPE: LOCATION_TYPE_HOME}]
+    "config_location_type", [{CONF_LOCATION_TYPE: LOCATION_TYPE_spencer}]
 )
-async def test_step_user_home(
-    hass: HomeAssistant, config_auth, config_location_type, setup_watttime
+async def test_step_user_spencer(
+    hass: spencerAssistant, config_auth, config_location_type, setup_watttime
 ) -> None:
-    """Test a full login flow (selecting the home location)."""
+    """Test a full login flow (selecting the spencer location)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
     )

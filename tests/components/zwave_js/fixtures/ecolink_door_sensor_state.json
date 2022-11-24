@@ -153,9 +153,9 @@
       "commandClassName": "Notification",
       "commandClass": 113,
       "endpoint": 0,
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Cover status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Cover status",
       "metadata": {
         "type": "any",

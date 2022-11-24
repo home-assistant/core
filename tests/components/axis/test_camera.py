@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from homeassistant.components import camera
-from homeassistant.components.axis.const import (
+from spencerassistant.components import camera
+from spencerassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import STATE_IDLE
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from spencerassistant.const import STATE_IDLE
+from spencerassistant.setup import async_setup_component
 
 from .test_device import ENTRY_OPTIONS, NAME, setup_axis_integration
 

@@ -1,25 +1,25 @@
 """The tests for Shelly device triggers."""
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.shelly.const import (
+from spencerassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     CONF_SUBTYPE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import (
+from spencerassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from . import init_integration
 

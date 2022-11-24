@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import aiounifi
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.unifi.config_flow import _async_discover_unifi
-from homeassistant.components.unifi.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.unifi.config_flow import _async_discover_unifi
+from spencerassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
@@ -23,8 +23,8 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import (
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -302,7 +302,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
-    with patch("homeassistant.components.unifi.async_setup_entry"):
+    with patch("spencerassistant.components.unifi.async_setup_entry"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={

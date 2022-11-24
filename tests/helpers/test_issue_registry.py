@@ -1,13 +1,13 @@
 """Test the repairs websocket API."""
 import pytest
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import issue_registry
 
 from tests.common import async_capture_events, flush_store
 
 
-async def test_load_issues(hass: HomeAssistant) -> None:
+async def test_load_issues(hass: spencerAssistant) -> None:
     """Make sure that we can load/save data correctly."""
     issues = [
         {
@@ -172,7 +172,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_issues_from_storage(hass: spencerAssistant, hass_storage) -> None:
     """Test loading stored issues on start."""
     hass_storage[issue_registry.STORAGE_KEY] = {
         "version": issue_registry.STORAGE_VERSION_MAJOR,
@@ -219,7 +219,7 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
+async def test_migration_1_1(hass: spencerAssistant, hass_storage) -> None:
     """Test migration from version 1.1."""
     hass_storage[issue_registry.STORAGE_KEY] = {
         "version": 1,

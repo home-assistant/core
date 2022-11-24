@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import cover, mqtt
-from homeassistant.components.cover import (
+from spencerassistant.components import cover, mqtt
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
-from homeassistant.components.mqtt.cover import (
+from spencerassistant.components.mqtt.const import CONF_STATE_TOPIC
+from spencerassistant.components.mqtt.cover import (
     CONF_GET_POSITION_TEMPLATE,
     CONF_GET_POSITION_TOPIC,
     CONF_SET_POSITION_TEMPLATE,
@@ -24,7 +24,7 @@ from homeassistant.components.mqtt.cover import (
     MQTT_COVER_ATTRIBUTES_BLOCKED,
     MqttCover,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     CONF_VALUE_TEMPLATE,
@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -86,7 +86,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def cover_platform_only():
     """Only setup the cover platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
         yield
 
 
@@ -2614,7 +2614,7 @@ async def test_discovery_update_unchanged_cover(
     """Test update of discovered cover."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
     with patch(
-        "homeassistant.components.mqtt.cover.MqttCover.discovery_update"
+        "spencerassistant.components.mqtt.cover.MqttCover.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

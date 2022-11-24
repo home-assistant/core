@@ -5,15 +5,15 @@ control of Rflink switch devices.
 
 """
 
-from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
-from homeassistant.const import (
+from spencerassistant.components.rflink import EVENT_BUTTON_PRESSED
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState, State, callback
+from spencerassistant.core import CoreState, State, callback
 
 from .test_init import mock_rflink
 

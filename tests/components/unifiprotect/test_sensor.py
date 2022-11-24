@@ -15,11 +15,11 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.data.nvr import EventMetadata
 
-from homeassistant.components.unifiprotect.const import (
+from spencerassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
     DEFAULT_ATTRIBUTION,
 )
-from homeassistant.components.unifiprotect.sensor import (
+from spencerassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
@@ -30,14 +30,14 @@ from homeassistant.components.unifiprotect.sensor import (
     OBJECT_TYPE_NONE,
     SENSE_SENSORS,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -56,7 +56,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
 
 async def test_sensor_camera_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
 ):
     """Test removing and re-adding a camera device."""
 
@@ -70,7 +70,7 @@ async def test_sensor_camera_remove(
 
 
 async def test_sensor_sensor_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test removing and re-adding a light device."""
 
@@ -84,7 +84,7 @@ async def test_sensor_sensor_remove(
 
 
 async def test_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test sensor entity setup for sensor devices."""
 
@@ -135,7 +135,7 @@ async def test_sensor_setup_sensor(
 
 
 async def test_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor: Sensor
 ):
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
@@ -169,7 +169,7 @@ async def test_sensor_setup_sensor_none(
 
 
 async def test_sensor_setup_nvr(
-    hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
+    hass: spencerAssistant, ufp: MockUFPFixture, fixed_now: datetime
 ):
     """Test sensor entity setup for NVR device."""
 
@@ -244,7 +244,7 @@ async def test_sensor_setup_nvr(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_sensor_nvr_missing_values(hass: spencerAssistant, ufp: MockUFPFixture):
     """Test NVR sensor sensors if no data available."""
 
     reset_objects(ufp.api.bootstrap)
@@ -313,7 +313,7 @@ async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixtur
 
 
 async def test_sensor_setup_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor entity setup for camera devices."""
 
@@ -414,7 +414,7 @@ async def test_sensor_setup_camera(
 
 
 async def test_sensor_setup_camera_with_last_trip_time(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_registry_enabled_by_default: AsyncMock,
     ufp: MockUFPFixture,
     doorbell: Camera,
@@ -446,7 +446,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
 
 async def test_sensor_update_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: spencerAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -490,7 +490,7 @@ async def test_sensor_update_motion(
 
 
 async def test_sensor_update_alarm(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
+    hass: spencerAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -534,7 +534,7 @@ async def test_sensor_update_alarm(
 
 
 async def test_sensor_update_alarm_with_last_trip_time(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_registry_enabled_by_default: AsyncMock,
     ufp: MockUFPFixture,
     sensor_all: Sensor,

@@ -1,9 +1,9 @@
 """Test button of ONVIF integration."""
 from unittest.mock import AsyncMock
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
+from spencerassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
+from spencerassistant.helpers import entity_registry as er
 
 from . import MAC, setup_onvif_integration
 

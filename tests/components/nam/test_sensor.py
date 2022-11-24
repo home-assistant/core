@@ -4,14 +4,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from nettigo_air_monitor import ApiError
 
-from homeassistant.components.nam.const import DOMAIN
-from homeassistant.components.sensor import (
+from spencerassistant.components.nam.const import DOMAIN
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -24,9 +24,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from . import INCOMPLETE_NAM_DATA, init_integration, nam_data
 
@@ -55,7 +55,7 @@ async def test_sensor(hass):
 
     # Patch return value from utcnow, with offset to make sure the patch is correct
     now = utcnow() - timedelta(hours=1)
-    with patch("homeassistant.components.nam.sensor.utcnow", return_value=now):
+    with patch("spencerassistant.components.nam.sensor.utcnow", return_value=now):
         await init_integration(hass)
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_humidity")
@@ -473,8 +473,8 @@ async def test_incompleta_data_after_device_restart(hass):
 
     future = utcnow() + timedelta(minutes=6)
     update_response = Mock(json=AsyncMock(return_value=INCOMPLETE_NAM_DATA))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+    with patch("spencerassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "spencerassistant.components.nam.NettigoAirMonitor._async_http_request",
         return_value=update_response,
     ):
         async_fire_time_changed(hass, future)
@@ -495,8 +495,8 @@ async def test_availability(hass):
     assert state.state == "7.6"
 
     future = utcnow() + timedelta(minutes=6)
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+    with patch("spencerassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "spencerassistant.components.nam.NettigoAirMonitor._async_http_request",
         side_effect=ApiError("API Error"),
     ):
         async_fire_time_changed(hass, future)
@@ -508,8 +508,8 @@ async def test_availability(hass):
 
     future = utcnow() + timedelta(minutes=12)
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+    with patch("spencerassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "spencerassistant.components.nam.NettigoAirMonitor._async_http_request",
         return_value=update_response,
     ):
         async_fire_time_changed(hass, future)
@@ -522,18 +522,18 @@ async def test_availability(hass):
 
 
 async def test_manual_update_entity(hass):
-    """Test manual update entity via service homeasasistant/update_entity."""
+    """Test manual update entity via service spencerasasistant/update_entity."""
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
 
     update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+    with patch("spencerassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "spencerassistant.components.nam.NettigoAirMonitor._async_http_request",
         return_value=update_response,
     ) as mock_get_data:
         await hass.services.async_call(
-            "homeassistant",
+            "spencerassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["sensor.nettigo_air_monitor_bme280_temperature"]},
             blocking=True,

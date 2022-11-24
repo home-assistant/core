@@ -10,23 +10,23 @@ from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
-from homeassistant import setup
-from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import (
+from spencerassistant import setup
+from spencerassistant.components.switch import DOMAIN, SCAN_INTERVAL
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
-async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+async def setup_test_entity(hass: spencerAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line switch entity."""
     assert await setup.async_setup_component(
         hass,
@@ -40,7 +40,7 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     await hass.async_block_till_done()
 
 
-async def test_state_none(hass: HomeAssistant) -> None:
+async def test_state_none(hass: spencerAssistant) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -81,7 +81,7 @@ async def test_state_none(hass: HomeAssistant) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_value(hass: HomeAssistant) -> None:
+async def test_state_value(hass: spencerAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -127,7 +127,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-async def test_state_json_value(hass: HomeAssistant) -> None:
+async def test_state_json_value(hass: spencerAssistant) -> None:
     """Test with state JSON value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -176,7 +176,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         assert entity_state.attributes.get("icon") == "mdi:off"
 
 
-async def test_state_code(hass: HomeAssistant) -> None:
+async def test_state_code(hass: spencerAssistant) -> None:
     """Test with state code."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -219,7 +219,7 @@ async def test_state_code(hass: HomeAssistant) -> None:
 
 
 async def test_assumed_state_should_be_true_if_command_state_is_none(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test with state value."""
 
@@ -238,7 +238,7 @@ async def test_assumed_state_should_be_true_if_command_state_is_none(
 
 
 async def test_assumed_state_should_absent_if_command_state_present(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test with state value."""
 
@@ -257,7 +257,7 @@ async def test_assumed_state_should_absent_if_command_state_present(
     assert "assumed_state" not in entity_state.attributes
 
 
-async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
+async def test_name_is_set_correctly(hass: spencerAssistant) -> None:
     """Test that name is set correctly."""
     await setup_test_entity(
         hass,
@@ -276,7 +276,7 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
 
 
 async def test_switch_command_state_fail(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
@@ -313,12 +313,12 @@ async def test_switch_command_state_fail(
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -346,12 +346,12 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -379,14 +379,14 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_switches(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(hass: spencerAssistant) -> None:
     """Test unique_id option and if it only creates one switch per id."""
     await setup_test_entity(
         hass,
@@ -421,7 +421,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
 
 
-async def test_command_failure(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_command_failure(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test command failure."""
 
     await setup_test_entity(

@@ -1,8 +1,8 @@
 """Tests for the Atag climate platform."""
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
-from homeassistant.components.climate import (
+from spencerassistant.components.atag.climate import DOMAIN, PRESET_MAP
+from spencerassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -14,16 +14,16 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.spencerassistant import DOMAIN as HA_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from . import UID, init_integration
 
@@ -33,7 +33,7 @@ CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
 
 
 async def test_climate(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of Atag climate device."""
     await init_integration(hass, aioclient_mock)
@@ -46,7 +46,7 @@ async def test_climate(
 
 
 async def test_setting_climate(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test setting the climate device."""
     await init_integration(hass, aioclient_mock)
@@ -82,7 +82,7 @@ async def test_setting_climate(
 
 
 async def test_incorrect_modes(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test incorrect values are handled correctly."""
@@ -95,7 +95,7 @@ async def test_incorrect_modes(
 
 
 async def test_update_failed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test data is not destroyed on update failure."""

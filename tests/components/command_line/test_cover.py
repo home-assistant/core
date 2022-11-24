@@ -8,23 +8,23 @@ from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
-from homeassistant import config as hass_config, setup
-from homeassistant.components.cover import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import (
+from spencerassistant import config as hass_config, setup
+from spencerassistant.components.cover import DOMAIN, SCAN_INTERVAL
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_RELOAD,
     SERVICE_STOP_COVER,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
 
 
-async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+async def setup_test_entity(hass: spencerAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line notify service."""
     assert await setup.async_setup_component(
         hass,
@@ -38,22 +38,22 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     await hass.async_block_till_done()
 
 
-async def test_no_covers(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_covers(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         return_value=b"50\n",
     ):
         await setup_test_entity(hass, {})
         assert "No covers added" in caplog.text
 
 
-async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
+async def test_no_poll_when_cover_has_no_command_state(hass: spencerAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {}})
@@ -62,11 +62,11 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
         assert not check_output.called
 
 
-async def test_poll_when_cover_has_command_state(hass: HomeAssistant) -> None:
+async def test_poll_when_cover_has_command_state(hass: spencerAssistant) -> None:
     """Test that the cover polls when there's a state  command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "spencerassistant.components.command_line.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {"command_state": "echo state"}})
@@ -77,7 +77,7 @@ async def test_poll_when_cover_has_command_state(hass: HomeAssistant) -> None:
         )
 
 
-async def test_state_value(hass: HomeAssistant) -> None:
+async def test_state_value(hass: spencerAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "cover_status")
@@ -120,7 +120,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         assert entity_state.state == "closed"
 
 
-async def test_reload(hass: HomeAssistant) -> None:
+async def test_reload(hass: spencerAssistant) -> None:
     """Verify we can reload command_line covers."""
 
     await setup_test_entity(
@@ -153,7 +153,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_move_cover_failure(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test command failure."""
 
@@ -168,7 +168,7 @@ async def test_move_cover_failure(
     assert "return code 1" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(hass: spencerAssistant) -> None:
     """Test unique_id option and if it only creates one cover per id."""
     await setup_test_entity(
         hass,

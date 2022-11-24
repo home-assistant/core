@@ -1,9 +1,9 @@
-"""Test Home Assistant icon util methods."""
+"""Test spencer Assistant icon util methods."""
 
 
 def test_battery_icon():
     """Test icon generator for battery sensor."""
-    from homeassistant.helpers.icon import icon_for_battery_level
+    from spencerassistant.helpers.icon import icon_for_battery_level
 
     assert icon_for_battery_level(None, True) == "mdi:battery-unknown"
     assert icon_for_battery_level(None, False) == "mdi:battery-unknown"
@@ -48,7 +48,7 @@ def test_battery_icon():
 
 def test_signal_icon():
     """Test icon generator for signal sensor."""
-    from homeassistant.helpers.icon import icon_for_signal_level
+    from spencerassistant.helpers.icon import icon_for_signal_level
 
     assert icon_for_signal_level(None) == "mdi:signal-cellular-outline"
     assert icon_for_signal_level(0) == "mdi:signal-cellular-outline"

@@ -1,10 +1,10 @@
 """Tests for Shelly binary sensor platform."""
 
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import State
-from homeassistant.helpers.entity_registry import async_get
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import State
+from spencerassistant.helpers.entity_registry import async_get
 
 from . import (
     init_integration,

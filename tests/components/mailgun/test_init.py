@@ -4,19 +4,19 @@ import hmac
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import mailgun, webhook
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import mailgun, webhook
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import CONF_API_KEY, CONF_DOMAIN
+from spencerassistant.core import callback
+from spencerassistant.setup import async_setup_component
 
 API_KEY = "abc123"
 
 
 @pytest.fixture
 async def http_client(hass, hass_client_no_auth):
-    """Initialize a Home Assistant Server for testing this module."""
+    """Initialize a spencer Assistant Server for testing this module."""
     await async_setup_component(hass, webhook.DOMAIN, {})
     return await hass_client_no_auth()
 

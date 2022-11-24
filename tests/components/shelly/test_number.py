@@ -4,16 +4,16 @@ from unittest.mock import AsyncMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
-from homeassistant.components.number import (
+from spencerassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import State
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.shelly.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.core import State
+from spencerassistant.exceptions import spencerAssistantError
 
 from . import init_integration, register_device, register_entity
 
@@ -107,7 +107,7 @@ async def test_block_set_value_connection_error(hass, mock_block_device, monkeyp
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

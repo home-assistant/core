@@ -2,8 +2,8 @@
 import json
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.metoffice.const import DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components.metoffice.const import DOMAIN
 
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
@@ -33,7 +33,7 @@ async def test_form(hass, requests_mock):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.metoffice.async_setup_entry",
+        "spencerassistant.components.metoffice.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

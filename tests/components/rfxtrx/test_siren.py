@@ -1,7 +1,7 @@
 """The tests for the Rfxtrx siren platform."""
 from unittest.mock import call
 
-from homeassistant.components.rfxtrx import DOMAIN
+from spencerassistant.components.rfxtrx import DOMAIN
 
 from .conftest import create_rfx_test_cfg
 

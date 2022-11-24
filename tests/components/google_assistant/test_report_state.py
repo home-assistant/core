@@ -2,9 +2,9 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.google_assistant import error, report_state
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from spencerassistant.components.google_assistant import error, report_state
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util.dt import utcnow
 
 from . import BASIC_CONFIG
 
@@ -64,7 +64,7 @@ async def test_report_state(hass, caplog):
 
     # Test that if serialize returns same value, we don't send
     with patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        "spencerassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
         return_value={"same": "info"},
     ), patch.object(BASIC_CONFIG, "async_report_state_all", AsyncMock()) as mock_report:
         # New state, so reported
@@ -99,8 +99,8 @@ async def test_report_state(hass, caplog):
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report, patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
-        side_effect=error.SmartHomeError("mock-error", "mock-msg"),
+        "spencerassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        side_effect=error.SmartspencerError("mock-error", "mock-msg"),
     ):
         hass.states.async_set("light.kitchen", "off")
         async_fire_time_changed(

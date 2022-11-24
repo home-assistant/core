@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientSession, web
 
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from .common import TEST_BACKUP, setup_backup_integration
 
@@ -12,7 +12,7 @@ from tests.common import MockUser
 
 
 async def test_downloading_backup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> None:
     """Test downloading a backup file."""
@@ -21,10 +21,10 @@ async def test_downloading_backup(
     client = await hass_client()
 
     with patch(
-        "homeassistant.components.backup.http.BackupManager.get_backup",
+        "spencerassistant.components.backup.http.BackupManager.get_backup",
         return_value=TEST_BACKUP,
     ), patch("pathlib.Path.exists", return_value=True), patch(
-        "homeassistant.components.backup.http.FileResponse",
+        "spencerassistant.components.backup.http.FileResponse",
         return_value=web.Response(text=""),
     ):
 
@@ -33,7 +33,7 @@ async def test_downloading_backup(
 
 
 async def test_downloading_backup_not_found(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> None:
     """Test downloading a backup file that does not exist."""
@@ -46,7 +46,7 @@ async def test_downloading_backup_not_found(
 
 
 async def test_non_admin(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     hass_client: Callable[..., Awaitable[ClientSession]],
     hass_admin_user: MockUser,
 ) -> None:

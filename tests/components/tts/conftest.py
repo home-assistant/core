@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.tts import _get_cache_files
+from spencerassistant.components.tts import _get_cache_files
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -25,7 +25,7 @@ def pytest_runtest_makereport(item, call):
 def mock_get_cache_files():
     """Mock the list TTS cache function."""
     with patch(
-        "homeassistant.components.tts._get_cache_files", return_value={}
+        "spencerassistant.components.tts._get_cache_files", return_value={}
     ) as mock_cache_files:
         yield mock_cache_files
 
@@ -34,7 +34,7 @@ def mock_get_cache_files():
 def mock_init_cache_dir():
     """Mock the TTS cache dir in memory."""
     with patch(
-        "homeassistant.components.tts._init_tts_cache_dir",
+        "spencerassistant.components.tts._init_tts_cache_dir",
         side_effect=lambda hass, cache_dir: hass.config.path(cache_dir),
     ) as mock_cache_dir:
         yield mock_cache_dir
@@ -67,7 +67,7 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request
 def mutagen_mock():
     """Mock writing tags."""
     with patch(
-        "homeassistant.components.tts.SpeechManager.write_tags",
+        "spencerassistant.components.tts.SpeechManager.write_tags",
         side_effect=lambda *args: args[1],
     ) as mock_write_tags:
         yield mock_write_tags

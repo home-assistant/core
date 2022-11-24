@@ -1,4 +1,4 @@
-<user email="myplexusername@email.com" id="12345" uuid="1234567890" mailing_list_status="active" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" username="User 1" title="User 1" cloudSyncDevice="" locale="" authenticationToken="faketoken" authToken="faketoken" scrobbleTypes="" restricted="0" home="1" guest="0" queueEmail="queue+1234567890@save.plex.tv" queueUid="" hasPassword="true" homeSize="2" maxHomeSize="15" secure="1" certificateVersion="2">
+<user email="myplexusername@email.com" id="12345" uuid="1234567890" mailing_list_status="active" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" username="User 1" title="User 1" cloudSyncDevice="" locale="" authenticationToken="faketoken" authToken="faketoken" scrobbleTypes="" restricted="0" spencer="1" guest="0" queueEmail="queue+1234567890@save.plex.tv" queueUid="" hasPassword="true" spencerSize="2" maxspencerSize="15" secure="1" certificateVersion="2">
   <subscription active="1" status="Active" plan="lifetime">
     <feature id="companions_sonos"/>
   </subscription>

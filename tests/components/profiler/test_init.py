@@ -3,7 +3,7 @@ from datetime import timedelta
 import os
 from unittest.mock import patch
 
-from homeassistant.components.profiler import (
+from spencerassistant.components.profiler import (
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
@@ -13,9 +13,9 @@ from homeassistant.components.profiler import (
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
 )
-from homeassistant.components.profiler.const import DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.profiler.const import DOMAIN
+from spencerassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
+import spencerassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

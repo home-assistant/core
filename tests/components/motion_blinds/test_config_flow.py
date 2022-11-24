@@ -4,11 +4,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp
-from homeassistant.components.motion_blinds import const
-from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import dhcp
+from spencerassistant.components.motion_blinds import const
+from spencerassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
+from spencerassistant.const import CONF_API_KEY, CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -71,34 +71,34 @@ TEST_INTERFACES = [
 def motion_blinds_connect_fixture(mock_get_source_ip):
     """Mock motion blinds connection and entry setup."""
     with patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.Update",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.device_list",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.device_list",
         TEST_DEVICE_LIST,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.mac",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.mac",
         TEST_MAC,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
+        "spencerassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+        "spencerassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+        "spencerassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.network.async_get_adapters",
+        "spencerassistant.components.motion_blinds.gateway.network.async_get_adapters",
         return_value=TEST_INTERFACES,
     ), patch(
-        "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
+        "spencerassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
 
@@ -156,7 +156,7 @@ async def test_config_flow_discovery_1_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
+        "spencerassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Stop_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -184,7 +184,7 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
+        "spencerassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_2,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -210,7 +210,7 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.Check_gateway_multicast",
         side_effect=socket.timeout,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -247,7 +247,7 @@ async def test_config_flow_connection_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
+        "spencerassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
         side_effect=socket.timeout,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -270,7 +270,7 @@ async def test_config_flow_discovery_fail(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
+        "spencerassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -303,7 +303,7 @@ async def test_config_flow_invalid_interface(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+        "spencerassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -337,7 +337,7 @@ async def test_dhcp_flow(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+        "spencerassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_configure(

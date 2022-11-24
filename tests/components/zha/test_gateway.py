@@ -7,8 +7,8 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
-from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.const import Platform
+from spencerassistant.components.zha.core.group import GroupMember
+from spencerassistant.const import Platform
 
 from .common import async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -36,7 +36,7 @@ def zigpy_dev_basic(zigpy_device_mock):
 def required_platform_only():
     """Only setup the required and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.SENSOR,
             Platform.LIGHT,
@@ -214,14 +214,14 @@ async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
 
 
 @patch(
-    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
+    "spencerassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
     MagicMock(),
 )
 @patch(
-    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
+    "spencerassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
     MagicMock(),
 )
-@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+@patch("spencerassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
 @pytest.mark.parametrize(
     "startup",
     [
@@ -245,7 +245,7 @@ async def test_gateway_initialize_success(startup, hass, device_light_1, coordin
     assert mock_new.call_count == len(startup)
 
 
-@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+@patch("spencerassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
 async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
     """Test ZHA failing to initialize the gateway."""
     zha_gateway = get_zha_gateway(hass)

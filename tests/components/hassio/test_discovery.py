@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.hassio.discovery import HassioServiceInfo
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.setup import async_setup_component
+from spencerassistant import config_entries
+from spencerassistant.components.hassio.discovery import HassioServiceInfo
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from spencerassistant.const import EVENT_spencerASSISTANT_START, EVENT_spencerASSISTANT_STARTED
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockModule, mock_entity_platform, mock_integration
 
@@ -63,9 +63,9 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client, moc
 
     assert aioclient_mock.call_count == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_START)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
     assert mock_mqtt.async_step_hassio.called
@@ -121,10 +121,10 @@ async def test_hassio_discovery_startup_done(
     )
 
     with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
+        "spencerassistant.components.hassio.HassIO.update_hass_api",
         return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
         await hass.async_start()
@@ -179,7 +179,7 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client, moc
         json={"addon": "mosquitto", "service": "mqtt", "uuid": "testuuid"},
     )
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert resp.status == HTTPStatus.OK

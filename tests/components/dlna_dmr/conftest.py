@@ -9,10 +9,10 @@ from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.client_factory import UpnpFactory
 import pytest
 
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
-from homeassistant.components.dlna_dmr.data import DlnaDmrData
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from spencerassistant.components.dlna_dmr.data import DlnaDmrData
+from spencerassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +30,7 @@ NEW_DEVICE_LOCATION = "http://192.88.99.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
-def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
+def domain_data_mock(hass: spencerAssistant) -> Iterable[Mock]:
     """Mock the global data used by this component.
 
     This includes network clients and library object factories. Mocking it
@@ -98,7 +98,7 @@ def config_entry_mock() -> MockConfigEntry:
 def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
     """Mock the async_upnp_client DMR device, initially connected."""
     with patch(
-        "homeassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
+        "spencerassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
     ) as constructor:
         device = constructor.return_value
         device.on_event = None
@@ -117,7 +117,7 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
 @pytest.fixture(autouse=True)
 def ssdp_scanner_mock() -> Iterable[Mock]:
     """Mock the SSDP Scanner."""
-    with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+    with patch("spencerassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
@@ -126,7 +126,7 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
 @pytest.fixture(autouse=True)
 def ssdp_server_mock() -> Iterable[Mock]:
     """Mock the SSDP Server."""
-    with patch("homeassistant.components.ssdp.Server", autospec=True):
+    with patch("spencerassistant.components.ssdp.Server", autospec=True):
         yield
 
 
@@ -134,7 +134,7 @@ def ssdp_server_mock() -> Iterable[Mock]:
 def async_get_local_ip_mock() -> Iterable[Mock]:
     """Mock the async_get_local_ip utility function to prevent network access."""
     with patch(
-        "homeassistant.components.dlna_dmr.media_player.async_get_local_ip",
+        "spencerassistant.components.dlna_dmr.media_player.async_get_local_ip",
         autospec=True,
     ) as func:
         func.return_value = AddressFamily.AF_INET, LOCAL_IP

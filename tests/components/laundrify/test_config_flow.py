@@ -2,17 +2,17 @@
 
 from laundrify_aio import exceptions
 
-from homeassistant.components.laundrify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_SOURCE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.laundrify.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from spencerassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_SOURCE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
 from .const import VALID_ACCESS_TOKEN, VALID_AUTH_CODE, VALID_USER_INPUT
 
 
-async def test_form(hass: HomeAssistant, laundrify_setup_entry) -> None:
+async def test_form(hass: spencerAssistant, laundrify_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant, laundrify_setup_entry) -> None:
 
 
 async def test_form_invalid_format(
-    hass: HomeAssistant, laundrify_exchange_code
+    hass: spencerAssistant, laundrify_exchange_code
 ) -> None:
     """Test we handle invalid format."""
     laundrify_exchange_code.side_effect = exceptions.InvalidFormat
@@ -50,7 +50,7 @@ async def test_form_invalid_format(
     assert result["errors"] == {CONF_CODE: "invalid_format"}
 
 
-async def test_form_invalid_auth(hass: HomeAssistant, laundrify_exchange_code) -> None:
+async def test_form_invalid_auth(hass: spencerAssistant, laundrify_exchange_code) -> None:
     """Test we handle invalid auth."""
     laundrify_exchange_code.side_effect = exceptions.UnknownAuthCode
     result = await hass.config_entries.flow.async_init(
@@ -63,7 +63,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, laundrify_exchange_code) -
     assert result["errors"] == {CONF_CODE: "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, laundrify_exchange_code):
+async def test_form_cannot_connect(hass: spencerAssistant, laundrify_exchange_code):
     """Test we handle cannot connect error."""
     laundrify_exchange_code.side_effect = exceptions.ApiConnectionException
     result = await hass.config_entries.flow.async_init(
@@ -76,7 +76,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, laundrify_exchange_code)
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unkown_exception(hass: HomeAssistant, laundrify_exchange_code):
+async def test_form_unkown_exception(hass: spencerAssistant, laundrify_exchange_code):
     """Test we handle all other errors."""
     laundrify_exchange_code.side_effect = Exception
     result = await hass.config_entries.flow.async_init(
@@ -89,7 +89,7 @@ async def test_form_unkown_exception(hass: HomeAssistant, laundrify_exchange_cod
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_step_reauth(hass: HomeAssistant) -> None:
+async def test_step_reauth(hass: spencerAssistant) -> None:
     """Test the reauth form is shown."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}
@@ -107,7 +107,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
 
 
-async def test_integration_already_exists(hass: HomeAssistant):
+async def test_integration_already_exists(hass: spencerAssistant):
     """Test we only allow a single config flow."""
     create_entry(hass)
     result = await hass.config_entries.flow.async_init(

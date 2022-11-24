@@ -9,10 +9,10 @@ import zigpy.profiles.zha
 import zigpy.types as t
 import zigpy.zcl.clusters
 
-import homeassistant.components.zha.core.channels as zha_channels
-import homeassistant.components.zha.core.channels.base as base_channels
-import homeassistant.components.zha.core.const as zha_const
-import homeassistant.components.zha.core.registries as registries
+import spencerassistant.components.zha.core.channels as zha_channels
+import spencerassistant.components.zha.core.channels.base as base_channels
+import spencerassistant.components.zha.core.const as zha_const
+import spencerassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -23,7 +23,7 @@ from tests.common import async_capture_events
 @pytest.fixture(autouse=True)
 def disable_platform_only():
     """Disable platforms to speed up tests."""
-    with patch("homeassistant.components.zha.PLATFORMS", []):
+    with patch("spencerassistant.components.zha.PLATFORMS", []):
         yield
 
 
@@ -350,10 +350,10 @@ def test_epch_claim_channels(channel):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+    "spencerassistant.components.zha.core.channels.ChannelPool.add_client_channels"
 )
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    "spencerassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
 def test_ep_channels_all_channels(m1, zha_device_mock):
@@ -401,10 +401,10 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+    "spencerassistant.components.zha.core.channels.ChannelPool.add_client_channels"
 )
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    "spencerassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
 def test_channel_power_config(m1, zha_device_mock):
@@ -658,10 +658,10 @@ async def test_zll_device_groups(
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+    "spencerassistant.components.zha.core.channels.ChannelPool.add_client_channels"
 )
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    "spencerassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
 async def test_cluster_no_ep_attribute(m1, zha_device_mock):

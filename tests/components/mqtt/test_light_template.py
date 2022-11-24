@@ -6,8 +6,8 @@ mqtt:
     light:
         schema: template
         name: mqtt_template_light_1
-        state_topic: 'home/rgb1'
-        command_topic: 'home/rgb1/set'
+        state_topic: 'spencer/rgb1'
+        command_topic: 'spencer/rgb1/set'
         command_on_template: >
             on,{{ brightness|d }},{{ red|d }}-{{ green|d }}-{{ blue|d }}
         command_off_template: 'off'
@@ -29,11 +29,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.light.schema_basic import (
+from spencerassistant.components import light, mqtt
+from spencerassistant.components.mqtt.light.schema_basic import (
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -41,8 +41,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -93,7 +93,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def light_platform_only():
     """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
         yield
 
 
@@ -1012,7 +1012,7 @@ async def test_discovery_update_unchanged_light(
         '  "command_off_template": "off"}'
     )
     with patch(
-        "homeassistant.components.mqtt.light.schema_template.MqttLightTemplate.discovery_update"
+        "spencerassistant.components.mqtt.light.schema_template.MqttLightTemplate.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

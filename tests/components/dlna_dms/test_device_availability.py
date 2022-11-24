@@ -11,12 +11,12 @@ from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 from didl_lite import didl_lite
 import pytest
 
-from homeassistant.components import media_source, ssdp
-from homeassistant.components.dlna_dms.const import DOMAIN
-from homeassistant.components.dlna_dms.dms import get_domain_data
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.core import HomeAssistant
+from spencerassistant.components import media_source, ssdp
+from spencerassistant.components.dlna_dms.const import DOMAIN
+from spencerassistant.components.dlna_dms.dms import get_domain_data
+from spencerassistant.components.media_player.errors import BrowseError
+from spencerassistant.components.media_source.error import Unresolvable
+from spencerassistant.core import spencerAssistant
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -58,7 +58,7 @@ async def connected_source_mock(
 
 @pytest.fixture
 async def disconnected_source_mock(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -103,14 +103,14 @@ async def disconnected_source_mock(
     )
 
 
-async def assert_source_available(hass: HomeAssistant) -> None:
+async def assert_source_available(hass: spencerAssistant) -> None:
     """Assert that the DmsDeviceSource under test can be used."""
     assert await media_source.async_browse_media(
         hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{DUMMY_OBJECT_ID}"
     )
 
 
-async def assert_source_unavailable(hass: HomeAssistant) -> None:
+async def assert_source_unavailable(hass: spencerAssistant) -> None:
     """Assert that the DmsDeviceSource under test cannot be used."""
     with pytest.raises(Unresolvable, match="DMS is not connected"):
         await media_source.async_browse_media(
@@ -119,7 +119,7 @@ async def assert_source_unavailable(hass: HomeAssistant) -> None:
 
 
 async def test_unavailable_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
     disconnected_source_mock: None,
@@ -165,7 +165,7 @@ async def test_unavailable_device(
 
 
 async def test_become_available(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
     disconnected_source_mock: None,
@@ -195,7 +195,7 @@ async def test_become_available(
 
 
 async def test_alive_but_gone(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
     disconnected_source_mock: None,
@@ -287,7 +287,7 @@ async def test_alive_but_gone(
 
 
 async def test_multiple_ssdp_alive(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
     disconnected_source_mock: None,
@@ -336,7 +336,7 @@ async def test_multiple_ssdp_alive(
 
 
 async def test_ssdp_byebye(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ssdp_scanner_mock: Mock,
     connected_source_mock: None,
 ) -> None:
@@ -371,7 +371,7 @@ async def test_ssdp_byebye(
 
 
 async def test_ssdp_update_seen_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ssdp_scanner_mock: Mock,
     upnp_factory_mock: Mock,
     disconnected_source_mock: None,
@@ -483,7 +483,7 @@ async def test_ssdp_update_seen_bootid(
 
 
 async def test_ssdp_update_missed_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ssdp_scanner_mock: Mock,
     upnp_factory_mock: Mock,
     disconnected_source_mock: None,
@@ -553,7 +553,7 @@ async def test_ssdp_update_missed_bootid(
 
 
 async def test_ssdp_bootid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     ssdp_scanner_mock: Mock,
     disconnected_source_mock: None,
@@ -618,7 +618,7 @@ async def test_ssdp_bootid(
 
 async def test_repeated_connect(
     caplog: pytest.LogCaptureFixture,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     upnp_factory_mock: Mock,
     connected_source_mock: None,
 ) -> None:
@@ -636,7 +636,7 @@ async def test_repeated_connect(
 
 
 async def test_become_unavailable(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     connected_source_mock: None,
     dms_device_mock: Mock,
 ) -> None:

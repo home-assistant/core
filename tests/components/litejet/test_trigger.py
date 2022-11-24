@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import setup
-import homeassistant.components.automation as automation
-import homeassistant.util.dt as dt_util
+from spencerassistant import setup
+import spencerassistant.components.automation as automation
+import spencerassistant.util.dt as dt_util
 
 from . import async_init_integration
 
@@ -34,7 +34,7 @@ async def simulate_press(hass, mock_litejet, number):
     _LOGGER.info("*** simulate press of %d", number)
     callback = mock_litejet.switch_pressed_callbacks.get(number)
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "spencerassistant.helpers.condition.dt_util.utcnow",
         return_value=mock_litejet.start_time + mock_litejet.last_delta,
     ):
         if callback is not None:
@@ -47,7 +47,7 @@ async def simulate_release(hass, mock_litejet, number):
     _LOGGER.info("*** simulate release of %d", number)
     callback = mock_litejet.switch_released_callbacks.get(number)
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "spencerassistant.helpers.condition.dt_util.utcnow",
         return_value=mock_litejet.start_time + mock_litejet.last_delta,
     ):
         if callback is not None:
@@ -62,7 +62,7 @@ async def simulate_time(hass, mock_litejet, delta):
     )
     mock_litejet.last_delta = delta
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "spencerassistant.helpers.condition.dt_util.utcnow",
         return_value=mock_litejet.start_time + delta,
     ):
         _LOGGER.info("now=%s", dt_util.utcnow())
@@ -253,7 +253,7 @@ async def test_reload(hass, calls, mock_litejet):
     )
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={
             "automation": {

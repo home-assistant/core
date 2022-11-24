@@ -5,8 +5,8 @@ from unittest.mock import patch
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError
 
-from homeassistant.components import weather
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import weather
+from spencerassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 

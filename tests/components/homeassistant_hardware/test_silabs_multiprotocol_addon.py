@@ -1,4 +1,4 @@
-"""Test the Home Assistant Hardware silabs multiprotocol addon manager."""
+"""Test the spencer Assistant Hardware silabs multiprotocol addon manager."""
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -7,13 +7,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.spencerassistant_hardware import silabs_multiprotocol_addon
+from spencerassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
+from spencerassistant.config_entries import ConfigEntry, ConfigFlow
+from spencerassistant.core import spencerAssistant, callback
+from spencerassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
@@ -77,7 +77,7 @@ class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
+    hass: spencerAssistant, current_request_with_host: Any
 ) -> Generator[TestConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -86,7 +86,7 @@ def config_flow_handler(
 
 
 async def test_option_flow_install_multi_pan_addon(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -106,7 +106,7 @@ async def test_option_flow_install_multi_pan_addon(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -154,7 +154,7 @@ async def test_option_flow_install_multi_pan_addon(
 
 
 async def test_option_flow_install_multi_pan_addon_zha(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -182,7 +182,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     zha_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -240,7 +240,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
 
 
 async def test_option_flow_install_multi_pan_addon_zha_other_radio(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -275,7 +275,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
     zha_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -334,7 +334,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
 
 
 async def test_option_flow_non_hassio(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test installing the multi pan addon."""
     mock_integration(hass, MockModule("hassio"))
@@ -354,7 +354,7 @@ async def test_option_flow_non_hassio(
 
 
 async def test_option_flow_addon_installed_other_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_installed,
 ) -> None:
@@ -371,7 +371,7 @@ async def test_option_flow_addon_installed_other_device(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -383,7 +383,7 @@ async def test_option_flow_addon_installed_other_device(
 
 
 async def test_option_flow_addon_installed_same_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_info,
     addon_store_info,
     addon_installed,
@@ -402,7 +402,7 @@ async def test_option_flow_addon_installed_same_device(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -414,7 +414,7 @@ async def test_option_flow_addon_installed_same_device(
 
 
 async def test_option_flow_do_not_install_multi_pan_addon(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_info,
     addon_store_info,
 ) -> None:
@@ -431,7 +431,7 @@ async def test_option_flow_do_not_install_multi_pan_addon(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -448,7 +448,7 @@ async def test_option_flow_do_not_install_multi_pan_addon(
 
 
 async def test_option_flow_install_multi_pan_addon_install_fails(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -469,7 +469,7 @@ async def test_option_flow_install_multi_pan_addon_install_fails(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -497,7 +497,7 @@ async def test_option_flow_install_multi_pan_addon_install_fails(
 
 
 async def test_option_flow_install_multi_pan_addon_start_fails(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -518,7 +518,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -567,7 +567,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
 
 
 async def test_option_flow_install_multi_pan_addon_set_options_fails(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -588,7 +588,7 @@ async def test_option_flow_install_multi_pan_addon_set_options_fails(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -616,7 +616,7 @@ async def test_option_flow_install_multi_pan_addon_set_options_fails(
 
 
 async def test_option_flow_addon_info_fails(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
 ) -> None:
@@ -634,7 +634,7 @@ async def test_option_flow_addon_info_fails(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -643,12 +643,12 @@ async def test_option_flow_addon_info_fails(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_initiate_migration",
+    "spencerassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_initiate_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
     mock_initiate_migration,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -676,7 +676,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
     zha_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -705,12 +705,12 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_finish_migration",
+    "spencerassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_finish_migration",
     side_effect=Exception("Boom!"),
 )
 async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
     mock_finish_migration,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -738,7 +738,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
     zha_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

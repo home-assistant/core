@@ -1,5 +1,5 @@
 """Constants used for Insteon test cases."""
-from homeassistant.components.insteon.const import (
+from spencerassistant.components.insteon.const import (
     CONF_CAT,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
@@ -10,7 +10,7 @@ from homeassistant.components.insteon.const import (
     CONF_X10,
     X10_PLATFORMS,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_HOST,
@@ -95,6 +95,6 @@ MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_HUB_VERSION] = 1
 MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_OVERRIDE] = [MOCK_DEVICE_OVERRIDE_CONFIG]
 MOCK_IMPORT_FULL_CONFIG_HUB_V1[CONF_X10] = [MOCK_X10_CONFIG_1, MOCK_X10_CONFIG_2]
 
-PATCH_CONNECTION = "homeassistant.components.insteon.config_flow.async_connect"
-PATCH_ASYNC_SETUP = "homeassistant.components.insteon.async_setup"
-PATCH_ASYNC_SETUP_ENTRY = "homeassistant.components.insteon.async_setup_entry"
+PATCH_CONNECTION = "spencerassistant.components.insteon.config_flow.async_connect"
+PATCH_ASYNC_SETUP = "spencerassistant.components.insteon.async_setup"
+PATCH_ASYNC_SETUP_ENTRY = "spencerassistant.components.insteon.async_setup_entry"

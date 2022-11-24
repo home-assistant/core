@@ -1,7 +1,7 @@
 """Tests for the BlueMaestro integration."""
 
 
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from spencerassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_BLUEMAESTRO_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",

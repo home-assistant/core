@@ -1,8 +1,8 @@
 """Tests for the litejet component."""
-from homeassistant.components import scene, switch
-from homeassistant.components.litejet import DOMAIN
-from homeassistant.const import CONF_PORT
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.components import scene, switch
+from spencerassistant.components.litejet import DOMAIN
+from spencerassistant.const import CONF_PORT
+from spencerassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 async def async_init_integration(
     hass, use_switch=False, use_scene=False
 ) -> MockConfigEntry:
-    """Set up the LiteJet integration in Home Assistant."""
+    """Set up the LiteJet integration in spencer Assistant."""
 
     registry = er.async_get(hass)
 

@@ -1,37 +1,37 @@
-"""Tests for the devolo Home Control binary sensors."""
+"""Tests for the devolo spencer Control binary sensors."""
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.binary_sensor import DOMAIN
+from spencerassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry
+from spencerassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mocks import (
-    HomeControlMock,
-    HomeControlMockBinarySensor,
-    HomeControlMockDisabledBinarySensor,
-    HomeControlMockRemoteControl,
+    spencerControlMock,
+    spencerControlMockBinarySensor,
+    spencerControlMockDisabledBinarySensor,
+    spencerControlMockRemoteControl,
 )
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_binary_sensor(hass: HomeAssistant):
+async def test_binary_sensor(hass: spencerAssistant):
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockBinarySensor()
+    test_gateway = spencerControlMockBinarySensor()
     test_gateway.devices["Test"].status = 0
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -63,14 +63,14 @@ async def test_binary_sensor(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remote_control(hass: HomeAssistant):
+async def test_remote_control(hass: spencerAssistant):
     """Test setup and state change of a remote control device."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockRemoteControl()
+    test_gateway = spencerControlMockRemoteControl()
     test_gateway.devices["Test"].status = 0
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -98,12 +98,12 @@ async def test_remote_control(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_disabled(hass: HomeAssistant):
+async def test_disabled(hass: spencerAssistant):
     """Test setup of a disabled device."""
     entry = configure_integration(hass)
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[HomeControlMockDisabledBinarySensor(), HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[spencerControlMockDisabledBinarySensor(), spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -112,13 +112,13 @@ async def test_disabled(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: spencerAssistant):
     """Test removing entity."""
     entry = configure_integration(hass)
-    test_gateway = HomeControlMockBinarySensor()
+    test_gateway = spencerControlMockBinarySensor()
     with patch(
-        "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[test_gateway, HomeControlMock()],
+        "spencerassistant.components.devolo_spencer_control.spencerControl",
+        side_effect=[test_gateway, spencerControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

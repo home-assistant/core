@@ -2,9 +2,9 @@
 import asyncio
 from datetime import timedelta
 
-from homeassistant.core import callback
-from homeassistant.helpers import ratelimit
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import callback
+from spencerassistant.helpers import ratelimit
+from spencerassistant.util import dt as dt_util
 
 
 async def test_hit(hass):

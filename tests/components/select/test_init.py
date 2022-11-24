@@ -3,16 +3,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.select import ATTR_OPTIONS, DOMAIN, SelectEntity
-from homeassistant.const import (
+from spencerassistant.components.select import ATTR_OPTIONS, DOMAIN, SelectEntity
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_OPTION,
     CONF_PLATFORM,
     SERVICE_SELECT_OPTION,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 
 class MockSelectEntity(SelectEntity):
@@ -22,7 +22,7 @@ class MockSelectEntity(SelectEntity):
     _attr_options = ["option_one", "option_two", "option_three"]
 
 
-async def test_select(hass: HomeAssistant) -> None:
+async def test_select(hass: spencerAssistant) -> None:
     """Test getting data from the mocked select entity."""
     select = MockSelectEntity()
     assert select.current_option == "option_one"

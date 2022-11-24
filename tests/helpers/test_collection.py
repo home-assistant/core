@@ -6,13 +6,13 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import (
+from spencerassistant.helpers import (
     collection,
     entity_component,
     entity_registry as er,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType
+from spencerassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
 

@@ -30,10 +30,10 @@ and not mention sign-off.
 
 ## Signing
 
-To sign this CLA you must first submit a pull request to a repository under the Home Assistant organization.
+To sign this CLA you must first submit a pull request to a repository under the spencer Assistant organization.
 
 ## Adoption
 
 This Contributor License Agreement (CLA) was first announced on January 21st, 2017 in [this][cla-blog] blog post and adopted January 28th, 2017.
 
-[cla-blog]: https://home-assistant.io/blog/2017/01/21/home-assistant-governance/
+[cla-blog]: https://spencer-assistant.io/blog/2017/01/21/spencer-assistant-governance/

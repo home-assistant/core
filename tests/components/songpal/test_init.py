@@ -1,8 +1,8 @@
 """Tests songpal setup."""
 from unittest.mock import patch
 
-from homeassistant.components import songpal
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import songpal
+from spencerassistant.setup import async_setup_component
 
 from . import (
     CONF_DATA,
@@ -21,7 +21,7 @@ def _patch_media_setup():
         return True
 
     return patch(
-        "homeassistant.components.songpal.media_player.async_setup_entry",
+        "spencerassistant.components.songpal.media_player.async_setup_entry",
         side_effect=_async_return,
     )
 

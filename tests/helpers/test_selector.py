@@ -4,8 +4,8 @@ from enum import Enum
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import selector
-from homeassistant.util import yaml
+from spencerassistant.helpers import selector
+from spencerassistant.util import yaml
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 

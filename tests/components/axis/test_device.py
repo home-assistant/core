@@ -8,11 +8,11 @@ from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
-from homeassistant.components import axis, zeroconf
-from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_ZEROCONF
-from homeassistant.const import (
+from spencerassistant.components import axis, zeroconf
+from spencerassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.config_entries import SOURCE_ZEROCONF
+from spencerassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_NAME,
@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
@@ -69,7 +69,7 @@ API_DISCOVERY_PORT_MANAGEMENT = {
 }
 
 APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
- <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
+ <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorspencerPage="http://www.axis.com" />
 </reply>"""
 
 BASIC_DEVICE_INFO_RESPONSE = {
@@ -297,7 +297,7 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
 async def test_device_setup(hass):
     """Successful setup."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "spencerassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_axis_integration(hass)
@@ -374,7 +374,7 @@ async def test_update_address(hass):
     assert device.api.config.host == "1.2.3.4"
 
     with patch(
-        "homeassistant.components.axis.async_setup_entry",
+        "spencerassistant.components.axis.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, respx.mock:
         mock_default_vapix_requests(respx, "2.3.4.5")

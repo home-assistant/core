@@ -5,14 +5,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant.components.zha.core.const import (
+from spencerassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import MAJOR_VERSION, MINOR_VERSION
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port
 @pytest.fixture(autouse=True)
 def disable_platform_only():
     """Disable platforms to speed up tests."""
-    with patch("homeassistant.components.zha.PLATFORMS", []):
+    with patch("spencerassistant.components.zha.PLATFORMS", []):
         yield
 
 
@@ -38,7 +38,7 @@ def config_entry_v1(hass):
 
 
 @pytest.mark.parametrize("config", ({}, {DOMAIN: {}}))
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("spencerassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     """Test migration of config entry from v1."""
     config_entry_v1.add_to_hass(hass)
@@ -52,7 +52,7 @@ async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     assert config_entry_v1.version == 3
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("spencerassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     """Test migration of config entry from v1 with baudrate in config."""
     config_entry_v1.add_to_hass(hass)
@@ -67,7 +67,7 @@ async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     assert config_entry_v1.version == 3
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("spencerassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
     """Test migration of config entry from v1 with wrong baudrate."""
     config_entry_v1.add_to_hass(hass)
@@ -98,7 +98,7 @@ async def test_config_depreciation(hass, zha_config):
     """Test config option depreciation."""
 
     with patch(
-        "homeassistant.components.zha.async_setup", return_value=True
+        "spencerassistant.components.zha.async_setup", return_value=True
     ) as setup_mock:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
         assert setup_mock.call_count == 1

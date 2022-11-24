@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
-from homeassistant.const import CONF_SHOW_ON_MAP
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
+from spencerassistant.const import CONF_SHOW_ON_MAP
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.luftdaten.async_setup_entry", return_value=True
+        "spencerassistant.components.luftdaten.async_setup_entry", return_value=True
     ):
         yield
 
@@ -37,7 +37,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 def mock_luftdaten_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked Luftdaten client."""
     with patch(
-        "homeassistant.components.luftdaten.config_flow.Luftdaten", autospec=True
+        "spencerassistant.components.luftdaten.config_flow.Luftdaten", autospec=True
     ) as luftdaten_mock:
         luftdaten = luftdaten_mock.return_value
         luftdaten.validate_sensor.return_value = True
@@ -48,7 +48,7 @@ def mock_luftdaten_config_flow() -> Generator[None, MagicMock, None]:
 def mock_luftdaten() -> Generator[None, MagicMock, None]:
     """Return a mocked Luftdaten client."""
     with patch(
-        "homeassistant.components.luftdaten.Luftdaten", autospec=True
+        "spencerassistant.components.luftdaten.Luftdaten", autospec=True
     ) as luftdaten_mock:
         luftdaten = luftdaten_mock.return_value
         luftdaten.sensor_id = 12345
@@ -71,7 +71,7 @@ def mock_luftdaten() -> Generator[None, MagicMock, None]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_luftdaten: MagicMock
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, mock_luftdaten: MagicMock
 ) -> MockConfigEntry:
     """Set up the Luftdaten integration for testing."""
     mock_config_entry.add_to_hass(hass)

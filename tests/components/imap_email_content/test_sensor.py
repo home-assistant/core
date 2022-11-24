@@ -5,9 +5,9 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from homeassistant.components.imap_email_content import sensor as imap_email_content
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.template import Template
+from spencerassistant.components.imap_email_content import sensor as imap_email_content
+from spencerassistant.helpers.event import async_track_state_change
+from spencerassistant.helpers.template import Template
 
 
 class FakeEMailReader:

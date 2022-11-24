@@ -8,12 +8,12 @@ from unittest.mock import patch
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
-from homeassistant.components.bluetooth import BaseHaRemoteScanner, HaBluetoothConnector
-from homeassistant.components.bluetooth.const import (
+from spencerassistant.components.bluetooth import BaseHaRemoteScanner, HaBluetoothConnector
+from spencerassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-import homeassistant.util.dt as dt_util
+import spencerassistant.util.dt as dt_util
 
 from . import MockBleakClient, _get_manager, generate_advertisement_data
 
@@ -161,7 +161,7 @@ async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)
@@ -237,7 +237,7 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)
@@ -255,7 +255,7 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
     with patch(
-        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        "spencerassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=expire_monotonic,
     ):
         async_fire_time_changed(hass, expire_utc)

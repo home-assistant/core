@@ -8,17 +8,17 @@ from async_upnp_client.client import UpnpDevice
 from async_upnp_client.exceptions import UpnpError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.components.dlna_dmr.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import ssdp
+from spencerassistant.components.dlna_dmr.const import (
     CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DOMAIN as DLNA_DOMAIN,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
-from homeassistant.core import HomeAssistant
+from spencerassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
+from spencerassistant.core import spencerAssistant
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -75,11 +75,11 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
             ]
         },
     },
-    x_homeassistant_matching_domains={DLNA_DOMAIN},
+    x_spencerassistant_matching_domains={DLNA_DOMAIN},
 )
 
 
-async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
+async def test_user_flow_undiscovered_manual(hass: spencerAssistant) -> None:
     """Test user-init'd flow, no discovered devices, user entering a valid URL."""
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,7 +106,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_discovered_manual(
-    hass: HomeAssistant, ssdp_scanner_mock: Mock
+    hass: spencerAssistant, ssdp_scanner_mock: Mock
 ) -> None:
     """Test user-init'd flow, with discovered devices, user entering a valid URL."""
     ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
@@ -147,7 +147,7 @@ async def test_user_flow_discovered_manual(
     await hass.async_block_till_done()
 
 
-async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+async def test_user_flow_selected(hass: spencerAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test user-init'd flow, user selects discovered device."""
     ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
         [MOCK_DISCOVERY],
@@ -179,7 +179,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
 
 
 async def test_user_flow_uncontactable(
-    hass: HomeAssistant, domain_data_mock: Mock
+    hass: spencerAssistant, domain_data_mock: Mock
 ) -> None:
     """Test user-init'd config flow with user entering an uncontactable URL."""
     # Device is not contactable
@@ -202,7 +202,7 @@ async def test_user_flow_uncontactable(
 
 
 async def test_user_flow_embedded_st(
-    hass: HomeAssistant, domain_data_mock: Mock
+    hass: spencerAssistant, domain_data_mock: Mock
 ) -> None:
     """Test user-init'd flow for device with an embedded DMR."""
     # Device is the wrong type
@@ -242,7 +242,7 @@ async def test_user_flow_embedded_st(
     await hass.async_block_till_done()
 
 
-async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -> None:
+async def test_user_flow_wrong_st(hass: spencerAssistant, domain_data_mock: Mock) -> None:
     """Test user-init'd config flow with user entering a URL for the wrong device."""
     # Device has a sub device of the right type
     upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
@@ -264,7 +264,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     assert result["step_id"] == "manual"
 
 
-async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
+async def test_ssdp_flow_success(hass: spencerAssistant) -> None:
     """Test that SSDP discovery with an available device works."""
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -290,7 +290,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
 
 
 async def test_ssdp_flow_unavailable(
-    hass: HomeAssistant, domain_data_mock: Mock
+    hass: spencerAssistant, domain_data_mock: Mock
 ) -> None:
     """Test that SSDP discovery with an unavailable device still succeeds.
 
@@ -323,7 +323,7 @@ async def test_ssdp_flow_unavailable(
 
 
 async def test_ssdp_flow_existing(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
     """Test that SSDP discovery of existing config entry updates the URL."""
     config_entry_mock.add_to_hass(hass)
@@ -348,7 +348,7 @@ async def test_ssdp_flow_existing(
 
 
 async def test_ssdp_flow_duplicate_location(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
     """Test that discovery of device with URL matching existing entry gets aborted."""
     config_entry_mock.add_to_hass(hass)
@@ -363,7 +363,7 @@ async def test_ssdp_flow_duplicate_location(
 
 
 async def test_ssdp_flow_upnp_udn(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
     """Test that SSDP discovery ignores the root device's UDN."""
     config_entry_mock.add_to_hass(hass)
@@ -387,7 +387,7 @@ async def test_ssdp_flow_upnp_udn(
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
-async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
+async def test_ssdp_missing_services(hass: spencerAssistant) -> None:
     """Test SSDP ignores devices that are missing required services."""
     # No service list at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
@@ -430,7 +430,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_dmr"
 
 
-async def test_ssdp_single_service(hass: HomeAssistant) -> None:
+async def test_ssdp_single_service(hass: spencerAssistant) -> None:
     """Test SSDP discovery info with only one service defined.
 
     THe etree_to_dict function turns multiple services into a list of dicts, but
@@ -452,11 +452,11 @@ async def test_ssdp_single_service(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_dmr"
 
 
-async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
+async def test_ssdp_ignore_device(hass: spencerAssistant) -> None:
     """Test SSDP discovery ignores certain devices."""
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.x_homeassistant_matching_domains = {DLNA_DOMAIN, "other_domain"}
-    assert discovery.x_homeassistant_matching_domains
+    discovery.x_spencerassistant_matching_domains = {DLNA_DOMAIN, "other_domain"}
+    assert discovery.x_spencerassistant_matching_domains
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -497,7 +497,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         assert result["reason"] == "alternative_integration"
 
 
-async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
+async def test_unignore_flow(hass: spencerAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test a config flow started by unignoring a device."""
     # Create ignored entry
     result = await hass.config_entries.flow.async_init(
@@ -548,7 +548,7 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
 
 
 async def test_unignore_flow_offline(
-    hass: HomeAssistant, ssdp_scanner_mock: Mock
+    hass: spencerAssistant, ssdp_scanner_mock: Mock
 ) -> None:
     """Test a config flow started by unignoring a device, but the device is offline."""
     # Create ignored entry
@@ -577,7 +577,7 @@ async def test_unignore_flow_offline(
 
 
 async def test_options_flow(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+    hass: spencerAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
     """Test config flow options."""
     config_entry_mock.add_to_hass(hass)

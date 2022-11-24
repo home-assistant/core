@@ -3,8 +3,8 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import State
-from homeassistant.helpers import config_validation as cv, intent
+from spencerassistant.core import State
+from spencerassistant.helpers import config_validation as cv, intent
 
 
 class MockIntentHandler(intent.IntentHandler):

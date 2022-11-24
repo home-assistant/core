@@ -1,16 +1,16 @@
-"""Test the Home Assistant Supervisor config flow."""
+"""Test the spencer Assistant Supervisor config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.hassio import DOMAIN
+from spencerassistant.components.hassio import DOMAIN
 
 
 async def test_config_flow(hass):
     """Test we get the form."""
 
     with patch(
-        "homeassistant.components.hassio.async_setup", return_value=True
+        "spencerassistant.components.hassio.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hassio.async_setup_entry",
+        "spencerassistant.components.hassio.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(

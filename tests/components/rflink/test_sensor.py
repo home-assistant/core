@@ -5,15 +5,15 @@ automatic sensor creation.
 
 """
 
-from homeassistant.components.rflink import (
+from spencerassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import (
+from spencerassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from spencerassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,

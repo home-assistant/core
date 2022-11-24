@@ -1,14 +1,14 @@
 """The tests for the DirecTV remote platform."""
 from unittest.mock import patch
 
-from homeassistant.components.remote import (
+from spencerassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
@@ -22,7 +22,7 @@ UNAVAILABLE_ENTITY_ID = f"{REMOTE_DOMAIN}.unavailable_client"
 # pylint: disable=redefined-outer-name
 
 
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_setup(hass: spencerAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with basic config."""
     await setup_integration(hass, aioclient_mock)
     assert hass.states.get(MAIN_ENTITY_ID)
@@ -31,7 +31,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
 
 async def test_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
@@ -49,7 +49,7 @@ async def test_unique_id(
 
 
 async def test_main_services(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the different services."""
     await setup_integration(hass, aioclient_mock)

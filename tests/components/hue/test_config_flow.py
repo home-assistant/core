@@ -7,11 +7,11 @@ from aiohue.errors import LinkButtonNotPressed
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.hue import config_flow, const
-from homeassistant.components.hue.errors import CannotConnect
-from homeassistant.helpers import device_registry as dr
+from spencerassistant import config_entries
+from spencerassistant.components import ssdp, zeroconf
+from spencerassistant.components.hue import config_flow, const
+from spencerassistant.components.hue.errors import CannotConnect
+from spencerassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="hue_setup", autouse=True)
 def hue_setup_fixture():
     """Mock hue entry setup."""
-    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.hue.async_setup_entry", return_value=True):
         yield
 
 
@@ -51,7 +51,7 @@ async def test_flow_works(hass):
     disc_bridge = get_discovered_bridge(supports_v2=True)
 
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[disc_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -98,7 +98,7 @@ async def test_manual_flow_works(hass):
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[disc_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -124,7 +124,7 @@ async def test_manual_flow_works(hass):
     assert result["step_id"] == "link"
 
     with patch.object(config_flow, "create_app_key", return_value="123456789"), patch(
-        "homeassistant.components.hue.async_unload_entry", return_value=True
+        "spencerassistant.components.hue.async_unload_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -148,7 +148,7 @@ async def test_manual_flow_bridge_exist(hass):
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -242,7 +242,7 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
 async def test_flow_timeout_discovery(hass):
     """Test config flow ."""
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -257,7 +257,7 @@ async def test_flow_link_unknown_error(hass):
     """Test if a unknown error happened during the linking processes."""
     disc_bridge = get_discovered_bridge()
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[disc_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -282,7 +282,7 @@ async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
     disc_bridge = get_discovered_bridge()
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[disc_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -307,7 +307,7 @@ async def test_flow_link_cannot_connect(hass):
     """Test config flow ."""
     disc_bridge = get_discovered_bridge()
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp",
+        "spencerassistant.components.hue.config_flow.discover_nupnp",
         return_value=[disc_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -375,7 +375,7 @@ async def test_bridge_ssdp_emulated_hue(hass):
             ssdp_st="mock_st",
             ssdp_location="http://0.0.0.0/",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "spencer Assistant Bridge",
                 ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
                 ssdp.ATTR_UPNP_SERIAL: "1234",
             },
@@ -545,9 +545,9 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert result["step_id"] == "link"
 
     with patch(
-        "homeassistant.components.hue.config_flow.create_app_key",
+        "spencerassistant.components.hue.config_flow.create_app_key",
         return_value="123456789",
-    ), patch("homeassistant.components.hue.async_unload_entry", return_value=True):
+    ), patch("spencerassistant.components.hue.async_unload_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == "create_entry"
@@ -564,13 +564,13 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert new_entry.unique_id == "id-1234"
 
 
-async def test_bridge_homekit(hass, aioclient_mock):
-    """Test a bridge being discovered via HomeKit."""
+async def test_bridge_spencerkit(hass, aioclient_mock):
+    """Test a bridge being discovered via spencerKit."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "bla")])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
             addresses=["0.0.0.0"],
@@ -609,8 +609,8 @@ async def test_bridge_import_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_bridge_homekit_already_configured(hass, aioclient_mock):
-    """Test if a HomeKit discovered bridge has already been configured."""
+async def test_bridge_spencerkit_already_configured(hass, aioclient_mock):
+    """Test if a spencerKit discovered bridge has already been configured."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "aabbccddeeff")])
     MockConfigEntry(
         domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
@@ -618,7 +618,7 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
+        context={"source": config_entries.SOURCE_spencerKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
             addresses=["0.0.0.0"],

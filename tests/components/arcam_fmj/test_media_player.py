@@ -5,14 +5,14 @@ from unittest.mock import ANY, PropertyMock, patch
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     SERVICE_SELECT_SOURCE,
     MediaType,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -281,7 +281,7 @@ async def test_media_artist(player, state, source, dls, artist):
 )
 async def test_media_title(player, state, source, channel, title):
     """Test media title."""
-    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
+    from spencerassistant.components.arcam_fmj.media_player import ArcamFmj
 
     state.get_source.return_value = source
     with patch.object(
@@ -297,14 +297,14 @@ async def test_media_title(player, state, source, channel, title):
 
 async def test_added_to_hass(player, state):
     """Test addition to hass."""
-    from homeassistant.components.arcam_fmj.const import (
+    from spencerassistant.components.arcam_fmj.const import (
         SIGNAL_CLIENT_DATA,
         SIGNAL_CLIENT_STARTED,
         SIGNAL_CLIENT_STOPPED,
     )
 
     with patch(
-        "homeassistant.components.arcam_fmj.media_player.async_dispatcher_connect"
+        "spencerassistant.components.arcam_fmj.media_player.async_dispatcher_connect"
     ) as connect:
         await player.async_added_to_hass()
 

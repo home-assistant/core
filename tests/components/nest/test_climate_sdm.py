@@ -14,7 +14,7 @@ from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.event import EventMessage
 import pytest
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
@@ -34,13 +34,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.core import spencerAssistant
+from spencerassistant.exceptions import spencerAssistantError
 
 from .common import (
     DEVICE_COMMAND,
@@ -72,7 +72,7 @@ def device_traits() -> dict[str, Any]:
 
 @pytest.fixture
 async def create_event(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     auth: AbstractAuth,
     subscriber: FakeSubscriber,
 ) -> CreateEvent:
@@ -97,14 +97,14 @@ async def create_event(
     return create_event
 
 
-async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup) -> None:
+async def test_no_devices(hass: spencerAssistant, setup_platform: PlatformSetup) -> None:
     """Test no devices returned by the api."""
     await setup_platform()
     assert len(hass.states.async_all()) == 0
 
 
 async def test_climate_devices(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:
     """Test no eligible climate devices returned by the api."""
     create_device.create({"sdm.devices.traits.CameraImage": {}})
@@ -113,7 +113,7 @@ async def test_climate_devices(
 
 
 async def test_thermostat_off(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is not running."""
     create_device.create(
@@ -152,7 +152,7 @@ async def test_thermostat_off(
 
 
 async def test_thermostat_heat(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is heating."""
     create_device.create(
@@ -194,7 +194,7 @@ async def test_thermostat_heat(
 
 
 async def test_thermostat_cool(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is cooling."""
     create_device.create(
@@ -236,7 +236,7 @@ async def test_thermostat_cool(
 
 
 async def test_thermostat_heatcool(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is cooling in heatcool mode."""
     create_device.create(
@@ -279,7 +279,7 @@ async def test_thermostat_heatcool(
 
 
 async def test_thermostat_eco_off(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:
     """Test a thermostat cooling with eco off."""
     create_device.create(
@@ -328,7 +328,7 @@ async def test_thermostat_eco_off(
 
 
 async def test_thermostat_eco_on(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:
     """Test a thermostat in eco mode."""
     create_device.create(
@@ -377,7 +377,7 @@ async def test_thermostat_eco_on(
 
 
 async def test_thermostat_eco_heat_only(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:
     """Test a thermostat in eco mode that only supports heat."""
     create_device.create(
@@ -421,7 +421,7 @@ async def test_thermostat_eco_heat_only(
 
 
 async def test_thermostat_set_hvac_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -492,7 +492,7 @@ async def test_thermostat_set_hvac_mode(
 
 
 async def test_thermostat_invalid_hvac_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -524,7 +524,7 @@ async def test_thermostat_invalid_hvac_mode(
 
 
 async def test_thermostat_set_eco_preset(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -627,7 +627,7 @@ async def test_thermostat_set_eco_preset(
 
 
 async def test_thermostat_set_cool(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -664,7 +664,7 @@ async def test_thermostat_set_cool(
 
 
 async def test_thermostat_set_heat(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -701,7 +701,7 @@ async def test_thermostat_set_heat(
 
 
 async def test_thermostat_set_temperature_hvac_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -760,7 +760,7 @@ async def test_thermostat_set_temperature_hvac_mode(
 
 
 async def test_thermostat_set_heat_cool(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -800,7 +800,7 @@ async def test_thermostat_set_heat_cool(
 
 
 async def test_thermostat_fan_off(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -845,7 +845,7 @@ async def test_thermostat_fan_off(
 
 
 async def test_thermostat_fan_on(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -892,7 +892,7 @@ async def test_thermostat_fan_on(
 
 
 async def test_thermostat_cool_with_fan(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -935,7 +935,7 @@ async def test_thermostat_cool_with_fan(
 
 
 async def test_thermostat_set_fan(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -997,7 +997,7 @@ async def test_thermostat_set_fan(
 
 
 async def test_thermostat_set_fan_when_off(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -1038,7 +1038,7 @@ async def test_thermostat_set_fan_when_off(
 
 
 async def test_thermostat_fan_empty(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1086,7 +1086,7 @@ async def test_thermostat_fan_empty(
 
 
 async def test_thermostat_invalid_fan_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1130,7 +1130,7 @@ async def test_thermostat_invalid_fan_mode(
 
 
 async def test_thermostat_target_temp(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
     create_event: CreateEvent,
@@ -1186,7 +1186,7 @@ async def test_thermostat_target_temp(
 
 
 async def test_thermostat_missing_mode_traits(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1223,7 +1223,7 @@ async def test_thermostat_missing_mode_traits(
 
 
 async def test_thermostat_missing_temperature_trait(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1265,7 +1265,7 @@ async def test_thermostat_missing_temperature_trait(
 
 
 async def test_thermostat_unexpected_hvac_status(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1299,7 +1299,7 @@ async def test_thermostat_unexpected_hvac_status(
 
 
 async def test_thermostat_missing_set_point(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1337,7 +1337,7 @@ async def test_thermostat_missing_set_point(
 
 
 async def test_thermostat_unexepected_hvac_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
 ) -> None:
@@ -1375,7 +1375,7 @@ async def test_thermostat_unexepected_hvac_mode(
 
 
 async def test_thermostat_invalid_set_preset_mode(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -1415,7 +1415,7 @@ async def test_thermostat_invalid_set_preset_mode(
 
 
 async def test_thermostat_hvac_mode_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     create_device: CreateDevice,
@@ -1449,30 +1449,30 @@ async def test_thermostat_hvac_mode_failure(
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await common.async_set_hvac_mode(hass, HVACMode.HEAT)
         await hass.async_block_till_done()
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await common.async_set_temperature(
             hass, hvac_mode=HVACMode.HEAT, temperature=25.0
         )
         await hass.async_block_till_done()
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await common.async_set_fan_mode(hass, FAN_ON)
         await hass.async_block_till_done()
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await common.async_set_preset_mode(hass, PRESET_ECO)
         await hass.async_block_till_done()
 
 
 async def test_thermostat_available(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is available."""
     create_device.create(
@@ -1502,7 +1502,7 @@ async def test_thermostat_available(
 
 
 async def test_thermostat_unavailable(
-    hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
+    hass: spencerAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
     """Test a thermostat that is unavailable."""
     create_device.create(

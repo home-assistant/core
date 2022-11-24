@@ -5,9 +5,9 @@ from unittest.mock import patch
 from peco import AlertResults, BadJSONError, HttpError, OutageResults
 import pytest
 
-from homeassistant.components.peco.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.peco.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ COUNTY_ENTRY_DATA = {"county": "BUCKS"}
 INVALID_COUNTY_DATA = {"county": "INVALID"}
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: spencerAssistant) -> None:
     """Test the unload entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -58,7 +58,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "bucks_customers_served",
     ],
 )
-async def test_update_timeout(hass: HomeAssistant, sensor):
+async def test_update_timeout(hass: spencerAssistant, sensor):
     """Test if it raises an error when there is a timeout."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=COUNTY_ENTRY_DATA)
@@ -84,7 +84,7 @@ async def test_update_timeout(hass: HomeAssistant, sensor):
         "total_customers_served",
     ],
 )
-async def test_total_update_timeout(hass: HomeAssistant, sensor):
+async def test_total_update_timeout(hass: spencerAssistant, sensor):
     """Test if it raises an error when there is a timeout."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
@@ -109,7 +109,7 @@ async def test_total_update_timeout(hass: HomeAssistant, sensor):
         "bucks_customers_served",
     ],
 )
-async def test_http_error(hass: HomeAssistant, sensor: str):
+async def test_http_error(hass: spencerAssistant, sensor: str):
     """Test if it raises an error when an abnormal status code is returned."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=COUNTY_ENTRY_DATA)
@@ -135,7 +135,7 @@ async def test_http_error(hass: HomeAssistant, sensor: str):
         "bucks_customers_served",
     ],
 )
-async def test_bad_json(hass: HomeAssistant, sensor: str):
+async def test_bad_json(hass: spencerAssistant, sensor: str):
     """Test if it raises an error when abnormal JSON is returned."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=COUNTY_ENTRY_DATA)

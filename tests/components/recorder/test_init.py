@@ -12,8 +12,8 @@ from unittest.mock import Mock, patch
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
-from homeassistant.components import recorder
-from homeassistant.components.recorder import (
+from spencerassistant.components import recorder
+from spencerassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
     CONF_COMMIT_INTERVAL,
@@ -27,8 +27,8 @@ from homeassistant.components.recorder import (
     get_instance,
     pool,
 )
-from homeassistant.components.recorder.const import KEEPALIVE_TIME
-from homeassistant.components.recorder.db_schema import (
+from spencerassistant.components.recorder.const import KEEPALIVE_TIME
+from spencerassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -37,26 +37,26 @@ from homeassistant.components.recorder.db_schema import (
     States,
     StatisticsRuns,
 )
-from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.services import (
+from spencerassistant.components.recorder.models import process_timestamp
+from spencerassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
 )
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import (
+    EVENT_spencerASSISTANT_FINAL_WRITE,
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
     MATCH_ALL,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import async_setup_component, setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import CoreState, Event, spencerAssistant, callback
+from spencerassistant.helpers import recorder as recorder_helper
+from spencerassistant.setup import async_setup_component, setup_component
+from spencerassistant.util import dt as dt_util
 
 from .common import (
     async_block_recorder,
@@ -70,7 +70,7 @@ from tests.common import (
     SetupRecorderInstanceT,
     async_fire_time_changed,
     fire_time_changed,
-    get_test_home_assistant,
+    get_test_spencer_assistant,
 )
 
 
@@ -92,7 +92,7 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant, tmp_path
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: spencerAssistant, tmp_path
 ):
     """Test shutdown before recorder starts is clean."""
 
@@ -112,7 +112,7 @@ async def test_shutdown_before_startup_finishes(
     session = await hass.async_add_executor_job(instance.get_session)
 
     with patch.object(instance, "engine"):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
         await hass.async_block_till_done()
         await hass.async_stop()
 
@@ -125,7 +125,7 @@ async def test_shutdown_before_startup_finishes(
 
 async def test_canceled_before_startup_finishes(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test recorder shuts down when its startup future is canceled out from under it."""
@@ -162,7 +162,7 @@ async def test_shutdown_closes_connections(recorder_mock, hass):
 
     await instance.async_add_executor_job(_ensure_connected)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
 
     assert len(pool.shutdown.mock_calls) == 1
@@ -171,7 +171,7 @@ async def test_shutdown_closes_connections(recorder_mock, hass):
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: spencerAssistant
 ):
     """Test we can record an event when starting with not running."""
 
@@ -187,7 +187,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     hass.states.async_set(entity_id, state, attributes)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
 
     await async_wait_recording_done(hass)
 
@@ -197,7 +197,7 @@ async def test_state_gets_saved_when_set_before_start_event(
         assert db_states[0].event_id is None
 
 
-async def test_saving_state(recorder_mock, hass: HomeAssistant):
+async def test_saving_state(recorder_mock, hass: spencerAssistant):
     """Test saving and restoring a state."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -220,7 +220,7 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
 
 async def test_saving_many_states(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: spencerAssistant
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
@@ -248,7 +248,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    recorder_mock, hass: HomeAssistant
+    recorder_mock, hass: spencerAssistant
 ):
     """Test saving states with intermixed time changes."""
     entity_id = "test.recorder"
@@ -369,8 +369,8 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
             hass.states.async_set(entity_id, "on", attributes)
             hass.states.async_set(entity_id, "off", attributes)
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_FINAL_WRITE)
         await hass.async_block_till_done()
 
     assert "Error executing query" in caplog.text
@@ -537,10 +537,10 @@ def test_saving_event_exclude_event_type(hass_recorder):
             "exclude": {
                 "event_types": [
                     "service_registered",
-                    "homeassistant_start",
+                    "spencerassistant_start",
                     "component_loaded",
                     "core_config_updated",
-                    "homeassistant_started",
+                    "spencerassistant_started",
                     "test",
                 ]
             }
@@ -654,7 +654,7 @@ def test_recorder_setup_failure(hass):
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
-        "homeassistant.components.recorder.core.time.sleep"
+        "spencerassistant.components.recorder.core.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
@@ -669,9 +669,9 @@ def test_recorder_validate_schema_failure(hass):
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch(
-        "homeassistant.components.recorder.migration._get_schema_version"
+        "spencerassistant.components.recorder.migration._get_schema_version"
     ) as inspect_schema_version, patch(
-        "homeassistant.components.recorder.core.time.sleep"
+        "spencerassistant.components.recorder.core.time.sleep"
     ):
         inspect_schema_version.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
@@ -686,7 +686,7 @@ def test_recorder_setup_failure_without_event_listener(hass):
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
-        "homeassistant.components.recorder.core.time.sleep"
+        "spencerassistant.components.recorder.core.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
@@ -706,7 +706,7 @@ async def test_defaults_set(hass):
         recorder_config = config["recorder"]
         return True
 
-    with patch("homeassistant.components.recorder.async_setup", side_effect=mock_setup):
+    with patch("spencerassistant.components.recorder.async_setup", side_effect=mock_setup):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
@@ -744,9 +744,9 @@ def test_auto_purge(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+        "spencerassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
+        "spencerassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -802,11 +802,11 @@ def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.core.is_second_sunday", return_value=True
+        "spencerassistant.components.recorder.core.is_second_sunday", return_value=True
     ), patch(
-        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+        "spencerassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
+        "spencerassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -840,11 +840,11 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.core.is_second_sunday", return_value=True
+        "spencerassistant.components.recorder.core.is_second_sunday", return_value=True
     ), patch(
-        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+        "spencerassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
+        "spencerassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -878,12 +878,12 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.core.is_second_sunday",
+        "spencerassistant.components.recorder.core.is_second_sunday",
         return_value=False,
     ), patch(
-        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+        "spencerassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
+        "spencerassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -916,9 +916,9 @@ def test_auto_purge_disabled(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+        "spencerassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
+        "spencerassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -953,7 +953,7 @@ def test_auto_statistics(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.statistics.compile_statistics",
+        "spencerassistant.components.recorder.statistics.compile_statistics",
         return_value=True,
     ) as compile_statistics:
         # Advance 5 minutes, and the statistics task should run
@@ -987,7 +987,7 @@ def test_statistics_runs_initiated(hass_recorder):
     """Test statistics_runs is initiated when DB is created."""
     now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
+        "spencerassistant.components.recorder.core.dt_util.utcnow", return_value=now
     ):
         hass = hass_recorder()
 
@@ -1009,7 +1009,7 @@ def test_compile_missing_statistics(tmpdir, freezer):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
@@ -1026,9 +1026,9 @@ def test_compile_missing_statistics(tmpdir, freezer):
     wait_recording_done(hass)
     hass.stop()
 
-    # Start Home Assistant one hour later
+    # Start spencer Assistant one hour later
     freezer.tick(timedelta(hours=1))
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
@@ -1220,7 +1220,7 @@ def test_service_disable_run_information_recorded(tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
@@ -1242,7 +1242,7 @@ def test_service_disable_run_information_recorded(tmpdir):
     wait_recording_done(hass)
     hass.stop()
 
-    hass = get_test_home_assistant()
+    hass = get_test_spencer_assistant()
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
@@ -1329,7 +1329,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     new_start_time = get_instance(hass).run_history.recording_start
     assert original_start_time < new_start_time
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     hass.stop()
 
@@ -1371,7 +1371,7 @@ def test_entity_id_filter(hass_recorder):
 
 async def test_database_lock_and_unlock(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
@@ -1413,7 +1413,7 @@ async def test_database_lock_and_unlock(
 
 async def test_database_lock_and_overflow(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
@@ -1456,7 +1456,7 @@ async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
 
     instance = get_instance(hass)
 
@@ -1479,7 +1479,7 @@ async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
 
 async def test_database_lock_without_instance(recorder_mock, hass):
     """Test database lock doesn't fail if instance is not initialized."""
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
 
     instance = get_instance(hass)
     with patch.object(instance, "engine", None):
@@ -1499,15 +1499,15 @@ async def test_in_memory_database(hass, caplog):
 
 async def test_database_connection_keep_alive(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test we keep alive socket based dialects."""
-    with patch("homeassistant.components.recorder.Recorder.dialect_name"):
+    with patch("spencerassistant.components.recorder.Recorder.dialect_name"):
         instance = await async_setup_recorder_instance(hass)
         # We have to mock this since we don't have a mock
         # MySQL server available in tests.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
         await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
@@ -1519,7 +1519,7 @@ async def test_database_connection_keep_alive(
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ):
@@ -1529,7 +1529,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
         return
 
     instance = await async_setup_recorder_instance(hass)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
@@ -1563,7 +1563,7 @@ def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
 
 # Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
 # the CI can fail because the test takes too long to run
-@patch("homeassistant.components.recorder.core.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
+@patch("spencerassistant.components.recorder.core.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
 def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, caplog):
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()
@@ -1642,9 +1642,9 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
     mock_event = MockEvent()
     with patch(
-        "homeassistant.components.recorder.core.create_engine"
+        "spencerassistant.components.recorder.core.create_engine"
     ) as create_engine_mock, patch(
-        "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
+        "spencerassistant.components.recorder.core.sqlalchemy_event", mock_event
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: db_url}})
         create_engine_mock.assert_called_once()
@@ -1698,9 +1698,9 @@ async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
 
     mock_event = MockEvent()
     with patch(
-        "homeassistant.components.recorder.core.create_engine"
+        "spencerassistant.components.recorder.core.create_engine"
     ) as create_engine_mock, patch(
-        "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
+        "spencerassistant.components.recorder.core.sqlalchemy_event", mock_event
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()

@@ -3,21 +3,21 @@ from datetime import timedelta
 
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.cover import DOMAIN, CoverEntityFeature
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.cover import DOMAIN, CoverEntityFeature
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import (
     CONF_PLATFORM,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,

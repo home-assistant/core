@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.switchbot.const import CONF_RETRY_COUNT
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.switchbot.const import CONF_RETRY_COUNT
+from spencerassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from spencerassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     NOT_SWITCHBOT_INFO,
@@ -128,7 +128,7 @@ async def test_user_setup_wohand(hass):
     """Test the user initiated form with password and valid mac."""
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -169,7 +169,7 @@ async def test_user_setup_wohand_already_configured(hass):
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -183,7 +183,7 @@ async def test_user_setup_wocurtain(hass):
     """Test the user initiated form with password and valid mac."""
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOCURTAIN_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -214,7 +214,7 @@ async def test_user_setup_wocurtain_or_bot(hass):
     """Test the user initiated form with valid address."""
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
             NOT_SWITCHBOT_INFO,
             WOCURTAIN_SERVICE_INFO,
@@ -250,7 +250,7 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass):
     """Test the user initiated form and valid address and a bot with a password."""
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
             WOCURTAIN_SERVICE_INFO,
             WOHAND_ENCRYPTED_SERVICE_INFO,
@@ -294,7 +294,7 @@ async def test_user_setup_single_bot_with_password(hass):
     """Test the user initiated form for a bot with a password."""
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOHAND_ENCRYPTED_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -325,7 +325,7 @@ async def test_user_setup_single_bot_with_password(hass):
 async def test_user_setup_wosensor(hass):
     """Test the user initiated form with password and valid mac."""
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOSENSORTH_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -355,7 +355,7 @@ async def test_user_setup_wosensor(hass):
 async def test_user_no_devices(hass):
     """Test the user initiated form with password and valid mac."""
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -376,7 +376,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert result["step_id"] == "confirm"
 
     with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        "spencerassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[WOCURTAIN_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(

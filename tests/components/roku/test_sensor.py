@@ -3,16 +3,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.roku.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.roku.const import DOMAIN
+from spencerassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.helpers.entity import EntityCategory
 
 from . import UPNP_SERIAL
 
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_roku_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Roku sensors."""
@@ -68,7 +68,7 @@ async def test_roku_sensors(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_sensors(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:

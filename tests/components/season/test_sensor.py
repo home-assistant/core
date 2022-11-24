@@ -4,40 +4,40 @@ from datetime import datetime
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.season.const import (
+from spencerassistant.components.season.const import (
     DOMAIN,
     TYPE_ASTRONOMICAL,
     TYPE_METEOROLOGICAL,
 )
-from homeassistant.components.season.sensor import (
+from spencerassistant.components.season.sensor import (
     STATE_AUTUMN,
     STATE_SPRING,
     STATE_SUMMER,
     STATE_WINTER,
 )
-from homeassistant.const import CONF_TYPE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.const import CONF_TYPE, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 HEMISPHERE_NORTHERN = {
-    "homeassistant": {"latitude": 48.864716, "longitude": 2.349014},
+    "spencerassistant": {"latitude": 48.864716, "longitude": 2.349014},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_SOUTHERN = {
-    "homeassistant": {"latitude": -33.918861, "longitude": 18.423300},
+    "spencerassistant": {"latitude": -33.918861, "longitude": 18.423300},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_EQUATOR = {
-    "homeassistant": {"latitude": 0, "longitude": -51.065100},
+    "spencerassistant": {"latitude": 0, "longitude": -51.065100},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_EMPTY = {
-    "homeassistant": {},
+    "spencerassistant": {},
     "sensor": {"platform": "season", "type": "meteorological"},
 }
 
@@ -72,14 +72,14 @@ def idfn(val):
 
 @pytest.mark.parametrize("type,day,expected", NORTHERN_PARAMETERS, ids=idfn)
 async def test_season_northern_hemisphere(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     type: str,
     day: datetime,
     expected: str,
 ) -> None:
     """Test that season should be summer."""
-    hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
+    hass.config.latitude = HEMISPHERE_NORTHERN["spencerassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=type, data={CONF_TYPE: type}
@@ -101,14 +101,14 @@ async def test_season_northern_hemisphere(
 
 @pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
 async def test_season_southern_hemisphere(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     type: str,
     day: datetime,
     expected: str,
 ) -> None:
     """Test that season should be summer."""
-    hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
+    hass.config.latitude = HEMISPHERE_SOUTHERN["spencerassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=type, data={CONF_TYPE: type}
@@ -137,11 +137,11 @@ async def test_season_southern_hemisphere(
 
 
 async def test_season_equator(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that season should be unknown for equator."""
-    hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
+    hass.config.latitude = HEMISPHERE_EQUATOR["spencerassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
 
     with freeze_time(datetime(2017, 9, 3, 0, 0)):

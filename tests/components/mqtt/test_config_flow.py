@@ -8,11 +8,11 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config as hass_config, config_entries, data_entry_flow
-from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant import config as hass_config, config_entries, data_entry_flow
+from spencerassistant.components import mqtt
+from spencerassistant.components.hassio import HassioServiceInfo
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +24,7 @@ MOCK_CLIENT_KEY = b"## mock key file ##"
 def mock_finish_setup():
     """Mock out the finish setup method."""
     with patch(
-        "homeassistant.components.mqtt.MQTT.async_connect", return_value=True
+        "spencerassistant.components.mqtt.MQTT.async_connect", return_value=True
     ) as mock_finish:
         yield mock_finish
 
@@ -33,7 +33,7 @@ def mock_finish_setup():
 def mock_client_cert_check_fail():
     """Mock the client certificate check."""
     with patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate",
+        "spencerassistant.components.mqtt.config_flow.load_pem_x509_certificate",
         side_effect=ValueError,
     ) as mock_cert_check:
         yield mock_cert_check
@@ -43,7 +43,7 @@ def mock_client_cert_check_fail():
 def mock_client_key_check_fail():
     """Mock the client key file check."""
     with patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_private_key",
+        "spencerassistant.components.mqtt.config_flow.load_pem_private_key",
         side_effect=ValueError,
     ) as mock_key_check:
         yield mock_key_check
@@ -53,11 +53,11 @@ def mock_client_key_check_fail():
 def mock_ssl_context():
     """Mock the SSL context used to load the cert chain and to load verify locations."""
     with patch(
-        "homeassistant.components.mqtt.config_flow.SSLContext"
+        "spencerassistant.components.mqtt.config_flow.SSLContext"
     ) as mock_context, patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_private_key"
+        "spencerassistant.components.mqtt.config_flow.load_pem_private_key"
     ) as mock_key_check, patch(
-        "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate"
+        "spencerassistant.components.mqtt.config_flow.load_pem_x509_certificate"
     ) as mock_cert_check:
         yield {
             "context": mock_context,
@@ -70,7 +70,7 @@ def mock_ssl_context():
 def mock_reload_after_entry_update():
     """Mock out the reload after updating the entry."""
     with patch(
-        "homeassistant.components.mqtt._async_config_entry_updated"
+        "spencerassistant.components.mqtt._async_config_entry_updated"
     ) as mock_reload:
         yield mock_reload
 
@@ -78,7 +78,7 @@ def mock_reload_after_entry_update():
 @pytest.fixture
 def mock_try_connection():
     """Mock the try connection method."""
-    with patch("homeassistant.components.mqtt.config_flow.try_connection") as mock_try:
+    with patch("spencerassistant.components.mqtt.config_flow.try_connection") as mock_try:
         yield mock_try
 
 
@@ -121,7 +121,7 @@ def mock_try_connection_time_out():
 
     # Patch prevent waiting 5 sec for a timeout
     with patch("paho.mqtt.client.Client") as mock_client, patch(
-        "homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0
+        "spencerassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0
     ):
         mock_client().loop_start = lambda *args: 1
         yield mock_client()
@@ -151,12 +151,12 @@ def mock_process_uploaded_file(tmp_path):
             assert False
 
     with patch(
-        "homeassistant.components.mqtt.config_flow.process_uploaded_file",
+        "spencerassistant.components.mqtt.config_flow.process_uploaded_file",
         side_effect=_mock_process_uploaded_file,
     ) as mock_upload, patch(
         # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt" + f"-{getrandbits(10):03x}",
+        "spencerassistant.components.mqtt.util.TEMP_DIR_NAME",
+        "spencer-assistant-mqtt" + f"-{getrandbits(10):03x}",
     ):
         mock_upload.file_id = {
             mqtt.CONF_CERTIFICATE: file_id_ca,
@@ -186,7 +186,7 @@ async def test_user_connection_works(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
+        "discovery_prefix": "spencerassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -223,7 +223,7 @@ async def test_user_v5_connection_works(
     assert result["result"].data == {
         "broker": "another-broker",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
+        "discovery_prefix": "spencerassistant",
         "port": 2345,
         "protocol": "5",
     }
@@ -306,7 +306,7 @@ async def test_manual_config_set(
         "broker": "127.0.0.1",
         "port": 1883,
         "discovery": True,
-        "discovery_prefix": "homeassistant",
+        "discovery_prefix": "spencerassistant",
     }
     # Check we tried the connection, with precedence for config entry settings
     mock_try_connection.assert_called_once_with(
@@ -344,7 +344,7 @@ async def test_hassio_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_hassio_ignored(hass: HomeAssistant) -> None:
+async def test_hassio_ignored(hass: spencerAssistant) -> None:
     """Test we supervisor discovered instance can be ignored."""
     MockConfigEntry(
         domain=mqtt.DOMAIN, source=config_entries.SOURCE_IGNORE
@@ -406,7 +406,7 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
         "username": "mock-user",
         "password": "mock-pass",
         "discovery": True,
-        "discovery_prefix": "homeassistant",
+        "discovery_prefix": "spencerassistant",
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -455,7 +455,7 @@ async def test_hassio_cannot_connect(
 
 
 @patch(
-    "homeassistant.config.async_hass_config_yaml",
+    "spencerassistant.config.async_hass_config_yaml",
     AsyncMock(return_value={}),
 )
 async def test_option_flow(
@@ -498,7 +498,7 @@ async def test_option_flow(
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
-            "discovery_prefix": "homeassistant",
+            "discovery_prefix": "spencerassistant",
             "birth_enable": True,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -519,7 +519,7 @@ async def test_option_flow(
         mqtt.CONF_USERNAME: "user",
         mqtt.CONF_PASSWORD: "pass",
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant",
         mqtt.CONF_BIRTH_MESSAGE: {
             mqtt.ATTR_TOPIC: "ha_state/online",
             mqtt.ATTR_PAYLOAD: "online",
@@ -737,7 +737,7 @@ async def test_disable_birth_will(
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+            mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant",
             "birth_enable": False,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -758,7 +758,7 @@ async def test_disable_birth_will(
         mqtt.CONF_USERNAME: "user",
         mqtt.CONF_PASSWORD: "pass",
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
     }
@@ -782,7 +782,7 @@ async def test_invalid_discovery_prefix(
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant",
     }
 
     mqtt_mock.async_connect.reset_mock()
@@ -808,7 +808,7 @@ async def test_invalid_discovery_prefix(
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant#invalid",
+            mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant#invalid",
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -818,7 +818,7 @@ async def test_invalid_discovery_prefix(
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant",
     }
 
     await hass.async_block_till_done()
@@ -1406,7 +1406,7 @@ async def test_setup_with_advanced_settings(
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
+            mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant_test",
         },
     )
     assert result["type"] == "create_entry"
@@ -1429,7 +1429,7 @@ async def test_setup_with_advanced_settings(
         },
         mqtt.CONF_CERTIFICATE: "auto",
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant_test",
     }
 
 
@@ -1474,7 +1474,7 @@ async def test_change_websockets_transport_to_tcp(
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
+            mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant_test",
         },
     )
     assert result["type"] == "create_entry"
@@ -1485,5 +1485,5 @@ async def test_change_websockets_transport_to_tcp(
         mqtt.CONF_PORT: 1234,
         mqtt.CONF_TRANSPORT: "tcp",
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
+        mqtt.CONF_DISCOVERY_PREFIX: "spencerassistant_test",
     }

@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant, callback
+from spencerassistant.const import ATTR_DEVICE_CLASS
+from spencerassistant.core import spencerAssistant, callback
 
 
 @callback
 def async_check_significant_change(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     old_state: str,
     old_attrs: dict,
     new_state: str,

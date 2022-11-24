@@ -5,22 +5,22 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
-from homeassistant.const import (
+from spencerassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
+from spencerassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_CLOSED,
-    STATE_HOME,
+    STATE_spencer,
     STATE_LOCKED,
-    STATE_NOT_HOME,
+    STATE_NOT_spencer,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_UNLOCKED,
 )
-import homeassistant.core as ha
-from homeassistant.helpers import state
-from homeassistant.util import dt as dt_util
+import spencerassistant.core as ha
+from spencerassistant.helpers import state
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
@@ -31,7 +31,7 @@ async def test_async_track_states(hass, mock_integration_frame):
     point2 = point1 + timedelta(seconds=5)
     point3 = point2 + timedelta(seconds=5)
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+    with patch("spencerassistant.core.dt_util.utcnow") as mock_utcnow:
         mock_utcnow.return_value = point2
 
         with state.AsyncTrackStates(hass) as states:
@@ -52,13 +52,13 @@ async def test_async_track_states(hass, mock_integration_frame):
 async def test_call_to_component(hass):
     """Test calls to components state reproduction functions."""
     with patch(
-        "homeassistant.components.media_player.reproduce_state.async_reproduce_states"
+        "spencerassistant.components.media_player.reproduce_state.async_reproduce_states"
     ) as media_player_fun:
         media_player_fun.return_value = asyncio.Future()
         media_player_fun.return_value.set_result(None)
 
         with patch(
-            "homeassistant.components.climate.reproduce_state.async_reproduce_states"
+            "spencerassistant.components.climate.reproduce_state.async_reproduce_states"
         ) as climate_fun:
             climate_fun.return_value = asyncio.Future()
             climate_fun.return_value.set_result(None)
@@ -88,15 +88,15 @@ async def test_get_changed_since(hass, mock_integration_frame):
     point2 = point1 + timedelta(seconds=5)
     point3 = point2 + timedelta(seconds=5)
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point1):
+    with patch("spencerassistant.core.dt_util.utcnow", return_value=point1):
         hass.states.async_set("light.test", "on")
         state1 = hass.states.get("light.test")
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point2):
+    with patch("spencerassistant.core.dt_util.utcnow", return_value=point2):
         hass.states.async_set("light.test2", "on")
         state2 = hass.states.get("light.test2")
 
-    with patch("homeassistant.core.dt_util.utcnow", return_value=point3):
+    with patch("spencerassistant.core.dt_util.utcnow", return_value=point3):
         hass.states.async_set("light.test3", "on")
         state3 = hass.states.get("light.test3")
 
@@ -191,9 +191,9 @@ async def test_as_number_states(hass):
         STATE_CLOSED,
         STATE_UNLOCKED,
         STATE_BELOW_HORIZON,
-        STATE_NOT_HOME,
+        STATE_NOT_spencer,
     )
-    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON, STATE_HOME)
+    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON, STATE_spencer)
     for _state in zero_states:
         assert state.state_as_number(ha.State("domain.test", _state, {})) == 0
     for _state in one_states:

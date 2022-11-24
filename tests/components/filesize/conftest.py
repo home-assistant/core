@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.filesize.const import DOMAIN
-from homeassistant.const import CONF_FILE_PATH
+from spencerassistant.components.filesize.const import DOMAIN
+from spencerassistant.const import CONF_FILE_PATH
 
 from . import TEST_FILE, TEST_FILE2, TEST_FILE_NAME
 
@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.filesize.async_setup_entry", return_value=True
+        "spencerassistant.components.filesize.async_setup_entry", return_value=True
     ):
         yield
 

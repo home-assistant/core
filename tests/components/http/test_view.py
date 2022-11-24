@@ -1,4 +1,4 @@
-"""Tests for Home Assistant View."""
+"""Tests for spencer Assistant View."""
 from http import HTTPStatus
 import json
 from unittest.mock import AsyncMock, Mock
@@ -11,11 +11,11 @@ from aiohttp.web_exceptions import (
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.http.view import (
-    HomeAssistantView,
+from spencerassistant.components.http.view import (
+    spencerAssistantView,
     request_handler_factory,
 )
-from homeassistant.exceptions import ServiceNotFound, Unauthorized
+from spencerassistant.exceptions import ServiceNotFound, Unauthorized
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def mock_request_with_stopping():
 
 async def test_invalid_json(caplog):
     """Test trying to return invalid JSON."""
-    view = HomeAssistantView()
+    view = spencerAssistantView()
 
     with pytest.raises(HTTPInternalServerError):
         view.json(rb"\ud800")
@@ -42,7 +42,7 @@ async def test_invalid_json(caplog):
 
 async def test_nan_serialized_to_null(caplog):
     """Test nan serialized to null JSON."""
-    view = HomeAssistantView()
+    view = spencerAssistantView()
     response = view.json(float("NaN"))
     assert json.loads(response.body.decode("utf-8")) is None
 

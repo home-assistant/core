@@ -14,13 +14,13 @@ from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device_manager import DeviceManager
 import pytest
 
-from homeassistant.components.application_credentials import (
+from spencerassistant.components.application_credentials import (
     async_import_client_credential,
 )
-from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.const import CONF_SUBSCRIBER_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.nest import DOMAIN
+from spencerassistant.components.nest.const import CONF_SUBSCRIBER_ID
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .common import (
     DEVICE_ID,
@@ -102,7 +102,7 @@ async def auth(aiohttp_client):
 def cleanup_media_storage(hass):
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
-    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
+    with patch("spencerassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
         yield
         shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
 
@@ -112,7 +112,7 @@ def subscriber() -> YieldFixture[FakeSubscriber]:
     """Set up the FakeSusbcriber."""
     subscriber = FakeSubscriber()
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
         yield subscriber
@@ -123,7 +123,7 @@ def mock_subscriber() -> YieldFixture[AsyncMock]:
     """Fixture for injecting errors into the subscriber."""
     mock_subscriber = AsyncMock(FakeSubscriber)
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber",
         return_value=mock_subscriber,
     ):
         yield mock_subscriber
@@ -241,7 +241,7 @@ def config_entry(
 
 
 @pytest.fixture(autouse=True)
-async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> None:
+async def credential(hass: spencerAssistant, nest_test_config: NestTestConfig) -> None:
     """Fixture that provides the ClientCredential for the test if any."""
     if not nest_test_config.credential:
         return
@@ -256,7 +256,7 @@ async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> N
 
 @pytest.fixture
 async def setup_base_platform(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     platforms: list[str],
     config: dict[str, Any],
     config_entry: MockConfigEntry | None,
@@ -264,7 +264,7 @@ async def setup_base_platform(
     """Fixture to setup the integration platform."""
     if config_entry:
         config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.nest.PLATFORMS", platforms):
+    with patch("spencerassistant.components.nest.PLATFORMS", platforms):
 
         async def _setup_func() -> bool:
             assert await async_setup_component(hass, DOMAIN, config)

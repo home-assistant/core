@@ -10,7 +10,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
@@ -36,9 +36,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.zha.climate import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
-from homeassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHEDULE
-from homeassistant.const import (
+from spencerassistant.components.zha.climate import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
+from spencerassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHEDULE
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_UNKNOWN,
@@ -175,7 +175,7 @@ ZCL_ATTR_PLUG = {
 def climate_platform_only():
     """Only setup the climate and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.BUTTON,
             Platform.CLIMATE,
@@ -1364,7 +1364,7 @@ async def test_set_moes_operation_mode(hass, device_climate_moes):
 
 
 async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
-    """Test setting preset from homeassistant for zonnsmart trv."""
+    """Test setting preset from spencerassistant for zonnsmart trv."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
     thrm_cluster = device_climate_zonnsmart.device.endpoints[1].thermostat

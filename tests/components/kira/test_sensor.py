@@ -1,7 +1,7 @@
 """The tests for Kira sensor platform."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.kira import sensor as kira
+from spencerassistant.components.kira import sensor as kira
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
 
@@ -16,7 +16,7 @@ def add_entities(devices):
         DEVICES.append(device)
 
 
-@patch("homeassistant.components.kira.sensor.KiraReceiver.schedule_update_ha_state")
+@patch("spencerassistant.components.kira.sensor.KiraReceiver.schedule_update_ha_state")
 def test_kira_sensor_callback(mock_schedule_update_ha_state, hass):
     """Ensure Kira sensor properly updates its attributes from callback."""
     mock_kira = MagicMock()

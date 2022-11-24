@@ -2,10 +2,10 @@
 from collections import namedtuple
 from datetime import datetime, timezone
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
+from spencerassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 
 ENTRY_CONFIG = {
-    CONF_NAME: "Home Town",
+    CONF_NAME: "spencer Town",
     CONF_LATITUDE: "1",
     CONF_LONGITUDE: "2",
     CONF_MODE: "hourly",
@@ -103,8 +103,8 @@ class MockLocation:
                 ),
             ]
 
-    name = "HomeTown"
-    station = "HomeTown Station"
+    name = "spencerTown"
+    station = "spencerTown Station"
     station_latitude = 0
     station_longitude = 0
     global_id_local = 1130600

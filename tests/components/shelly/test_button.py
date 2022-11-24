@@ -1,14 +1,14 @@
 """Tests for Shelly button platform."""
 from __future__ import annotations
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
 
 from . import init_integration
 
 
-async def test_block_button(hass: HomeAssistant, mock_block_device):
+async def test_block_button(hass: spencerAssistant, mock_block_device):
     """Test block device reboot button."""
     await init_integration(hass, 1)
 
@@ -24,7 +24,7 @@ async def test_block_button(hass: HomeAssistant, mock_block_device):
     assert mock_block_device.trigger_reboot.call_count == 1
 
 
-async def test_rpc_button(hass: HomeAssistant, mock_rpc_device):
+async def test_rpc_button(hass: spencerAssistant, mock_rpc_device):
     """Test rpc device OTA button."""
     await init_integration(hass, 2)
 

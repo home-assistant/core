@@ -1,14 +1,14 @@
 """The tests for Cover device actions."""
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.cover import DOMAIN, CoverEntityFeature
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.cover import DOMAIN, CoverEntityFeature
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import CONF_PLATFORM
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

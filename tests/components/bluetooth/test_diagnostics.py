@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 from bleak.backends.scanner import BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
-from homeassistant.components import bluetooth
+from spencerassistant.components import bluetooth
 
 from . import generate_advertisement_data, inject_advertisement
 
@@ -24,13 +24,13 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
+        "spencerassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
         [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
     ), patch(
-        "homeassistant.components.bluetooth.diagnostics.platform.system",
+        "spencerassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
     ), patch(
-        "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
+        "spencerassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={
             "org.bluez": {
                 "/org/bluez/hci0": {
@@ -70,13 +70,13 @@ async def test_diagnostics(
                     "address": "00:00:00:00:00:01",
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
-                    "sw_version": "homeassistant",
+                    "sw_version": "spencerassistant",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": True,
-                    "sw_version": "homeassistant",
+                    "sw_version": "spencerassistant",
                 },
             },
             "dbus": {
@@ -101,13 +101,13 @@ async def test_diagnostics(
                         "address": "00:00:00:00:00:01",
                         "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": False,
-                        "sw_version": "homeassistant",
+                        "sw_version": "spencerassistant",
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
                         "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": True,
-                        "sw_version": "homeassistant",
+                        "sw_version": "spencerassistant",
                     },
                 },
                 "advertisement_tracker": {
@@ -171,13 +171,13 @@ async def test_diagnostics_macos(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
+        "spencerassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
         [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
     ), patch(
-        "homeassistant.components.bluetooth.diagnostics.platform.system",
+        "spencerassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Darwin",
     ), patch(
-        "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
+        "spencerassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
         entry1 = MockConfigEntry(

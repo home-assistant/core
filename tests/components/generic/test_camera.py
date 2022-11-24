@@ -8,11 +8,11 @@ import httpx
 import pytest
 import respx
 
-from homeassistant.components.camera import (
+from spencerassistant.components.camera import (
     async_get_mjpeg_stream,
     async_get_stream_source,
 )
-from homeassistant.components.generic.const import (
+from spencerassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
@@ -20,11 +20,11 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
-from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
-from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.stream.const import CONF_RTSP_TRANSPORT
+from spencerassistant.components.websocket_api.const import TYPE_RESULT
+from spencerassistant.config_entries import SOURCE_IMPORT
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from spencerassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, Mock, MockConfigEntry
 
@@ -223,8 +223,8 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
     assert stream_source == "http://barney:betty@example.com/5a"
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
-        return_value="http://home.assistant/playlist.m3u8",
+        "spencerassistant.components.camera.Stream.endpoint_url",
+        return_value="http://spencer.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -265,8 +265,8 @@ async def test_stream_source_error(hass, hass_client, hass_ws_client, fakeimgbyt
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
-        return_value="http://home.assistant/playlist.m3u8",
+        "spencerassistant.components.camera.Stream.endpoint_url",
+        return_value="http://spencer.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -332,8 +332,8 @@ async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
-        return_value="http://home.assistant/playlist.m3u8",
+        "spencerassistant.components.camera.Stream.endpoint_url",
+        return_value="http://spencer.assistant/playlist.m3u8",
     ) as mock_request_stream:
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -446,7 +446,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
     respx.get("http://example.com").respond(stream=fakeimgbytes_jpg)
 
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
+        "spencerassistant.components.generic.camera.GenericCamera.async_camera_image",
         side_effect=asyncio.CancelledError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
@@ -483,7 +483,7 @@ async def test_no_still_image_url(hass, hass_client):
     client = await hass_client()
 
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera.stream_source",
+        "spencerassistant.components.generic.camera.GenericCamera.stream_source",
         return_value=None,
     ) as mock_stream_source:
 
@@ -493,7 +493,7 @@ async def test_no_still_image_url(hass, hass_client):
         mock_stream_source.assert_called_once()
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
-    with patch("homeassistant.components.camera.create_stream") as mock_create_stream:
+    with patch("spencerassistant.components.camera.create_stream") as mock_create_stream:
 
         # Now test when creating the stream succeeds
         mock_stream = Mock()
@@ -529,7 +529,7 @@ async def test_frame_interval_property(hass):
 
     request = Mock()
     with patch(
-        "homeassistant.components.camera.async_get_still_stream"
+        "spencerassistant.components.camera.async_get_still_stream"
     ) as mock_get_stream:
         await async_get_mjpeg_stream(hass, request, "camera.config_test")
 

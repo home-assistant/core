@@ -2,7 +2,7 @@
 config2/*
 
 tests/testing_config/deps
-tests/testing_config/home-assistant.log*
+tests/testing_config/spencer-assistant.log*
 
 # hass-release
 data/
@@ -112,8 +112,8 @@ docs/build
 
 # Windows Explorer
 desktop.ini
-/home-assistant.pyproj
-/home-assistant.sln
+/spencer-assistant.pyproj
+/spencer-assistant.sln
 /.vs/*
 
 # mypy

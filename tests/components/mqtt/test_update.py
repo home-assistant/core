@@ -4,16 +4,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, update
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import (
+from spencerassistant.components import mqtt, update
+from spencerassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -58,7 +58,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def update_platform_only():
     """Only setup the update platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.UPDATE]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.UPDATE]):
         yield
 
 
@@ -143,7 +143,7 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("latest_version") == "1.9.0"
     assert (
         state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+        == "https://brands.spencer-assistant.io/_/mqtt/icon.png"
     )
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
@@ -456,7 +456,7 @@ async def test_discovery_update_unchanged_update(
     """Test update of discovered update."""
     data1 = '{ "name": "Beer", "state_topic": "installed-topic", "latest_version_topic": "latest-topic"}'
     with patch(
-        "homeassistant.components.mqtt.update.MqttUpdate.discovery_update"
+        "spencerassistant.components.mqtt.update.MqttUpdate.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.blueprint import errors, models
-from homeassistant.util.yaml import Input
+from spencerassistant.components.blueprint import errors, models
+from spencerassistant.util.yaml import Input
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def blueprint_1():
             "blueprint": {
                 "name": "Hello",
                 "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
                 "input": {"test-input": {"name": "Name", "description": "Description"}},
             },
             "example": Input("test-input"),
@@ -32,7 +32,7 @@ def blueprint_2():
             "blueprint": {
                 "name": "Hello",
                 "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
                 "input": {
                     "test-input": {"name": "Name", "description": "Description"},
                     "test-input-default": {"default": "test"},
@@ -81,7 +81,7 @@ def test_blueprint_properties(blueprint_1):
     assert blueprint_1.metadata == {
         "name": "Hello",
         "domain": "automation",
-        "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "source_url": "https://github.com/balloob/spencer-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         "input": {"test-input": {"name": "Name", "description": "Description"}},
     }
     assert blueprint_1.domain == "automation"
@@ -125,10 +125,10 @@ def test_blueprint_validate():
             "blueprint": {
                 "name": "Hello",
                 "domain": "automation",
-                "homeassistant": {"min_version": "100000.0.0"},
+                "spencerassistant": {"min_version": "100000.0.0"},
             },
         }
-    ).validate() == ["Requires at least Home Assistant 100000.0.0"]
+    ).validate() == ["Requires at least spencer Assistant 100000.0.0"]
 
 
 def test_blueprint_inputs(blueprint_2):
@@ -204,12 +204,12 @@ async def test_domain_blueprints_get_blueprint_errors(hass, domain_bps):
     assert hass.data["blueprint"]["automation"] is domain_bps
 
     with pytest.raises(errors.FailedToLoad), patch(
-        "homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError
+        "spencerassistant.util.yaml.load_yaml", side_effect=FileNotFoundError
     ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
     with patch(
-        "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
+        "spencerassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
     ), pytest.raises(errors.FailedToLoad):
         await domain_bps.async_get_blueprint("non-existing-path")
 

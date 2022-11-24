@@ -1,151 +1,151 @@
-:mod:`homeassistant.util`
+:mod:`spencerassistant.util`
 =========================
 
-.. automodule:: homeassistant.util
+.. automodule:: spencerassistant.util
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.yaml
+spencerassistant.util.yaml
 -----------------------
 
-.. automodule:: homeassistant.util.yaml
+.. automodule:: spencerassistant.util.yaml
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.aiohttp
+spencerassistant.util.aiohttp
 --------------------------
 
-.. automodule:: homeassistant.util.aiohttp
+.. automodule:: spencerassistant.util.aiohttp
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.async\_
+spencerassistant.util.async\_
 --------------------------
 
-.. automodule:: homeassistant.util.async_
+.. automodule:: spencerassistant.util.async_
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.color
+spencerassistant.util.color
 ------------------------
 
-.. automodule:: homeassistant.util.color
+.. automodule:: spencerassistant.util.color
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.decorator
+spencerassistant.util.decorator
 ----------------------------
 
-.. automodule:: homeassistant.util.decorator
+.. automodule:: spencerassistant.util.decorator
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.distance
+spencerassistant.util.distance
 ---------------------------
 
-.. automodule:: homeassistant.util.distance
+.. automodule:: spencerassistant.util.distance
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.dt
+spencerassistant.util.dt
 ---------------------
 
-.. automodule:: homeassistant.util.dt
+.. automodule:: spencerassistant.util.dt
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.json
+spencerassistant.util.json
 -----------------------
 
-.. automodule:: homeassistant.util.json
+.. automodule:: spencerassistant.util.json
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.location
+spencerassistant.util.location
 ---------------------------
 
-.. automodule:: homeassistant.util.location
+.. automodule:: spencerassistant.util.location
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.logging
+spencerassistant.util.logging
 --------------------------
 
-.. automodule:: homeassistant.util.logging
+.. automodule:: spencerassistant.util.logging
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.network
+spencerassistant.util.network
 --------------------------
 
-.. automodule:: homeassistant.util.network
+.. automodule:: spencerassistant.util.network
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.package
+spencerassistant.util.package
 --------------------------
 
-.. automodule:: homeassistant.util.package
+.. automodule:: spencerassistant.util.package
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.pil
+spencerassistant.util.pil
 ----------------------
 
-.. automodule:: homeassistant.util.pil
+.. automodule:: spencerassistant.util.pil
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.pressure
+spencerassistant.util.pressure
 ---------------------------
 
-.. automodule:: homeassistant.util.pressure
+.. automodule:: spencerassistant.util.pressure
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.ssl
+spencerassistant.util.ssl
 ----------------------
 
-.. automodule:: homeassistant.util.ssl
+.. automodule:: spencerassistant.util.ssl
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.temperature
+spencerassistant.util.temperature
 ------------------------------
 
-.. automodule:: homeassistant.util.temperature
+.. automodule:: spencerassistant.util.temperature
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.unit\_system
+spencerassistant.util.unit\_system
 -------------------------------
 
-.. automodule:: homeassistant.util.unit_system
+.. automodule:: spencerassistant.util.unit_system
    :members:
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.volume
+spencerassistant.util.volume
 -------------------------
 
-.. automodule:: homeassistant.util.volume
+.. automodule:: spencerassistant.util.volume
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,12 +1,12 @@
 """The tests for Netatmo switch."""
 from unittest.mock import patch
 
-from homeassistant.components.switch import (
+from spencerassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from spencerassistant.const import ATTR_ENTITY_ID
 
 from .common import selected_platforms
 
@@ -23,7 +23,7 @@ async def test_switch_setup_and_services(hass, config_entry, netatmo_auth):
     assert hass.states.get(switch_entity).state == "on"
 
     # Test turning switch off
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -44,7 +44,7 @@ async def test_switch_setup_and_services(hass, config_entry, netatmo_auth):
         )
 
     # Test turning switch on
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+    with patch("pyatmo.spencer.spencer.async_set_state") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,

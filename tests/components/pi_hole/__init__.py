@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
-from homeassistant.const import (
+from spencerassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
+from spencerassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
@@ -102,10 +102,10 @@ def _create_mocked_hole(raise_exception=False, has_versions=True):
 
 
 def _patch_init_hole(mocked_hole):
-    return patch("homeassistant.components.pi_hole.Hole", return_value=mocked_hole)
+    return patch("spencerassistant.components.pi_hole.Hole", return_value=mocked_hole)
 
 
 def _patch_config_flow_hole(mocked_hole):
     return patch(
-        "homeassistant.components.pi_hole.config_flow.Hole", return_value=mocked_hole
+        "spencerassistant.components.pi_hole.config_flow.Hole", return_value=mocked_hole
     )

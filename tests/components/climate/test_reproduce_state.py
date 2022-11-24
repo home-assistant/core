@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
@@ -20,9 +20,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.climate.reproduce_state import async_reproduce_states
-from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import Context, State
+from spencerassistant.components.climate.reproduce_state import async_reproduce_states
+from spencerassistant.const import ATTR_TEMPERATURE
+from spencerassistant.core import Context, State
 
 from tests.common import async_mock_service
 

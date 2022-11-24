@@ -1,9 +1,9 @@
 """Tests for the Sonos number platform."""
 from unittest.mock import patch
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import entity_registry as ent_reg
+from spencerassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.helpers import entity_registry as ent_reg
 
 
 async def test_number_entities(hass, async_autosetup_sonos, soco):

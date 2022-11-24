@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.application_credentials import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
     DEFAULT_IMPORT_NAME,
     DOMAIN,
@@ -20,15 +20,15 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DOMAIN,
     CONF_NAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_platform
 
@@ -60,14 +60,14 @@ async def config_credential() -> ClientCredential | None:
 
 @pytest.fixture
 async def import_config_credential(
-    hass: HomeAssistant, config_credential: ClientCredential
+    hass: spencerAssistant, config_credential: ClientCredential
 ) -> None:
     """Fixture to import the yaml based credential."""
     await async_import_client_credential(hass, TEST_DOMAIN, config_credential)
 
 
 async def setup_application_credentials_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     domain: str,
     authorization_server: AuthorizationServer,
 ) -> None:
@@ -86,11 +86,11 @@ async def setup_application_credentials_integration(
 
 @pytest.fixture(autouse=True)
 async def mock_application_credentials_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     authorization_server: AuthorizationServer,
 ):
     """Mock a application_credentials integration."""
-    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
+    with patch("spencerassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
         assert await async_setup_component(hass, "application_credentials", {})
         await setup_application_credentials_integration(
             hass, TEST_DOMAIN, authorization_server
@@ -111,7 +111,7 @@ class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
+    hass: spencerAssistant, current_request_with_host: Any
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -171,7 +171,7 @@ class OAuthFixture:
 
 @pytest.fixture
 async def oauth_fixture(
-    hass: HomeAssistant, hass_client_no_auth: Any, aioclient_mock: Any
+    hass: spencerAssistant, hass_client_no_auth: Any, aioclient_mock: Any
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -370,7 +370,7 @@ async def test_websocket_import_config(
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_import_duplicate_credentials(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     config_credential: ClientCredential,
     import_config_credential: Any,
@@ -424,7 +424,7 @@ async def test_config_flow_no_credentials(hass):
 
 
 async def test_config_flow_other_domain(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     authorization_server: AuthorizationServer,
 ):
@@ -451,7 +451,7 @@ async def test_config_flow_other_domain(
 
 
 async def test_config_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
 ):
@@ -508,7 +508,7 @@ async def test_config_flow(
 
 
 async def test_config_flow_multiple_entries(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
 ):
@@ -551,7 +551,7 @@ async def test_config_flow_multiple_entries(
 
 
 async def test_config_flow_create_delete_credential(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     oauth_fixture: OAuthFixture,
 ):
@@ -612,7 +612,7 @@ async def test_import_without_setup(hass, config_credential):
 
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
-    hass: HomeAssistant, ws_client: ClientFixture
+    hass: spencerAssistant, ws_client: ClientFixture
 ):
     """Test an integration without the application credential platform."""
     assert await async_setup_component(hass, "application_credentials", {})
@@ -641,7 +641,7 @@ async def test_websocket_without_platform(
 
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_authorization_server(
-    hass: HomeAssistant, ws_client: ClientFixture
+    hass: spencerAssistant, ws_client: ClientFixture
 ):
     """Test platform with incorrect implementation."""
     assert await async_setup_component(hass, "application_credentials", {})
@@ -693,7 +693,7 @@ async def test_platform_with_auth_implementation(
     hass.config.components.add(TEST_DOMAIN)
 
     async def get_auth_impl(
-        hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+        hass: spencerAssistant, auth_domain: str, credential: ClientCredential
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
         return AuthImplementation(hass, auth_domain, credential, authorization_server)
 
@@ -721,7 +721,7 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
     """Test websocket integration list command."""
     client = await ws_client()
     with patch(
-        "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
+        "spencerassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
     ):
         assert await client.cmd_result("config") == {
             "domains": ["example1", "example2"],
@@ -733,7 +733,7 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
 
 
 async def test_name(
-    hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
+    hass: spencerAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
 ):
     """Test a credential with a name set."""
     client = await ws_client()
@@ -777,7 +777,7 @@ async def test_name(
 
 
 async def test_remove_config_entry_without_app_credentials(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ws_client: ClientFixture,
     authorization_server: AuthorizationServer,
 ):

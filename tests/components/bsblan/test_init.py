@@ -3,15 +3,15 @@ from unittest.mock import MagicMock
 
 from bsblan import BSBLANConnectionError
 
-from homeassistant.components.bsblan.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.bsblan.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
 ) -> None:
@@ -31,7 +31,7 @@ async def test_load_unload_config_entry(
 
 
 async def test_config_entry_not_ready(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
 ) -> None:

@@ -11,16 +11,16 @@ from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
-import homeassistant
-from homeassistant import config_entries
-from homeassistant.components import ssdp
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
+import spencerassistant
+from spencerassistant import config_entries
+from spencerassistant.components import ssdp
+from spencerassistant.const import (
+    EVENT_spencerASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STOP,
     MATCH_ALL,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -31,7 +31,7 @@ def _ssdp_headers(headers):
     return ssdp_headers
 
 
-async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
+async def init_ssdp_component(hass: spencerassistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
     await hass.async_block_till_done()
@@ -39,7 +39,7 @@ async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
 
 
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -57,7 +57,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert len(mock_flow_init.mock_calls) == 1
@@ -73,13 +73,13 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     assert mock_call_data.ssdp_ext == ""
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
-    assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
+    assert mock_call_data.x_spencerassistant_matching_domains == {"mock-domain"}
     assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"manufacturerURL": "mock-url"}]},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -100,7 +100,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert len(mock_flow_init.mock_calls) == 1
@@ -116,14 +116,14 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     assert mock_call_data.ssdp_ext == ""
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
-    assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
+    assert mock_call_data.x_spencerassistant_matching_domains == {"mock-domain"}
     assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_manufacturer(
@@ -150,7 +150,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
     ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     # If we get duplicate response, ensure we only look it up once
@@ -164,7 +164,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_devicetype(
@@ -192,7 +192,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     # If we get duplicate response, ensure we only look it up once
@@ -206,7 +206,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={
         "mock-domain": [
             {
@@ -239,7 +239,7 @@ async def test_scan_not_all_present(
     ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert not mock_flow_init.mock_calls
@@ -247,7 +247,7 @@ async def test_scan_not_all_present(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={
         "mock-domain": [
             {
@@ -280,7 +280,7 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
     ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert not mock_flow_init.mock_calls
@@ -288,7 +288,7 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
 )
 async def test_flow_start_only_alive(
@@ -306,7 +306,7 @@ async def test_flow_start_only_alive(
     """,
     )
     ssdp_listener = await init_ssdp_component(hass)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     # Search should start a flow
@@ -359,7 +359,7 @@ async def test_flow_start_only_alive(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={},
 )
 async def test_discovery_from_advertisement_sets_ssdp_st(
@@ -377,7 +377,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     """,
     )
     ssdp_listener = await init_ssdp_component(hass)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     mock_ssdp_advertisement = _ssdp_headers(
@@ -408,14 +408,14 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
 
 
 @patch(
-    "homeassistant.components.ssdp.async_build_source_set",
+    "spencerassistant.components.ssdp.async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
 async def test_start_stop_scanner(mock_source_set, hass):
     """Test we start and stop the scanner."""
     ssdp_listener = await init_ssdp_component(hass)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
@@ -424,7 +424,7 @@ async def test_start_stop_scanner(mock_source_set, hass):
     assert ssdp_listener.async_search.call_count == 4
     assert ssdp_listener.async_stop.call_count == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
@@ -434,7 +434,7 @@ async def test_start_stop_scanner(mock_source_set, hass):
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
-@patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
+@patch("spencerassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
     mock_get_ssdp, hass, aioclient_mock, caplog
 ):
@@ -509,7 +509,7 @@ async def test_scan_with_registered_callback(
     assert mock_call_data.ssdp_headers["x-rincon-bootseq"] == "55"
     assert mock_call_data.ssdp_udn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
-    assert mock_call_data.x_homeassistant_matching_domains == set()
+    assert mock_call_data.x_spencerassistant_matching_domains == set()
     assert mock_call_data.upnp == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
@@ -525,7 +525,7 @@ async def test_scan_with_registered_callback(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
 async def test_getting_existing_headers(
@@ -650,7 +650,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={
         "mock-domain": [
             {
@@ -660,7 +660,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "spencerassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_async_detect_interfaces_setting_empty_route(
@@ -676,7 +676,7 @@ async def test_async_detect_interfaces_setting_empty_route(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={
         "mock-domain": [
             {
@@ -686,7 +686,7 @@ async def test_async_detect_interfaces_setting_empty_route(
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "spencerassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_bind_failure_skips_adapter(
@@ -721,7 +721,7 @@ async def test_bind_failure_skips_adapter(
 
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
+    "spencerassistant.components.ssdp.async_get_ssdp",
     return_value={
         "mock-domain": [
             {
@@ -731,7 +731,7 @@ async def test_bind_failure_skips_adapter(
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "spencerassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_ipv4_does_additional_search_for_sonos(
@@ -740,7 +740,7 @@ async def test_ipv4_does_additional_search_for_sonos(
     """Test that only ipv4 does an additional search for Sonos."""
     ssdp_listener = await init_ssdp_component(hass)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()

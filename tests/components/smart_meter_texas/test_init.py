@@ -1,14 +1,14 @@
 """Test the Smart Meter Texas module."""
 from unittest.mock import patch
 
-from homeassistant.components.homeassistant import (
+from spencerassistant.components.spencerassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.smart_meter_texas.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
 

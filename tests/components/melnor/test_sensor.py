@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from freezegun import freeze_time
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.helpers import entity_registry
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from spencerassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from spencerassistant.helpers import entity_registry
+import spencerassistant.util.dt as dt_util
 
 from .conftest import (
     mock_config_entry,

@@ -3,8 +3,8 @@ from http import HTTPStatus
 
 from requests_mock import Mocker
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.pushbullet.const import DOMAIN
+from spencerassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from spencerassistant.components.pushbullet.const import DOMAIN
 
 from . import MOCK_CONFIG
 

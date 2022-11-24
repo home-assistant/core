@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 from pyfronius import BadStatusError, FroniusError
 
-from homeassistant.components.fronius.coordinator import (
+from spencerassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
 )
-from homeassistant.util import dt
+from spencerassistant.util import dt
 
 from . import mock_responses, setup_fronius_integration
 

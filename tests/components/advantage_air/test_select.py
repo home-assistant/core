@@ -1,13 +1,13 @@
 """Test the Advantage Air Select Platform."""
 from json import loads
 
-from homeassistant.components.select import (
+from spencerassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_RESPONSE,

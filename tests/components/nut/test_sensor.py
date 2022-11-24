@@ -2,15 +2,15 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.nut.const import DOMAIN
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_RESOURCES,
     PERCENTAGE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.helpers import entity_registry as er
 
 from .util import _get_mock_pynutclient, async_init_integration
 
@@ -226,7 +226,7 @@ async def test_state_sensors(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -251,7 +251,7 @@ async def test_unknown_state_sensors(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -281,7 +281,7 @@ async def test_stale_options(hass):
     )
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

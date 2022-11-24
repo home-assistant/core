@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from zeep.exceptions import Fault
 
-from homeassistant import config_entries
-from homeassistant.components.onvif import config_flow
-from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.models import Capabilities, DeviceInfo
-from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from spencerassistant import config_entries
+from spencerassistant.components.onvif import config_flow
+from spencerassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
+from spencerassistant.components.onvif.models import Capabilities, DeviceInfo
+from spencerassistant.const import HTTP_DIGEST_AUTHENTICATION
 
 from tests.common import MockConfigEntry
 
@@ -135,11 +135,11 @@ async def setup_onvif_integration(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery

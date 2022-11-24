@@ -6,9 +6,9 @@ import pytest
 import requests
 import requests_mock
 
-import homeassistant.components.facebox.image_processing as fb
-import homeassistant.components.image_processing as ip
-from homeassistant.const import (
+import spencerassistant.components.facebox.image_processing as fb
+import spencerassistant.components.image_processing as ip
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_FRIENDLY_NAME,
@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import callback
+from spencerassistant.setup import async_setup_component
 
 MOCK_IP = "192.168.0.1"
 MOCK_PORT = "8080"
@@ -79,7 +79,7 @@ VALID_CONFIG = {
 def mock_healthybox():
     """Mock fb.check_box_health."""
     check_box_health = (
-        "homeassistant.components.facebox.image_processing.check_box_health"
+        "spencerassistant.components.facebox.image_processing.check_box_health"
     )
     with patch(check_box_health, return_value=MOCK_BOX_ID) as _mock_healthybox:
         yield _mock_healthybox
@@ -89,7 +89,7 @@ def mock_healthybox():
 def mock_isfile():
     """Mock os.path.isfile."""
     with patch(
-        "homeassistant.components.facebox.image_processing.cv.isfile", return_value=True
+        "spencerassistant.components.facebox.image_processing.cv.isfile", return_value=True
     ) as _mock_isfile:
         yield _mock_isfile
 
@@ -98,7 +98,7 @@ def mock_isfile():
 def mock_image():
     """Return a mock camera image."""
     with patch(
-        "homeassistant.components.demo.camera.DemoCamera.camera_image",
+        "spencerassistant.components.demo.camera.DemoCamera.camera_image",
         return_value=b"Test",
     ) as image:
         yield image
@@ -109,7 +109,7 @@ def mock_open_file():
     """Mock open."""
     mopen = mock_open()
     with patch(
-        "homeassistant.components.facebox.image_processing.open", mopen, create=True
+        "spencerassistant.components.facebox.image_processing.open", mopen, create=True
     ) as _mock_open:
         yield _mock_open
 

@@ -1,12 +1,12 @@
 """Test the SenseME config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.senseme.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components import dhcp
+from spencerassistant.components.senseme.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_ID
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     MOCK_ADDRESS,
@@ -28,11 +28,11 @@ DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
 )
 
 
-async def test_form_user(hass: HomeAssistant) -> None:
+async def test_form_user(hass: spencerAssistant) -> None:
     """Test we get the form as a user."""
 
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.async_setup_entry",
+        "spencerassistant.components.senseme.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -57,7 +57,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_manual_entry(hass: HomeAssistant) -> None:
+async def test_form_user_manual_entry(hass: spencerAssistant) -> None:
     """Test we get the form as a user with a discovery but user chooses manual."""
 
     with _patch_discovery():
@@ -79,10 +79,10 @@ async def test_form_user_manual_entry(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "manual"
 
     with patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=MOCK_DEVICE,
     ), patch(
-        "homeassistant.components.senseme.async_setup_entry",
+        "spencerassistant.components.senseme.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -101,14 +101,14 @@ async def test_form_user_manual_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_no_discovery(hass: HomeAssistant) -> None:
+async def test_form_user_no_discovery(hass: spencerAssistant) -> None:
     """Test we get the form as a user with no discovery."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=MOCK_DEVICE,
     ), patch(
-        "homeassistant.components.senseme.async_setup_entry",
+        "spencerassistant.components.senseme.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -145,7 +145,7 @@ async def test_form_user_no_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_manual_entry_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_user_manual_entry_cannot_connect(hass: spencerAssistant) -> None:
     """Test we get the form as a user."""
 
     with _patch_discovery():
@@ -167,7 +167,7 @@ async def test_form_user_manual_entry_cannot_connect(hass: HomeAssistant) -> Non
     assert result2["step_id"] == "manual"
 
     with patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -183,7 +183,7 @@ async def test_form_user_manual_entry_cannot_connect(hass: HomeAssistant) -> Non
     assert result3["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_discovery(hass: HomeAssistant) -> None:
+async def test_discovery(hass: spencerAssistant) -> None:
     """Test we can setup a discovered device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -195,14 +195,14 @@ async def test_discovery(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.async_get_device_by_device_info",
+        "spencerassistant.components.senseme.async_get_device_by_device_info",
         return_value=(True, MOCK_DEVICE2),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.async_setup_entry",
+        "spencerassistant.components.senseme.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -229,7 +229,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_discovery_existing_device_no_ip_change(hass: HomeAssistant) -> None:
+async def test_discovery_existing_device_no_ip_change(hass: spencerAssistant) -> None:
     """Test we can setup a discovered device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -241,7 +241,7 @@ async def test_discovery_existing_device_no_ip_change(hass: HomeAssistant) -> No
     entry.add_to_hass(hass)
 
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.async_get_device_by_device_info",
+        "spencerassistant.components.senseme.async_get_device_by_device_info",
         return_value=(True, MOCK_DEVICE),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -257,7 +257,7 @@ async def test_discovery_existing_device_no_ip_change(hass: HomeAssistant) -> No
         assert result["reason"] == "already_configured"
 
 
-async def test_discovery_existing_device_ip_change(hass: HomeAssistant) -> None:
+async def test_discovery_existing_device_ip_change(hass: spencerAssistant) -> None:
     """Test a config entry ips get updated from discovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -269,7 +269,7 @@ async def test_discovery_existing_device_ip_change(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with _patch_discovery(device=MOCK_DEVICE_ALTERNATE_IP), patch(
-        "homeassistant.components.senseme.async_get_device_by_device_info",
+        "spencerassistant.components.senseme.async_get_device_by_device_info",
         return_value=(True, MOCK_DEVICE),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -287,7 +287,7 @@ async def test_discovery_existing_device_ip_change(hass: HomeAssistant) -> None:
     assert entry.data["info"]["address"] == "127.0.0.8"
 
 
-async def test_dhcp_discovery_existing_config_entry(hass: HomeAssistant) -> None:
+async def test_dhcp_discovery_existing_config_entry(hass: spencerAssistant) -> None:
     """Test dhcp discovery is aborted if there is an existing config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -304,13 +304,13 @@ async def test_dhcp_discovery_existing_config_entry(hass: HomeAssistant) -> None
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery(hass: HomeAssistant) -> None:
+async def test_dhcp_discovery(hass: spencerAssistant) -> None:
     """Test we can setup a dhcp discovered device."""
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=MOCK_DEVICE,
     ), patch(
-        "homeassistant.components.senseme.async_setup_entry",
+        "spencerassistant.components.senseme.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -335,10 +335,10 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
+async def test_dhcp_discovery_cannot_connect(hass: spencerAssistant) -> None:
     """Test we abort if we cannot cannot to a dhcp discovered device."""
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -348,10 +348,10 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-async def test_dhcp_discovery_cannot_connect_no_uuid(hass: HomeAssistant) -> None:
+async def test_dhcp_discovery_cannot_connect_no_uuid(hass: spencerAssistant) -> None:
     """Test we abort if the discovered device has no uuid."""
     with _patch_discovery(), patch(
-        "homeassistant.components.senseme.config_flow.async_get_device_by_ip_address",
+        "spencerassistant.components.senseme.config_flow.async_get_device_by_ip_address",
         return_value=MOCK_DEVICE_NO_UUID,
     ):
         result = await hass.config_entries.flow.async_init(

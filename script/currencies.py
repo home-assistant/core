@@ -33,7 +33,7 @@ historic_currencies = {
     and x.Ccy.contents[0] not in active_currencies
 }
 
-Path("homeassistant/generated/currencies.py").write_text(
+Path("spencerassistant/generated/currencies.py").write_text(
     format_python_namespace(
         {
             "ACTIVE_CURRENCIES": active_currencies,

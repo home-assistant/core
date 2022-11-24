@@ -1,10 +1,10 @@
 """Test the Advantage Air Binary Sensor Platform."""
 from datetime import timedelta
 
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util import dt
 
 from . import (
     TEST_SET_RESPONSE,

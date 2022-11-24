@@ -1,7 +1,7 @@
 """Test Airly diagnostics."""
 import json
 
-from homeassistant.components.diagnostics import REDACTED
+from spencerassistant.components.diagnostics import REDACTED
 
 from . import init_integration
 
@@ -21,11 +21,11 @@ async def test_entry_diagnostics(hass, aioclient_mock, hass_client):
         "entry_id": entry.entry_id,
         "version": 1,
         "domain": "airly",
-        "title": "Home",
+        "title": "spencer",
         "data": {
             "latitude": REDACTED,
             "longitude": REDACTED,
-            "name": "Home",
+            "name": "spencer",
             "api_key": REDACTED,
         },
         "options": {},

@@ -4,17 +4,17 @@ from __future__ import annotations
 import pytest
 import voluptuous_serialize
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.select import DOMAIN
-from homeassistant.components.select.device_trigger import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.select import DOMAIN
+from spencerassistant.components.select.device_trigger import (
     async_get_trigger_capabilities,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import spencerAssistant, ServiceCall
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -27,25 +27,25 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
+def device_reg(hass: spencerAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass: HomeAssistant) -> EntityRegistry:
+def entity_reg(hass: spencerAssistant) -> EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
+def calls(hass: spencerAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device_reg: device_registry.DeviceRegistry,
     entity_reg: EntityRegistry,
 ) -> None:
@@ -225,7 +225,7 @@ async def test_if_fires_on_state_change(hass, calls):
     ] == "from-to - device - {} - option3 - option1 - None - 0".format("select.entity")
 
 
-async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
+async def test_get_trigger_capabilities(hass: spencerAssistant) -> None:
     """Test we get the expected capabilities from a select trigger."""
     config = {
         "platform": "device",

@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 from smarttub import LoginFailed
 
-from homeassistant.components import smarttub
-from homeassistant.components.smarttub.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import smarttub
+from spencerassistant.components.smarttub.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from spencerassistant.setup import async_setup_component
 
 
 async def test_setup_with_no_config(setup_component, hass, smarttub_api):

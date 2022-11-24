@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
-from homeassistant.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
+from spencerassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
@@ -17,7 +17,7 @@ from homeassistant.const import (
 @pytest.fixture(name="gdacs_setup", autouse=True)
 def gdacs_setup_fixture():
     """Mock gdacs entry setup."""
-    with patch("homeassistant.components.gdacs.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.gdacs.async_setup_entry", return_value=True):
         yield
 
 

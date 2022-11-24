@@ -1,8 +1,8 @@
 """Tests for Lovelace system health."""
 from unittest.mock import patch
 
-from homeassistant.components.lovelace import dashboard
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.lovelace import dashboard
+from spencerassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
 
@@ -35,7 +35,7 @@ async def test_system_health_info_yaml(hass):
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "spencerassistant.components.lovelace.dashboard.load_yaml",
         return_value={"views": [{"cards": []}]},
     ):
         info = await get_system_health_info(hass, "lovelace")

@@ -2,10 +2,10 @@
   "controller": {
     "libraryVersion": "Z-Wave 3.95",
     "type": 1,
-    "homeId": 3245146787,
+    "spencerId": 3245146787,
     "ownNodeId": 1,
     "isSecondary": false,
-    "isUsingHomeIdFromOtherNetwork": false,
+    "isUsingspencerIdFromOtherNetwork": false,
     "isSISPresent": true,
     "wasRealPrimary": true,
     "isStaticUpdateController": true,

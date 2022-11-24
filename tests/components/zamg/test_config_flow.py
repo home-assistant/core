@@ -1,17 +1,17 @@
 """Tests for the Zamg config flow."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN, LOGGER
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.zamg.const import CONF_STATION_ID, DOMAIN, LOGGER
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from spencerassistant.const import CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_STATION_ID, TEST_STATION_NAME
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -37,7 +37,7 @@ async def test_full_user_flow_implementation(
 
 
 async def test_error_update(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -61,7 +61,7 @@ async def test_error_update(
 
 
 async def test_full_import_flow_implementation(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -76,7 +76,7 @@ async def test_full_import_flow_implementation(
 
 
 async def test_user_flow_duplicate(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -114,7 +114,7 @@ async def test_user_flow_duplicate(
 
 
 async def test_import_flow_duplicate(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -147,7 +147,7 @@ async def test_import_flow_duplicate(
 
 
 async def test_import_flow_duplicate_after_position(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -180,7 +180,7 @@ async def test_import_flow_duplicate_after_position(
 
 
 async def test_import_flow_no_name(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:

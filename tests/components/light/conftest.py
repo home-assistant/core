@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.light import Profiles
+from spencerassistant.components.light import Profiles
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +19,7 @@ def mock_light_profiles():
         return profiles
 
     with patch(
-        "homeassistant.components.light.Profiles",
+        "spencerassistant.components.light.Profiles",
         side_effect=mock_profiles_class,
     ):
         yield data

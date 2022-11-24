@@ -1,7 +1,7 @@
 """Tests for the numato sensor platform."""
-from homeassistant.const import STATE_UNKNOWN, Platform
-from homeassistant.helpers import discovery
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import STATE_UNKNOWN, Platform
+from spencerassistant.helpers import discovery
+from spencerassistant.setup import async_setup_component
 
 from .common import NUMATO_CFG, mockup_raise
 

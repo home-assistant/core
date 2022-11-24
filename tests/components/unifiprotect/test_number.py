@@ -8,16 +8,16 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pyunifiprotect.data import Camera, Doorlock, Light
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.components.unifiprotect.number import (
+from spencerassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from spencerassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
     DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -30,7 +30,7 @@ from .utils import (
 
 
 async def test_number_sensor_camera_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, unadopted_camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera, unadopted_camera: Camera
 ):
     """Test removing and re-adding a camera device."""
 
@@ -43,7 +43,7 @@ async def test_number_sensor_camera_remove(
 
 
 async def test_number_sensor_light_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test removing and re-adding a light device."""
 
@@ -56,7 +56,7 @@ async def test_number_sensor_light_remove(
 
 
 async def test_number_lock_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+    hass: spencerAssistant, ufp: MockUFPFixture, doorlock: Doorlock
 ):
     """Test removing and re-adding a light device."""
 
@@ -69,7 +69,7 @@ async def test_number_lock_remove(
 
 
 async def test_number_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test number entity setup for light devices."""
 
@@ -93,7 +93,7 @@ async def test_number_setup_light(
 
 
 async def test_number_setup_camera_all(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (all features)."""
 
@@ -118,7 +118,7 @@ async def test_number_setup_camera_all(
 
 
 async def test_number_setup_camera_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (no features)."""
 
@@ -132,7 +132,7 @@ async def test_number_setup_camera_none(
 
 
 async def test_number_setup_camera_missing_attr(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: spencerAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (no features, bad attrs)."""
 
@@ -143,7 +143,7 @@ async def test_number_setup_camera_missing_attr(
 
 
 async def test_number_light_sensitivity(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test sensitivity number entity for lights."""
 
@@ -166,7 +166,7 @@ async def test_number_light_sensitivity(
 
 
 async def test_number_light_duration(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test auto-shutoff duration number entity for lights."""
 
@@ -189,7 +189,7 @@ async def test_number_light_duration(
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
 async def test_number_camera_simple(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     ufp: MockUFPFixture,
     camera: Camera,
     description: ProtectNumberEntityDescription,
@@ -215,7 +215,7 @@ async def test_number_camera_simple(
 
 
 async def test_number_lock_auto_close(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+    hass: spencerAssistant, ufp: MockUFPFixture, doorlock: Doorlock
 ):
     """Test auto-lock timeout for locks."""
 

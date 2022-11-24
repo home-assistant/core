@@ -1,8 +1,8 @@
 """The test for the World clock sensor platform."""
 import pytest
 
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 
 @pytest.fixture

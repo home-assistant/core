@@ -1,8 +1,8 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.helpers import entity_registry as er
 
 from .common import BASIC_NUMBER_ENTITY
 

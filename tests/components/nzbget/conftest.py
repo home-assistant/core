@@ -9,7 +9,7 @@ from . import MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION
 @fixture
 def nzbget_api(hass):
     """Mock NZBGetApi for easier testing."""
-    with patch("homeassistant.components.nzbget.coordinator.NZBGetAPI") as mock_api:
+    with patch("spencerassistant.components.nzbget.coordinator.NZBGetAPI") as mock_api:
         instance = mock_api.return_value
 
         instance.history = MagicMock(return_value=list(MOCK_HISTORY))

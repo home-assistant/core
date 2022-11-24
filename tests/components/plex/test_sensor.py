@@ -5,12 +5,12 @@ from unittest.mock import patch
 
 import requests.exceptions
 
-from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt
+from spencerassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
+from spencerassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.helpers.dispatcher import async_dispatcher_send
+from spencerassistant.util import dt
 
 from .helpers import trigger_plex_update, wait_for_debouncer
 

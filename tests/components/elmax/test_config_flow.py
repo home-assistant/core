@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.elmax.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.elmax.const import (
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -12,7 +12,7 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_USERNAME,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from spencerassistant.config_entries import SOURCE_REAUTH
 
 from . import (
     MOCK_PANEL_ID,
@@ -43,7 +43,7 @@ async def test_standard_setup(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.elmax.async_setup_entry",
+        "spencerassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
         login_result = await hass.config_entries.flow.async_configure(
@@ -251,7 +251,7 @@ async def test_reauth_flow(hass):
 
     # Trigger reauth
     with patch(
-        "homeassistant.components.elmax.async_setup_entry",
+        "spencerassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
         reauth_result = await hass.config_entries.flow.async_init(

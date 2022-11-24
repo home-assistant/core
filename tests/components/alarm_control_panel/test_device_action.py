@@ -1,23 +1,23 @@
 """The tests for Alarm control panel device actions."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
+from spencerassistant.components.alarm_control_panel import DOMAIN, const
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import (
     CONF_PLATFORM,
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_spencer,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -54,9 +54,9 @@ def entity_reg(hass):
         ),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_HOME,
+            const.AlarmControlPanelEntityFeature.ARM_spencer,
             0,
-            ["disarm", "arm_home"],
+            ["disarm", "arm_spencer"],
         ),
         (
             False,
@@ -75,8 +75,8 @@ def entity_reg(hass):
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_HOME,
-            ["disarm", "arm_home"],
+            const.AlarmControlPanelEntityFeature.ARM_spencer,
+            ["disarm", "arm_spencer"],
         ),
         (
             True,
@@ -244,7 +244,7 @@ async def test_get_action_capabilities(
 
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
-        "arm_home": {"extra_fields": []},
+        "arm_spencer": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
         "arm_vacation": {"extra_fields": []},
         "disarm": {
@@ -290,7 +290,7 @@ async def test_get_action_capabilities_arm_code(
         "arm_away": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
-        "arm_home": {
+        "arm_spencer": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
         "arm_night": {
@@ -341,13 +341,13 @@ async def test_action(hass, enable_custom_integrations):
                 {
                     "trigger": {
                         "platform": "event",
-                        "event_type": "test_event_arm_home",
+                        "event_type": "test_event_arm_spencer",
                     },
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "alarm_control_panel.alarm_no_arm_code",
-                        "type": "arm_home",
+                        "type": "arm_spencer",
                     },
                 },
                 {
@@ -413,11 +413,11 @@ async def test_action(hass, enable_custom_integrations):
         == STATE_ALARM_ARMED_AWAY
     )
 
-    hass.bus.async_fire("test_event_arm_home")
+    hass.bus.async_fire("test_event_arm_spencer")
     await hass.async_block_till_done()
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state
-        == STATE_ALARM_ARMED_HOME
+        == STATE_ALARM_ARMED_spencer
     )
 
     hass.bus.async_fire("test_event_arm_vacation")

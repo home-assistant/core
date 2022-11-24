@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from homeassistant.components import numato
+from spencerassistant.components import numato
 
 from . import numato_mock
 from .common import NUMATO_CFG
@@ -22,7 +22,7 @@ def config():
 
 @pytest.fixture
 def numato_fixture(monkeypatch):
-    """Inject the numato mockup into numato homeassistant module."""
+    """Inject the numato mockup into numato spencerassistant module."""
     module_mock = numato_mock.NumatoModuleMock()
     monkeypatch.setattr(numato, "gpio", module_mock)
     return module_mock

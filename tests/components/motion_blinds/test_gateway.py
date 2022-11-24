@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from motionblinds import DEVICE_TYPES_WIFI, BlindType
 
-from homeassistant.components.motion_blinds.gateway import device_name
+from spencerassistant.components.motion_blinds.gateway import device_name
 
 TEST_BLIND_MAC = "abcdefghujkl0001"
 

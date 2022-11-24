@@ -11,7 +11,7 @@ from script.hassfest.requirements import validate_requirements_format
 def integration():
     """Fixture for hassfest integration model."""
     integration = Integration(
-        path=Path("homeassistant/components/test"),
+        path=Path("spencerassistant/components/test"),
         manifest={
             "domain": "test",
             "documentation": "https://example.com",

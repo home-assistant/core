@@ -309,9 +309,9 @@
       "endpoint": 0,
       "commandClass": 113,
       "commandClassName": "Notification",
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Cover status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Cover status",
       "ccVersion": 4,
       "metadata": {
@@ -335,9 +335,9 @@
       "endpoint": 0,
       "commandClass": 113,
       "commandClassName": "Notification",
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Motion sensor status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Motion sensor status",
       "ccVersion": 4,
       "metadata": {

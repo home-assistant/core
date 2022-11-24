@@ -1,7 +1,7 @@
 """Test UniFi Network diagnostics."""
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.unifi.const import (
+from spencerassistant.components.diagnostics import REDACTED
+from spencerassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,

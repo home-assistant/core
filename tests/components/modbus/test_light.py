@@ -2,8 +2,8 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.modbus.const import (
+from spencerassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from spencerassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -16,7 +16,7 @@ from homeassistant.components.modbus.const import (
     CONF_WRITE_TYPE,
     MODBUS_DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -28,8 +28,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
@@ -300,14 +300,14 @@ async def test_light_service_turn(hass, caplog, mock_modbus):
     ],
 )
 async def test_service_light_update(hass, mock_modbus, mock_ha):
-    """Run test for service homeassistant.update_entity."""
+    """Run test for service spencerassistant.update_entity."""
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     mock_modbus.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        "spencerassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 

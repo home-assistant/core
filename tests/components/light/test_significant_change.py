@@ -1,11 +1,11 @@
 """Test the Light significant change platform."""
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
 )
-from homeassistant.components.light.significant_change import (
+from spencerassistant.components.light.significant_change import (
     async_check_significant_change,
 )
 

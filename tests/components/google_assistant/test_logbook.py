@@ -1,12 +1,12 @@
 """The tests for Google Assistant logbook."""
-from homeassistant.components.google_assistant.const import (
+from spencerassistant.components.google_assistant.const import (
     DOMAIN,
     EVENT_COMMAND_RECEIVED,
     SOURCE_CLOUD,
     SOURCE_LOCAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from spencerassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 

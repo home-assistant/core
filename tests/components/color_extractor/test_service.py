@@ -7,22 +7,22 @@ import aiohttp
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components.color_extractor import (
+from spencerassistant.components.color_extractor import (
     ATTR_PATH,
     ATTR_URL,
     DOMAIN,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF as LIGHT_SERVICE_TURN_OFF,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from spencerassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.color as color_util
 
 from tests.common import load_fixture
 
@@ -269,7 +269,7 @@ async def test_file(hass):
     assert state.state == STATE_OFF
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
-    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
+    with patch("spencerassistant.components.color_extractor._get_file", _get_file_mock):
         await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
         await hass.async_block_till_done()
 
@@ -307,7 +307,7 @@ async def test_file_denied_dir(hass):
     assert state.state == STATE_OFF
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
-    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
+    with patch("spencerassistant.components.color_extractor._get_file", _get_file_mock):
         await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
         await hass.async_block_till_done()
 

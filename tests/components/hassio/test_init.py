@@ -5,20 +5,20 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import frontend
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.hassio import (
+from spencerassistant.auth.const import GROUP_ID_ADMIN
+from spencerassistant.components import frontend
+from spencerassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from spencerassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
 )
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.helpers.device_registry import async_get
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.hassio.handler import HassioAPIError
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.helpers.device_registry import async_get
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -45,7 +45,7 @@ def os_info(extra_os_info):
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock, request, os_info):
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
@@ -54,7 +54,7 @@ def mock_all(aioclient_mock, request, os_info):
             "result": "ok",
             "data": {
                 "supervisor": "222",
-                "homeassistant": "0.110.0",
+                "spencerassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
         },
@@ -106,7 +106,7 @@ def mock_all(aioclient_mock, request, os_info):
                     "version": "1.0.0",
                     "version_latest": "1.0.0",
                     "repository": "core",
-                    "url": "https://github.com/home-assistant/addons/test",
+                    "url": "https://github.com/spencer-assistant/addons/test",
                 },
                 {
                     "name": "test2",
@@ -355,7 +355,7 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
     assert aioclient_mock.call_count == 16
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
-    with patch("homeassistant.util.dt.set_default_time_zone"):
+    with patch("spencerassistant.util.dt.set_default_time_zone"):
         await hass.config.async_update(time_zone="America/New_York")
     await hass.async_block_till_done()
     assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
@@ -383,7 +383,7 @@ async def test_fail_setup_without_environ_var(hass):
 async def test_warn_when_cannot_connect(hass, caplog):
     """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
+        "spencerassistant.components.hassio.HassIO.is_connected",
         return_value=None,
     ):
         result = await async_setup_component(hass, "hassio", {})
@@ -453,7 +453,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
         "hassio",
         "backup_partial",
         {
-            "homeassistant": True,
+            "spencerassistant": True,
             "addons": ["test"],
             "folders": ["ssl"],
             "password": "123456",
@@ -463,7 +463,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
 
     assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[-1][2] == {
-        "homeassistant": True,
+        "spencerassistant": True,
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",
@@ -477,7 +477,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
         "restore_partial",
         {
             "slug": "test",
-            "homeassistant": False,
+            "spencerassistant": False,
             "addons": ["test"],
             "folders": ["ssl"],
             "password": "123456",
@@ -489,7 +489,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
-        "homeassistant": False,
+        "spencerassistant": False,
         "password": "123456",
     }
 
@@ -498,23 +498,23 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
     """Call core service and check the API calls behind that."""
     assert await async_setup_component(hass, "hassio", {})
 
-    aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/restart", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/spencerassistant/stop", json={"result": "ok"})
 
-    await hass.services.async_call("homeassistant", "stop")
+    await hass.services.async_call("spencerassistant", "stop")
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 6
 
-    await hass.services.async_call("homeassistant", "check_config")
+    await hass.services.async_call("spencerassistant", "check_config")
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 6
 
     with patch(
-        "homeassistant.config.async_check_ha_config_file", return_value=None
+        "spencerassistant.config.async_check_ha_config_file", return_value=None
     ) as mock_check_config:
-        await hass.services.async_call("homeassistant", "restart")
+        await hass.services.async_call("spencerassistant", "restart")
         await hass.async_block_till_done()
         assert mock_check_config.called
 
@@ -565,7 +565,7 @@ async def test_device_registry_calls(hass):
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "repository": "test",
-                "url": "https://github.com/home-assistant/addons/test",
+                "url": "https://github.com/spencer-assistant/addons/test",
             },
             {
                 "name": "test2",
@@ -589,10 +589,10 @@ async def test_device_registry_calls(hass):
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        "spencerassistant.components.hassio.HassIO.get_supervisor_info",
         return_value=supervisor_mock_data,
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
+        "spencerassistant.components.hassio.HassIO.get_os_info",
         return_value=os_mock_data,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -622,10 +622,10 @@ async def test_device_registry_calls(hass):
 
     # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
     with patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        "spencerassistant.components.hassio.HassIO.get_supervisor_info",
         return_value=supervisor_mock_data,
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
+        "spencerassistant.components.hassio.HassIO.get_os_info",
         return_value=os_mock_data,
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
@@ -669,16 +669,16 @@ async def test_device_registry_calls(hass):
     # Test that when addon is added, next update will reload the entry so we register
     # a new device
     with patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        "spencerassistant.components.hassio.HassIO.get_supervisor_info",
         return_value=supervisor_mock_data,
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
+        "spencerassistant.components.hassio.HassIO.get_os_info",
         return_value=os_mock_data,
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
+        "spencerassistant.components.hassio.HassIO.get_info",
         return_value={
             "supervisor": "222",
-            "homeassistant": "0.110.0",
+            "spencerassistant": "0.110.0",
             "hassos": None,
         },
     ):
@@ -689,9 +689,9 @@ async def test_device_registry_calls(hass):
 
 async def test_coordinator_updates(hass, caplog):
     """Test coordinator updates."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "spencerassistant", {})
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates"
+        "spencerassistant.components.hassio.HassIO.refresh_updates"
     ) as refresh_updates_mock:
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
@@ -700,22 +700,22 @@ async def test_coordinator_updates(hass, caplog):
         assert refresh_updates_mock.call_count == 1
 
     with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
+        "spencerassistant.components.hassio.HassIO.refresh_updates",
     ) as refresh_updates_mock:
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
         await hass.async_block_till_done()
         assert refresh_updates_mock.call_count == 0
 
     with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
+        "spencerassistant.components.hassio.HassIO.refresh_updates",
     ) as refresh_updates_mock:
         await hass.services.async_call(
-            "homeassistant",
+            "spencerassistant",
             "update_entity",
             {
                 "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
+                    "update.spencer_assistant_core_update",
+                    "update.spencer_assistant_supervisor_update",
                 ]
             },
             blocking=True,
@@ -727,16 +727,16 @@ async def test_coordinator_updates(hass, caplog):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
+        "spencerassistant.components.hassio.HassIO.refresh_updates",
         side_effect=HassioAPIError("Unknown"),
     ) as refresh_updates_mock:
         await hass.services.async_call(
-            "homeassistant",
+            "spencerassistant",
             "update_entity",
             {
                 "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
+                    "update.spencer_assistant_core_update",
+                    "update.spencer_assistant_supervisor_update",
                 ]
             },
             blocking=True,
@@ -757,14 +757,14 @@ async def test_coordinator_updates(hass, caplog):
         ({"board": "rpi3-64"}, "raspberry_pi"),
         ({"board": "rpi4"}, "raspberry_pi"),
         ({"board": "rpi4-64"}, "raspberry_pi"),
-        ({"board": "yellow"}, "homeassistant_yellow"),
+        ({"board": "yellow"}, "spencerassistant_yellow"),
     ],
 )
 async def test_setup_hardware_integration(hass, aioclient_mock, integration):
     """Test setup initiates hardware integration."""
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        f"homeassistant.components.{integration}.async_setup_entry",
+        f"spencerassistant.components.{integration}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await async_setup_component(hass, "hassio", {"hassio": {}})

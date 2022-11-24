@@ -1,7 +1,7 @@
 """The tests for the Netatmo climate platform."""
 from unittest.mock import patch
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -14,12 +14,12 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
-from homeassistant.components.netatmo.const import (
+from spencerassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
+from spencerassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 
 from .common import selected_platforms, simulate_webhook
 
@@ -52,9 +52,9 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     # Fake webhook thermostat manual set point
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -95,9 +95,9 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     # Fake webhook thermostat mode change to "Max"
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -132,9 +132,9 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
 
     # Fake webhook turn thermostat off
     response = {
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -168,23 +168,23 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     # Fake webhook thermostat mode cancel set point
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
                     "id": "2746182631",
                     "name": "Livingroom",
                     "type": "livingroom",
-                    "therm_setpoint_mode": "home",
+                    "therm_setpoint_mode": "spencer",
                 }
             ],
             "modules": [
                 {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
             ],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
@@ -228,10 +228,10 @@ async def test_service_preset_mode_frost_guard_thermostat(
     # Fake webhook thermostat mode change to "Frost Guard"
     response = {
         "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
+        "spencer": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
         "mode": "hg",
         "previous_mode": "schedule",
-        "push_type": "home_event_changed",
+        "push_type": "spencer_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -256,10 +256,10 @@ async def test_service_preset_mode_frost_guard_thermostat(
     # Test webhook thermostat mode change to "Schedule"
     response = {
         "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
+        "spencer": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
         "mode": "schedule",
         "previous_mode": "hg",
-        "push_type": "home_event_changed",
+        "push_type": "spencer_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -296,10 +296,10 @@ async def test_service_preset_modes_thermostat(hass, config_entry, netatmo_auth)
     # Fake webhook thermostat mode change to "Away"
     response = {
         "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+        "spencer": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
         "mode": "away",
         "previous_mode": "schedule",
-        "push_type": "home_event_changed",
+        "push_type": "spencer_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -320,9 +320,9 @@ async def test_service_preset_modes_thermostat(hass, config_entry, netatmo_auth)
     # Test webhook thermostat mode change to "Max"
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -354,26 +354,26 @@ async def test_webhook_event_handling_no_data(hass, config_entry, netatmo_auth):
 
         await hass.async_block_till_done()
 
-    # Test webhook without home entry
+    # Test webhook without spencer entry
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
     response = {
-        "push_type": "home_event_changed",
+        "push_type": "spencer_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    # Test webhook with different home id
+    # Test webhook with different spencer id
     response = {
-        "home_id": "3d3e344f491763b24c424e8b",
+        "spencer_id": "3d3e344f491763b24c424e8b",
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "3d3e344f491763b24c424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [],
             "modules": [],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
@@ -382,14 +382,14 @@ async def test_webhook_event_handling_no_data(hass, config_entry, netatmo_auth):
     # Test webhook without room entries
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [],
             "modules": [],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
@@ -407,7 +407,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
     climate_entity_livingroom = "climate.livingroom"
 
     # Test setting a valid schedule
-    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
+    with patch("pyatmo.spencer.spencer.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_SCHEDULE,
@@ -424,7 +424,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
         "event_type": "schedule",
         "schedule_id": "b1b54a2f45795764f59d50d8",
         "previous_schedule_id": "59d32176d183948b05ab4dce",
-        "push_type": "home_event_changed",
+        "push_type": "spencer_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -434,7 +434,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
     )
 
     # Test setting an invalid schedule
-    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
+    with patch("pyatmo.spencer.spencer.async_switch_schedule") as mock_switch_spencer_schedule:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_SCHEDULE,
@@ -442,7 +442,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_switch_home_schedule.assert_not_called()
+        mock_switch_spencer_schedule.assert_not_called()
 
     assert "summer is not a valid schedule" in caplog.text
 
@@ -469,9 +469,9 @@ async def test_service_preset_mode_already_boost_valves(
     # Test webhook valve mode change to "Max"
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -502,9 +502,9 @@ async def test_service_preset_mode_already_boost_valves(
     # Test webhook valve mode change to "Max"
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -552,9 +552,9 @@ async def test_service_preset_mode_boost_valves(hass, config_entry, netatmo_auth
     # Fake backend response
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -622,9 +622,9 @@ async def test_valves_service_turn_off(hass, config_entry, netatmo_auth):
     # Fake backend response for valve being turned off
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
@@ -667,21 +667,21 @@ async def test_valves_service_turn_on(hass, config_entry, netatmo_auth):
     # Fake backend response for valve being turned on
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
                     "id": "2833524037",
                     "name": "Entrada",
                     "type": "lobby",
-                    "therm_setpoint_mode": "home",
+                    "therm_setpoint_mode": "spencer",
                 }
             ],
             "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
@@ -690,7 +690,7 @@ async def test_valves_service_turn_on(hass, config_entry, netatmo_auth):
     assert hass.states.get(climate_entity_entrada).state == "auto"
 
 
-async def test_webhook_home_id_mismatch(hass, config_entry, netatmo_auth):
+async def test_webhook_spencer_id_mismatch(hass, config_entry, netatmo_auth):
     """Test service turn on for valves."""
     with selected_platforms(["climate"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -705,21 +705,21 @@ async def test_webhook_home_id_mismatch(hass, config_entry, netatmo_auth):
     # Fake backend response for valve being turned on
     response = {
         "room_id": "2833524037",
-        "home": {
+        "spencer": {
             "id": "123",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
                     "id": "2833524037",
                     "name": "Entrada",
                     "type": "lobby",
-                    "therm_setpoint_mode": "home",
+                    "therm_setpoint_mode": "spencer",
                 }
             ],
             "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "cancel_set_point",
         "push_type": "display_change",
     }
@@ -741,22 +741,22 @@ async def test_webhook_set_point(hass, config_entry, netatmo_auth):
     # Fake backend response for valve being turned on
     response = {
         "room_id": "2746182631",
-        "home": {
+        "spencer": {
             "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
+            "name": "MYspencer",
             "country": "DE",
             "rooms": [
                 {
                     "id": "2833524037",
                     "name": "Entrada",
                     "type": "lobby",
-                    "therm_setpoint_mode": "home",
+                    "therm_setpoint_mode": "spencer",
                     "therm_setpoint_temperature": 30,
                 }
             ],
             "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
         },
-        "mode": "home",
+        "mode": "spencer",
         "event_type": "set_point",
         "temperature": 21,
         "push_type": "display_change",

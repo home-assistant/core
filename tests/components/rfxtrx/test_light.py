@@ -3,10 +3,10 @@ from unittest.mock import call
 
 import pytest
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import State
+from spencerassistant.components.light import ATTR_BRIGHTNESS
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.core import State
 
 from .conftest import create_rfx_test_cfg
 

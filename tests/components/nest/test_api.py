@@ -13,10 +13,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from spencerassistant.components.nest import DOMAIN
+from spencerassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt
 
 from .common import (
     CLIENT_ID,

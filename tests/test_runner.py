@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import core, runner
-from homeassistant.util import executor, thread
+from spencerassistant import core, runner
+from spencerassistant.util import executor, thread
 
-# https://github.com/home-assistant/supervisor/blob/main/supervisor/docker/homeassistant.py
+# https://github.com/spencer-assistant/supervisor/blob/main/supervisor/docker/spencerassistant.py
 SUPERVISOR_HARD_TIMEOUT = 220
 
 TIMEOUT_SAFETY_MARGIN = 10
@@ -33,9 +33,9 @@ async def test_setup_and_run_hass(hass, tmpdir):
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
 
-    with patch("homeassistant.bootstrap.async_setup_hass", return_value=hass), patch(
+    with patch("spencerassistant.bootstrap.async_setup_hass", return_value=hass), patch(
         "threading._shutdown"
-    ), patch("homeassistant.core.HomeAssistant.async_run") as mock_run:
+    ), patch("spencerassistant.core.spencerAssistant.async_run") as mock_run:
         await runner.setup_and_run_hass(default_config)
         assert threading._shutdown == thread.deadlock_safe_shutdown
 
@@ -48,9 +48,9 @@ def test_run(hass, tmpdir):
     default_config = runner.RuntimeConfig(test_dir)
 
     with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
-        "homeassistant.bootstrap.async_setup_hass", return_value=hass
+        "spencerassistant.bootstrap.async_setup_hass", return_value=hass
     ), patch("threading._shutdown"), patch(
-        "homeassistant.core.HomeAssistant.async_run"
+        "spencerassistant.core.spencerAssistant.async_run"
     ) as mock_run:
         runner.run(default_config)
 
@@ -64,13 +64,13 @@ def test_run_executor_shutdown_throws(hass, tmpdir):
 
     with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), pytest.raises(
         RuntimeError
-    ), patch("homeassistant.bootstrap.async_setup_hass", return_value=hass), patch(
+    ), patch("spencerassistant.bootstrap.async_setup_hass", return_value=hass), patch(
         "threading._shutdown"
     ), patch(
-        "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
+        "spencerassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
         side_effect=RuntimeError,
     ) as mock_shutdown, patch(
-        "homeassistant.core.HomeAssistant.async_run"
+        "spencerassistant.core.spencerAssistant.async_run"
     ) as mock_run:
         runner.run(default_config)
 
@@ -107,9 +107,9 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
         return 0
 
     with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
-        "homeassistant.bootstrap.async_setup_hass", return_value=hass
+        "spencerassistant.bootstrap.async_setup_hass", return_value=hass
     ), patch("threading._shutdown"), patch(
-        "homeassistant.core.HomeAssistant.async_run", _async_create_tasks
+        "spencerassistant.core.spencerAssistant.async_run", _async_create_tasks
     ):
         runner.run(default_config)
 

@@ -4,10 +4,10 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError
 import faadelays
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.faa_delays.const import DOMAIN
-from homeassistant.const import CONF_ID
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.faa_delays.const import DOMAIN
+from spencerassistant.const import CONF_ID
+from spencerassistant.exceptions import spencerAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +27,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch.object(faadelays.Airport, "update", new=mock_valid_airport), patch(
-        "homeassistant.components.faa_delays.async_setup_entry",
+        "spencerassistant.components.faa_delays.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -105,7 +105,7 @@ async def test_form_unexpected_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("faadelays.Airport.update", side_effect=HomeAssistantError):
+    with patch("faadelays.Airport.update", side_effect=spencerAssistantError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

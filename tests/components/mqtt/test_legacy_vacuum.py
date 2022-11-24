@@ -5,11 +5,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, vacuum
-from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC
-from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
-from homeassistant.components.mqtt.vacuum.schema import services_to_strings
-from homeassistant.components.mqtt.vacuum.schema_legacy import (
+from spencerassistant.components import mqtt, vacuum
+from spencerassistant.components.mqtt.const import CONF_COMMAND_TOPIC
+from spencerassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
+from spencerassistant.components.mqtt.vacuum.schema import services_to_strings
+from spencerassistant.components.mqtt.vacuum.schema_legacy import (
     ALL_SERVICES,
     CONF_BATTERY_LEVEL_TOPIC,
     CONF_CHARGING_TOPIC,
@@ -21,7 +21,7 @@ from homeassistant.components.mqtt.vacuum.schema_legacy import (
     MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED,
     SERVICE_TO_STRING,
 )
-from homeassistant.components.vacuum import (
+from spencerassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
@@ -29,8 +29,8 @@ from homeassistant.components.vacuum import (
     ATTR_STATUS,
     VacuumEntityFeature,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -94,7 +94,7 @@ DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 @pytest.fixture(autouse=True)
 def vacuum_platform_only():
     """Only setup the vacuum platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
         yield
 
 
@@ -110,7 +110,7 @@ async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config
             "turn_on",
             "turn_off",
             "stop",
-            "return_home",
+            "return_spencer",
             "battery",
             "status",
             "clean_spot",
@@ -745,7 +745,7 @@ async def test_discovery_update_unchanged_vacuum(
     """Test update of discovered vacuum."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
     with patch(
-        "homeassistant.components.mqtt.vacuum.schema_legacy.MqttVacuum.discovery_update"
+        "spencerassistant.components.mqtt.vacuum.schema_legacy.MqttVacuum.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,
@@ -968,7 +968,7 @@ async def test_encoding_subscribable_topics(
         "turn_off",
         "pause",
         "stop",
-        "return_home",
+        "return_spencer",
         "battery",
         "status",
         "locate",

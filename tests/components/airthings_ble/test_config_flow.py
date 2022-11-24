@@ -4,11 +4,11 @@ from unittest.mock import patch
 from airthings_ble import AirthingsDevice
 from bleak import BleakError
 
-from homeassistant.components.airthings_ble.const import DOMAIN
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.airthings_ble.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from spencerassistant.const import CONF_ADDRESS
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import (
     UNKNOWN_SERVICE_INFO,
@@ -22,7 +22,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant):
+async def test_bluetooth_discovery(hass: spencerAssistant):
     """Test discovery via bluetooth with a valid device."""
     with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
         with patch_airthings_ble(
@@ -48,7 +48,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant):
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
-async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant):
+async def test_bluetooth_discovery_no_BLEDevice(hass: spencerAssistant):
     """Test discovery via bluetooth but there's no BLEDevice."""
     with patch_async_ble_device_from_address(None):
         result = await hass.config_entries.flow.async_init(
@@ -61,7 +61,7 @@ async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant):
 
 
 async def test_bluetooth_discovery_airthings_ble_update_failed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ):
     """Test discovery via bluetooth but there's an exception from airthings-ble."""
     for loop in [(Exception(), "unknown"), (BleakError(), "cannot_connect")]:
@@ -78,7 +78,7 @@ async def test_bluetooth_discovery_airthings_ble_update_failed(
         assert result["reason"] == reason
 
 
-async def test_bluetooth_discovery_already_setup(hass: HomeAssistant):
+async def test_bluetooth_discovery_already_setup(hass: spencerAssistant):
     """Test discovery via bluetooth with a valid device when already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -94,10 +94,10 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_user_setup(hass: HomeAssistant):
+async def test_user_setup(hass: spencerAssistant):
     """Test the user initiated form."""
     with patch(
-        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
     ):
         with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
@@ -118,7 +118,7 @@ async def test_user_setup(hass: HomeAssistant):
     }
 
     with patch(
-        "homeassistant.components.airthings_ble.async_setup_entry",
+        "spencerassistant.components.airthings_ble.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -131,10 +131,10 @@ async def test_user_setup(hass: HomeAssistant):
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
-async def test_user_setup_no_device(hass: HomeAssistant):
+async def test_user_setup_no_device(hass: spencerAssistant):
     """Test the user initiated form without any device detected."""
     with patch(
-        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -144,7 +144,7 @@ async def test_user_setup_no_device(hass: HomeAssistant):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_setup_existing_and_unknown_device(hass: HomeAssistant):
+async def test_user_setup_existing_and_unknown_device(hass: spencerAssistant):
     """Test the user initiated form with existing devices and unknown ones."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -152,7 +152,7 @@ async def test_user_setup_existing_and_unknown_device(hass: HomeAssistant):
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[UNKNOWN_SERVICE_INFO, WAVE_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -162,10 +162,10 @@ async def test_user_setup_existing_and_unknown_device(hass: HomeAssistant):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_setup_unknown_error(hass: HomeAssistant):
+async def test_user_setup_unknown_error(hass: spencerAssistant):
     """Test the user initiated form with an unknown error."""
     with patch(
-        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
     ):
         with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
@@ -178,10 +178,10 @@ async def test_user_setup_unknown_error(hass: HomeAssistant):
     assert result["reason"] == "unknown"
 
 
-async def test_user_setup_unable_to_connect(hass: HomeAssistant):
+async def test_user_setup_unable_to_connect(hass: spencerAssistant):
     """Test the user initiated form with a device that's failing connection."""
     with patch(
-        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        "spencerassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
     ):
         with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):

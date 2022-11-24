@@ -1,14 +1,14 @@
-image: homeassistant/{machine}-homeassistant
-shadow_repository: ghcr.io/home-assistant
+image: spencerassistant/{machine}-spencerassistant
+shadow_repository: ghcr.io/spencer-assistant
 build_from:
-  aarch64: "ghcr.io/home-assistant/aarch64-homeassistant:"
-  armv7: "ghcr.io/home-assistant/armv7-homeassistant:"
-  armhf: "ghcr.io/home-assistant/armhf-homeassistant:"
-  amd64: "ghcr.io/home-assistant/amd64-homeassistant:"
-  i386: "ghcr.io/home-assistant/i386-homeassistant:"
+  aarch64: "ghcr.io/spencer-assistant/aarch64-spencerassistant:"
+  armv7: "ghcr.io/spencer-assistant/armv7-spencerassistant:"
+  armhf: "ghcr.io/spencer-assistant/armhf-spencerassistant:"
+  amd64: "ghcr.io/spencer-assistant/amd64-spencerassistant:"
+  i386: "ghcr.io/spencer-assistant/i386-spencerassistant:"
 codenotary:
-  signer: notary@home-assistant.io
-  base_image: notary@home-assistant.io
+  signer: notary@spencer-assistant.io
+  base_image: notary@spencer-assistant.io
 labels:
   io.hass.type: core
-  org.opencontainers.image.source: https://github.com/home-assistant/core
+  org.opencontainers.image.source: https://github.com/spencer-assistant/core

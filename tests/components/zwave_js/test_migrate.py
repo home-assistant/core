@@ -4,9 +4,9 @@ import copy
 import pytest
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.components.zwave_js.const import DOMAIN
+from spencerassistant.components.zwave_js.helpers import get_device_id
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import AIR_TEMPERATURE_SENSOR, NOTIFICATION_MOTION_BINARY_SENSOR
 
@@ -21,7 +21,7 @@ async def test_unique_id_migration_dupes(
 
     # Create entity RegistryEntry using old unique ID format
     old_unique_id_1 = (
-        f"{client.driver.controller.home_id}.52.52-49-00-Air temperature-00"
+        f"{client.driver.controller.spencer_id}.52.52-49-00-Air temperature-00"
     )
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
@@ -36,7 +36,7 @@ async def test_unique_id_migration_dupes(
 
     # Create entity RegistryEntry using b0 unique ID format
     old_unique_id_2 = (
-        f"{client.driver.controller.home_id}.52.52-49-0-Air temperature-00-00"
+        f"{client.driver.controller.spencer_id}.52.52-49-0-Air temperature-00-00"
     )
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
@@ -58,7 +58,7 @@ async def test_unique_id_migration_dupes(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
+    new_unique_id = f"{client.driver.controller.spencer_id}.52-49-0-Air temperature"
     assert entity_entry.unique_id == new_unique_id
     assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_1) is None
     assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_2) is None
@@ -80,7 +80,7 @@ async def test_unique_id_migration(hass, multisensor_6_state, client, integratio
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.{id}"
+    old_unique_id = f"{client.driver.controller.spencer_id}.{id}"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -101,7 +101,7 @@ async def test_unique_id_migration(hass, multisensor_6_state, client, integratio
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
+    new_unique_id = f"{client.driver.controller.spencer_id}.52-49-0-Air temperature"
     assert entity_entry.unique_id == new_unique_id
     assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
@@ -124,7 +124,7 @@ async def test_unique_id_migration_property_key(
     entity_name = SENSOR_NAME.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.{id}"
+    old_unique_id = f"{client.driver.controller.spencer_id}.{id}"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -145,7 +145,7 @@ async def test_unique_id_migration_property_key(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(SENSOR_NAME)
-    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
+    new_unique_id = f"{client.driver.controller.spencer_id}.32-50-0-value-66049"
     assert entity_entry.unique_id == new_unique_id
     assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
@@ -159,7 +159,7 @@ async def test_unique_id_migration_notification_binary_sensor(
     entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.52.52-113-00-Home Security-Motion sensor status.8"
+    old_unique_id = f"{client.driver.controller.spencer_id}.52.52-113-00-spencer Security-Motion sensor status.8"
     entity_entry = ent_reg.async_get_or_create(
         "binary_sensor",
         DOMAIN,
@@ -180,7 +180,7 @@ async def test_unique_id_migration_notification_binary_sensor(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
+    new_unique_id = f"{client.driver.controller.spencer_id}.52-113-0-spencer Security-Motion sensor status.8"
     assert entity_entry.unique_id == new_unique_id
     assert ent_reg.async_get_entity_id("binary_sensor", DOMAIN, old_unique_id) is None
 
@@ -206,7 +206,7 @@ async def test_old_entity_migration(
     entity_name = SENSOR_NAME.split(".")[1]
 
     # Create entity RegistryEntry using fake endpoint
-    old_unique_id = f"{driver.controller.home_id}.32-50-1-value-66049"
+    old_unique_id = f"{driver.controller.spencer_id}.32-50-1-value-66049"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -228,7 +228,7 @@ async def test_old_entity_migration(
 
         # Check that new RegistryEntry is using new unique ID format
         entity_entry = ent_reg.async_get(SENSOR_NAME)
-        new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
+        new_unique_id = f"{client.driver.controller.spencer_id}.32-50-0-value-66049"
         assert entity_entry.unique_id == new_unique_id
         assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
@@ -254,7 +254,7 @@ async def test_different_endpoint_migration_status_sensor(
     entity_name = SENSOR_NAME.split(".")[1]
 
     # Create entity RegistryEntry using fake endpoint
-    old_unique_id = f"{driver.controller.home_id}.32.node_status"
+    old_unique_id = f"{driver.controller.spencer_id}.32.node_status"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -300,7 +300,7 @@ async def test_skip_old_entity_migration_for_multiple(
     entity_name = SENSOR_NAME.split(".")[1]
 
     # Create two entity entrrys using different endpoints
-    old_unique_id_1 = f"{driver.controller.home_id}.32-50-1-value-66049"
+    old_unique_id_1 = f"{driver.controller.spencer_id}.32-50-1-value-66049"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -314,7 +314,7 @@ async def test_skip_old_entity_migration_for_multiple(
     assert entity_entry.unique_id == old_unique_id_1
 
     # Create two entity entrrys using different endpoints
-    old_unique_id_2 = f"{driver.controller.home_id}.32-50-2-value-66049"
+    old_unique_id_2 = f"{driver.controller.spencer_id}.32-50-2-value-66049"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -333,7 +333,7 @@ async def test_skip_old_entity_migration_for_multiple(
 
     # Check that new RegistryEntry is created using new unique ID format
     entity_entry = ent_reg.async_get(SENSOR_NAME)
-    new_unique_id = f"{driver.controller.home_id}.32-50-0-value-66049"
+    new_unique_id = f"{driver.controller.spencer_id}.32-50-0-value-66049"
     assert entity_entry.unique_id == new_unique_id
 
     # Check that the old entities stuck around because we skipped the migration step
@@ -362,7 +362,7 @@ async def test_old_entity_migration_notification_binary_sensor(
 
     # Create entity RegistryEntry using old unique ID format
     old_unique_id = (
-        f"{driver.controller.home_id}.52-113-1-Home Security-Motion sensor status.8"
+        f"{driver.controller.spencer_id}.52-113-1-spencer Security-Motion sensor status.8"
     )
     entity_entry = ent_reg.async_get_or_create(
         "binary_sensor",
@@ -386,7 +386,7 @@ async def test_old_entity_migration_notification_binary_sensor(
         # Check that new RegistryEntry is using new unique ID format
         entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
         new_unique_id = (
-            f"{driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
+            f"{driver.controller.spencer_id}.52-113-0-spencer Security-Motion sensor status.8"
         )
         assert entity_entry.unique_id == new_unique_id
         assert (

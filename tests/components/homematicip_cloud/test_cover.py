@@ -1,14 +1,14 @@
-"""Tests for HomematicIP Cloud cover."""
-from homematicip.base.enums import DoorCommand, DoorState
+"""Tests for spencermaticIP Cloud cover."""
+from spencermaticip.base.enums import DoorCommand, DoorState
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
 )
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -22,7 +22,7 @@ async def test_manually_configured_platform(hass):
 
 
 async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
-    """Test HomematicipCoverShutte."""
+    """Test spencermaticipCoverShutte."""
     entity_id = "cover.broll_1"
     entity_name = "BROLL_1"
     device_model = "HmIP-BROLL"
@@ -87,7 +87,7 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
 
 
 async def test_hmip_cover_slats(hass, default_mock_hap_factory):
-    """Test HomematicipCoverSlats."""
+    """Test spencermaticipCoverSlats."""
     entity_id = "cover.sofa_links"
     entity_name = "Sofa links"
     device_model = "HmIP-FBL"
@@ -161,7 +161,7 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
 
 
 async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
-    """Test HomematicipCoverSlats."""
+    """Test spencermaticipCoverSlats."""
     entity_id = "cover.wohnzimmer_fenster"
     entity_name = "Wohnzimmer Fenster"
     device_model = "HmIP-DRBLI4"
@@ -239,7 +239,7 @@ async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
 
 
 async def test_hmip_blind_module(hass, default_mock_hap_factory):
-    """Test HomematicipBlindModule."""
+    """Test spencermaticipBlindModule."""
     entity_id = "cover.sonnenschutz_balkontur"
     entity_name = "Sonnenschutz Balkontür"
     device_model = "HmIP-HDM1"
@@ -349,7 +349,7 @@ async def test_hmip_blind_module(hass, default_mock_hap_factory):
 
 
 async def test_hmip_garage_door_tormatic(hass, default_mock_hap_factory):
-    """Test HomematicipCoverShutte."""
+    """Test spencermaticipCoverShutte."""
     entity_id = "cover.garage_door_module"
     entity_name = "Garage Door Module"
     device_model = "HmIP-MOD-TM"
@@ -396,7 +396,7 @@ async def test_hmip_garage_door_tormatic(hass, default_mock_hap_factory):
 
 
 async def test_hmip_garage_door_hoermann(hass, default_mock_hap_factory):
-    """Test HomematicipCoverShutte."""
+    """Test spencermaticipCoverShutte."""
     entity_id = "cover.garage_door"
     entity_name = "Garage door"
     device_model = "HmIP-MOD-HO"
@@ -443,7 +443,7 @@ async def test_hmip_garage_door_hoermann(hass, default_mock_hap_factory):
 
 
 async def test_hmip_cover_shutter_group(hass, default_mock_hap_factory):
-    """Test HomematicipCoverShutteGroup."""
+    """Test spencermaticipCoverShutteGroup."""
     entity_id = "cover.rollos_shuttergroup"
     entity_name = "Rollos ShutterGroup"
     device_model = None
@@ -506,7 +506,7 @@ async def test_hmip_cover_shutter_group(hass, default_mock_hap_factory):
 
 
 async def test_hmip_cover_slats_group(hass, default_mock_hap_factory):
-    """Test slats with HomematicipCoverShutteGroup."""
+    """Test slats with spencermaticipCoverShutteGroup."""
     entity_id = "cover.rollos_shuttergroup"
     entity_name = "Rollos ShutterGroup"
     device_model = None

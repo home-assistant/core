@@ -3,20 +3,20 @@ from unittest.mock import patch
 
 from apyhiveapi.helper import hive_exceptions
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
-USERNAME = "username@home-assistant.com"
-UPDATED_USERNAME = "updated_username@home-assistant.com"
+USERNAME = "username@spencer-assistant.com"
+UPDATED_USERNAME = "updated_username@spencer-assistant.com"
 PASSWORD = "test-password"
 UPDATED_PASSWORD = "updated-password"
 INCORRECT_PASSWORD = "incorrect-password"
 SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
-DEVICE_NAME = "Test Home Assistant"
+DEVICE_NAME = "Test spencer Assistant"
 MFA_CODE = "1234"
 MFA_RESEND_CODE = "0000"
 MFA_INVALID_CODE = "HIVE"
@@ -26,7 +26,7 @@ async def test_import_flow(hass):
     """Check import flow."""
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -35,9 +35,9 @@ async def test_import_flow(hass):
             },
         },
     ), patch(
-        "homeassistant.components.hive.async_setup", return_value=True
+        "spencerassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hive.async_setup_entry",
+        "spencerassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -74,7 +74,7 @@ async def test_user_flow(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -83,9 +83,9 @@ async def test_user_flow(hass):
             },
         },
     ), patch(
-        "homeassistant.components.hive.async_setup", return_value=True
+        "spencerassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hive.async_setup_entry",
+        "spencerassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -123,7 +123,7 @@ async def test_user_flow_2fa(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -141,7 +141,7 @@ async def test_user_flow_2fa(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -162,19 +162,19 @@ async def test_user_flow_2fa(hass):
     assert result3["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        "spencerassistant.components.hive.config_flow.Auth.device_registration",
         return_value=True,
     ), patch(
-        "homeassistant.components.hive.config_flow.Auth.get_device_data",
+        "spencerassistant.components.hive.config_flow.Auth.get_device_data",
         return_value=[
             "mock-device-group-key",
             "mock-device-key",
             "mock-device-password",
         ],
     ), patch(
-        "homeassistant.components.hive.async_setup", return_value=True
+        "spencerassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hive.async_setup_entry",
+        "spencerassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
@@ -227,7 +227,7 @@ async def test_reauth_flow(hass):
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -243,7 +243,7 @@ async def test_reauth_flow(hass):
     assert result["errors"] == {"base": "invalid_password"}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -286,7 +286,7 @@ async def test_reauth_2fa_flow(hass):
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -302,7 +302,7 @@ async def test_reauth_2fa_flow(hass):
     assert result["errors"] == {"base": "invalid_password"}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -316,7 +316,7 @@ async def test_reauth_2fa_flow(hass):
         )
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -325,7 +325,7 @@ async def test_reauth_2fa_flow(hass):
             },
         },
     ), patch(
-        "homeassistant.components.hive.async_setup_entry",
+        "spencerassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -391,7 +391,7 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -409,7 +409,7 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -424,7 +424,7 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert result3["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -445,19 +445,19 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert result4["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        "spencerassistant.components.hive.config_flow.Auth.device_registration",
         return_value=True,
     ), patch(
-        "homeassistant.components.hive.config_flow.Auth.get_device_data",
+        "spencerassistant.components.hive.config_flow.Auth.get_device_data",
         return_value=[
             "mock-device-group-key",
             "mock-device-key",
             "mock-device-password",
         ],
     ), patch(
-        "homeassistant.components.hive.async_setup", return_value=True
+        "spencerassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hive.async_setup_entry",
+        "spencerassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result5 = await hass.config_entries.flow.async_configure(
@@ -521,7 +521,7 @@ async def test_user_flow_invalid_username(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidUsername(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -544,7 +544,7 @@ async def test_user_flow_invalid_password(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -568,7 +568,7 @@ async def test_user_flow_no_internet_connection(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveApiError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -592,7 +592,7 @@ async def test_user_flow_2fa_no_internet_connection(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -607,7 +607,7 @@ async def test_user_flow_2fa_no_internet_connection(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         side_effect=hive_exceptions.HiveApiError(),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -630,7 +630,7 @@ async def test_user_flow_2fa_invalid_code(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -645,7 +645,7 @@ async def test_user_flow_2fa_invalid_code(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         side_effect=hive_exceptions.HiveInvalid2FACode(),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -667,7 +667,7 @@ async def test_user_flow_unknown_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={"ChallengeName": "FAILED", "InvalidAuthenticationResult": {}},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -690,7 +690,7 @@ async def test_user_flow_2fa_unknown_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.login",
+        "spencerassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -704,7 +704,7 @@ async def test_user_flow_2fa_unknown_error(hass):
     assert result2["step_id"] == CONF_CODE
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        "spencerassistant.components.hive.config_flow.Auth.sms_2fa",
         return_value={"ChallengeName": "FAILED", "InvalidAuthenticationResult": {}},
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -717,10 +717,10 @@ async def test_user_flow_2fa_unknown_error(hass):
     assert result3["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        "spencerassistant.components.hive.config_flow.Auth.device_registration",
         return_value=True,
     ), patch(
-        "homeassistant.components.hive.config_flow.Auth.get_device_data",
+        "spencerassistant.components.hive.config_flow.Auth.get_device_data",
         return_value=[
             "mock-device-group-key",
             "mock-device-key",

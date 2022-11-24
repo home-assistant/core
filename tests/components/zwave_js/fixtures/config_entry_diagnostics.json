@@ -3,7 +3,7 @@
     "type": "version",
     "driverVersion": "8.11.6",
     "serverVersion": "1.15.0",
-    "homeId": 1234567890,
+    "spencerId": 1234567890,
     "minSchemaVersion": 0,
     "maxSchemaVersion": 15
   },
@@ -32,10 +32,10 @@
         "controller": {
           "libraryVersion": "Z-Wave 6.07",
           "type": 1,
-          "homeId": 1234567890,
+          "spencerId": 1234567890,
           "ownNodeId": 1,
           "isSecondary": false,
-          "isUsingHomeIdFromOtherNetwork": false,
+          "isUsingspencerIdFromOtherNetwork": false,
           "isSISPresent": true,
           "wasRealPrimary": true,
           "isStaticUpdateController": true,

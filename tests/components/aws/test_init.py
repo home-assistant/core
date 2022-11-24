@@ -2,7 +2,7 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 class MockAioSession:
@@ -40,7 +40,7 @@ async def test_empty_config(hass):
     """Test a default config will be create for empty config."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(hass, "aws", {"aws": {}})
         await hass.async_block_till_done()
@@ -53,7 +53,7 @@ async def test_empty_credential(hass):
     """Test a default config will be create for empty credential section."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -83,7 +83,7 @@ async def test_profile_credential(hass):
     """Test credentials with profile name."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
 
         await async_setup_component(
@@ -119,7 +119,7 @@ async def test_access_key_credential(hass):
     """Test credentials with access key."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -161,9 +161,9 @@ async def test_notify_credential(hass):
     """Test notify service can use access key directly."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.notify.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -195,9 +195,9 @@ async def test_notify_credential_profile(hass):
     """Test notify service can use profile directly."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.notify.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -227,7 +227,7 @@ async def test_credential_skip_validate(hass):
     """Test credential can skip validate."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -254,7 +254,7 @@ async def test_service_call_extra_data(hass):
     """Test service call extra data are parsed properly."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -287,7 +287,7 @@ async def test_service_call_extra_data(hass):
     mock_session.publish.assert_called_once_with(
         TargetArn="ARN",
         Message="test",
-        Subject="Home Assistant",
+        Subject="spencer Assistant",
         MessageAttributes={
             "AWS.SNS.SMS.SenderID": {"StringValue": "HA-notify", "DataType": "String"}
         },
@@ -298,7 +298,7 @@ async def test_events_service_call(hass):
     """Test events service (EventBridge) call works as expected."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -340,7 +340,7 @@ async def test_events_service_call(hass):
                 "EventBusName": "ARN",
                 "Detail": json.dumps({"message": "test"}),
                 "DetailType": "",
-                "Source": "homeassistant",
+                "Source": "spencerassistant",
                 "Resources": [],
             }
         ]
@@ -351,7 +351,7 @@ async def test_events_service_call_10_targets(hass):
     """Test events service (EventBridge) call works with more than 10 targets."""
     mock_session = MockAioSession()
     with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
+        "spencerassistant.components.aws.AioSession", return_value=mock_session
     ):
         await async_setup_component(
             hass,
@@ -380,7 +380,7 @@ async def test_events_service_call_10_targets(hass):
             "data": {
                 "detail_type": "test_event",
                 "detail": {"eventkey": "eventvalue"},
-                "source": "HomeAssistant-test",
+                "source": "spencerAssistant-test",
                 "resources": ["resource1", "resource2"],
             },
         },
@@ -390,7 +390,7 @@ async def test_events_service_call_10_targets(hass):
     entry = {
         "Detail": json.dumps({"eventkey": "eventvalue"}),
         "DetailType": "test_event",
-        "Source": "HomeAssistant-test",
+        "Source": "spencerAssistant-test",
         "Resources": ["resource1", "resource2"],
     }
 

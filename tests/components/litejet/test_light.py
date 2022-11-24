@@ -1,8 +1,8 @@
 """The tests for the litejet component."""
-from homeassistant.components import light
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
-from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from spencerassistant.components import light
+from spencerassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
+from spencerassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
+from spencerassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
 from . import async_init_integration
 

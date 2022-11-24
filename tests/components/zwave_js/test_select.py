@@ -5,12 +5,12 @@ from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-import homeassistant.helpers.entity_registry as er
+from spencerassistant.components.zwave_js.helpers import ZwaveValueMatcher
+from spencerassistant.config_entries import ConfigEntry
+from spencerassistant.const import STATE_UNKNOWN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.entity import EntityCategory
+import spencerassistant.helpers.entity_registry as er
 
 from .common import replace_value_of_zwave_value
 
@@ -20,7 +20,7 @@ MULTILEVEL_SWITCH_SELECT_ENTITY = "select.front_door_siren"
 
 
 async def test_default_tone_select(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: MagicMock,
     aeotec_zw164_siren: Node,
     integration: ConfigEntry,
@@ -117,7 +117,7 @@ async def test_default_tone_select(
 
 
 async def test_protection_select(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     client: MagicMock,
     inovelli_lzw36: Node,
     integration: ConfigEntry,

@@ -1,9 +1,9 @@
 """Test launch_library config flow."""
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
-from homeassistant.components.launch_library.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from spencerassistant import data_entry_flow
+from spencerassistant.components.launch_library.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_create_entry(hass):
     assert result.get("step_id") == SOURCE_USER
 
     with patch(
-        "homeassistant.components.launch_library.async_setup_entry", return_value=True
+        "spencerassistant.components.launch_library.async_setup_entry", return_value=True
     ):
 
         result = await hass.config_entries.flow.async_configure(

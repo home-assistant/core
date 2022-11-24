@@ -6,15 +6,15 @@ from unittest.mock import patch
 from gtts import gTTSError
 import pytest
 
-from homeassistant.components import media_source, tts
-from homeassistant.components.media_player import (
+from spencerassistant.components import media_source, tts
+from spencerassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 from tests.components.tts.conftest import mutagen_mock  # noqa: F401
@@ -55,7 +55,7 @@ async def setup_internal_url(hass):
 @pytest.fixture
 def mock_gtts():
     """Mock gtts."""
-    with patch("homeassistant.components.google_translate.tts.gTTS") as mock_gtts:
+    with patch("spencerassistant.components.google_translate.tts.gTTS") as mock_gtts:
         yield mock_gtts
 
 
@@ -162,6 +162,6 @@ async def test_service_say_error(hass, mock_gtts, calls):
     )
 
     assert len(calls) == 1
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_gtts.mock_calls) == 2

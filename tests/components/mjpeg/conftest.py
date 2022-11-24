@@ -7,19 +7,19 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from requests_mock import Mocker
 
-from homeassistant.components.mjpeg.const import (
+from spencerassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     CONF_AUTHENTICATION,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.mjpeg.async_setup_entry", return_value=True
+        "spencerassistant.components.mjpeg.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
 
@@ -54,7 +54,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_reload_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.mjpeg.async_reload_entry") as mock_reload:
+    with patch("spencerassistant.components.mjpeg.async_reload_entry") as mock_reload:
         yield mock_reload
 
 
@@ -68,7 +68,7 @@ def mock_mjpeg_requests(requests_mock: Mocker) -> Generator[Mocker, None, None]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mjpeg_requests: Mocker
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry, mock_mjpeg_requests: Mocker
 ) -> MockConfigEntry:
     """Set up the MJPEG IP Camera integration for testing."""
     mock_config_entry.add_to_hass(hass)

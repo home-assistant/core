@@ -3,7 +3,7 @@
     "id": "9c489c26-9e34-4fcd-8324-a57e3a664cc0",
     "status": "unpaired",
     "status_values": ["pairing", "paired", "unpaired"],
-    "type": "homekit"
+    "type": "spencerkit"
   },
   {
     "actions": [
@@ -1561,7 +1561,7 @@
         "rtype": "grouped_light"
       }
     ],
-    "type": "bridge_home"
+    "type": "bridge_spencer"
   },
   {
     "children": [
@@ -1977,12 +1977,12 @@
   },
   {
     "configuration_schema": {
-      "$ref": "leaving_home_config.json#"
+      "$ref": "leaving_spencer_config.json#"
     },
     "description": "Automatically turn off your lights when you leave",
     "id": "0194752a-2d53-4f92-8209-dfdc52745af3",
     "metadata": {
-      "name": "Leaving home"
+      "name": "Leaving spencer"
     },
     "state_schema": {},
     "trigger_schema": {
@@ -2039,12 +2039,12 @@
   },
   {
     "configuration_schema": {
-      "$ref": "coming_home_config.json#"
+      "$ref": "coming_spencer_config.json#"
     },
-    "description": "Automatically turn your lights to choosen light states, when you arrive at home.",
+    "description": "Automatically turn your lights to choosen light states, when you arrive at spencer.",
     "id": "fd60fcd1-4809-4813-b510-4a18856a595c",
     "metadata": {
-      "name": "Coming home"
+      "name": "Coming spencer"
     },
     "state_schema": {},
     "trigger_schema": {

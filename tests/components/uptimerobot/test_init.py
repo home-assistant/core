@@ -4,15 +4,15 @@ from unittest.mock import patch
 from pytest import LogCaptureFixture
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
-from homeassistant import config_entries
-from homeassistant.components.uptimerobot.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.uptimerobot.const import (
     COORDINATOR_UPDATE_INTERVAL,
     DOMAIN,
 )
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt
+from spencerassistant.const import STATE_ON, STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.util import dt
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_reauthentication_trigger_in_setup(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: spencerAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -61,7 +61,7 @@ async def test_reauthentication_trigger_in_setup(
 
 
 async def test_reauthentication_trigger_key_read_only(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: spencerAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = MockConfigEntry(
@@ -94,7 +94,7 @@ async def test_reauthentication_trigger_key_read_only(
 
 
 async def test_reauthentication_trigger_after_setup(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: spencerAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
     mock_config_entry = await setup_uptimerobot_integration(hass)
@@ -127,7 +127,7 @@ async def test_reauthentication_trigger_after_setup(
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-async def test_integration_reload(hass: HomeAssistant):
+async def test_integration_reload(hass: spencerAssistant):
     """Test integration reload."""
     mock_entry = await setup_uptimerobot_integration(hass)
 
@@ -144,7 +144,7 @@ async def test_integration_reload(hass: HomeAssistant):
     assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
 
 
-async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
+async def test_update_errors(hass: spencerAssistant, caplog: LogCaptureFixture):
     """Test errors during updates."""
     await setup_uptimerobot_integration(hass)
 
@@ -181,7 +181,7 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
     assert "Error fetching uptimerobot data: test error from API" in caplog.text
 
 
-async def test_device_management(hass: HomeAssistant):
+async def test_device_management(hass: spencerAssistant):
     """Test that we are adding and removing devices for monitors returned from the API."""
     mock_entry = await setup_uptimerobot_integration(hass)
     dev_reg = dr.async_get(hass)

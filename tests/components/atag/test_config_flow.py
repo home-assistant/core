@@ -1,16 +1,16 @@
 """Tests for the Atag config flow."""
 from unittest.mock import PropertyMock, patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.atag import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.atag import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from . import UID, USER_INPUT, init_integration, mock_connection
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_show_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_show_form(hass: spencerAssistant, aioclient_mock: AiohttpClientMocker):
     """Test that the form is served with no input."""
     mock_connection(aioclient_mock)
     result = await hass.config_entries.flow.async_init(
@@ -22,7 +22,7 @@ async def test_show_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocke
 
 
 async def test_adding_second_device(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that only one Atag configuration is allowed."""
     await init_integration(hass, aioclient_mock)
@@ -43,7 +43,7 @@ async def test_adding_second_device(
 
 
 async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ):
     """Test we show user form on Atag connection error."""
     mock_connection(aioclient_mock, conn_error=True)
@@ -58,7 +58,7 @@ async def test_connection_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_unauthorized(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_unauthorized(hass: spencerAssistant, aioclient_mock: AiohttpClientMocker):
     """Test we show correct form when Unauthorized error is raised."""
     mock_connection(aioclient_mock, authorized=False)
     result = await hass.config_entries.flow.async_init(
@@ -72,7 +72,7 @@ async def test_unauthorized(hass: HomeAssistant, aioclient_mock: AiohttpClientMo
 
 
 async def test_full_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test registering an integration and finishing flow works."""
     mock_connection(aioclient_mock)

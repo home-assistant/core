@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from homeassistant.components.nexia import util
+from spencerassistant.components.nexia import util
 
 
 async def test_is_invalid_auth_code():

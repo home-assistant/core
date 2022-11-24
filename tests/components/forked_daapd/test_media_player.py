@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.forked_daapd.browse_media import create_media_content_id
-from homeassistant.components.forked_daapd.const import (
+from spencerassistant.components.forked_daapd.browse_media import create_media_content_id
+from spencerassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -18,7 +18,7 @@ from homeassistant.components.forked_daapd.const import (
     SUPPORTED_FEATURES,
     SUPPORTED_FEATURES_ZONE,
 )
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -54,8 +54,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEnqueue,
     MediaType,
 )
-from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import (
+from spencerassistant.components.media_source import PlayMedia
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
@@ -307,7 +307,7 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
         return get_request_return_values[update_type]
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "spencerassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.side_effect = get_request_side_effect
@@ -609,7 +609,7 @@ async def test_async_play_media_unsupported(hass, mock_api_object):
 async def test_async_play_media_announcement_tts_timeout(hass, mock_api_object):
     """Test async play media announcement with TTS timeout."""
     mock_api_object.add_to_queue.side_effect = None
-    with patch("homeassistant.components.forked_daapd.media_player.TTS_TIMEOUT", 0):
+    with patch("spencerassistant.components.forked_daapd.media_player.TTS_TIMEOUT", 0):
         initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
         await _service_call(
             hass,
@@ -656,7 +656,7 @@ async def pipe_control_api_object_fixture(
 ):
     """Fixture for mock librespot_java api."""
     with patch(
-        "homeassistant.components.forked_daapd.media_player.LibrespotJavaAPI",
+        "spencerassistant.components.forked_daapd.media_player.LibrespotJavaAPI",
         autospec=True,
     ) as pipe_control_api:
         hass.config_entries.async_update_entry(config_entry, options=OPTIONS_DATA)
@@ -741,7 +741,7 @@ async def test_librespot_java_play_media_pause_timeout(hass, pipe_control_api_ob
     # test media play with pause timeout
     pipe_control_api_object.player_pause.side_effect = None
     with patch(
-        "homeassistant.components.forked_daapd.media_player.CALLBACK_TIMEOUT", 0
+        "spencerassistant.components.forked_daapd.media_player.CALLBACK_TIMEOUT", 0
     ):
         initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
         await _service_call(
@@ -770,7 +770,7 @@ async def test_unsupported_update(hass, mock_api_object):
 async def test_invalid_websocket_port(hass, config_entry):
     """Test invalid websocket port on async_init."""
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "spencerassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = SAMPLE_CONFIG_NO_WEBSOCKET
@@ -921,7 +921,7 @@ async def test_play_media_source(hass, mock_api_object):
     """Test async play media with a spotify source."""
     initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     with patch(
-        "homeassistant.components.media_source.async_resolve_media",
+        "spencerassistant.components.media_source.async_resolve_media",
         return_value=PlayMedia("http://my_hass/song.m4a", "audio/aac"),
     ):
         await _service_call(

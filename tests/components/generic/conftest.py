@@ -7,8 +7,8 @@ from PIL import Image
 import pytest
 import respx
 
-from homeassistant import config_entries
-from homeassistant.components.generic.const import DOMAIN
+from spencerassistant import config_entries
+from spencerassistant.components.generic.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -69,7 +69,7 @@ def mock_create_stream():
     mock_stream.start = AsyncMock()
     mock_stream.stop = AsyncMock()
     fake_create_stream = patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,
     )
     return fake_create_stream

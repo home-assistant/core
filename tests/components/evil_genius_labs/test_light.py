@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from spencerassistant.const import ATTR_SUPPORTED_FEATURES
 
 
 @pytest.mark.parametrize("platforms", [("light",)])

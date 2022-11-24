@@ -2,23 +2,23 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.emulated_hue.config import (
+from spencerassistant.components.emulated_hue.config import (
     DATA_KEY,
     DATA_VERSION,
     SAVE_DELAY,
     Config,
 )
-from homeassistant.components.emulated_hue.upnp import UPNPResponderProtocol
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.setup import async_setup_component
-from homeassistant.util import utcnow
+from spencerassistant.components.emulated_hue.upnp import UPNPResponderProtocol
+from spencerassistant.const import EVENT_spencerASSISTANT_START
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
 
 
-async def test_config_google_home_entity_id_to_number(hass, hass_storage):
+async def test_config_google_spencer_entity_id_to_number(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
+    conf = Config(hass, {"type": "google_spencer"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -47,9 +47,9 @@ async def test_config_google_home_entity_id_to_number(hass, hass_storage):
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage):
+async def test_config_google_spencer_entity_id_to_number_altered(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
+    conf = Config(hass, {"type": "google_spencer"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
         "version": DATA_VERSION,
         "key": DATA_KEY,
@@ -78,9 +78,9 @@ async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
+async def test_config_google_spencer_entity_id_to_number_empty(hass, hass_storage):
     """Test config adheres to the type."""
-    conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
+    conf = Config(hass, {"type": "google_spencer"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {"version": DATA_VERSION, "key": DATA_KEY, "data": {}}
 
     await conf.async_setup()
@@ -123,16 +123,16 @@ async def test_setup_works(hass):
     """Test setup works."""
     hass.config.components.add("network")
     with patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint",
+        "spencerassistant.components.emulated_hue.async_create_upnp_datagram_endpoint",
         AsyncMock(),
     ) as mock_create_upnp_datagram_endpoint, patch(
-        "homeassistant.components.emulated_hue.async_get_source_ip"
+        "spencerassistant.components.emulated_hue.async_get_source_ip"
     ):
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol
         )
         assert await async_setup_component(hass, "emulated_hue", {})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_spencerASSISTANT_START)
         await hass.async_block_till_done()
 
     assert len(mock_create_upnp_datagram_endpoint.mock_calls) == 1

@@ -1,7 +1,7 @@
 """The tests for the humidifier component."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.humidifier import HumidifierEntity
+from spencerassistant.components.humidifier import HumidifierEntity
 
 
 class MockHumidifierEntity(HumidifierEntity):

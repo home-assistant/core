@@ -1,8 +1,8 @@
 """Test the init file of Twilio."""
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import twilio
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import callback
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import twilio
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.core import callback
 
 
 async def test_config_flow_registers_webhook(hass, hass_client_no_auth):

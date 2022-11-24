@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     _LOGGER,
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
@@ -22,14 +22,14 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.loader import bind_hass
+from spencerassistant.loader import bind_hass
 
 
 async def async_set_preset_mode(hass, preset_mode, entity_id=ENTITY_MATCH_ALL):

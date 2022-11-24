@@ -1,7 +1,7 @@
 .. _bootstrap_module:
 
-:mod:`homeassistant.bootstrap`
+:mod:`spencerassistant.bootstrap`
 ------------------------------
 
-.. automodule:: homeassistant.bootstrap
+.. automodule:: spencerassistant.bootstrap
     :members:

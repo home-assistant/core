@@ -1,20 +1,20 @@
 """The test for sensor device automation."""
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.sensor import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.sensor.device_condition import ENTITY_CONDITIONS
+from spencerassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
+from spencerassistant.helpers import device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,

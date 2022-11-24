@@ -3,9 +3,9 @@ import logging
 
 import pytest
 
-from homeassistant.components import pilight
-import homeassistant.components.sensor as sensor
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import pilight
+import spencerassistant.components.sensor as sensor
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component
 

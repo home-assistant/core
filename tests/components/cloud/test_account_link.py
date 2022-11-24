@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.cloud import account_link
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.util.dt import utcnow
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.cloud import account_link
+from spencerassistant.helpers import config_entry_oauth2_flow
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed, mock_platform
 
@@ -53,7 +53,7 @@ async def test_setup_provide_implementation(hass):
     account_link.async_setup(hass)
 
     with patch(
-        "homeassistant.components.cloud.account_link._get_services",
+        "spencerassistant.components.cloud.account_link._get_services",
         return_value=[
             {"service": "test", "min_version": "0.1.0"},
             {"service": "too_new", "min_version": "1000000.0.0"},
@@ -75,7 +75,7 @@ async def test_setup_provide_implementation(hass):
             },
         ],
     ), patch(
-        "homeassistant.components.cloud.account_link.HA_VERSION", "2022.9.0.dev20220817"
+        "spencerassistant.components.cloud.account_link.HA_VERSION", "2022.9.0.dev20220817"
     ):
         assert (
             await config_entry_oauth2_flow.async_get_implementations(
@@ -170,7 +170,7 @@ async def test_implementation(hass, flow_handler, current_request_with_host):
     hass.data["cloud"] = None
 
     impl = account_link.CloudOAuth2Implementation(hass, "test")
-    assert impl.name == "Home Assistant Cloud"
+    assert impl.name == "spencer Assistant Cloud"
     assert impl.domain == "cloud"
 
     flow_handler.async_register_implementation(hass, impl)

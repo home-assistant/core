@@ -5,9 +5,9 @@ from arcam.fmj.client import Client
 from arcam.fmj.state import State
 import pytest
 
-from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
-from homeassistant.components.arcam_fmj.media_player import ArcamFmj
-from homeassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.components.arcam_fmj.const import DEFAULT_NAME
+from spencerassistant.components.arcam_fmj.media_player import ArcamFmj
+from spencerassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -93,9 +93,9 @@ async def player_setup_fixture(hass, state_1, state_2, client):
         if zone == 2:
             return state_2
 
-    with patch("homeassistant.components.arcam_fmj.Client", return_value=client), patch(
-        "homeassistant.components.arcam_fmj.media_player.State", side_effect=state_mock
-    ), patch("homeassistant.components.arcam_fmj._run_client", return_value=None):
+    with patch("spencerassistant.components.arcam_fmj.Client", return_value=client), patch(
+        "spencerassistant.components.arcam_fmj.media_player.State", side_effect=state_mock
+    ), patch("spencerassistant.components.arcam_fmj._run_client", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID

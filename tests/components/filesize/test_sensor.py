@@ -1,9 +1,9 @@
 """The tests for the filesize sensor."""
 import os
 
-from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
+from spencerassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers.entity_component import async_update_entity
 
 from . import TEST_FILE, TEST_FILE_NAME, async_create_file
 
@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_invalid_path(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: spencerAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that an invalid path is caught."""
     mock_config_entry.add_to_hass(hass)
@@ -24,7 +24,7 @@ async def test_invalid_path(
 
 
 async def test_valid_path(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: spencerAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for a valid path."""
     testfile = f"{tmpdir}/file.txt"
@@ -46,7 +46,7 @@ async def test_valid_path(
 
 
 async def test_state_unavailable(
-    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+    hass: spencerAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
 ) -> None:
     """Verify we handle state unavailable."""
     testfile = f"{tmpdir}/file.txt"

@@ -1,9 +1,9 @@
 {
   "body": {
-    "homes": [
+    "spencers": [
       {
         "id": "91763b24c43d3e344f424e8b",
-        "name": "MYHOME",
+        "name": "MYspencer",
         "persons": [
           {
             "id": "91827374-7e04-5298-83ad-a0cb8372dff1",

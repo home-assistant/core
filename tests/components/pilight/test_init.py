@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 from voluptuous import MultipleInvalid
 
-from homeassistant.components import pilight
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components import pilight
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -41,7 +41,7 @@ class PilightDaemonSim:
         _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
-        """Handle homeassistant.start callback.
+        """Handle spencerassistant.start callback.
 
         Also sends one test message after start up
         """
@@ -52,7 +52,7 @@ class PilightDaemonSim:
             self.called = True
 
     def stop(self):
-        """Handle homeassistant.stop callback."""
+        """Handle spencerassistant.stop callback."""
         _LOGGER.error("PilightDaemonSim stop")
 
     def set_callback(self, function):
@@ -61,7 +61,7 @@ class PilightDaemonSim:
         _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
-@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER.error")
 async def test_connection_failed_error(mock_error, hass):
     """Try to connect at 127.0.0.1:5001 with socket error."""
     with assert_setup_component(4), patch(
@@ -76,7 +76,7 @@ async def test_connection_failed_error(mock_error, hass):
         assert mock_error.call_count == 1
 
 
-@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER.error")
 async def test_connection_timeout_error(mock_error, hass):
     """Try to connect at 127.0.0.1:5001 with socket timeout."""
     with assert_setup_component(4), patch(
@@ -110,8 +110,8 @@ async def test_send_code_no_protocol(hass):
             assert "required key not provided @ data['protocol']" in str(error)
 
 
-@patch("homeassistant.components.pilight._LOGGER.error")
-@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("spencerassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER", _LOGGER)
 @patch("pilight.pilight.Client", PilightDaemonSim)
 async def test_send_code(mock_pilight_error, hass):
     """Try to send proper data."""
@@ -133,7 +133,7 @@ async def test_send_code(mock_pilight_error, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER.error")
 async def test_send_code_fail(mock_pilight_error, hass):
     """Check IOError exception error message."""
     with assert_setup_component(4), patch(
@@ -154,8 +154,8 @@ async def test_send_code_fail(mock_pilight_error, hass):
         assert "Pilight send failed" in str(error_log_call)
 
 
-@patch("homeassistant.components.pilight._LOGGER.error")
-@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("spencerassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER", _LOGGER)
 @patch("pilight.pilight.Client", PilightDaemonSim)
 async def test_send_code_delay(mock_pilight_error, hass):
     """Try to send proper data with delay afterwards."""
@@ -196,8 +196,8 @@ async def test_send_code_delay(mock_pilight_error, hass):
         assert str(service_data2) in str(error_log_call)
 
 
-@patch("homeassistant.components.pilight._LOGGER.error")
-@patch("homeassistant.components.pilight._LOGGER", _LOGGER)
+@patch("spencerassistant.components.pilight._LOGGER.error")
+@patch("spencerassistant.components.pilight._LOGGER", _LOGGER)
 @patch("pilight.pilight.Client", PilightDaemonSim)
 async def test_start_stop(mock_pilight_error, hass):
     """Check correct startup and stop of pilight daemon."""
@@ -221,7 +221,7 @@ async def test_start_stop(mock_pilight_error, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
+@patch("spencerassistant.core._LOGGER.debug")
 async def test_receive_code(mock_debug, hass):
     """Check if code receiving via pilight daemon works."""
     with assert_setup_component(4):
@@ -247,7 +247,7 @@ async def test_receive_code(mock_debug, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
+@patch("spencerassistant.core._LOGGER.debug")
 async def test_whitelist_exact_match(mock_debug, hass):
     """Check whitelist filter with matched data."""
     with assert_setup_component(4):
@@ -280,7 +280,7 @@ async def test_whitelist_exact_match(mock_debug, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
+@patch("spencerassistant.core._LOGGER.debug")
 async def test_whitelist_partial_match(mock_debug, hass):
     """Check whitelist filter with partially matched data, should work."""
     with assert_setup_component(4):
@@ -311,7 +311,7 @@ async def test_whitelist_partial_match(mock_debug, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
+@patch("spencerassistant.core._LOGGER.debug")
 async def test_whitelist_or_match(mock_debug, hass):
     """Check whitelist filter with several subsection, should work."""
     with assert_setup_component(4):
@@ -345,7 +345,7 @@ async def test_whitelist_or_match(mock_debug, hass):
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
+@patch("spencerassistant.core._LOGGER.debug")
 async def test_whitelist_no_match(mock_debug, hass):
     """Check whitelist filter with unmatched data, should not work."""
     with assert_setup_component(4):

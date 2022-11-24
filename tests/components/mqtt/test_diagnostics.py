@@ -5,8 +5,8 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components import mqtt
-from homeassistant.const import Platform
+from spencerassistant.components import mqtt
+from spencerassistant.const import Platform
 
 from tests.common import async_fire_mqtt_message, mock_device_registry
 from tests.components.diagnostics import (
@@ -18,7 +18,7 @@ default_config = {
     "birth_message": {},
     "broker": "mock-broker",
     "discovery": True,
-    "discovery_prefix": "homeassistant",
+    "discovery_prefix": "spencerassistant",
     "keepalive": 60,
     "port": 1883,
     "protocol": "3.1.1",
@@ -30,7 +30,7 @@ default_config = {
         "payload": "offline",
         "qos": 0,
         "retain": False,
-        "topic": "homeassistant/status",
+        "topic": "spencerassistant/status",
     },
 }
 
@@ -39,7 +39,7 @@ default_config = {
 def device_tracker_sensor_only():
     """Only setup the device_tracker and sensor platforms to speed up tests."""
     with patch(
-        "homeassistant.components.mqtt.PLATFORMS",
+        "spencerassistant.components.mqtt.PLATFORMS",
         [Platform.DEVICE_TRACKER, Platform.SENSOR],
     ):
         yield
@@ -84,9 +84,9 @@ async def test_entry_diagnostics(
     data_sensor = json.dumps(config_sensor)
     data_trigger = json.dumps(config_trigger)
 
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
+    async_fire_mqtt_message(hass, "spencerassistant/sensor/bla/config", data_sensor)
     async_fire_mqtt_message(
-        hass, "homeassistant/device_automation/bla/config", data_trigger
+        hass, "spencerassistant/device_automation/bla/config", data_trigger
     )
     await hass.async_block_till_done()
 
@@ -99,7 +99,7 @@ async def test_entry_diagnostics(
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
-                    "topic": "homeassistant/sensor/bla/config",
+                    "topic": "spencerassistant/sensor/bla/config",
                 },
                 "transmitted": [],
             }
@@ -108,7 +108,7 @@ async def test_entry_diagnostics(
             {
                 "discovery_data": {
                     "payload": config_trigger,
-                    "topic": "homeassistant/device_automation/bla/config",
+                    "topic": "spencerassistant/device_automation/bla/config",
                 },
                 "trigger_key": ["device_automation", "bla"],
             }
@@ -194,7 +194,7 @@ async def test_redact_diagnostics(
     data_tracker = json.dumps(config_tracker)
 
     async_fire_mqtt_message(
-        hass, "homeassistant/device_tracker/bla/config", data_tracker
+        hass, "spencerassistant/device_tracker/bla/config", data_tracker
     )
     await hass.async_block_till_done()
 
@@ -225,7 +225,7 @@ async def test_redact_diagnostics(
                 ],
                 "discovery_data": {
                     "payload": config_tracker,
-                    "topic": "homeassistant/device_tracker/bla/config",
+                    "topic": "spencerassistant/device_tracker/bla/config",
                 },
                 "transmitted": [],
             }
@@ -256,7 +256,7 @@ async def test_redact_diagnostics(
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,
                     "last_updated": ANY,
-                    "state": "home",
+                    "state": "spencer",
                 },
                 "unit_of_measurement": None,
             }

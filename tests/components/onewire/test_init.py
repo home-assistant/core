@@ -6,12 +6,12 @@ import aiohttp
 from pyownet import protocol
 import pytest
 
-from homeassistant.components.onewire.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.onewire.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntry, ConfigEntryState
+from spencerassistant.const import Platform
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
 
@@ -33,7 +33,7 @@ async def remove_device(
 
 
 @pytest.mark.usefixtures("owproxy_with_connerror")
-async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_connect_failure(hass: spencerAssistant, config_entry: ConfigEntry):
     """Test connection failure raises ConfigEntryNotReady."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -44,7 +44,7 @@ async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 async def test_listing_failure(
-    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+    hass: spencerAssistant, config_entry: ConfigEntry, owproxy: MagicMock
 ):
     """Test listing failure raises ConfigEntryNotReady."""
     owproxy.return_value.dir.side_effect = protocol.OwnetError()
@@ -58,7 +58,7 @@ async def test_listing_failure(
 
 
 @pytest.mark.usefixtures("owproxy")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_unload_entry(hass: spencerAssistant, config_entry: ConfigEntry):
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -73,13 +73,13 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     assert not hass.data.get(DOMAIN)
 
 
-@patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
+@patch("spencerassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
     hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+        [spencerAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
     ],
 ):
     """Test being able to remove a disconnected device."""

@@ -3,10 +3,10 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 
-from homeassistant.components.kmtronic.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.kmtronic.const import DOMAIN
+from spencerassistant.const import STATE_UNAVAILABLE
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

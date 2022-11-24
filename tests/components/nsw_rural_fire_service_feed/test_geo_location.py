@@ -4,9 +4,9 @@ from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 
-from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
+from spencerassistant.components import geo_location
+from spencerassistant.components.geo_location import ATTR_SOURCE
+from spencerassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_CATEGORY,
     ATTR_COUNCIL_AREA,
     ATTR_EXTERNAL_ID,
@@ -19,7 +19,7 @@ from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_TYPE,
     SCAN_INTERVAL,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -29,12 +29,12 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_spencerASSISTANT_START,
+    EVENT_spencerASSISTANT_STOP,
     LENGTH_KILOMETERS,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+import spencerassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -57,7 +57,7 @@ CONFIG_WITH_CUSTOM_LOCATION = {
 def _generate_mock_feed_entry(
     external_id,
     title,
-    distance_to_home,
+    distance_to_spencer,
     coordinates,
     category=None,
     location=None,
@@ -74,7 +74,7 @@ def _generate_mock_feed_entry(
     feed_entry = MagicMock()
     feed_entry.external_id = external_id
     feed_entry.title = title
-    feed_entry.distance_to_home = distance_to_home
+    feed_entry.distance_to_spencer = distance_to_spencer
     feed_entry.coordinates = coordinates
     feed_entry.category = category
     feed_entry.location = location
@@ -117,7 +117,7 @@ async def test_setup(hass):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with patch("spencerassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = (
@@ -128,7 +128,7 @@ async def test_setup(hass):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
             await hass.async_block_till_done()
             # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_START)
             # Collect events.
             await hass.async_block_till_done()
 
@@ -221,7 +221,7 @@ async def test_setup(hass):
             assert len(all_states) == 0
 
             # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_STOP)
             # Collect events.
             await hass.async_block_till_done()
 
@@ -246,7 +246,7 @@ async def test_setup_with_custom_location(hass):
             await hass.async_block_till_done()
 
             # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            hass.bus.async_fire(EVENT_spencerASSISTANT_START)
             # Collect events.
             await hass.async_block_till_done()
 

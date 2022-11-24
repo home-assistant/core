@@ -7,18 +7,18 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components import automation
-from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
-from homeassistant.components.zwave_js.triggers.trigger_helpers import (
+from spencerassistant.components import automation
+from spencerassistant.components.zwave_js import DOMAIN
+from spencerassistant.components.zwave_js.trigger import async_validate_trigger_config
+from spencerassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.helpers.device_registry import (
+from spencerassistant.const import SERVICE_RELOAD
+from spencerassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY
 
@@ -265,7 +265,7 @@ async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integrat
 
     clear_events()
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("spencerassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 
@@ -279,7 +279,7 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation(
     no_value_filter = async_capture_events(hass, "no_value_filter")
 
     with patch(
-        "homeassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
+        "spencerassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
         return_value=True,
     ):
         assert await async_setup_component(
@@ -337,7 +337,7 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
     no_value_filter = async_capture_events(hass, "no_value_filter")
 
     with patch(
-        "homeassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
+        "spencerassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
         return_value=True,
     ):
         assert await async_setup_component(
@@ -756,7 +756,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
 
     clear_events()
 
-    with patch("homeassistant.config.load_yaml", return_value={}):
+    with patch("spencerassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 
@@ -770,7 +770,7 @@ async def test_zwave_js_event_bypass_dynamic_validation(
     node_no_event_data_filter = async_capture_events(hass, "node_no_event_data_filter")
 
     with patch(
-        "homeassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
+        "spencerassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
         return_value=True,
     ):
         assert await async_setup_component(
@@ -820,7 +820,7 @@ async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
     node_no_event_data_filter = async_capture_events(hass, "node_no_event_data_filter")
 
     with patch(
-        "homeassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
+        "spencerassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
         return_value=True,
     ):
         assert await async_setup_component(
@@ -895,7 +895,7 @@ async def test_async_validate_trigger_config(hass):
     """Test async_validate_trigger_config."""
     mock_platform = AsyncMock()
     with patch(
-        "homeassistant.components.zwave_js.trigger._get_trigger_platform",
+        "spencerassistant.components.zwave_js.trigger._get_trigger_platform",
         return_value=mock_platform,
     ):
         mock_platform.async_validate_trigger_config.return_value = {}

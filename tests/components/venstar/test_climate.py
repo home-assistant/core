@@ -1,7 +1,7 @@
 """The climate tests for the venstar integration."""
 from unittest.mock import patch
 
-from homeassistant.components.climate import ClimateEntityFeature
+from spencerassistant.components.climate import ClimateEntityFeature
 
 from .util import async_init_integration, mock_venstar_devices
 
@@ -16,7 +16,7 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
 async def test_colortouch(hass):
     """Test interfacing with a venstar colortouch with attached humidifier."""
 
-    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+    with patch("spencerassistant.components.venstar.VENSTAR_SLEEP", new=0):
         await async_init_integration(hass)
 
     state = hass.states.get("climate.colortouch")
@@ -52,7 +52,7 @@ async def test_colortouch(hass):
 async def test_t2000(hass):
     """Test interfacing with a venstar T2000 presently turned off."""
 
-    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+    with patch("spencerassistant.components.venstar.VENSTAR_SLEEP", new=0):
         await async_init_integration(hass)
 
     state = hass.states.get("climate.t2000")

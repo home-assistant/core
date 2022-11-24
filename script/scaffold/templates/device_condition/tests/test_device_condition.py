@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation
+from spencerassistant.components.NEW_DOMAIN import DOMAIN
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.const import STATE_OFF, STATE_ON
+from spencerassistant.core import spencerAssistant, ServiceCall
+from spencerassistant.helpers import device_registry, entity_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -22,25 +22,25 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
+def device_reg(hass: spencerAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
+def entity_reg(hass: spencerAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
+def calls(hass: spencerAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_conditions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device_reg: device_registry.DeviceRegistry,
     entity_reg: entity_registry.EntityRegistry,
 ) -> None:
@@ -74,7 +74,7 @@ async def test_get_conditions(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_if_state(hass: spencerAssistant, calls: list[ServiceCall]) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
 

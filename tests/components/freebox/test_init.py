@@ -1,21 +1,21 @@
 """Tests for the Freebox config flow."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox.const import DOMAIN as DOMAIN, SERVICE_REBOOT
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from spencerassistant.components.freebox.const import DOMAIN as DOMAIN, SERVICE_REBOOT
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistant, router: Mock):
+async def test_setup(hass: spencerAssistant, router: Mock):
     """Test setup of integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -33,7 +33,7 @@ async def test_setup(hass: HomeAssistant, router: Mock):
     assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
     with patch(
-        "homeassistant.components.freebox.router.FreeboxRouter.reboot"
+        "spencerassistant.components.freebox.router.FreeboxRouter.reboot"
     ) as mock_service:
         await hass.services.async_call(
             DOMAIN,
@@ -44,7 +44,7 @@ async def test_setup(hass: HomeAssistant, router: Mock):
         mock_service.assert_called_once()
 
 
-async def test_setup_import(hass: HomeAssistant, router: Mock):
+async def test_setup_import(hass: spencerAssistant, router: Mock):
     """Test setup of integration from import."""
 
     entry = MockConfigEntry(
@@ -65,7 +65,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock):
     assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
 
-async def test_unload_remove(hass: HomeAssistant, router: Mock):
+async def test_unload_remove(hass: spencerAssistant, router: Mock):
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
     entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_download_speed"

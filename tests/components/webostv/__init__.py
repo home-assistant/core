@@ -1,8 +1,8 @@
 """Tests for the WebOS TV integration."""
 
-from homeassistant.components.webostv.const import DOMAIN
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.webostv.const import DOMAIN
+from spencerassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from spencerassistant.setup import async_setup_component
 
 from .const import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME
 

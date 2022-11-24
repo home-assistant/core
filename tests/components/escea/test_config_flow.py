@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.escea.const import DOMAIN, ESCEA_FIREPLACE
-from homeassistant.components.escea.discovery import DiscoveryServiceListener
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.escea.const import DOMAIN, ESCEA_FIREPLACE
+from spencerassistant.components.escea.discovery import DiscoveryServiceListener
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -43,14 +43,14 @@ def _mock_start_discovery(
 
 
 async def test_not_found(
-    hass: HomeAssistant, mock_discovery_service: MagicMock
+    hass: spencerAssistant, mock_discovery_service: MagicMock
 ) -> None:
     """Test not finding any Escea controllers."""
 
     with patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
+        "spencerassistant.components.escea.discovery.pescea_discovery_service"
     ) as discovery_service, patch(
-        "homeassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0
+        "spencerassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0
     ):
         discovery_service.return_value = mock_discovery_service
 
@@ -70,16 +70,16 @@ async def test_not_found(
 
 
 async def test_found(
-    hass: HomeAssistant, mock_controller: MagicMock, mock_discovery_service: AsyncMock
+    hass: spencerAssistant, mock_controller: MagicMock, mock_discovery_service: AsyncMock
 ) -> None:
     """Test finding an Escea controller."""
     mock_discovery_service.controllers["test-uid"] = mock_controller
 
     with patch(
-        "homeassistant.components.escea.async_setup_entry",
+        "spencerassistant.components.escea.async_setup_entry",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
+        "spencerassistant.components.escea.discovery.pescea_discovery_service"
     ) as discovery_service:
         discovery_service.return_value = mock_discovery_service
         mock_discovery_service.start_discovery.side_effect = _mock_start_discovery(
@@ -100,13 +100,13 @@ async def test_found(
     assert mock_setup.call_count == 1
 
 
-async def test_single_instance_allowed(hass: HomeAssistant) -> None:
+async def test_single_instance_allowed(hass: spencerAssistant) -> None:
     """Test single instance allowed."""
     config_entry = MockConfigEntry(domain=DOMAIN, title=ESCEA_FIREPLACE)
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
+        "spencerassistant.components.escea.discovery.pescea_discovery_service"
     ) as discovery_service:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.spider.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.spider.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +21,7 @@ SPIDER_USER_DATA = {
 @pytest.fixture(name="spider")
 def spider_fixture() -> Mock:
     """Patch libraries."""
-    with patch("homeassistant.components.spider.config_flow.SpiderApi") as spider:
+    with patch("spencerassistant.components.spider.config_flow.SpiderApi") as spider:
         yield spider
 
 
@@ -36,9 +36,9 @@ async def test_user(hass, spider):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.spider.async_setup", return_value=True
+        "spencerassistant.components.spider.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.spider.async_setup_entry", return_value=True
+        "spencerassistant.components.spider.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=SPIDER_USER_DATA
@@ -59,10 +59,10 @@ async def test_import(hass, spider):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.spider.async_setup",
+        "spencerassistant.components.spider.async_setup",
         return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.spider.async_setup_entry",
+        "spencerassistant.components.spider.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(

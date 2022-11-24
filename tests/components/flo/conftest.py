@@ -5,8 +5,8 @@ import time
 
 import pytest
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
+from spencerassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
@@ -122,7 +122,7 @@ def aioclient_mock_fixture(aioclient_mock):
         text=load_fixture("flo/user_info_expand_locations_response.json"),
         status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
-        json={"systemMode": {"target": "home"}},
+        json={"systemMode": {"target": "spencer"}},
     )
     # Mocks the health test call for flo.
     aioclient_mock.post(
@@ -142,7 +142,7 @@ def aioclient_mock_fixture(aioclient_mock):
             "systemMode": {
                 "target": "sleep",
                 "revertMinutes": 120,
-                "revertMode": "home",
+                "revertMode": "spencer",
             }
         },
     )

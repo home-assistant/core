@@ -4,13 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, number
-from homeassistant.components.mqtt.number import (
+from spencerassistant.components import mqtt, number
+from spencerassistant.components.mqtt.number import (
     CONF_MAX,
     CONF_MIN,
     MQTT_NUMBER_ATTRIBUTES_BLOCKED,
 )
-from homeassistant.components.number import (
+from spencerassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
     NumberDeviceClass,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -28,8 +28,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.setup import async_setup_component
+import spencerassistant.core as ha
+from spencerassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -71,7 +71,7 @@ DEFAULT_CONFIG = {
 @pytest.fixture(autouse=True)
 def number_platform_only():
     """Only setup the number platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
         yield
 
 
@@ -589,7 +589,7 @@ async def test_discovery_update_unchanged_number(
         '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic"}'
     )
     with patch(
-        "homeassistant.components.mqtt.number.MqttNumber.discovery_update"
+        "spencerassistant.components.mqtt.number.MqttNumber.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
             hass,

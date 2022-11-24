@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder.db_schema import (
+from spencerassistant.components.recorder.db_schema import (
     Base,
     EventData,
     Events,
@@ -15,16 +15,16 @@ from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
 )
-from homeassistant.components.recorder.models import (
+from spencerassistant.components.recorder.models import (
     LazyState,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.util import dt, dt as dt_util
+from spencerassistant.const import EVENT_STATE_CHANGED
+import spencerassistant.core as ha
+from spencerassistant.exceptions import InvalidEntityFormatError
+from spencerassistant.util import dt, dt as dt_util
 
 
 def test_from_event_to_db_event():

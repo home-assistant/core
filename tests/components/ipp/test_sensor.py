@@ -2,12 +2,12 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.ipp.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.ipp.const import DOMAIN
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
+from spencerassistant.util import dt as dt_util
 
 from . import init_integration, mock_connection
 
@@ -15,7 +15,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the IPP sensors."""
     mock_connection(aioclient_mock)
@@ -33,7 +33,7 @@ async def test_sensors(
     )
 
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
-    with patch("homeassistant.components.ipp.sensor.utcnow", return_value=test_time):
+    with patch("spencerassistant.components.ipp.sensor.utcnow", return_value=test_time):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -84,7 +84,7 @@ async def test_sensors(
 
 
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the disabled by default IPP sensors."""
     await init_integration(hass, aioclient_mock)
@@ -100,7 +100,7 @@ async def test_disabled_by_default_sensors(
 
 
 async def test_missing_entry_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the unique_id of IPP sensor when printer is missing identifiers."""
     entry = await init_integration(hass, aioclient_mock, uuid=None, unique_id=None)

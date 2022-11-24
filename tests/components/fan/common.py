@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.fan import (
+from spencerassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,

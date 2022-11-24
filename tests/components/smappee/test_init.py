@@ -1,8 +1,8 @@
 """Tests for the Smappee component init module."""
 from unittest.mock import patch
 
-from homeassistant.components.smappee.const import DOMAIN
-from homeassistant.config_entries import SOURCE_ZEROCONF
+from spencerassistant.components.smappee.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_ZEROCONF
 
 from tests.common import MockConfigEntry
 

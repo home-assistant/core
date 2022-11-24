@@ -3,9 +3,9 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.nut.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_PORT
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -18,9 +18,9 @@ def _get_mock_pynutclient(list_vars=None, list_ups=None):
 
 
 async def async_init_integration(
-    hass: HomeAssistant, ups_fixture: str
+    hass: spencerAssistant, ups_fixture: str
 ) -> MockConfigEntry:
-    """Set up the nexia integration in Home Assistant."""
+    """Set up the nexia integration in spencer Assistant."""
 
     ups_fixture = f"nut/{ups_fixture}.json"
     list_vars = json.loads(load_fixture(ups_fixture))
@@ -28,7 +28,7 @@ async def async_init_integration(
     mock_pynut = _get_mock_pynutclient(list_ups={"ups1": "UPS 1"}, list_vars=list_vars)
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient",
+        "spencerassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ):
         entry = MockConfigEntry(

@@ -3,8 +3,8 @@ from functools import partial
 
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
+from spencerassistant.core import callback
+from spencerassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )

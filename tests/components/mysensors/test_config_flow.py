@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.mysensors.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
     CONF_GATEWAY_TYPE,
@@ -23,8 +23,8 @@ from homeassistant.components.mysensors.const import (
     DOMAIN,
     ConfGatewayType,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ GATEWAY_TYPE_TO_STEP = {
 
 
 async def get_form(
-    hass: HomeAssistant, gateway_type: ConfGatewayType, expected_step_id: str
+    hass: spencerAssistant, gateway_type: ConfGatewayType, expected_step_id: str
 ) -> FlowResult:
     """Get a form for the given gateway type."""
 
@@ -55,15 +55,15 @@ async def get_form(
     return result
 
 
-async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
+async def test_config_mqtt(hass: spencerAssistant, mqtt: None) -> None:
     """Test configuring a mqtt gateway."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_MQTT, "gw_mqtt")
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
+        "spencerassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -93,7 +93,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_missing_mqtt(hass: HomeAssistant) -> None:
+async def test_missing_mqtt(hass: spencerAssistant) -> None:
     """Test configuring a mqtt gateway without mqtt integration setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -110,20 +110,20 @@ async def test_missing_mqtt(hass: HomeAssistant) -> None:
     assert result["reason"] == "mqtt_required"
 
 
-async def test_config_serial(hass: HomeAssistant) -> None:
+async def test_config_serial(hass: spencerAssistant) -> None:
     """Test configuring a gateway via serial."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_SERIAL, "gw_serial")
     flow_id = step["flow_id"]
 
     with patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
-        "homeassistant.components.mysensors.config_flow.is_serial_port",
+        "spencerassistant.components.mysensors.config_flow.is_serial_port",
         return_value=True,
     ), patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+        "spencerassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
+        "spencerassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -150,17 +150,17 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_tcp(hass: HomeAssistant) -> None:
+async def test_config_tcp(hass: spencerAssistant) -> None:
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+        "spencerassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
+        "spencerassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -187,17 +187,17 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_fail_to_connect(hass: HomeAssistant) -> None:
+async def test_fail_to_connect(hass: spencerAssistant) -> None:
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=False
+        "spencerassistant.components.mysensors.config_flow.try_connect", return_value=False
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
+        "spencerassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -340,7 +340,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     ],
 )
 async def test_config_invalid(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mqtt: None,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
@@ -353,14 +353,14 @@ async def test_config_invalid(
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+        "spencerassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
+        "spencerassistant.components.mysensors.gateway.socket.getaddrinfo",
         side_effect=OSError,
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
+        "spencerassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -645,7 +645,7 @@ async def test_config_invalid(
     ],
 )
 async def test_duplicate(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mqtt: None,
     first_input: dict,
     second_input: dict,
@@ -654,9 +654,9 @@ async def test_duplicate(
     """Test duplicate detection."""
 
     with patch("sys.platform", "win32"), patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+        "spencerassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup_entry",
+        "spencerassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ):
         MockConfigEntry(domain=DOMAIN, data=first_input).add_to_hass(hass)

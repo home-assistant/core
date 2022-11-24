@@ -5,11 +5,11 @@ import pytest
 from pytest import LogCaptureFixture
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
-from homeassistant import config_entries
-from homeassistant.components.uptimerobot.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant import config_entries
+from spencerassistant.components.uptimerobot.const import DOMAIN
+from spencerassistant.const import CONF_API_KEY
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from .common import (
     MOCK_UPTIMEROBOT_ACCOUNT,
@@ -24,7 +24,7 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_read_only(hass: HomeAssistant) -> None:
+async def test_form_read_only(hass: spencerAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -84,7 +84,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
         (UptimeRobotAuthenticationException, "invalid_api_key"),
     ],
 )
-async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
+async def test_form_exception_thrown(hass: spencerAssistant, exception, error_key) -> None:
     """Test that we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -103,7 +103,7 @@ async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) 
     assert result2["errors"]["base"] == error_key
 
 
-async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
+async def test_form_api_error(hass: spencerAssistant, caplog: LogCaptureFixture) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -123,7 +123,7 @@ async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) ->
 
 
 async def test_user_unique_id_already_exists(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test creating an entry where the unique_id already exists."""
     entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -139,7 +139,7 @@ async def test_user_unique_id_already_exists(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -154,7 +154,7 @@ async def test_user_unique_id_already_exists(
 
 
 async def test_reauthentication(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test UptimeRobot reauthentication."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -178,7 +178,7 @@ async def test_reauthentication(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
 
@@ -193,7 +193,7 @@ async def test_reauthentication(
 
 
 async def test_reauthentication_failure(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test UptimeRobot reauthentication failure."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -217,7 +217,7 @@ async def test_reauthentication_failure(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
 
@@ -233,7 +233,7 @@ async def test_reauthentication_failure(
 
 
 async def test_reauthentication_failure_no_existing_entry(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test UptimeRobot reauthentication with no existing entry."""
     old_entry = MockConfigEntry(
@@ -259,7 +259,7 @@ async def test_reauthentication_failure_no_existing_entry(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
 
@@ -274,7 +274,7 @@ async def test_reauthentication_failure_no_existing_entry(
 
 
 async def test_reauthentication_failure_account_not_matching(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> None:
     """Test UptimeRobot reauthentication failure when using another account."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
@@ -301,7 +301,7 @@ async def test_reauthentication_failure_account_not_matching(
             data={**MOCK_UPTIMEROBOT_ACCOUNT, "user_id": 1234567891},
         ),
     ), patch(
-        "homeassistant.components.uptimerobot.async_setup_entry",
+        "spencerassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
     ):
 

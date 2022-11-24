@@ -4,12 +4,12 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from aiomodernforms import ModernFormsConnectionError
 
-from homeassistant.components import zeroconf
-from homeassistant.components.modern_forms.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components import zeroconf
+from spencerassistant.components.modern_forms.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from spencerassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 
@@ -18,7 +18,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
@@ -37,7 +37,7 @@ async def test_full_user_flow_implementation(
     assert "flow_id" in result
 
     with patch(
-        "homeassistant.components.modern_forms.async_setup_entry",
+        "spencerassistant.components.modern_forms.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_full_user_flow_implementation(
 
 
 async def test_full_zeroconf_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
@@ -102,11 +102,11 @@ async def test_full_zeroconf_flow_implementation(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "spencerassistant.components.modern_forms.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on Modern Forms connection error."""
     aioclient_mock.post("http://example.com/mf", exc=aiohttp.ClientError)
@@ -123,11 +123,11 @@ async def test_connection_error(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "spencerassistant.components.modern_forms.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_zeroconf_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on Modern Forms connection error."""
     aioclient_mock.post("http://192.168.1.123/mf", exc=aiohttp.ClientError)
@@ -151,11 +151,11 @@ async def test_zeroconf_connection_error(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "spencerassistant.components.modern_forms.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_zeroconf_confirm_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on Modern Forms connection error."""
     aioclient_mock.post("http://192.168.1.123:80/mf", exc=aiohttp.ClientError)
@@ -183,7 +183,7 @@ async def test_zeroconf_confirm_connection_error(
 
 
 async def test_user_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if Modern Forms device already configured."""
     aioclient_mock.post(
@@ -219,7 +219,7 @@ async def test_user_device_exists_abort(
 
 
 async def test_zeroconf_with_mac_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: spencerAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if a Modern Forms device already configured."""
     await init_integration(hass, aioclient_mock, skip_setup=True)

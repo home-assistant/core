@@ -3,7 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.media_player import (
+from spencerassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -34,7 +34,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.loader import bind_hass
+from spencerassistant.loader import bind_hass
 
 
 async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):

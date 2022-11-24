@@ -27,9 +27,9 @@ from pyunifiprotect.data import (
     WSSubscriptionMessage,
 )
 
-from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from spencerassistant.components.unifiprotect.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+import spencerassistant.util.dt as dt_util
 
 from . import _patch_discovery
 from .utils import MockUFPFixture
@@ -123,12 +123,12 @@ def mock_ufp_client(bootstrap: Bootstrap):
 
 @pytest.fixture(name="ufp")
 def mock_entry(
-    hass: HomeAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
+    hass: spencerAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
 ):
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        "spencerassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 

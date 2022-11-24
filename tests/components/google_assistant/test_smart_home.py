@@ -1,29 +1,29 @@
-"""Test Google Smart Home."""
+"""Test Google Smart spencer."""
 import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
 
-from homeassistant.components import camera
-from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
-from homeassistant.components.demo.binary_sensor import DemoBinarySensor
-from homeassistant.components.demo.cover import DemoCover
-from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
-from homeassistant.components.demo.media_player import AbstractDemoPlayer
-from homeassistant.components.demo.switch import DemoSwitch
-from homeassistant.components.google_assistant import (
+from spencerassistant.components import camera
+from spencerassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+from spencerassistant.components.demo.binary_sensor import DemoBinarySensor
+from spencerassistant.components.demo.cover import DemoCover
+from spencerassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
+from spencerassistant.components.demo.media_player import AbstractDemoPlayer
+from spencerassistant.components.demo.switch import DemoSwitch
+from spencerassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
     const,
-    smart_home as sh,
+    smart_spencer as sh,
     trait,
 )
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
-from homeassistant.core import EVENT_CALL_SERVICE, State
-from homeassistant.helpers import device_registry, entity_platform
-from homeassistant.setup import async_setup_component
+from spencerassistant.config import async_process_ha_core_config
+from spencerassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
+from spencerassistant.core import EVENT_CALL_SERVICE, State
+from spencerassistant.helpers import device_registry, entity_platform
+from spencerassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
@@ -1188,7 +1188,7 @@ async def test_trait_execute_adding_query_data(hass):
     )
 
     with patch(
-        "homeassistant.components.camera.async_request_stream",
+        "spencerassistant.components.camera.async_request_stream",
         return_value="/api/streams/bla",
     ):
         result = await sh.async_handle_message(
@@ -1265,7 +1265,7 @@ async def test_identify(hass):
                                     {
                                         "type": "TXT",
                                         "class": "IN",
-                                        "name": "devhome._home-assistant._tcp.local",
+                                        "name": "devspencer._spencer-assistant._tcp.local",
                                         "ttl": 4500,
                                         "data": [
                                             "version=0.101.0.dev0",
@@ -1304,8 +1304,8 @@ async def test_identify(hass):
                 "isProxy": True,
                 "deviceInfo": {
                     "hwVersion": "UNKNOWN_HW_VERSION",
-                    "manufacturer": "Home Assistant",
-                    "model": "Home Assistant",
+                    "manufacturer": "spencer Assistant",
+                    "model": "spencer Assistant",
                     "swVersion": __version__,
                 },
             }

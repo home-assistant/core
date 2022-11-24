@@ -3,9 +3,9 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
@@ -20,7 +20,7 @@ def calls(hass):
 @pytest.fixture(autouse=True)
 def no_platforms():
     """Skip platform setup to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+    with patch("spencerassistant.components.mqtt.PLATFORMS", []):
         yield
 
 

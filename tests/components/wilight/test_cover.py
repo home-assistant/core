@@ -4,12 +4,12 @@ from unittest.mock import patch
 import pytest
 import pywilight
 
-from homeassistant.components.cover import (
+from spencerassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -56,7 +56,7 @@ def mock_dummy_device_from_host_light_fan():
 
 
 async def test_loading_cover(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     dummy_device_from_host_cover,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -78,7 +78,7 @@ async def test_loading_cover(
 
 
 async def test_open_close_cover_state(
-    hass: HomeAssistant, dummy_device_from_host_cover
+    hass: spencerAssistant, dummy_device_from_host_cover
 ) -> None:
     """Test the change of state of the cover."""
     await setup_integration(hass)

@@ -1,8 +1,8 @@
 """Tests for the kraken config_flow."""
 from unittest.mock import patch
 
-from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL
+from spencerassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
+from spencerassistant.const import CONF_SCAN_INTERVAL
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 async def test_config_flow(hass):
     """Test we can finish a config flow."""
     with patch(
-        "homeassistant.components.kraken.async_setup_entry",
+        "spencerassistant.components.kraken.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -58,7 +58,7 @@ async def test_options(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
+        "spencerassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
         return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
     ), patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",

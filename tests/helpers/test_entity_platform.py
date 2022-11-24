@@ -6,24 +6,24 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
-from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import (
+from spencerassistant.const import EVENT_spencerASSISTANT_STARTED, PERCENTAGE
+from spencerassistant.core import CoreState, spencerAssistant, callback
+from spencerassistant.exceptions import spencerAssistantError, PlatformNotReady
+from spencerassistant.helpers import (
     device_registry as dr,
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import (
+from spencerassistant.helpers.entity import (
     DeviceInfo,
     EntityCategory,
     async_generate_entity_id,
 )
-from homeassistant.helpers.entity_component import (
+from spencerassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
 )
-import homeassistant.util.dt as dt_util
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -154,7 +154,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("spencerassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
 
@@ -702,7 +702,7 @@ async def test_setup_entry_platform_not_ready_with_message(hass, caplog):
 
 async def test_setup_entry_platform_not_ready_from_exception(hass, caplog):
     """Test when an entry is not ready yet that includes the causing exception string."""
-    original_exception = HomeAssistantError("The device dropped the connection")
+    original_exception = spencerAssistantError("The device dropped the connection")
     platform_exception = PlatformNotReady()
     platform_exception.__cause__ = original_exception
 
@@ -751,7 +751,7 @@ async def test_reset_cancels_retry_setup_when_not_started(hass):
     """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
     hass.state = CoreState.starting
     async_setup_entry = Mock(side_effect=PlatformNotReady)
-    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+    initial_listeners = hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED]
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry()
@@ -762,13 +762,13 @@ async def test_reset_cancels_retry_setup_when_not_started(hass):
     assert not await ent_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
     assert (
-        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+        hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED] == initial_listeners + 1
     )
     assert ent_platform._async_cancel_retry_setup is not None
 
     await ent_platform.async_reset()
     await hass.async_block_till_done()
-    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners
+    assert hass.bus.async_listeners()[EVENT_spencerASSISTANT_STARTED] == initial_listeners
     assert ent_platform._async_cancel_retry_setup is None
 
 
@@ -1045,8 +1045,8 @@ async def test_device_info_invalid_url(hass, caplog):
     )
 
 
-async def test_device_info_homeassistant_url(hass, caplog):
-    """Test device info with homeassistant URL."""
+async def test_device_info_spencerassistant_url(hass, caplog):
+    """Test device info with spencerassistant URL."""
     registry = dr.async_get(hass)
     registry.async_get_or_create(
         config_entry_id="123",
@@ -1060,12 +1060,12 @@ async def test_device_info_homeassistant_url(hass, caplog):
         """Mock setup entry method."""
         async_add_entities(
             [
-                # Valid device info, with homeassistant url
+                # Valid device info, with spencerassistant url
                 MockEntity(
                     unique_id="qwer",
                     device_info={
                         "identifiers": {("mqtt", "1234")},
-                        "configuration_url": "homeassistant://config/mqtt",
+                        "configuration_url": "spencerassistant://config/mqtt",
                     },
                 ),
             ]
@@ -1086,7 +1086,7 @@ async def test_device_info_homeassistant_url(hass, caplog):
     device = registry.async_get_device({("mqtt", "1234")})
     assert device is not None
     assert device.identifiers == {("mqtt", "1234")}
-    assert device.configuration_url == "homeassistant://config/mqtt"
+    assert device.configuration_url == "spencerassistant://config/mqtt"
 
 
 async def test_device_info_change_to_no_url(hass, caplog):
@@ -1098,14 +1098,14 @@ async def test_device_info_change_to_no_url(hass, caplog):
         identifiers={("mqtt", "via-id")},
         manufacturer="manufacturer",
         model="via",
-        configuration_url="homeassistant://config/mqtt",
+        configuration_url="spencerassistant://config/mqtt",
     )
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
         async_add_entities(
             [
-                # Valid device info, with homeassistant url
+                # Valid device info, with spencerassistant url
                 MockEntity(
                     unique_id="qwer",
                     device_info={
@@ -1158,7 +1158,7 @@ async def test_entity_disabled_by_integration(hass):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_entity_disabled_by_device(hass: HomeAssistant):
+async def test_entity_disabled_by_device(hass: spencerAssistant):
     """Test entity disabled by device."""
 
     connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
@@ -1335,7 +1335,7 @@ async def test_invalid_entity_id(hass):
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await platform.async_add_entities([entity])
     assert entity.hass is None
     assert entity.platform is None

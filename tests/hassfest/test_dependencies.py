@@ -20,7 +20,7 @@ def test_child_import(mock_collector):
     mock_collector.visit(
         ast.parse(
             """
-from homeassistant.components import child_import
+from spencerassistant.components import child_import
 """
         )
     )
@@ -32,7 +32,7 @@ def test_subimport(mock_collector):
     mock_collector.visit(
         ast.parse(
             """
-from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
+from spencerassistant.components.subimport.smart_spencer import EVENT_ALEXA_SMART_spencer
 """
         )
     )
@@ -44,7 +44,7 @@ def test_child_import_field(mock_collector):
     mock_collector.visit(
         ast.parse(
             """
-from homeassistant.components.child_import_field import bla
+from spencerassistant.components.child_import_field import bla
 """
         )
     )
@@ -56,7 +56,7 @@ def test_renamed_absolute(mock_collector):
     mock_collector.visit(
         ast.parse(
             """
-import homeassistant.components.renamed_absolute as hue
+import spencerassistant.components.renamed_absolute as hue
 """
         )
     )
@@ -95,13 +95,13 @@ def test_all_imports(mock_collector):
     mock_collector.visit(
         ast.parse(
             """
-from homeassistant.components import child_import
+from spencerassistant.components import child_import
 
-from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
+from spencerassistant.components.subimport.smart_spencer import EVENT_ALEXA_SMART_spencer
 
-from homeassistant.components.child_import_field import bla
+from spencerassistant.components.child_import_field import bla
 
-import homeassistant.components.renamed_absolute as hue
+import spencerassistant.components.renamed_absolute as hue
 
 def bla(hass):
     hass.components.hass_components_var.async_do_something()

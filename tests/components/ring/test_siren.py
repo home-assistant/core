@@ -1,7 +1,7 @@
 """The tests for the Ring button platform."""
 
-from homeassistant.const import Platform
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import Platform
+from spencerassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 

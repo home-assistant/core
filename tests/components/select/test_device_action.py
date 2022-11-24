@@ -2,18 +2,18 @@
 import pytest
 import voluptuous_serialize
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.select import DOMAIN
-from homeassistant.components.select.device_action import async_get_action_capabilities
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.select import DOMAIN
+from spencerassistant.components.select.device_action import async_get_action_capabilities
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import (
     config_validation as cv,
     device_registry,
     entity_registry,
 )
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -26,19 +26,19 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
+def device_reg(hass: spencerAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
+def entity_reg(hass: spencerAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 async def test_get_actions(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     device_reg: device_registry.DeviceRegistry,
     entity_reg: entity_registry.EntityRegistry,
 ) -> None:
@@ -113,7 +113,7 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: spencerAssistant) -> None:
     """Test for select_option action."""
     assert await async_setup_component(
         hass,
@@ -147,7 +147,7 @@ async def test_action(hass: HomeAssistant) -> None:
     assert select_calls[0].data == {"entity_id": "select.entity", "option": "option1"}
 
 
-async def test_get_action_capabilities(hass: HomeAssistant) -> None:
+async def test_get_action_capabilities(hass: spencerAssistant) -> None:
     """Test we get the expected capabilities from a select action."""
     config = {
         "platform": "device",

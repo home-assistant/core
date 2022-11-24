@@ -1,6 +1,6 @@
 """The tests for Cover."""
-import homeassistant.components.cover as cover
-from homeassistant.const import (
+import spencerassistant.components.cover as cover
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TOGGLE,
@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 async def test_services(hass, enable_custom_integrations):

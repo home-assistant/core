@@ -20,7 +20,7 @@
     "manufacturer": "Kwikset",
     "manufacturerId": 144,
     "label": "HC620",
-    "description": "Home Connect 620 Connected Smart Lock",
+    "description": "spencer Connect 620 Connected Smart Lock",
     "devices": [
       {
         "productType": 2065,
@@ -11034,9 +11034,9 @@
       "endpoint": 0,
       "commandClass": 113,
       "commandClassName": "Notification",
-      "property": "Home Security",
+      "property": "spencer Security",
       "propertyKey": "Cover status",
-      "propertyName": "Home Security",
+      "propertyName": "spencer Security",
       "propertyKeyName": "Cover status",
       "ccVersion": 8,
       "metadata": {

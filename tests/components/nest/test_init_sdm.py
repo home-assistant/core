@@ -21,8 +21,8 @@ from google_nest_sdm.exceptions import (
 )
 import pytest
 
-from homeassistant.components.nest import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.components.nest import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
 
 from .common import (
     PROJECT_ID,
@@ -47,14 +47,14 @@ def platforms() -> list[str]:
 @pytest.fixture
 def error_caplog(caplog):
     """Fixture to capture nest init error messages."""
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+    with caplog.at_level(logging.ERROR, logger="spencerassistant.components.nest"):
         yield caplog
 
 
 @pytest.fixture
 def warning_caplog(caplog):
     """Fixture to capture nest init warning messages."""
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
+    with caplog.at_level(logging.WARNING, logger="spencerassistant.components.nest"):
         yield caplog
 
 
@@ -69,7 +69,7 @@ def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscrib
     """Fixture overriding default subscriber behavior to allow failure injection."""
     subscriber = FakeSubscriber()
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=subscriber_side_effect,
     ):
         yield subscriber
@@ -117,9 +117,9 @@ async def test_setup_susbcriber_failure(
 async def test_setup_device_manager_failure(hass, warning_caplog, setup_base_platform):
     """Test device manager api failure."""
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.start_async"
     ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
         side_effect=ApiException(),
     ):
         await setup_base_platform()
@@ -218,7 +218,7 @@ async def test_unload_entry(hass, setup_platform):
 async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_called):
     """Test successful unload of a ConfigEntry."""
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber",
         return_value=FakeSubscriber(),
     ):
         await setup_base_platform()
@@ -232,9 +232,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
     assert entry.data.get("project_id") == PROJECT_ID
 
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
     ), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
     ) as delete:
         assert await hass.config_entries.async_remove(entry.entry_id)
         assert delete.called == delete_called
@@ -253,7 +253,7 @@ async def test_remove_entry_delete_subscriber_failure(
 ):
     """Test a failure when deleting the subscription."""
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber",
         return_value=FakeSubscriber(),
     ):
         await setup_base_platform()
@@ -264,7 +264,7 @@ async def test_remove_entry_delete_subscriber_failure(
     assert entry.state is ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+        "spencerassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
         side_effect=SubscriberException(),
     ) as delete:
         assert await hass.config_entries.async_remove(entry.entry_id)

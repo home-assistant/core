@@ -1,20 +1,20 @@
-"""Test the Home Assistant Yellow config flow."""
+"""Test the spencer Assistant Yellow config flow."""
 from unittest.mock import Mock, patch
 
-from homeassistant.components.homeassistant_yellow.const import DOMAIN
-from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.spencerassistant_yellow.const import DOMAIN
+from spencerassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
+async def test_config_flow(hass: spencerAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
 
     with patch(
-        "homeassistant.components.homeassistant_yellow.async_setup_entry",
+        "spencerassistant.components.spencerassistant_yellow.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -22,7 +22,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant Yellow"
+    assert result["title"] == "spencer Assistant Yellow"
     assert result["data"] == {}
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -30,10 +30,10 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
     assert config_entry.options == {}
-    assert config_entry.title == "Home Assistant Yellow"
+    assert config_entry.title == "spencer Assistant Yellow"
 
 
-async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
+async def test_config_flow_single_entry(hass: spencerAssistant) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -42,12 +42,12 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_yellow.async_setup_entry",
+        "spencerassistant.components.spencerassistant_yellow.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -60,7 +60,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
 
 async def test_option_flow_install_multi_pan_addon(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -75,12 +75,12 @@ async def test_option_flow_install_multi_pan_addon(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -128,7 +128,7 @@ async def test_option_flow_install_multi_pan_addon(
 
 
 async def test_option_flow_install_multi_pan_addon_zha(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     addon_store_info,
     addon_info,
     install_addon,
@@ -143,7 +143,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         data={},
         domain=DOMAIN,
         options={},
-        title="Home Assistant Yellow",
+        title="spencer Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
 
@@ -156,7 +156,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     zha_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        "spencerassistant.components.spencerassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

@@ -7,7 +7,7 @@ from unittest import mock
 import prometheus_client
 import pytest
 
-from homeassistant.components import (
+from spencerassistant.components import (
     binary_sensor,
     climate,
     counter,
@@ -22,16 +22,16 @@ from homeassistant.components import (
     sensor,
     switch,
 )
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
 )
-from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
+from spencerassistant.components.humidifier import ATTR_AVAILABLE_MODES
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -44,21 +44,21 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
-    STATE_HOME,
+    STATE_spencer,
     STATE_LOCKED,
-    STATE_NOT_HOME,
+    STATE_NOT_spencer,
     STATE_OFF,
     STATE_ON,
     STATE_UNLOCKED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import split_entity_id
-from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.core import split_entity_id
+from spencerassistant.helpers import entity_registry
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
-PROMETHEUS_PATH = "homeassistant.components.prometheus"
+PROMETHEUS_PATH = "spencerassistant.components.prometheus"
 
 
 @dataclass
@@ -138,7 +138,7 @@ async def test_view_default_namespace(client, sensor_entities):
     )
 
     assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'spencerassistant_sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
@@ -315,7 +315,7 @@ async def test_humidifier(client, humidifier_entities):
         'humidifier_mode{domain="humidifier",'
         'entity="humidifier.hygrostat",'
         'friendly_name="Hygrostat",'
-        'mode="home"} 1.0' in body
+        'mode="spencer"} 1.0' in body
     )
     assert (
         'humidifier_mode{domain="humidifier",'
@@ -860,7 +860,7 @@ async def sensor_fixture(hass, registry):
         original_name="Radio Energy",
     )
     with mock.patch(
-        "homeassistant.util.dt.utcnow",
+        "spencerassistant.util.dt.utcnow",
         return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
     ):
         set_state_with_entry(hass, sensor_3, 14)
@@ -1048,8 +1048,8 @@ async def humidifier_fixture(hass, registry):
     )
     humidifier_3_attributes = {
         ATTR_HUMIDITY: 50,
-        ATTR_MODE: "home",
-        ATTR_AVAILABLE_MODES: ["home", "eco"],
+        ATTR_MODE: "spencer",
+        ATTR_AVAILABLE_MODES: ["spencer", "eco"],
     }
     set_state_with_entry(hass, humidifier_3, STATE_ON, humidifier_3_attributes)
     data["humidifier_3"] = humidifier_3
@@ -1276,7 +1276,7 @@ async def person_fixture(hass, registry):
         suggested_object_id="bob",
         original_name="Bob",
     )
-    set_state_with_entry(hass, person_1, STATE_HOME)
+    set_state_with_entry(hass, person_1, STATE_spencer)
     data["person_1"] = person_1
 
     person_2 = registry.async_get_or_create(
@@ -1286,7 +1286,7 @@ async def person_fixture(hass, registry):
         suggested_object_id="alice",
         original_name="Alice",
     )
-    set_state_with_entry(hass, person_2, STATE_NOT_HOME)
+    set_state_with_entry(hass, person_2, STATE_NOT_spencer)
     data["person_2"] = person_2
 
     await hass.async_block_till_done()
@@ -1304,7 +1304,7 @@ async def device_tracker_fixture(hass, registry):
         suggested_object_id="phone",
         original_name="Phone",
     )
-    set_state_with_entry(hass, device_tracker_1, STATE_HOME)
+    set_state_with_entry(hass, device_tracker_1, STATE_spencer)
     data["device_tracker_1"] = device_tracker_1
 
     device_tracker_2 = registry.async_get_or_create(
@@ -1314,7 +1314,7 @@ async def device_tracker_fixture(hass, registry):
         suggested_object_id="watch",
         original_name="Watch",
     )
-    set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
+    set_state_with_entry(hass, device_tracker_2, STATE_NOT_spencer)
     data["device_tracker_2"] = device_tracker_2
 
     await hass.async_block_till_done()

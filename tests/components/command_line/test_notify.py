@@ -9,12 +9,12 @@ from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
-from homeassistant import setup
-from homeassistant.components.notify import DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant import setup
+from spencerassistant.components.notify import DOMAIN
+from spencerassistant.core import spencerAssistant
 
 
-async def setup_test_service(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+async def setup_test_service(hass: spencerAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line notify service."""
     assert await setup.async_setup_component(
         hass,
@@ -28,19 +28,19 @@ async def setup_test_service(hass: HomeAssistant, config_dict: dict[str, Any]) -
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: spencerAssistant) -> None:
     """Test sensor setup."""
     await setup_test_service(hass, {"command": "exit 0"})
     assert hass.services.has_service(DOMAIN, "test")
 
 
-async def test_bad_config(hass: HomeAssistant) -> None:
+async def test_bad_config(hass: spencerAssistant) -> None:
     """Test set up the platform with bad/missing configuration."""
     await setup_test_service(hass, {})
     assert not hass.services.has_service(DOMAIN, "test")
 
 
-async def test_command_line_output(hass: HomeAssistant) -> None:
+async def test_command_line_output(hass: spencerAssistant) -> None:
     """Test the command line output."""
     with tempfile.TemporaryDirectory() as tempdirname:
         filename = os.path.join(tempdirname, "message.txt")
@@ -63,7 +63,7 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
 
 
 async def test_error_for_none_zero_exit_code(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
     await setup_test_service(
@@ -80,7 +80,7 @@ async def test_error_for_none_zero_exit_code(
     assert "return code 1" in caplog.text
 
 
-async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_timeout(caplog: LogCaptureFixture, hass: spencerAssistant) -> None:
     """Test blocking is not forever."""
     await setup_test_service(
         hass,
@@ -96,12 +96,12 @@ async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
 
 
 async def test_subprocess_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: LogCaptureFixture, hass: spencerAssistant
 ) -> None:
     """Test that notify subprocess exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.notify.subprocess.Popen"
+        "spencerassistant.components.command_line.notify.subprocess.Popen"
     ) as check_output:
         check_output.return_value.__enter__ = check_output
         check_output.return_value.communicate.side_effect = [

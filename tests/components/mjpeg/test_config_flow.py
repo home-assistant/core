@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock
 import requests
 from requests_mock import Mocker
 
-from homeassistant.components.mjpeg.const import (
+from spencerassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -19,14 +19,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_mjpeg_requests: Mocker,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -68,7 +68,7 @@ async def test_full_user_flow(
 
 
 async def test_full_flow_with_authentication_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_mjpeg_requests: Mocker,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -134,7 +134,7 @@ async def test_full_flow_with_authentication_error(
 
 
 async def test_connection_error(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_mjpeg_requests: Mocker,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -222,7 +222,7 @@ async def test_connection_error(
 
 
 async def test_already_configured(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_mjpeg_requests: Mocker,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
@@ -248,7 +248,7 @@ async def test_already_configured(
 
 
 async def test_options_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_mjpeg_requests: Mocker,
     init_integration: MockConfigEntry,
 ) -> None:

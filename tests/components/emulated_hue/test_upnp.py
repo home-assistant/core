@@ -8,10 +8,10 @@ from aiohttp import web
 import defusedxml.ElementTree as ET
 import pytest
 
-from homeassistant import setup
-from homeassistant.components import emulated_hue
-from homeassistant.components.emulated_hue import upnp
-from homeassistant.const import CONTENT_TYPE_JSON
+from spencerassistant import setup
+from spencerassistant.components import emulated_hue
+from spencerassistant.components.emulated_hue import upnp
+from spencerassistant.const import CONTENT_TYPE_JSON
 
 from tests.common import get_test_instance_port
 
@@ -41,7 +41,7 @@ def hue_client(aiohttp_client):
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(
-        "homeassistant.components.emulated_hue.web.Application", return_value=app
+        "spencerassistant.components.emulated_hue.web.Application", return_value=app
     ):
 
         async def client():
@@ -54,7 +54,7 @@ def hue_client(aiohttp_client):
 async def setup_hue(hass):
     """Set up the emulated_hue integration."""
     with patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+        "spencerassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
     ):
         assert await setup.async_setup_component(
             hass,
@@ -102,7 +102,7 @@ def test_upnp_discovery_rootdevice():
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by Busch-Jaeger free@home SysAP."""
+    """Original request emitted by Busch-Jaeger free@spencer SysAP."""
     request = """M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
@@ -18,7 +18,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
     aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/os/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
-    aioclient_mock.get("https://version.home-assistant.io/stable.json", text="")
+    aioclient_mock.get("https://version.spencer-assistant.io/stable.json", text="")
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info", json={"result": "ok", "data": {}}
     )
@@ -34,7 +34,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
         "hassos": True,
     }
     hass.data["hassio_host_info"] = {
-        "operating_system": "Home Assistant OS 5.9",
+        "operating_system": "spencer Assistant OS 5.9",
         "agent_version": "1337",
         "disk_total": "32.0",
         "disk_used": "30.0",
@@ -59,7 +59,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
         "disk_used": "30.0 GB",
         "docker_version": "19.0.3",
         "healthy": True,
-        "host_os": "Home Assistant OS 5.9",
+        "host_os": "spencer Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
         "supervisor_api": "ok",
         "supervisor_version": "supervisor-2020.11.1",
@@ -75,7 +75,7 @@ async def test_hassio_system_health_with_issues(hass, aioclient_mock):
     aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/os/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
-    aioclient_mock.get("https://version.home-assistant.io/stable.json", exc=ClientError)
+    aioclient_mock.get("https://version.spencer-assistant.io/stable.json", exc=ClientError)
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info", json={"result": "ok", "data": {}}
     )

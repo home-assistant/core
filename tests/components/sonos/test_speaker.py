@@ -1,15 +1,15 @@
 """Tests for common SonosSpeaker behavior."""
 from unittest.mock import patch
 
-from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
+from spencerassistant.core import spencerAssistant
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
 async def test_fallback_to_polling(
-    hass: HomeAssistant, async_autosetup_sonos, soco, caplog
+    hass: spencerAssistant, async_autosetup_sonos, soco, caplog
 ):
     """Test that polling fallback works."""
     speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
@@ -19,8 +19,8 @@ async def test_fallback_to_polling(
     caplog.clear()
 
     # Ensure subscriptions are cancelled and polling methods are called when subscriptions time out
-    with patch("homeassistant.components.sonos.media.SonosMedia.poll_media"), patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.subscription_address"
+    with patch("spencerassistant.components.sonos.media.SonosMedia.poll_media"), patch(
+        "spencerassistant.components.sonos.speaker.SonosSpeaker.subscription_address"
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -31,10 +31,10 @@ async def test_fallback_to_polling(
     assert "Activity on Zone A from SonosSpeaker.update_volume" in caplog.text
 
 
-async def test_subscription_creation_fails(hass: HomeAssistant, async_setup_sonos):
+async def test_subscription_creation_fails(hass: spencerAssistant, async_setup_sonos):
     """Test that subscription creation failures are handled."""
     with patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker._subscribe",
+        "spencerassistant.components.sonos.speaker.SonosSpeaker._subscribe",
         side_effect=ConnectionError("Took too long"),
     ):
         await async_setup_sonos()

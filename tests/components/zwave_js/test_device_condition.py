@@ -9,16 +9,16 @@ import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.zwave_js import DOMAIN, device_condition
-from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.zwave_js import DOMAIN, device_condition
+from spencerassistant.components.zwave_js.helpers import get_zwave_value_from_config
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
 
@@ -545,16 +545,16 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         dev_reg, integration.entry_id
     )[0]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_condition.async_condition_from_config(
             hass, {"type": "failed.test", "device_id": device.id}
         )
 
     with patch(
-        "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
+        "spencerassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
         return_value=None,
     ), patch(
-        "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
+        "spencerassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
         return_value=None,
     ):
         assert (

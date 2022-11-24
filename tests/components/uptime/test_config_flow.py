@@ -3,17 +3,17 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.uptime.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from spencerassistant.components.uptime.const import DOMAIN
+from spencerassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from spencerassistant.const import CONF_NAME
+from spencerassistant.core import spencerAssistant
+from spencerassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test the full user configuration flow."""
@@ -37,7 +37,7 @@ async def test_full_user_flow(
 
 @pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_single_instance_allowed(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_config_entry: MockConfigEntry,
     source: str,
 ) -> None:
@@ -53,7 +53,7 @@ async def test_single_instance_allowed(
 
 
 async def test_import_flow(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test the import configuration flow."""

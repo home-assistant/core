@@ -3,8 +3,8 @@
 from iaqualink.exception import AqualinkServiceException
 import pytest
 
-from homeassistant.components.iaqualink.utils import await_or_reraise
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.iaqualink.utils import await_or_reraise
+from spencerassistant.exceptions import spencerAssistantError
 
 from .conftest import async_raises, async_returns
 
@@ -18,6 +18,6 @@ async def test_await_or_reraise(hass):
         async_ex = async_raises(Exception)
         await await_or_reraise(async_ex())
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_ex = async_raises(AqualinkServiceException)
         await await_or_reraise(async_ex())

@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from zamg import ZamgData as ZamgDevice
 
-from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.zamg.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.zamg.async_setup_entry", return_value=True):
         yield
 
 
@@ -38,7 +38,7 @@ def mock_zamg_config_flow(
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Zamg client."""
     with patch(
-        "homeassistant.components.zamg.sensor.ZamgData", autospec=True
+        "spencerassistant.components.zamg.sensor.ZamgData", autospec=True
     ) as zamg_mock:
         zamg = zamg_mock.return_value
         zamg.update.return_value = ZamgDevice(
@@ -53,7 +53,7 @@ def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
     """Return a mocked Zamg client."""
 
     with patch(
-        "homeassistant.components.zamg.config_flow.ZamgData", autospec=True
+        "spencerassistant.components.zamg.config_flow.ZamgData", autospec=True
     ) as zamg_mock:
         zamg = zamg_mock.return_value
         zamg.update.return_value = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
@@ -73,7 +73,7 @@ def mock_zamg_stations(
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Zamg client."""
     with patch(
-        "homeassistant.components.zamg.config_flow.ZamgData.zamg_stations"
+        "spencerassistant.components.zamg.config_flow.ZamgData.zamg_stations"
     ) as zamg_mock:
         zamg_mock.return_value = {
             "11240": (46.99305556, 15.43916667, "GRAZ-FLUGHAFEN"),
@@ -84,7 +84,7 @@ def mock_zamg_stations(
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
 ) -> MockConfigEntry:
     """Set up the Zamg integration for testing."""
     mock_config_entry.add_to_hass(hass)

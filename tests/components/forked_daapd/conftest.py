@@ -2,9 +2,9 @@
 
 import pytest
 
-from homeassistant.components.forked_daapd.const import CONF_TTS_PAUSE_TIME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from spencerassistant.components.forked_daapd.const import CONF_TTS_PAUSE_TIME, DOMAIN
+from spencerassistant.config_entries import SOURCE_USER
+from spencerassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from tests.common import MockConfigEntry
 

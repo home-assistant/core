@@ -7,23 +7,23 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from spencerassistant.components import automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.zwave_js import DOMAIN, device_trigger
-from homeassistant.components.zwave_js.helpers import (
+from spencerassistant.components.zwave_js import DOMAIN, device_trigger
+from spencerassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import (
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import config_validation as cv
+from spencerassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
-from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
-from homeassistant.setup import async_setup_component
+from spencerassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     assert_lists_same,
@@ -1304,12 +1304,12 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
 
 async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
     """Test failure scenarios."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass, {"type": "failed.test", "device_id": "invalid_device_id"}, None, {}
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass,
             {"type": "event.failed_type", "device_id": "invalid_device_id"},
@@ -1320,12 +1320,12 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass, {"type": "failed.test", "device_id": device.id}, None, {}
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass,
             {"type": "event.failed_type", "device_id": device.id},
@@ -1333,7 +1333,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
             {},
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await device_trigger.async_attach_trigger(
             hass,
             {"type": "state.failed_type", "device_id": device.id},
@@ -1342,10 +1342,10 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         )
 
     with patch(
-        "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
+        "spencerassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
         return_value=None,
     ), patch(
-        "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
+        "spencerassistant.components.zwave_js.helpers.get_zwave_value_from_config",
         return_value=None,
     ):
         assert (
@@ -1355,7 +1355,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
             == {}
         )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         async_get_node_status_sensor_entity_id(hass, "invalid_device_id")
 
     INVALID_CONFIG = {

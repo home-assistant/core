@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components import climate
-from homeassistant.components.climate import (
+from spencerassistant.components import climate
+from spencerassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
@@ -15,12 +15,12 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_STEP,
 )
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import State
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from spencerassistant.components.recorder.db_schema import StateAttributes, States
+from spencerassistant.components.recorder.util import session_scope
+from spencerassistant.const import ATTR_FRIENDLY_NAME
+from spencerassistant.core import State
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done

@@ -1,8 +1,8 @@
 """Test helpers for Tibber."""
 import pytest
 
-from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from spencerassistant.components.tibber.const import DOMAIN
+from spencerassistant.const import CONF_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
 

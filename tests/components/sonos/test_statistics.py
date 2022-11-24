@@ -1,5 +1,5 @@
 """Tests for the Sonos statistics."""
-from homeassistant.components.sonos.const import DATA_SONOS
+from spencerassistant.components.sonos.const import DATA_SONOS
 
 
 async def test_statistics_duplicate(

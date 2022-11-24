@@ -8,8 +8,8 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.components.automation import (
+import spencerassistant.components.automation as automation
+from spencerassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
@@ -17,10 +17,10 @@ from homeassistant.components.automation import (
     SERVICE_TRIGGER,
     AutomationEntity,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_spencerASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -28,16 +28,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
+from spencerassistant.core import (
     Context,
     CoreState,
-    HomeAssistant,
+    spencerAssistant,
     ServiceCall,
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers.script import (
+from spencerassistant.exceptions import spencerAssistantError, Unauthorized
+from spencerassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
     SCRIPT_MODE_PARALLEL,
     SCRIPT_MODE_QUEUED,
@@ -45,9 +45,9 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
-from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
-import homeassistant.util.dt as dt_util
+from spencerassistant.setup import async_setup_component
+from spencerassistant.util import yaml
+import spencerassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
@@ -131,7 +131,7 @@ async def test_service_specify_data(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.helpers.script.utcnow", return_value=time):
+    with patch("spencerassistant.helpers.script.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -553,7 +553,7 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={
             automation.DOMAIN: {
@@ -626,7 +626,7 @@ async def test_reload_config_when_invalid_config(hass, calls):
     assert calls[0].data.get("event") == "test_event"
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={automation.DOMAIN: "not valid"},
     ):
@@ -664,8 +664,8 @@ async def test_reload_config_handles_load_fails(hass, calls):
     assert calls[0].data.get("event") == "test_event"
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
-        side_effect=HomeAssistantError("bla"),
+        "spencerassistant.config.load_yaml_config_file",
+        side_effect=spencerAssistantError("bla"),
     ):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
@@ -724,7 +724,7 @@ async def test_automation_stops(hass, calls, service):
     else:
         config[automation.DOMAIN]["alias"] = "goodbye"
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -771,7 +771,7 @@ async def test_reload_unchanged_does_not_stop(hass, calls, extra_config):
     assert len(calls) == 0
 
     with patch(
-        "homeassistant.config.load_yaml_config_file",
+        "spencerassistant.config.load_yaml_config_file",
         autospec=True,
         return_value=config,
     ):
@@ -786,7 +786,7 @@ async def test_reload_unchanged_does_not_stop(hass, calls, extra_config):
 async def test_reload_moved_automation_without_alias(hass, calls):
     """Test that changing the order of automations without alias triggers reload."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "spencerassistant.components.automation.AutomationEntity", wraps=AutomationEntity
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -816,7 +816,7 @@ async def test_reload_moved_automation_without_alias(hass, calls):
         # Reverse the order of the automations
         config[automation.DOMAIN].reverse()
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -839,7 +839,7 @@ async def test_reload_moved_automation_without_alias(hass, calls):
 async def test_reload_identical_automations_without_id(hass, calls):
     """Test reloading of identical automations without id."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "spencerassistant.components.automation.AutomationEntity", wraps=AutomationEntity
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -874,7 +874,7 @@ async def test_reload_identical_automations_without_id(hass, calls):
 
         # Reload the automations without any change
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -897,7 +897,7 @@ async def test_reload_identical_automations_without_id(hass, calls):
         del config[automation.DOMAIN][-1]
         del config[automation.DOMAIN][-1]
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -918,7 +918,7 @@ async def test_reload_identical_automations_without_id(hass, calls):
         config[automation.DOMAIN].append(config[automation.DOMAIN][-1])
         config[automation.DOMAIN].append(config[automation.DOMAIN][-1])
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -1012,7 +1012,7 @@ async def test_reload_identical_automations_without_id(hass, calls):
 async def test_reload_unchanged_automation(hass, calls, automation_config):
     """Test an unmodified automation is not reloaded."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "spencerassistant.components.automation.AutomationEntity", wraps=AutomationEntity
     ) as automation_entity_init:
         config = {automation.DOMAIN: [automation_config]}
         assert await async_setup_component(hass, automation.DOMAIN, config)
@@ -1025,7 +1025,7 @@ async def test_reload_unchanged_automation(hass, calls, automation_config):
 
         # Reload the automations without any change
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ):
@@ -1045,7 +1045,7 @@ async def test_reload_unchanged_automation(hass, calls, automation_config):
 async def test_reload_automation_when_blueprint_changes(hass, calls, extra_config):
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "spencerassistant.components.automation.AutomationEntity", wraps=AutomationEntity
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1077,11 +1077,11 @@ async def test_reload_automation_when_blueprint_changes(hass, calls, extra_confi
         blueprint_config["action"].append(blueprint_config["action"][-1])
 
         with patch(
-            "homeassistant.config.load_yaml_config_file",
+            "spencerassistant.config.load_yaml_config_file",
             autospec=True,
             return_value=config,
         ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml",
+            "spencerassistant.components.blueprint.models.yaml.load_yaml",
             autospec=True,
             return_value=blueprint_config,
         ):
@@ -1321,7 +1321,7 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_spencerASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
@@ -1349,9 +1349,9 @@ async def test_automation_bad_trigger(hass, caplog):
 
 
 async def test_automation_with_error_in_script(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     caplog: pytest.LogCaptureFixture,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: Callable[[spencerAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
@@ -1539,19 +1539,19 @@ async def test_extraction_functions(hass):
                         },
                         {
                             "platform": "event",
-                            "event_type": "esphome.button_pressed",
+                            "event_type": "espspencer.button_pressed",
                             "event_data": {"device_id": "device-trigger-event"},
                         },
                         # device_id is a list of strings (not supported)
                         {
                             "platform": "event",
-                            "event_type": "esphome.button_pressed",
+                            "event_type": "espspencer.button_pressed",
                             "event_data": {"device_id": ["device-trigger-event"]},
                         },
                         # device_id is not a string
                         {
                             "platform": "event",
-                            "event_type": "esphome.button_pressed",
+                            "event_type": "espspencer.button_pressed",
                             "event_data": {"device_id": 123},
                         },
                     ],
@@ -2049,7 +2049,7 @@ async def test_trigger_condition_explicit_id(hass, calls):
     ),
 )
 async def test_recursive_automation_starting_script(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     automation_mode,
     automation_runs,
     script_mode,
@@ -2075,7 +2075,7 @@ async def test_recursive_automation_starting_script(
         stop_scripts_at_shutdown_called.set()
 
     with patch(
-        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        "spencerassistant.helpers.script._async_stop_scripts_at_shutdown",
         wraps=mock_stop_scripts_at_shutdown,
     ):
         assert await async_setup_component(
@@ -2144,7 +2144,7 @@ async def test_recursive_automation_starting_script(
 
         # Trigger 1st stage script shutdown
         hass.state = CoreState.stopping
-        hass.bus.async_fire("homeassistant_stop")
+        hass.bus.async_fire("spencerassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
         # Trigger 2nd stage script shutdown
@@ -2155,11 +2155,11 @@ async def test_recursive_automation_starting_script(
 
 
 @pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
-async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog):
+async def test_recursive_automation(hass: spencerAssistant, automation_mode, caplog):
     """Test automation triggering itself.
 
     - Illegal recursion detection should not be triggered
-    - Home Assistant should not hang on shut down
+    - spencer Assistant should not hang on shut down
     """
     stop_scripts_at_shutdown_called = asyncio.Event()
     real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
@@ -2169,7 +2169,7 @@ async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog
         stop_scripts_at_shutdown_called.set()
 
     with patch(
-        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        "spencerassistant.helpers.script._async_stop_scripts_at_shutdown",
         wraps=stop_scripts_at_shutdown,
     ):
         assert await async_setup_component(
@@ -2202,7 +2202,7 @@ async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog
 
         # Trigger 1st stage script shutdown
         hass.state = CoreState.stopping
-        hass.bus.async_fire("homeassistant_stop")
+        hass.bus.async_fire("spencerassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
 
         # Trigger 2nd stage script shutdown

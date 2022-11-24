@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.nightscout.const import DOMAIN
-from homeassistant.components.nightscout.utils import hash_from_url
-from homeassistant.const import CONF_URL
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.nightscout.const import DOMAIN
+from spencerassistant.components.nightscout.utils import hash_from_url
+from spencerassistant.const import CONF_URL
 
 from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
 
@@ -45,7 +45,7 @@ async def test_user_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_server_status",
         side_effect=ClientConnectionError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -64,10 +64,10 @@ async def test_user_form_api_key_required(hass):
     )
 
     with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_server_status",
         return_value=SERVER_STATUS_STATUS_ONLY,
     ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_sgvs",
         side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -86,7 +86,7 @@ async def test_user_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_server_status",
         side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -115,20 +115,20 @@ async def test_user_form_duplicate(hass):
 
 def _patch_async_setup_entry():
     return patch(
-        "homeassistant.components.nightscout.async_setup_entry",
+        "spencerassistant.components.nightscout.async_setup_entry",
         return_value=True,
     )
 
 
 def _patch_glucose_readings():
     return patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_sgvs",
         return_value=GLUCOSE_READINGS,
     )
 
 
 def _patch_server_status():
     return patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        "spencerassistant.components.nightscout.NightscoutAPI.get_server_status",
         return_value=SERVER_STATUS,
     )

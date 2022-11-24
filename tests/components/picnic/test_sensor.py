@@ -7,23 +7,23 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from homeassistant import config_entries
-from homeassistant.components.picnic import const
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
+from spencerassistant import config_entries
+from spencerassistant.components.picnic import const
+from spencerassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
+from spencerassistant.components.sensor import SensorDeviceClass
+from spencerassistant.const import (
     CONF_ACCESS_TOKEN,
     CURRENCY_EURO,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.util import dt
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_test_home_assistant,
+    async_test_spencer_assistant,
 )
 
 DEFAULT_USER_RESPONSE = {
@@ -96,11 +96,11 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = await async_test_home_assistant(None)
+        self.hass = await async_test_spencer_assistant(None)
         self.entity_registry = er.async_get(self.hass)
 
         # Patch the api client
-        self.picnic_patcher = patch("homeassistant.components.picnic.PicnicAPI")
+        self.picnic_patcher = patch("spencerassistant.components.picnic.PicnicAPI")
         self.picnic_mock = self.picnic_patcher.start()
         self.picnic_mock().session.auth_token = "3q29fpwhulzes"
 

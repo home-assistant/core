@@ -1,8 +1,8 @@
-"""Tests for HomematicIP Cloud sensor."""
-from homematicip.base.enums import ValveState
+"""Tests for spencermaticIP Cloud sensor."""
+from spencermaticip.base.enums import ValveState
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.generic_entity import (
+from spencerassistant.components.spencermaticip_cloud import DOMAIN as HMIPC_DOMAIN
+from spencerassistant.components.spencermaticip_cloud.generic_entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
     ATTR_DEVICE_OVERLOADED,
@@ -11,7 +11,7 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_RSSI_DEVICE,
     ATTR_RSSI_PEER,
 )
-from homeassistant.components.homematicip_cloud.sensor import (
+from spencerassistant.components.spencermaticip_cloud.sensor import (
     ATTR_CURRENT_ILLUMINATION,
     ATTR_HIGHEST_ILLUMINATION,
     ATTR_LEFT_COUNTER,
@@ -21,8 +21,8 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_MILLIMETERS,
     LIGHT_LUX,
@@ -31,7 +31,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
@@ -45,12 +45,12 @@ async def test_manually_configured_platform(hass):
 
 
 async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
-    """Test HomematicipSwitch."""
-    entity_id = "sensor.home_control_access_point_duty_cycle"
-    entity_name = "HOME_CONTROL_ACCESS_POINT Duty Cycle"
+    """Test spencermaticipSwitch."""
+    entity_id = "sensor.spencer_control_access_point_duty_cycle"
+    entity_name = "spencer_CONTROL_ACCESS_POINT Duty Cycle"
     device_model = "HmIP-HAP"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["HOME_CONTROL_ACCESS_POINT"]
+        test_devices=["spencer_CONTROL_ACCESS_POINT"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -62,7 +62,7 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
 
 
 async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
-    """Test HomematicipHeatingThermostat."""
+    """Test spencermaticipHeatingThermostat."""
     entity_id = "sensor.heizkorperthermostat_heating"
     entity_name = "Heizkörperthermostat Heating"
     device_model = "HMIP-eTRV"
@@ -96,7 +96,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
 
 
 async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipHumiditySensor."""
+    """Test spencermaticipHumiditySensor."""
     entity_id = "sensor.bwth_1_humidity"
     entity_name = "BWTH 1 Humidity"
     device_model = "HmIP-BWTH"
@@ -119,7 +119,7 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_temperature_sensor1(hass, default_mock_hap_factory):
-    """Test HomematicipTemperatureSensor."""
+    """Test spencermaticipTemperatureSensor."""
     entity_id = "sensor.bwth_1_temperature"
     entity_name = "BWTH 1 Temperature"
     device_model = "HmIP-BWTH"
@@ -144,7 +144,7 @@ async def test_hmip_temperature_sensor1(hass, default_mock_hap_factory):
 
 
 async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
-    """Test HomematicipTemperatureSensor."""
+    """Test spencermaticipTemperatureSensor."""
     entity_id = "sensor.heizkorperthermostat_temperature"
     entity_name = "Heizkörperthermostat Temperature"
     device_model = "HMIP-eTRV"
@@ -169,7 +169,7 @@ async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
 
 
 async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
-    """Test HomematicipTemperatureSensor."""
+    """Test spencermaticipTemperatureSensor."""
     entity_id = "sensor.raumbediengerat_analog_temperature"
     entity_name = "Raumbediengerät Analog Temperature"
     device_model = "ALPHA-IP-RBGa"
@@ -194,7 +194,7 @@ async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
 
 
 async def test_hmip_power_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipPowerSensor."""
+    """Test spencermaticipPowerSensor."""
     entity_id = "sensor.flur_oben_power"
     entity_name = "Flur oben Power"
     device_model = "HmIP-BSM"
@@ -231,7 +231,7 @@ async def test_hmip_power_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_illuminance_sensor1(hass, default_mock_hap_factory):
-    """Test HomematicipIlluminanceSensor."""
+    """Test spencermaticipIlluminanceSensor."""
     entity_id = "sensor.wettersensor_illuminance"
     entity_name = "Wettersensor Illuminance"
     device_model = "HmIP-SWO-B"
@@ -251,7 +251,7 @@ async def test_hmip_illuminance_sensor1(hass, default_mock_hap_factory):
 
 
 async def test_hmip_illuminance_sensor2(hass, default_mock_hap_factory):
-    """Test HomematicipIlluminanceSensor."""
+    """Test spencermaticipIlluminanceSensor."""
     entity_id = "sensor.lichtsensor_nord_illuminance"
     entity_name = "Lichtsensor Nord Illuminance"
     device_model = "HmIP-SLO"
@@ -274,7 +274,7 @@ async def test_hmip_illuminance_sensor2(hass, default_mock_hap_factory):
 
 
 async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipWindspeedSensor."""
+    """Test spencermaticipWindspeedSensor."""
     entity_id = "sensor.wettersensor_pro_windspeed"
     entity_name = "Wettersensor - pro Windspeed"
     device_model = "HmIP-SWO-PR"
@@ -321,7 +321,7 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
 
 
 async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
-    """Test HomematicipTodayRainSensor."""
+    """Test spencermaticipTodayRainSensor."""
     entity_id = "sensor.weather_sensor_plus_today_rain"
     entity_name = "Weather Sensor – plus Today Rain"
     device_model = "HmIP-SWO-PL"
@@ -343,7 +343,7 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
 async def test_hmip_temperature_external_sensor_channel_1(
     hass, default_mock_hap_factory
 ):
-    """Test HomematicipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
+    """Test spencermaticipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_1_temperature"
     entity_name = "STE2 Channel 1 Temperature"
     device_model = "HmIP-STE2-PCB"
@@ -368,7 +368,7 @@ async def test_hmip_temperature_external_sensor_channel_1(
 async def test_hmip_temperature_external_sensor_channel_2(
     hass, default_mock_hap_factory
 ):
-    """Test HomematicipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
+    """Test spencermaticipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_2_temperature"
     entity_name = "STE2 Channel 2 Temperature"
     device_model = "HmIP-STE2-PCB"
@@ -391,7 +391,7 @@ async def test_hmip_temperature_external_sensor_channel_2(
 
 
 async def test_hmip_temperature_external_sensor_delta(hass, default_mock_hap_factory):
-    """Test HomematicipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
+    """Test spencermaticipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_delta_temperature"
     entity_name = "STE2 Delta Temperature"
     device_model = "HmIP-STE2-PCB"
@@ -416,7 +416,7 @@ async def test_hmip_temperature_external_sensor_delta(hass, default_mock_hap_fac
 
 
 async def test_hmip_passage_detector_delta_counter(hass, default_mock_hap_factory):
-    """Test HomematicipPassageDetectorDeltaCounter."""
+    """Test spencermaticipPassageDetectorDeltaCounter."""
     entity_id = "sensor.spdr_1"
     entity_name = "SPDR_1"
     device_model = "HmIP-SPDR"

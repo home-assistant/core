@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.sensor import DOMAIN
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 

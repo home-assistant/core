@@ -66,9 +66,9 @@ def save_json(filename: str, data: list | dict):
 
 def get_component_path(lang, component):
     """Get the component translation path."""
-    if os.path.isdir(os.path.join("homeassistant", "components", component)):
+    if os.path.isdir(os.path.join("spencerassistant", "components", component)):
         return os.path.join(
-            "homeassistant", "components", component, "translations", f"{lang}.json"
+            "spencerassistant", "components", component, "translations", f"{lang}.json"
         )
     return None
 
@@ -76,7 +76,7 @@ def get_component_path(lang, component):
 def get_platform_path(lang, component, platform):
     """Get the platform translation path."""
     return os.path.join(
-        "homeassistant",
+        "spencerassistant",
         "components",
         component,
         "translations",

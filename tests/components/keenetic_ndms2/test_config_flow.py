@@ -7,11 +7,11 @@ from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import keenetic_ndms2 as keenetic, ssdp
-from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.const import CONF_HOST, CONF_SOURCE
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components import keenetic_ndms2 as keenetic, ssdp
+from spencerassistant.components.keenetic_ndms2 import const
+from spencerassistant.const import CONF_HOST, CONF_SOURCE
+from spencerassistant.core import spencerAssistant
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
 
@@ -45,7 +45,7 @@ def mock_keenetic_connect_failed():
         yield
 
 
-async def test_flow_works(hass: HomeAssistant, connect) -> None:
+async def test_flow_works(hass: spencerAssistant, connect) -> None:
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "spencerassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -69,12 +69,12 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass: HomeAssistant) -> None:
+async def test_options(hass: spencerAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "spencerassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -110,7 +110,7 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result2["data"] == MOCK_OPTIONS
 
 
-async def test_host_already_configured(hass: HomeAssistant, connect) -> None:
+async def test_host_already_configured(hass: spencerAssistant, connect) -> None:
     """Test host already configured."""
 
     entry = MockConfigEntry(
@@ -130,7 +130,7 @@ async def test_host_already_configured(hass: HomeAssistant, connect) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
+async def test_connection_error(hass: spencerAssistant, connect_error) -> None:
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
@@ -143,7 +143,7 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
+async def test_ssdp_works(hass: spencerAssistant, connect) -> None:
     """Test host already configured and discovered."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
@@ -157,7 +157,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "spencerassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         user_input = MOCK_DATA.copy()
         user_input.pop(CONF_HOST)
@@ -174,7 +174,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
+async def test_ssdp_already_configured(hass: spencerAssistant) -> None:
     """Test host already configured and discovered."""
 
     entry = MockConfigEntry(
@@ -193,7 +193,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_ignored(hass: HomeAssistant) -> None:
+async def test_ssdp_ignored(hass: spencerAssistant) -> None:
     """Test unique ID ignored and discovered."""
 
     entry = MockConfigEntry(
@@ -214,7 +214,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_update_host(hass: HomeAssistant) -> None:
+async def test_ssdp_update_host(hass: spencerAssistant) -> None:
     """Test unique ID configured and discovered with the new host."""
 
     entry = MockConfigEntry(
@@ -241,7 +241,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
     assert entry.data[CONF_HOST] == new_ip
 
 
-async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
+async def test_ssdp_reject_no_udn(hass: spencerAssistant) -> None:
     """Discovered device has no UDN."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
@@ -258,7 +258,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_udn"
 
 
-async def test_ssdp_reject_non_keenetic(hass: HomeAssistant) -> None:
+async def test_ssdp_reject_non_keenetic(hass: spencerAssistant) -> None:
     """Discovered device does not look like a keenetic router."""
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)

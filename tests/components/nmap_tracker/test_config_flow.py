@@ -3,19 +3,19 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.device_tracker import (
-    CONF_CONSIDER_HOME,
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.device_tracker import (
+    CONF_CONSIDER_spencer,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.components.nmap_tracker.const import (
-    CONF_HOME_INTERVAL,
+from spencerassistant.components.nmap_tracker.const import (
+    CONF_spencer_INTERVAL,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
 )
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
-from homeassistant.core import CoreState, HomeAssistant
+from spencerassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from spencerassistant.core import CoreState, spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "hosts", ["1.1.1.1", "192.168.1.0/24", "192.168.1.0/24,192.168.2.0/24"]
 )
-async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None:
+async def test_form(hass: spencerAssistant, hosts: str, mock_get_source_ip) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -36,14 +36,14 @@ async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None
     assert CONF_SCAN_INTERVAL not in schema_defaults
 
     with patch(
-        "homeassistant.components.nmap_tracker.async_setup_entry",
+        "spencerassistant.components.nmap_tracker.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOSTS: hosts,
-                CONF_HOME_INTERVAL: 3,
+                CONF_spencer_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4",
             },
@@ -55,14 +55,14 @@ async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None
     assert result2["data"] == {}
     assert result2["options"] == {
         CONF_HOSTS: hosts,
-        CONF_HOME_INTERVAL: 3,
+        CONF_spencer_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_range(hass: spencerAssistant, mock_get_source_ip) -> None:
     """Test we get the form and can take an ip range."""
 
     result = await hass.config_entries.flow.async_init(
@@ -72,14 +72,14 @@ async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nmap_tracker.async_setup_entry",
+        "spencerassistant.components.nmap_tracker.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOSTS: "192.168.0.5-12",
-                CONF_HOME_INTERVAL: 3,
+                CONF_spencer_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4",
             },
@@ -91,14 +91,14 @@ async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert result2["data"] == {}
     assert result2["options"] == {
         CONF_HOSTS: "192.168.0.5-12",
-        CONF_HOME_INTERVAL: 3,
+        CONF_spencer_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_invalid_hosts(hass: spencerAssistant, mock_get_source_ip) -> None:
     """Test invalid hosts passed in."""
 
     result = await hass.config_entries.flow.async_init(
@@ -111,7 +111,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> No
         result["flow_id"],
         {
             CONF_HOSTS: "not an ip block",
-            CONF_HOME_INTERVAL: 3,
+            CONF_spencer_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "",
         },
@@ -122,7 +122,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> No
     assert result2["errors"] == {CONF_HOSTS: "invalid_hosts"}
 
 
-async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_already_configured(hass: spencerAssistant, mock_get_source_ip) -> None:
     """Test duplicate host list."""
 
     config_entry = MockConfigEntry(
@@ -130,7 +130,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) 
         data={},
         options={
             CONF_HOSTS: "192.168.0.0/20",
-            CONF_HOME_INTERVAL: 3,
+            CONF_spencer_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "4.4.4.4",
         },
@@ -146,7 +146,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) 
         result["flow_id"],
         {
             CONF_HOSTS: "192.168.0.0/20",
-            CONF_HOME_INTERVAL: 3,
+            CONF_spencer_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "",
         },
@@ -157,7 +157,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) 
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_invalid_excludes(hass: spencerAssistant, mock_get_source_ip) -> None:
     """Test invalid excludes passed in."""
 
     result = await hass.config_entries.flow.async_init(
@@ -170,7 +170,7 @@ async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) ->
         result["flow_id"],
         {
             CONF_HOSTS: "3.3.3.3",
-            CONF_HOME_INTERVAL: 3,
+            CONF_spencer_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "not an exclude",
         },
@@ -181,7 +181,7 @@ async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) ->
     assert result2["errors"] == {CONF_EXCLUDE: "invalid_hosts"}
 
 
-async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_options_flow(hass: spencerAssistant, mock_get_source_ip) -> None:
     """Test we can edit options."""
 
     config_entry = MockConfigEntry(
@@ -189,7 +189,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         data={},
         options={
             CONF_HOSTS: "192.168.1.0/24",
-            CONF_HOME_INTERVAL: 3,
+            CONF_spencer_INTERVAL: 3,
             CONF_OPTIONS: DEFAULT_OPTIONS,
             CONF_EXCLUDE: "4.4.4.4",
         },
@@ -207,23 +207,23 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
 
     assert result["data_schema"]({}) == {
         CONF_EXCLUDE: "4.4.4.4",
-        CONF_HOME_INTERVAL: 3,
+        CONF_spencer_INTERVAL: 3,
         CONF_HOSTS: "192.168.1.0/24",
-        CONF_CONSIDER_HOME: 180,
+        CONF_CONSIDER_spencer: 180,
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-F -T4 --min-rate 10 --host-timeout 5s",
     }
 
     with patch(
-        "homeassistant.components.nmap_tracker.async_setup_entry",
+        "spencerassistant.components.nmap_tracker.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_HOSTS: "192.168.1.0/24, 192.168.2.0/24",
-                CONF_HOME_INTERVAL: 5,
-                CONF_CONSIDER_HOME: 500,
+                CONF_spencer_INTERVAL: 5,
+                CONF_CONSIDER_spencer: 500,
                 CONF_OPTIONS: "-sn",
                 CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
                 CONF_SCAN_INTERVAL: 10,
@@ -234,8 +234,8 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
-        CONF_HOME_INTERVAL: 5,
-        CONF_CONSIDER_HOME: 500,
+        CONF_spencer_INTERVAL: 5,
+        CONF_CONSIDER_spencer: 500,
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
         CONF_SCAN_INTERVAL: 10,

@@ -1,8 +1,8 @@
 """Test ONVIF config flow."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.onvif import config_flow
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.onvif import config_flow
 
 from . import (
     HOST,
@@ -77,11 +77,11 @@ async def test_flow_discovered_devices(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery)
@@ -103,7 +103,7 @@ async def test_flow_discovered_devices(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup_entry", return_value=True
+            "spencerassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -139,11 +139,11 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery, with_mac=True)
@@ -178,11 +178,11 @@ async def test_flow_discovered_no_device(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera)
         mock_discovery.return_value = []
@@ -220,11 +220,11 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery, with_name=True, with_mac=True)
@@ -263,11 +263,11 @@ async def test_flow_manual_entry(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
+        "spencerassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
+        "spencerassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
+        "spencerassistant.components.onvif.ONVIFDevice"
     ) as mock_device:
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
@@ -283,7 +283,7 @@ async def test_flow_manual_entry(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup_entry", return_value=True
+            "spencerassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],

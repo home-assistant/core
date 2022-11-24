@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, call
 from motioneye_client.client import MotionEyeClientPathError
 import pytest
 
-from homeassistant.components.media_source import (
+from spencerassistant.components.media_source import (
     URI_SCHEME,
     MediaSourceError,
     PlayMedia,
@@ -13,10 +13,10 @@ from homeassistant.components.media_source import (
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.motioneye.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.motioneye.const import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr
+from spencerassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA_DEVICE_IDENTIFIER,
@@ -78,7 +78,7 @@ async def setup_media_source(hass) -> None:
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_async_browse_media_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_success(hass: spencerAssistant) -> None:
     """Test successful browse media."""
 
     client = create_mock_motioneye_client()
@@ -297,7 +297,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_images_success(hass: spencerAssistant) -> None:
     """Test successful browse media of images."""
 
     client = create_mock_motioneye_client()
@@ -348,7 +348,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_success(hass: spencerAssistant) -> None:
     """Test successful resolve media."""
 
     client = create_mock_motioneye_client()
@@ -388,7 +388,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
 
 
-async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_failure(hass: spencerAssistant) -> None:
     """Test failed resolve media calls."""
 
     client = create_mock_motioneye_client()

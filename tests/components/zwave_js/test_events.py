@@ -44,7 +44,7 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert events[0].data["home_id"] == client.driver.controller.home_id
+    assert events[0].data["spencer_id"] == client.driver.controller.spencer_id
     assert events[0].data["node_id"] == 32
     assert events[0].data["endpoint"] == 0
     assert events[0].data["command_class"] == 32
@@ -164,7 +164,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert events[0].data["home_id"] == client.driver.controller.home_id
+    assert events[0].data["spencer_id"] == client.driver.controller.spencer_id
     assert events[0].data["node_id"] == 32
     assert events[0].data["type"] == 6
     assert events[0].data["event"] == 5
@@ -196,7 +196,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 2
-    assert events[1].data["home_id"] == client.driver.controller.home_id
+    assert events[1].data["spencer_id"] == client.driver.controller.spencer_id
     assert events[1].data["node_id"] == 32
     assert events[1].data["event_type"] == 5
     assert events[1].data["event_type_label"] == "test1"
@@ -222,7 +222,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 3
-    assert events[2].data["home_id"] == client.driver.controller.home_id
+    assert events[2].data["spencer_id"] == client.driver.controller.spencer_id
     assert events[2].data["node_id"] == 32
     assert events[2].data["event_type"] == 4
     assert events[2].data["event_type_label"] == "test1"
@@ -258,7 +258,7 @@ async def test_value_updated(hass, vision_security_zl7432, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert events[0].data["home_id"] == client.driver.controller.home_id
+    assert events[0].data["spencer_id"] == client.driver.controller.spencer_id
     assert events[0].data["node_id"] == 7
     assert events[0].data["entity_id"] == "switch.in_wall_dual_relay_switch"
     assert events[0].data["command_class"] == CommandClass.SWITCH_BINARY

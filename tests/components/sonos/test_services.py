@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
-from homeassistant.components.sonos.const import DATA_SONOS
-from homeassistant.exceptions import HomeAssistantError
+from spencerassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
+from spencerassistant.components.sonos.const import DATA_SONOS
+from spencerassistant.exceptions import spencerAssistantError
 
 
 async def test_media_player_join(hass, async_autosetup_sonos):
@@ -14,7 +14,7 @@ async def test_media_player_join(hass, async_autosetup_sonos):
     mocked_entity_id = "media_player.mocked"
 
     # Ensure an error is raised if the entity is unknown
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_JOIN,
@@ -29,7 +29,7 @@ async def test_media_player_join(hass, async_autosetup_sonos):
     with patch.dict(
         hass.data[DATA_SONOS].entity_id_mappings, mock_entity_id_mappings
     ), patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.join_multi"
+        "spencerassistant.components.sonos.speaker.SonosSpeaker.join_multi"
     ) as mock_join_multi:
         await hass.services.async_call(
             MP_DOMAIN,

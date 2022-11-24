@@ -4,20 +4,20 @@ from unittest.mock import patch
 import pytest
 import pywilight
 
-from homeassistant.components.light import (
+from spencerassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -129,7 +129,7 @@ def mock_dummy_device_from_host_color():
 
 
 async def test_loading_light(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     dummy_device_from_host_light_fan,
     dummy_get_components_from_model_light,
 ) -> None:
@@ -154,7 +154,7 @@ async def test_loading_light(
 
 
 async def test_on_off_light_state(
-    hass: HomeAssistant, dummy_device_from_host_pb
+    hass: spencerAssistant, dummy_device_from_host_pb
 ) -> None:
     """Test the change of state of the light switches."""
     await setup_integration(hass)
@@ -187,7 +187,7 @@ async def test_on_off_light_state(
 
 
 async def test_dimmer_light_state(
-    hass: HomeAssistant, dummy_device_from_host_dimmer
+    hass: spencerAssistant, dummy_device_from_host_dimmer
 ) -> None:
     """Test the change of state of the light switches."""
     await setup_integration(hass)
@@ -257,7 +257,7 @@ async def test_dimmer_light_state(
 
 
 async def test_color_light_state(
-    hass: HomeAssistant, dummy_device_from_host_color
+    hass: spencerAssistant, dummy_device_from_host_color
 ) -> None:
     """Test the change of state of the light switches."""
     await setup_integration(hass)

@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 from epson_projector.const import PWR_OFF_STATE
 
-from homeassistant import config_entries
-from homeassistant.components.epson.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
+from spencerassistant import config_entries
+from spencerassistant.components.epson.const import DOMAIN
+from spencerassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 
 
 async def test_form(hass):
     """Test we get the form."""
 
-    with patch("homeassistant.components.epson.Projector.get_power", return_value="01"):
+    with patch("spencerassistant.components.epson.Projector.get_power", return_value="01"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -19,13 +19,13 @@ async def test_form(hass):
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
     with patch(
-        "homeassistant.components.epson.Projector.get_power",
+        "spencerassistant.components.epson.Projector.get_power",
         return_value="01",
     ), patch(
-        "homeassistant.components.epson.Projector.get_serial_number",
+        "spencerassistant.components.epson.Projector.get_serial_number",
         return_value="12345",
     ), patch(
-        "homeassistant.components.epson.async_setup_entry",
+        "spencerassistant.components.epson.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -47,7 +47,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.epson.Projector.get_power",
+        "spencerassistant.components.epson.Projector.get_power",
         return_value=STATE_UNAVAILABLE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -66,7 +66,7 @@ async def test_form_powered_off(hass):
     )
 
     with patch(
-        "homeassistant.components.epson.Projector.get_power",
+        "spencerassistant.components.epson.Projector.get_power",
         return_value=PWR_OFF_STATE,
     ):
         result2 = await hass.config_entries.flow.async_configure(

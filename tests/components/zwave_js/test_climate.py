@@ -7,7 +7,7 @@ from zwave_js_server.const.command_class.thermostat import (
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -29,9 +29,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
-from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import (
+from spencerassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from spencerassistant.components.zwave_js.helpers import ZwaveValueMatcher
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,

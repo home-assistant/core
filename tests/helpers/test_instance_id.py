@@ -1,7 +1,7 @@
 """Tests for instance ID helper."""
 from unittest.mock import patch
 
-from homeassistant.helpers import instance_id
+from spencerassistant.helpers import instance_id
 
 
 async def test_get_id_empty(hass, hass_storage):
@@ -15,7 +15,7 @@ async def test_get_id_empty(hass, hass_storage):
 async def test_get_id_migrate(hass, hass_storage):
     """Migrate existing file."""
     with patch(
-        "homeassistant.util.json.load_json", return_value={"uuid": "1234"}
+        "spencerassistant.util.json.load_json", return_value={"uuid": "1234"}
     ), patch("os.path.isfile", return_value=True), patch("os.remove") as mock_remove:
         uuid = await instance_id.async_get(hass)
 

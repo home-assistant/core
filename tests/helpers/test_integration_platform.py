@@ -1,11 +1,11 @@
 """Test integration platform helpers."""
 from unittest.mock import Mock
 
-from homeassistant.helpers.integration_platform import (
+from spencerassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from spencerassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 
 from tests.common import mock_platform
 

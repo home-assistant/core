@@ -3,17 +3,17 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.auth.providers import homeassistant as hass_auth
-from homeassistant.scripts import auth as script_auth
+from spencerassistant.auth.providers import spencerassistant as hass_auth
+from spencerassistant.scripts import auth as script_auth
 
 from tests.common import register_auth_provider
 
 
 @pytest.fixture
 def provider(hass):
-    """Home Assistant auth provider."""
+    """spencer Assistant auth provider."""
     provider = hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
+        register_auth_provider(hass, {"type": "spencerassistant"})
     )
     hass.loop.run_until_complete(provider.async_initialize())
     return provider

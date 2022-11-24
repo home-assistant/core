@@ -6,13 +6,13 @@ import shutil
 
 import pytest
 
-from homeassistant.components import media_source, tts
-from homeassistant.components.media_player import (
+from spencerassistant.components import media_source, tts
+from spencerassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
@@ -63,7 +63,7 @@ async def test_service_say(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -82,7 +82,7 @@ async def test_service_say(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     assert len(calls) == 1
@@ -95,7 +95,7 @@ async def test_service_say_russian_config(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "ru-RU",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -120,7 +120,7 @@ async def test_service_say_russian_config(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
 
@@ -134,7 +134,7 @@ async def test_service_say_russian_service(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "ru-RU",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -155,7 +155,7 @@ async def test_service_say_russian_service(hass, aioclient_mock):
         "yandextts_say",
         {
             "entity_id": "media_player.something",
-            tts.ATTR_MESSAGE: "HomeAssistant",
+            tts.ATTR_MESSAGE: "spencerAssistant",
             tts.ATTR_LANGUAGE: "ru-RU",
         },
         blocking=True,
@@ -170,7 +170,7 @@ async def test_service_say_timeout(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -194,7 +194,7 @@ async def test_service_say_timeout(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -210,7 +210,7 @@ async def test_service_say_http_error(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -234,7 +234,7 @@ async def test_service_say_http_error(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
 
@@ -248,7 +248,7 @@ async def test_service_say_specified_speaker(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "alyss",
@@ -273,7 +273,7 @@ async def test_service_say_specified_speaker(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     assert len(calls) == 1
@@ -286,7 +286,7 @@ async def test_service_say_specified_emotion(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -311,7 +311,7 @@ async def test_service_say_specified_emotion(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     assert len(calls) == 1
@@ -325,7 +325,7 @@ async def test_service_say_specified_low_speed(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -346,7 +346,7 @@ async def test_service_say_specified_low_speed(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     assert len(calls) == 1
@@ -360,7 +360,7 @@ async def test_service_say_specified_speed(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -379,7 +379,7 @@ async def test_service_say_specified_speed(hass, aioclient_mock):
     await hass.services.async_call(
         tts.DOMAIN,
         "yandextts_say",
-        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
+        {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "spencerAssistant"},
         blocking=True,
     )
     assert len(calls) == 1
@@ -393,7 +393,7 @@ async def test_service_say_specified_options(hass, aioclient_mock):
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     url_param = {
-        "text": "HomeAssistant",
+        "text": "spencerAssistant",
         "lang": "en-US",
         "key": "1234567xx",
         "speaker": "zahar",
@@ -413,7 +413,7 @@ async def test_service_say_specified_options(hass, aioclient_mock):
         "yandextts_say",
         {
             "entity_id": "media_player.something",
-            tts.ATTR_MESSAGE: "HomeAssistant",
+            tts.ATTR_MESSAGE: "spencerAssistant",
             "options": {"emotion": "evil", "speed": 2},
         },
         blocking=True,

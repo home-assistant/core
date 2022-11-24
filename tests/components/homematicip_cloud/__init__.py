@@ -1,1 +1,1 @@
-"""Tests for the HomematicIP Cloud component."""
+"""Tests for the spencermaticIP Cloud component."""

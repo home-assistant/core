@@ -4,8 +4,8 @@ from urllib.parse import parse_qsl
 import pytest
 import requests_mock as rmock
 
-from homeassistant.components.nest import config_flow, const
-from homeassistant.components.nest.legacy import local_auth
+from spencerassistant.components.nest import config_flow, const
+from spencerassistant.components.nest.legacy import local_auth
 
 
 @pytest.fixture

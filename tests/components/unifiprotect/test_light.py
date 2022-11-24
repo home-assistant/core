@@ -7,17 +7,17 @@ from unittest.mock import AsyncMock, Mock
 from pyunifiprotect.data import Light
 from pyunifiprotect.data.types import LEDLevel
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.const import (
+from spencerassistant.components.light import ATTR_BRIGHTNESS
+from spencerassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -28,7 +28,7 @@ from .utils import (
 )
 
 
-async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def test_light_remove(hass: spencerAssistant, ufp: MockUFPFixture, light: Light):
     """Test removing and re-adding a light device."""
 
     await init_entry(hass, ufp, [light])
@@ -40,7 +40,7 @@ async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
 
 
 async def test_light_setup(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity setup."""
 
@@ -62,7 +62,7 @@ async def test_light_setup(
 
 
 async def test_light_update(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity update."""
 
@@ -88,7 +88,7 @@ async def test_light_update(
 
 
 async def test_light_turn_on(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity turn off."""
 
@@ -110,7 +110,7 @@ async def test_light_turn_on(
 
 
 async def test_light_turn_off(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: spencerAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity turn on."""
 

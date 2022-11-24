@@ -1,7 +1,7 @@
 """Tests for the Keenetic NDMS2 component."""
-from homeassistant.components import ssdp
-from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.const import (
+from spencerassistant.components import ssdp
+from spencerassistant.components.keenetic_ndms2 import const
+from spencerassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,11 +22,11 @@ MOCK_DATA = {
 
 MOCK_OPTIONS = {
     CONF_SCAN_INTERVAL: 15,
-    const.CONF_CONSIDER_HOME: 150,
+    const.CONF_CONSIDER_spencer: 150,
     const.CONF_TRY_HOTSPOT: False,
     const.CONF_INCLUDE_ARP: True,
     const.CONF_INCLUDE_ASSOCIATED: True,
-    const.CONF_INTERFACES: ["Home", "VPS0"],
+    const.CONF_INTERFACES: ["spencer", "VPS0"],
 }
 
 MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(

@@ -5,7 +5,7 @@ from attr import dataclass
 import pytest
 import whirlpool
 
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -33,7 +33,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
@@ -42,14 +42,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
 async def update_ac_state(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     entity_id: str,
     mock_aircon_api_instances: MagicMock,
     mock_instance_idx: int,
@@ -64,7 +64,7 @@ async def update_ac_state(
 
 
 async def test_no_appliances(
-    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+    hass: spencerAssistant, mock_appliances_manager_api: MagicMock
 ):
     """Test the setup of the climate entities when there are no appliances available."""
     mock_appliances_manager_api.return_value.aircons = []
@@ -72,7 +72,7 @@ async def test_no_appliances(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMock):
+async def test_static_attributes(hass: spencerAssistant, mock_aircon1_api: MagicMock):
     """Test static climate attributes."""
     await init_integration(hass)
 
@@ -115,7 +115,7 @@ async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMoc
 
 
 async def test_dynamic_attributes(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     mock_aircon_api_instances: MagicMock,
     mock_aircon1_api: MagicMock,
     mock_aircon2_api: MagicMock,
@@ -233,7 +233,7 @@ async def test_dynamic_attributes(
 
 
 async def test_service_calls(
-    hass: HomeAssistant, mock_aircon1_api: MagicMock, mock_aircon2_api: MagicMock
+    hass: spencerAssistant, mock_aircon1_api: MagicMock, mock_aircon2_api: MagicMock
 ):
     """Test controlling the entity through service calls."""
     await init_integration(hass)

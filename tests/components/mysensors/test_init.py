@@ -7,20 +7,20 @@ from aiohttp import ClientWebSocketResponse
 from mysensors import BaseSyncGateway
 from mysensors.sensor import Sensor
 
-from homeassistant.components.mysensors import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.mysensors import DOMAIN
+from spencerassistant.core import spencerAssistant
+from spencerassistant.helpers import device_registry as dr, entity_registry as er
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_remove_config_entry_device(
-    hass: HomeAssistant,
+    hass: spencerAssistant,
     gps_sensor: Sensor,
     integration: MockConfigEntry,
     gateway: BaseSyncGateway,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: Callable[[spencerAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test that a device can be removed ok."""
     entity_id = "sensor.gps_sensor_1_1"

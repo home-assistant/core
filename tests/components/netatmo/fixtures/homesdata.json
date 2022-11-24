@@ -1,9 +1,9 @@
 {
   "body": {
-    "homes": [
+    "spencers": [
       {
         "id": "91763b24c43d3e344f424e8b",
-        "name": "MYHOME",
+        "name": "MYspencer",
         "altitude": 112,
         "coordinates": [52.516263, 13.377726],
         "country": "DE",

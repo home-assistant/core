@@ -1,6 +1,6 @@
 """Test the Advantage Air Initialization."""
 
-from homeassistant.config_entries import ConfigEntryState
+from spencerassistant.config_entries import ConfigEntryState
 
 from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, add_mock_config
 

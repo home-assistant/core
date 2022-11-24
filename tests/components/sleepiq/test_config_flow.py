@@ -4,15 +4,15 @@ from unittest.mock import patch
 from asyncsleepiq import SleepIQLoginException, SleepIQTimeoutException
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.sleepiq.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from spencerassistant import config_entries, data_entry_flow, setup
+from spencerassistant.components.sleepiq.const import DOMAIN
+from spencerassistant.const import CONF_PASSWORD, CONF_USERNAME
+from spencerassistant.core import spencerAssistant
 
 from .conftest import SLEEPIQ_CONFIG, setup_platform
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_import(hass: spencerAssistant) -> None:
     """Test that we can import a config entry."""
     with patch("asyncsleepiq.AsyncSleepIQ.login"):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: SLEEPIQ_CONFIG})
@@ -27,7 +27,7 @@ async def test_import(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "side_effect", [SleepIQLoginException, SleepIQTimeoutException]
 )
-async def test_import_failure(hass: HomeAssistant, side_effect) -> None:
+async def test_import_failure(hass: spencerAssistant, side_effect) -> None:
     """Test that we won't import a config entry on login failure."""
     with patch(
         "asyncsleepiq.AsyncSleepIQ.login",
@@ -39,7 +39,7 @@ async def test_import_failure(hass: HomeAssistant, side_effect) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_show_set_form(hass: HomeAssistant) -> None:
+async def test_show_set_form(hass: spencerAssistant) -> None:
     """Test that the setup form is served."""
     with patch("asyncsleepiq.AsyncSleepIQ.login"):
         result = await hass.config_entries.flow.async_init(
@@ -57,7 +57,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         (SleepIQTimeoutException, "cannot_connect"),
     ],
 )
-async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
+async def test_login_failure(hass: spencerAssistant, side_effect, error) -> None:
     """Test that we show user form with appropriate error on login failure."""
     with patch(
         "asyncsleepiq.AsyncSleepIQ.login",
@@ -72,7 +72,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
         assert result["errors"] == {"base": error}
 
 
-async def test_success(hass: HomeAssistant) -> None:
+async def test_success(hass: spencerAssistant) -> None:
     """Test successful flow provides entry creation data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -81,7 +81,7 @@ async def test_success(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True), patch(
-        "homeassistant.components.sleepiq.async_setup_entry",
+        "spencerassistant.components.sleepiq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
 
@@ -102,7 +102,7 @@ async def test_reauth_password(hass):
     # set up initially
     entry = await setup_platform(hass)
     with patch(
-        "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
+        "spencerassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
         side_effect=SleepIQLoginException,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -116,10 +116,10 @@ async def test_reauth_password(hass):
         )
 
     with patch(
-        "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
+        "spencerassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.sleepiq.async_setup_entry",
+        "spencerassistant.components.sleepiq.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(

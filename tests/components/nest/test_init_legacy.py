@@ -49,11 +49,11 @@ async def test_thermostat(hass, setup_base_platform):
     nest = MagicMock()
     type(nest).structures = PropertyMock(return_value=[structure])
 
-    with patch("homeassistant.components.nest.legacy.Nest", return_value=nest), patch(
-        "homeassistant.components.nest.legacy.sensor._VALID_SENSOR_TYPES",
+    with patch("spencerassistant.components.nest.legacy.Nest", return_value=nest), patch(
+        "spencerassistant.components.nest.legacy.sensor._VALID_SENSOR_TYPES",
         ["humidity", "temperature"],
     ), patch(
-        "homeassistant.components.nest.legacy.binary_sensor._VALID_BINARY_SENSOR_TYPES",
+        "spencerassistant.components.nest.legacy.binary_sensor._VALID_BINARY_SENSOR_TYPES",
         {"fan": None},
     ):
         await setup_base_platform()

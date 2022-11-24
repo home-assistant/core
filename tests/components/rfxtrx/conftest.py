@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import rfxtrx
-from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.util.dt import utcnow
+from spencerassistant.components import rfxtrx
+from spencerassistant.components.rfxtrx import DOMAIN
+from spencerassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -80,7 +80,7 @@ async def rfxtrx_automatic_fixture(hass, rfxtrx):
 async def timestep(hass):
     """Step system time forward."""
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+    with patch("spencerassistant.core.dt_util.utcnow") as mock_utcnow:
         mock_utcnow.return_value = utcnow()
 
         async def delay(seconds):

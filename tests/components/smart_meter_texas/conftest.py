@@ -13,13 +13,13 @@ from smart_meter_texas.const import (
     OD_READ_ENDPOINT,
 )
 
-from homeassistant.components.homeassistant import (
+from spencerassistant.components.spencerassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.setup import async_setup_component
+from spencerassistant.components.smart_meter_texas.const import DOMAIN
+from spencerassistant.const import ATTR_ENTITY_ID
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 

@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.helpers import device_registry as dr
+from spencerassistant.helpers import device_registry as dr
 
 from .const import (
     DATA_CALL_GET_CALLS_LOG,
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"):
+    with patch("spencerassistant.components.freebox.router.Path"):
         yield
 
 
@@ -49,7 +49,7 @@ def mock_device_registry_devices(hass):
 @pytest.fixture(name="router")
 def mock_router(mock_device_registry_devices):
     """Mock a successful connection."""
-    with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
+    with patch("spencerassistant.components.freebox.router.Freepybox") as service_mock:
         instance = service_mock.return_value
         instance.open = AsyncMock()
         instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)

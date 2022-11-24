@@ -1,9 +1,9 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
 
-from homeassistant.components import automation, hue
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.hue.v1 import device_trigger
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import automation, hue
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.hue.v1 import device_trigger
+from spencerassistant.setup import async_setup_component
 
 from .conftest import setup_platform
 from .test_sensor_v1 import HUE_DIMMER_REMOTE_1, HUE_TAP_REMOTE_1

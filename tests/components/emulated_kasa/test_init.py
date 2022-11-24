@@ -2,21 +2,21 @@
 import math
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant.components import emulated_kasa
-from homeassistant.components.emulated_kasa.const import (
+from spencerassistant.components import emulated_kasa
+from spencerassistant.components.emulated_kasa.const import (
     CONF_POWER,
     CONF_POWER_ENTITY,
     DOMAIN,
 )
-from homeassistant.components.fan import (
+from spencerassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from spencerassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from spencerassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
@@ -24,7 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"

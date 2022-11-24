@@ -1,7 +1,7 @@
 """Tests for the Govee BLE integration."""
 
 
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from spencerassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_GOVEE_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",

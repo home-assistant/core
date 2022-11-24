@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.aemet.const import ATTRIBUTION
-from homeassistant.components.weather import (
+from spencerassistant.components.aemet.const import ATTRIBUTION
+from spencerassistant.components.weather import (
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SNOWY,
     ATTR_FORECAST,
@@ -21,8 +21,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import ATTR_ATTRIBUTION
+import spencerassistant.util.dt as dt_util
 
 from .util import async_init_integration
 
@@ -32,8 +32,8 @@ async def test_aemet_weather(hass):
 
     hass.config.set_time_zone("UTC")
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
+    with patch("spencerassistant.util.dt.now", return_value=now), patch(
+        "spencerassistant.util.dt.utcnow", return_value=now
     ):
         await async_init_integration(hass)
 

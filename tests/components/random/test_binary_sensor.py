@@ -1,7 +1,7 @@
 """The test for the Random binary sensor platform."""
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 
 async def test_random_binary_sensor_on(hass):
@@ -9,7 +9,7 @@ async def test_random_binary_sensor_on(hass):
     config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
     with patch(
-        "homeassistant.components.random.binary_sensor.getrandbits",
+        "spencerassistant.components.random.binary_sensor.getrandbits",
         return_value=1,
     ):
         assert await async_setup_component(
@@ -29,7 +29,7 @@ async def test_random_binary_sensor_off(hass):
     config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
     with patch(
-        "homeassistant.components.random.binary_sensor.getrandbits",
+        "spencerassistant.components.random.binary_sensor.getrandbits",
         return_value=False,
     ):
         assert await async_setup_component(

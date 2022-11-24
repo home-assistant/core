@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import media_source
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.setup import async_setup_component
+from spencerassistant.components import media_source
+from spencerassistant.components.media_player.errors import BrowseError
+from spencerassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
@@ -23,7 +23,7 @@ async def mock_get_tts_audio(hass):
     )
 
     with patch(
-        "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
+        "spencerassistant.components.demo.tts.DemoProvider.get_tts_audio",
         return_value=("mp3", b""),
     ) as mock_get_tts:
         yield mock_get_tts

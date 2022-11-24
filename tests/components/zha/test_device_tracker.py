@@ -7,12 +7,12 @@ import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.zha.core.registries import (
+from spencerassistant.components.device_tracker import SourceType
+from spencerassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
-import homeassistant.util.dt as dt_util
+from spencerassistant.const import STATE_spencer, STATE_NOT_spencer, STATE_UNAVAILABLE, Platform
+import spencerassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
@@ -29,7 +29,7 @@ from tests.common import async_fire_time_changed
 def device_tracker_platforms_only():
     """Only setup the device_tracker platforms and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.DEVICE_TRACKER,
             Platform.BUTTON,
@@ -70,7 +70,7 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     entity_id = await find_entity_id(Platform.DEVICE_TRACKER, zha_device, hass)
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+    assert hass.states.get(entity_id).state == STATE_NOT_spencer
     await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the device tracker was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -83,8 +83,8 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
 
-    # test that the state has changed from unavailable to not home
-    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+    # test that the state has changed from unavailable to not spencer
+    assert hass.states.get(entity_id).state == STATE_NOT_spencer
 
     # turn state flip
     await send_attributes_report(
@@ -96,7 +96,7 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_HOME
+    assert hass.states.get(entity_id).state == STATE_spencer
 
     entity = hass.data[Platform.DEVICE_TRACKER].get_entity(entity_id)
 
@@ -106,4 +106,4 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
 
     # test adding device tracker to the network and HA
     await async_test_rejoin(hass, zigpy_device_dt, [cluster], (2,))
-    assert hass.states.get(entity_id).state == STATE_HOME
+    assert hass.states.get(entity_id).state == STATE_spencer

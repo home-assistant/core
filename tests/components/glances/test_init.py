@@ -3,16 +3,16 @@ from unittest.mock import MagicMock
 
 from glances_api.exceptions import GlancesApiConnectionError
 
-from homeassistant.components.glances.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from spencerassistant.components.glances.const import DOMAIN
+from spencerassistant.config_entries import ConfigEntryState
+from spencerassistant.core import spencerAssistant
 
 from . import MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
 
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
+async def test_successful_config_entry(hass: spencerAssistant) -> None:
     """Test that Glances is configured successfully."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
@@ -23,7 +23,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_conn_error(hass: spencerAssistant, mock_api: MagicMock) -> None:
     """Test Glances failed due to connection error."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
@@ -34,7 +34,7 @@ async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: spencerAssistant) -> None:
     """Test removing Glances."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)

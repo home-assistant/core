@@ -8,16 +8,16 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 
-from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
-from homeassistant.const import (
+from spencerassistant.components.rflink import CONF_RECONNECT_INTERVAL
+from spencerassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, State, callback
-import homeassistant.util.dt as dt_util
+from spencerassistant.core import CoreState, State, callback
+import spencerassistant.util.dt as dt_util
 
 from .test_init import mock_rflink
 

@@ -2,14 +2,14 @@
 import pytest
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_tracker import DOMAIN, device_trigger
-import homeassistant.components.zone as zone
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
-from homeassistant.setup import async_setup_component
+import spencerassistant.components.automation as automation
+from spencerassistant.components.device_automation import DeviceAutomationType
+from spencerassistant.components.device_tracker import DOMAIN, device_trigger
+import spencerassistant.components.zone as zone
+from spencerassistant.helpers import config_validation as cv, device_registry
+from spencerassistant.helpers.entity import EntityCategory
+from spencerassistant.helpers.entity_registry import RegistryEntryHider
+from spencerassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -24,8 +24,8 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 AWAY_LATITUDE = 32.881011
 AWAY_LONGITUDE = -117.234758
 
-HOME_LATITUDE = 32.880837
-HOME_LONGITUDE = -117.237561
+spencer_LATITUDE = 32.880837
+spencer_LONGITUDE = -117.237561
 
 
 @pytest.fixture
@@ -56,8 +56,8 @@ def setup_zone(hass):
             {
                 "zone": {
                     "name": "test",
-                    "latitude": HOME_LATITUDE,
-                    "longitude": HOME_LONGITUDE,
+                    "latitude": spencer_LATITUDE,
+                    "longitude": spencer_LONGITUDE,
                     "radius": 250,
                 }
             },
@@ -200,7 +200,7 @@ async def test_if_fires_on_zone_change(hass, calls):
     hass.states.async_set(
         "device_tracker.entity",
         "state",
-        {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE},
+        {"latitude": spencer_LATITUDE, "longitude": spencer_LONGITUDE},
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -249,6 +249,6 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             "name": "zone",
             "required": True,
             "type": "select",
-            "options": [("zone.test", "test"), ("zone.home", "test home")],
+            "options": [("zone.test", "test"), ("zone.spencer", "test spencer")],
         }
     ]

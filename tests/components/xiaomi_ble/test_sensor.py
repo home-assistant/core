@@ -1,9 +1,9 @@
 """Test the Xiaomi config flow."""
 
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.components.xiaomi_ble.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from spencerassistant.components.sensor import ATTR_STATE_CLASS
+from spencerassistant.components.xiaomi_ble.const import DOMAIN
+from spencerassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
 from . import HHCCJCY10_SERVICE_INFO, MMC_T201_1_SERVICE_INFO, make_advertisement
 

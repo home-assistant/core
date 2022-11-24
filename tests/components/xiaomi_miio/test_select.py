@@ -9,28 +9,28 @@ from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
 )
 import pytest
 
-from homeassistant.components.select import (
+from spencerassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
-from homeassistant.components.xiaomi_miio.const import (
+from spencerassistant.components.xiaomi_miio import UPDATE_INTERVAL
+from spencerassistant.components.xiaomi_miio.const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODEL_AIRFRESH_T2017,
 )
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from . import TEST_MAC
 
@@ -38,7 +38,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-async def setup_test(hass: HomeAssistant):
+async def setup_test(hass: spencerAssistant):
     """Initialize test xiaomi_miio for select entity."""
 
     mock_airfresh = MagicMock()
@@ -46,16 +46,16 @@ async def setup_test(hass: HomeAssistant):
     mock_airfresh.status().ptc_level = PtcLevel.Low
 
     with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
+        "spencerassistant.components.xiaomi_miio.get_platforms",
         return_value=[
             Platform.SELECT,
         ],
-    ), patch("homeassistant.components.xiaomi_miio.AirFreshT2017") as mock_airfresh_cls:
+    ), patch("spencerassistant.components.xiaomi_miio.AirFreshT2017") as mock_airfresh_cls:
         mock_airfresh_cls.return_value = mock_airfresh
         yield mock_airfresh
 
 
-async def test_select_params(hass: HomeAssistant) -> None:
+async def test_select_params(hass: spencerAssistant) -> None:
     """Test the initial parameters."""
 
     entity_name = "test_airfresh_select"
@@ -67,7 +67,7 @@ async def test_select_params(hass: HomeAssistant) -> None:
     assert select_entity.attributes.get(ATTR_OPTIONS) == ["forward", "left", "right"]
 
 
-async def test_select_bad_attr(hass: HomeAssistant) -> None:
+async def test_select_bad_attr(hass: spencerAssistant) -> None:
     """Test selecting a different option with invalid option value."""
 
     entity_name = "test_airfresh_select"
@@ -91,7 +91,7 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
     assert state.state == "forward"
 
 
-async def test_select_option(hass: HomeAssistant) -> None:
+async def test_select_option(hass: spencerAssistant) -> None:
     """Test selecting of a option."""
 
     entity_name = "test_airfresh_select"
@@ -114,7 +114,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
     assert state.state == "left"
 
 
-async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> None:
+async def test_select_coordinator_update(hass: spencerAssistant, setup_test) -> None:
     """Test coordinator update of a option."""
 
     entity_name = "test_airfresh_select"

@@ -5,7 +5,7 @@ from unittest.mock import create_autospec
 import pytest
 import smarttub
 
-from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
+from spencerassistant.components.binary_sensor import STATE_OFF, STATE_ON
 
 
 async def test_binary_sensors(spa, setup_entry, hass):

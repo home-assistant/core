@@ -1,12 +1,12 @@
 """Tests for Search integration."""
-from homeassistant.components import search
-from homeassistant.helpers import (
+from spencerassistant.components import search
+from spencerassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity,
     entity_registry as er,
 )
-from homeassistant.setup import async_setup_component
+from spencerassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401

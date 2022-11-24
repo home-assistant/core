@@ -4,14 +4,14 @@ from unittest.mock import patch
 from aioazuredevops.core import DevOpsProject
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.azure_devops.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.azure_devops.const import (
     CONF_ORG,
     CONF_PAT,
     CONF_PROJECT,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
+from spencerassistant.core import spencerAssistant
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +21,7 @@ FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "ab
 UNIQUE_ID = "random_project"
 
 
-async def test_show_user_form(hass: HomeAssistant) -> None:
+async def test_show_user_form(hass: spencerAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -31,10 +31,10 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_authorization_error(hass: HomeAssistant) -> None:
+async def test_authorization_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps authorization error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -55,10 +55,10 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
+async def test_reauth_authorization_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps authorization error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -81,10 +81,10 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -105,10 +105,10 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_connection_error(hass: HomeAssistant) -> None:
+async def test_reauth_connection_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -131,15 +131,15 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_project_error(hass: HomeAssistant) -> None:
+async def test_project_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -160,15 +160,15 @@ async def test_project_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "project_error"}
 
 
-async def test_reauth_project_error(hass: HomeAssistant) -> None:
+async def test_reauth_project_error(hass: spencerAssistant) -> None:
     """Test we show user form on Azure DevOps project error."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -191,10 +191,10 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "project_error"}
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: spencerAssistant) -> None:
     """Test reauth works."""
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
         return_value=False,
     ):
         mock_config = MockConfigEntry(
@@ -213,12 +213,12 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=DevOpsProject(
             "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
         ),
@@ -233,18 +233,18 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         assert result2["reason"] == "reauth_successful"
 
 
-async def test_full_flow_implementation(hass: HomeAssistant) -> None:
+async def test_full_flow_implementation(hass: spencerAssistant) -> None:
     """Test registering an integration and finishing flow works."""
     with patch(
-        "homeassistant.components.azure_devops.async_setup_entry",
+        "spencerassistant.components.azure_devops.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        "spencerassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=DevOpsProject(
             "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
         ),

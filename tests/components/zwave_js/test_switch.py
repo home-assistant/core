@@ -4,9 +4,9 @@ from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from spencerassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from spencerassistant.components.zwave_js.helpers import ZwaveValueMatcher
+from spencerassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 from .common import SWITCH_ENTITY, replace_value_of_zwave_value
 

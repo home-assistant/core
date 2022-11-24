@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
-from homeassistant.components.smarttub.const import SCAN_INTERVAL
-from homeassistant.util import dt
+from spencerassistant.components.smarttub.const import SCAN_INTERVAL
+from spencerassistant.util import dt
 
 from tests.common import async_fire_time_changed
 

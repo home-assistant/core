@@ -9,22 +9,22 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.const import (
+from spencerassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from spencerassistant.core import Context, spencerAssistantError
+from spencerassistant.helpers import device_registry as dr, entity, entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
     MockPlatform,
-    get_test_home_assistant,
+    get_test_spencer_assistant,
     mock_registry,
 )
 
@@ -88,13 +88,13 @@ async def test_async_update_support(hass):
 
 
 class TestHelpersEntity:
-    """Test homeassistant.helpers.entity module."""
+    """Test spencerassistant.helpers.entity module."""
 
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.entity = entity.Entity()
         self.entity.entity_id = "test.overwrite_hidden_true"
-        self.hass = self.entity.hass = get_test_home_assistant()
+        self.hass = self.entity.hass = get_test_spencer_assistant()
         self.entity.schedule_update_ha_state()
         self.hass.block_till_done()
 
@@ -115,7 +115,7 @@ class TestHelpersEntity:
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) is None
         with patch(
-            "homeassistant.helpers.entity.Entity.device_class", new="test_class"
+            "spencerassistant.helpers.entity.Entity.device_class", new="test_class"
         ):
             self.entity.schedule_update_ha_state()
             self.hass.block_till_done()
@@ -684,14 +684,14 @@ async def test_warn_slow_write_state(hass, caplog):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.platform = MagicMock(platform_name="hue")
 
-    with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
+    with patch("spencerassistant.helpers.entity.timer", side_effect=[0, 10]):
         mock_entity.async_write_ha_state()
 
     assert (
         "Updating state for comp_test.test_entity "
-        "(<class 'homeassistant.helpers.entity.Entity'>) "
+        "(<class 'spencerassistant.helpers.entity.Entity'>) "
         "took 10.000 seconds. Please create a bug report at "
-        "https://github.com/home-assistant/core/issues?"
+        "https://github.com/spencer-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
@@ -709,7 +709,7 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.platform = MagicMock(platform_name="hue")
 
-    with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
+    with patch("spencerassistant.helpers.entity.timer", side_effect=[0, 10]):
         mock_entity.async_write_ha_state()
 
     assert (
@@ -799,7 +799,7 @@ async def test_get_supported_features_prioritize_state(hass):
 
 async def test_get_supported_features_raises_on_unknown(hass):
     """Test get_supported_features raises on unknown entity_id."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         entity.get_supported_features(hass, "hello.world")
 
 
@@ -822,13 +822,13 @@ async def test_attribution_attribute(hass):
     mock_entity = entity.Entity()
     mock_entity.hass = hass
     mock_entity.entity_id = "hello.world"
-    mock_entity._attr_attribution = "Home Assistant"
+    mock_entity._attr_attribution = "spencer Assistant"
 
     mock_entity.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
-    assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == "spencer Assistant"
 
 
 async def test_entity_category_property(hass):

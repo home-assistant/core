@@ -6,11 +6,11 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.const import (
+from spencerassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from spencerassistant.const import (
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_spencer,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
@@ -26,7 +26,7 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 def alarm_control_panel_platform_only():
     """Only setup the alarm_control_panel and required base platforms to speed up tests."""
     with patch(
-        "homeassistant.components.zha.PLATFORMS",
+        "spencerassistant.components.zha.PLATFORMS",
         (
             Platform.ALARM_CONTROL_PANEL,
             Platform.DEVICE_TRACKER,
@@ -136,16 +136,16 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
 
-    # arm_home from HA
+    # arm_spencer from HA
     cluster.client_command.reset_mock()
     await hass.services.async_call(
         ALARM_DOMAIN,
-        "alarm_arm_home",
+        "alarm_arm_spencer",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_spencer
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
     assert cluster.client_command.call_args == call(
@@ -189,12 +189,12 @@ async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_devic
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
 
-    # arm day home only from panel
+    # arm day spencer only from panel
     cluster.listener_event(
-        "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Day_Home_Only, "", 0]
+        "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Day_spencer_Only, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_spencer
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)

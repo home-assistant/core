@@ -9,10 +9,10 @@ import httpx
 import pytest
 import respx
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.camera import async_get_image
-from homeassistant.components.generic.config_flow import slug
-from homeassistant.components.generic.const import (
+from spencerassistant import config_entries, data_entry_flow
+from spencerassistant.components.camera import async_get_image
+from spencerassistant.components.generic.config_flow import slug
+from spencerassistant.components.generic.const import (
     CONF_CONFIRMED_OK,
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
@@ -21,12 +21,12 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
-from homeassistant.components.stream import (
+from spencerassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
-from homeassistant.components.stream.worker import StreamWorkerError
-from homeassistant.const import (
+from spencerassistant.components.stream.worker import StreamWorkerError
+from spencerassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -34,7 +34,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.helpers import entity_registry
+from spencerassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +65,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
 
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+        "spencerassistant.components.generic.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -117,7 +117,7 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.generic.async_setup_entry", return_value=True):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -172,7 +172,7 @@ async def test_form_still_preview_cam_off(
 ):
     """Test camera errors are triggered during preview."""
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera.is_on",
+        "spencerassistant.components.generic.camera.GenericCamera.is_on",
         new_callable=PropertyMock(return_value=False),
     ), mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
@@ -193,7 +193,7 @@ async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
     """Test we complete ok if the user wants a gif."""
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.generic.async_setup_entry", return_value=True):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -216,7 +216,7 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.generic.async_setup_entry", return_value=True):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -249,7 +249,7 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
         respx.get("http://127.0.0.1/testurl/1").respond(stream=image.read())
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.generic.async_setup_entry", return_value=True):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -309,7 +309,7 @@ async def test_still_template(
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with patch("spencerassistant.components.generic.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -326,7 +326,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, user_flow, mock_create_stream):
     data[CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
     with mock_create_stream as mock_setup, patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+        "spencerassistant.components.generic.async_setup_entry", return_value=True
     ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
@@ -389,7 +389,7 @@ async def test_form_only_stream(hass, fakeimgbytes_jpg, user_flow, mock_create_s
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
+        "spencerassistant.components.generic.camera.GenericCamera.async_camera_image",
         return_value=fakeimgbytes_jpg,
     ):
         image_obj = await async_get_image(hass, "camera.127_0_0_1")
@@ -478,7 +478,7 @@ async def test_form_stream_invalidimage3(hass, user_flow, mock_create_stream):
 async def test_form_stream_timeout(hass, fakeimg_png, user_flow):
     """Test we handle invalid auth."""
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream"
+        "spencerassistant.components.generic.config_flow.create_stream"
     ) as create_stream:
         create_stream.return_value.start = AsyncMock()
         create_stream.return_value.add_provider.return_value.part_recv = AsyncMock()
@@ -497,7 +497,7 @@ async def test_form_stream_timeout(hass, fakeimg_png, user_flow):
 async def test_form_stream_worker_error(hass, fakeimg_png, user_flow):
     """Test we handle a StreamWorkerError and pass the message through."""
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         side_effect=StreamWorkerError("Some message"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -513,7 +513,7 @@ async def test_form_stream_permission_error(hass, fakeimgbytes_png, user_flow):
     """Test we handle permission error."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         side_effect=PermissionError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -528,7 +528,7 @@ async def test_form_stream_permission_error(hass, fakeimgbytes_png, user_flow):
 async def test_form_no_route_to_host(hass, fakeimg_png, user_flow):
     """Test we handle no route to host."""
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         side_effect=OSError(errno.EHOSTUNREACH, "No route to host"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -543,7 +543,7 @@ async def test_form_no_route_to_host(hass, fakeimg_png, user_flow):
 async def test_form_stream_io_error(hass, fakeimg_png, user_flow):
     """Test we handle no io error when setting up stream."""
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         side_effect=OSError(errno.EIO, "Input/output error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -558,7 +558,7 @@ async def test_form_stream_io_error(hass, fakeimg_png, user_flow):
 async def test_form_oserror(hass, fakeimg_png, user_flow):
     """Test we handle OS error when setting up stream."""
     with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
+        "spencerassistant.components.generic.config_flow.create_stream",
         side_effect=OSError("Some other OSError"),
     ), pytest.raises(OSError):
         await hass.config_entries.flow.async_configure(
@@ -815,7 +815,7 @@ async def test_use_wallclock_as_timestamps_option(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+        "spencerassistant.components.generic.async_setup_entry", return_value=True
     ), mock_create_stream:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -829,7 +829,7 @@ async def test_use_wallclock_as_timestamps_option(
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["step_id"] == "init"
     with patch(
-        "homeassistant.components.generic.async_setup_entry", return_value=True
+        "spencerassistant.components.generic.async_setup_entry", return_value=True
     ), mock_create_stream:
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],

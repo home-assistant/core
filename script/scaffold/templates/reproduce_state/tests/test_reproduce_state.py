@@ -1,14 +1,14 @@
 """Test reproduce state for NEW_NAME."""
 import pytest
 
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.state import async_reproduce_state
+from spencerassistant.core import spencerAssistant, State
+from spencerassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
 async def test_reproducing_states(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: spencerAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reproducing NEW_NAME states."""
     hass.states.async_set("NEW_DOMAIN.entity_off", "off", {})

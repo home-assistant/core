@@ -3,15 +3,15 @@ from json import loads
 
 import pytest
 
-from homeassistant.components.advantage_air.climate import (
+from spencerassistant.components.advantage_air.climate import (
     HASS_FAN_MODES,
     HASS_HVAC_MODES,
 )
-from homeassistant.components.advantage_air.const import (
+from spencerassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
 )
-from homeassistant.components.climate import (
+from spencerassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -21,9 +21,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from spencerassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from spencerassistant.exceptions import spencerAssistantError
+from spencerassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_RESPONSE,
@@ -187,7 +187,7 @@ async def test_climate_async_failed_update(hass, aioclient_mock):
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(spencerAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,

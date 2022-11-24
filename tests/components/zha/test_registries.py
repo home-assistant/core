@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-import homeassistant.components.zha.core.registries as registries
+import spencerassistant.components.zha.core.registries as registries
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
