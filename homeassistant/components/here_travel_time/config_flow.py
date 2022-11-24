@@ -28,6 +28,7 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     EntitySelector,
+    EntitySelectorConfig,
     LocationSelector,
     TimeSelector,
 )
@@ -180,7 +181,13 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
-        schema = vol.Schema({vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector()})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector(
+                    EntitySelectorConfig()
+                )
+            }
+        )
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
 
     async def async_step_destination_coordinates(
@@ -230,7 +237,11 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options=default_options(self.hass),
             )
         schema = vol.Schema(
-            {vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector()}
+            {
+                vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector(
+                    EntitySelectorConfig()
+                )
+            }
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
