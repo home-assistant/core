@@ -96,9 +96,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-_R = TypeVar("_R")
 _P = ParamSpec("_P")
-_ContextT = TypeVar("_ContextT")
+_R = TypeVar("_R")
 _T = TypeVar("_T")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
@@ -2086,12 +2085,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
         def hassfunction(
-            func: Callable[Concatenate[HomeAssistant, _P], _R]
-        ) -> Callable[Concatenate[_ContextT, _P], _R]:
+            func: Callable[Concatenate[HomeAssistant, _P], _R],
+        ) -> Callable[Concatenate[jinja2.runtime.Context, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(_: _ContextT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+            def wrapper(
+                context: jinja2.runtime.Context, *args: _P.args, **kwargs: _P.kwargs
+            ) -> _R:
                 return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
