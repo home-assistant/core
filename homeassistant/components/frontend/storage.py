@@ -16,6 +16,7 @@ DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
 
 
+@callback
 def _initialize_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
     if DATA_STORAGE in hass.data:
