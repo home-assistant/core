@@ -1539,6 +1539,15 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
     assert bulb.set_color.calls[0][0][0] == [32000, 0, 25700, 2700]
     bulb.set_color.reset_mock()
 
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, ATTR_COLOR_TEMP: 400},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 2500]
+    bulb.set_color.reset_mock()
+
 
 async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
     """Test setting infrared with a color bulb."""

@@ -7,8 +7,19 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "description": "Aktualizova\u0165 heslo pre {username}"
+            },
             "service": {
                 "title": "Vyberte slu\u017eby"
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo"
+                }
             }
         }
     },

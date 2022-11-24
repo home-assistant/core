@@ -10,11 +10,9 @@
             "invalid_setup": "F\u00fcge deinen Adam anstelle deiner Anna hinzu. Weitere Informationen findest du in der Dokumentation zur Integration von Home Assistant Plugwise.",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Verbindungstyp",
                     "host": "IP-Adresse",
                     "password": "Smile ID",
                     "port": "Port",
@@ -22,26 +20,6 @@
                 },
                 "description": "Bitte eingeben",
                 "title": "Stelle eine Verbindung zu Smile her"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP-Adresse",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "Smile-Benutzername"
-                },
-                "description": "Bitte eingeben",
-                "title": "Stelle eine Verbindung zu Smile her"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Scanintervall (Sekunden)"
-                },
-                "description": "Plugwise-Optionen einstellen"
             }
         }
     }

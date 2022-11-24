@@ -10,6 +10,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -36,6 +37,7 @@ async def test_light_without_binary_sensor(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_BRIGHTNESS] == round(

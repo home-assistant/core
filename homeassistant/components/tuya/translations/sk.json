@@ -6,7 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "country_code": "Krajina"
+                    "country_code": "Krajina",
+                    "password": "Heslo"
                 }
             }
         }

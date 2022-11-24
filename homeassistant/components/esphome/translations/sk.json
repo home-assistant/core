@@ -37,10 +37,16 @@
             },
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port"
                 },
                 "description": "Pros\u00edm, zadajte nastavenia pripojenia v\u00e1\u0161ho uzla [ESPHome](https://esphomelib.com/)."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "title": "Aktualizujte {name} pomocou ESPHome 2022.11.0 alebo nov\u0161ieho"
         }
     }
 }

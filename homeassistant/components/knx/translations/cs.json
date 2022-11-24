@@ -14,15 +14,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "tunnel": {
-                "data": {
-                    "host": "Hostitel",
-                    "port": "Port"
-                }
-            }
-        }
     }
 }

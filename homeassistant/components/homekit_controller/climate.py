@@ -148,9 +148,9 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
 
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             features |= ClimateEntityFeature.FAN_MODE
@@ -368,7 +368,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features
 
@@ -602,7 +602,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = super().supported_features
 

@@ -18,7 +18,6 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture

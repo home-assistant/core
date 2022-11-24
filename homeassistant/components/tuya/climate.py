@@ -134,7 +134,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     ) -> None:
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
-        self._attr_supported_features = 0
         self.entity_description = description
 
         super().__init__(device, device_manager)
