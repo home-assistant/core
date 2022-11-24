@@ -166,13 +166,7 @@ class HeatzyPiloteV2Thermostat(HeatzyThermostat):
         "fro": PRESET_AWAY,
         "stop": PRESET_NONE,
     }
-
-    HA_TO_HEATZY_STATE = {
-        PRESET_COMFORT: "cft",
-        PRESET_ECO: "eco",
-        PRESET_AWAY: "fro",
-        PRESET_NONE: "stop",
-    }
+    HA_TO_HEATZY_STATE = {preset: name for (name, preset) in HEATZY_TO_HA_STATE.items()}
 
     @property
     def preset_mode(self) -> str | None:
