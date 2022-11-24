@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -58,7 +59,7 @@ def _validate_config(data: Any) -> Any:
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor"),
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
     }
 )
@@ -67,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor"),
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
         vol.Required(CONF_METER_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(options=METER_TYPES),
