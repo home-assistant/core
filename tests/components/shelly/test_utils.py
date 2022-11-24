@@ -1,5 +1,6 @@
 """Tests for Shelly utils."""
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
@@ -136,16 +137,17 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch):
     )
 
 
-async def test_get_block_device_sleep_period():
+@pytest.mark.parametrize(
+    "settings, sleep_period",
+    [
+        ({}, 0),
+        ({"sleep_mode": {"period": 1000, "unit": "m"}}, 1000 * 60),
+        ({"sleep_mode": {"period": 5, "unit": "h"}}, 5 * 3600),
+    ],
+)
+async def test_get_block_device_sleep_period(settings, sleep_period):
     """Test get block device sleep period."""
-    settings = {}
-    assert get_block_device_sleep_period(settings) == 0
-
-    settings = {"sleep_mode": {"period": 1000, "unit": "m"}}
-    assert get_block_device_sleep_period(settings) == 1000 * 60
-
-    settings = {"sleep_mode": {"period": 5, "unit": "h"}}
-    assert get_block_device_sleep_period(settings) == 5 * 3600
+    assert get_block_device_sleep_period(settings) == sleep_period
 
 
 @freeze_time("2019-01-10 18:43:00+00:00")
@@ -203,10 +205,9 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch):
     }
 
 
-async def test_get_rpc_channel_name(mock_rpc_device, monkeypatch):
+async def test_get_rpc_channel_name(mock_rpc_device):
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "test switch_0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name switch_3"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch):

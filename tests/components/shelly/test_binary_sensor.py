@@ -67,7 +67,7 @@ async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_block_rest_binary_sensor_connectet_battery_devices(
+async def test_block_rest_binary_sensor_connected_battery_devices(
     hass, mock_block_device, monkeypatch
 ):
     """Test block REST binary sensor for connected battery devices."""
