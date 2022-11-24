@@ -1,4 +1,20 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "The operation took too long. Please try again later."
+                },
+                "step": {
+                    "confirm": {
+                        "description": "You are using a legacy subscription. Please update your subscription to continue using Home Assistant Cloud.",
+                        "title": "title inside"
+                    }
+                }
+            },
+            "title": "Legacy subscription deteceted"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa Enabled",

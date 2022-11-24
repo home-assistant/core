@@ -13,5 +13,21 @@
       "logged_in": "Logged In",
       "subscription_expiration": "Subscription Expiration"
     }
+  },
+  "issues": {
+    "legacy_subscription": {
+      "title": "Legacy subscription deteceted",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "title inside",
+            "description": "You are using a legacy subscription. Please update your subscription to continue using Home Assistant Cloud."
+          }
+        },
+        "abort": {
+          "operation_took_too_long": "The operation took too long. Please try again later."
+        }
+      }
+    }
   }
 }
