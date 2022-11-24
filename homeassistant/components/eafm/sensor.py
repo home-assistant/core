@@ -36,6 +36,15 @@ def get_measures(station_data):
     return station_data["measures"]
 
 
+def get_scales(station_data):
+    """Force measure key to always be a list."""
+    if "stageScale" not in station_data:
+        return []
+    if isinstance(station_data["stageScale"], dict):
+        return [station_data["stageScale"]]
+    return station_data["stageScale"]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -53,6 +62,7 @@ async def async_setup_entry(
             data = await get_station(session, station_key)
 
         measures = get_measures(data)
+        stagescale = get_scales(data)
         entities = []
 
         # Look to see if payload contains new measures
@@ -65,6 +75,23 @@ async def async_setup_entry(
                 continue
 
             entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
+
+            measurements.add(measure["@id"])
+        for measure in stagescale:
+            if measure["@id"] in measurements:
+                continue
+
+            if "typicalRangeHigh" not in measure:
+                # Don't create a sensor entity for a gauge that isn't available
+                continue
+
+            entities.append(
+                MeasurementFlood(
+                    hass.data[DOMAIN][station_key],
+                    measure["@id"],
+                )
+            )
+
             measurements.add(measure["@id"])
 
         async_add_entities(entities)
@@ -173,3 +200,74 @@ class Measurement(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the current sensor value."""
         return self.coordinator.data["measures"][self.key]["latestReading"]["value"]
+
+
+class MeasurementFlood(CoordinatorEntity, SensorEntity):
+    """A gauge at a flood monitoring station."""
+
+    _attr_attribution = (
+        "This uses Environment Agency flood and river level data "
+        "from the real-time data API"
+    )
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator, key):
+        """Initialise the gauge with a data instance and station."""
+        super().__init__(coordinator)
+        self.key = key
+
+    @property
+    def station_name(self):
+        """Return the station name for the measure."""
+        return self.coordinator.data["label"]
+
+    @property
+    def station_id(self):
+        """Return the station id for the measure."""
+        return self.coordinator.data["stationReference"]
+
+    @property
+    def qualifier(self):
+        """Return the qualifier for the station."""
+        return "Typical High"
+
+    @property
+    def parameter_name(self):
+        """Return the parameter name for the station."""
+        return "Water Level"
+
+    @property
+    def name(self):
+        """Return the name of the gauge."""
+        return f"{self.station_name} {self.parameter_name} {self.qualifier}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the gauge."""
+        return self.key
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, "measure-id", self.station_id)},
+            manufacturer="https://environment.data.gov.uk/",
+            model=self.parameter_name,
+            name=self.name,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return True
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return units for the sensor."""
+        return UNIT_MAPPING.get("http://qudt.org/1.1/vocab/unit#Meter", "mASD")
+
+    @property
+    def native_value(self):
+        """Return the current sensor value."""
+        return self.coordinator.data["stageScale"]["typicalRangeHigh"]
