@@ -104,12 +104,13 @@ class TestHtml5Notify:
 
         service.dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
 
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -134,12 +135,13 @@ class TestHtml5Notify:
             "Hello", target=["device", "non_existing"], data={"icon": "beer.png"}
         )
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
 
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -164,19 +166,21 @@ class TestHtml5Notify:
 
         service.send_message("Hello", target=["chrome", "firefox"])
 
-        assert len(mock_wp.mock_calls) == 6
+        assert len(mock_wp.mock_calls) == 16
 
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
-        assert mock_wp.mock_calls[3][1][0] == SUBSCRIPTION_2["subscription"]
+        assert mock_wp.mock_calls[8][1][0] == SUBSCRIPTION_2["subscription"]
 
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
-        assert mock_wp.mock_calls[5][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
+        assert mock_wp.mock_calls[10][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[11][0] == "().send().status_code.__ne__"
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["gcm_key"] is not None
-        assert mock_wp.mock_calls[4][2]["gcm_key"] is None
+        assert mock_wp.mock_calls[9][2]["gcm_key"] is None
 
     @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_key_include(self, mock_wp):
@@ -193,12 +197,13 @@ class TestHtml5Notify:
 
         service.send_message("Hello", target=["chrome"])
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["Authorization"] is not None
@@ -218,12 +223,13 @@ class TestHtml5Notify:
 
         service.send_message("Hello", target=["chrome"], priority="undefined")
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
@@ -243,12 +249,13 @@ class TestHtml5Notify:
 
         service.send_message("Hello")
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
@@ -268,12 +275,13 @@ class TestHtml5Notify:
 
         service.send_message("Hello", data={"mykey": "myvalue"})
 
-        assert len(mock_wp.mock_calls) == 3
+        assert len(mock_wp.mock_calls) == 8
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
 
         # Third mock_call checks the status_code of the response.
         assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+        assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
@@ -485,12 +493,13 @@ async def test_callback_view_with_jwt(hass, hass_client):
             blocking=True,
         )
 
-    assert len(mock_wp.mock_calls) == 3
+    assert len(mock_wp.mock_calls) == 8
 
     # WebPusher constructor
     assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1["subscription"]
     # Third mock_call checks the status_code of the response.
     assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+    assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
     # Call to send
     push_payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -521,12 +530,13 @@ async def test_send_fcm_without_targets(hass, hass_client):
             blocking=True,
         )
 
-    assert len(mock_wp.mock_calls) == 3
+    assert len(mock_wp.mock_calls) == 8
 
     # WebPusher constructor
     assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
     # Third mock_call checks the status_code of the response.
     assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+    assert mock_wp.mock_calls[3][0] == "().send().status_code.__ne__"
 
 
 async def test_send_fcm_expired(hass, hass_client):
