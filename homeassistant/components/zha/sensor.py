@@ -521,7 +521,7 @@ class Tier1SmartEnergySummation(
     """Tier 1 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier1_summ_delivered"
-    _attr_name: str = "Tier 1 Summation delivered"
+    _attr_name: str = "Tier 1 summation delivered"
 
 
 @MULTI_MATCH(
@@ -535,7 +535,7 @@ class Tier2SmartEnergySummation(
     """Tier 2 Smart Energy Metering summation sensor."""
 
     SENSOR_ATTR: int | str = "current_tier2_summ_delivered"
-    _attr_name: str = "Tier 2 Summation delivered"
+    _attr_name: str = "Tier 2 summation delivered"
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
