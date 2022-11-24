@@ -1,6 +1,7 @@
 spencer Assistant |Chat Status|
 =================================================================================
 
+
 Open source spencer automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
 
 Check out `spencer-assistant.io <https://spencer-assistant.io>`__ for `a
@@ -22,7 +23,7 @@ of a component, check the `spencer Assistant help section <https://spencer-assis
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://discord.gg/c5DvZ4e
-.. |screenshot-states| image:: https://raw.githubusercontent.com/spencer-assistant/core/master/docs/screenshots.png
+.. |screenshot-states| image:: https://i.imgur.com/EGRgjTF.png
    :target: https://spencer-assistant.io/demo/
 .. |screenshot-integrations| image:: https://raw.githubusercontent.com/spencer-assistant/core/dev/docs/screenshot-integrations.png
    :target: https://spencer-assistant.io/integrations/
