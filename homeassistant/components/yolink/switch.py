@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_COORDINATORS,
     ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
     ATTR_DEVICE_OUTLET,
     ATTR_DEVICE_SWITCH,
     DOMAIN,
@@ -34,6 +35,8 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     value: Callable[[Any], bool | None] = lambda _: None
     state_key: str = "state"
+    device_type: str | None = None
+    plug_index: int = 0
 
 
 DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
@@ -43,6 +46,7 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         name="State",
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
+        device_type=ATTR_DEVICE_OUTLET,
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
@@ -50,6 +54,7 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         icon="mdi:pipe",
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
+        device_type=ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(
         key="switch_state",
@@ -57,10 +62,61 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
         value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
+        device_type=ATTR_DEVICE_SWITCH,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_usb_ports",
+        name="UsbPorts",
+        device_class=SwitchDeviceClass.OUTLET,
+        value=lambda value: value[0] == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=0,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_1",
+        name="Plug1",
+        device_class=SwitchDeviceClass.OUTLET,
+        value=lambda value: value[1] == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=1,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_2",
+        name="Plug2",
+        device_class=SwitchDeviceClass.OUTLET,
+        value=lambda value: value[2] == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=2,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_3",
+        name="Plug3",
+        device_class=SwitchDeviceClass.OUTLET,
+        value=lambda value: value[3] == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=3,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="multi_outlet_plug_4",
+        name="Plug4",
+        device_class=SwitchDeviceClass.OUTLET,
+        value=lambda value: value[4] == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
+        device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=4,
     ),
 )
 
-DEVICE_TYPE = [ATTR_DEVICE_MANIPULATOR, ATTR_DEVICE_OUTLET, ATTR_DEVICE_SWITCH]
+DEVICE_TYPE = [
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
+]
 
 
 async def async_setup_entry(
@@ -118,8 +174,16 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
-        await self.call_device_api("setState", {"state": state})
-        self._attr_is_on = self.entity_description.value(state)
+        params: dict[str, str | int] = {"state": state}
+        if self.entity_description.device_type == ATTR_DEVICE_MULTI_OUTLET:
+            params["chs"] = 1 << self.entity_description.plug_index
+        await self.call_device_api("setState", params)
+        cur_state: str | list[str | None] = state
+        if self.entity_description.device_type == ATTR_DEVICE_MULTI_OUTLET:
+            state_arr: list[str | None] = [None] * 5
+            state_arr[self.entity_description.plug_index] = state
+            cur_state = state_arr
+        self._attr_is_on = self.entity_description.value(cur_state)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
