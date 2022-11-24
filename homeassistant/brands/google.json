@@ -5,6 +5,7 @@
     "google_assistant",
     "google_cloud",
     "google_domains",
+    "google_mail",
     "google_maps",
     "google_pubsub",
     "google_sheets",
