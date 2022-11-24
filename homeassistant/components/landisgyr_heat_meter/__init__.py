@@ -1,11 +1,8 @@
 """The Landis+Gyr Heat Meter integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
-import async_timeout
-import serial
 import ultraheat_api
 from ultraheat_api.response import HeatMeterResponse
 
@@ -13,9 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, POLLING_INTERVAL, ULTRAHEAT_TIMEOUT
+from .const import DOMAIN
+from .coordinator import UltraheatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
+    reader = ultraheat_api.FileReader(
+        "/workspaces/core/homeassistant/components/landisgyr_heat_meter/LUGCUH50_dummy.txt"
+    )
     api = ultraheat_api.HeatMeterService(reader)
     coordinator = UltraheatCoordinator(hass, api)
 
@@ -37,28 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
-
-
-class UltraheatCoordinator(DataUpdateCoordinator):
-    """Coordinator for getting data from the ultraheat api."""
-
-    def __init__(self, hass, api):
-        """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="ultraheat",
-            update_interval=POLLING_INTERVAL,
-        )
-        self.api = api
-
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
-                return await self.hass.async_add_executor_job(self.api.read)
-        except (asyncio.TimeoutError, serial.serialutil.SerialException) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
