@@ -3,7 +3,7 @@ from typing import Any
 
 from bleak.backends.device import BLEDevice
 
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 
 BLUECHARM_BLE_DEVICE = BLEDevice(
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",

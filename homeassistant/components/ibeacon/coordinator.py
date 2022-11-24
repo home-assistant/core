@@ -354,7 +354,19 @@ class IBeaconCoordinator:
             for group_id in self._group_ids_random_macs
             if group_id not in self._unavailable_group_ids
             and (service_info := self._last_seen_by_group_id.get(group_id))
-            and now - service_info.time > UNAVAILABLE_TIMEOUT
+            and (
+                # Since we will not be callbacks for ibeacons with random macs
+                # that rotate infrequently since their data is static we need
+                # to ask for the latest service info for the address we last
+                # saw to get the latest timestamp. If its missing we know the
+                # address is no longer advertising.
+                not (
+                    latest_service_info := bluetooth.async_last_service_info(
+                        self.hass, service_info.address, connectable=False
+                    )
+                )
+                or now - latest_service_info.time > UNAVAILABLE_TIMEOUT
+            )
         ]
         for group_id in gone_unavailable:
             self._unavailable_group_ids.add(group_id)
