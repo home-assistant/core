@@ -1,7 +1,7 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, TypedDict, cast
 from uuid import UUID
 
@@ -60,10 +60,10 @@ class Selector:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
-    config: Any
+    config: Mapping[str, Any]
     selector_type: str
 
-    def __init__(self, config: Any = None) -> None:
+    def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         # Selectors can be empty
         if config is None:
@@ -71,7 +71,7 @@ class Selector:
 
         self.config = self.CONFIG_SCHEMA(config)
 
-    def serialize(self) -> Any:
+    def serialize(self) -> dict[str, dict[str, Mapping[str, Any]]]:
         """Serialize Selector for voluptuous_serialize."""
         return {"selector": {self.selector_type: self.config}}
 
@@ -466,7 +466,6 @@ class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
 class EntitySelector(Selector):
     """Selector of a single or list of entities."""
 
-    config: EntitySelectorConfig
     selector_type = "entity"
 
     CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
@@ -477,7 +476,7 @@ class EntitySelector(Selector):
         }
     )
 
-    def __init__(self, config: EntitySelectorConfig) -> None:
+    def __init__(self, config: EntitySelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
