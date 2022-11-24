@@ -743,8 +743,8 @@ class UnitOfVolumetricFlux(StrEnum):
     """Derived from mm³/(mm².h)"""
 
 
-class UnitOfIntegratedVolumetricFlux(StrEnum):
-    """Integrated volumetric flux, commonly used for accumulated precipitation.
+class UnitOfPrecipitationDepth(StrEnum):
+    """Precipitation depth.
 
     The derivation of these units is a volume of rain amassing in a container
     with constant cross section
@@ -759,9 +759,9 @@ class UnitOfIntegratedVolumetricFlux(StrEnum):
 
 # Precipitation units
 PRECIPITATION_INCHES: Final = "in"
-"""Deprecated: please use UnitOfIntegratedVolumetricFlux.INCHES"""
+"""Deprecated: please use UnitOfPrecipitationDepth.INCHES"""
 PRECIPITATION_MILLIMETERS: Final = "mm"
-"""Deprecated: please use UnitOfIntegratedVolumetricFlux.MILLIMETERS"""
+"""Deprecated: please use UnitOfPrecipitationDepth.MILLIMETERS"""
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
 """Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR"""
 PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
