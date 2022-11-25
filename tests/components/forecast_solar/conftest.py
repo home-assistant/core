@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, AsyncMock, None]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
