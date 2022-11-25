@@ -2,7 +2,7 @@
 from unittest.mock import call
 
 import pytest
-from vallox_websocket_api import PROFILE
+from vallox_websocket_api import PROFILE, ValloxApiException
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -60,7 +60,7 @@ async def test_fan_profile(
     """Test fan profile."""
 
     # Act
-    with patch_profile(profile), patch_metrics({}):
+    with patch_profile(profile):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -142,25 +142,25 @@ async def test_turn_on_with_parameters(
 
 
 @pytest.mark.parametrize(
-    "preset, initial_profile, expected_profile",
+    "preset, initial_profile, expected_call_args_list",
     [
-        ("Home", PROFILE.AWAY, PROFILE.HOME),
-        ("Away", PROFILE.HOME, PROFILE.AWAY),
-        ("Boost", PROFILE.HOME, PROFILE.BOOST),
-        ("Fireplace", PROFILE.HOME, PROFILE.FIREPLACE),
+        ("Home", PROFILE.AWAY, [call(PROFILE.HOME)]),
+        ("Away", PROFILE.HOME, [call(PROFILE.AWAY)]),
+        ("Boost", PROFILE.HOME, [call(PROFILE.BOOST)]),
+        ("Fireplace", PROFILE.HOME, [call(PROFILE.FIREPLACE)]),
+        ("Home", PROFILE.HOME, []),
+        ("Missing", PROFILE.HOME, []),
     ],
 )
 async def test_set_preset_mode(
     preset: str,
     initial_profile: PROFILE,
-    expected_profile: PROFILE,
+    expected_call_args_list: list[tuple],
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
 ) -> None:
     """Test set preset mode."""
-    with patch_metrics(metrics={}), patch_profile(
-        initial_profile
-    ), patch_profile_set() as profile_set:
+    with patch_profile(initial_profile), patch_profile_set() as profile_set:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         await hass.services.async_call(
@@ -169,7 +169,27 @@ async def test_set_preset_mode(
             service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PRESET_MODE: preset},
             blocking=True,
         )
-        profile_set.assert_called_once_with(expected_profile)
+        assert profile_set.call_args_list == expected_call_args_list
+
+
+async def test_set_preset_mode_exception(
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
+    """Test set preset mode."""
+    with patch_profile_set() as profile_set:
+        profile_set.side_effect = ValloxApiException("Fake exception")
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PRESET_MODE: "Away"},
+            blocking=True,
+        )
+        state = hass.states.get("fan.vallox")
+        assert state
+        assert state.attributes["preset_mode"] == "Home"
 
 
 @pytest.mark.parametrize(
@@ -201,3 +221,26 @@ async def test_set_fan_speed(
             blocking=True,
         )
         assert metrics_set.call_args_list == expected_call_args_list
+
+
+async def test_set_fan_speed_exception(
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+) -> None:
+    """Test set fan speed percentage."""
+    with patch_metrics_set() as metrics_set, patch_metrics(
+        {"A_CYC_MODE": 0, "A_CYC_HOME_SPEED_SETTING": 30}
+    ):
+        metrics_set.side_effect = ValloxApiException("Fake failure")
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            service_data={ATTR_ENTITY_ID: "fan.vallox", ATTR_PERCENTAGE: 5},
+            blocking=True,
+        )
+
+        state = hass.states.get("fan.vallox")
+        assert state
+        assert state.attributes["percentage"] == 30

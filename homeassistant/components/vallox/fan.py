@@ -193,7 +193,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
                 {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
             )
         except ValloxApiException as err:
-            _LOGGER.error("Error setting mode: %s", err)
+            _LOGGER.error("Error setting power mode: %s", err)
             return False
 
         return True
@@ -239,7 +239,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             # This can happen if current profile does not support setting the fan speed.
             return False
         except ValloxApiException as err:
-            _LOGGER.error("Error setting preset: %s", err)
+            _LOGGER.error("Error setting fan speed: %s", err)
             return False
 
         return True
