@@ -21,7 +21,7 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 
