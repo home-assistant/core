@@ -340,7 +340,7 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
-        self._compiled_env = None
+        self._compiled_env: TemplateEnvironment | None = None
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
@@ -2155,12 +2155,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         add_ext(
             "device_attr",
             glob=device_attr,
+            filt=device_attr,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "is_device_attr",
             glob=is_device_attr,
+            test=pass_eval_context(hassfunction(is_device_attr)),
             support_limited=False,
             require_hass=True,
         )
