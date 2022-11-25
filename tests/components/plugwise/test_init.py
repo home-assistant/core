@@ -61,33 +61,6 @@ async def test_gateway_config_entry_not_ready(
     entry_state: ConfigEntryState,
 ) -> None:
     """Test the Plugwise configuration entry not ready."""
-    mock_smile_anna.connect.side_effect = side_effect
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(mock_smile_anna.connect.mock_calls) == 1
-    assert mock_config_entry.state is entry_state
-
-
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        (ConnectionFailedError),
-        (InvalidAuthentication),
-        (InvalidXMLError),
-        (ResponseError),
-        (UnsupportedDeviceError),
-    ],
-)
-async def test_coord_config_entry_not_ready(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
-    side_effect: Exception,
-) -> None:
-    """Test the Plugwise configuration entry not ready."""
     mock_smile_anna.async_update.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
@@ -95,7 +68,7 @@ async def test_coord_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert len(mock_smile_anna.connect.mock_calls) == 1
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is entry_state
 
 
 @pytest.mark.parametrize(
