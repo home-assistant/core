@@ -66,6 +66,19 @@ async def async_setup_entry(
         entities = []
 
         # Look to see if payload contains new measures
+
+        for measure in measures:
+            if measure["@id"] in measurements:
+                continue
+
+            if "latestReading" not in measure:
+                # Don't create a sensor entity for a gauge that isn't available
+                continue
+
+            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
+
+            measurements.add(measure["@id"])
+
         for measure in stagescale:
             if measure["@id"] in measurements:
                 continue
@@ -80,17 +93,6 @@ async def async_setup_entry(
                     measure["@id"],
                 )
             )
-
-            measurements.add(measure["@id"])
-        for measure in measures:
-            if measure["@id"] in measurements:
-                continue
-
-            if "latestReading" not in measure:
-                # Don't create a sensor entity for a gauge that isn't available
-                continue
-
-            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
 
             measurements.add(measure["@id"])
 
@@ -248,13 +250,10 @@ class MeasurementFlood(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        """Return the device info."""
+        """Return the device info, but don't override default gauge"""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, "measure-id", self.station_id)},
-            manufacturer="https://environment.data.gov.uk/",
-            model=self.parameter_name,
-            name=self.name,
         )
 
     @property
