@@ -19,7 +19,12 @@ from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .data_entry_flow import FlowResult
-from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from .helpers import device_registry, entity_registry, storage
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import async_call_later
@@ -371,6 +376,16 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+        except ConfigEntryError as ex:
+            error_reason = str(ex) or "Unknown fatal config entry error"
+            _LOGGER.exception(
+                "Error setting up entry %s for %s: %s",
+                self.title,
+                self.domain,
+                error_reason,
+            )
+            await self._async_process_on_unload()
+            result = False
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
             auth_base_message = "could not authenticate"
