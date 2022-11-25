@@ -162,9 +162,9 @@ class SchemaCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        options = dict(self._options)
+        suggested_values = dict(self._options)
         if user_input:
-            options.update(user_input)
+            suggested_values.update(user_input)
 
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
@@ -193,10 +193,10 @@ class SchemaCommonFlowHandler:
                         continue
 
                 new_key = key
-                if key in options and isinstance(key, vol.Marker):
+                if key in suggested_values and isinstance(key, vol.Marker):
                     # Copy the marker to not modify the flow schema
                     new_key = copy.copy(key)
-                    new_key.description = {"suggested_value": options[key]}
+                    new_key.description = {"suggested_value": suggested_values[key]}
                 schema[new_key] = val
             data_schema = vol.Schema(schema)
 
