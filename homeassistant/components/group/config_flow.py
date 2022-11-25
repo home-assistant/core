@@ -11,6 +11,7 @@ from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
@@ -104,11 +105,15 @@ def choose_options_step(options: dict[str, Any]) -> str:
     return cast(str, options["group_type"])
 
 
-def set_group_type(group_type: str) -> Callable[[dict[str, Any]], dict[str, Any]]:
+def set_group_type(
+    group_type: str,
+) -> Callable[[SchemaCommonFlowHandler, dict[str, Any]], dict[str, Any]]:
     """Set group type."""
 
     @callback
-    def _set_group_type(user_input: dict[str, Any]) -> dict[str, Any]:
+    def _set_group_type(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
         """Add group type to user input."""
         return {"group_type": group_type, **user_input}
 
