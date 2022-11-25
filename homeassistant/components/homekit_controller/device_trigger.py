@@ -62,7 +62,7 @@ class TriggerSource:
         self._hass = hass
         self._triggers: dict[tuple[str, str], dict[str, Any]] = {}
         self._callbacks: dict[tuple[str, str], list[Callable[[Any], None]]] = {}
-        self._iid_event_to_trigger_keys: dict[int, set[tuple[str, str]]] = {}
+        self._iid_trigger_keys: dict[int, set[tuple[str, str]]] = {}
 
     async def async_setup(
         self, connection: HKDevice, aid: int, triggers: list[dict[str, Any]]
@@ -77,12 +77,12 @@ class TriggerSource:
             trigger_key = (trigger_data[CONF_TYPE], trigger_data[CONF_SUBTYPE])
             self._triggers[trigger_key] = trigger_data
             iid = trigger_data["characteristic"]
-            self._iid_event_to_trigger_keys.setdefault(iid, set()).add(trigger_key)
+            self._iid_trigger_keys.setdefault(iid, set()).add(trigger_key)
             await connection.add_watchable_characteristics([(aid, iid)])
 
     def fire(self, iid: int, value: dict[str, Any]) -> None:
         """Process events that have been received from a HomeKit accessory."""
-        for trigger_key in self._iid_event_to_trigger_keys.get(iid, set()):
+        for trigger_key in self._iid_trigger_keys.get(iid, set()):
             for event_handler in self._callbacks.get(trigger_key, []):
                 event_handler(value)
 
