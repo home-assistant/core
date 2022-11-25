@@ -45,7 +45,6 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-
     client = Client(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
 
@@ -178,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def _async_get_addon_info(self) -> AddonInfo:
-        """Return and cache Matter Server add-on info."""
+        """Return Matter Server add-on info."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
             addon_info: AddonInfo = await addon_manager.async_get_addon_info()
@@ -279,11 +278,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Prepare info needed to complete the config entry.
-
-        Get add-on discovery info and server version info.
-        Set unique id and abort if already configured.
-        """
+        """Prepare info needed to complete the config entry."""
         if not self.ws_address:
             discovery_info = await self._async_get_addon_discovery_info()
             ws_address = self.ws_address = build_ws_address(
