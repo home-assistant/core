@@ -403,6 +403,7 @@ async def test_handle_events_late_setup(hass, utcnow, calls):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     await hass.config_entries.async_setup(helper.config_entry.entry_id)
     await hass.async_block_till_done()
