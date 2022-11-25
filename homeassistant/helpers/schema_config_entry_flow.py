@@ -137,6 +137,9 @@ class SchemaCommonFlowHandler:
             except SchemaFlowError as exc:
                 return self._show_next_step(step_id, exc, user_input)
 
+        # User input was validated successfully, update options
+        self._options.update(user_input)
+
         next_step_id: str = step_id
         if form_step.schema is None:
             # Get next step
