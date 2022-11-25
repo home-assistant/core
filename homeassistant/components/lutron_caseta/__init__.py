@@ -51,7 +51,21 @@ from .device_trigger import (
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
     LUTRON_BUTTON_TRIGGER_SCHEMA,
 )
-from .models import LutronButton, LutronCasetaData, LutronKeypad, LutronKeypadData
+from .models import (
+    LUTRON_BUTTON_LEAP_BUTTON_NUMBER,
+    LUTRON_KEYPAD_AREA_NAME,
+    LUTRON_KEYPAD_BUTTONS,
+    LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID,
+    LUTRON_KEYPAD_LUTRON_DEVICE_ID,
+    LUTRON_KEYPAD_MODEL,
+    LUTRON_KEYPAD_NAME,
+    LUTRON_KEYPAD_SERIAL,
+    LUTRON_KEYPAD_TYPE,
+    LutronButton,
+    LutronCasetaData,
+    LutronKeypad,
+    LutronKeypadData,
+)
 from .util import serial_to_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -226,7 +240,7 @@ def _async_setup_keypads(
     hass: HomeAssistant,
     config_entry_id: str,
     bridge: Smartbridge,
-    bridge_device: dict[str, Any],
+    bridge_device: dict[str, str | int],
 ) -> LutronKeypadData:
     """Register keypad devices (Keypads and Pico Remotes) in the device registry."""
 
@@ -262,11 +276,11 @@ def _async_setup_keypads(
             dr_device = device_registry.async_get_or_create(
                 **keypad["device_info"], config_entry_id=config_entry_id
             )
-            keypad["dr_device_id"] = dr_device.id
+            keypad[LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID] = dr_device.id
             dr_device_id_to_keypad[dr_device.id] = keypad
 
         button_name = _get_button_name(keypad, bridge_button)
-        keypad_lutron_device_id = keypad["lutron_device_id"]
+        keypad_lutron_device_id = keypad[LUTRON_KEYPAD_LUTRON_DEVICE_ID]
 
         # Add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
         keypad_buttons[button_lutron_device_id] = LutronButton(
@@ -277,7 +291,7 @@ def _async_setup_keypads(
             parent_keypad=keypad_lutron_device_id,
         )
 
-        keypad["buttons"].append(button_lutron_device_id)
+        keypad[LUTRON_KEYPAD_BUTTONS].append(button_lutron_device_id)
 
         button_name_to_leap = keypad_button_names_to_leap.setdefault(
             keypad_lutron_device_id, {}
@@ -333,7 +347,6 @@ def _async_build_lutron_keypad(
     keypad_device_id: int,
 ) -> LutronKeypad:
     # First time seeing this keypad, build keypad data and store in keypads
-
     area_name = _area_name_from_id(bridge.areas, bridge_keypad["area"])
     keypad_name = bridge_keypad["name"].split("_")[-1]
     keypad_serial = _handle_none_keypad_serial(bridge_keypad, bridge_device["serial"])
@@ -371,7 +384,7 @@ def _get_button_name(keypad: LutronKeypad, bridge_button: dict[str, Any]) -> str
         # This is a Caseta Button retrieve name from hardcoded trigger definitions.
         return _get_button_name_from_triggers(keypad, button_number)
 
-    keypad_model = keypad["model"]
+    keypad_model = keypad[LUTRON_KEYPAD_MODEL]
     if keypad_model_override := KEYPAD_LEAP_BUTTON_NAME_OVERRIDE.get(keypad_model):
         if alt_button_name := keypad_model_override.get(button_number):
             return alt_button_name
@@ -451,23 +464,23 @@ def _async_subscribe_keypad_events(
         else:
             action = ACTION_RELEASE
 
-        keypad_type = keypad["type"]
-        keypad_device_id = keypad["device_id"]
+        keypad_type = keypad[LUTRON_KEYPAD_TYPE]
+        keypad_device_id = keypad[LUTRON_KEYPAD_LUTRON_DEVICE_ID]
         leap_button_to_name = leap_to_keypad_button_names[keypad_device_id]
-        leap_button_number = button["leap_button_number"]
+        leap_button_number = button[LUTRON_BUTTON_LEAP_BUTTON_NUMBER]
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
         button_name = leap_button_to_name[leap_button_number]
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
-                ATTR_SERIAL: keypad["serial"],
+                ATTR_SERIAL: keypad[LUTRON_KEYPAD_SERIAL],
                 ATTR_TYPE: keypad_type,
                 ATTR_BUTTON_NUMBER: lip_button_number,
                 ATTR_LEAP_BUTTON_NUMBER: leap_button_number,
-                ATTR_DEVICE_NAME: keypad["name"],
-                ATTR_DEVICE_ID: keypad["dr_device_id"],
-                ATTR_AREA_NAME: keypad["area_name"],
+                ATTR_DEVICE_NAME: keypad[LUTRON_KEYPAD_NAME],
+                ATTR_DEVICE_ID: keypad[LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID],
+                ATTR_AREA_NAME: keypad[LUTRON_KEYPAD_AREA_NAME],
                 ATTR_BUTTON_NAME: button_name,
                 ATTR_ACTION: action,
             },
