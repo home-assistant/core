@@ -1683,8 +1683,18 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry."""
+        return self._config_entry
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
 
 
 class EntityRegistryDisabledHandler:
