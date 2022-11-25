@@ -111,9 +111,11 @@ class SchemaCommonFlowHandler:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
 
+        if user_input is None:
+            return self._show_next_step(step_id)
+
         if (
-            user_input is not None
-            and (data_schema := self._get_schema(form_step))
+            (data_schema := self._get_schema(form_step))
             and data_schema.schema
             and not self._handler.show_advanced_options
         ):
@@ -128,19 +130,15 @@ class SchemaCommonFlowHandler:
                     ):
                         user_input[str(key.schema)] = key.default()
 
-        if user_input is not None and form_step.validate_user_input is not None:
+        if form_step.validate_user_input is not None:
             # Do extra validation of user input
             try:
                 user_input = form_step.validate_user_input(self, user_input)
             except SchemaFlowError as exc:
                 return self._show_next_step(step_id, exc, user_input)
 
-        if user_input is not None:
-            # User input was validated successfully, update options
-            self._options.update(user_input)
-
         next_step_id: str = step_id
-        if user_input is not None or form_step.schema is None:
+        if form_step.schema is None:
             # Get next step
             if form_step.next_step is None:
                 # Flow done, create entry or update config entry options
