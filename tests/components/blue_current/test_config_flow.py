@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.bluecurrent import DOMAIN
-from homeassistant.components.bluecurrent.config_flow import (
+from homeassistant.components.blue_current import DOMAIN
+from homeassistant.components.blue_current.config_flow import (
     AlreadyConnected,
     InvalidApiToken,
     RequestLimitReached,
@@ -36,7 +36,7 @@ async def test_user(hass: HomeAssistant) -> None:
     with patch("bluecurrent_api.Client.validate_api_token", return_value=True), patch(
         "bluecurrent_api.Client.get_email", return_value="test@email.com"
     ), patch(
-        "homeassistant.components.bluecurrent.async_setup_entry",
+        "homeassistant.components.blue_current.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(

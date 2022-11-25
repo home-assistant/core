@@ -7,7 +7,7 @@ from bluecurrent_api.client import Client
 from bluecurrent_api.exceptions import RequestLimitReached, WebsocketException
 import pytest
 
-from homeassistant.components.bluecurrent import (
+from homeassistant.components.blue_current import (
     DOMAIN,
     Connector,
     async_setup_entry,
@@ -95,7 +95,7 @@ async def test_on_data(hass: HomeAssistant):
     await init_integration(hass, "sensor", {}, {})
 
     with patch(
-        "homeassistant.components.bluecurrent.async_dispatcher_send"
+        "homeassistant.components.blue_current.async_dispatcher_send"
     ) as test_async_dispatcher_send:
 
         connector: Connector = hass.data[DOMAIN]["uuid"]
@@ -149,7 +149,7 @@ async def test_on_data(hass: HomeAssistant):
         }
 
         test_async_dispatcher_send.assert_called_with(
-            hass, "bluecurrent_value_update_101"
+            hass, "blue_current_value_update_101"
         )
 
         # test GRID_STATUS
@@ -167,14 +167,14 @@ async def test_on_data(hass: HomeAssistant):
             "grid_actual_p2": 14,
             "grid_actual_p3": 15,
         }
-        test_async_dispatcher_send.assert_called_with(hass, "bluecurrent_grid_update")
+        test_async_dispatcher_send.assert_called_with(hass, "blue_current_grid_update")
 
 
 async def test_start_loop(hass: HomeAssistant):
     """Tests start_loop."""
 
     with patch(
-        "homeassistant.components.bluecurrent.async_call_later"
+        "homeassistant.components.blue_current.async_call_later"
     ) as test_async_call_later:
 
         config_entry = MockConfigEntry(
@@ -208,7 +208,7 @@ async def test_reconnect(hass: HomeAssistant):
     ), patch(
         "bluecurrent_api.Client.get_next_reset_delta", return_value=timedelta(hours=1)
     ), patch(
-        "homeassistant.components.bluecurrent.async_call_later"
+        "homeassistant.components.blue_current.async_call_later"
     ) as test_async_call_later:
 
         config_entry = MockConfigEntry(

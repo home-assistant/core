@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from bluecurrent_api import Client
 
-from homeassistant.components.bluecurrent import DOMAIN, Connector
+from homeassistant.components.blue_current import DOMAIN, Connector
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -35,9 +35,9 @@ async def init_integration(
         self.grid = grid
 
     with patch(
-        "homeassistant.components.bluecurrent.PLATFORMS", [platform]
+        "homeassistant.components.blue_current.PLATFORMS", [platform]
     ), patch.object(Connector, "__init__", init), patch(
-        "homeassistant.components.bluecurrent.Client", autospec=True
+        "homeassistant.components.blue_current.Client", autospec=True
     ):
 
         config_entry = MockConfigEntry(

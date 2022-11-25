@@ -1,7 +1,7 @@
 """The tests for Blue current sensors."""
 from datetime import datetime
 
-from homeassistant.components.bluecurrent import Connector
+from homeassistant.components.blue_current import Connector
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -128,13 +128,13 @@ async def test_sensor_update(hass: HomeAssistant):
     grid_key = "grid_avg_current"
     grid_entity_id = "average_grid_current"
 
-    connector: Connector = hass.data["bluecurrent"]["uuid"]
+    connector: Connector = hass.data["blue_current"]["uuid"]
 
     connector.charge_points = {"101": {key: 20, timestamp_key: None}}
     connector.grid = {grid_key: 20}
-    async_dispatcher_send(hass, "bluecurrent_value_update_101")
+    async_dispatcher_send(hass, "blue_current_value_update_101")
     await hass.async_block_till_done()
-    async_dispatcher_send(hass, "bluecurrent_grid_update")
+    async_dispatcher_send(hass, "blue_current_grid_update")
     await hass.async_block_till_done()
 
     # test data updated
@@ -168,7 +168,7 @@ async def test_sensor_update(hass: HomeAssistant):
             )
         }
     }
-    async_dispatcher_send(hass, "bluecurrent_value_update_101")
+    async_dispatcher_send(hass, "blue_current_value_update_101")
     state = hass.states.get(f"sensor.101_{timestamp_entity_id}")
     assert state
     assert (

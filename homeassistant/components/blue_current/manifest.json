@@ -1,5 +1,5 @@
 {
-  "domain": "bluecurrent",
+  "domain": "blue_current",
   "name": "Blue Current",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blue_current",

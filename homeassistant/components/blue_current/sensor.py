@@ -139,14 +139,14 @@ SENSORS = (
         key="vehicle_status",
         name="Vehicle Status",
         icon="mdi:car",
-        device_class="bluecurrent__vehicle_status",
+        device_class="blue_current__vehicle_status",
         has_entity_name=True,
     ),
     SensorEntityDescription(
         key="activity",
         name="Activity",
         icon="mdi:ev-station",
-        device_class="bluecurrent__activity",
+        device_class="blue_current__activity",
         has_entity_name=True,
     ),
     SensorEntityDescription(

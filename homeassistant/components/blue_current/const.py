@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.const import Platform
 
-DOMAIN = "bluecurrent"
+DOMAIN = "blue_current"
 
 LOGGER = logging.getLogger(__package__)
 

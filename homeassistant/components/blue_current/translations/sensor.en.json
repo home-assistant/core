@@ -1,13 +1,13 @@
 {
     "state": {
-        "bluecurrent__activity": {
+        "blue_current__activity": {
             "available": "Available",
             "charging": "Charging",
             "error": "Error",
             "offline": "Offline",
             "unavailable": "Unavailable"
         },
-        "bluecurrent__vehicle_status": {
+        "blue_current__vehicle_status": {
             "no_power": "No power",
             "ready": "Ready",
             "standby": "Standby",

@@ -650,7 +650,7 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bluecurrent": {
+    "blue_current": {
       "name": "Blue Current",
       "integration_type": "hub",
       "config_flow": true,
