@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "error": {
+            "unknown_error": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
         "step": {
             "user": {
                 "data": {

@@ -948,6 +948,8 @@ async def test_config_defaults():
     assert config.safe_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
+    assert config.country is None
+    assert config.language == "en"
 
 
 async def test_config_path_with_file():
@@ -989,6 +991,8 @@ async def test_config_as_dict():
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
+        "country": None,
+        "language": "en",
     }
 
     assert expected == config.as_dict()

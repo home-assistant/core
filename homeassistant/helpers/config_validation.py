@@ -89,6 +89,8 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.generated import currencies
+from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -1662,3 +1664,7 @@ currency = vol.In(
 historic_currency = vol.In(
     currencies.HISTORIC_CURRENCIES, msg="invalid ISO 4217 formatted historic currency"
 )
+
+country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
+
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")

@@ -52,6 +52,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,

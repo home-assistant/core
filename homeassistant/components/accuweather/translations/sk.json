@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d"
+            "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d",
+            "requests_exceeded": "Povolen\u00fd po\u010det po\u017eiadaviek na rozhranie Accuweather API bol prekro\u010den\u00fd. Mus\u00edte po\u010dka\u0165 alebo zmeni\u0165 k\u013e\u00fa\u010d API."
         },
         "step": {
             "user": {
@@ -25,6 +26,12 @@
                     "forecast": "Predpove\u010f po\u010dasia"
                 }
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Oslovi\u0165 server AccuWeather",
+            "remaining_requests": "Zost\u00e1vaj\u00face povolen\u00e9 \u017eiadosti"
         }
     }
 }

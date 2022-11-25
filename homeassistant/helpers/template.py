@@ -29,6 +29,7 @@ import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -96,6 +97,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 }
 
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
@@ -2079,12 +2082,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # evaluated fresh with every execution, rather than executed
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
-        def hassfunction(func):
+        def hassfunction(
+            func: Callable[Concatenate[HomeAssistant, _P], _R],
+        ) -> Callable[Concatenate[Any, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(hass, *args[1:], **kwargs)
+            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+                return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
 

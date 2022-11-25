@@ -11,5 +11,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Frekvencia aktualiz\u00e1cie (sekundy)"
+                }
+            }
+        }
     }
 }

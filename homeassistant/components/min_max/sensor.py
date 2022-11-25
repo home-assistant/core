@@ -48,6 +48,7 @@ ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
+ATTR_SUM = "sum"
 
 ICON = "mdi:calculator"
 
@@ -58,6 +59,7 @@ SENSOR_TYPES = {
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
+    ATTR_SUM: "sum",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -188,6 +190,18 @@ def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int) -> float
     return value
 
 
+def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+    """Calculate a sum of values, not honoring unknown states."""
+    result = 0
+    for _, sensor_value in sensor_values:
+        if sensor_value in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            return None
+        result += sensor_value
+
+    value: float = round(result, round_digits)
+    return value
+
+
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
@@ -222,6 +236,7 @@ class MinMaxSensor(SensorEntity):
         self.last: float | None = None
         self.median: float | None = None
         self.range: float | None = None
+        self.sum: float | None = None
         self.min_entity_id: str | None = None
         self.max_entity_id: str | None = None
         self.last_entity_id: str | None = None
@@ -336,3 +351,4 @@ class MinMaxSensor(SensorEntity):
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
         self.range = calc_range(sensor_values, self._round_digits)
+        self.sum = calc_sum(sensor_values, self._round_digits)

@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "rate_limited": "Moment\u00e1lne je r\u00fdchlos\u0165 obmedzen\u00e1, sk\u00faste to pros\u00edm nesk\u00f4r."
+        },
         "step": {
             "user": {
                 "data": {
