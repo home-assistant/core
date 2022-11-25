@@ -67,8 +67,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][api_key]
         sensor_index = entry.data[CONF_SENSOR_INDEX]
 
-        # If this is the last sensor index being tracked by this coordinator, remove it:
         async with COORDINATOR_LOCK:
+            # If this is the last sensor index being tracked by this coordinator, we
+            # remove it; we use the lock here in the case of a reauth flow, which will
+            # unload all config entries using this coordinator at the same time:
             still_tracking = coordinator.async_untrack_sensor_index(sensor_index)
             if not still_tracking:
                 hass.data[DOMAIN].pop(api_key)
