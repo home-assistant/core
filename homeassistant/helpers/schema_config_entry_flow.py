@@ -63,6 +63,16 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
+    suggested_values: Callable[[SchemaCommonFlowHandler], dict[str, Any]] | None = None
+    """Optional property to populate suggested values.
+
+    - If `suggested_values` is None, each key in the schema will get a suggested value
+    from an option with the same key.
+
+    Note: if a step is retried due to a validation failure, then the user input will have
+    priority over the suggested values.
+    """
+
 
 @dataclass
 class SchemaFlowMenuStep(SchemaFlowStep):
@@ -167,10 +177,6 @@ class SchemaCommonFlowHandler:
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show form for next step."""
-        suggested_values = dict(self._options)
-        if user_input:
-            suggested_values.update(user_input)
-
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
             return self._handler.async_show_menu(
@@ -182,6 +188,15 @@ class SchemaCommonFlowHandler:
 
         if (data_schema := self._get_schema(form_step)) is None:
             return self._show_next_step_or_create_entry(form_step)
+
+        if form_step.suggested_values:
+            suggested_values = form_step.suggested_values(self)
+        else:
+            suggested_values = self._options
+        if user_input:
+            # We don't want to mutate the existing options
+            suggested_values = copy.deepcopy(suggested_values)
+            suggested_values.update(user_input)
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
