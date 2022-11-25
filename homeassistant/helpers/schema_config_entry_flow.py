@@ -65,10 +65,11 @@ class SchemaFlowFormStep(SchemaFlowStep):
     suggested_values: Callable[[SchemaCommonFlowHandler], dict[str, Any]] | None = None
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is None, the current options will be returned.
+    - If `suggested_values` is None, each key in the schema will get a suggested value
+    from an option with the same key.
 
-    Note: in case of failed validation, the user input will automatically be merged
-    into the suggested values.
+    Note: if a step is retried due to a validation failure, then the user input will have
+    priority over the suggested values.
     """
 
 
