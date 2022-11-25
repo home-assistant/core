@@ -21,7 +21,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_STATION_UPDATES): bool,
     }
 )
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
