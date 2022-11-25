@@ -1,7 +1,12 @@
 {
     "state": {
         "tuya__countdown": {
-            "3h": "3 hodiny"
+            "1h": "1 hodina",
+            "2h": "2 hodiny",
+            "3h": "3 hodiny",
+            "4h": "4 hodiny",
+            "5h": "5 hod\u00edn",
+            "6h": "6 hod\u00edn"
         },
         "tuya__decibel_sensitivity": {
             "1": "Vysok\u00e1 citlivos\u0165"

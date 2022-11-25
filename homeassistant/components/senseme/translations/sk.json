@@ -15,12 +15,14 @@
             "manual": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Zadajte IP adresu."
             },
             "user": {
                 "data": {
                     "device": "Zariadenie"
-                }
+                },
+                "description": "Vyberte zariadenie alebo vyberte mo\u017enos\u0165 \"IP adresa\", ak chcete manu\u00e1lne zada\u0165 IP adresu."
             }
         }
     }

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tento profil NextDNS je u\u017e nakonfigurovan\u00fd."
+        }
+    }
+}

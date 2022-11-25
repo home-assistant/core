@@ -11,7 +11,8 @@
             "is_closing": "{entity_name} sa zatv\u00e1ra",
             "is_open": "{entity_name} je otvoren\u00e1",
             "is_opening": "{entity_name} sa otv\u00e1ra",
-            "is_position": "Aktu\u00e1lna poz\u00edcia {entity_name} je"
+            "is_position": "Aktu\u00e1lna poz\u00edcia {entity_name} je",
+            "is_tilt_position": "Aktu\u00e1lna poloha naklonenia {entity_name} je"
         },
         "trigger_type": {
             "closed": "{entity_name} zatvoren\u00e9",
