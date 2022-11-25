@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} sa zmenila nameran\u00e1 vlhkos\u0165",
+            "current_temperature_changed": "{entity_name} sa zmenila nameran\u00e1 teplota"
+        }
+    },
     "state": {
         "_": {
             "auto": "Automatika",

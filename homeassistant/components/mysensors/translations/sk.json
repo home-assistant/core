@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "duplicate_persistence_file": "Perzistentn\u00fd s\u00fabor sa u\u017e pou\u017e\u00edva",
+            "duplicate_topic": "T\u00e9ma sa u\u017e pou\u017e\u00edva",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "invalid_device": "Neplatn\u00e9 zariadenie",
             "invalid_ip": "Neplatn\u00e1 IP adresa",
@@ -13,6 +15,8 @@
         "error": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "duplicate_persistence_file": "Perzistentn\u00fd s\u00fabor sa u\u017e pou\u017e\u00edva",
+            "duplicate_topic": "T\u00e9ma sa u\u017e pou\u017e\u00edva",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "invalid_device": "Neplatn\u00e9 zariadenie",
             "invalid_ip": "Neplatn\u00e1 IP adresa",

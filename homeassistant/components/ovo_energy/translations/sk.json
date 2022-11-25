@@ -1,13 +1,15 @@
 {
     "config": {
         "error": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
             "reauth": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Autentifik\u00e1cia pre OVO Energy zlyhala. Zadajte svoje aktu\u00e1lne poverenia."
             },
             "user": {
                 "data": {
