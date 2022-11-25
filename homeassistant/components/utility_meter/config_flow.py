@@ -10,6 +10,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
@@ -46,14 +47,16 @@ METER_TYPES = [
 ]
 
 
-def _validate_config(data: Any) -> Any:
+def _validate_config(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate config."""
     try:
-        vol.Unique()(data[CONF_TARIFFS])
+        vol.Unique()(user_input[CONF_TARIFFS])
     except vol.Invalid as exc:
         raise SchemaFlowError("tariffs_not_unique") from exc
 
-    return data
+    return user_input
 
 
 OPTIONS_SCHEMA = vol.Schema(

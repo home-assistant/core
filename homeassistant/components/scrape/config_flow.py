@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import async_get_hass
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
@@ -113,7 +114,9 @@ SENSOR_SETUP = {
 }
 
 
-def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+def validate_rest_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate rest setup."""
     hass = async_get_hass()
     rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
@@ -124,7 +127,9 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     return user_input
 
 
-def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+def validate_sensor_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate sensor setup."""
     return {
         "sensor": [
