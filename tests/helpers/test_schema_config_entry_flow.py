@@ -97,7 +97,7 @@ async def test_schema_none(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "option3"  # Fails, because the step_id is "pass"
+        assert result["step_id"] == "option3"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == FlowResultType.CREATE_ENTRY
