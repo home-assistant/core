@@ -149,7 +149,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Humidifiers under the humidifier platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Humidifiers under the humidifier platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(humidifier.DOMAIN),

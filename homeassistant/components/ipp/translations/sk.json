@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "ipp_error": "Vyskytla sa chyba IPP."
         },
         "flow_title": "{name}",
         "step": {

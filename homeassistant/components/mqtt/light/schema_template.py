@@ -112,7 +112,7 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_TEMPLATE = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )

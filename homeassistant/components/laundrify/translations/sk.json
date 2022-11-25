@@ -1,0 +1,9 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_format": "Neplatn\u00fd form\u00e1t. Zadajte ako xxx-xxx."
+        }
+    }
+}

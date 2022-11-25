@@ -27,6 +27,7 @@ from .const import (
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
+    CONF_COUNTRY,
     CONF_CURRENCY,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
@@ -35,6 +36,7 @@ from .const import (
     CONF_EXTERNAL_URL,
     CONF_ID,
     CONF_INTERNAL_URL,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
@@ -281,6 +283,8 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
+            vol.Optional(CONF_COUNTRY): cv.country,
+            vol.Optional(CONF_LANGUAGE): cv.language,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -560,6 +564,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
             CONF_CURRENCY,
+            CONF_COUNTRY,
+            CONF_LANGUAGE,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -574,6 +580,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
+        (CONF_COUNTRY, "country"),
+        (CONF_LANGUAGE, "language"),
     ):
         if key in config:
             setattr(hac, attr, config[key])

@@ -12,6 +12,7 @@
             "bad_client_key": "Ugyldig privat n\u00f8kkel, s\u00f8rg for at en PEM-kodet fil leveres uten passord",
             "bad_discovery_prefix": "Ugyldig oppdagelsesprefiks",
             "bad_will": "Ugyldig viljeemne",
+            "bad_ws_headers": "Oppgi gyldige HTTP-hoder som et JSON-objekt",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_inclusion": "Klientsertifikatet og den private n\u00f8kkelen m\u00e5 konfigureres sammen"
         },
@@ -31,7 +32,10 @@
                     "set_ca_cert": "Validering av meglersertifikat",
                     "set_client_cert": "Bruk et klientsertifikat",
                     "tls_insecure": "Ignorer validering av meglersertifikat",
-                    "username": "Brukernavn"
+                    "transport": "MQTT transport",
+                    "username": "Brukernavn",
+                    "ws_headers": "WebSocket-hoder i JSON-format",
+                    "ws_path": "WebSocket-bane"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."
             },
@@ -85,6 +89,7 @@
             "bad_client_key": "Ugyldig privat n\u00f8kkel, s\u00f8rg for at en PEM-kodet fil leveres uten passord",
             "bad_discovery_prefix": "Ugyldig oppdagelsesprefiks",
             "bad_will": "Ugyldig viljeemne",
+            "bad_ws_headers": "Oppgi gyldige HTTP-hoder som et JSON-objekt",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_inclusion": "Klientsertifikatet og den private n\u00f8kkelen m\u00e5 konfigureres sammen"
         },
@@ -104,7 +109,10 @@
                     "set_ca_cert": "Validering av meglersertifikat",
                     "set_client_cert": "Bruk et klientsertifikat",
                     "tls_insecure": "Ignorer validering av meglersertifikat",
-                    "username": "Brukernavn"
+                    "transport": "MQTT transport",
+                    "username": "Brukernavn",
+                    "ws_headers": "WebSocket-hoder i JSON-format",
+                    "ws_path": "WebSocket-bane"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler.",
                 "title": "Megleralternativer"
