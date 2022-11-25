@@ -882,6 +882,7 @@ async def test_subscribe_bad_topic(
         await mqtt.async_subscribe(hass, 55, record_calls)
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 async def test_subscribe_deprecated(hass, mqtt_mock_entry_no_yaml_config):
     """Test the subscription of a topic using deprecated callback signature."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -930,6 +931,7 @@ async def test_subscribe_deprecated(hass, mqtt_mock_entry_no_yaml_config):
     assert len(calls) == 1
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 async def test_subscribe_deprecated_async(hass, mqtt_mock_entry_no_yaml_config):
     """Test the subscription of a topic using deprecated coroutine signature."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
