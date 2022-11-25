@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
 from .coordinator import ShellyBlockCoordinator, get_entry_data
-from .utils import get_device_entry_gen
 
 
 async def async_setup_entry(
@@ -36,10 +35,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
-
-    if get_device_entry_gen(config_entry) == 2:
-        return
-
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert coordinator
     if coordinator.device.initialized:
@@ -109,7 +104,7 @@ class BlockSleepingClimate(
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
-    _attr_supported_features: int = (
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]

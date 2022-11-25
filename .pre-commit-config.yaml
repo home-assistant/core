@@ -4,6 +4,13 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v1.7.7
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-all-unused-imports
   - repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
@@ -17,7 +24,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,bre,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,sur,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa,pullrequests
+          - --ignore-words-list=alot,ba,bre,datas,dof,dur,ether,farenheit,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nd,pres,pullrequests,referer,rime,ser,serie,sur,te,technik,ue,uint,visability,wan,wanna,withing
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]

@@ -184,16 +184,17 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
+        brightness_pct: int
         if self.mode == "color":
             if self.control_result:
                 brightness_pct = self.control_result["gain"]
             else:
-                brightness_pct = self.block.gain
+                brightness_pct = cast(int, self.block.gain)
         else:
             if self.control_result:
                 brightness_pct = self.control_result["brightness"]
             else:
-                brightness_pct = self.block.brightness
+                brightness_pct = cast(int, self.block.brightness)
 
         return round(255 * brightness_pct / 100)
 

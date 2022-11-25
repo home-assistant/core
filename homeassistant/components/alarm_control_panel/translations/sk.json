@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "action_type": {
+            "trigger": "Sp\u00fa\u0161\u0165a\u010d {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "armed": "Akt\u00edvny",

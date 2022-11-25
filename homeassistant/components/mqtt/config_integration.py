@@ -45,15 +45,21 @@ from .const import (
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
     CONF_TLS_VERSION,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
+    DEFAULT_TRANSPORT,
     DEFAULT_WILL,
     SUPPORTED_PROTOCOLS,
+    TRANSPORT_TCP,
+    TRANSPORT_WEBSOCKETS,
 )
 from .util import valid_birth_will, valid_publish_topic
 
@@ -66,6 +72,7 @@ DEFAULT_VALUES = {
     CONF_PORT: DEFAULT_PORT,
     CONF_PROTOCOL: DEFAULT_PROTOCOL,
     CONF_TLS_VERSION: DEFAULT_TLS_PROTOCOL,
+    CONF_TRANSPORT: DEFAULT_TRANSPORT,
     CONF_WILL_MESSAGE: DEFAULT_WILL,
     CONF_KEEPALIVE: DEFAULT_KEEPALIVE,
 }
@@ -160,6 +167,11 @@ CONFIG_SCHEMA_ENTRY = vol.Schema(
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
         vol.Optional(CONF_DISCOVERY_PREFIX): valid_publish_topic,
+        vol.Optional(CONF_TRANSPORT, default=DEFAULT_TRANSPORT): vol.All(
+            cv.string, vol.In([TRANSPORT_TCP, TRANSPORT_WEBSOCKETS])
+        ),
+        vol.Optional(CONF_WS_PATH, default="/"): cv.string,
+        vol.Optional(CONF_WS_HEADERS, default={}): {cv.string: cv.string},
     }
 )
 

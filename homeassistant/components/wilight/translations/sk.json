@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "not_supported_device": "Toto WiLight moment\u00e1lne nie je podporovan\u00e9"
+        },
+        "flow_title": "{name}"
+    }
+}

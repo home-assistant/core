@@ -28,15 +28,5 @@
                 "description": "Der API-Schl\u00fcssel kann automatisch abgerufen werden, wenn in der Anwendung keine Anmeldeinformationen festgelegt wurden.\nDeinen API-Schl\u00fcssel findest du unter Einstellungen > Allgemein in der Lidarr-Web-Benutzeroberfl\u00e4che."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Anzahl der maximal anzuzeigenden Datens\u00e4tze f\u00fcr Gesucht und Warteschlange",
-                    "upcoming_days": "Anzahl der kommenden Tage, die im Kalender angezeigt werden sollen"
-                }
-            }
-        }
     }
 }

@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "addr_in_use": "Port servera sa u\u017e pou\u017e\u00edva.",
+            "already_configured": "Port servera je u\u017e nakonfigurovan\u00fd."
+        },
         "step": {
             "user": {
                 "data": {

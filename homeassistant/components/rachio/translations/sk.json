@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
@@ -7,6 +10,15 @@
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Trvanie v min\u00fatach pri aktiv\u00e1cii sp\u00edna\u010da z\u00f3ny"
                 }
             }
         }

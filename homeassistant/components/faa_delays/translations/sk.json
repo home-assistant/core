@@ -1,7 +1,9 @@
 {
     "config": {
         "error": {
-            "invalid_airport": "K\u00f3d letiska je neplatn\u00fd"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_airport": "K\u00f3d letiska je neplatn\u00fd",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         }
     }
 }

@@ -10,11 +10,9 @@
             "invalid_setup": "A\u00f1ade tu Adam en lugar de tu Anna, consulta la documentaci\u00f3n de la integraci\u00f3n Home Assistant Plugwise para m\u00e1s informaci\u00f3n",
             "unknown": "Error inesperado"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conexi\u00f3n",
                     "host": "Direcci\u00f3n IP",
                     "password": "ID de Smile",
                     "port": "Puerto",
@@ -22,26 +20,6 @@
                 },
                 "description": "Por favor, introduce",
                 "title": "Conectar a Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "Direcci\u00f3n IP",
-                    "password": "ID de Smile",
-                    "port": "Puerto",
-                    "username": "Nombre de usuario Smile"
-                },
-                "description": "Por favor, introduce",
-                "title": "Conectar a Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervalo de escaneo (segundos)"
-                },
-                "description": "Ajustar las opciones de Plugwise"
             }
         }
     }

@@ -6,13 +6,13 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
@@ -51,16 +51,16 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor")
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_user_input=_validate_mode)
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA, validate_user_input=_validate_mode)
 }
 

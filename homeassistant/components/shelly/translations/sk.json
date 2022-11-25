@@ -20,7 +20,15 @@
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
                 "description": "Pred nastaven\u00edm musia by\u0165 zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie zobuden\u00e9. Zobu\u010fte zariadenie pomocou tla\u010didla na \u0148om."
             }
         }

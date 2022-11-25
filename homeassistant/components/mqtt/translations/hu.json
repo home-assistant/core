@@ -24,7 +24,6 @@
                     "client_cert": "\u00dcgyf\u00e9ltan\u00fas\u00edtv\u00e1ny f\u00e1jl felt\u00f6lt\u00e9se",
                     "client_id": "\u00dcgyf\u00e9l azonos\u00edt\u00f3 (hagyja \u00fcresen a v\u00e9letlenszer\u0171en gener\u00e1lt azonos\u00edt\u00f3hoz)",
                     "client_key": "Priv\u00e1t kulcsf\u00e1jl felt\u00f6lt\u00e9se",
-                    "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se",
                     "keepalive": "A keep alive \u00fczenetek k\u00fcld\u00e9se k\u00f6z\u00f6tti id\u0151",
                     "password": "Jelsz\u00f3",
                     "port": "Port",

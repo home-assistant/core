@@ -14,6 +14,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Hostite\u013e",
                     "port": "Port",
                     "token": "Pr\u00edstupov\u00fd token"
                 }
