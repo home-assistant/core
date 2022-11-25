@@ -11,13 +11,6 @@
             "validate_verification_code": "Gagal memverifikasi kode verifikasi Anda, coba lagi"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Kata Sandi"
-                },
-                "description": "Kata sandi yang Anda masukkan sebelumnya untuk {username} tidak lagi berfungsi. Perbarui kata sandi Anda untuk tetap menggunakan integrasi ini.",
-                "title": "Autentikasi Ulang Integrasi"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"

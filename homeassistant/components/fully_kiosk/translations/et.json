@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {

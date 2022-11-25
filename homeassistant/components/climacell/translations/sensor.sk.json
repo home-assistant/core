@@ -2,6 +2,17 @@
     "state": {
         "climacell__health_concern": {
             "unhealthy": "Nezdrav\u00e9"
+        },
+        "climacell__pollen_index": {
+            "low": "N\u00edzke",
+            "medium": "Stredn\u00e9",
+            "very_high": "Ve\u013emi vysok\u00e9",
+            "very_low": "Ve\u013emi n\u00edzke"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
+            "rain": "D\u00e1\u017e\u010f",
+            "snow": "Sneh"
         }
     }
 }

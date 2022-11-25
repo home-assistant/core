@@ -104,7 +104,6 @@ class SwitcherClimateEntity(
         self._attr_target_temperature_step = 1
         self._attr_temperature_unit = TEMP_CELSIUS
 
-        self._attr_supported_features = 0
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:
             self._attr_hvac_modes.append(DEVICE_MODE_TO_HA[mode])

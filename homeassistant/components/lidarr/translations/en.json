@@ -28,15 +28,5 @@
                 "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Lidarr Web UI."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Number of maximum records to display on wanted and queue",
-                    "upcoming_days": "Number of upcoming days to display on calendar"
-                }
-            }
-        }
     }
 }

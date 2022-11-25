@@ -41,7 +41,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
     def get_service(
@@ -49,7 +49,7 @@ class LegacyNotifyPlatform(Protocol):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = ...,
-    ) -> BaseNotificationService:
+    ) -> BaseNotificationService | None:
         """Set up notification service."""
 
 
@@ -82,7 +82,7 @@ def async_setup_legacy(
         full_name = f"{DOMAIN}.{integration_name}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
-            notify_service = None
+            notify_service: BaseNotificationService | None = None
             try:
                 if hasattr(platform, "async_get_service"):
                     notify_service = await platform.async_get_service(
