@@ -36,9 +36,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Optional voluptuous schema, or function which returns a schema or None, for
     requesting and validating user input.
 
-    - If a function is specified, the function will be passed the handler, which is
-    either an instance of SchemaConfigFlowHandler or SchemaOptionsFlowHandler, and the
-    union of config entry options and user input from previous steps.
+    - If a function is specified, the function will be passed the current
+    `SchemaCommonFlowHandler`.
     - If schema validation fails, the step will be retried. If the schema is None, no
     user input is requested.
     """
@@ -49,7 +48,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Optional function to validate user input.
 
     - The `validate_user_input` function is called if the schema validates successfully.
-    - The `validate_user_input` function is passed the user input from the current step.
+    - The first argument is a reference to the current `SchemaCommonFlowHandler`.
+    - The second argument is the user input from the current step.
     - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
     """
 
