@@ -1351,6 +1351,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "edilkamin": {
+      "name": "Edilkamin Stove",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "edimax": {
       "name": "Edimax",
       "integration_type": "hub",

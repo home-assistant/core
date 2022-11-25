@@ -119,6 +119,7 @@ FLOWS = {
         "ecoforest",
         "econet",
         "ecowitt",
+        "edilkamin",
         "edl21",
         "efergy",
         "eight_sleep",
