@@ -85,6 +85,11 @@ class SchemaCommonFlowHandler:
         self._handler = handler
         self._options = options if options is not None else {}
 
+    @property
+    def parent_handler(self) -> SchemaConfigFlowHandler | SchemaOptionsFlowHandler:
+        """Return parent handler."""
+        return self._handler
+
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

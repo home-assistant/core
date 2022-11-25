@@ -31,8 +31,7 @@ def basic_group_options_schema(
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                # pylint: disable-next=protected-access
-                cast(SchemaOptionsFlowHandler, handler._handler),
+                cast(SchemaOptionsFlowHandler, handler.parent_handler),
                 selector.EntitySelectorConfig(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
