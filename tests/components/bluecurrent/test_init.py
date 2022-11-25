@@ -1,4 +1,4 @@
-"""Test BlueCurrent Init Component."""
+"""Test Blue Current Init Component."""
 
 from datetime import timedelta
 from unittest.mock import patch
@@ -70,13 +70,21 @@ async def test_set_entities_unavalible(hass: HomeAssistant):
         "actual_p3": 15,
     }
 
+    entity_ids = [
+        "voltage_phase_1",
+        "voltage_phase_2",
+        "voltage_phase_3",
+        "current_phase_1",
+        "current_phase_2",
+        "current_phase_3",
+    ]
+
     await init_integration(hass, "sensor", data, charge_point)
 
     set_entities_unavalible(hass, "uuid")
-    state = hass.states.get("sensor.actual_v1_101")
 
-    for key in charge_point:
-        state = hass.states.get(f"sensor.{key}_101")
+    for entity_id in entity_ids:
+        state = hass.states.get(f"sensor.101_{entity_id}")
         assert state
         assert state.state == "unavailable"
 
@@ -90,7 +98,7 @@ async def test_on_data(hass: HomeAssistant):
         "homeassistant.components.bluecurrent.async_dispatcher_send"
     ) as test_async_dispatcher_send:
 
-        connector: Connector = hass.data["bluecurrent"]["uuid"]
+        connector: Connector = hass.data[DOMAIN]["uuid"]
 
         # test CHARGE_POINTS
         data = {

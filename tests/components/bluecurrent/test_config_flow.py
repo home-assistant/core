@@ -1,4 +1,4 @@
-"""Test the BlueCurrent config flow."""
+"""Test the Blue Current config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries

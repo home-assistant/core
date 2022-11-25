@@ -1,4 +1,4 @@
-"""Config flow for BlueCurrent integration."""
+"""Config flow for Blue Current integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -22,31 +22,20 @@ from .const import DOMAIN, LOGGER
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
-async def validate_input(client: Client, api_token: str) -> None:
-    """Validate the user input allows us to connect."""
-    await client.validate_api_token(api_token)
-
-
-async def get_email(client: Client) -> str:
-    """Validate the user input allows us to connect."""
-    email: str = await client.get_email()
-    return email
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Blue Current."""
 
     VERSION = 1
 
-    input: dict[str, Any] = {}
-    client = Client()
+    input: dict[str, Any]
+    client: Client
     entry: config_entries.ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-
+        self.client = Client()
         errors = {}
         if user_input is not None:
 
@@ -54,8 +43,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_TOKEN: api_token})
 
             try:
-                await validate_input(self.client, api_token)
-                email = await get_email(self.client)
+                await self.client.validate_api_token(api_token)
+                email = await self.client.get_email()
             except WebsocketException:
                 errors["base"] = "cannot_connect"
             except RequestLimitReached:
@@ -71,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
 
                 self.entry = await self.async_set_unique_id(email)
-                self.input[CONF_API_TOKEN] = api_token
+                self.input = {CONF_API_TOKEN: api_token}
 
                 if self.entry:
                     await self.update_entry()
@@ -94,6 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Update the config entry."""
         assert self.entry
         self.hass.config_entries.async_update_entry(
-            self.entry, data=self.input, title=self.input["api_token"][:5]
+            self.entry, data=self.input, title=self.input[CONF_API_TOKEN][:5]
         )
         await self.hass.config_entries.async_reload(self.entry.entry_id)
