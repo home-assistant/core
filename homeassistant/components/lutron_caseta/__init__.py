@@ -27,8 +27,8 @@ from .const import (
     ACTION_RELEASE,
     ATTR_ACTION,
     ATTR_AREA_NAME,
-    ATTR_BUTTON_NAME,
     ATTR_BUTTON_NUMBER,
+    ATTR_BUTTON_TYPE,
     ATTR_DEVICE_NAME,
     ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
@@ -466,10 +466,11 @@ def _async_subscribe_keypad_events(
 
         keypad_type = keypad[LUTRON_KEYPAD_TYPE]
         keypad_device_id = keypad[LUTRON_KEYPAD_LUTRON_DEVICE_ID]
-        leap_button_to_name = leap_to_keypad_button_names[keypad_device_id]
         leap_button_number = button[LUTRON_BUTTON_LEAP_BUTTON_NUMBER]
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
-        button_name = leap_button_to_name[leap_button_number]
+        button_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
+            keypad_type, leap_to_keypad_button_names[keypad_device_id]
+        )[leap_button_number]
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
@@ -481,7 +482,7 @@ def _async_subscribe_keypad_events(
                 ATTR_DEVICE_NAME: keypad[LUTRON_KEYPAD_NAME],
                 ATTR_DEVICE_ID: keypad[LUTRON_KEYPAD_DEVICE_REGISTRY_DEVICE_ID],
                 ATTR_AREA_NAME: keypad[LUTRON_KEYPAD_AREA_NAME],
-                ATTR_BUTTON_NAME: button_name,
+                ATTR_BUTTON_TYPE: button_type,
                 ATTR_ACTION: action,
             },
         )

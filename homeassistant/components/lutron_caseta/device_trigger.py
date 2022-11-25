@@ -22,7 +22,7 @@ from .const import (
     ACTION_PRESS,
     ACTION_RELEASE,
     ATTR_ACTION,
-    ATTR_BUTTON_NAME,
+    ATTR_BUTTON_TYPE,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
@@ -312,7 +312,7 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP,
 }
 
-LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP = {
+LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP: dict[str, dict[int, str]] = {
     k: _reverse_dict(v) for k, v in DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.items()
 }
 
@@ -425,7 +425,7 @@ async def async_attach_trigger(
                 event_trigger.CONF_EVENT_DATA: {
                     CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                     ATTR_ACTION: config[CONF_TYPE],
-                    ATTR_BUTTON_NAME: config[CONF_SUBTYPE],
+                    ATTR_BUTTON_TYPE: config[CONF_SUBTYPE],
                 },
             }
         ),

@@ -13,7 +13,7 @@ from homeassistant.components.lutron_caseta import (
     ATTR_TYPE,
 )
 from homeassistant.components.lutron_caseta.const import (
-    ATTR_BUTTON_NAME,
+    ATTR_BUTTON_TYPE,
     ATTR_LEAP_BUTTON_NUMBER,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -257,7 +257,7 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
         ATTR_DEVICE_ID: device_id,
-        ATTR_BUTTON_NAME: "on",
+        ATTR_BUTTON_TYPE: "on",
     }
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
@@ -303,7 +303,7 @@ async def test_if_fires_on_button_event_without_lip(hass, calls, device_reg):
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
         ATTR_DEVICE_ID: device_id,
-        ATTR_BUTTON_NAME: "Kitchen Pendants",
+        ATTR_BUTTON_TYPE: "Kitchen Pendants",
     }
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
@@ -472,7 +472,7 @@ async def test_if_fires_on_button_event_late_setup(hass, calls):
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
         ATTR_DEVICE_ID: device_id,
-        ATTR_BUTTON_NAME: "on",
+        ATTR_BUTTON_TYPE: "on",
     }
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
