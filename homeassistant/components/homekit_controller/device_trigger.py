@@ -103,7 +103,7 @@ class TriggerSource:
         job = HassJob(action)
 
         @callback
-        def event_handler(char):
+        def event_handler(char: dict[str, Any]) -> None:
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
                 return
             self._hass.async_run_hass_job(job, {"trigger": {**trigger_data, **config}})
