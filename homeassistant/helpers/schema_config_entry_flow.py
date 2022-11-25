@@ -139,19 +139,21 @@ class SchemaCommonFlowHandler:
             # User input was validated successfully, update options
             self._options.update(user_input)
 
-        next_step_id: str = step_id
         if user_input is not None or form_step.schema is None:
-            # Get next step
-            if form_step.next_step is None:
-                # Flow done, create entry or update config entry options
-                return self._handler.async_create_entry(data=self._options)
+            return self._show_next_step_or_create_entry(form_step)
 
-            if isinstance(form_step.next_step, str):
-                next_step_id = form_step.next_step
-            else:
-                next_step_id = form_step.next_step(self._options)
+        return self._show_next_step(step_id)
 
-        return self._show_next_step(next_step_id)
+    def _show_next_step_or_create_entry(
+        self, form_step: SchemaFlowFormStep
+    ) -> FlowResult:
+        if form_step.next_step is None:
+            # Flow done, create entry or update config entry options
+            return self._handler.async_create_entry(data=self._options)
+
+        if isinstance(form_step.next_step, str):
+            return self._show_next_step(form_step.next_step)
+        return self._show_next_step(form_step.next_step(self._options))
 
     def _show_next_step(
         self,
@@ -173,7 +175,10 @@ class SchemaCommonFlowHandler:
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
-        if (data_schema := self._get_schema(form_step)) and data_schema.schema:
+        if (data_schema := self._get_schema(form_step)) is None:
+            return self._show_next_step_or_create_entry(form_step)
+
+        if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
