@@ -70,3 +70,34 @@ async def test_menu_step(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_schema_none(hass: HomeAssistant) -> None:
+    """Test SchemaFlowFormStep with schema set to None."""
+
+    CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "user": SchemaFlowFormStep(next_step="option1"),
+        "option1": SchemaFlowFormStep(vol.Schema({}), next_step="pass"),
+        "pass": SchemaFlowFormStep(next_step="option3"),
+        "option3": SchemaFlowFormStep(vol.Schema({})),
+    }
+
+    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+        """Handle a config or options flow for Derivative."""
+
+        config_flow = CONFIG_FLOW
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestConfigFlow}):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "option1"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "option3"  # Fails, because the step_id is "pass"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.CREATE_ENTRY
