@@ -31,9 +31,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: vol.Schema | Callable[
-        [SchemaConfigFlowHandler | SchemaOptionsFlowHandler, dict[str, Any]],
-        vol.Schema | None,
-    ] | None
+        [SchemaCommonFlowHandler], vol.Schema | None
+    ] | None = None
     """Optional voluptuous schema, or function which returns a schema or None, for
     requesting and validating user input.
 
@@ -94,14 +93,12 @@ class SchemaCommonFlowHandler:
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
-    def _get_schema(
-        self, form_step: SchemaFlowFormStep, options: dict[str, Any]
-    ) -> vol.Schema | None:
+    def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
         if form_step.schema is None:
             return None
         if isinstance(form_step.schema, vol.Schema):
             return form_step.schema
-        return form_step.schema(self._handler, options)
+        return form_step.schema(self)
 
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -111,7 +108,7 @@ class SchemaCommonFlowHandler:
 
         if (
             user_input is not None
-            and (data_schema := self._get_schema(form_step, self._options))
+            and (data_schema := self._get_schema(form_step))
             and data_schema.schema
             and not self._handler.show_advanced_options
         ):
@@ -171,9 +168,7 @@ class SchemaCommonFlowHandler:
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
-        if (
-            data_schema := self._get_schema(form_step, self._options)
-        ) and data_schema.schema:
+        if (data_schema := self._get_schema(form_step)) and data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
             schema = {}
             for key, val in data_schema.schema.items():
