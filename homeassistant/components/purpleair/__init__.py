@@ -68,9 +68,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sensor_index = entry.data[CONF_SENSOR_INDEX]
 
         # If this is the last sensor index being tracked by this coordinator, remove it:
-        still_tracking = coordinator.async_untrack_sensor_index(sensor_index)
-        if not still_tracking:
-            hass.data[DOMAIN].pop(api_key)
+        async with COORDINATOR_LOCK:
+            still_tracking = coordinator.async_untrack_sensor_index(sensor_index)
+            if not still_tracking:
+                hass.data[DOMAIN].pop(api_key)
 
     return unload_ok
 
