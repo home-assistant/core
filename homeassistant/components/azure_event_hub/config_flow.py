@@ -13,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
 )
 
@@ -62,7 +61,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_SEND_INTERVAL): int,
     }
 )
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
