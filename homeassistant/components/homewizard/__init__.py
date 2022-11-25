@@ -4,7 +4,7 @@ import logging
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, InvalidStateError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, PLATFORMS
@@ -67,8 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+
+    except ConfigEntryNotReady as ex:
         await coordinator.api.close()
+
+        if coordinator.api_disabled:
+            raise InvalidStateError from ex
+
         raise
 
     # Finalize
