@@ -68,7 +68,7 @@ async def test_gateway_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert len(mock_smile_anna.connect.mock_calls) == 1
-    assert mock_config_entry.state == entry_state
+    assert mock_config_entry.state is entry_state
 
 
 @pytest.mark.parametrize(
