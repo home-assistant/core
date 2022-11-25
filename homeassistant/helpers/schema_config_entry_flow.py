@@ -44,7 +44,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     user input is requested.
     """
 
-    validate_user_input: Callable[[dict[str, Any]], dict[str, Any]] = lambda x: x
+    validate_user_input: Callable[
+        [SchemaCommonFlowHandler, dict[str, Any]], dict[str, Any]
+    ] | None = None
     """Optional function to validate user input.
 
     - The `validate_user_input` function is called if the schema validates successfully.
@@ -124,10 +126,10 @@ class SchemaCommonFlowHandler:
                     ):
                         user_input[str(key.schema)] = key.default()
 
-        if user_input is not None and form_step.schema is not None:
+        if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
             try:
-                user_input = form_step.validate_user_input(user_input)
+                user_input = form_step.validate_user_input(self, user_input)
             except SchemaFlowError as exc:
                 return self._show_next_step(step_id, exc, user_input)
 
