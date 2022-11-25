@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 # have fresh data:
                 await coordinator.async_request_refresh()
             else:
-                # If HASS is alerady running, we assume this is a newly-added config
+                # If HASS is already running, we assume this is a newly-added config
                 # entry, which should request data right away:
                 await coordinator.async_refresh()
         except UpdateFailed as err:
