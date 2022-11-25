@@ -183,7 +183,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Fans under the fan platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Fans under the fan platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(fan.DOMAIN),
@@ -518,7 +518,6 @@ class MqttFan(MqttEntity, FanEntity):
         # The default for FanEntity is to compute it based on percentage
         return self._attr_is_on
 
-    # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
         percentage: int | None = None,
