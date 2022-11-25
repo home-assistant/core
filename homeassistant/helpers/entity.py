@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_TRANSLATION_KEY,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
@@ -223,6 +224,7 @@ class EntityDescription:
     icon: str | None = None
     has_entity_name: bool = False
     name: str | None = None
+    translation_key: str | None = None
     unit_of_measurement: str | None = None
 
 
@@ -290,6 +292,7 @@ class Entity(ABC):
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
+    _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -486,6 +489,15 @@ class Entity(ABC):
             return self.entity_description.entity_category
         return None
 
+    @property
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        if hasattr(self, "_attr_translation_key"):
+            return self._attr_translation_key
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_key
+        return None
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -606,6 +618,9 @@ class Entity(ABC):
 
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
+
+        if (translation_key := self.translation_key) is not None:
+            attr[ATTR_TRANSLATION_KEY] = translation_key
 
         def friendly_name() -> str | None:
             """Return the friendly name.

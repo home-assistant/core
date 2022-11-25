@@ -1,7 +1,12 @@
 """Recorder constants."""
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_RESTORED,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TRANSLATION_KEY,
+)
 from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-import
     JSON_DUMP,
 )
@@ -31,7 +36,12 @@ MAX_ROWS_TO_PURGE = 998
 
 DB_WORKER_PREFIX = "DbWorker"
 
-ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
+ALL_DOMAIN_EXCLUDE_ATTRS = {
+    ATTR_ATTRIBUTION,
+    ATTR_RESTORED,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TRANSLATION_KEY,
+}
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"

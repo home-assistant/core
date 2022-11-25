@@ -477,6 +477,9 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+# Translation key
+ATTR_TRANSLATION_KEY: Final = "translation_key"
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 POWER_VOLT_AMPERE: Final = "VA"
