@@ -112,6 +112,8 @@ class SchemaCommonFlowHandler:
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
 
         if user_input is None:
+            if form_step.schema is None:
+                return self._show_next_step_or_create_entry(form_step)
             return self._show_next_step(step_id)
 
         if (
