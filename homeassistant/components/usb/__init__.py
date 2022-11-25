@@ -83,10 +83,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
         )
 
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    return any(
-        _is_matching(USBDevice(*device_tuple), matcher)
-        for device_tuple in usb_discovery.seen
-    )
+    return any(_is_matching(device, matcher) for device in usb_discovery.seen)
 
 
 @dataclasses.dataclass
@@ -182,7 +179,7 @@ class USBDiscovery:
         """Init USB Discovery."""
         self.hass = hass
         self.usb = usb
-        self.seen: set[tuple[str, ...]] = set()
+        self.seen: set[USBDevice] = set()
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
@@ -262,10 +259,9 @@ class USBDiscovery:
     def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
-        device_tuple = dataclasses.astuple(device)
-        if device_tuple in self.seen:
+        if device in self.seen:
             return
-        self.seen.add(device_tuple)
+        self.seen.add(device)
 
         matched = [matcher for matcher in self.usb if _is_matching(device, matcher)]
         if not matched:
