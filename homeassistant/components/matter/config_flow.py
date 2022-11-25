@@ -33,7 +33,7 @@ from .const import (
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
-DEFAULT_URL = "ws://172.30.32.1:5580/chip_ws"
+DEFAULT_URL = "ws://localhost:5580/chip_ws"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
