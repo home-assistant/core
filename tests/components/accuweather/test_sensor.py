@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    ATTR_TRANSLATION_KEY,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     LENGTH_FEET,
@@ -73,8 +74,9 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "accuweather__pressure_tendency"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_TRANSLATION_KEY) == "pressure_tendency"
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry
