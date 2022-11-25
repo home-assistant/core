@@ -1,17 +1,21 @@
 """Plugwise platform for Home Assistant Core."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
-from aiohttp import ClientConnectionError
-from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.exceptions import (
+    ConnectionFailedError,
+    InvalidAuthentication,
+    InvalidXMLError,
+    ResponseError,
+    UnsupportedDeviceError,
+)
 from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -42,17 +46,16 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connected = await api.connect()
-    except InvalidAuthentication:
-        LOGGER.error("Invalid username or Smile ID")
-        return False
-    except (ClientConnectionError, PlugwiseException) as err:
+    except ConnectionFailedError as err:
+        raise ConfigEntryNotReady("Failed to connect to the Plugwise Smile") from err
+    except InvalidAuthentication as err:
+        raise HomeAssistantError("Invalid username or Smile ID") from err
+    except (InvalidXMLError, ResponseError) as err:
         raise ConfigEntryNotReady(
-            f"Error while communicating to device {api.smile_name}"
+            "Error while communicating to the Plugwise Smile"
         ) from err
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady(
-            f"Timeout while connecting to Smile {api.smile_name}"
-        ) from err
+    except UnsupportedDeviceError as err:
+        raise HomeAssistantError("Device with unsupported firmware") from err
 
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Smile")
