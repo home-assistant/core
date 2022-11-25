@@ -483,11 +483,6 @@ omit =
     homeassistant/components/habitica/__init__.py
     homeassistant/components/habitica/const.py
     homeassistant/components/habitica/sensor.py
-    homeassistant/components/hangouts/__init__.py
-    homeassistant/components/hangouts/hangouts_bot.py
-    homeassistant/components/hangouts/hangups_utils.py
-    homeassistant/components/hangouts/intents.py
-    homeassistant/components/hangouts/notify.py
     homeassistant/components/harman_kardon_avr/media_player.py
     homeassistant/components/harmony/const.py
     homeassistant/components/harmony/data.py
@@ -1110,9 +1105,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/shelly/climate.py
-    homeassistant/components/shelly/coordinator.py
-    homeassistant/components/shelly/utils.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sia/__init__.py
@@ -1570,6 +1562,7 @@ omit =
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/cover.py
     homeassistant/components/yolink/entity.py
+    homeassistant/components/yolink/light.py
     homeassistant/components/yolink/lock.py
     homeassistant/components/yolink/sensor.py
     homeassistant/components/yolink/siren.py

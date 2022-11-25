@@ -11,6 +11,14 @@
             },
             "title": "L'alimentazione non \u00e8 stabile"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Non \u00e8 possibile riscaldare nuovamente il t\u00e8 in questo momento"
+                }
+            },
+            "title": "Il t\u00e8 \u00e8 freddo"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

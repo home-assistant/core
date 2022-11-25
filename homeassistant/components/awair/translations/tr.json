@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_configured_account": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
@@ -26,9 +25,6 @@
                 "description": "{model} ( {device_id} ) kurulumunu yapmak istiyor musunuz?"
             },
             "local": {
-                "data": {
-                    "host": "IP Adresi"
-                },
                 "description": "Awair Yerel API'sinin nas\u0131l etkinle\u015ftirilece\u011fiyle ilgili [bu talimatlar\u0131]( {url} ) uygulay\u0131n. \n\n \u0130\u015finiz bitti\u011finde g\u00f6nder'i t\u0131klay\u0131n."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Cihaz",
                     "host": "IP Adresi"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Eri\u015fim Anahtar\u0131",
-                    "email": "E-posta"
-                },
-                "description": "L\u00fctfen Awair geli\u015ftirici eri\u015fim anahtar\u0131n\u0131 yeniden girin."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "L\u00fctfen Awair geli\u015ftirici eri\u015fim anahtar\u0131n\u0131 yeniden girin."
             },
             "user": {
-                "data": {
-                    "access_token": "Eri\u015fim Anahtar\u0131",
-                    "email": "E-posta"
-                },
                 "description": "En iyi deneyim i\u00e7in yerel se\u00e7in. Bulutu yaln\u0131zca cihaz Home Assistant ile ayn\u0131 a\u011fa ba\u011fl\u0131 de\u011filse veya eski bir cihaz\u0131n\u0131z varsa kullan\u0131n.",
                 "menu_options": {
                     "cloud": "Bulut \u00fczerinden ba\u011flan\u0131n",

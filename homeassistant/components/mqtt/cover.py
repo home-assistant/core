@@ -720,8 +720,8 @@ class MqttCover(MqttEntity, CoverEntity):
         """Find the 0-100% value within the specified range."""
         # the range of motion as defined by the min max values
         if range_type == COVER_PAYLOAD:
-            max_range = self._config[CONF_POSITION_OPEN]
-            min_range = self._config[CONF_POSITION_CLOSED]
+            max_range: int = self._config[CONF_POSITION_OPEN]
+            min_range: int = self._config[CONF_POSITION_CLOSED]
         else:
             max_range = self._config[CONF_TILT_MAX]
             min_range = self._config[CONF_TILT_MIN]
@@ -748,8 +748,8 @@ class MqttCover(MqttEntity, CoverEntity):
         returning the offset
         """
         if range_type == COVER_PAYLOAD:
-            max_range = self._config[CONF_POSITION_OPEN]
-            min_range = self._config[CONF_POSITION_CLOSED]
+            max_range: int = self._config[CONF_POSITION_OPEN]
+            min_range: int = self._config[CONF_POSITION_CLOSED]
         else:
             max_range = self._config[CONF_TILT_MAX]
             min_range = self._config[CONF_TILT_MIN]

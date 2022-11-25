@@ -13,7 +13,9 @@
                 "data": {
                     "ip_address": "IP adresa",
                     "password": "Heslo"
-                }
+                },
+                "description": "Zadajte IP adresu alebo mDNS zariadenia a jeho heslo",
+                "title": "Identifikujte zariadenie"
             }
         }
     }

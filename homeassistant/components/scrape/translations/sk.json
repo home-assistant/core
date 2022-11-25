@@ -1,6 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "step": {
+            "sensor": {
+                "data": {
+                    "attribute": "Atrib\u00fat",
+                    "name": "N\u00e1zov",
+                    "unit_of_measurement": "Jednotka merania",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
+                },
+                "data_description": {
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Heslo"

@@ -1,7 +1,9 @@
 {
     "state": {
         "tomorrowio__pollen_index": {
-            "low": "N\u00edzka"
+            "high": "Vysok\u00fd",
+            "low": "N\u00edzka",
+            "medium": "Stredn\u00fd"
         }
     }
 }

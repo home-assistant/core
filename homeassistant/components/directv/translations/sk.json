@@ -1,7 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
         "flow_title": "{name}",
         "step": {
+            "ssdp_confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

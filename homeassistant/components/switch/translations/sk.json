@@ -5,6 +5,7 @@
             "turn_on": "Zapn\u00fa\u0165 {entity_name}"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} zapnut\u00e9 alebo vypnut\u00e9",
             "turned_off": "{entity_name} vypnut\u00e1",
             "turned_on": "{entity_name} zapnut\u00e1"
         }

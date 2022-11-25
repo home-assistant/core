@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {

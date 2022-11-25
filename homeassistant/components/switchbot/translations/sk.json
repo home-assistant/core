@@ -2,21 +2,23 @@
     "config": {
         "abort": {
             "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_unconfigured_devices": "Nena\u0161li sa \u017eiadne nenakonfigurovan\u00e9 zariadenia.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
             "password": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Zariadenie {name} vy\u017eaduje heslo"
             },
             "user": {
                 "data": {
-                    "address": "Adresa zariadenia",
-                    "mac": "MAC adresa zariadenia",
-                    "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "address": "Adresa zariadenia"
                 }
             }
         }

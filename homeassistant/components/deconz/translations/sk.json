@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Bridge je u\u017e nakonfigurovan\u00fd",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "error": {
+            "no_key": "Nepodarilo sa z\u00edska\u0165 k\u013e\u00fa\u010d API"
         },
         "flow_title": "{host}",
         "step": {
@@ -11,6 +15,29 @@
                     "port": "Port"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_2": "Druh\u00e9 tla\u010didlo",
+            "close": "Zavrie\u0165",
+            "dim_down": "Stlmi\u0165",
+            "dim_up": "Zv\u00fd\u0161i\u0165",
+            "left": "V\u013eavo",
+            "open": "Otvori\u0165",
+            "right": "Vpravo",
+            "side_1": "Strana 1",
+            "side_2": "Strana 2",
+            "side_3": "Strana 3",
+            "side_4": "Strana 4",
+            "side_5": "Strana 5",
+            "side_6": "Strana 6",
+            "turn_off": "Vypn\u00fa\u0165",
+            "turn_on": "Zapn\u00fa\u0165"
+        },
+        "trigger_type": {
+            "remote_awakened": "Zariadenie sa prebudilo",
+            "remote_button_double_press": "dvojklik na tla\u010didlo \u201e{subtype}\u201c"
         }
     }
 }

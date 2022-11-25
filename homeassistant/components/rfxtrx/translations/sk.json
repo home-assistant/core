@@ -1,14 +1,43 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
         "step": {
             "setup_network": {
                 "data": {
                     "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "title": "Vyberte adresu pripojenia"
             },
             "setup_serial": {
+                "data": {
+                    "device": "Vyberte zariadenie"
+                },
                 "title": "Zariadenie"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Odosla\u0165 pr\u00edkaz: {subtype}",
+            "send_status": "Odosla\u0165 aktualiz\u00e1ciu stavu: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Prijat\u00fd pr\u00edkaz: {subtype}",
+            "status": "Prijat\u00fd stav: {subtype}"
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "device": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165"
+                }
             }
         }
     }

@@ -1,7 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "link_local_address": "Lok\u00e1lne adresy odkazov nie s\u00fa podporovan\u00e9"
+        },
         "error": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "flow_title": "{name} ({host})",

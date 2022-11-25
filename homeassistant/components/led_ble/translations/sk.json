@@ -2,8 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
+            "no_unconfigured_devices": "Nena\u0161li sa \u017eiadne nenakonfigurovan\u00e9 zariadenia.",
             "not_supported": "Zariadenie nie je podporovan\u00e9"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adresa Bluetooth"
+                }
+            }
+        }
     }
 }

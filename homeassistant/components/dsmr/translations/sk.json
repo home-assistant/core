@@ -1,13 +1,23 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "step": {
             "setup_network": {
                 "data": {
                     "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "title": "Vyberte adresu pripojenia"
             },
             "setup_serial": {
+                "data": {
+                    "port": "Vyberte zariadenie"
+                },
                 "title": "Zariadenie"
             }
         }

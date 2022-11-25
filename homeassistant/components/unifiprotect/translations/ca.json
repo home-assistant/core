@@ -42,8 +42,10 @@
         }
     },
     "issues": {
+        "ea_setup_failed": {
+            "title": "Error de configuraci\u00f3 amb la versi\u00f3 d'acc\u00e9s anticipat"
+        },
         "ea_warning": {
-            "description": "Est\u00e0s utilitzant UniFi Protect v{version} que \u00e9s una versi\u00f3 d'acc\u00e9s anticipat. Les versions d'acc\u00e9s anticipat no s\u00f3n compatibles amb Home Assistant i poden fer que la teva integraci\u00f3 d'UniFi Protect s'espatlli o no funcioni correctament.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -58,15 +60,11 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Ha de ser una llista d'adreces MAC separades per comes"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "M\u00e8triques en temps real (ALERTA: augmenta considerablement l'\u00fas de CPU)",
                     "disable_rtsp": "Desactiva el flux RTSP",
-                    "ignored_devices": "Llista d'adreces MAC dels dispositius a ignorar, separades per comes",
                     "max_media": "Nombre m\u00e0xim d'esdeveniments a carregar al navegador multim\u00e8dia (augmenta l'\u00fas de RAM)",
                     "override_connection_host": "Substitueix l'amfitri\u00f3 de connexi\u00f3"
                 },

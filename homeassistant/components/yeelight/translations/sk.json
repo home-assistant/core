@@ -1,10 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "flow_title": "{model} {id} ({host})",
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {model} ({host})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Zariadenie"

@@ -19,7 +19,7 @@ class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
     hass: HomeAssistant = attr.ib()
-    topic: str = attr.ib()
+    topic: str | None = attr.ib()
     message_callback: MessageCallbackType = attr.ib()
     subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None = attr.ib()
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
@@ -39,7 +39,7 @@ class EntitySubscription:
             other.unsubscribe_callback()
             # Clear debug data if it exists
             debug_info.remove_subscription(
-                self.hass, other.message_callback, other.topic
+                self.hass, other.message_callback, str(other.topic)
             )
 
         if self.topic is None:
@@ -112,7 +112,7 @@ def async_prepare_subscribe_topics(
             remaining.unsubscribe_callback()
             # Clear debug data if it exists
             debug_info.remove_subscription(
-                hass, remaining.message_callback, remaining.topic
+                hass, remaining.message_callback, str(remaining.topic)
             )
 
     return new_state

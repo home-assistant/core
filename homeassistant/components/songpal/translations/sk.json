@@ -1,5 +1,13 @@
 {
     "config": {
-        "flow_title": "{name} ({host})"
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Chcete nastavi\u0165 {name} ({host})?"
+            }
+        }
     }
 }

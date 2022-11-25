@@ -1,7 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adresa (pozri popis vy\u0161\u0161ie)"
+                }
+            }
         }
     }
 }

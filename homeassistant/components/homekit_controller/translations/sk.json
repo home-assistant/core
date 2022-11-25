@@ -1,16 +1,46 @@
 {
     "config": {
         "abort": {
+            "accessory_not_found_error": "Nie je mo\u017en\u00e9 prida\u0165 p\u00e1rovanie, preto\u017ee zariadenie u\u017e nie je mo\u017en\u00e9 n\u00e1js\u0165.",
+            "already_configured": "Pr\u00edslu\u0161enstvo je u\u017e nakonfigurovan\u00e9 s t\u00fdmto kontrol\u00e9rom.",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "error": {
+            "pairing_failed": "Pri pokuse o sp\u00e1rovanie s t\u00fdmto zariaden\u00edm do\u0161lo k neobsluhovanej chybe. M\u00f4\u017ee \u00eds\u0165 o do\u010dasn\u00fa chybu alebo va\u0161e zariadenie nemus\u00ed by\u0165 v s\u00fa\u010dasnosti podporovan\u00e9: {error}",
+            "unable_to_pair": "Nie je mo\u017en\u00e9 sp\u00e1rova\u0165, sk\u00faste to znova.",
+            "unknown_error": "Zariadenie hl\u00e1silo nezn\u00e1mu chybu. Sp\u00e1rovanie zlyhalo."
         },
         "flow_title": "{name} ({category})",
         "step": {
+            "busy_error": {
+                "title": "Zariadenie sa u\u017e sp\u00e1ruje s in\u00fdm kontrol\u00e9rom"
+            },
             "user": {
                 "data": {
                     "device": "Zariadenie"
                 },
                 "title": "V\u00fdber zariadenia"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Tla\u010didlo 1",
+            "button10": "Tla\u010didlo 10",
+            "button2": "Tla\u010didlo 2",
+            "button3": "Tla\u010didlo 3",
+            "button4": "Tla\u010didlo 4",
+            "button5": "Tla\u010didlo 5",
+            "button6": "Tla\u010didlo 6",
+            "button7": "Tla\u010didlo 7",
+            "button8": "Tla\u010didlo 8",
+            "button9": "Tla\u010didlo 9",
+            "doorbell": "Domov\u00fd zvon\u010dek"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" stla\u010den\u00e9 dvakr\u00e1t",
+            "long_press": "\"{subtype}\" stla\u010den\u00e9 a podr\u017ean\u00e9",
+            "single_press": "\"{subtype}\" stla\u010den\u00e9"
         }
     }
 }

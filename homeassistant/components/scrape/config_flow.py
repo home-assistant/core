@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+import uuid
 
 import voluptuous as vol
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -34,10 +36,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import async_get_hass
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import (
@@ -112,7 +114,9 @@ SENSOR_SETUP = {
 }
 
 
-def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+def validate_rest_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate rest setup."""
     hass = async_get_hass()
     rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
@@ -123,18 +127,28 @@ def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
     return user_input
 
 
-def validate_sensor_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+def validate_sensor_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate sensor setup."""
-    return {"sensor": [{**user_input, CONF_INDEX: int(user_input[CONF_INDEX])}]}
+    return {
+        "sensor": [
+            {
+                **user_input,
+                CONF_INDEX: int(user_input[CONF_INDEX]),
+                CONF_UNIQUE_ID: str(uuid.uuid1()),
+            }
+        ]
+    }
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
 DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_RESOURCE,
-        next_step=lambda _: "sensor",
+        next_step="sensor",
         validate_user_input=validate_rest_setup,
     ),
     "sensor": SchemaFlowFormStep(
@@ -142,7 +156,7 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         validate_user_input=validate_sensor_setup,
     ),
 }
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(DATA_SCHEMA_RESOURCE),
 }
 

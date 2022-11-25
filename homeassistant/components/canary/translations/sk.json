@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

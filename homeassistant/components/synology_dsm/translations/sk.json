@@ -13,7 +13,8 @@
                 "data": {
                     "password": "Heslo",
                     "port": "Port"
-                }
+                },
+                "description": "Chcete nastavi\u0165 {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -25,6 +26,15 @@
                     "host": "Hostite\u013e",
                     "password": "Heslo",
                     "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Min\u00faty medzi skenovaniami"
                 }
             }
         }

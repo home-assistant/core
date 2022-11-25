@@ -5,7 +5,8 @@
             "addon_install_failed": "Die Installation des Silicon Labs Multiprotokoll-Add-Ons ist fehlgeschlagen.",
             "addon_set_config_failed": "Die Silicon Labs Multiprotokoll-Konfiguration konnte nicht eingestellt werden.",
             "addon_start_failed": "Das Silicon Labs Multiprotokoll-Add-On konnte nicht gestartet werden.",
-            "not_hassio": "Die Hardwareoptionen k\u00f6nnen nur auf HassOS-Installationen konfiguriert werden."
+            "not_hassio": "Die Hardwareoptionen k\u00f6nnen nur auf HassOS-Installationen konfiguriert werden.",
+            "zha_migration_failed": "Die ZHA Migration war nicht erfolgreich."
         },
         "error": {
             "unknown": "Unerwarteter Fehler"
@@ -22,7 +23,7 @@
                 "data": {
                     "enable_multi_pan": "Multiprotokollunterst\u00fctzung aktivieren"
                 },
-                "description": "Wenn die Multiprotokoll-Unterst\u00fctzung aktiviert ist, kann das IEEE 802.15.4-Funkger\u00e4t des Home Assistant Yellow sowohl f\u00fcr Zigbee als auch f\u00fcr Thread (von Matter verwendet) gleichzeitig verwendet werden. Hinweis: Dies ist eine experimentelle Funktion.",
+                "description": "Wenn die Multiprotokoll-Unterst\u00fctzung aktiviert ist, kann das IEEE 802.15.4-Radio des Home Assistant Yellow gleichzeitig f\u00fcr Zigbee und Thread (von Matter verwendet) verwendet werden. Wenn das Funkger\u00e4t bereits von der ZHA-Zigbee-Integration verwendet wird, wird ZHA neu konfiguriert, um die Multiprotokoll-Firmware zu verwenden. \n\nHinweis: Dies ist eine experimentelle Funktion.",
                 "title": "Aktiviere die Multiprotokollunterst\u00fctzung auf dem IEEE 802.15.4-Funkger\u00e4t"
             },
             "install_addon": {

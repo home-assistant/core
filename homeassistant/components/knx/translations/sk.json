@@ -3,17 +3,25 @@
         "abort": {
             "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
         },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+        },
         "step": {
             "manual_tunnel": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
                 }
             },
-            "secure_manual": {
+            "routing": {
                 "data": {
-                    "device_authentication": "Heslo na overenie zariadenia",
-                    "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
+                    "individual_address": "Individu\u00e1lna adresa",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                },
+                "data_description": {
+                    "individual_address": "Adresa KNX, ktor\u00fa bude pou\u017e\u00edva\u0165 Home Assistant, napr. `0.0.4`"
                 }
             },
             "secure_tunnel_manual": {
@@ -26,33 +34,37 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+        },
         "step": {
             "connection_type": {
                 "data": {
                     "connection_type": "Typ pripojenia KNX"
                 }
             },
-            "init": {
-                "data": {
-                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
-                }
-            },
             "manual_tunnel": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a",
                     "port": "Port"
+                }
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Individu\u00e1lna adresa",
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                },
+                "data_description": {
+                    "individual_address": "Adresa KNX, ktor\u00fa bude pou\u017e\u00edva\u0165 Home Assistant, napr. `0.0.4`"
                 }
             },
             "secure_tunnel_manual": {
                 "data": {
+                    "device_authentication": "Heslo na overenie zariadenia",
                     "user_id": "ID pou\u017e\u00edvate\u013ea",
                     "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
-                }
-            },
-            "tunnel": {
-                "data": {
-                    "host": "Hostite\u013e",
-                    "port": "Port"
                 }
             }
         }

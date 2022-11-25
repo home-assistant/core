@@ -1,23 +1,18 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Toto konto SimpliSafe sa u\u017e pou\u017e\u00edva.",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
+            "identifier_exists": "\u00da\u010det je u\u017e zaregistrovan\u00fd",
             "invalid_auth": "Neplatn\u00e9 overenie"
-        },
-        "step": {
-            "reauth_confirm": {
-                "data": {
-                    "password": "Heslo"
-                }
-            },
-            "user": {
-                "data": {
-                    "password": "Heslo",
-                    "username": "Email"
-                }
-            }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "description": "Aktualizujte v\u0161etky automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa t\u00fato slu\u017ebu, aby namiesto nej pou\u017e\u00edvali slu\u017ebu `{alternate_service}` s ID cie\u013eovej entity `{alternate_target}`. Potom kliknite na tla\u010didlo SUBMIT (Odosla\u0165) ni\u017e\u0161ie a ozna\u010dte tento probl\u00e9m ako vyrie\u0161en\u00fd.",
+            "title": "Slu\u017eba {deprecated_service} sa odstra\u0148uje"
         }
     }
 }

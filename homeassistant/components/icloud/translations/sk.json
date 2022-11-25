@@ -1,21 +1,26 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "send_verification_code": "Odoslanie overovacieho k\u00f3du zlyhalo",
+            "validate_verification_code": "Nepodarilo sa overi\u0165 overovac\u00ed k\u00f3d, sk\u00faste to znova"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Heslo"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
                 }
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "D\u00f4veryhodn\u00e9 zariadenie"
+                },
+                "description": "Vyberte svoje d\u00f4veryhodn\u00e9 zariadenie",
+                "title": "d\u00f4veryhodn\u00e9 zariadenie iCloud"
             },
             "user": {
                 "data": {
