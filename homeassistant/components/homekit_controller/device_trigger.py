@@ -1,7 +1,6 @@
 """Provides device automations for homekit devices."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Generator
 from typing import TYPE_CHECKING, Any
 
@@ -230,7 +229,7 @@ async def async_setup_triggers_for_entry(
             return False
 
         trigger = async_get_or_create_trigger_source(conn.hass, device_id)
-        asyncio.create_task(trigger.async_setup(conn, aid, triggers))
+        hass.async_create_task(trigger.async_setup(conn, aid, triggers))
 
         return True
 
