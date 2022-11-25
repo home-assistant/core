@@ -9,6 +9,7 @@ from typing import Any
 import async_timeout
 from pyeiscp import Connection
 
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
@@ -131,7 +132,7 @@ class OnkyoNetworkReceiver:
         """Connect to the receiver."""
         self._event.clear()
         try:
-            with async_timeout.timeout(CONNECT_TIMEOUT):
+            async with async_timeout.timeout(CONNECT_TIMEOUT):
                 await self._connection.connect()
                 await self._event.wait()
 
@@ -291,6 +292,11 @@ class ReceiverZone:
         if self._supports_volume:
             return SUPPORT_ONKYO_WO_SOUND_MODE
         return SUPPORT_ONKYO_WO_VOLUME
+
+    @property
+    def supports_set_volume(self) -> bool:
+        """Return whether the zone supports setting its volume."""
+        return self.supported_features & MediaPlayerEntityFeature.VOLUME_SET != 0
 
     def set_max_volume(self, max_volume: int) -> None:
         """Set the max volume of the receiver zone."""

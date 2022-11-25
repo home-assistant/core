@@ -4,6 +4,7 @@
   "codeowners": ["@klaashoekstra94"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["eiscp"],
   "requirements": ["pyeiscp==0.0.7"]

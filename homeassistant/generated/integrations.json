@@ -3823,10 +3823,10 @@
       "iot_class": "local_polling"
     },
     "onkyo": {
-      "name": "Onkyo",
+      "name": "Onkyo & Pioneer Network Receivers",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "onvif": {
       "name": "ONVIF",

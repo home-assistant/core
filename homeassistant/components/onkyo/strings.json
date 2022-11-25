@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "manual": {
-        "title": "Onkyo & Pioneer Network Receivers",
         "description": "No receivers discovered, please set the IP manually",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
@@ -30,7 +29,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Onkyo & Pioneer Network Receivers",
         "description": "Optional receiver settings",
         "data": {
           "max_volume": "Max volume. Older receivers use 80, newer 200",
@@ -38,7 +36,6 @@
         }
       },
       "source_names": {
-        "title": "Onkyo & Pioneer Network Receivers",
         "description": "Set custom names for receiver sources",
         "data": {
           "aiplay": "Airplay custon name",

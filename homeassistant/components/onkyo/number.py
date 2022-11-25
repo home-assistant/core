@@ -3,13 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.media_player.const import SUPPORT_VOLUME_SET
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_MAX_VOLUME,
@@ -34,7 +32,7 @@ async def async_setup_entry(
 
     new_devices: list[NumberBase] = []
     for zone in receiver.zones.values():
-        if zone.supported_features & SUPPORT_VOLUME_SET != 0:
+        if zone.supports_set_volume:
             new_devices.append(OnkyoMaxVolumeNumber(zone))
 
     # Add all new devices to HA.
@@ -75,15 +73,17 @@ class NumberBase(NumberEntity):
         self._receiver_zone.remove_callback(self.async_write_ha_state)
 
 
-class OnkyoMaxVolumeNumber(NumberBase, RestoreEntity):
+class OnkyoMaxVolumeNumber(NumberBase, RestoreNumber):
     """Representation of the max volume on an Onkyo network receiver zone."""
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
-        if state := await self.async_get_last_state():
-            # Get the last value from the extra state attributes.
+        if number_data := await self.async_get_last_number_data():
+            # Get the last stored value and set the zone's max volume to it.
             self._receiver_zone.set_max_volume(
-                int(state.attributes.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME))
+                int(number_data.native_value)
+                if number_data.native_value is not None
+                else DEFAULT_MAX_VOLUME
             )
 
         await super().async_added_to_hass()
@@ -104,20 +104,20 @@ class OnkyoMaxVolumeNumber(NumberBase, RestoreEntity):
         return f"{self._receiver_zone.name} Maximum Volume"
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return MAX_VOLUME_MIN_VALUE
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return MAX_VOLUME_MAX_VALUE
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current max volume."""
         return float(self._receiver_zone.max_volume)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the max volume to this value."""
         self._receiver_zone.set_max_volume(int(value))

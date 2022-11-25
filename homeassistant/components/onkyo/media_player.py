@@ -7,7 +7,12 @@ from typing import Any
 from pyeiscp.commands import COMMANDS
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerState
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -263,7 +268,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._receiver_zone.set_mute(mute)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: int
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play radio station by preset number."""
         self._receiver_zone.play_media(media_type, media_id)
