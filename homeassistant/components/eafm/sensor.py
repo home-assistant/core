@@ -250,7 +250,7 @@ class MeasurementFlood(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        """Return the device info, but don't override default gauge"""
+        """Return the device info, but don't override default gauge."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, "measure-id", self.station_id)},
