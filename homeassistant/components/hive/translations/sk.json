@@ -1,7 +1,13 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
+        },
+        "error": {
+            "invalid_username": "Nepodarilo sa prihl\u00e1si\u0165 do syst\u00e9mu Hive. Va\u0161a e-mailov\u00e1 adresa nie je rozpoznan\u00e1.",
+            "no_internet_available": "Na pripojenie k Hive je potrebn\u00e9 internetov\u00e9 pripojenie.",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "configuration": {
@@ -16,7 +22,17 @@
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "scan_interval": "Interval skenovania (sekundy)"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Interval skenovania (sekundy)"
                 }
             }
         }

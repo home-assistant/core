@@ -9,6 +9,9 @@
                 "description": "Chcete nastavi\u0165 {product_type} ({serial}) na {ip_address}?"
             },
             "user": {
+                "data": {
+                    "ip_address": "IP adresa"
+                },
                 "title": "Konfigur\u00e1cia zariadenia"
             }
         }

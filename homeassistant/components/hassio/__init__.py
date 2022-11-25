@@ -866,6 +866,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if not scheduled:
@@ -874,4 +875,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
-        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )

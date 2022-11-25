@@ -17,7 +17,7 @@ from pyairvisual.node import NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -30,6 +30,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from . import async_get_geography_id
 from .const import (
@@ -65,6 +69,13 @@ PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
         )
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SHOW_ON_MAP): bool},
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -165,9 +176,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return AirVisualOptionsFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_geography_by_coords(
         self, user_input: dict[str, str] | None = None
@@ -258,30 +269,3 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY_NAME:
             return await self.async_step_geography_by_name()
         return await self.async_step_node_pro()
-
-
-class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle an AirVisual options flow."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SHOW_ON_MAP,
-                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
-                    ): bool
-                }
-            ),
-        )

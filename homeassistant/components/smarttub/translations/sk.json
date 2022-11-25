@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -11,7 +12,8 @@
                 "data": {
                     "email": "Email",
                     "password": "Heslo"
-                }
+                },
+                "description": "Na prihl\u00e1senie zadajte svoju e-mailov\u00fa adresu a heslo SmartTub"
             }
         }
     }

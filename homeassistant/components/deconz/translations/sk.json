@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Bridge je u\u017e nakonfigurovan\u00fd",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "error": {
+            "no_key": "Nepodarilo sa z\u00edska\u0165 k\u013e\u00fa\u010d API"
         },
         "flow_title": "{host}",
         "step": {
@@ -15,6 +19,7 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_2": "Druh\u00e9 tla\u010didlo",
             "close": "Zavrie\u0165",
             "dim_down": "Stlmi\u0165",
             "dim_up": "Zv\u00fd\u0161i\u0165",
