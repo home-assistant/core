@@ -20,6 +20,7 @@ from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
@@ -2863,6 +2864,96 @@ async def test_entry_reload_calls_on_unload_listeners(hass, manager):
     # Since we did not register another async_on_unload it should
     # have only been called once
     assert len(mock_unload_callback.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_setup_raise_entry_error(hass, caplog):
+    """Test a setup raising ConfigEntryError."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryError("Incompatible firmware version")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry test_title for test: Incompatible firmware version"
+        in caplog.text
+    )
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Incompatible firmware version"
+
+
+async def test_setup_raise_entry_error_from_first_coordinator_update(hass, caplog):
+    """Test async_config_entry_first_refresh raises ConfigEntryError."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryError("Incompatible firmware version")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_config_entry_first_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry test_title for test: Incompatible firmware version"
+        in caplog.text
+    )
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Incompatible firmware version"
+
+
+async def test_setup_not_raise_entry_error_from_future_coordinator_update(hass, caplog):
+    """Test a coordinator not raises ConfigEntryError in the future."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryError("Incompatible firmware version")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert (
+        "Config entry setup failed while fetching any data: Incompatible firmware version"
+        in caplog.text
+    )
+
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
