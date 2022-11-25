@@ -375,3 +375,71 @@ async def test_schema_none(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_last_step(hass: HomeAssistant) -> None:
+    """Test SchemaFlowFormStep with schema set to None."""
+
+    CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "user": SchemaFlowFormStep(next_step="step1"),
+        "step1": SchemaFlowFormStep(vol.Schema({}), next_step="step2"),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step3"),
+        "step3": SchemaFlowFormStep(vol.Schema({}), next_step=None),
+    }
+
+    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+        """Handle a config or options flow for Derivative."""
+
+        config_flow = CONFIG_FLOW
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestConfigFlow}):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "step1"
+        assert result["last_step"] is False
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "step2"
+        assert result["last_step"] is None
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "step3"
+        assert result["last_step"] is True
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_next_step_function(hass: HomeAssistant) -> None:
+    """Test SchemaFlowFormStep with a next_step function."""
+
+    CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "user": SchemaFlowFormStep(next_step="step1"),
+        "step1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step2"),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: None),
+    }
+
+    class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
+        """Handle a config or options flow for Derivative."""
+
+        config_flow = CONFIG_FLOW
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestConfigFlow}):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "step1"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "step2"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == FlowResultType.CREATE_ENTRY

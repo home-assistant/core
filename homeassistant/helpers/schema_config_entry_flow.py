@@ -53,12 +53,13 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
     """
 
-    next_step: Callable[[dict[str, Any]], str] | str | None = None
+    next_step: Callable[[dict[str, Any]], str | None] | str | None = None
     """Optional property to identify next step.
 
     - If `next_step` is a function, it is called if the schema validates successfully or
     if no schema is defined. The `next_step` function is passed the union of config entry
-    options and user input from previous steps.
+    options and user input from previous steps. If the function returns None, the flow is
+    ended with `FlowResultType.CREATE_ENTRY`.
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
@@ -147,13 +148,17 @@ class SchemaCommonFlowHandler:
     def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
     ) -> FlowResult:
-        if form_step.next_step is None:
+        next_step_id_or_end_flow: str | None
+
+        if callable(form_step.next_step):
+            next_step_id_or_end_flow = form_step.next_step(self._options)
+        else:
+            next_step_id_or_end_flow = form_step.next_step
+
+        if next_step_id_or_end_flow is None:
             # Flow done, create entry or update config entry options
             return self._handler.async_create_entry(data=self._options)
-
-        if isinstance(form_step.next_step, str):
-            return self._show_next_step(form_step.next_step)
-        return self._show_next_step(form_step.next_step(self._options))
+        return self._show_next_step(next_step_id_or_end_flow)
 
     def _show_next_step(
         self,
@@ -203,11 +208,14 @@ class SchemaCommonFlowHandler:
         errors = {"base": str(error)} if error else None
 
         # Show form for next step
+        last_step = None
+        if not callable(form_step.next_step):
+            last_step = form_step.next_step is None
         return self._handler.async_show_form(
             step_id=next_step_id,
             data_schema=data_schema,
             errors=errors,
-            last_step=form_step.next_step is None,
+            last_step=last_step,
         )
 
     async def _async_menu_step(
