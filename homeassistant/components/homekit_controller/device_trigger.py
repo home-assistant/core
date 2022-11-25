@@ -67,7 +67,12 @@ class TriggerSource:
     async def async_setup(
         self, connection: HKDevice, aid: int, triggers: list[dict[str, Any]]
     ) -> None:
-        """Set up a set of triggers for a device."""
+        """Set up a set of triggers for a device.
+
+        This function must be re-entrant since
+        it is called when the device is first added and
+        when the config entry is reloaded.
+        """
         for trigger_data in triggers:
             trigger_key = (trigger_data[CONF_TYPE], trigger_data[CONF_SUBTYPE])
             self._triggers[trigger_key] = trigger_data
