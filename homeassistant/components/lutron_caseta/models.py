@@ -51,5 +51,5 @@ class LutronButton(TypedDict):
     lutron_device_id: int
     leap_button_number: int
     button_name: str
-    led_device_id: int
+    led_device_id: str | None
     parent_keypad: int

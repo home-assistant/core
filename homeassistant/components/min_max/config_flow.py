@@ -23,6 +23,7 @@ _STATISTIC_MEASURES = [
     selector.SelectOptionDict(value="median", label="Median"),
     selector.SelectOptionDict(value="last", label="Most recently updated"),
     selector.SelectOptionDict(value="range", label="Statistical range"),
+    selector.SelectOptionDict(value="sum", label="Sum"),
 ]
 
 

@@ -6,7 +6,7 @@ import contextlib
 from itertools import chain
 import logging
 import ssl
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
 from pylutron_caseta import BUTTON_STATUS_PRESSED
@@ -27,6 +27,7 @@ from .const import (
     ACTION_RELEASE,
     ATTR_ACTION,
     ATTR_AREA_NAME,
+    ATTR_BUTTON_NAME,
     ATTR_BUTTON_NUMBER,
     ATTR_DEVICE_NAME,
     ATTR_LEAP_BUTTON_NUMBER,
@@ -231,24 +232,30 @@ def _async_setup_keypads(
 
     device_registry = dr.async_get(hass)
 
-    bridge_devices = bridge.get_devices()
-    bridge_buttons = bridge.buttons
+    bridge_devices: dict[str, dict[str, str | int]] = bridge.get_devices()
+    bridge_buttons: dict[str, dict[str, str | int]] = bridge.buttons
 
     dr_device_id_to_keypad: dict[str, LutronKeypad] = {}
     keypads: dict[int, LutronKeypad] = {}
     keypad_buttons: dict[int, LutronButton] = {}
     keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
+    leap_to_keypad_button_names: dict[int, dict[int, str]] = {}
 
     for bridge_button in bridge_buttons.values():
 
-        bridge_keypad = bridge_devices[bridge_button["parent_device"]]
-        keypad_device_id = bridge_keypad["device_id"]
-        button_device_id = bridge_button["device_id"]
+        parent_device = cast(str, bridge_button["parent_device"])
+        bridge_keypad = bridge_devices[parent_device]
+        keypad_lutron_device_id = cast(int, bridge_keypad["device_id"])
+        button_lutron_device_id = cast(int, bridge_button["device_id"])
+        leap_button_number = cast(int, bridge_button["button_number"])
+        button_led_device_id = None
+        if "button_led" in bridge_button:
+            button_led_device_id = cast(str, bridge_button["button_led"])
 
-        if not (keypad := keypads.get(keypad_device_id)):
+        if not (keypad := keypads.get(keypad_lutron_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
-            keypad = keypads[keypad_device_id] = _async_build_lutron_keypad(
-                bridge, bridge_device, bridge_keypad, keypad_device_id
+            keypad = keypads[keypad_lutron_device_id] = _async_build_lutron_keypad(
+                bridge, bridge_device, bridge_keypad, keypad_lutron_device_id
             )
 
             # Register the keypad device
@@ -258,24 +265,38 @@ def _async_setup_keypads(
             keypad["dr_device_id"] = dr_device.id
             dr_device_id_to_keypad[dr_device.id] = keypad
 
+        button_name = _get_button_name(keypad, bridge_button)
+        keypad_lutron_device_id = keypad["lutron_device_id"]
+
         # Add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
-        button = keypad_buttons[button_device_id] = LutronButton(
-            lutron_device_id=button_device_id,
-            leap_button_number=bridge_button["button_number"],
-            button_name=_get_button_name(keypad, bridge_button),
-            led_device_id=bridge_button.get("button_led"),
-            parent_keypad=keypad["lutron_device_id"],
+        keypad_buttons[button_lutron_device_id] = LutronButton(
+            lutron_device_id=button_lutron_device_id,
+            leap_button_number=leap_button_number,
+            button_name=button_name,
+            led_device_id=button_led_device_id,
+            parent_keypad=keypad_lutron_device_id,
         )
 
-        keypad["buttons"].append(button["lutron_device_id"])
+        keypad["buttons"].append(button_lutron_device_id)
 
-        keypad_button_names_to_leap.setdefault(keypad["lutron_device_id"], {}).update(
-            {button["button_name"]: int(button["leap_button_number"])}
+        button_name_to_leap = keypad_button_names_to_leap.setdefault(
+            keypad_lutron_device_id, {}
         )
+        button_name_to_leap[button_name] = leap_button_number
+        leap_to_button_name = leap_to_keypad_button_names.setdefault(
+            keypad_lutron_device_id, {}
+        )
+        leap_to_button_name[leap_button_number] = button_name
 
     keypad_trigger_schemas = _async_build_trigger_schemas(keypad_button_names_to_leap)
 
-    _async_subscribe_keypad_events(hass, bridge, keypads, keypad_buttons)
+    _async_subscribe_keypad_events(
+        hass=hass,
+        bridge=bridge,
+        keypads=keypads,
+        keypad_buttons=keypad_buttons,
+        leap_to_keypad_button_names=leap_to_keypad_button_names,
+    )
 
     return LutronKeypadData(
         dr_device_id_to_keypad,
@@ -412,8 +433,9 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
 def _async_subscribe_keypad_events(
     hass: HomeAssistant,
     bridge: Smartbridge,
-    keypads: dict[int, Any],
-    keypad_buttons: dict[int, Any],
+    keypads: dict[int, LutronKeypad],
+    keypad_buttons: dict[int, LutronButton],
+    leap_to_keypad_button_names: dict[int, dict[int, str]],
 ):
     """Subscribe to lutron events."""
 
@@ -430,8 +452,11 @@ def _async_subscribe_keypad_events(
             action = ACTION_RELEASE
 
         keypad_type = keypad["type"]
+        keypad_device_id = keypad["device_id"]
+        leap_button_to_name = leap_to_keypad_button_names[keypad_device_id]
         leap_button_number = button["leap_button_number"]
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
+        button_name = leap_button_to_name[leap_button_number]
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
@@ -443,6 +468,7 @@ def _async_subscribe_keypad_events(
                 ATTR_DEVICE_NAME: keypad["name"],
                 ATTR_DEVICE_ID: keypad["dr_device_id"],
                 ATTR_AREA_NAME: keypad["area_name"],
+                ATTR_BUTTON_NAME: button_name,
                 ATTR_ACTION: action,
             },
         )
