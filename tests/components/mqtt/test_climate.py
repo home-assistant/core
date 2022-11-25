@@ -120,7 +120,6 @@ async def test_preset_none_in_preset_modes(hass, caplog):
     assert "Invalid config for [mqtt]: not a valid value" in caplog.text
 
 
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
 @pytest.mark.parametrize(
     "parameter,config_value",
     [
