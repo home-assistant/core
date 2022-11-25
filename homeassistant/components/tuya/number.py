@@ -252,6 +252,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        NumberEntityDescription(
+            key=DPCode.ROOM_TEMPERATURE_CALIBRATION,
+            name="Temperature Calibration",
+            icon="mdi:adjust",
+            entity_category=EntityCategory.CONFIG,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        ),
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (
@@ -409,10 +420,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         if self._number is None:
             return None
 
-        # Raw value
-        if not (value := self.device.status.get(self.entity_description.key)):
+        # Raw value. Makes sure `0` is returned as a number, not as `undefined`
+        if (value := self.device.status.get(self.entity_description.key)) is None:
             return None
-
         return self._number.scale_value(value)
 
     def set_native_value(self, value: float) -> None:
