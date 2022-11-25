@@ -25,16 +25,14 @@ from .const import CONF_HIDE_MEMBERS
 
 
 def basic_group_options_schema(
-    domain: str,
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
+    domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
-    handler = cast(SchemaOptionsFlowHandler, handler)
     return vol.Schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                handler, selector.EntitySelectorConfig(domain=domain, multiple=True)
+                cast(SchemaOptionsFlowHandler, handler.parent_handler),
+                selector.EntitySelectorConfig(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
@@ -54,12 +52,9 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     )
 
 
-def binary_sensor_options_schema(
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
-) -> vol.Schema:
+def binary_sensor_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema("binary_sensor", handler, options).extend(
+    return basic_group_options_schema("binary_sensor", handler).extend(
         {
             vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
@@ -74,12 +69,10 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 
 
 def light_switch_options_schema(
-    domain: str,
-    handler: SchemaConfigFlowHandler | SchemaOptionsFlowHandler,
-    options: dict[str, Any],
+    domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema(domain, handler, options).extend(
+    return basic_group_options_schema(domain, handler).extend(
         {
             vol.Required(
                 CONF_ALL, default=False, description={"advanced": True}
@@ -145,7 +138,7 @@ CONFIG_FLOW = {
 
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(None, next_step=choose_options_step),
+    "init": SchemaFlowFormStep(next_step=choose_options_step),
     "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
     "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
