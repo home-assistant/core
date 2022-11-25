@@ -9,14 +9,20 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, Union
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
+from aiounifi.interfaces.api_handlers import (
+    APIHandler,
+    CallbackType,
+    ItemEvent,
+    UnsubscribeType,
+)
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
+from aiounifi.models.api import APIItem
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import (
     DeviceSetOutletRelayRequest,
@@ -51,8 +57,8 @@ from .controller import UniFiController
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
-_DataT = TypeVar("_DataT")
-_HandlerT = TypeVar("_HandlerT")
+_DataT = TypeVar("_DataT", bound=Union[APIItem, Outlet, Port])
+_HandlerT = TypeVar("_HandlerT", bound=Union[APIHandler, Outlets, Ports])
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 

@@ -7,8 +7,14 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
+from aiounifi.interfaces.api_handlers import (
+    APIHandler,
+    CallbackType,
+    ItemEvent,
+    UnsubscribeType,
+)
 from aiounifi.interfaces.devices import Devices
+from aiounifi.models.api import APIItem
 from aiounifi.models.device import Device, DeviceUpgradeRequest
 
 from homeassistant.components.update import (
@@ -32,8 +38,8 @@ if TYPE_CHECKING:
 
     from .controller import UniFiController
 
-_DataT = TypeVar("_DataT")
-_HandlerT = TypeVar("_HandlerT")
+_DataT = TypeVar("_DataT", bound=APIItem)
+_HandlerT = TypeVar("_HandlerT", bound=APIHandler)
 
 Subscription = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
