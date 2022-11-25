@@ -9,8 +9,8 @@ class USBDevice:
     """A usb device."""
 
     device: str
-    vid: str
-    pid: str
+    vid: str | None
+    pid: str | None
     serial_number: str | None
     manufacturer: str | None
     description: str | None

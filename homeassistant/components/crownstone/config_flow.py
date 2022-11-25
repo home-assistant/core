@@ -9,8 +9,6 @@ from crownstone_cloud.exceptions import (
     CrownstoneAuthenticationError,
     CrownstoneUnknownError,
 )
-import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -55,9 +53,7 @@ class BaseCrownstoneFlowHandler(FlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Set up a Crownstone USB dongle."""
-        list_of_ports = await self.hass.async_add_executor_job(
-            serial.tools.list_ports.comports
-        )
+        list_of_ports = await self.hass.async_add_executor_job(usb.list_serial_ports)
         if self.flow_type == CONFIG_FLOW:
             ports_as_string = list_ports_as_str(list_of_ports)
         else:
@@ -76,7 +72,7 @@ class BaseCrownstoneFlowHandler(FlowHandler):
                 else:
                     index = ports_as_string.index(selection) - 1
 
-                selected_port: ListPortInfo = list_of_ports[index]
+                selected_port: usb.USBDevice = list_of_ports[index]
                 self.usb_path = await self.hass.async_add_executor_job(
                     usb.get_serial_by_id, selected_port.device
                 )

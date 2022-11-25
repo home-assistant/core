@@ -7,7 +7,6 @@ from typing import Any
 
 import async_timeout
 import serial
-from serial.tools import list_ports
 import ultraheat_api
 import voluptuous as vol
 
@@ -119,22 +118,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
-    ports = await hass.async_add_executor_job(list_ports.comports)
+    ports = await hass.async_add_executor_job(usb.list_serial_ports)
     port_descriptions = {}
     for port in ports:
         # this prevents an issue with usb_device_from_port not working for ports without vid on RPi
         if port.vid:
-            usb_device = usb.usb_device_from_port(port)
-            dev_path = usb.get_serial_by_id(usb_device.device)
-            human_name = usb.human_readable_device_name(
-                dev_path,
-                usb_device.serial_number,
-                usb_device.manufacturer,
-                usb_device.description,
-                usb_device.vid,
-                usb_device.pid,
-            )
-            port_descriptions[dev_path] = human_name
+            port_descriptions[port.device] = usb.human_readable_device_name(port)
 
     return port_descriptions
 

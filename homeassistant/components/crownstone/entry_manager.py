@@ -14,7 +14,7 @@ from crownstone_sse import CrownstoneSSEAsync
 from crownstone_uart import CrownstoneUart, UartEventBus
 from crownstone_uart.Exceptions import UartException
 
-from homeassistant.components import persistent_notification
+from homeassistant.components import persistent_notification, usb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -31,7 +31,6 @@ from .const import (
     SSE_LISTENERS,
     UART_LISTENERS,
 )
-from .helpers import get_port
 from .listeners import setup_sse_listeners, setup_uart_listeners
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,7 +123,7 @@ class CrownstoneEntryManager:
         """Attempt setup of a Crownstone usb dongle."""
         # Trace by-id symlink back to the serial port
         serial_port = await self.hass.async_add_executor_job(
-            get_port, self.config_entry.options[CONF_USB_PATH]
+            usb.get_serial_by_id, self.config_entry.options[CONF_USB_PATH]
         )
         if serial_port is None:
             return

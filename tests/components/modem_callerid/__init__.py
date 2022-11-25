@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 from phone_modem import DEFAULT_PORT
-from serial.tools.list_ports_common import ListPortInfo
+
+from homeassistant.components.usb import USBDevice
 
 
 def patch_init_modem():
@@ -20,12 +21,13 @@ def patch_config_flow_modem():
     )
 
 
-def com_port():
+def serial_port():
     """Mock of a serial port."""
-    port = ListPortInfo(DEFAULT_PORT)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = DEFAULT_PORT
-    port.description = "Some serial port"
-
-    return port
+    return USBDevice(
+        device=DEFAULT_PORT,
+        vid=None,
+        pid=None,
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )

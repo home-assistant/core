@@ -15,23 +15,18 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
-        device = discovery_info.device
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        if await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(updates={"device": device})
+        if await self.async_set_unique_id(usb.generate_unique_id(discovery_info)):
+            self._abort_if_unique_id_configured(
+                updates={"device": discovery_info.device}
+            )
         return self.async_create_entry(
             title="Home Assistant Sky Connect",
             data={
-                "device": device,
-                "vid": vid,
-                "pid": pid,
-                "serial_number": serial_number,
-                "manufacturer": manufacturer,
-                "description": description,
+                "device": discovery_info.device,
+                "vid": discovery_info.vid,
+                "pid": discovery_info.pid,
+                "serial_number": discovery_info.serial_number,
+                "manufacturer": discovery_info.manufacturer,
+                "description": discovery_info.description,
             },
         )

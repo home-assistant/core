@@ -194,18 +194,8 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        dev_path = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
-        self._device_path = dev_path
-        self._device_name = usb.human_readable_device_name(
-            dev_path,
-            discovery_info.serial_number,
-            discovery_info.manufacturer,
-            discovery_info.description,
-            discovery_info.vid,
-            discovery_info.pid,
-        )
+        self._device_path = discovery_info.device
+        self._device_name = usb.human_readable_device_name(discovery_info)
         self._set_confirm_only()
         self.context["title_placeholders"] = {
             CONF_NAME: f"Insteon PLM {self._device_name}"

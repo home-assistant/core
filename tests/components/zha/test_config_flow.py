@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, p
 import uuid
 
 import pytest
-import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
@@ -89,15 +88,16 @@ def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
     return detect
 
 
-def com_port(device="/dev/ttyUSB1234"):
+def serial_port(device="/dev/ttyUSB1234"):
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = device
-    port.description = "Some serial port"
-
-    return port
+    return usb.USBDevice(
+        device=device,
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+        pid=None,
+        vid=None,
+    )
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -672,12 +672,15 @@ async def test_discovery_already_setup(hass):
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),
 )
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 async def test_user_flow(hass):
     """Test user flow -- radio detected."""
 
-    port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port = serial_port()
+    port_select = usb.human_readable_device_name(port)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -710,12 +713,15 @@ async def test_user_flow(hass):
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(ret=False),
 )
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 async def test_user_flow_not_detected(hass):
     """Test user flow, radio not detected."""
 
-    port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port = serial_port()
+    port_select = usb.human_readable_device_name(port)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -727,7 +733,10 @@ async def test_user_flow_not_detected(hass):
     assert result["step_id"] == "manual_pick_radio_type"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 async def test_user_flow_show_form(hass):
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
@@ -739,7 +748,7 @@ async def test_user_flow_show_form(hass):
     assert result["step_id"] == "choose_serial_port"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
+@patch("homeassistant.components.usb.list_serial_ports", MagicMock(return_value=[]))
 async def test_user_flow_show_manual(hass):
     """Test user flow manual entry when no comport detected."""
     result = await hass.config_entries.flow.async_init(
@@ -1047,8 +1056,8 @@ def pick_radio(hass):
     """Fixture for the first step of the config flow (where a radio is picked)."""
 
     async def wrapper(radio_type):
-        port = com_port()
-        port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+        port = serial_port()
+        port_select = usb.human_readable_device_name(port)
 
         with patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
@@ -1067,7 +1076,10 @@ def pick_radio(hass):
 
         return result, port
 
-    p1 = patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+    p1 = patch(
+        "homeassistant.components.usb.list_serial_ports",
+        MagicMock(return_value=[serial_port()]),
+    )
     p2 = patch("homeassistant.components.zha.async_setup_entry")
 
     with p1, p2:
@@ -1126,6 +1138,7 @@ def test_parse_uploaded_backup(process_mock):
     process_mock.return_value.__enter__.return_value.read_text.return_value = text
 
     handler = config_flow.ZhaConfigFlowHandler()
+    handler.hass = MagicMock()
     parsed_backup = handler._parse_uploaded_backup(str(uuid.uuid4()))
 
     assert backup == parsed_backup
@@ -1440,12 +1453,12 @@ async def test_ezsp_restore_without_settings_change_ieee(
     "async_unload_effect", [True, config_entries.OperationNotAllowed()]
 )
 @patch(
-    "serial.tools.list_ports.comports",
+    "homeassistant.components.usb.list_serial_ports",
     MagicMock(
         return_value=[
-            com_port("/dev/SomePort"),
-            com_port("/dev/ttyUSB0"),
-            com_port("/dev/SomeOtherPort"),
+            serial_port("/dev/SomePort"),
+            serial_port("/dev/ttyUSB0"),
+            serial_port("/dev/SomeOtherPort"),
         ]
     ),
 )
@@ -1561,11 +1574,11 @@ async def test_options_flow_defaults(async_setup_entry, async_unload_effect, has
 
 
 @patch(
-    "serial.tools.list_ports.comports",
+    "homeassistant.components.usb.list_serial_ports",
     MagicMock(
         return_value=[
-            com_port("/dev/SomePort"),
-            com_port("/dev/SomeOtherPort"),
+            serial_port("/dev/SomePort"),
+            serial_port("/dev/SomeOtherPort"),
         ]
     ),
 )
@@ -1635,7 +1648,10 @@ async def test_options_flow_defaults_socket(hass):
     assert result5["step_id"] == "choose_formation_strategy"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
 async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry, hass):
     """Test options flow restarts a previously-running ZHA if it's cancelled."""
@@ -1688,7 +1704,10 @@ async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry,
     async_setup_entry.assert_called_once_with(hass, entry)
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_options_flow_migration_reset_old_adapter(hass, mock_app):
     """Test options flow for migrating from an old radio."""

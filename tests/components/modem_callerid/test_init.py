@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 
-from . import com_port, patch_init_modem
+from . import patch_init_modem, serial_port
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,7 @@ async def test_setup_entry(hass: HomeAssistant):
     """Test Modem Caller ID entry setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DEVICE: com_port().device},
+        data={CONF_DEVICE: serial_port().device},
     )
     entry.add_to_hass(hass)
     with patch("aioserial.AioSerial", autospec=True), patch(
@@ -32,7 +32,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DEVICE: com_port().device},
+        data={CONF_DEVICE: serial_port().device},
     )
     entry.add_to_hass(hass)
 
@@ -48,7 +48,7 @@ async def test_unload_entry(hass: HomeAssistant):
     """Test unload."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_DEVICE: com_port().device},
+        data={CONF_DEVICE: serial_port().device},
     )
     entry.add_to_hass(hass)
     with patch_init_modem():

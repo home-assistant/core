@@ -2,9 +2,10 @@
 import os
 from unittest.mock import MagicMock, patch, sentinel
 
-import serial.tools.list_ports
+import serial
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import usb
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -24,15 +25,16 @@ def serial_connect_fail(self):
     self.serial = None
 
 
-def com_port():
+def serial_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1234"
-    port.description = "Some serial port"
-
-    return port
+    return usb.USBDevice(
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        device="/dev/ttyUSB1234",
+        description="Some serial port",
+        pid=None,
+        vid=None,
+    )
 
 
 async def start_options_flow(hass, entry):
@@ -81,7 +83,7 @@ async def test_setup_network(transport_mock, hass):
     }
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
@@ -92,7 +94,7 @@ async def test_setup_network(transport_mock, hass):
 )
 async def test_setup_serial(com_mock, connect_mock, hass):
     """Test we can setup serial."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -127,7 +129,7 @@ async def test_setup_serial(com_mock, connect_mock, hass):
     }
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect,
@@ -212,14 +214,14 @@ async def test_setup_network_fail(transport_mock, hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     side_effect=serial.serialutil.SerialException,
 )
 async def test_setup_serial_fail(com_mock, connect_mock, hass):
     """Test setup serial failed connection."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -247,7 +249,7 @@ async def test_setup_serial_fail(com_mock, connect_mock, hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 @patch(
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect_fail,

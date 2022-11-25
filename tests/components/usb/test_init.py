@@ -63,8 +63,8 @@ async def test_observer_discovery(hass, hass_ws_client, venv):
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -88,7 +88,7 @@ async def test_observer_discovery(hass, hass_ws_client, venv):
     ), patch("pyudev.Monitor.filter_by"), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -126,8 +126,8 @@ async def test_removal_by_observer_before_started(hass, operating_system):
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -137,7 +137,7 @@ async def test_removal_by_observer_before_started(hass, operating_system):
     with patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch(
         "pyudev.MonitorObserver", new=_create_mock_monitor_observer
     ), patch.object(
@@ -146,7 +146,7 @@ async def test_removal_by_observer_before_started(hass, operating_system):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
 
-    with patch("homeassistant.components.usb.comports", return_value=[]):
+    with patch("homeassistant.components.usb.list_serial_ports", return_value=[]):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -163,8 +163,8 @@ async def test_discovered_by_websocket_scan(hass, hass_ws_client):
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -174,7 +174,7 @@ async def test_discovered_by_websocket_scan(hass, hass_ws_client):
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -203,8 +203,8 @@ async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -214,7 +214,7 @@ async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -242,8 +242,8 @@ async def test_most_targeted_matcher_wins(hass, hass_ws_client):
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -253,7 +253,7 @@ async def test_most_targeted_matcher_wins(hass, hass_ws_client):
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -282,8 +282,8 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -293,7 +293,7 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -326,8 +326,8 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -337,7 +337,7 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -366,8 +366,8 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -377,7 +377,7 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -410,8 +410,8 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
     mock_comports = [
         MagicMock(
             device=conbee_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=conbee_device.serial_number,
             manufacturer=conbee_device.manufacturer,
             description=conbee_device.description,
@@ -421,7 +421,7 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -455,8 +455,8 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
     mock_comports = [
         MagicMock(
             device=conbee_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=conbee_device.serial_number,
             manufacturer=conbee_device.manufacturer,
             description=conbee_device.description,
@@ -466,7 +466,7 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -494,8 +494,8 @@ async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
     mock_comports = [
         MagicMock(
             device=conbee_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=None,
             manufacturer=None,
             description=None,
@@ -505,7 +505,7 @@ async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -529,8 +529,8 @@ async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client)
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -540,7 +540,7 @@ async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client)
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -565,8 +565,8 @@ async def test_discovered_by_websocket_scan_match_vid_wrong_pid(hass, hass_ws_cl
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -576,7 +576,7 @@ async def test_discovered_by_websocket_scan_match_vid_wrong_pid(hass, hass_ws_cl
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -611,7 +611,7 @@ async def test_discovered_by_websocket_no_vid_pid(hass, hass_ws_client):
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -638,8 +638,8 @@ async def test_non_matching_discovered_by_scanner_after_started(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -649,7 +649,7 @@ async def test_non_matching_discovered_by_scanner_after_started(
     with patch("pyudev.Context", side_effect=exception_type), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -679,8 +679,8 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -690,7 +690,7 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     with patch("pyudev.Context"), patch(
         "pyudev.Monitor.filter_by", side_effect=ValueError
     ), patch("homeassistant.components.usb.async_get_usb", return_value=new_usb), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow:
@@ -729,8 +729,8 @@ async def test_not_discovered_by_observer_before_started_on_docker(hass, docker)
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -740,16 +740,16 @@ async def test_not_discovered_by_observer_before_started_on_docker(hass, docker)
     with patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch(
         "pyudev.MonitorObserver", new=_create_mock_monitor_observer
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
         await hass.async_block_till_done()
 
-    with patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_config_flow:
+    with patch(
+        "homeassistant.components.usb.list_serial_ports", return_value=[]
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -806,12 +806,14 @@ def test_get_serial_by_id():
 def test_human_readable_device_name():
     """Test human readable device name includes the passed data."""
     name = usb.human_readable_device_name(
-        "/dev/null",
-        "612020FD",
-        "Silicon Labs",
-        "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
-        "10C4",
-        "8A2A",
+        usb.UsbServiceInfo(
+            device="/dev/null",
+            vid="612020FD",
+            pid="Silicon Labs",
+            serial_number="HubZ Smart Home Controller - HubZ Z-Wave Com Port",
+            manufacturer="10C4",
+            description="8A2A",
+        )
     )
     assert "/dev/null" in name
     assert "612020FD" in name
@@ -821,12 +823,14 @@ def test_human_readable_device_name():
     assert "8A2A" in name
 
     name = usb.human_readable_device_name(
-        "/dev/null",
-        "612020FD",
-        "Silicon Labs",
-        None,
-        "10C4",
-        "8A2A",
+        usb.UsbServiceInfo(
+            device="/dev/null",
+            vid="612020FD",
+            pid="Silicon Labs",
+            serial_number=None,
+            manufacturer="10C4",
+            description="8A2A",
+        )
     )
     assert "/dev/null" in name
     assert "612020FD" in name
@@ -842,8 +846,8 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
     mock_comports = [
         MagicMock(
             device=slae_sh_device.device,
-            vid=12345,
-            pid=12345,
+            vid="3039",
+            pid="3039",
             serial_number=slae_sh_device.serial_number,
             manufacturer=slae_sh_device.manufacturer,
             description=slae_sh_device.description,
@@ -857,7 +861,9 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
 
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+    ), patch(
+        "homeassistant.components.usb.list_serial_ports", return_value=[]
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
@@ -867,7 +873,7 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
         assert not usb.async_is_plugged_in(hass, matcher)
 
     with patch(
-        "homeassistant.components.usb.comports", return_value=mock_comports
+        "homeassistant.components.usb.list_serial_ports", return_value=mock_comports
     ), patch.object(hass.config_entries.flow, "async_init"):
         ws_client = await hass_ws_client(hass)
         await ws_client.send_json({"id": 1, "type": "usb/scan"})
@@ -894,7 +900,9 @@ async def test_async_is_plugged_in_case_enforcement(hass, matcher):
 
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+    ), patch(
+        "homeassistant.components.usb.list_serial_ports", return_value=[]
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
@@ -912,7 +920,9 @@ async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_cli
 
     with patch("pyudev.Context", side_effect=ImportError), patch(
         "homeassistant.components.usb.async_get_usb", return_value=[]
-    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+    ), patch(
+        "homeassistant.components.usb.list_serial_ports", return_value=[]
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ):
         assert await async_setup_component(hass, "usb", {"usb": {}})

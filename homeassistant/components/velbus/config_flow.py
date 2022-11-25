@@ -71,19 +71,14 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
-        await self.async_set_unique_id(
-            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
-        )
-        dev_path = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
+        await self.async_set_unique_id(usb.generate_unique_id(discovery_info))
         # check if this device is not already configured
-        self._async_abort_entries_match({CONF_PORT: dev_path})
+        self._async_abort_entries_match({CONF_PORT: discovery_info.device})
         # check if we can make a valid velbus connection
-        if not await self._test_connection(dev_path):
+        if not await self._test_connection(discovery_info.device):
             return self.async_abort(reason="cannot_connect")
         # store the data for the config step
-        self._device = dev_path
+        self._device = discovery_info.device
         self._title = "Velbus USB"
         # call the config step
         self._set_confirm_only()

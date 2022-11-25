@@ -1,12 +1,11 @@
 """Test the Z-Wave JS config flow."""
 import asyncio
 from collections.abc import Generator
-from copy import copy
+import dataclasses
 from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
@@ -138,35 +137,36 @@ def mock_addon_setup_time():
 
 
 @pytest.fixture(name="serial_port")
-def serial_port_fixture() -> ListPortInfo:
+def serial_port_fixture() -> usb.USBDevice:
     """Return a mock serial port."""
-    port = ListPortInfo("/test", skip_link_detection=True)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/test"
-    port.description = "Some serial port"
-    port.pid = 9876
-    port.vid = 5678
-
-    return port
+    return usb.USBDevice(
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        device="/test",
+        description="Some serial port",
+        pid=9876,
+        vid=5678,
+    )
 
 
 @pytest.fixture(name="mock_list_ports", autouse=True)
 def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
     """Mock list ports."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
-    ) as mock_list_ports:
-        another_port = copy(serial_port)
-        another_port.device = "/new"
-        another_port.description = "New serial port"
-        another_port.serial_number = "5678"
-        another_port.pid = 8765
-        no_vid_port = copy(serial_port)
-        no_vid_port.device = "/no_vid"
-        no_vid_port.description = "Port without vid"
-        no_vid_port.serial_number = "9123"
-        no_vid_port.vid = None
+    with patch("homeassistant.components.usb.list_serial_ports") as mock_list_ports:
+        another_port = dataclasses.replace(
+            serial_port,
+            device="/new",
+            description="New serial port",
+            serial_number="5678",
+            pid=8765,
+        )
+        no_vid_port = dataclasses.replace(
+            serial_port,
+            device="/no_vid",
+            description="Port without vid",
+            serial_number="9123",
+            vid=None,
+        )
         mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
         yield mock_list_ports
 
@@ -2508,9 +2508,9 @@ async def test_import_addon_installed(
     start_addon,
     get_addon_discovery_info,
     serial_port,
+    mock_list_ports,
 ):
     """Test import step while add-on already installed on Supervisor."""
-    serial_port.device = "/test/imported"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -2520,6 +2520,9 @@ async def test_import_addon_installed(
     assert result["type"] == "form"
     assert result["step_id"] == "on_supervisor"
 
+    mock_list_ports.return_value.append(
+        dataclasses.replace(serial_port, device="/test/imported")
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )

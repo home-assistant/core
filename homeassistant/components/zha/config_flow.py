@@ -5,7 +5,6 @@ import collections
 import json
 from typing import Any
 
-import serial.tools.list_ports
 import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
@@ -84,12 +83,12 @@ class BaseZhaFlow(FlowHandler):
         self._title: str | None = None
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:  # type: ignore[override]
         """Return hass."""
         return self._hass
 
     @hass.setter
-    def hass(self, hass):
+    def hass(self, hass: HomeAssistant) -> None:
         """Set hass."""
         self._hass = hass
         self._radio_mgr.hass = hass
@@ -118,17 +117,13 @@ class BaseZhaFlow(FlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose a serial port."""
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        list_of_ports = [
-            f"{p}, s/n: {p.serial_number or 'n/a'}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        ]
+        ports = await self.hass.async_add_executor_job(usb.list_serial_ports)
+        port_names = [usb.human_readable_device_name(port) for port in ports]
 
-        if not list_of_ports:
+        if not port_names:
             return await self.async_step_manual_pick_radio_type()
 
-        list_of_ports.append(CONF_MANUAL_PATH)
+        port_names.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
@@ -136,19 +131,14 @@ class BaseZhaFlow(FlowHandler):
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_pick_radio_type()
 
-            port = ports[list_of_ports.index(user_selection)]
+            port = ports[port_names.index(user_selection)]
             self._radio_mgr.device_path = port.device
 
             if not await self._radio_mgr.detect_radio_type():
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
-            self._title = (
-                f"{port.description}, s/n: {port.serial_number or 'n/a'}"
-                f" - {port.manufacturer}"
-                if port.manufacturer
-                else ""
-            )
+            self._title = user_selection
 
             return await self.async_step_choose_formation_strategy()
 
@@ -156,7 +146,7 @@ class BaseZhaFlow(FlowHandler):
         default_port = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports):
+            for description, port in zip(port_names, ports):
                 if port.device == self._radio_mgr.device_path:
                     default_port = description
                     break
@@ -164,11 +154,7 @@ class BaseZhaFlow(FlowHandler):
                 default_port = CONF_MANUAL_PATH
 
         schema = vol.Schema(
-            {
-                vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(
-                    list_of_ports
-                )
-            }
+            {vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(port_names)}
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
@@ -463,17 +449,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        device = discovery_info.device
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-
         await self._set_unique_id_or_update_path(
-            unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
-            device_path=dev_path,
+            unique_id=usb.generate_unique_id(discovery_info),
+            device_path=discovery_info.device,
         )
 
         # If they already have a discovery for deconz we ignore the usb discovery as
@@ -484,14 +462,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             if entry.source != config_entries.SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
 
-        self._radio_mgr.device_path = dev_path
-        self._title = description or usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
+        self._radio_mgr.device_path = discovery_info.device
+        self._title = discovery_info.description or usb.human_readable_device_name(
+            discovery_info
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_confirm()

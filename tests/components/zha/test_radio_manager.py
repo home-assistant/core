@@ -4,7 +4,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
-import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
@@ -68,17 +67,6 @@ def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
         return ret
 
     return detect
-
-
-def com_port(device="/dev/ttyUSB1234"):
-    """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = device
-    port.description = "Some serial port"
-
-    return port
 
 
 @pytest.fixture()

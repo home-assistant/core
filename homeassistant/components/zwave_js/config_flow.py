@@ -8,7 +8,6 @@ from typing import Any
 
 import aiohttp
 from async_timeout import timeout
-from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
@@ -130,26 +129,10 @@ async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> Versio
 
 def get_usb_ports() -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
-    ports = list_ports.comports()
-    port_descriptions = {}
-    for port in ports:
-        vid: str | None = None
-        pid: str | None = None
-        if port.vid is not None and port.pid is not None:
-            usb_device = usb.usb_device_from_port(port)
-            vid = usb_device.vid
-            pid = usb_device.pid
-        dev_path = usb.get_serial_by_id(port.device)
-        human_name = usb.human_readable_device_name(
-            dev_path,
-            port.serial_number,
-            port.manufacturer,
-            port.description,
-            vid,
-            pid,
-        )
-        port_descriptions[dev_path] = human_name
-    return port_descriptions
+    return {
+        port.device: usb.human_readable_device_name(port)
+        for port in usb.list_serial_ports()
+    }
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -414,9 +397,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         vid = discovery_info.vid
         pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        device = discovery_info.device
-        manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         # Zooz uses this vid/pid, but so do 2652 sticks
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
@@ -426,20 +406,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.NOT_RUNNING):
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(
-            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        )
+        await self.async_set_unique_id(usb.generate_unique_id(discovery_info))
         self._abort_if_unique_id_configured()
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        self.usb_path = dev_path
-        self._title = usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
-        )
+        self.usb_path = discovery_info.device
+        self._title = usb.human_readable_device_name(discovery_info)
         self.context["title_placeholders"] = {
             CONF_NAME: self._title.split(" - ")[0].strip()
         }

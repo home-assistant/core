@@ -1,14 +1,16 @@
 """Test the DSMR config flow."""
 import asyncio
 from itertools import chain, repeat
-import os
-from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch, sentinel
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import serial
-import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.components import usb
+from homeassistant.components.dsmr import DOMAIN
+
+# Required to get the config flow to register when running this test in isolation
+import homeassistant.components.dsmr.config_flow  # noqa: F401
 
 from tests.common import MockConfigEntry
 
@@ -16,15 +18,16 @@ SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
 SERIAL_DATA_SWEDEN = {"serial_id": None, "serial_id_gas": None}
 
 
-def com_port():
+def serial_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1234"
-    port.description = "Some serial port"
-
-    return port
+    return usb.USBDevice(
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        device="/dev/ttyUSB1234",
+        description="Some serial port",
+        vid=None,
+        pid=None,
+    )
 
 
 async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
@@ -120,10 +123,10 @@ async def test_setup_network_rfxtrx(
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixture):
     """Test we can setup serial."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -160,7 +163,7 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial_rfxtrx(
     com_mock,
     hass,
@@ -170,7 +173,7 @@ async def test_setup_serial_rfxtrx(
     """Test we can setup serial."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -210,10 +213,10 @@ async def test_setup_serial_rfxtrx(
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
     """Test we can setup serial."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -252,10 +255,10 @@ async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
     assert result["data"] == entry_data
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
     """Test we can setup serial."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -293,10 +296,10 @@ async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
     assert result["data"] == entry_data
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
     """Test we can setup serial."""
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -335,7 +338,7 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
     assert result["data"] == entry_data
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial_manual(
     com_mock, hass, dsmr_connection_send_validate_fixture
 ):
@@ -383,12 +386,12 @@ async def test_setup_serial_manual(
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_fixture):
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -427,7 +430,7 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial_timeout(
     com_mock,
     hass,
@@ -442,7 +445,7 @@ async def test_setup_serial_timeout(
         rfxtrx_protocol,
     ) = rfxtrx_dsmr_connection_send_validate_fixture
 
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -483,7 +486,7 @@ async def test_setup_serial_timeout(
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
-@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+@patch("homeassistant.components.usb.list_serial_ports", return_value=[serial_port()])
 async def test_setup_serial_wrong_telegram(
     com_mock,
     hass,
@@ -498,7 +501,7 @@ async def test_setup_serial_wrong_telegram(
         rfxtrx_protocol,
     ) = rfxtrx_dsmr_connection_send_validate_fixture
 
-    port = com_port()
+    port = serial_port()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -567,50 +570,3 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
 
     assert entry.options == {"time_between_update": 15}
-
-
-def test_get_serial_by_id_no_dir():
-    """Test serial by id conversion if there's no /dev/serial/by-id."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=False))
-    p2 = patch("os.scandir")
-    with p1 as is_dir_mock, p2 as scan_mock:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 0
-
-
-def test_get_serial_by_id():
-    """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
-
-    def _realpath(path):
-        if path is sentinel.matched_link:
-            return sentinel.path
-        return sentinel.serial_link_path
-
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 1
-
-        entry1 = MagicMock(spec_set=os.DirEntry)
-        entry1.is_symlink.return_value = True
-        entry1.path = sentinel.some_path
-
-        entry2 = MagicMock(spec_set=os.DirEntry)
-        entry2.is_symlink.return_value = False
-        entry2.path = sentinel.other_path
-
-        entry3 = MagicMock(spec_set=os.DirEntry)
-        entry3.is_symlink.return_value = True
-        entry3.path = sentinel.matched_link
-
-        scan_mock.return_value = [entry1, entry2, entry3]
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.matched_link
-        assert is_dir_mock.call_count == 2
-        assert scan_mock.call_count == 2

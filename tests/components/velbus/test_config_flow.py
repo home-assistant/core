@@ -2,7 +2,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import serial.tools.list_ports
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant import data_entry_flow
@@ -26,14 +25,16 @@ DISCOVERY_INFO = usb.UsbServiceInfo(
 )
 
 
-def com_port():
+def serial_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo(PORT_SERIAL)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = PORT_SERIAL
-    port.description = "Some serial port"
-    return port
+    return usb.USBDevice(
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        device=PORT_SERIAL,
+        description="Some serial port",
+        vid=None,
+        pid=None,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -125,7 +126,10 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("controller")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 async def test_flow_usb(hass: HomeAssistant):
     """Test usb discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -161,7 +165,10 @@ async def test_flow_usb(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.usb.list_serial_ports",
+    MagicMock(return_value=[serial_port()]),
+)
 async def test_flow_usb_failed(hass: HomeAssistant):
     """Test usb discovery flow with a failed velbus test."""
     result = await hass.config_entries.flow.async_init(

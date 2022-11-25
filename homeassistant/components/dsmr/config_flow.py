@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-import os
 from typing import Any
 
 from async_timeout import timeout
@@ -15,10 +14,10 @@ from dsmr_parser.clients.rfxtrx_protocol import (
 )
 from dsmr_parser.objects import DSMRObject
 import serial
-import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import usb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
@@ -223,7 +222,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_setup_serial_manual_path()
 
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, user_selection
+                usb.get_serial_by_id, user_selection
             )
 
             validate_data = {
@@ -235,11 +234,9 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
 
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await self.hass.async_add_executor_job(usb.list_serial_ports)
         list_of_ports = {
-            port.device: f"{port}, s/n: {port.serial_number or 'n/a'}"
-            + (f" - {port.manufacturer}" if port.manufacturer else "")
-            for port in ports
+            port.device: usb.human_readable_device_name(port) for port in ports
         }
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
@@ -260,8 +257,11 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Select path manually."""
         if user_input is not None:
+            port = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, user_input[CONF_PORT]
+            )
             validate_data = {
-                CONF_PORT: user_input[CONF_PORT],
+                CONF_PORT: port,
                 CONF_DSMR_VERSION: self._dsmr_version,
             }
 
@@ -330,18 +330,6 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path
 
 
 class CannotConnect(exceptions.HomeAssistantError):

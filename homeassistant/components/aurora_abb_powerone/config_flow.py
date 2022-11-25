@@ -6,10 +6,10 @@ import logging
 from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components import usb
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
@@ -57,19 +57,6 @@ def validate_and_connect(
     return ret
 
 
-def scan_comports() -> tuple[list[str] | None, str | None]:
-    """Find and store available com ports for the GUI dropdown."""
-    com_ports = serial.tools.list_ports.comports(include_links=True)
-    com_ports_list = []
-    for port in com_ports:
-        com_ports_list.append(port.device)
-        _LOGGER.debug("COM port option: %s", port.device)
-    if len(com_ports_list) > 0:
-        return com_ports_list, com_ports_list[0]
-    _LOGGER.warning("No com ports found.  Need a valid RS485 device to communicate")
-    return None, None
-
-
 class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aurora ABB PowerOne."""
 
@@ -88,8 +75,13 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if self._com_ports_list is None:
-            result = await self.hass.async_add_executor_job(scan_comports)
-            self._com_ports_list, self._default_com_port = result
+            self._com_ports_list = await self.hass.async_add_executor_job(
+                usb.list_serial_ports
+            )
+            self._default_com_port = (
+                self._com_ports_list[0] if self._com_ports_list else None
+            )
+
             if self._default_com_port is None:
                 return self.async_abort(reason="no_serial_ports")
 

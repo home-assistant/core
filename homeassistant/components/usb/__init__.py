@@ -9,8 +9,6 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any
 
-from serial.tools.list_ports import comports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -31,7 +29,7 @@ from homeassistant.loader import USBMatcher, async_get_usb
 
 from .const import DOMAIN
 from .models import USBDevice
-from .utils import usb_device_from_port
+from .utils import list_serial_ports
 
 if TYPE_CHECKING:
     from pyudev import Device
@@ -98,23 +96,21 @@ class UsbServiceInfo(BaseServiceInfo):
     description: str | None
 
 
-def human_readable_device_name(
-    device: str,
-    serial_number: str | None,
-    manufacturer: str | None,
-    description: str | None,
-    vid: str | None,
-    pid: str | None,
-) -> str:
-    """Return a human readable name from USBDevice attributes."""
-    device_details = f"{device}, s/n: {serial_number or 'n/a'}"
-    manufacturer_details = f" - {manufacturer}" if manufacturer else ""
-    vendor_details = f" - {vid}:{pid}" if vid else ""
+def human_readable_device_name(info: UsbServiceInfo | USBDevice) -> str:
+    """Return a human readable name from USBDevice or UsbServiceInfo attributes."""
+    device_details = f"{info.device}, s/n: {info.serial_number or 'n/a'}"
+    manufacturer_details = f" - {info.manufacturer}" if info.manufacturer else ""
+    vendor_details = f" - {info.vid}:{info.pid}" if info.vid else ""
     full_details = f"{device_details}{manufacturer_details}{vendor_details}"
 
-    if not description:
+    if not info.description:
         return full_details
-    return f"{description[:26]} - {full_details}"
+    return f"{info.description[:26]} - {full_details}"
+
+
+def generate_unique_id(info: UsbServiceInfo | USBDevice) -> str:
+    """Generate unique ID from USBDevice or UsbServiceInfo attributes."""
+    return f"{info.vid}:{info.pid}_{info.serial_number}_{info.manufacturer}_{info.description}"
 
 
 def get_serial_by_id(dev_path: str) -> str:
@@ -267,6 +263,10 @@ class USBDiscovery:
         if not matched:
             return
 
+        # Only serial ports from USB devices are considered for discovery
+        assert device.vid is not None
+        assert device.pid is not None
+
         service_info = UsbServiceInfo(
             device=device.device,
             vid=device.vid,
@@ -293,16 +293,18 @@ class USBDiscovery:
             )
 
     @hass_callback
-    def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
+    def _async_process_ports(self, ports: list[USBDevice]) -> None:
         """Process each discovered port."""
         for port in ports:
+            # Ignore serial ports that do not come from USB devices
             if port.vid is None and port.pid is None:
                 continue
-            self._async_process_discovered_usb_device(usb_device_from_port(port))
+            self._async_process_discovered_usb_device(port)
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
-        self._async_process_ports(await self.hass.async_add_executor_job(comports))
+        ports = await self.hass.async_add_executor_job(list_serial_ports)
+        self._async_process_ports(ports)
 
     async def _async_scan(self) -> None:
         """Scan for USB devices and notify callbacks to scan as well."""

@@ -4,8 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from phone_modem import PhoneModem
-import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,11 +14,6 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
-
-
-def _generate_unique_id(port: ListPortInfo) -> str:
-    """Generate unique id from usb attributes."""
-    return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
 
 
 class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,19 +56,12 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = {}
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await self.hass.async_add_executor_job(usb.list_serial_ports)
         existing_devices = [
             entry.data[CONF_DEVICE] for entry in self._async_current_entries()
         ]
         unused_ports = [
-            usb.human_readable_device_name(
-                port.device,
-                port.serial_number,
-                port.manufacturer,
-                port.description,
-                port.vid,
-                port.pid,
-            )
+            usb.human_readable_device_name(port)
             for port in ports
             if port.device not in existing_devices
         ]
@@ -84,16 +70,13 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = ports[unused_ports.index(str(user_input.get(CONF_DEVICE)))]
-            dev_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, port.device
-            )
             errors = await self.validate_device_errors(
-                dev_path=dev_path, unique_id=_generate_unique_id(port)
+                dev_path=port.device, unique_id=usb.generate_unique_id(port)
             )
             if errors is None:
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                    data={CONF_DEVICE: dev_path},
+                    data={CONF_DEVICE: port.device},
                 )
         user_input = user_input or {}
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
