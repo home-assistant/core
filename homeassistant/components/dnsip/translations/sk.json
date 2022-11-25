@@ -3,5 +3,10 @@
         "error": {
             "invalid_hostname": "Neplatn\u00fd n\u00e1zov hostite\u013ea"
         }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Neplatn\u00e1 adresa IP pre resolver"
+        }
     }
 }

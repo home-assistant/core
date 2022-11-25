@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.here_travel_time.config_flow import default_options
+from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
 from homeassistant.components.here_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data=DEFAULT_CONFIG,
-        options=default_options(hass),
+        options=DEFAULT_OPTIONS,
     )
     entry.add_to_hass(hass)
 

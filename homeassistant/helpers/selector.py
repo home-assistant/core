@@ -94,7 +94,7 @@ class SingleEntitySelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
-    domain: str
+    domain: str | list[str]
     device_class: str
 
 

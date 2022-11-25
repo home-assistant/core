@@ -3,6 +3,10 @@
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "select_single": "Vyberte jednu mo\u017enos\u0165."
+        },
         "flow_title": "{name}",
         "step": {
             "confirm_usb": {
@@ -24,6 +28,11 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "input_error": "Neplatn\u00e9 polo\u017eky, skontrolujte svoje hodnoty.",
+            "select_single": "Vyberte jednu mo\u017enos\u0165."
+        },
         "step": {
             "add_override": {
                 "data": {
@@ -37,6 +46,16 @@
                     "host": "IP adresa",
                     "password": "Heslo",
                     "port": "Port"
+                }
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Vyberte adresu zariadenia, ktor\u00fa chcete odstr\u00e1ni\u0165"
+                }
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Vyberte adresu zariadenia, ktor\u00fa chcete odstr\u00e1ni\u0165"
                 }
             }
         }

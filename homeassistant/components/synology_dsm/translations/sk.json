@@ -29,5 +29,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Min\u00faty medzi skenovaniami"
+                }
+            }
+        }
     }
 }

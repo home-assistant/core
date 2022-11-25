@@ -9,10 +9,10 @@
                     "type": "Caracter\u00edstica estad\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales en la salida cuando la caracter\u00edstica estad\u00edstica es media o mediana."
+                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales en la salida cuando la caracter\u00edstica estad\u00edstica es media, mediana o suma."
                 },
-                "description": "Crea un sensor que calcula el valor m\u00ednimo, m\u00e1ximo, medio o mediano a partir de una lista de sensores de entrada.",
-                "title": "A\u00f1adir sensor m\u00edn / m\u00e1x / media / mediana"
+                "description": "Crea un sensor que calcule un m\u00ednimo, un m\u00e1ximo, una media, una mediana o una suma a partir de una lista de sensores de entrada.",
+                "title": "Combinar el estado de varios sensores"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Caracter\u00edstica estad\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales en la salida cuando la caracter\u00edstica estad\u00edstica es media o mediana."
+                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales en la salida cuando la caracter\u00edstica estad\u00edstica es media, mediana o suma."
                 }
             }
         }
     },
-    "title": "Sensor m\u00edn / m\u00e1x / media / mediana"
+    "title": "Combinar el estado de varios sensores"
 }
