@@ -4,7 +4,13 @@ from typing import NamedTuple, cast
 
 from plugwise import Smile
 from plugwise.constants import DeviceData, GatewayData
-from plugwise.exceptions import PlugwiseException, XMLDataMissingError
+from plugwise.exceptions import (
+    ConnectionFailedError,
+    InvalidAuthentication,
+    InvalidXMLError,
+    ResponseError,
+    UnsupportedDeviceError,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
@@ -47,12 +53,16 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         """Fetch data from Plugwise."""
         try:
             data = await self.api.async_update()
-        except XMLDataMissingError as err:
+        except InvalidAuthentication as err:
+            raise UpdateFailed("Authentication failed") from err
+        except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                f"No XML data received for: {self.api.smile_name}"
+                "Invalid XML data, or error indication received for the Plugwise Adam/Smile/Stretch"
             ) from err
-        except PlugwiseException as err:
-            raise UpdateFailed(f"Updated failed for: {self.api.smile_name}") from err
+        except UnsupportedDeviceError as err:
+            raise UpdateFailed("Device with unsupported firmware") from err
+        except ConnectionFailedError as err:
+            raise UpdateFailed("Failed to connect") from err
         return PlugwiseData(
             gateway=cast(GatewayData, data[0]),
             devices=cast(dict[str, DeviceData], data[1]),
