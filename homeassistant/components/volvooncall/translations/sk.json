@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "step": {
             "user": {
                 "data": {

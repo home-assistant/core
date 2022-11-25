@@ -8,7 +8,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Zadajte n\u00e1zov hostite\u013ea alebo IP adresu v\u00e1\u0161ho zariadenia TOLO Sauna."
             }
         }
     }

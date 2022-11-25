@@ -7,6 +7,7 @@
         "step": {
             "gateway_entry": {
                 "data": {
+                    "ip_address": "IP adresa",
                     "port": "Port"
                 }
             }

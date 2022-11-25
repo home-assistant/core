@@ -697,8 +697,8 @@ build.json @home-assistant/supervisor
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen
 /tests/components/mill/ @danielhiversen
-/homeassistant/components/min_max/ @fabaff
-/tests/components/min_max/ @fabaff
+/homeassistant/components/min_max/ @gjohansson-ST
+/tests/components/min_max/ @gjohansson-ST
 /homeassistant/components/minecraft_server/ @elmurato
 /tests/components/minecraft_server/ @elmurato
 /homeassistant/components/minio/ @tkislan
@@ -1158,6 +1158,8 @@ build.json @home-assistant/supervisor
 /tests/components/template/ @PhracturedBlue @tetienne @home-assistant/core
 /homeassistant/components/tesla_wall_connector/ @einarhauks
 /tests/components/tesla_wall_connector/ @einarhauks
+/homeassistant/components/text/ @home-assistant/core
+/tests/components/text/ @home-assistant/core
 /homeassistant/components/tfiac/ @fredrike @mellado
 /homeassistant/components/thermobeacon/ @bdraco
 /tests/components/thermobeacon/ @bdraco
