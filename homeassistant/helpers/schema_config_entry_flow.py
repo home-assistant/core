@@ -140,19 +140,14 @@ class SchemaCommonFlowHandler:
         # User input was validated successfully, update options
         self._options.update(user_input)
 
-        next_step_id: str = step_id
-
         # Get next step
         if form_step.next_step is None:
             # Flow done, create entry or update config entry options
             return self._handler.async_create_entry(data=self._options)
 
         if isinstance(form_step.next_step, str):
-            next_step_id = form_step.next_step
-        else:
-            next_step_id = form_step.next_step(self._options)
-
-        return self._show_next_step(next_step_id)
+            return self._show_next_step(form_step.next_step)
+        return self._show_next_step(form_step.next_step(self._options))
 
     def _show_next_step(
         self,
