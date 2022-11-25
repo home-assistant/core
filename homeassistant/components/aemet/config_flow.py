@@ -10,7 +10,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
 )
 
