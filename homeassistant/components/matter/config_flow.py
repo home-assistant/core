@@ -170,7 +170,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     break
             else:
-                raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
+                raise CannotConnect("Failed to start Matter Server add-on: timeout")
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
