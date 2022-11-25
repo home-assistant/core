@@ -11,8 +11,9 @@ from datetime import datetime, timedelta
 from typing import Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
+from aiounifi.models.api import APIItem
 from aiounifi.models.client import Client
 
 from homeassistant.components.sensor import (
@@ -33,9 +34,8 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 
-_DataT = TypeVar("_DataT")
-_HandlerT = TypeVar("_HandlerT")
-_SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+_DataT = TypeVar("_DataT", bound=APIItem)
+_HandlerT = TypeVar("_HandlerT", bound=APIHandler)
 
 
 @callback
