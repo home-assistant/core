@@ -57,6 +57,21 @@ DEVICE_SELECT_TYPES = (
     ),
 )
 
+SELECT_STATES_TO_API = {
+    "stopped": "stopped",
+    "fixedleft": "fixedLeft",
+    "fixedcenterleft": "fixedCenterLeft",
+    "fixedcenter": "fixedCenter",
+    "fixedcenterright": "fixedCenterRight",
+    "fixedright": "fixedRight",
+    "fixedleftright": "fixedLeftRight",
+    "rangecenter": "rangeCenter",
+    "rangefull": "rangeFull",
+    "on": "on",
+    "dim": "dim",
+    "off": "off",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -92,7 +107,10 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self.entity_description.value_fn(self.device_data)
+        state = self.entity_description.value_fn(self.device_data)
+        if isinstance(state, str):
+            return state.lower()
+        return state
 
     @property
     def options(self) -> list[str]:
@@ -100,7 +118,10 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         options = self.entity_description.options_fn(self.device_data)
         if TYPE_CHECKING:
             assert options is not None
-        return options
+        lower_case_options = []
+        for option in options:
+            lower_case_options.append(option.lower())
+        return lower_case_options
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
@@ -109,9 +130,10 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
             )
 
+        value = SELECT_STATES_TO_API[option]
         await self.async_send_api_call(
             key=self.entity_description.data_key,
-            value=option,
+            value=value,
         )
 
     @async_handle_api_call
