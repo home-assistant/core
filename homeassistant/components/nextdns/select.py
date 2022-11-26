@@ -124,6 +124,9 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
         self._attr_options = description.options
         self._attr_current_option = description.state(coordinator.data)
         self.entity_description: NextDnsSelectEntityDescription = description
+        self._select_option = getattr(
+            self.coordinator.nextdns, self.entity_description.select_option_method
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -133,9 +136,6 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        method = getattr(
-            self.coordinator.nextdns, self.entity_description.select_option_method
-        )
-        await method(
+        await self._select_option(
             self.coordinator.profile_id, self.entity_description.option_map[option]
         )
