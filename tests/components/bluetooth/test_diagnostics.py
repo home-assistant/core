@@ -24,8 +24,13 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
-        [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
+        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        {
+            "44:44:33:11:23:45": (
+                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_advertisement_data(local_name="x"),
+            )
+        },
     ), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
@@ -120,8 +125,21 @@ async def test_diagnostics(
                 "scanners": [
                     {
                         "adapter": "hci0",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -131,8 +149,21 @@ async def test_diagnostics(
                     },
                     {
                         "adapter": "hci0",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -142,8 +173,21 @@ async def test_diagnostics(
                     },
                     {
                         "adapter": "hci1",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -171,8 +215,13 @@ async def test_diagnostics_macos(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
-        [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
+        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        {
+            "44:44:33:11:23:45": (
+                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                switchbot_adv,
+            )
+        },
     ), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Darwin",
@@ -274,8 +323,26 @@ async def test_diagnostics_macos(
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "wohand",
+                                    {
+                                        "1": {
+                                            "__type": "<class " "'bytes'>",
+                                            "repr": "b'\\x01'",
+                                        }
+                                    },
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "Core Bluetooth",
