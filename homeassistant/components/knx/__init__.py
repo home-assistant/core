@@ -51,6 +51,8 @@ from .const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SECURE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
@@ -406,15 +408,15 @@ class KNXModule:
                 auto_reconnect=True,
                 threaded=True,
             )
-        if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
-            knxkeys_file: str | None = (
-                self.hass.config.path(
-                    STORAGE_DIR,
-                    self.entry.data[CONF_KNX_KNXKEY_FILENAME],
-                )
-                if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
-                else None
+        knxkeys_file: str | None = (
+            self.hass.config.path(
+                STORAGE_DIR,
+                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
             )
+            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
+            else None
+        )
+        if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
                 gateway_ip=self.entry.data[CONF_HOST],
@@ -425,6 +427,21 @@ class KNXModule:
                     device_authentication_password=self.entry.data.get(
                         CONF_KNX_SECURE_DEVICE_AUTHENTICATION
                     ),
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=knxkeys_file,
+                ),
+                auto_reconnect=True,
+                threaded=True,
+            )
+        if _conn_type == CONF_KNX_ROUTING_SECURE:
+            return ConnectionConfig(
+                connection_type=ConnectionType.ROUTING_SECURE,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
+                secure_config=SecureConfig(
+                    backbone_key=self.entry.data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                     knxkeys_file_path=knxkeys_file,
                 ),

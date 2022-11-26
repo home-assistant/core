@@ -30,6 +30,9 @@ CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
 CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
+CONF_KNX_ROUTING_BACKBONE_KEY: Final = "backbone_key"
+CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: Final = "sync_latency_tolerance"
+CONF_KNX_ROUTING_SECURE: Final = "routing_secure"
 CONF_KNX_TUNNELING: Final = "tunneling"
 CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
 CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
@@ -92,6 +95,8 @@ class KNXConfigEntryData(TypedDict, total=False):
     device_authentication: str
     knxkeys_filename: str
     knxkeys_password: str
+    backbone_key: str | None
+    sync_latency_tolerance: int | None
 
 
 class ColorTempModes(Enum):

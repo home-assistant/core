@@ -33,6 +33,9 @@ from .const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SECURE,
+    CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
@@ -168,7 +171,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             )
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                 return self.async_show_menu(
-                    step_id="secure_tunneling",
+                    step_id="secure_key_source",
                     menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                 )
             return self.finish_flow(title=f"Tunneling @ {self._selected_tunnel}")
@@ -215,8 +218,8 @@ class KNXCommonFlow(ABC, FlowHandler):
 
                 if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
-                        step_id="secure_tunneling",
-                        menu_options=["secure_knxkeys", "secure_tunnel_manual"],
+                        step_id="secure_key_source",
+                        menu_options=["secure_knxkeys", "secure_routing_manual"],
                     )
                 return self.finish_flow(title=f"Tunneling @ {_host}")
 
@@ -281,7 +284,7 @@ class KNXCommonFlow(ABC, FlowHandler):
     async def async_step_secure_tunnel_manual(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Configure ip secure manually."""
+        """Configure ip secure tunnelling manually."""
         errors: dict = {}
 
         if user_input is not None:
@@ -327,6 +330,58 @@ class KNXCommonFlow(ABC, FlowHandler):
             errors=errors,
         )
 
+    async def async_step_secure_routing_manual(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Configure ip secure routing manually."""
+        errors: dict = {}
+
+        if user_input is not None:
+            try:
+                bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
+            except ValueError:
+                errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
+            if not errors:
+                self.new_entry_data |= KNXConfigEntryData(
+                    backbone_key=user_input[CONF_KNX_ROUTING_BACKBONE_KEY],
+                    sync_latency_tolerance=user_input[
+                        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
+                    ],
+                )
+                return self.finish_flow(
+                    title=f"Secure Routing as {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                )
+
+        fields = {
+            vol.Required(
+                CONF_KNX_ROUTING_BACKBONE_KEY,
+                default=self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
+            ): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
+            ),
+            vol.Required(
+                CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
+                default=self.initial_data.get(CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE)
+                or 1000,
+            ): vol.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=400,
+                        max=4000,
+                        unit_of_measurement="ms",
+                        mode=selector.NumberSelectorMode.BOX,
+                    ),
+                ),
+                vol.Coerce(int),
+            ),
+        }
+
+        return self.async_show_form(
+            step_id="secure_routing_manual",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+        )
+
     async def async_step_secure_knxkeys(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -347,13 +402,19 @@ class KNXCommonFlow(ABC, FlowHandler):
 
             if not errors:
                 self.new_entry_data |= KNXConfigEntryData(
-                    connection_type=CONF_KNX_TUNNELING_TCP_SECURE,
+                    backbone_key=None,
+                    sync_latency_tolerance=None,
                     knxkeys_filename=storage_key,
                     knxkeys_password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
-                return self.finish_flow(
-                    title=f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
-                )
+                if (
+                    self.new_entry_data[CONF_KNX_CONNECTION_TYPE]
+                    == CONF_KNX_ROUTING_SECURE
+                ):
+                    title = f"Secure Routing as {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                else:
+                    title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
+                return self.finish_flow(title=title)
 
         fields = {
             vol.Required(
@@ -405,31 +466,46 @@ class KNXCommonFlow(ABC, FlowHandler):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
+                connection_type = (
+                    CONF_KNX_ROUTING_SECURE
+                    if user_input[CONF_KNX_ROUTING_SECURE]
+                    else CONF_KNX_ROUTING
+                )
                 self.new_entry_data = KNXConfigEntryData(
-                    connection_type=CONF_KNX_ROUTING,
+                    connection_type=connection_type,
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
                     multicast_port=_multicast_port,
                     local_ip=_local_ip,
                 )
+                if connection_type == CONF_KNX_ROUTING_SECURE:
+                    return self.async_show_menu(
+                        step_id="secure_key_source",
+                        menu_options=["secure_knxkeys", "secure_routing_manual"],
+                    )
                 return self.finish_flow(title=f"Routing as {_individual_address}")
+
+        routers = [router for router in self._found_gateways if router.supports_routing]
+        if not routers:
+            errors["base"] = "no_router_discovered"
+        default_secure_routing_enable = any(
+            router for router in routers if router.routing_requires_secure
+        )
 
         fields = {
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=_individual_address
             ): _IA_SELECTOR,
+            vol.Required(
+                CONF_KNX_ROUTING_SECURE, default=default_secure_routing_enable
+            ): selector.BooleanSelector(),
             vol.Required(CONF_KNX_MCAST_GRP, default=_multicast_group): _IP_SELECTOR,
             vol.Required(CONF_KNX_MCAST_PORT, default=_multicast_port): _PORT_SELECTOR,
         }
-
         if self.show_advanced_options:
             # Optional with default doesn't work properly in flow UI
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
-        if not any(
-            router for router in self._found_gateways if router.supports_routing
-        ):
-            errors["base"] = "no_router_discovered"
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
         )
