@@ -545,7 +545,7 @@ class ESPHomeClient(BaseBleakClient):
         """Destructor to make sure the connection state is unsubscribed."""
         if self._cancel_connection_state:
             _LOGGER.warning(
-                "%s: %s - %s: ESPHomeBleakClient was not properly disconnected before destruction",
+                "%s: %s - %s: ESPHomeClient bleak client was not properly disconnected before destruction",
                 self._source,
                 self._ble_device.name,
                 self._ble_device.address,
