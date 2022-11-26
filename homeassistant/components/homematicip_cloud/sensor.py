@@ -8,6 +8,7 @@ from homematicip.aio.device import (
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
+    AsyncHeatingThermostatEvo,
     AsyncHomeControlAccessPoint,
     AsyncLightSensor,
     AsyncMotionDetectorIndoor,
@@ -75,7 +76,14 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, AsyncHomeControlAccessPoint):
             entities.append(HomematicipAccesspointDutyCycle(hap, device))
-        if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
+        if isinstance(
+            device,
+            (
+                AsyncHeatingThermostat,
+                AsyncHeatingThermostatCompact,
+                AsyncHeatingThermostatEvo,
+            ),
+        ):
             entities.append(HomematicipHeatingThermostat(hap, device))
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(

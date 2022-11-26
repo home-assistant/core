@@ -95,6 +95,30 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     assert ha_state.attributes["icon"] == "mdi:battery-outline"
 
 
+async def test_hmip_temperature_sensor_evo(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureSensor."""
+    entity_id = "sensor.thermostat_evo_temperature"
+    entity_name = "thermostat_evo Temperature"
+    device_model = "HmIP-eTRV-E"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["thermostat_evo"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "18.7"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+    await async_manipulate_test_data(hass, hmip_device, "temperatureOffset", 0.7)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 0.7
+
+
 async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     """Test HomematicipHumiditySensor."""
     entity_id = "sensor.bwth_1_humidity"
