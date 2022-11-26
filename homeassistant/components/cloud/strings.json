@@ -16,7 +16,7 @@
   },
   "issues": {
     "legacy_subscription": {
-      "title": "Legacy subscription deteceted",
+      "title": "Legacy subscription detected",
       "fix_flow": {
         "step": {
           "confirm": {
