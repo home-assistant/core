@@ -89,11 +89,24 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--open-ui", action="store_true", help="Open the webinterface in a browser"
     )
-    parser.add_argument(
+
+    skip_pip_group = parser.add_mutually_exclusive_group()
+    skip_pip_group.add_argument(
         "--skip-pip",
         action="store_true",
         help="Skips pip install of required packages on startup",
     )
+    skip_pip_group.add_argument(
+        "--skip-pip-package",
+        metavar="package_name",
+        dest="skip_pip_packages",
+        action="append",
+        help=(
+            "Skip pip install of a specific package on startup. "
+            "Can be specified multiple times."
+        ),
+    )
+
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
     )
@@ -180,6 +193,7 @@ def main() -> int:
         log_file=args.log_file,
         log_no_color=args.log_no_color,
         skip_pip=args.skip_pip,
+        skip_pip_packages=args.skip_pip_packages,
         safe_mode=args.safe_mode,
         debug=args.debug,
         open_ui=args.open_ui,

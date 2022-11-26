@@ -939,6 +939,7 @@ async def test_config_defaults():
     assert config.external_url is None
     assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
+    assert config.skip_pip_packages == []
     assert config.components == set()
     assert config.api is None
     assert config.config_dir is None

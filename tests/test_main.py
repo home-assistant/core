@@ -61,3 +61,23 @@ def test_validate_python(mock_exit):
         assert mock_exit.called is False
 
     mock_exit.reset_mock()
+
+
+@patch("sys.exit")
+def test_skip_pip_mutually_exclusive(mock_exit):
+    """Test --skip-pip and --skip-pip-package are mutually exclusive."""
+
+    def parse_args(*args):
+        with patch("sys.argv", ["python"] + list(args)):
+            return main.get_arguments()
+
+    args = parse_args("--skip-pip")
+    assert args.skip_pip is True
+
+    args = parse_args("--skip-pip-package", "foo", "--skip-pip-package", "bar")
+    assert args.skip_pip is False
+    assert args.skip_pip_packages == ["foo", "bar"]
+
+    assert mock_exit.called is False
+    args = parse_args("--skip-pip", "--skip-pip-package", "foo")
+    assert mock_exit.called is True
