@@ -18,8 +18,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
-    DATA_MEGABYTES,
-    DATA_RATE_KILOBYTES_PER_SECOND,
+    DATA_MEBIBYTES,
+    DATA_RATE_KIBIBYTES_PER_SECOND,
     DATA_TEBIBYTES,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -115,7 +115,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_size",
         name="Memory Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -124,7 +124,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_cached",
         name="Memory Cached",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -133,7 +133,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_available_swap",
         name="Memory Available (Swap)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -141,7 +141,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_available_real",
         name="Memory Available (Real)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -149,7 +149,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_total_swap",
         name="Memory Total (Swap)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -157,7 +157,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_total_real",
         name="Memory Total (Real)",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -165,7 +165,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_up",
         name="Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -173,7 +173,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoCoreUtilization.API_KEY,
         key="network_down",
         name="Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -347,11 +347,11 @@ class SynoDSMUtilSensor(SynoDSMSensor):
             return None
 
         # Data (RAM)
-        if self.native_unit_of_measurement == DATA_MEGABYTES:
+        if self.native_unit_of_measurement == DATA_MEBIBYTES:
             return round(attr / 1024.0**2, 1)
 
         # Network
-        if self.native_unit_of_measurement == DATA_RATE_KILOBYTES_PER_SECOND:
+        if self.native_unit_of_measurement == DATA_RATE_KIBIBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
 
         # CPU load average
