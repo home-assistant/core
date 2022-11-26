@@ -26,6 +26,8 @@ from homeassistant.components.knx.const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
@@ -538,7 +540,7 @@ async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
     )
     await hass.async_block_till_done()
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_tunneling"
+    assert result3["step_id"] == "secure_key_source"
     return result3
 
 
@@ -588,7 +590,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     )
     await hass.async_block_till_done()
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_tunneling"
+    assert result3["step_id"] == "secure_key_source"
 
 
 async def test_configure_secure_tunnel_manual(hass: HomeAssistant):
@@ -665,6 +667,8 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
             CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
             CONF_KNX_KNXKEY_PASSWORD: "password",
+            CONF_KNX_ROUTING_BACKBONE_KEY: None,
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
             CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
