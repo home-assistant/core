@@ -444,10 +444,11 @@ class KNXCommonFlow(ABC, FlowHandler):
                     title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
                 return self.finish_flow(title=title)
 
+        if _default_filename := self.initial_data.get(CONF_KNX_KNXKEY_FILENAME):
+            _default_filename = _default_filename.lstrip(CONST_KNX_STORAGE_KEY)
         fields = {
             vol.Required(
-                CONF_KNX_KNXKEY_FILENAME,
-                default=self.initial_data.get(CONF_KNX_KNXKEY_FILENAME),
+                CONF_KNX_KNXKEY_FILENAME, default=_default_filename
             ): selector.TextSelector(),
             vol.Required(
                 CONF_KNX_KNXKEY_PASSWORD,
