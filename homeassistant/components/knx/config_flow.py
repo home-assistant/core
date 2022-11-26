@@ -87,13 +87,13 @@ class KNXCommonFlow(ABC, FlowHandler):
     def __init__(self, initial_data: KNXConfigEntryData) -> None:
         """Initialize KNXCommonFlow."""
         self.initial_data = initial_data
+        self.new_entry_data = KNXConfigEntryData()
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
-        self._tunneling_config: KNXConfigEntryData | None = None
 
     @abstractmethod
-    def finish_flow(self, new_entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+    def finish_flow(self, title: str) -> FlowResult:
         """Finish the flow."""
 
     async def async_step_connection_type(
@@ -119,11 +119,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                 return await self.async_step_tunnel()
 
             # Automatic connection type
-            entry_data = KNXConfigEntryData(connection_type=CONF_KNX_AUTOMATIC)
-            return self.finish_flow(
-                new_entry_data=entry_data,
-                title=CONF_KNX_AUTOMATIC.capitalize(),
-            )
+            self.new_entry_data = KNXConfigEntryData(connection_type=CONF_KNX_AUTOMATIC)
+            return self.finish_flow(title=CONF_KNX_AUTOMATIC.capitalize())
 
         supported_connection_types = {
             CONF_KNX_TUNNELING: CONF_KNX_TUNNELING.capitalize(),
@@ -163,7 +160,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 if self._selected_tunnel.supports_tunnelling_tcp
                 else CONF_KNX_TUNNELING
             )
-            self._tunneling_config = KNXConfigEntryData(
+            self.new_entry_data = KNXConfigEntryData(
                 host=self._selected_tunnel.ip_addr,
                 port=self._selected_tunnel.port,
                 route_back=False,
@@ -174,10 +171,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     step_id="secure_tunneling",
                     menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                 )
-            return self.finish_flow(
-                new_entry_data=self._tunneling_config,
-                title=f"Tunneling @ {self._selected_tunnel}",
-            )
+            return self.finish_flow(title=f"Tunneling @ {self._selected_tunnel}")
 
         if not self._found_tunnels:
             return await self.async_step_manual_tunnel()
@@ -211,7 +205,7 @@ class KNXCommonFlow(ABC, FlowHandler):
 
             if not errors:
                 connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
-                self._tunneling_config = KNXConfigEntryData(
+                self.new_entry_data = KNXConfigEntryData(
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=user_input[CONF_KNX_ROUTE_BACK],
@@ -224,10 +218,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                         step_id="secure_tunneling",
                         menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                     )
-                return self.finish_flow(
-                    new_entry_data=self._tunneling_config,
-                    title=f"Tunneling @ {_host}",
-                )
+                return self.finish_flow(title=f"Tunneling @ {_host}")
 
         _reconfiguring_existing_tunnel = (
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
@@ -294,16 +285,14 @@ class KNXCommonFlow(ABC, FlowHandler):
         errors: dict = {}
 
         if user_input is not None:
-            assert self._tunneling_config
-            entry_data = self._tunneling_config | KNXConfigEntryData(
+            self.new_entry_data |= KNXConfigEntryData(
                 connection_type=CONF_KNX_TUNNELING_TCP_SECURE,
                 device_authentication=user_input[CONF_KNX_SECURE_DEVICE_AUTHENTICATION],
                 user_id=user_input[CONF_KNX_SECURE_USER_ID],
                 user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
             )
             return self.finish_flow(
-                new_entry_data=entry_data,
-                title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
+                title=f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
             )
 
         fields = {
@@ -345,7 +334,6 @@ class KNXCommonFlow(ABC, FlowHandler):
         errors = {}
 
         if user_input is not None:
-            assert self._tunneling_config
             storage_key = CONST_KNX_STORAGE_KEY + user_input[CONF_KNX_KNXKEY_FILENAME]
             try:
                 await load_keyring(
@@ -358,14 +346,13 @@ class KNXCommonFlow(ABC, FlowHandler):
                 errors[CONF_KNX_KNXKEY_PASSWORD] = "invalid_signature"
 
             if not errors:
-                entry_data = self._tunneling_config | KNXConfigEntryData(
+                self.new_entry_data |= KNXConfigEntryData(
                     connection_type=CONF_KNX_TUNNELING_TCP_SECURE,
                     knxkeys_filename=storage_key,
                     knxkeys_password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
                 return self.finish_flow(
-                    new_entry_data=entry_data,
-                    title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
+                    title=f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
                 )
 
         fields = {
@@ -418,17 +405,14 @@ class KNXCommonFlow(ABC, FlowHandler):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
-                entry_data = KNXConfigEntryData(
+                self.new_entry_data = KNXConfigEntryData(
                     connection_type=CONF_KNX_ROUTING,
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
                     multicast_port=_multicast_port,
                     local_ip=_local_ip,
                 )
-                return self.finish_flow(
-                    new_entry_data=entry_data,
-                    title=f"Routing as {_individual_address}",
-                )
+                return self.finish_flow(title=f"Routing as {_individual_address}")
 
         fields = {
             vol.Required(
@@ -467,11 +451,11 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
         return KNXOptionsFlow(config_entry)
 
     @callback
-    def finish_flow(self, new_entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+    def finish_flow(self, title: str) -> FlowResult:
         """Create the ConfigEntry."""
         return self.async_create_entry(
             title=title,
-            data=DEFAULT_ENTRY_DATA | new_entry_data,
+            data=DEFAULT_ENTRY_DATA | self.new_entry_data,
         )
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
@@ -492,11 +476,9 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
         super().__init__(initial_data=config_entry.data)  # type: ignore[arg-type]
 
     @callback
-    def finish_flow(
-        self, new_entry_data: KNXConfigEntryData, title: str | None
-    ) -> FlowResult:
+    def finish_flow(self, title: str | None) -> FlowResult:
         """Update the ConfigEntry and finish the flow."""
-        new_data = DEFAULT_ENTRY_DATA | self.initial_data | new_entry_data
+        new_data = DEFAULT_ENTRY_DATA | self.initial_data | self.new_entry_data
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data,
@@ -518,13 +500,11 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
     ) -> FlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            return self.finish_flow(
-                new_entry_data=KNXConfigEntryData(
-                    state_updater=user_input[CONF_KNX_STATE_UPDATER],
-                    rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                ),
-                title=None,
+            self.new_entry_data = KNXConfigEntryData(
+                state_updater=user_input[CONF_KNX_STATE_UPDATER],
+                rate_limit=user_input[CONF_KNX_RATE_LIMIT],
             )
+            return self.finish_flow(title=None)
 
         data_schema = {
             vol.Required(
