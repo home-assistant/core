@@ -25,7 +25,7 @@ LOCATION_MAP = {
     "great_britain": "gb",
     "united_states": "us",
 }
-INVERTED_LOCATION_MAP = {v: k for k, v in LOCATION_MAP.items()}
+LOCATION_INVERTED_MAP = {v: k for k, v in LOCATION_MAP.items()}
 
 RETENTION_MAP = {
     "one_hour": 1,
@@ -38,14 +38,14 @@ RETENTION_MAP = {
     "one_year": 8760,
     "two_years": 17520,
 }
-INVERTED_RETENTION_MAP = {v: k for k, v in RETENTION_MAP.items()}
+RETENTION_INVERTED_MAP = {v: k for k, v in RETENTION_MAP.items()}
 
 
 @dataclass
 class NextDnsSelectRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
-    state: Callable[[CoordinatorDataT], str]
+    current_option: Callable[[CoordinatorDataT], str]
     select_option_method: str
     option_map: dict[str, Any]
 
@@ -63,7 +63,7 @@ SELECTS = (
         name="Logs location",
         entity_category=EntityCategory.CONFIG,
         option_map=LOCATION_MAP,
-        state=lambda data: INVERTED_LOCATION_MAP[data.logs_location],
+        current_option=lambda data: LOCATION_INVERTED_MAP[data.logs_location],
         select_option_method="set_logs_location",
         options=["switzerland", "european_union", "great_britain", "united_states"],
         device_class=f"{DOMAIN}__logs_location",
@@ -73,7 +73,7 @@ SELECTS = (
         name="Logs retention",
         entity_category=EntityCategory.CONFIG,
         option_map=RETENTION_MAP,
-        state=lambda data: INVERTED_RETENTION_MAP[data.logs_retention],
+        current_option=lambda data: RETENTION_INVERTED_MAP[data.logs_retention],
         select_option_method="set_logs_retention",
         options=[
             "one_hour",
@@ -122,7 +122,7 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         assert description.options is not None
         self._attr_options = description.options
-        self._attr_current_option = description.state(coordinator.data)
+        self._attr_current_option = description.current_option(coordinator.data)
         self.entity_description: NextDnsSelectEntityDescription = description
         self._select_option = getattr(
             self.coordinator.nextdns, self.entity_description.select_option_method
@@ -131,7 +131,9 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_option = self.entity_description.state(self.coordinator.data)
+        self._attr_current_option = self.entity_description.current_option(
+            self.coordinator.data
+        )
         self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
