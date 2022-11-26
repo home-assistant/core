@@ -362,11 +362,8 @@ class KNXModule:
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            own_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
-            multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
             state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
         )
 
@@ -384,6 +381,9 @@ class KNXModule:
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
                 threaded=True,

@@ -6,10 +6,10 @@ from typing import Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.exceptions.exception import InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
-from xknx.secure import load_key_ring
+from xknx.secure import load_keyring
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -41,6 +41,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     CONST_KNX_STORAGE_KEY,
+    DEFAULT_ROUTING_IA,
     DOMAIN,
     KNXConfigEntryData,
 )
@@ -50,7 +51,7 @@ CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
 
 DEFAULT_ENTRY_DATA = KNXConfigEntryData(
-    individual_address=XKNX.DEFAULT_ADDRESS,
+    individual_address=DEFAULT_ROUTING_IA,
     local_ip=None,
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
@@ -347,13 +348,13 @@ class KNXCommonFlow(ABC, FlowHandler):
             assert self._tunneling_config
             storage_key = CONST_KNX_STORAGE_KEY + user_input[CONF_KNX_KNXKEY_FILENAME]
             try:
-                load_key_ring(
+                await load_keyring(
                     path=self.hass.config.path(STORAGE_DIR, storage_key),
                     password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
             except FileNotFoundError:
                 errors[CONF_KNX_KNXKEY_FILENAME] = "file_not_found"
-            except InvalidSignature:
+            except InvalidSecureConfiguration:
                 errors[CONF_KNX_KNXKEY_PASSWORD] = "invalid_signature"
 
             if not errors:
