@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-from xknx.exceptions.exception import InvalidSignature
+from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
 
@@ -212,7 +212,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
-                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
                 CONF_KNX_ROUTE_BACK: False,
                 CONF_KNX_LOCAL_IP: None,
             },
@@ -229,7 +229,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
-                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
                 CONF_KNX_ROUTE_BACK: False,
                 CONF_KNX_LOCAL_IP: None,
             },
@@ -246,7 +246,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
-                CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+                CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
                 CONF_KNX_ROUTE_BACK: True,
                 CONF_KNX_LOCAL_IP: None,
             },
@@ -374,7 +374,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.2",
             CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
             CONF_KNX_ROUTE_BACK: False,
             CONF_KNX_LOCAL_IP: "192.168.1.112",
         }
@@ -420,7 +420,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
             CONF_KNX_ROUTE_BACK: False,
             CONF_KNX_LOCAL_IP: None,
         }
@@ -625,7 +625,7 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant):
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
             CONF_KNX_ROUTE_BACK: False,
             CONF_KNX_LOCAL_IP: None,
         }
@@ -649,7 +649,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.knx.config_flow.load_key_ring", return_value=True
+        "homeassistant.components.knx.config_flow.load_keyring", return_value=True
     ):
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -667,7 +667,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
             CONF_KNX_KNXKEY_PASSWORD: "password",
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
             CONF_KNX_ROUTE_BACK: False,
             CONF_KNX_LOCAL_IP: None,
         }
@@ -688,7 +688,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.knx.config_flow.load_key_ring",
+        "homeassistant.components.knx.config_flow.load_keyring",
         side_effect=FileNotFoundError(),
     ):
         secure_knxkeys = await hass.config_entries.flow.async_configure(
@@ -717,8 +717,8 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.knx.config_flow.load_key_ring",
-        side_effect=InvalidSignature(),
+        "homeassistant.components.knx.config_flow.load_keyring",
+        side_effect=InvalidSecureConfiguration(),
     ):
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -773,13 +773,13 @@ async def test_options_flow_connection_type(
 
         assert mock_config_entry.data == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
             CONF_KNX_LOCAL_IP: None,
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            CONF_KNX_RATE_LIMIT: 20,
+            CONF_KNX_RATE_LIMIT: 0,
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_ROUTE_BACK: False,
         }
@@ -804,7 +804,7 @@ async def test_options_communication_settings(
         result["flow_id"],
         user_input={
             CONF_KNX_STATE_UPDATER: False,
-            CONF_KNX_RATE_LIMIT: 0,
+            CONF_KNX_RATE_LIMIT: 40,
         },
     )
 
@@ -816,5 +816,5 @@ async def test_options_communication_settings(
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
         CONF_KNX_STATE_UPDATER: False,
-        CONF_KNX_RATE_LIMIT: 0,
+        CONF_KNX_RATE_LIMIT: 40,
     }

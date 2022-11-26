@@ -41,7 +41,9 @@ CONF_KNX_RATE_LIMIT: Final = "rate_limit"
 CONF_KNX_ROUTE_BACK: Final = "route_back"
 CONF_KNX_STATE_UPDATER: Final = "state_updater"
 CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
-CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
+CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
+
+DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 ##
 # Secure constants
