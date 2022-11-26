@@ -60,7 +60,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
         self._coordinator: DataUpdateCoordinator[Any] | None = None
-        self._result = None
+        self._result: list = []
         super().__init__(hub, entry)
 
     async def async_setup_slaves(
@@ -106,17 +106,15 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
-            self._result = None
+            self._result = []
         else:
             self._lazy_errors = self._lazy_error_count
             self._attr_available = True
-            self._result = result
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
                 self._result = result.bits
-                self._attr_is_on = bool(result.bits[0] & 1)
             else:
                 self._result = result.registers
-                self._attr_is_on = bool(result.registers[0] & 1)
+            self._attr_is_on = bool(self._result[0] & 1)
 
         self.async_write_ha_state()
         if self._coordinator:
