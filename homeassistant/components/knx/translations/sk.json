@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
         },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+        },
         "step": {
             "manual_tunnel": {
                 "data": {
@@ -13,7 +17,11 @@
             },
             "routing": {
                 "data": {
+                    "individual_address": "Individu\u00e1lna adresa",
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                },
+                "data_description": {
+                    "individual_address": "Adresa KNX, ktor\u00fa bude pou\u017e\u00edva\u0165 Home Assistant, napr. `0.0.4`"
                 }
             },
             "secure_tunnel_manual": {
@@ -26,6 +34,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ip_address": "Neplatn\u00e1 adresa IPv4."
+        },
         "step": {
             "connection_type": {
                 "data": {
@@ -41,7 +53,11 @@
             },
             "routing": {
                 "data": {
+                    "individual_address": "Individu\u00e1lna adresa",
                     "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                },
+                "data_description": {
+                    "individual_address": "Adresa KNX, ktor\u00fa bude pou\u017e\u00edva\u0165 Home Assistant, napr. `0.0.4`"
                 }
             },
             "secure_tunnel_manual": {

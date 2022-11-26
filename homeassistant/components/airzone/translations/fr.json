@@ -8,6 +8,12 @@
             "invalid_system_id": "ID syst\u00e8me Airzone non valide"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Serveur",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",

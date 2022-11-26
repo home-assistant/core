@@ -21,6 +21,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
+                },
+                "description": "Vzhledem k omezen\u00edm bezplatn\u00e9 verze kl\u00ed\u010de AccuWeather API, kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, aktualizace dat se budou prov\u00e1d\u011bt ka\u017ed\u00fdch 80 minut m\u00edsto ka\u017ed\u00fdch 40 minut."
+            },
             "user": {
                 "data": {
                     "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"

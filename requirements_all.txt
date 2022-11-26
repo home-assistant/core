@@ -1329,7 +1329,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.7
+plugwise==0.25.12
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2580,7 +2580,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
-xknx==1.2.1
+xknx==2.0.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

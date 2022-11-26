@@ -1,12 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
             "invalid_hosts": "Neplatn\u00ed hostitelia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Sie\u0165ov\u00e9 adresy (oddelen\u00e9 \u010diarkou), ktor\u00e9 sa maj\u00fa vyl\u00fa\u010di\u0165 z kontroly",
+                    "hosts": "Sie\u0165ov\u00e9 adresy (oddelen\u00e9 \u010diarkami), ktor\u00e9 sa maj\u00fa skenova\u0165"
+                }
+            }
         }
     },
     "options": {
         "error": {
             "invalid_hosts": "Neplatn\u00ed hostitelia"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hosts": "Sie\u0165ov\u00e9 adresy (oddelen\u00e9 \u010diarkami), ktor\u00e9 sa maj\u00fa skenova\u0165",
+                    "interval_seconds": "Interval skenovania"
+                }
+            }
         }
     }
 }

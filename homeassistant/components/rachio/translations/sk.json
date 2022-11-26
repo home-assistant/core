@@ -13,5 +13,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Trvanie v min\u00fatach pri aktiv\u00e1cii sp\u00edna\u010da z\u00f3ny"
+                }
+            }
+        }
     }
 }

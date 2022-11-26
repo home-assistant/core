@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_bat_low": "{entity_name} bat\u00e9ria je vybit\u00e1",
             "is_motion": "{entity_name} zaznamen\u00e1va pohyb",
             "is_moving": "{entity_name} sa h\u00fdbe",
             "is_no_gas": "{entity_name} nedetekuje plyn",
@@ -11,6 +12,7 @@
             "is_no_sound": "{entity_name} nerozpozn\u00e1va zvuk",
             "is_no_update": "{entity_name} je aktu\u00e1lne",
             "is_no_vibration": "{entity_name} nezaznamen\u00e1va vibr\u00e1cie",
+            "is_not_bat_low": "{entity_name} bat\u00e9ria je norm\u00e1lna",
             "is_not_cold": "{entity_name} nie je studen\u00e9",
             "is_not_connected": "{entity_name} je odpojen\u00fd",
             "is_not_hot": "{entity_name} nie je hor\u00face",
@@ -19,7 +21,9 @@
             "is_not_moving": "{entity_name} sa neh\u00fdbe"
         },
         "trigger_type": {
+            "bat_low": "{entity_name} bat\u00e9ria vybit\u00e1",
             "connected": "{entity_name} je pripojen\u00fd",
+            "not_bat_low": "{entity_name} bat\u00e9ria norm\u00e1lna",
             "not_plugged_in": "{entity_name} odpojen\u00fd",
             "not_powered": "{entity_name} nie je nap\u00e1jan\u00e9"
         }

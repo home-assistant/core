@@ -144,7 +144,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
 
 def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get unit of measurement class of an entity.
+    """Get unit of measurement of an entity.
 
     First try the statemachine, then entity registry.
     """

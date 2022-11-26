@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import voluptuous as vol
 
-from homeassistant import auth, config_entries, core as ha, loader
+from homeassistant import auth, bootstrap, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
     models as auth_models,
@@ -306,6 +306,7 @@ async def async_test_home_assistant(loop, load_registries=True):
             issue_registry.async_load(hass),
         )
         await hass.async_block_till_done()
+        hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = ha.CoreState.running
 

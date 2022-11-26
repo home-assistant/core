@@ -6,6 +6,9 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -29,7 +32,10 @@ _STATISTIC_MEASURES = [
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor", multiple=True),
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN],
+                multiple=True,
+            ),
         ),
         vol.Required(CONF_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
