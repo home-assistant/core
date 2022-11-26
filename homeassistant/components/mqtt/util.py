@@ -97,7 +97,7 @@ def valid_subscribe_topic(topic: Any) -> str:
 
 def valid_subscribe_topic_template(value: Any) -> template.Template:
     """Validate either a jinja2 template or a valid MQTT subscription topic."""
-    tpl = template.Template(value)
+    tpl = cv.template(value)
 
     if tpl.is_static:
         valid_subscribe_topic(value)
@@ -115,7 +115,8 @@ def valid_publish_topic(topic: Any) -> str:
 
 def valid_qos_schema(qos: Any) -> int:
     """Validate that QOS value is valid."""
-    return _VALID_QOS_SCHEMA(qos)
+    validated_qos: int = _VALID_QOS_SCHEMA(qos)
+    return validated_qos
 
 
 _MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
@@ -138,9 +139,12 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
 
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
+    mqtt_data: MqttData
     if ensure_exists:
-        return hass.data.setdefault(DATA_MQTT, MqttData())
-    return hass.data[DATA_MQTT]
+        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
+        return mqtt_data
+    mqtt_data = hass.data[DATA_MQTT]
+    return mqtt_data
 
 
 async def async_create_certificate_temp_files(

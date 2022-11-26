@@ -4,9 +4,9 @@
 from unittest.mock import ANY, patch
 
 from bleak.backends.scanner import BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
 from . import generate_advertisement_data, inject_advertisement
 
@@ -68,15 +68,15 @@ async def test_diagnostics(
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
-                    "hw_version": "usbid:1234",
+                    "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
-                    "sw_version": "BlueZ 4.63",
+                    "sw_version": "homeassistant",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
-                    "hw_version": "usbid:1234",
+                    "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": True,
-                    "sw_version": "BlueZ 4.63",
+                    "sw_version": "homeassistant",
                 },
             },
             "dbus": {
@@ -99,15 +99,15 @@ async def test_diagnostics(
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
-                        "hw_version": "usbid:1234",
+                        "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": False,
-                        "sw_version": "BlueZ 4.63",
+                        "sw_version": "homeassistant",
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
-                        "hw_version": "usbid:1234",
+                        "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": True,
-                        "sw_version": "BlueZ 4.63",
+                        "sw_version": "homeassistant",
                     },
                 },
                 "advertisement_tracker": {

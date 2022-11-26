@@ -24,12 +24,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Endere\u00e7o do dispositivo",
-                    "mac": "Endere\u00e7o MAC do dispositivo",
-                    "name": "Nome",
-                    "password": "Senha"
-                },
-                "title": "Configurar dispositivo Switchbot"
+                    "address": "Endere\u00e7o do dispositivo"
+                }
             }
         }
     },
@@ -37,10 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Contagem de tentativas",
-                    "retry_timeout": "Intervalo entre tentativas",
-                    "scan_timeout": "Quanto tempo para verificar os dados do an\u00fancio",
-                    "update_time": "Tempo entre atualiza\u00e7\u00f5es (segundos)"
+                    "retry_count": "Contagem de tentativas"
                 }
             }
         }

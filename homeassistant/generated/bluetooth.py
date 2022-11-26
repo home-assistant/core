@@ -273,6 +273,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "Ruuvi *",
     },
     {
+        "domain": "sensirion_ble",
+        "manufacturer_id": 1749,
+    },
+    {
+        "domain": "sensirion_ble",
+        "local_name": "MyCO2*",
+    },
+    {
         "connectable": False,
         "domain": "sensorpro",
         "manufacturer_data_start": [

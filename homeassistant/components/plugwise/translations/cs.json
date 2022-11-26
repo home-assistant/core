@@ -6,37 +6,18 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+            "invalid_setup": "P\u0159idejte sv\u00e9ho Adama m\u00edsto sv\u00e9 Anny, viz dokumentace",
+            "response_error": "Byla p\u0159ijata neplatn\u00e1 data XML nebo indikace chyby",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
+            "unsupported": "Za\u0159\u00edzen\u00ed s nepodporovan\u00fdm firmwarem"
         },
-        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Typ p\u0159ipojen\u00ed",
                     "host": "IP adresa"
                 },
                 "description": "Produkt:",
                 "title": "Typ Plugwise"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP adresa",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no Smile"
-                },
-                "description": "Pros\u00edm zadejte",
-                "title": "P\u0159ipojen\u00ed k Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
-                },
-                "description": "Upravte mo\u017enosti Plugwise"
             }
         }
     }

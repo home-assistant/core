@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "Dostupnos\u0165 aktualiz\u00e1cie {entity_name} sa zmenila",
+            "turned_off": "{entity_name} sa stalo aktu\u00e1lnym"
+        }
+    },
+    "title": "Aktualizova\u0165"
+}

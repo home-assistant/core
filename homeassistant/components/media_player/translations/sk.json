@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} zmenil stav"
+        }
+    },
     "state": {
         "_": {
             "idle": "Ne\u010dinn\u00fd",

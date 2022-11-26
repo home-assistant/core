@@ -9,6 +9,14 @@
                 }
             },
             "title": "De voeding is niet stabiel"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Kan op dit moment de thee niet opnieuw verwarmen"
+                }
+            },
+            "title": "De thee is koud"
         }
     },
     "options": {
