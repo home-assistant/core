@@ -97,14 +97,11 @@ def get_arguments() -> argparse.Namespace:
         help="Skips pip install of required packages on startup",
     )
     skip_pip_group.add_argument(
-        "--skip-pip-package",
-        metavar="package_name",
-        dest="skip_pip_packages",
-        action="append",
-        help=(
-            "Skip pip install of a specific package on startup. "
-            "Can be specified multiple times."
-        ),
+        "--skip-pip-packages",
+        metavar="package_names",
+        type=lambda arg: arg.split(","),
+        default=[],
+        help="Skip pip install of specific packages on startup",
     )
 
     parser.add_argument(
