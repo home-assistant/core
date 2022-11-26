@@ -108,7 +108,9 @@ class KNXCommonFlow(ABC, FlowHandler):
     ) -> FlowResult:
         """Handle connection type configuration."""
         if user_input is not None:
-            self._async_scan_gen = None  # stop the scan
+            if self._async_scan_gen:
+                await self._async_scan_gen.aclose()  # stop the scan
+                self._async_scan_gen = None
             if self._gatewayscanner:
                 self._found_gateways = list(
                     self._gatewayscanner.found_gateways.values()
@@ -146,10 +148,9 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._gatewayscanner = GatewayScanner(
             xknx, stop_on_found=0, timeout_in_seconds=2
         )
-        # keep a reference to the generator to avoid it being garbage collected before timeout
+        # keep a reference to the generator to scan in background until user selects a connection type
         self._async_scan_gen = self._gatewayscanner.async_scan()
         try:
-            assert self._async_scan_gen is not None
             await self._async_scan_gen.__anext__()  # pylint: disable=unnecessary-dunder-call
         except StopAsyncIteration:
             pass  # scan finished, no interfaces discovered
