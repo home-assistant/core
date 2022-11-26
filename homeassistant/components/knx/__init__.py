@@ -53,6 +53,7 @@ from .const import (
     CONF_KNX_ROUTING,
     CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_ROUTING_SECURE,
+    CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
@@ -442,6 +443,9 @@ class KNXModule:
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 secure_config=SecureConfig(
                     backbone_key=self.entry.data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
+                    latency_ms=self.entry.data.get(
+                        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
+                    ),
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                     knxkeys_file_path=knxkeys_file,
                 ),
