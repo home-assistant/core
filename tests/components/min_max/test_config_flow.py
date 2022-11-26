@@ -5,6 +5,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,7 +30,14 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "My min_max", "entity_ids": input_sensors, "type": "max"},
+            {
+                "name": "My min_max",
+                "entity_ids": input_sensors,
+                "type": "max",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "device_class": SensorDeviceClass.TEMPERATURE,
+            },
         )
         await hass.async_block_till_done()
 
@@ -40,6 +49,9 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 2.0,
         "type": "max",
+        "unit_of_measurement": "°C",
+        "state_class": "measurement",
+        "device_class": "temperature",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -50,6 +62,9 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 2.0,
         "type": "max",
+        "unit_of_measurement": "°C",
+        "state_class": "measurement",
+        "device_class": "temperature",
     }
     assert config_entry.title == "My min_max"
 

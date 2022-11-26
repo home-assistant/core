@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorStateClass,
@@ -16,9 +17,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -88,6 +91,9 @@ async def async_setup_entry(
     )
     sensor_type = config_entry.options[CONF_TYPE]
     round_digits = int(config_entry.options[CONF_ROUND_DIGITS])
+    unit_of_measurement = config_entry.options.get(CONF_UNIT_OF_MEASUREMENT)
+    state_class = config_entry.options.get(CONF_STATE_CLASS)
+    device_class = config_entry.options.get(CONF_DEVICE_CLASS)
 
     async_add_entities(
         [
@@ -97,6 +103,9 @@ async def async_setup_entry(
                 sensor_type,
                 round_digits,
                 config_entry.entry_id,
+                unit_of_measurement,
+                state_class,
+                device_class,
             )
         ]
     )
@@ -118,7 +127,11 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
+        [
+            MinMaxSensor(
+                entity_ids, name, sensor_type, round_digits, unique_id, None, None, None
+            )
+        ]
     )
 
 
@@ -207,7 +220,6 @@ class MinMaxSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_should_poll = False
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -216,9 +228,17 @@ class MinMaxSensor(SensorEntity):
         sensor_type: str,
         round_digits: int,
         unique_id: str | None,
+        unit_of_measurement: str | None,
+        state_class: str | None,
+        device_class: str | None,
     ) -> None:
         """Initialize the min/max sensor."""
         self._attr_unique_id = unique_id
+        self._attr_state_class = (
+            state_class if state_class else SensorStateClass.MEASUREMENT
+        )
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
@@ -262,7 +282,10 @@ class MinMaxSensor(SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if self._unit_of_measurement_mismatch:
+        if (
+            self._unit_of_measurement_mismatch
+            and self._attr_native_unit_of_measurement is None
+        ):
             return None
         value: StateType | datetime = getattr(self, self._sensor_attr)
         return value
@@ -270,6 +293,8 @@ class MinMaxSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
+        if self._attr_native_unit_of_measurement:
+            return self._attr_native_unit_of_measurement
         if self._unit_of_measurement_mismatch:
             return "ERR"
         return self._unit_of_measurement

@@ -6,7 +6,11 @@ from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -15,12 +19,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]
@@ -524,3 +529,43 @@ async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_sum")
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_uom_device_state_class(
+    hass: HomeAssistant, caplog: LogCaptureFixture
+) -> None:
+    """Test UoM, DeviceClass and StateClass."""
+    hass.states.async_set(
+        "sensor.input_one", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+    )
+    hass.states.async_set(
+        "sensor.input_two", "20", {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}
+    )
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_ids": input_sensors,
+            "name": "My min_max",
+            "round_digits": 0,
+            "type": "min",
+            "unit_of_measurement": UnitOfTemperature.CELSIUS,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "device_class": SensorDeviceClass.TEMPERATURE,
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_min_max")
+
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    assert "Units of measurement do not match for entity" in caplog.text

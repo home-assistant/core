@@ -8,8 +8,18 @@ import voluptuous as vol
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_TYPE
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -44,6 +54,25 @@ OPTIONS_SCHEMA = vol.Schema(
             selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorDeviceClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorStateClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in UnitOfTemperature],
+                custom_value=True,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
         ),
     }
 )
