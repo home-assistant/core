@@ -2,11 +2,23 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "script/setup",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {}
+  },
+  "containerUser": "vscode",
+  "postCreateCommand": "script/setup && pre-commit install --install-hooks",
   "postStartCommand": "script/bootstrap",
-  "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": ["8123:8123"],
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "containerEnv": {
+    "DEVCONTAINER": "1",
+    "GIT_EDITOR": "code --wait"
+  },
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
+    }
+  },
   "extensions": [
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
@@ -16,6 +28,7 @@
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
+    "remote.autoForwardPorts": false,
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
