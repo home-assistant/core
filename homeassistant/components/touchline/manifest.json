@@ -1,6 +1,7 @@
 {
   "domain": "touchline",
   "name": "Roth Touchline",
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/touchline",
   "requirements": ["pytouchline==0.7"],
   "codeowners": [],

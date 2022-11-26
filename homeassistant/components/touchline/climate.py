@@ -74,6 +74,8 @@ class Touchline(ClimateEntity):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
         self._name = None
+        self._controller_id = None
+        self._device_id = None
         self._current_temperature = None
         self._target_temperature = None
         self._current_operation_mode = None
@@ -83,6 +85,8 @@ class Touchline(ClimateEntity):
         """Update thermostat attributes."""
         self.unit.update()
         self._name = self.unit.get_name()
+        self._controller_id = self.unit.get_controller_id()
+        self._device_id = self.unit.get_device_id()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
@@ -90,35 +94,40 @@ class Touchline(ClimateEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> None:
         """Return the name of the climate device."""
         return self._name
 
     @property
-    def current_temperature(self):
+    def unique_id(self) -> None:
+        """Return a unique ID."""
+        return self._controller_id + self._device_id
+
+    @property
+    def current_temperature(self) -> None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> None:
         """Return the current preset mode."""
         return self._preset_mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list:
         """Return available preset modes."""
         return list(PRESET_MODES)
 
-    def set_preset_mode(self, preset_mode):
-        """Set new target preset mode."""
-        preset_mode = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset_mode.mode)
-        self.unit.set_week_program(preset_mode.program)
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        selected_preset_mode = PRESET_MODES[preset_mode]
+        self.unit.set_operation_mode(selected_preset_mode.mode)
+        self.unit.set_week_program(selected_preset_mode.program)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
