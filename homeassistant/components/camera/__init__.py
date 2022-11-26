@@ -429,7 +429,7 @@ class Camera(Entity):
     _attr_motion_detection_enabled: bool = False
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
-    _attr_supported_features: CameraEntityFeature | int = 0
+    _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
 
     def __init__(self) -> None:
         """Initialize a camera."""
@@ -450,7 +450,7 @@ class Camera(Entity):
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
     @property
-    def supported_features(self) -> CameraEntityFeature | int:
+    def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 

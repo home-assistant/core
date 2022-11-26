@@ -83,7 +83,7 @@ class EsphomeMediaPlayer(
         return self._state.volume
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag supported features."""
         flags = (
             MediaPlayerEntityFeature.PLAY_MEDIA

@@ -19,10 +19,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "Konfigurering av Simplepush med YAML tas bort. \n\n Din befintliga YAML-konfiguration har automatiskt importerats till anv\u00e4ndargr\u00e4nssnittet. \n\n Ta bort Simplepush YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
-            "title": "Simplepush YAML-konfigurationen tas bort"
-        },
         "removed_yaml": {
             "description": "Konfigurering av Simplepush med YAML har tagits bort. \n\n Din befintliga YAML-konfiguration anv\u00e4nds inte av Home Assistant. \n\n Ta bort Simplepush YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
             "title": "Simplepush YAML-konfigurationen har tagits bort"

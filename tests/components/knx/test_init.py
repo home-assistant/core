@@ -1,6 +1,5 @@
 """Test KNX init."""
 import pytest
-from xknx import XKNX
 from xknx.io import (
     DEFAULT_MCAST_GRP,
     DEFAULT_MCAST_PORT,
@@ -9,6 +8,7 @@ from xknx.io import (
     SecureConfig,
 )
 
+from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
@@ -51,7 +51,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
             },
             ConnectionConfig(threaded=True),
         ),
@@ -63,10 +63,13 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
             },
             ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                individual_address=DEFAULT_ROUTING_IA,
+                multicast_group=DEFAULT_MCAST_GRP,
+                multicast_port=DEFAULT_MCAST_PORT,
                 local_ip="192.168.1.1",
                 threaded=True,
             ),
@@ -82,7 +85,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
             },
             ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING,
@@ -103,7 +106,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
             },
             ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
@@ -122,7 +125,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
                 CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
@@ -146,7 +149,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-                CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+                CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
                 CONF_KNX_SECURE_USER_ID: 2,
                 CONF_KNX_SECURE_USER_PASSWORD: "password",
                 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",

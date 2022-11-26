@@ -60,19 +60,6 @@
                 },
                 "description": "Introdueix la informaci\u00f3 del teu fitxer `.knxkeys`."
             },
-            "secure_manual": {
-                "data": {
-                    "device_authentication": "Contrasenya d'autenticaci\u00f3 del dispositiu",
-                    "user_id": "ID d'usuari",
-                    "user_password": "Contrasenya d'usuari"
-                },
-                "data_description": {
-                    "device_authentication": "S'estableix al panell 'IP' de la interf\u00edcie d'ETS.",
-                    "user_id": "Sovint \u00e9s el n\u00famero del t\u00fanel +1. Per tant, 'T\u00fanel 2' tindria l'ID d'usuari '3'.",
-                    "user_password": "Contrasenya per a la connexi\u00f3 t\u00fanel espec\u00edfica configurada al panell 'Propietats' del t\u00fanel a ETS."
-                },
-                "description": "Introdueix la informaci\u00f3 de seguretat IP (IP Secure)."
-            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Contrasenya d'autenticaci\u00f3 del dispositiu",
@@ -90,7 +77,6 @@
                 "description": "Selecciona com vols configurar KNX/IP Secure.",
                 "menu_options": {
                     "secure_knxkeys": "Utilitza un fitxer `.knxkeys` que contingui les claus de seguretat IP (IP Secure)",
-                    "secure_manual": "Configura manualment les claus de seguretat IP (IP Secure)",
                     "secure_tunnel_manual": "Configura manualment les claus de seguretat IP (IP Secure)"
                 }
             },
@@ -99,12 +85,6 @@
                     "gateway": "Connexi\u00f3 t\u00fanel KNX"
                 },
                 "description": "Selecciona una passarel\u00b7la d'enlla\u00e7 de la llista."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "Tipus de connexi\u00f3 KNX"
-                },
-                "description": "Introdueix el tipus de connexi\u00f3 a utilitzar per a la connexi\u00f3 KNX.\n AUTOM\u00c0TICA: la integraci\u00f3 s'encarrega de la connectivitat al bus KNX realitzant una exploraci\u00f3 de la passarel\u00b7la.\n T\u00daNEL: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant un t\u00fanel.\n ENCAMINAMENT: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant l'encaminament."
             }
         }
     },
@@ -134,25 +114,6 @@
                     "connection_type": "Tipus de connexi\u00f3 KNX"
                 },
                 "description": "Introdueix el tipus de connexi\u00f3 a utilitzar per a la connexi\u00f3 KNX.\n AUTOM\u00c0TICA: la integraci\u00f3 s'encarrega de la connectivitat al bus KNX realitzant una exploraci\u00f3 de la passarel\u00b7la.\n T\u00daNEL: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant un t\u00fanel.\n ENCAMINAMENT: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant l'encaminament."
-            },
-            "init": {
-                "data": {
-                    "connection_type": "Tipus de connexi\u00f3 KNX",
-                    "individual_address": "Adre\u00e7a individual predeterminada",
-                    "local_ip": "IP local de Home Assistant",
-                    "multicast_group": "Grup multidifusi\u00f3",
-                    "multicast_port": "Port multidifusi\u00f3",
-                    "rate_limit": "Freq\u00fc\u00e8ncia m\u00e0xima",
-                    "state_updater": "Actualitzador d'estat"
-                },
-                "data_description": {
-                    "individual_address": "Adre\u00e7a KNX per utilitzar amb Home Assistant, p. ex. `0.0.4`",
-                    "local_ip": "Utilitza `0.0.0.0` per al descobriment autom\u00e0tic.",
-                    "multicast_group": "Utilitzada per a l'encaminament i el descobriment. Per defecte: `224.0.23.12`",
-                    "multicast_port": "Utilitzat per a l'encaminament i el descobriment. Per defecte: `3671`",
-                    "rate_limit": "Telegrames de sortida m\u00e0xims per segon.\nRecomanat: de 20 a 40",
-                    "state_updater": "Configuraci\u00f3 predeterminadament per llegir els estats del bus KNX. Si est\u00e0 desactivat, Home Assistant no obtindr\u00e0 activament els estats del bus KNX. Les opcions d'entitat `sync_state` poden substituir-ho."
-                }
             },
             "manual_tunnel": {
                 "data": {
@@ -222,14 +183,7 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "Connexi\u00f3 t\u00fanel KNX",
-                    "host": "Amfitri\u00f3",
-                    "port": "Port",
-                    "tunneling_type": "Tipus de t\u00fanel KNX"
-                },
-                "data_description": {
-                    "host": "Adre\u00e7a IP del dispositiu de tunelitzaci\u00f3 KNX/IP.",
-                    "port": "Port del dispositiu de tunelitzaci\u00f3 KNX/IP."
+                    "gateway": "Connexi\u00f3 t\u00fanel KNX"
                 },
                 "description": "Selecciona una passarel\u00b7la d'enlla\u00e7 de la llista."
             }

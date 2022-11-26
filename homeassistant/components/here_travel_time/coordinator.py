@@ -10,7 +10,7 @@ import here_transit
 from here_transit import HERETransitApi
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS, LENGTH_MILES
+from homeassistant.const import ATTR_ATTRIBUTION, UnitOfLength
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
@@ -28,7 +28,6 @@ from .const import (
     ATTR_ORIGIN_NAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    IMPERIAL_UNITS,
     ROUTE_MODE_FASTEST,
 )
 from .model import HERETravelTimeConfig, HERETravelTimeData
@@ -100,13 +99,9 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         mapped_origin_lon: float = section["departure"]["place"]["location"]["lng"]
         mapped_destination_lat: float = section["arrival"]["place"]["location"]["lat"]
         mapped_destination_lon: float = section["arrival"]["place"]["location"]["lng"]
-        distance: float = summary["length"]
-        if self.config.units == IMPERIAL_UNITS:
-            # Convert to miles.
-            distance = DistanceConverter.convert(distance, LENGTH_METERS, LENGTH_MILES)
-        else:
-            # Convert to kilometers
-            distance = distance / 1000
+        distance: float = DistanceConverter.convert(
+            summary["length"], UnitOfLength.METERS, UnitOfLength.KILOMETERS
+        )
         origin_name: str | None = None
         if (names := section["spans"][0].get("names")) is not None:
             origin_name = names[0]["value"]
@@ -189,18 +184,14 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         mapped_destination_lon: float = sections[-1]["arrival"]["place"]["location"][
             "lng"
         ]
-        distance: float = sum(
-            section["travelSummary"]["length"] for section in sections
+        distance: float = DistanceConverter.convert(
+            sum(section["travelSummary"]["length"] for section in sections),
+            UnitOfLength.METERS,
+            UnitOfLength.KILOMETERS,
         )
         duration: float = sum(
             section["travelSummary"]["duration"] for section in sections
         )
-        if self.config.units == IMPERIAL_UNITS:
-            # Convert to miles.
-            distance = DistanceConverter.convert(distance, LENGTH_METERS, LENGTH_MILES)
-        else:
-            # Convert to kilometers
-            distance = distance / 1000
         return HERETravelTimeData(
             {
                 ATTR_ATTRIBUTION: attribution,
@@ -256,9 +247,9 @@ def prepare_parameters(
     arrival: str | None = None
     departure: str | None = None
     if config.arrival is not None:
-        arrival = convert_time_to_isodate(config.arrival)
+        arrival = next_datetime(config.arrival).isoformat()
     if config.departure is not None:
-        departure = convert_time_to_isodate(config.departure)
+        departure = next_datetime(config.departure).isoformat()
 
     return (origin, destination, arrival, departure)
 
@@ -278,12 +269,12 @@ def build_hass_attribution(sections: dict) -> str | None:
     return None
 
 
-def convert_time_to_isodate(simple_time: time) -> str:
+def next_datetime(simple_time: time) -> datetime:
     """Take a time like 08:00:00 and combine it with the current date."""
     combined = datetime.combine(dt.start_of_local_day(), simple_time)
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
-    return combined.isoformat()
+    return combined
 
 
 class InvalidCoordinatesException(Exception):

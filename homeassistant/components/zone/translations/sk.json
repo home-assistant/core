@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "name_exists": "N\u00e1zov u\u017e existuje"
+        },
         "step": {
             "init": {
                 "data": {

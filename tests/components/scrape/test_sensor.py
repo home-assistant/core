@@ -26,7 +26,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_config, return_integration_config
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DOMAIN = "scrape"
 
@@ -405,3 +405,17 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test setup from config entry."""
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.current_version")
+
+    assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"

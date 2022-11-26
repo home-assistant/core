@@ -10,7 +10,7 @@ from whirlpool.backendselector import BackendSelector, Brand, Region
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")
-        return False
+        raise ConfigEntryAuthFailed("Incorrect Password")
 
     appliances_manager = AppliancesManager(backend_selector, auth)
     if not await appliances_manager.fetch_appliances():

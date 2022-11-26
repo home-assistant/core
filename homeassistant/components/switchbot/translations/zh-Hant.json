@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "\u88dd\u7f6e\u4f4d\u5740",
-                    "mac": "\u88dd\u7f6e MAC \u4f4d\u5740",
-                    "name": "\u540d\u7a31",
-                    "password": "\u5bc6\u78bc"
-                },
-                "title": "\u8a2d\u5b9a Switchbot \u88dd\u7f6e"
+                    "address": "\u88dd\u7f6e\u4f4d\u5740"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "\u91cd\u8a66\u6b21\u6578",
-                    "retry_timeout": "\u903e\u6642",
-                    "scan_timeout": "\u6383\u63cf\u5ee3\u544a\u6578\u64da\u7684\u6642\u9593",
-                    "update_time": "\u66f4\u65b0\u9593\u9694\u6642\u9593\uff08\u79d2\uff09"
+                    "retry_count": "\u91cd\u8a66\u6b21\u6578"
                 }
             }
         }

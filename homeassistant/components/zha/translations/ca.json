@@ -64,35 +64,12 @@
                 "description": "La teva c\u00f2pia de seguretat t\u00e9 una adre\u00e7a IEEE diferent de la teva r\u00e0dio. Perqu\u00e8 la xarxa funcioni correctament, tamb\u00e9 s'ha de canviar l'adre\u00e7a IEEE de la teva r\u00e0dio. \n\nAquesta \u00e9s una operaci\u00f3 permanent.",
                 "title": "Sobreescriu l'adre\u00e7a IEEE r\u00e0dio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Tipus de r\u00e0dio"
-                },
-                "description": "Tria el teu tipus de r\u00e0dio Zigbee",
-                "title": "Tipus de r\u00e0dio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "velocitat del port",
-                    "flow_control": "control de flux de dades",
-                    "path": "Ruta del port s\u00e8rie al dispositiu"
-                },
-                "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
-                "title": "Configuraci\u00f3"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Puja un fitxer"
                 },
                 "description": "Restaura la configuraci\u00f3 de xarxa des d'un fitxer JSON de c\u00f2pia de seguretat penjat. Pots baixar-ne un des d'una instal\u00b7laci\u00f3 ZHA diferent anant a **Configuraci\u00f3 de xarxa** o utilitzar un fitxer `coordinator_backup.json` de Zigbee2MQTT.",
                 "title": "Pujada de c\u00f2pia de seguretat manual"
-            },
-            "user": {
-                "data": {
-                    "path": "Ruta del port s\u00e8rie al dispositiu"
-                },
-                "description": "Selecciona el port s\u00e8rie per a la r\u00e0dio Zigbee",
-                "title": "ZHA"
             }
         }
     },
