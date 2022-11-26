@@ -57,7 +57,7 @@ class NextDnsSelectEntityDescription(
     """NextDNS select entity description."""
 
 
-SELECTS = [
+SELECTS = (
     NextDnsSelectEntityDescription[Settings](
         key="logs_location",
         name="Logs location",
@@ -88,7 +88,7 @@ SELECTS = [
         ],
         device_class=f"{DOMAIN}__logs_retention",
     ),
-]
+)
 
 
 async def async_setup_entry(
