@@ -12,7 +12,7 @@
             "stopped": "Stopped"
         },
         "sensibo__light": {
-            "Off": "Off",
+            "off": "Off",
             "on": "On"
         }
     }

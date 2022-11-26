@@ -13,7 +13,7 @@
     },
     "sensibo__light": {
       "on": "On",
-      "Off": "Off"
+      "off": "Off"
     }
   }
 }
