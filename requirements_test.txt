@@ -26,7 +26,7 @@ pytest-timeout==2.1.0
 pytest-xdist==2.5.0
 pytest==7.2.0
 requests_mock==1.10.0
-respx==0.19.2
+respx==0.20.1
 stdlib-list==0.7.0
 tomli==2.0.1;python_version<"3.11"
 tqdm==4.64.0
