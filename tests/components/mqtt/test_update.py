@@ -30,6 +30,7 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
+    help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setup_manual_entity_from_yaml,
@@ -526,4 +527,13 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )
+
+
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = update.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )

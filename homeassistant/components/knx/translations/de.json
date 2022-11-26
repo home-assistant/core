@@ -60,19 +60,6 @@
                 },
                 "description": "Bitte gib die Informationen f\u00fcr deine `.knxkeys`-Datei ein."
             },
-            "secure_manual": {
-                "data": {
-                    "device_authentication": "Ger\u00e4te-Authentifizierungscode",
-                    "user_id": "Benutzer-ID",
-                    "user_password": "Benutzer-Passwort"
-                },
-                "data_description": {
-                    "device_authentication": "Dies wird im Feld \"IP\" der Schnittstelle in ETS eingestellt.",
-                    "user_id": "Dies ist oft die Tunnelnummer +1. \u201eTunnel 2\u201c h\u00e4tte also die Benutzer-ID \u201e3\u201c.",
-                    "user_password": "Passwort f\u00fcr die spezifische Tunnelverbindung, die im Bereich \u201eEigenschaften\u201c des Tunnels in ETS festgelegt wurde."
-                },
-                "description": "Bitte gib deine IP-Secure Informationen ein."
-            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Ger\u00e4te-Authentifizierungscode",
@@ -90,7 +77,6 @@
                 "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
                 "menu_options": {
                     "secure_knxkeys": "Verwende eine `.knxkeys`-Datei, die IP-Secure-Schl\u00fcssel enth\u00e4lt",
-                    "secure_manual": "IP-Secure Schl\u00fcssel manuell konfigurieren",
                     "secure_tunnel_manual": "IP-Secure Schl\u00fcssel manuell konfigurieren"
                 }
             },
@@ -99,12 +85,6 @@
                     "gateway": "KNX Tunnel Verbindung"
                 },
                 "description": "Bitte w\u00e4hle eine Schnittstelle aus der Liste aus."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "KNX-Verbindungstyp"
-                },
-                "description": "Bitte gib den Verbindungstyp ein, den wir f\u00fcr deine KNX-Verbindung verwenden sollen. \n AUTOMATISCH - Die Integration k\u00fcmmert sich um die Verbindung zu deinem KNX Bus, indem sie einen Gateway-Scan durchf\u00fchrt. \n TUNNELING - Die Integration stellt die Verbindung zu deinem KNX Bus \u00fcber Tunneling her. \n ROUTING - Die Integration stellt die Verbindung zu deinem KNX-Bus \u00fcber Routing her."
             }
         }
     },
@@ -134,25 +114,6 @@
                     "connection_type": "KNX-Verbindungstyp"
                 },
                 "description": "Bitte gib den Verbindungstyp ein, den wir f\u00fcr deine KNX-Verbindung verwenden sollen. \n AUTOMATISCH - Die Integration k\u00fcmmert sich um die Verbindung zu deinem KNX Bus, indem sie einen Gateway-Scan durchf\u00fchrt. \n TUNNELING - Die Integration stellt die Verbindung zu deinem KNX Bus \u00fcber Tunneling her. \n ROUTING - Die Integration stellt die Verbindung zu deinem KNX-Bus \u00fcber Routing her."
-            },
-            "init": {
-                "data": {
-                    "connection_type": "KNX-Verbindungstyp",
-                    "individual_address": "Standard physikalische Adresse",
-                    "local_ip": "Lokale IP von Home Assistant",
-                    "multicast_group": "Multicast-Gruppe",
-                    "multicast_port": "Multicast-Port",
-                    "rate_limit": "Telegrammdrossel",
-                    "state_updater": "Status-Updater"
-                },
-                "data_description": {
-                    "individual_address": "Physikalische Adresse, die von Home Assistant verwendet werden soll, z.\u00a0B. \u201e0.0.4\u201c.",
-                    "local_ip": "Verwende \"0.0.0.0\" f\u00fcr die automatische Erkennung.",
-                    "multicast_group": "Wird f\u00fcr Routing und Netzwerkerkennung verwendet. Standard: `224.0.23.12`",
-                    "multicast_port": "Wird f\u00fcr Routing und Netzwerkerkennung verwendet. Standard: \u201e3671\u201c.",
-                    "rate_limit": "Maximal gesendete Telegramme pro Sekunde.\nEmpfohlen: 20 bis 40",
-                    "state_updater": "Standardeinstellung f\u00fcr das Lesen von Zust\u00e4nden aus dem KNX-Bus. Wenn diese Option deaktiviert ist, wird der Home Assistant den Zustand der Entit\u00e4ten nicht aktiv vom KNX-Bus abrufen. Kann durch die Entity-Optionen `sync_state` au\u00dfer Kraft gesetzt werden."
-                }
             },
             "manual_tunnel": {
                 "data": {
@@ -222,14 +183,7 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "KNX Tunnel Verbindung",
-                    "host": "Host",
-                    "port": "Port",
-                    "tunneling_type": "KNX Tunneling Typ"
-                },
-                "data_description": {
-                    "host": "IP-Adresse der KNX/IP-Tunneling Schnittstelle.",
-                    "port": "Port der KNX/IP-Tunneling Schnittstelle."
+                    "gateway": "KNX Tunnel Verbindung"
                 },
                 "description": "Bitte w\u00e4hle eine Schnittstelle aus der Liste aus."
             }

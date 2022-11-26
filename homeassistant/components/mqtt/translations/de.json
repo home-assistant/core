@@ -12,6 +12,7 @@
             "bad_client_key": "Ung\u00fcltiger privater Schl\u00fcssel. Stelle sicher, dass eine PEM-codierte Datei ohne Passwort bereitgestellt wird",
             "bad_discovery_prefix": "Ung\u00fcltiges Discovery-Pr\u00e4fix",
             "bad_will": "Ung\u00fcltiges \u201eWill\u201c-Thema",
+            "bad_ws_headers": "Bereitstellung g\u00fcltiger HTTP-Header als JSON-Objekt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_inclusion": "Das Client-Zertifikat und der private Schl\u00fcssel m\u00fcssen gemeinsam konfiguriert werden"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Client-Zertifikatsdatei hochladen",
                     "client_id": "Client-ID (leer lassen, um eine zuf\u00e4llig generierte zu erhalten)",
                     "client_key": "Private Schl\u00fcsseldatei hochladen",
-                    "discovery": "Suche aktivieren",
                     "keepalive": "Die Zeit zwischen dem Senden von Keep-Alive-Nachrichten",
                     "password": "Passwort",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Validierung des Broker-Zertifikats",
                     "set_client_cert": "Ein Client-Zertifikat verwenden",
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
-                    "username": "Benutzername"
+                    "transport": "MQTT-Transport",
+                    "username": "Benutzername",
+                    "ws_headers": "WebSocket-Header im JSON-Format",
+                    "ws_path": "WebSocket-Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
             },
@@ -86,6 +89,7 @@
             "bad_client_key": "Ung\u00fcltiger privater Schl\u00fcssel. Stelle sicher, dass eine PEM-codierte Datei ohne Passwort bereitgestellt wird",
             "bad_discovery_prefix": "Ung\u00fcltiges Discovery-Pr\u00e4fix",
             "bad_will": "Ung\u00fcltiges \u201eWill\u201c-Thema",
+            "bad_ws_headers": "Bereitstellung g\u00fcltiger HTTP-Header als JSON-Objekt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_inclusion": "Das Client-Zertifikat und der private Schl\u00fcssel m\u00fcssen gemeinsam konfiguriert werden"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validierung des Broker-Zertifikats",
                     "set_client_cert": "Ein Client-Zertifikat verwenden",
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
-                    "username": "Benutzername"
+                    "transport": "MQTT-Transport",
+                    "username": "Benutzername",
+                    "ws_headers": "WebSocket-Header im JSON-Format",
+                    "ws_path": "WebSocket-Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
                 "title": "Broker-Optionen"

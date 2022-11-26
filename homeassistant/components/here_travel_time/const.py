@@ -51,16 +51,10 @@ ICONS = {
     TRAVEL_MODE_TRUCK: ICON_TRUCK,
 }
 
-IMPERIAL_UNITS = "imperial"
-METRIC_UNITS = "metric"
-UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
-
 ATTR_DURATION = "duration"
 ATTR_DISTANCE = "distance"
 ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
-
-ATTR_UNIT_SYSTEM = "unit_system"
 
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"

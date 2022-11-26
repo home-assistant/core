@@ -14,7 +14,7 @@
             "authentication_error": "Ung\u00fcltiger HomeKit Code, \u00fcberpr\u00fcfe bitte den Code und versuche es erneut.",
             "insecure_setup_code": "Der angeforderte Setup-Code ist unsicher, da er zu trivial ist. Dieses Zubeh\u00f6r erf\u00fcllt nicht die grundlegenden Sicherheitsanforderungen.",
             "max_peers_error": "Das Ger\u00e4t weigerte sich, die Kopplung durchzuf\u00fchren, da es keinen freien Kopplungs-Speicher hat.",
-            "pairing_failed": "Beim Versuch dieses Ger\u00e4t zu koppeln ist ein Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das Ger\u00e4t wird derzeit m\u00f6glicherweise nicht unterst\u00fctzt.",
+            "pairing_failed": "Beim Koppeln mit diesem Ger\u00e4t ist ein nicht behandelter Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das oder Ihr Ger\u00e4t wird derzeit nicht unterst\u00fctzt: {error}",
             "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
             "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
         },

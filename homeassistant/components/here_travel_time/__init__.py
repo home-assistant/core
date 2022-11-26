@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_UNIT_SYSTEM, Platform
+from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
@@ -55,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         origin_entity_id=config_entry.data.get(CONF_ORIGIN_ENTITY_ID),
         travel_mode=config_entry.data[CONF_MODE],
         route_mode=config_entry.options[CONF_ROUTE_MODE],
-        units=config_entry.options[CONF_UNIT_SYSTEM],
         arrival=arrival,
         departure=departure,
     )

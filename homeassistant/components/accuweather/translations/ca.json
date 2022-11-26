@@ -24,6 +24,11 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Previsi\u00f3 meteorol\u00f2gica"
+                }
+            },
             "user": {
                 "data": {
                     "forecast": "Previsi\u00f3 meteorol\u00f2gica"

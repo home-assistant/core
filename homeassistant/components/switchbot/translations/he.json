@@ -11,13 +11,6 @@
                 "data": {
                     "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
                 }
-            },
-            "user": {
-                "data": {
-                    "name": "\u05e9\u05dd",
-                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
-                },
-                "title": "\u05d4\u05ea\u05e7\u05e0\u05ea \u05d1\u05d5\u05e8\u05e8 \u05db\u05d9\u05d5\u05d5\u05e0\u05d5\u05df"
             }
         }
     },
@@ -25,10 +18,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "\u05e1\u05e4\u05d9\u05e8\u05ea \u05e0\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea \u05d7\u05d5\u05d6\u05e8\u05d9\u05dd",
-                    "retry_timeout": "\u05e4\u05e1\u05e7 \u05d6\u05de\u05df \u05d1\u05d9\u05df \u05e0\u05d9\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea \u05d7\u05d5\u05d6\u05e8\u05d9\u05dd",
-                    "scan_timeout": "\u05db\u05de\u05d4 \u05d6\u05de\u05df \u05dc\u05e1\u05e8\u05d5\u05e7 \u05e0\u05ea\u05d5\u05e0\u05d9 \u05e4\u05e8\u05e1\u05d5\u05de\u05ea",
-                    "update_time": "\u05d6\u05de\u05df \u05d1\u05d9\u05df \u05e2\u05d3\u05db\u05d5\u05e0\u05d9\u05dd (\u05e9\u05e0\u05d9\u05d5\u05ea)"
+                    "retry_count": "\u05e1\u05e4\u05d9\u05e8\u05ea \u05e0\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea \u05d7\u05d5\u05d6\u05e8\u05d9\u05dd"
                 }
             }
         }

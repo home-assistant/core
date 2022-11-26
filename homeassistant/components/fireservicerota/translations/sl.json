@@ -11,12 +11,6 @@
             "invalid_auth": "Napaka pri overjanju"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Geslo"
-                },
-                "description": "Overitveni \u017eetoni niso ve\u010d veljavni, ponovno se prijavite, da jih znova ustvarite."
-            },
             "user": {
                 "data": {
                     "password": "Geslo",

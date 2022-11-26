@@ -9,7 +9,8 @@
                     "host": "Hostitel (nepovinn\u00fd)",
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no (nepovinn\u00e9)"
-                }
+                },
+                "description": "V\u00fdchoz\u00ed hostitel: {host}\nV\u00fdchoz\u00ed u\u017eivatelsk\u00e9 jm\u00e9no: {username}"
             }
         }
     }

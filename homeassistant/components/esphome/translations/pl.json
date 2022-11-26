@@ -43,5 +43,11 @@
                 "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia w\u0119z\u0142a [ESPHome]({esphome_url})."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Aby poprawi\u0107 niezawodno\u015b\u0107 i wydajno\u015b\u0107 Bluetooth, zdecydowanie zalecamy zaktualizowanie {name} do wersji ESPHome 2022.11.0 lub nowszej.",
+            "title": "Zaktualizuj {name} do wersji ESPHome 2022.11.0 lub nowszej"
+        }
     }
 }

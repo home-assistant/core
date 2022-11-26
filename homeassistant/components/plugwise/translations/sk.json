@@ -1,12 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
-            "user_gateway": {
+            "user": {
                 "data": {
-                    "port": "Port"
+                    "host": "IP adresa"
                 }
             }
         }
