@@ -2,6 +2,7 @@
 import statistics
 from unittest.mock import patch
 
+import numpy
 from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
@@ -34,6 +35,7 @@ MEDIAN = round(statistics.median(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
+PRODUCT_VALUE = numpy.product(VALUES)
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
@@ -524,3 +526,33 @@ async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_sum")
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_product_sensor(hass: HomeAssistant) -> None:
+    """Test the product sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_product",
+            "type": "product",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_product_sensor",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_product")
+
+    assert str(float(PRODUCT_VALUE)) == state.state
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.test_product")
+    assert entity.unique_id == "very_unique_id_product_sensor"
