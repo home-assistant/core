@@ -23,7 +23,7 @@ from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
 from homeassistant.components.bluetooth import async_scanner_by_source
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from ..domain_data import DomainData
 from .characteristic import BleakGATTCharacteristicESPHome
@@ -123,7 +123,7 @@ class ESPHomeClient(BaseBleakClient):
         """Initialize the ESPHomeClient."""
         assert isinstance(address_or_ble_device, BLEDevice)
         super().__init__(address_or_ble_device, *args, **kwargs)
-        self._hass = kwargs["hass"]
+        self._hass: HomeAssistant = kwargs["hass"]
         self._ble_device = address_or_ble_device
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
@@ -540,3 +540,15 @@ class ESPHomeClient(BaseBleakClient):
         # to be consistent with the behavior of the BlueZ backend
         if coro := self._notify_cancels.pop(characteristic.handle, None):
             await coro()
+
+    def __del__(self) -> None:
+        """Destructor to make sure the connection state is unsubscribed."""
+        if self._cancel_connection_state:
+            _LOGGER.warning(
+                "%s: %s - %s: ESPHomeClient bleak client was not properly disconnected before destruction",
+                self._source,
+                self._ble_device.name,
+                self._ble_device.address,
+            )
+        if not self._hass.loop.is_closed():
+            self._hass.loop.call_soon_threadsafe(self._unsubscribe_connection_state)
