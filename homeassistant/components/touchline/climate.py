@@ -119,15 +119,15 @@ class Touchline(ClimateEntity):
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> None:
+    def preset_modes(self) -> list:
         """Return available preset modes."""
         return list(PRESET_MODES)
 
     def set_preset_mode(self, preset_mode: str) -> None:
-        """Set new target preset mode."""
-        preset_mode = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset_mode.mode)
-        self.unit.set_week_program(preset_mode.program)
+        """Set new preset mode."""
+        selected_preset_mode = PRESET_MODES[preset_mode]
+        self.unit.set_operation_mode(selected_preset_mode.mode)
+        self.unit.set_week_program(selected_preset_mode.program)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
