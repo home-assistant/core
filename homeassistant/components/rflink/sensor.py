@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
@@ -25,7 +26,9 @@ from homeassistant.const import (
     PERCENTAGE,
     PRECIPITATION_MILLIMETERS,
     UV_INDEX,
+    UnitOfLength,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
@@ -64,6 +67,7 @@ SENSOR_TYPES = (
         name="Barometric pressure",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
         key="battery",
@@ -75,6 +79,7 @@ SENSOR_TYPES = (
         name="CO2 air quality",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     SensorEntityDescription(
         key="command",
@@ -107,6 +112,7 @@ SENSOR_TYPES = (
         name="Distance",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
     ),
     SensorEntityDescription(
         key="doorbell_melody",
