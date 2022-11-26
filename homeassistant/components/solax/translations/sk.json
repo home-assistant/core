@@ -3,6 +3,8 @@
         "step": {
             "user": {
                 "data": {
+                    "ip_address": "IP adresa",
+                    "password": "Heslo",
                     "port": "Port"
                 }
             }

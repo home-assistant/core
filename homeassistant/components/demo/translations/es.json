@@ -11,6 +11,14 @@
             },
             "title": "La fuente de alimentaci\u00f3n no es estable."
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "No se puede volver a calentar el t\u00e9 en este momento"
+                }
+            },
+            "title": "El t\u00e9 est\u00e1 fr\u00edo"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

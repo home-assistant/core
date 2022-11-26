@@ -1,9 +1,9 @@
 """Models for Recorder."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, overload
+from typing import Any, Literal, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
@@ -284,3 +284,32 @@ def row_to_compressed_state(
                 row_changed_changed
             )
     return comp_state
+
+
+class CalendarStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    period: Literal["hour", "day", "week", "month", "year"]
+    offset: int
+
+
+class FixedStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    end_time: datetime
+    start_time: datetime
+
+
+class RollingWindowStatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    duration: timedelta
+    offset: timedelta
+
+
+class StatisticPeriod(TypedDict, total=False):
+    """Statistic period definition."""
+
+    calendar: CalendarStatisticPeriod
+    fixed_period: FixedStatisticPeriod
+    rolling_window: RollingWindowStatisticPeriod

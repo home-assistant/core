@@ -200,7 +200,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_TO_WINDOW,
                         description={
                             "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_TO_WINDOW
+                                CONF_TO_WINDOW, DEFAULT_TO_WINDOW
                             )
                         },
                     ): vol.Coerce(float),

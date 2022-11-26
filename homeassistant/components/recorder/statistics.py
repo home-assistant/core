@@ -45,7 +45,13 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import (
+    DOMAIN,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    MAX_ROWS_TO_PURGE,
+    SupportedDialect,
+)
 from .db_schema import (
     Statistics,
     StatisticsBase,
@@ -640,7 +646,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
 
 @retryable_database_job("statistics")
-def compile_statistics(instance: Recorder, start: datetime) -> bool:
+def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -> bool:
     """Compile 5-minute statistics for all integrations with a recorder platform.
 
     The actual calculation is delegated to the platforms.
@@ -695,6 +701,11 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             _compile_hourly_statistics(session, start)
 
         session.add(StatisticsRuns(start=start))
+
+    if fire_events:
+        instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
+        if start.minute == 55:
+            instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
     return True
 

@@ -375,12 +375,6 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def do_adhoc_statistics(self, **kwargs: Any) -> None:
-        """Trigger an adhoc statistics run."""
-        if not (start := kwargs.get("start")):
-            start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
-
     def _empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
@@ -479,7 +473,7 @@ class Recorder(threading.Thread):
         Short term statistics run every 5 minutes
         """
         start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
+        self.queue_task(StatisticsTask(start, True))
 
     @callback
     def async_adjust_statistics(
@@ -1193,7 +1187,7 @@ class Recorder(threading.Thread):
         while start < last_period:
             end = start + timedelta(minutes=5)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            self.queue_task(StatisticsTask(start))
+            self.queue_task(StatisticsTask(start, end >= last_period))
             start = end
 
     def _end_session(self) -> None:

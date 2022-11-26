@@ -336,7 +336,8 @@ class AqaraMotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+    channel_names="opple_cluster",
+    models={"lumi.motion.ac01", "lumi.motion.ac02", "lumi.motion.agl04"},
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA motion sensitivity configuration entity."""
@@ -476,3 +477,20 @@ class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
     _select_attr = "switch_type"
     _enum = InovelliSwitchType
     _attr_name: str = "Switch type"
+
+
+class AqaraFeedingMode(types.enum8):
+    """Feeding mode."""
+
+    Manual = 0x00
+    Schedule = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
+    """Representation of an Aqara pet feeder mode configuration entity."""
+
+    _select_attr = "feeding_mode"
+    _enum = AqaraFeedingMode
+    _attr_name = "Mode"
+    _attr_icon: str = "mdi:wrench-clock"

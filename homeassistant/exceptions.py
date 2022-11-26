@@ -25,9 +25,12 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: Exception) -> None:
+    def __init__(self, exception: Exception | str) -> None:
         """Init the error."""
-        super().__init__(f"{exception.__class__.__name__}: {exception}")
+        if isinstance(exception, str):
+            super().__init__(exception)
+        else:
+            super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
 @attr.s
@@ -109,6 +112,10 @@ class IntegrationError(HomeAssistantError):
 
 class PlatformNotReady(IntegrationError):
     """Error to indicate that platform is not ready."""
+
+
+class ConfigEntryError(IntegrationError):
+    """Error to indicate that config entry setup has failed."""
 
 
 class ConfigEntryNotReady(IntegrationError):

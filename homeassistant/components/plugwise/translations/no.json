@@ -10,11 +10,9 @@
             "invalid_setup": "Legg til din Adam i stedet for din Anna, se integrasjonsdokumentasjonen for Home Assistant Plugwise for mer informasjon",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tilkoblingstype",
                     "host": "IP adresse",
                     "password": "Smile ID",
                     "port": "Port",
@@ -22,26 +20,6 @@
                 },
                 "description": "Vennligst skriv inn",
                 "title": "Koble til Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP adresse",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "Smile brukernavn"
-                },
-                "description": "Vennligst skriv inn",
-                "title": "Koble til Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Skanneintervall (sekunder)"
-                },
-                "description": "Juster Plugwise-alternativer"
             }
         }
     }

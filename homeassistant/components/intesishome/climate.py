@@ -172,7 +172,6 @@ class IntesisAC(ClimateEntity):
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._attr_supported_features = 0
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 

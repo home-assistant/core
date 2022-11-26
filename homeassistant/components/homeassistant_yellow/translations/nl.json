@@ -1,0 +1,10 @@
+{
+    "options": {
+        "abort": {
+            "zha_migration_failed": "De ZHA migratie is niet gelukt."
+        },
+        "error": {
+            "unknown": "Onverwachte fout"
+        }
+    }
+}
