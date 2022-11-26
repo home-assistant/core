@@ -74,7 +74,7 @@ class WanIpSensor(SensorEntity):
         }
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{hostname}")},
+            identifiers={(DOMAIN, hostname)},
             manufacturer="DNS",
             model=aiodns.__version__,
             name=name,
