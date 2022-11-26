@@ -94,36 +94,36 @@ class Touchline(ClimateEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> None:
         """Return the name of the climate device."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> None:
         """Return a unique ID."""
         return self._controller_id + self._device_id
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> None:
         """Return the current preset mode."""
         return self._preset_mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> None:
         """Return available preset modes."""
         return list(PRESET_MODES)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset_mode = PRESET_MODES[preset_mode]
         self.unit.set_operation_mode(preset_mode.mode)
