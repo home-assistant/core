@@ -45,22 +45,22 @@ def mock_homewizardenergy():
         client = device.return_value
         client.features = AsyncMock(return_value=Features("HWE-SKT", "3.01"))
         client.device = AsyncMock(
-            return_value=Device.from_dict(
+            side_effect=lambda: Device.from_dict(
                 json.loads(load_fixture("homewizard/device.json"))
             )
         )
         client.data = AsyncMock(
-            return_value=Data.from_dict(
+            side_effect=lambda: Data.from_dict(
                 json.loads(load_fixture("homewizard/data.json"))
             )
         )
         client.state = AsyncMock(
-            return_value=State.from_dict(
+            side_effect=lambda: State.from_dict(
                 json.loads(load_fixture("homewizard/state.json"))
             )
         )
         client.system = AsyncMock(
-            return_value=System.from_dict(
+            side_effect=lambda: System.from_dict(
                 json.loads(load_fixture("homewizard/system.json"))
             )
         )
