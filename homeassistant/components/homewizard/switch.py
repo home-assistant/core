@@ -137,11 +137,11 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
     """
     Representation of the enable cloud configuration.
 
-    Disable cloud turns off all communication to HomeWizard Cloud.
+    Turning off 'cloud connection' turns off all communication to HomeWizard Cloud.
     At this point, the device is fully local.
     """
 
-    _attr_name = "Enable cloud"
+    _attr_name = "Cloud connection"
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -152,17 +152,17 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, entry, "cloud_enabled")
+        super().__init__(coordinator, entry, "cloud_connection")
         self.hass = hass
         self.entry = entry
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn switch-lock on."""
+        """Turn cloud connection on."""
         await self.coordinator.api.system_set(cloud_enabled=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn switch-lock off."""
+        """Turn cloud connection off."""
         await self.coordinator.api.system_set(cloud_enabled=False)
         await self.coordinator.async_refresh()
 
@@ -173,5 +173,5 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if switch is on."""
+        """Return true if cloud connection is active."""
         return bool(self.coordinator.data["system"].cloud_enabled)

@@ -288,7 +288,7 @@ async def test_switch_lock_sets_power_on_unavailable(
         assert len(api.state_set.mock_calls) == 2
 
 
-async def test_enabled_cloud_on_off(hass, mock_config_entry_data, mock_config_entry):
+async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config_entry):
     """Test entity turns switch on and off."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -313,7 +313,7 @@ async def test_enabled_cloud_on_off(hass, mock_config_entry_data, mock_config_en
         await hass.async_block_till_done()
 
         assert (
-            hass.states.get("switch.product_name_aabbccddeeff_enable_cloud").state
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
             == STATE_OFF
         )
 
@@ -321,14 +321,14 @@ async def test_enabled_cloud_on_off(hass, mock_config_entry_data, mock_config_en
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.product_name_aabbccddeeff_enable_cloud"},
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
             blocking=True,
         )
 
         await hass.async_block_till_done()
         assert len(api.system_set.mock_calls) == 1
         assert (
-            hass.states.get("switch.product_name_aabbccddeeff_enable_cloud").state
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
             == STATE_ON
         )
 
@@ -336,13 +336,13 @@ async def test_enabled_cloud_on_off(hass, mock_config_entry_data, mock_config_en
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": "switch.product_name_aabbccddeeff_enable_cloud"},
+            {"entity_id": "switch.product_name_aabbccddeeff_cloud_connection"},
             blocking=True,
         )
 
         await hass.async_block_till_done()
         assert (
-            hass.states.get("switch.product_name_aabbccddeeff_enable_cloud").state
+            hass.states.get("switch.product_name_aabbccddeeff_cloud_connection").state
             == STATE_OFF
         )
         assert len(api.system_set.mock_calls) == 2
