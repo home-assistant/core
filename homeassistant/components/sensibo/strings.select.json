@@ -13,6 +13,7 @@
     },
     "sensibo__light": {
       "on": "On",
+      "dim": "Dim",
       "off": "Off"
     }
   }
