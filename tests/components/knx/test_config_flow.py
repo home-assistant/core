@@ -27,6 +27,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
     CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SECURE,
     CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
@@ -196,6 +197,151 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
             CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
         }
 
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_routing_secure_manual_setup(hass: HomeAssistant) -> None:
+    """Test routing secure setup with manual key config."""
+    with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
+        gateways.return_value = []
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert not result["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "routing"
+    assert result2["errors"] == {"base": "no_router_discovered"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_MCAST_PORT: 3671,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
+            CONF_KNX_ROUTING_SECURE: True,
+        },
+    )
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "secure_key_source"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {"next_step_id": "secure_routing_manual"},
+    )
+    assert result4["type"] == FlowResultType.FORM
+    assert result4["step_id"] == "secure_routing_manual"
+    assert not result4["errors"]
+
+    result_invalid_key = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        {
+            CONF_KNX_ROUTING_BACKBONE_KEY: "g",
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
+        },
+    )
+    assert result_invalid_key["type"] == FlowResultType.FORM
+    assert result_invalid_key["step_id"] == "secure_routing_manual"
+    assert result_invalid_key["errors"] == {"backbone_key": "invalid_backbone_key"}
+
+    with patch(
+        "homeassistant.components.knx.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        secure_routing_manual = await hass.config_entries.flow.async_configure(
+            result_invalid_key["flow_id"],
+            {
+                CONF_KNX_ROUTING_BACKBONE_KEY: "1234567890",
+                CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
+            },
+        )
+        await hass.async_block_till_done()
+        assert secure_routing_manual["type"] == FlowResultType.CREATE_ENTRY
+        assert secure_routing_manual["title"] == "Secure Routing as 0.0.123"
+        assert secure_routing_manual["data"] == {
+            **DEFAULT_ENTRY_DATA,
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
+            CONF_KNX_ROUTING_BACKBONE_KEY: "1234567890",
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
+        }
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_routing_secure_keyfile(hass: HomeAssistant) -> None:
+    """Test routing secure setup with keyfile."""
+    with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
+        gateways.return_value = []
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert not result["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "routing"
+    assert result2["errors"] == {"base": "no_router_discovered"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_MCAST_PORT: 3671,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
+            CONF_KNX_ROUTING_SECURE: True,
+        },
+    )
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "secure_key_source"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {"next_step_id": "secure_knxkeys"},
+    )
+    assert result4["type"] == FlowResultType.FORM
+    assert result4["step_id"] == "secure_knxkeys"
+    assert not result4["errors"]
+
+    with patch(
+        "homeassistant.components.knx.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.knx.config_flow.load_keyring", return_value=True
+    ):
+        routing_secure_knxkeys = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            {
+                CONF_KNX_KNXKEY_FILENAME: "testcase.knxkeys",
+                CONF_KNX_KNXKEY_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+        assert routing_secure_knxkeys["type"] == FlowResultType.CREATE_ENTRY
+        assert routing_secure_knxkeys["title"] == "Secure Routing as 0.0.123"
+        assert routing_secure_knxkeys["data"] == {
+            **DEFAULT_ENTRY_DATA,
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
+            CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
+            CONF_KNX_KNXKEY_PASSWORD: "password",
+            CONF_KNX_ROUTING_BACKBONE_KEY: None,
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
+        }
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -508,7 +654,7 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
 
 
 async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
-    """Return flow in secure_tunnellinn menu step."""
+    """Return flow in secure_tunnelling menu step."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
