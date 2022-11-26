@@ -44,6 +44,7 @@ DEVICE_SELECT_TYPES = (
         icon="mdi:air-conditioner",
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
+        device_class=f"{DOMAIN}__horizontalswing",
     ),
     SensiboSelectEntityDescription(
         key="light",
@@ -52,6 +53,7 @@ DEVICE_SELECT_TYPES = (
         icon="mdi:flashlight",
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
+        device_class=f"{DOMAIN}__light",
     ),
 )
 

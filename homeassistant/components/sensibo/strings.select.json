@@ -1,0 +1,19 @@
+{
+  "state": {
+    "sensibo__horizontalswing": {
+      "stopped": "Stopped",
+      "fixedLeft": "Fixed left",
+      "fixedCenterLeft": "Fixed center left",
+      "fixedCenter": "Fixed center",
+      "fixedCenterRight": "Fixed center right",
+      "fixedRight": "Fixed right",
+      "fixedLeftRight": "Fixed left right",
+      "rangeCenter": "Range center",
+      "rangeFull": "Range full"
+    },
+    "sensibo__light": {
+      "on": "On",
+      "Off": "Off"
+    }
+  }
+}
