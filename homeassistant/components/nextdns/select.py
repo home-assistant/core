@@ -1,15 +1,19 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from nextdns import Settings
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectorError
+from nextdns import ApiError, Settings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -140,6 +144,21 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._select_option(
-            self.coordinator.profile_id, self.entity_description.option_map[option]
-        )
+        try:
+            result = await self._select_option(
+                self.coordinator.profile_id, self.entity_description.option_map[option]
+            )
+        except (
+            ApiError,
+            ClientConnectorError,
+            asyncio.TimeoutError,
+            ClientError,
+            ValueError,
+        ) as err:
+            raise HomeAssistantError(
+                f"NextDNS API returned an error calling set_setting for {self.entity_id}: {err}"
+            ) from err
+
+        if result:
+            self._attr_current_option = option
+            self.async_write_ha_state()
