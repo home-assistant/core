@@ -1,4 +1,4 @@
-"""The tests for Number device actions."""
+"""The tests for Text device actions."""
 import pytest
 import voluptuous_serialize
 
