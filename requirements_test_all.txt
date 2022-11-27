@@ -1328,7 +1328,7 @@ pyruckus==0.16
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.21
+pysensibo==1.0.22
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1449,7 +1449,7 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.1
+pytrafikverket==0.2.2
 
 # homeassistant.components.usb
 pyudev==0.23.2
