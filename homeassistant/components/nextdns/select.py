@@ -70,7 +70,6 @@ SELECTS = (
         option_map=LOCATION_MAP,
         current_option=lambda data: LOCATION_INVERTED_MAP[data.logs_location],
         select_option_method="set_logs_location",
-        options=["switzerland", "european_union", "great_britain", "united_states"],
         device_class=f"{DOMAIN}__logs_location",
     ),
     NextDnsSelectEntityDescription[Settings](
@@ -81,17 +80,6 @@ SELECTS = (
         option_map=RETENTION_MAP,
         current_option=lambda data: RETENTION_INVERTED_MAP[data.logs_retention],
         select_option_method="set_logs_retention",
-        options=[
-            "one_hour",
-            "six_hours",
-            "one_day",
-            "one_week",
-            "one_month",
-            "three_months",
-            "six_months",
-            "one_year",
-            "two_years",
-        ],
         device_class=f"{DOMAIN}__logs_retention",
     ),
 )
@@ -126,8 +114,7 @@ class NextDnsSelect(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SelectE
         super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
-        assert description.options is not None
-        self._attr_options = description.options
+        self._attr_options = list(description.option_map.keys())
         self._attr_current_option = description.current_option(coordinator.data)
         self.entity_description: NextDnsSelectEntityDescription = description
         self._select_option = getattr(
