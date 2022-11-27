@@ -62,7 +62,7 @@ CHOOSE_MODE_SCHEMA = vol.Schema(
                         label="Connect to Elmax Panel via local/direct IP",
                     ),
                 ],
-                mode=SelectSelectorMode.LIST,
+                mode=SelectSelectorMode.DROPDOWN,
             )
         )
     }
@@ -143,7 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._selected_mode = user_input[CONF_ELMAX_MODE]
         if self._selected_mode == CONF_ELMAX_MODE_CLOUD:
             return self.async_show_form(
-                step_id="cloud_setup", data_schema=None, errors=errors
+                step_id="cloud_setup", data_schema=LOGIN_FORM_SCHEMA, errors=errors
             )
         # Assume mode direct.
         return self.async_show_form(
