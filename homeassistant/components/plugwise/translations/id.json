@@ -8,7 +8,9 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "invalid_setup": "Tambahkan Adam Anda, alih-alih Anna. Baca dokumentasi integrasi Plugwise Home Assistant untuk informasi lebih lanjut",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "response_error": "Data XML tidak valid, atau indikasi kesalahan diterima",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unsupported": "Perangkat dengan firmware yang tidak didukung"
         },
         "step": {
             "user": {
