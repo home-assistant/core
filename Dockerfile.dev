@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.9
 
 # Ensure RUN fails if any command fails
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
@@ -27,8 +27,8 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
         ffmpeg; \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip3 install --upgrade pip
+# Disable pip version check as we pin its version in requirements.txt
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Setup hass-release
 WORKDIR /usr/src/hass-release
