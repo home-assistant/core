@@ -33,8 +33,6 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    value: Callable[[Any], bool | None] = lambda _: None
-    state_key: str = "state"
     device_type: str | None = None
     plug_index: int = 0
 
@@ -44,7 +42,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="outlet_state",
         device_class=SwitchDeviceClass.OUTLET,
         name="State",
-        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
         device_type=ATTR_DEVICE_OUTLET,
     ),
@@ -52,7 +49,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="manipulator_state",
         name="State",
         icon="mdi:pipe",
-        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
         device_type=ATTR_DEVICE_MANIPULATOR,
     ),
@@ -60,7 +56,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="switch_state",
         name="State",
         device_class=SwitchDeviceClass.SWITCH,
-        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
         device_type=ATTR_DEVICE_SWITCH,
     ),
@@ -68,16 +63,13 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_usb_ports",
         name="UsbPorts",
         device_class=SwitchDeviceClass.OUTLET,
-        value=lambda value: value[0] == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
-        plug_index=0,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_1",
         name="Plug1",
         device_class=SwitchDeviceClass.OUTLET,
-        value=lambda value: value[1] == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=1,
@@ -86,7 +78,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_plug_2",
         name="Plug2",
         device_class=SwitchDeviceClass.OUTLET,
-        value=lambda value: value[2] == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=2,
@@ -95,7 +86,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_plug_3",
         name="Plug3",
         device_class=SwitchDeviceClass.OUTLET,
-        value=lambda value: value[3] == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=3,
@@ -104,7 +94,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_plug_4",
         name="Plug4",
         device_class=SwitchDeviceClass.OUTLET,
-        value=lambda value: value[4] == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=4,
@@ -164,11 +153,19 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
             f"{coordinator.device.device_name} ({self.entity_description.name})"
         )
 
+    def _get_state(
+        self, state_value: str | list[str] | None, plug_index: int
+    ) -> bool | None:
+        """Parse state value."""
+        if isinstance(state_value, list):
+            return state_value[plug_index] == "open"
+        return state_value == "open" if state_value is not None else None
+
     @callback
-    def update_entity_state(self, state: dict[str, Any]) -> None:
+    def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = self.entity_description.value(
-            state.get(self.entity_description.state_key)
+        self._attr_is_on = self._get_state(
+            state.get("state"), self.entity_description.plug_index
         )
         self.async_write_ha_state()
 
@@ -178,12 +175,7 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         if self.entity_description.device_type == ATTR_DEVICE_MULTI_OUTLET:
             params["chs"] = 1 << self.entity_description.plug_index
         await self.call_device_api("setState", params)
-        cur_state: str | list[str | None] = state
-        if self.entity_description.device_type == ATTR_DEVICE_MULTI_OUTLET:
-            state_arr: list[str | None] = [None] * 5
-            state_arr[self.entity_description.plug_index] = state
-            cur_state = state_arr
-        self._attr_is_on = self.entity_description.value(cur_state)
+        self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
