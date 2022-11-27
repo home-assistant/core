@@ -241,25 +241,36 @@ async def test_routing_secure_manual_setup(hass: HomeAssistant) -> None:
     assert result4["step_id"] == "secure_routing_manual"
     assert not result4["errors"]
 
-    result_invalid_key = await hass.config_entries.flow.async_configure(
+    result_invalid_key1 = await hass.config_entries.flow.async_configure(
         result4["flow_id"],
         {
-            CONF_KNX_ROUTING_BACKBONE_KEY: "g",
+            CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",  # invalid hex string
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
-    assert result_invalid_key["type"] == FlowResultType.FORM
-    assert result_invalid_key["step_id"] == "secure_routing_manual"
-    assert result_invalid_key["errors"] == {"backbone_key": "invalid_backbone_key"}
+    assert result_invalid_key1["type"] == FlowResultType.FORM
+    assert result_invalid_key1["step_id"] == "secure_routing_manual"
+    assert result_invalid_key1["errors"] == {"backbone_key": "invalid_backbone_key"}
+
+    result_invalid_key2 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        {
+            CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44",  # invalid length
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
+        },
+    )
+    assert result_invalid_key2["type"] == FlowResultType.FORM
+    assert result_invalid_key2["step_id"] == "secure_routing_manual"
+    assert result_invalid_key2["errors"] == {"backbone_key": "invalid_backbone_key"}
 
     with patch(
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         secure_routing_manual = await hass.config_entries.flow.async_configure(
-            result_invalid_key["flow_id"],
+            result_invalid_key2["flow_id"],
             {
-                CONF_KNX_ROUTING_BACKBONE_KEY: "1234567890",
+                CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
                 CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
             },
         )
@@ -269,7 +280,7 @@ async def test_routing_secure_manual_setup(hass: HomeAssistant) -> None:
         assert secure_routing_manual["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
-            CONF_KNX_ROUTING_BACKBONE_KEY: "1234567890",
+            CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
             CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
         }

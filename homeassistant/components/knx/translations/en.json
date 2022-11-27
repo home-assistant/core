@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
-            "invalid_backbone_key": "Invalid backbone key format. Hexadecimal numbers expected.",
+            "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
@@ -76,6 +76,7 @@
                     "sync_latency_tolerance": "Network latency tolerance"
                 },
                 "data_description": {
+                    "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Default is 1000."
                 },
                 "description": "Please enter your IP secure information."
@@ -105,7 +106,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
-            "invalid_backbone_key": "Invalid backbone key format. Hexadecimal numbers expected.",
+            "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
             "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
@@ -190,6 +191,7 @@
                     "sync_latency_tolerance": "Network latency tolerance"
                 },
                 "data_description": {
+                    "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Default is 1000."
                 },
                 "description": "Please enter your IP secure information."
