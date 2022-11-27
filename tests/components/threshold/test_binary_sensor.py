@@ -567,3 +567,23 @@ async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.state == "on"
+
+
+async def test_sensor_no_lower_upper(hass: HomeAssistant) -> None:
+    """Test if no lower or upper has been provided."""
+    config = {
+        "binary_sensor": {
+            "platform": "threshold",
+            "entity_id": "sensor.test_monitored",
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", 20)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.threshold")
+
+    assert state.state == STATE_UNKNOWN
