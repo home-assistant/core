@@ -4,7 +4,7 @@
             "already_configured": "Account is al geconfigureerd"
         },
         "error": {
-            "resource_error": "Kon de de REST data niet bijwerken, controleer je configuratie"
+            "resource_error": "Kon de REST data niet bijwerken, controleer je configuratie"
         },
         "step": {
             "sensor": {
