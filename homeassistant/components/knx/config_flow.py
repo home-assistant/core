@@ -338,7 +338,8 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         if user_input is not None:
             try:
-                if len(bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])) != 16:
+                key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
+                if len(key_bytes) != 16:
                     raise ValueError
             except ValueError:
                 errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
