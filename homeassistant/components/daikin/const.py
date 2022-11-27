@@ -14,8 +14,8 @@ ATTR_ENERGY_TODAY = "energy_today"
 ATTR_COOL_ENERGY = "cool_energy"
 ATTR_HEAT_ENERGY = "heat_energy"
 
-ATTR_ALL_POWER = "all_power"
-ATTR_ALL_ENERGY_TODAY = "all_energy_today"
+ATTR_TOTAL_POWER = "total_power"
+ATTR_TOTAL_ENERGY_TODAY = "total_energy_today"
 
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"

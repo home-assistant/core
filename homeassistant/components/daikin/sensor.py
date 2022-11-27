@@ -27,8 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
-    ATTR_ALL_ENERGY_TODAY,
-    ATTR_ALL_POWER,
     ATTR_COMPRESSOR_FREQUENCY,
     ATTR_COOL_ENERGY,
     ATTR_ENERGY_TODAY,
@@ -37,6 +35,8 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
+    ATTR_TOTAL_ENERGY_TODAY,
+    ATTR_TOTAL_POWER,
 )
 
 
@@ -86,7 +86,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         value_func=lambda device: device.humidity,
     ),
     DaikinSensorEntityDescription(
-        key=ATTR_ALL_POWER,
+        key=ATTR_TOTAL_POWER,
         name="Compressor estimated power consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -130,7 +130,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         value_func=lambda device: device.compressor_frequency,
     ),
     DaikinSensorEntityDescription(
-        key=ATTR_ALL_ENERGY_TODAY,
+        key=ATTR_TOTAL_ENERGY_TODAY,
         name="Compressor energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -166,8 +166,8 @@ async def async_setup_entry(
         sensors.append(ATTR_ENERGY_TODAY)
         sensors.append(ATTR_COOL_ENERGY)
         sensors.append(ATTR_HEAT_ENERGY)
-        sensors.append(ATTR_ALL_POWER)
-        sensors.append(ATTR_ALL_ENERGY_TODAY)
+        sensors.append(ATTR_TOTAL_POWER)
+        sensors.append(ATTR_TOTAL_ENERGY_TODAY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)
