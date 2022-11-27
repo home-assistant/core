@@ -26,6 +26,7 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -34,8 +35,7 @@ from homeassistant.helpers.typing import (
     StateType,
 )
 
-from . import PLATFORMS
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,11 +109,24 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the min/max/mean sensor."""
-    entity_ids: list[str] = config[CONF_ENTITY_IDS]
-    name: str | None = config.get(CONF_NAME)
-    sensor_type: str = config[CONF_TYPE]
-    round_digits: int = config[CONF_ROUND_DIGITS]
-    unique_id = config.get(CONF_UNIQUE_ID)
+    if discovery_info is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "moved_yaml",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="moved_yaml",
+        )
+        sensor_config = config
+    else:
+        sensor_config = discovery_info
+    entity_ids: list[str] = sensor_config[CONF_ENTITY_IDS]
+    name: str | None = sensor_config.get(CONF_NAME)
+    sensor_type: str = sensor_config[CONF_TYPE]
+    round_digits: int = sensor_config[CONF_ROUND_DIGITS]
+    unique_id = sensor_config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
