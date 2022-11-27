@@ -110,7 +110,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.print-speed",
-            name="Print Speed",
+            name="Print speed",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["telemetry"]["print-speed"]),
         ),
