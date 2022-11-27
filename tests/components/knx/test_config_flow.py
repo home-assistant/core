@@ -383,6 +383,9 @@ async def test_routing_secure_keyfile(
             CONF_KNX_KNXKEY_PASSWORD: "password",
             CONF_KNX_ROUTING_BACKBONE_KEY: None,
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
+            CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+            CONF_KNX_SECURE_USER_ID: None,
+            CONF_KNX_SECURE_USER_PASSWORD: None,
             CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
         }
         assert len(mock_setup_entry.mock_calls) == 1
@@ -1055,7 +1058,7 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_tunneling"
+    assert result3["step_id"] == "secure_key_source"
 
     result4 = await hass.config_entries.options.async_configure(
         result3["flow_id"],
@@ -1084,6 +1087,8 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
         CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
         CONF_KNX_SECURE_USER_ID: None,
         CONF_KNX_SECURE_USER_PASSWORD: None,
+        CONF_KNX_ROUTING_BACKBONE_KEY: None,
+        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
         CONF_HOST: "192.168.0.1",
         CONF_PORT: 3675,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
