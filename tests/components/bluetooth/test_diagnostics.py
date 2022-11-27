@@ -71,12 +71,20 @@ async def test_diagnostics(
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
+                    "product": "Bluetooth Adapter 5.0",
+                    "product_id": "aa01",
+                    "vendor_id": "cc01",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
                     "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": True,
                     "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
+                    "product": "Bluetooth Adapter 5.0",
+                    "product_id": "aa01",
+                    "vendor_id": "cc01",
                 },
             },
             "dbus": {
@@ -102,12 +110,20 @@ async def test_diagnostics(
                         "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": False,
                         "sw_version": "homeassistant",
+                        "manufacturer": "ACME",
+                        "product": "Bluetooth Adapter 5.0",
+                        "product_id": "aa01",
+                        "vendor_id": "cc01",
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
                         "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": True,
                         "sw_version": "homeassistant",
+                        "manufacturer": "ACME",
+                        "product": "Bluetooth Adapter 5.0",
+                        "product_id": "aa01",
+                        "vendor_id": "cc01",
                     },
                 },
                 "advertisement_tracker": {
@@ -200,6 +216,10 @@ async def test_diagnostics_macos(
                     "address": "00:00:00:00:00:00",
                     "passive_scan": False,
                     "sw_version": ANY,
+                    "manufacturer": "Apple",
+                    "product": "Unknown MacOS Model",
+                    "product_id": "Unknown",
+                    "vendor_id": "Unknown",
                 }
             },
             "manager": {
@@ -208,6 +228,10 @@ async def test_diagnostics_macos(
                         "address": "00:00:00:00:00:00",
                         "passive_scan": False,
                         "sw_version": ANY,
+                        "manufacturer": "Apple",
+                        "product": "Unknown MacOS Model",
+                        "product_id": "Unknown",
+                        "vendor_id": "Unknown",
                     }
                 },
                 "advertisement_tracker": {
