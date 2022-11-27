@@ -101,6 +101,11 @@ class SchemaCommonFlowHandler:
         """Return parent handler."""
         return self._handler
 
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return the options linked to the current flow handler."""
+        return self._options
+
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
