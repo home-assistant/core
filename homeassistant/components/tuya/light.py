@@ -123,6 +123,11 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             color_temp=DPCode.TEMP_VALUE,
             color_data=DPCode.COLOUR_DATA,
         ),
+        # Some ceiling fan lights use LIGHT for DPCode instead of SWITCH_LED
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name="Light",
+        ),
     ),
     # Ambient Light
     # https://developer.tuya.com/en/docs/iot/ambient-light?id=Kaiuz06amhe6g
