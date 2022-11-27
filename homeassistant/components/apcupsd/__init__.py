@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN: Final = "apcupsd"
 VALUE_ONLINE: Final = 8
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
-MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=2)
 
 
 CONFIG_SCHEMA = vol.Schema(
