@@ -23,13 +23,6 @@ from .const import ATTR_SETTINGS, DOMAIN
 
 PARALLEL_UPDATES = 1
 
-LOCATION_MAP = {
-    "switzerland": "ch",
-    "european_union": "eu",
-    "great_britain": "gb",
-    "united_states": "us",
-}
-LOCATION_INVERTED_MAP = {v: k for k, v in LOCATION_MAP.items()}
 
 RETENTION_MAP = {
     "one_hour": 1,
@@ -61,27 +54,15 @@ class NextDnsSelectEntityDescription(
     """NextDNS select entity description."""
 
 
-SELECTS = (
-    NextDnsSelectEntityDescription[Settings](
-        key="logs_location",
-        name="Logs location",
-        entity_category=EntityCategory.CONFIG,
-        icon="mdi:archive-marker-outline",
-        option_map=LOCATION_MAP,
-        current_option=lambda data: LOCATION_INVERTED_MAP[data.logs_location],
-        select_option_method="set_logs_location",
-        device_class=f"{DOMAIN}__logs_location",
-    ),
-    NextDnsSelectEntityDescription[Settings](
-        key="logs_retention",
-        name="Logs retention",
-        entity_category=EntityCategory.CONFIG,
-        icon="mdi:history",
-        option_map=RETENTION_MAP,
-        current_option=lambda data: RETENTION_INVERTED_MAP[data.logs_retention],
-        select_option_method="set_logs_retention",
-        device_class=f"{DOMAIN}__logs_retention",
-    ),
+LOGS_RETENTION_SELECT = NextDnsSelectEntityDescription[Settings](
+    key="logs_retention",
+    name="Logs retention",
+    entity_category=EntityCategory.CONFIG,
+    icon="mdi:history",
+    option_map=RETENTION_MAP,
+    current_option=lambda data: RETENTION_INVERTED_MAP[data.logs_retention],
+    select_option_method="set_logs_retention",
+    device_class=f"{DOMAIN}__logs_retention",
 )
 
 
@@ -94,8 +75,7 @@ async def async_setup_entry(
     ]
 
     selects: list[NextDnsSelect] = []
-    for description in SELECTS:
-        selects.append(NextDnsSelect(coordinator, description))
+    selects.append(NextDnsSelect(coordinator, LOGS_RETENTION_SELECT))
 
     async_add_entities(selects)
 

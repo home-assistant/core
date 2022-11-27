@@ -31,21 +31,6 @@ async def test_select(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    state = hass.states.get("select.fake_profile_logs_location")
-    assert state
-    assert state.state == "switzerland"
-    assert state.attributes.get("options") == [
-        "switzerland",
-        "european_union",
-        "great_britain",
-        "united_states",
-    ]
-    assert state.attributes.get("icon") == "mdi:archive-marker-outline"
-
-    entry = registry.async_get("select.fake_profile_logs_location")
-    assert entry
-    assert entry.unique_id == "xyz12_logs_location"
-
     state = hass.states.get("select.fake_profile_logs_retention")
     assert state
     assert state.state == "one_month"
@@ -67,22 +52,13 @@ async def test_select(hass: HomeAssistant) -> None:
     assert entry.unique_id == "xyz12_logs_retention"
 
 
-@pytest.mark.parametrize(
-    "entity,from_option,to_option",
-    [
-        ("select.fake_profile_logs_location", "switzerland", "european_union"),
-        ("select.fake_profile_logs_retention", "one_month", "one_year"),
-    ],
-)
-async def test_select_option(
-    hass: HomeAssistant, entity: str, from_option: str, to_option: str
-) -> None:
+async def test_select_option(hass: HomeAssistant) -> None:
     """Test the option can be selected."""
     await init_integration(hass)
 
-    state = hass.states.get(entity)
+    state = hass.states.get("select.fake_profile_logs_retention")
     assert state
-    assert state.state == from_option
+    assert state.state == "one_month"
 
     with patch(
         "homeassistant.components.nextdns.NextDns._http_request",
@@ -91,14 +67,17 @@ async def test_select_option(
         assert await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity, ATTR_OPTION: to_option},
+            {
+                ATTR_ENTITY_ID: "select.fake_profile_logs_retention",
+                ATTR_OPTION: "one_year",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
 
-        state = hass.states.get(entity)
+        state = hass.states.get("select.fake_profile_logs_retention")
         assert state
-        assert state.state == to_option
+        assert state.state == "one_year"
 
         mock_select_option.assert_called_once()
 
@@ -159,8 +138,8 @@ async def test_select_option_failure(hass: HomeAssistant, exc: Exception) -> Non
                 SELECT_DOMAIN,
                 SERVICE_SELECT_OPTION,
                 {
-                    ATTR_ENTITY_ID: "select.fake_profile_logs_location",
-                    ATTR_OPTION: "european_union",
+                    ATTR_ENTITY_ID: "select.fake_profile_logs_retention",
+                    ATTR_OPTION: "one_year",
                 },
                 blocking=True,
             )
@@ -175,8 +154,8 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.fake_profile_logs_location",
-                ATTR_OPTION: "wrong_location",
+                ATTR_ENTITY_ID: "select.fake_profile_logs_retention",
+                ATTR_OPTION: "wrong_value",
             },
             blocking=True,
         )
