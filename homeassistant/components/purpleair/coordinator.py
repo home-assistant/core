@@ -4,15 +4,16 @@ from __future__ import annotations
 from datetime import timedelta
 
 from aiopurpleair import API
-from aiopurpleair.errors import PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 from aiopurpleair.models.sensors import GetSensorsResponse
 
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SENSOR_INDEX, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDEX, LOGGER
+from .util import async_get_config_entries_by_api_key
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 
@@ -48,15 +49,16 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
 
     def __init__(self, hass: HomeAssistant, api_key: str) -> None:
         """Initialize."""
-        self._api = API(api_key, session=aiohttp_client.async_get_clientsession(hass))
+        self._session = aiohttp_client.async_get_clientsession(hass)
+        self._api = API(api_key, session=self._session)
+        self.api_key = api_key
 
         # Set the initial list of sensor indices to track by examining all PurpleAir
         # config entries that utilize the same API key that was passed to this
         # coordinator:
         self._sensor_indices: list[int] = [
             entry.data[CONF_SENSOR_INDEX]
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_API_KEY] == api_key
+            for entry in async_get_config_entries_by_api_key(hass, api_key)
         ]
 
         super().__init__(
@@ -77,6 +79,8 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             return await self._api.sensors.async_get_sensors(
                 SENSOR_FIELDS_TO_RETRIEVE, sensor_indices=self._sensor_indices
             )
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except PurpleAirError as err:
             raise UpdateFailed(f"Error while fetching data: {err}") from err
 

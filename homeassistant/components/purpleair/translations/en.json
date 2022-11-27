@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_api_key": "Invalid API key",
@@ -15,13 +16,17 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude"
+                "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude."
             },
             "check_api_key": {
                 "data": {
                     "api_key": "API Key"
                 },
                 "description": "Input your PurpleAir API key. If you have both a read and write API key, this should be the read API key."
+            },
+            "reauth_confirm": {
+                "description": "Note that by re-authorizing this instance of the PurpleAir integration, you will automatically re-authorize _all_ instances that utilize the same API key.",
+                "title": "Reauthenticate Integration"
             }
         }
     }

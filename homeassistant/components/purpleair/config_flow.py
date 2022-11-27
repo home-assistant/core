@@ -1,6 +1,7 @@
 """Config flow for PurpleAir integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from aiopurpleair import API
@@ -10,10 +11,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_SENSOR_INDEX, DOMAIN, LOGGER
+from .util import async_get_config_entries_by_api_key
 
 CONF_DISTANCE = "distance"
 
@@ -24,6 +27,14 @@ STEP_CHECK_API_KEY_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
     }
 )
+
+
+@callback
+def async_reset_coordinator_data_key(
+    hass: HomeAssistant, old_api_key: str, new_api_key: str
+) -> None:
+    """Reset a coordinator's key in hass.data."""
+    hass.data[DOMAIN][new_api_key] = hass.data[DOMAIN].pop(old_api_key)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -37,6 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # checks for these objects' existence:
         self._api: API = None  # type: ignore[assignment]
         self._api_key: str = None  # type: ignore[assignment]
+        self._old_api_key: str = None  # type: ignore[assignment]
 
     @property
     def step_by_coordinates_schema(self) -> vol.Schema:
@@ -135,7 +147,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._api_key = user_input[CONF_API_KEY]
 
+        if self._old_api_key:
+            return await self.async_step_reauth_finish()
         return await self.async_step_by_coordinates()
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._old_api_key = entry_data[CONF_API_KEY]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the confirmation of re-auth."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_check_api_key()
+
+    async def async_step_reauth_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Finish an active re-auth.
+
+        This will update all config entries that used the old API key.
+        """
+        # When we reload a PurpleAir config entry, the unload process needs to get the
+        # coordinator; however, at this stage, the coordinator is stored under the old
+        # API key. That will cause an error when the config entry gets unloaded. So,
+        # we first "reset" where the coordinator is stored:
+        self.hass.data[DOMAIN][self._api_key] = self.hass.data[DOMAIN].pop(
+            self._old_api_key
+        )
+
+        for entry in async_get_config_entries_by_api_key(
+            self.hass, self._old_api_key
+        ):
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    CONF_API_KEY: self._api_key,
+                    CONF_SENSOR_INDEX: entry.data[CONF_SENSOR_INDEX],
+                },
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
+            )
+
+        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
