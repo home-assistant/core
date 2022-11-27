@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
-from elmax_api.http import Elmax, ElmaxLocal
+from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
 import httpx
 import voluptuous as vol
@@ -22,7 +22,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .common import get_direct_api_url
+from .common import build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -31,6 +31,7 @@ from .const import (
     CONF_ELMAX_MODE_DIRECT_HOST,
     CONF_ELMAX_MODE_DIRECT_PORT,
     CONF_ELMAX_MODE_DIRECT_SSL,
+    CONF_ELMAX_MODE_DIRECT_SSL_CERT,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -72,8 +73,8 @@ DIRECT_SETUP_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
         vol.Required(CONF_ELMAX_MODE_DIRECT_PORT): int,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL): bool,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS): bool,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
+        vol.Required(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, default=True): bool,
         vol.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
@@ -113,6 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _panel_direct_hostname: str
     _panel_direct_port: int
     _panel_direct_follow_mdns: bool
+    _panel_direct_ssl_cert: str
 
     # Cloud API variables
     _cloud_username: str
@@ -152,13 +154,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _test_direct_and_create_entry(self):
         """Test the direct connection to the Elmax panel and create and entry if successful."""
+        ssl_context = None
+        if self._panel_direct_use_ssl:
+            # Fetch the remote certificate.
+            # Local API is exposed via a self-signed SSL that we must add to our trust store.
+            self._panel_direct_ssl_cert = (
+                await GenericElmax.retrieve_server_certificate(
+                    hostname=self._panel_direct_hostname, port=self._panel_direct_port
+                )
+            )
+            ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
+
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
             host=self._panel_direct_hostname,
             port=self._panel_direct_port,
-            ssl=self._panel_direct_use_ssl,
+            use_ssl=self._panel_direct_use_ssl,
         )
-        client = ElmaxLocal(panel_api_url=client_api_url, panel_code=self._panel_pin)
+        client = ElmaxLocal(
+            panel_api_url=client_api_url,
+            panel_code=self._panel_pin,
+            ssl_context=ssl_context,
+        )
         await client.login()
         # Retrieve the current panel status. If this succeeds, it means the
         # setup did complete successfully.
@@ -174,6 +191,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: self._panel_direct_follow_mdns,
                 CONF_ELMAX_PANEL_PIN: self._panel_pin,
                 CONF_ELMAX_PANEL_ID: status.panel_id,
+                CONF_ELMAX_MODE_DIRECT_SSL_CERT: self._panel_direct_ssl_cert,
             },
         )
 
@@ -215,6 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=ZEROCONF_SETUP_SCHEMA,
                 errors=None,
             )
+
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
         try:
             return await self._test_direct_and_create_entry()

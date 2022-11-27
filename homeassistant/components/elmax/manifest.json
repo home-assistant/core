@@ -4,8 +4,8 @@
   "codeowners": ["@albertogeniola"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elmax",
+  "requirements": ["elmax_api==0.0.3rc3"],
   "iot_class": "cloud_polling",
   "loggers": ["elmax_api"],
-  "requirements": ["elmax_api==0.0.3rc2"],
   "zeroconf": [{ "type": "_elmax-ssl._tcp.local." }]
 }
