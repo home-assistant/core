@@ -206,7 +206,10 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
-
+        resolve_services = not (
+            dangerous_use_bleak_cache
+            and self.entry_data.get_gatt_services_cache(self._address_as_int)
+        )
         connected_future: asyncio.Future[bool] = asyncio.Future()
 
         def _on_bluetooth_connection_state(
@@ -271,6 +274,7 @@ class ESPHomeClient(BaseBleakClient):
                         self._address_as_int,
                         _on_bluetooth_connection_state,
                         timeout=timeout,
+                        resolve_services=resolve_services,
                     )
                 )
             except Exception:  # pylint: disable=broad-except
