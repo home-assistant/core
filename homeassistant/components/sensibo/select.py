@@ -108,9 +108,9 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the current selected option."""
         state = self.entity_description.value_fn(self.device_data)
-        if isinstance(state, str):
-            return state.lower()
-        return state
+        if TYPE_CHECKING:
+            assert isinstance(state, str)
+        return state.lower()
 
     @property
     def options(self) -> list[str]:
