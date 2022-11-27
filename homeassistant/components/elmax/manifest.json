@@ -7,8 +7,5 @@
   "codeowners": ["@albertogeniola"],
   "iot_class": "cloud_polling",
   "loggers": ["elmax_api"],
-  "zeroconf": [
-    {"type":"_elmax-ssl._tcp.local."},
-    {"type":"_elmax._tcp.local."}
-  ]
+  "zeroconf": [{ "type": "_elmax-ssl._tcp.local." }]
 }

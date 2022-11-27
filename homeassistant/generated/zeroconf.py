@@ -199,11 +199,6 @@ ZEROCONF = {
             "domain": "elmax",
         },
     ],
-    "_elmax._tcp.local.": [
-        {
-            "domain": "elmax",
-        },
-    ],
     "_enphase-envoy._tcp.local.": [
         {
             "domain": "enphase_envoy",
