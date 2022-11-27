@@ -5,7 +5,8 @@
             "addon_install_failed": "No s'ha pogut instal\u00b7lar el complement Silicon Labs Multiprotocol-",
             "addon_set_config_failed": "No s'ha pogut establir la configuraci\u00f3 de Silicon Labs Multiprotocol.",
             "addon_start_failed": "No s'ha pogut iniciar el complement Silicon Labs Multiprotocol.",
-            "not_hassio": "Les opcions de maquinari nom\u00e9s es poden configurar a les instal\u00b7lacions HassOS."
+            "not_hassio": "Les opcions de maquinari nom\u00e9s es poden configurar a les instal\u00b7lacions HassOS.",
+            "zha_migration_failed": "La migraci\u00f3 ZHA no ha tingut \u00e8xit."
         },
         "error": {
             "unknown": "Error inesperat"

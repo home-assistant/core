@@ -60,19 +60,6 @@
                 },
                 "description": "Wprowad\u017a informacje dotycz\u0105ce pliku `.knxkeys`."
             },
-            "secure_manual": {
-                "data": {
-                    "device_authentication": "Has\u0142o uwierzytelniania urz\u0105dzenia",
-                    "user_id": "Identyfikator u\u017cytkownika",
-                    "user_password": "Has\u0142o u\u017cytkownika"
-                },
-                "data_description": {
-                    "device_authentication": "Jest to ustawiane w panelu \u201eIP\u201d interfejsu w ETS.",
-                    "user_id": "Cz\u0119sto jest to numer tunelu plus 1. Tak wi\u0119c \u201eTunnel 2\u201d mia\u0142by identyfikator u\u017cytkownika \u201e3\u201d.",
-                    "user_password": "Has\u0142o dla konkretnego po\u0142\u0105czenia tunelowego ustawione w panelu \u201eW\u0142a\u015bciwo\u015bci\u201d tunelu w ETS."
-                },
-                "description": "Wprowad\u017a informacje o IP secure."
-            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Has\u0142o uwierzytelniania urz\u0105dzenia",
@@ -90,7 +77,6 @@
                 "description": "Wybierz, jak chcesz skonfigurowa\u0107 KNX/IP secure.",
                 "menu_options": {
                     "secure_knxkeys": "U\u017cyj pliku `.knxkeys` zawieraj\u0105cego klucze IP secure",
-                    "secure_manual": "R\u0119czna konfiguracja kluczy IP secure",
                     "secure_tunnel_manual": "R\u0119czna konfiguracja kluczy IP secure"
                 }
             },
@@ -99,12 +85,6 @@
                     "gateway": "Po\u0142\u0105czenie tunelowe KNX"
                 },
                 "description": "Prosz\u0119 wybra\u0107 bramk\u0119 z listy."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "Typ po\u0142\u0105czenia KNX"
-                },
-                "description": "Prosz\u0119 wprowadzi\u0107 typ po\u0142\u0105czenia, kt\u00f3rego powinni\u015bmy u\u017cy\u0107 dla po\u0142\u0105czenia KNX. \n AUTOMATIC - Integracja sama zadba o po\u0142\u0105czenie z magistral\u0105 KNX poprzez skanowanie bramki. \n TUNNELING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez tunelowanie. \n ROUTING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez routing."
             }
         }
     },
@@ -134,25 +114,6 @@
                     "connection_type": "Typ po\u0142\u0105czenia KNX"
                 },
                 "description": "Prosz\u0119 wprowadzi\u0107 typ po\u0142\u0105czenia, kt\u00f3rego powinni\u015bmy u\u017cy\u0107 dla po\u0142\u0105czenia KNX. \nAUTOMATIC - Integracja sama zadba o po\u0142\u0105czenie z magistral\u0105 KNX poprzez skanowanie bramki. \nTUNNELING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez tunelowanie. \nROUTING - Integracja po\u0142\u0105czy si\u0119 z magistral\u0105 KNX poprzez routing."
-            },
-            "init": {
-                "data": {
-                    "connection_type": "Typ po\u0142\u0105czenia KNX",
-                    "individual_address": "Domy\u015blny adres indywidualny",
-                    "local_ip": "Lokalny adres IP Home Assistanta",
-                    "multicast_group": "Grupa multicast",
-                    "multicast_port": "Port multicast",
-                    "rate_limit": "Limit",
-                    "state_updater": "Aktualizator stanu"
-                },
-                "data_description": {
-                    "individual_address": "Adres KNX u\u017cywany przez Home Assistanta, np. `0.0.4`",
-                    "local_ip": "U\u017cyj `0.0.0.0` do automatycznego wykrywania.",
-                    "multicast_group": "U\u017cywany do routingu i wykrywania. Domy\u015blnie: `224.0.23.12`",
-                    "multicast_port": "U\u017cywany do routingu i wykrywania. Domy\u015blnie: `3671`",
-                    "rate_limit": "Maksymalna liczba wychodz\u0105cych wiadomo\u015bci na sekund\u0119.\nZalecane: od 20 do 40",
-                    "state_updater": "Ustaw domy\u015blne odczytywanie stan\u00f3w z magistrali KNX. Po wy\u0142\u0105czeniu, Home Assistant nie b\u0119dzie aktywnie pobiera\u0107 stan\u00f3w encji z magistrali KNX. Mo\u017cna to zast\u0105pi\u0107 przez opcj\u0119 encji `sync_state`."
-                }
             },
             "manual_tunnel": {
                 "data": {
@@ -222,14 +183,7 @@
             },
             "tunnel": {
                 "data": {
-                    "gateway": "Po\u0142\u0105czenie tunelowe KNX",
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port",
-                    "tunneling_type": "Typ tunelowania KNX"
-                },
-                "data_description": {
-                    "host": "Adres IP urz\u0105dzenia tuneluj\u0105cego KNX/IP.",
-                    "port": "Port urz\u0105dzenia tuneluj\u0105cego KNX/IP."
+                    "gateway": "Po\u0142\u0105czenie tunelowe KNX"
                 },
                 "description": "Prosz\u0119 wybra\u0107 bramk\u0119 z listy."
             }

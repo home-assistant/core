@@ -28,15 +28,5 @@
                 "description": "Klucz API mo\u017ce zosta\u0107 pobrany automatycznie, je\u015bli dane logowania nie zosta\u0142y ustawione w aplikacji.\nTw\u00f3j klucz API mo\u017cesz znale\u017a\u0107 w Ustawienia > Og\u00f3lne, na swoim koncie Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Maksymalna liczba wpis\u00f3w do wy\u015bwietlenia w poszukiwanych i w kolejce",
-                    "upcoming_days": "Liczba nadchodz\u0105cych dni do wy\u015bwietlenia w kalendarzu"
-                }
-            }
-        }
     }
 }

@@ -52,6 +52,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
@@ -228,6 +229,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
         severity=IssueSeverity.CRITICAL,
         translation_key="bad_psu",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "cold_tea",
+        is_fixable=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="cold_tea",
     )
 
     return True

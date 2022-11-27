@@ -2738,6 +2738,21 @@ async def test_device_attr(hass: HomeAssistant) -> None:
     assert_result_info(info, True)
     assert info.rate_limit is None
 
+    # Test filter syntax (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' | device_attr('model') }}}}"
+    )
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test test syntax (is_device_attr)
+    info = render_to_info(
+        hass,
+        f"{{{{ ['{device_entry.id}'] | select('is_device_attr', 'model', 'test') | list }}}}",
+    )
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
 
 async def test_area_id(hass: HomeAssistant) -> None:
     """Test area_id function."""

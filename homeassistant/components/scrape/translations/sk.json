@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "step": {
             "sensor": {
                 "data": {
@@ -14,9 +17,7 @@
             },
             "user": {
                 "data": {
-                    "device_class": "Trieda zariadenia",
-                    "password": "Heslo",
-                    "unit_of_measurement": "Jednotka merania"
+                    "password": "Heslo"
                 }
             }
         }
@@ -25,9 +26,7 @@
         "step": {
             "init": {
                 "data": {
-                    "device_class": "Trieda zariadenia",
-                    "password": "Heslo",
-                    "unit_of_measurement": "Jednotka merania"
+                    "password": "Heslo"
                 }
             }
         }

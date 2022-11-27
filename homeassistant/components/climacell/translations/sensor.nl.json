@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "Goed",
+            "hazardous": "Gevaarlijk",
+            "moderate": "Gematigd",
+            "unhealthy": "Ongezond",
+            "unhealthy_for_sensitive_groups": "Ongezond voor gevoelige groepen",
+            "very_unhealthy": "Zeer ongezond"
+        },
+        "climacell__pollen_index": {
+            "high": "Hoog",
+            "low": "Laag",
+            "medium": "Medium",
+            "none": "Geen",
+            "very_high": "Zeer Hoog",
+            "very_low": "Zeer Laag"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "IJzel",
+            "ice_pellets": "IJskorrels",
+            "none": "Geen",
+            "rain": "Regen",
+            "snow": "Sneeuw"
+        }
+    }
+}

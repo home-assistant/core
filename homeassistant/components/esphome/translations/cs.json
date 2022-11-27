@@ -43,5 +43,11 @@
                 "description": "Zadejte pros\u00edm nastaven\u00ed p\u0159ipojen\u00ed va\u0161eho [ESPHome](https://esphomelib.com/) uzlu."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Chcete-li zlep\u0161it spolehlivost a v\u00fdkon Bluetooth, d\u016frazn\u011b doporu\u010dujeme aktualizovat {name} na ESPHome 2022.11.0 nebo nov\u011bj\u0161\u00ed.",
+            "title": "Aktualizovat {name} pomoc\u00ed ESPHome 2022.11.0 nebo nov\u011bj\u0161\u00ed"
+        }
     }
 }

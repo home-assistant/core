@@ -90,7 +90,7 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={},
+        sensor_ids={"mode": "color", "effect": 0},
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -115,6 +115,8 @@ MOCK_BLOCKS = [
         cfgChanged=0,
         mode=0,
         valvePos=50,
+        inputEvent="S",
+        wakeupEvent=["button"],
         description="device_0",
         type="device",
     ),
@@ -127,6 +129,7 @@ MOCK_CONFIG = {
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
+        "wakeup_period": 0,
     },
 }
 
@@ -255,6 +258,7 @@ def _mock_rpc_device(version: str | None = None):
         event={},
         shelly=MOCK_SHELLY_RPC,
         version=version or "0.12.0",
+        hostname="test-host",
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,

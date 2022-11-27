@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "N\u00e1zov notifika\u010dnej slu\u017eby (zmena vy\u017eaduje re\u0161tart)"
+                }
+            }
+        }
     }
 }

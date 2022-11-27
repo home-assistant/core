@@ -10,17 +10,18 @@
         "step": {
             "discovered_connection": {
                 "data": {
-                    "id": "System ID",
                     "host": "Host",
+                    "id": "System ID",
                     "port": "Port"
                 }
             },
             "user": {
                 "data": {
-                    "id": "System ID",
                     "host": "Host",
+                    "id": "System ID",
                     "port": "Port"
-                }
+                },
+                "description": "Set up Airzone integration."
             }
         }
     }

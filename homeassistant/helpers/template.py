@@ -29,6 +29,7 @@ import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -96,6 +97,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 }
 
 _T = TypeVar("_T")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
@@ -170,10 +173,10 @@ class ResultWrapper:
     render_result: str | None
 
 
-def gen_result_wrapper(kls):
+def gen_result_wrapper(kls: type[dict | list | set]) -> type:
     """Generate a result wrapper."""
 
-    class Wrapper(kls, ResultWrapper):
+    class Wrapper(kls, ResultWrapper):  # type: ignore[valid-type,misc]
         """Wrapper of a kls that can store render_result."""
 
         def __init__(self, *args: Any, render_result: str | None = None) -> None:
@@ -186,7 +189,7 @@ def gen_result_wrapper(kls):
                 if kls is set:
                     return str(set(self))
 
-                return cast(str, kls.__str__(self))
+                return kls.__str__(self)
 
             return self.render_result
 
@@ -214,10 +217,8 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-RESULT_WRAPPERS: dict[type, type] = {
-    kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
-    for kls in (list, dict, set)
-}
+_types: tuple[type[dict | list | set], ...] = (dict, list, set)
+RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _types}
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
@@ -2081,12 +2082,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # evaluated fresh with every execution, rather than executed
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
-        def hassfunction(func):
+        def hassfunction(
+            func: Callable[Concatenate[HomeAssistant, _P], _R],
+        ) -> Callable[Concatenate[Any, _P], _R]:
             """Wrap function that depend on hass."""
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(hass, *args[1:], **kwargs)
+            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+                return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
 
@@ -2094,7 +2097,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = pass_context(self.globals["device_attr"])
+
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.tests["is_device_attr"] = pass_eval_context(self.globals["is_device_attr"])
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
