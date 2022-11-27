@@ -224,15 +224,19 @@ async def test_routing_setup_advanced(
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_routing_secure_manual_setup(hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+async def test_routing_secure_manual_setup(
+    gateway_scanner_mock, hass: HomeAssistant
+) -> None:
     """Test routing secure setup with manual key config."""
-    with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
-        gateways.return_value = []
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert not result["errors"]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -311,15 +315,19 @@ async def test_routing_secure_manual_setup(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_routing_secure_keyfile(hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+async def test_routing_secure_keyfile(
+    gateway_scanner_mock, hass: HomeAssistant
+) -> None:
     """Test routing secure setup with keyfile."""
-    with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
-        gateways.return_value = []
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert not result["errors"]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
