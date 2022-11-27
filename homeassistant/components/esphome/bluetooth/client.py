@@ -516,6 +516,13 @@ class ESPHomeClient(BaseBleakClient):
                 f"characteristic:{characteristic.uuid} "
                 f"handle:{ble_handle}"
             )
+        if (
+            "notify" not in characteristic.properties
+            and "indicate" not in characteristic.properties
+        ):
+            raise BleakError(
+                f"Characteristic {characteristic.uuid} does not have notify or indicate property set."
+            )
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
             ble_handle,
