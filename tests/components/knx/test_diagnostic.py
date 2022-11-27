@@ -108,7 +108,7 @@ async def test_diagnostic_redact(
             CONF_KNX_KNXKEY_PASSWORD: "password",
             CONF_KNX_SECURE_USER_PASSWORD: "user_password",
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_authentication",
-            CONF_KNX_ROUTING_BACKBONE_KEY: "bac4b0n3",
+            CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
     )
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry)
