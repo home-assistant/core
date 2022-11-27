@@ -21,6 +21,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
