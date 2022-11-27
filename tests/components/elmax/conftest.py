@@ -1,5 +1,6 @@
 """Configuration for Elmax tests."""
 import json
+from unittest.mock import patch
 
 from elmax_api.constants import (
     BASE_URL,
@@ -72,3 +73,13 @@ def httpx_mock_direct_fixture(requests_mock):
         )
 
         yield respx_mock
+
+
+@pytest.fixture(autouse=True)
+def elmax_mock_direct_cert(requests_mock):
+    """Patch elmax library to return a specific PEM for SSL communication."""
+    with patch(
+        "elmax_api.http.GenericElmax.retrieve_server_certificate",
+        return_value=load_fixture("direct/cert.pem", "elmax"),
+    ) as patched_ssl_get_cert:
+        yield patched_ssl_get_cert

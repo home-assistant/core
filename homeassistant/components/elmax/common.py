@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from logging import Logger
+import ssl
 
 import async_timeout
 from elmax_api.exceptions import (
@@ -32,10 +33,19 @@ from .const import DEFAULT_TIMEOUT, DOMAIN, ELMAX_LOCAL_API_PATH
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_direct_api_url(host: str, port: int, ssl: bool) -> str:
+def get_direct_api_url(host: str, port: int, use_ssl: bool) -> str:
     """Return the direct API url given the base URI."""
-    schema = "https" if ssl else "http"
+    schema = "https" if use_ssl else "http"
     return f"{schema}://{host}:{port}/{ELMAX_LOCAL_API_PATH}"
+
+
+def build_direct_ssl_context(cadata: str) -> ssl.SSLContext:
+    """Create a custom SSL context for direct-api verification."""
+    context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.load_verify_locations(cadata=cadata)
+    return context
 
 
 class DummyPanel(PanelEntry):
@@ -54,13 +64,13 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
     def __init__(
-            self,
-            hass: HomeAssistant,
-            logger: Logger,
-            elmax_api_client: GenericElmax,
-            panel: PanelEntry,
-            name: str,
-            update_interval: timedelta,
+        self,
+        hass: HomeAssistant,
+        logger: Logger,
+        elmax_api_client: GenericElmax,
+        panel: PanelEntry,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
         """Instantiate the object."""
         self._client = elmax_api_client
@@ -130,10 +140,10 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
 
     def __init__(
-            self,
-            elmax_device: DeviceEndpoint,
-            panel_version: str,
-            coordinator: ElmaxCoordinator,
+        self,
+        elmax_device: DeviceEndpoint,
+        panel_version: str,
+        coordinator: ElmaxCoordinator,
     ) -> None:
         """Construct the object."""
         super().__init__(coordinator=coordinator)
