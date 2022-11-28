@@ -6,34 +6,13 @@ from pytautulli import exceptions
 from homeassistant import data_entry_flow
 from homeassistant.components.tautulli.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_SOURCE
+from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
-from . import (
-    CONF_DATA,
-    CONF_IMPORT_DATA,
-    NAME,
-    patch_config_flow_tautulli,
-    setup_integration,
-)
+from . import CONF_DATA, NAME, patch_config_flow_tautulli, setup_integration
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_flow_user_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test user step single instance allowed."""
-    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
-    entry.add_to_hass(hass)
-
-    with patch_config_flow_tautulli(AsyncMock()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONF_IMPORT_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "single_instance_allowed"
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -124,6 +103,50 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == NAME
     assert result2["data"] == CONF_DATA
+
+
+async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
+    """Test user step already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with patch_config_flow_tautulli(AsyncMock()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONF_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_flow_user_multiple_entries_allowed(hass: HomeAssistant) -> None:
+    """Test user step can configure multiple entries."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    input = {
+        CONF_URL: "http://1.2.3.5:8181/test",
+        CONF_API_KEY: "efgh",
+        CONF_VERIFY_SSL: True,
+    }
+    with patch_config_flow_tautulli(AsyncMock()):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=input,
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == NAME
+    assert result2["data"] == input
 
 
 async def test_flow_reauth(

@@ -101,11 +101,17 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     ],
     LitterRobot4: [
         RobotSensorEntityDescription[LitterRobot4](
+            key="litter_level",
+            name="Litter level",
+            native_unit_of_measurement=PERCENTAGE,
+            icon_fn=lambda state: icon_for_gauge_level(state, 10),
+        ),
+        RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
             name="Pet weight",
-            icon="mdi:scale",
             native_unit_of_measurement=MASS_POUNDS,
-        )
+            device_class=SensorDeviceClass.WEIGHT,
+        ),
     ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](

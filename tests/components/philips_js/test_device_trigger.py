@@ -34,6 +34,7 @@ async def test_get_triggers(hass, mock_device):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, mock_device.id
     )
+    triggers = [trigger for trigger in triggers if trigger["domain"] == DOMAIN]
     assert_lists_same(triggers, expected_triggers)
 
 

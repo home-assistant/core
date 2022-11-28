@@ -1,8 +1,14 @@
 {
     "config": {
+        "error": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "id_exists": "ID br\u00e1ny u\u017e existuje"
+        },
         "step": {
             "init": {
                 "data": {
+                    "device": "Cesta alebo URL",
+                    "id": "ID",
                     "name": "N\u00e1zov"
                 }
             }

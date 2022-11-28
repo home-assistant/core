@@ -1,7 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
         "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "conn_string": {
+                "description": "Zadajte re\u0165azec pripojenia pre: {event_hub_instance_name}",
+                "title": "Met\u00f3da re\u0165azca pripojenia"
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Le compte est d\u00e9j\u00e0 configur\u00e9",
-            "ezviz_cloud_account_missing": "Compte cloud Ezviz manquant. Veuillez reconfigurer le compte cloud Ezviz",
+            "ezviz_cloud_account_missing": "Compte cloud EZVIZ manquant. Veuillez reconfigurer le compte cloud EZVIZ",
             "unknown": "Erreur inattendue"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Entrez les informations d'identification RTSP pour la cam\u00e9ra Ezviz {serial} avec IP {ip_address}",
-                "title": "Cam\u00e9ra Ezviz d\u00e9couverte"
+                "description": "Saisissez les informations d'identification RTSP pour la cam\u00e9ra EZVIZ {serial} \u00e0 l'adresse\u00a0IP {ip_address}",
+                "title": "Cam\u00e9ra EZVIZ d\u00e9couverte"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Nom d'utilisateur"
                 },
-                "title": "Connectez-vous \u00e0 Ezviz Cloud"
+                "title": "Connectez-vous \u00e0 EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Sp\u00e9cifiez manuellement l'URL de votre r\u00e9gion",
-                "title": "Connectez-vous \u00e0 l'URL Ezviz personnalis\u00e9e"
+                "title": "Connectez-vous \u00e0 l'URL EZVIZ personnalis\u00e9e"
             }
         }
     },

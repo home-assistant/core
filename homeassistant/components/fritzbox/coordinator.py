@@ -1,9 +1,11 @@
 """Data update coordinator for AVM FRITZ!SmartHome devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
+from pyfritzhome.devicetypes import FritzhomeTemplate
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +16,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
 
 
-class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
+@dataclass
+class FritzboxCoordinatorData:
+    """Data Type of FritzboxDataUpdateCoordinator's data."""
+
+    devices: dict[str, FritzhomeDevice]
+    templates: dict[str, FritzhomeTemplate]
+
+
+class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
     """Fritzbox Smarthome device data update coordinator."""
 
     configuration_url: str
@@ -31,10 +41,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
-    def _update_fritz_devices(self) -> dict[str, FritzhomeDevice]:
+    def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
         try:
             self.fritz.update_devices()
+            self.fritz.update_templates()
         except requests.exceptions.ConnectionError as ex:
             raise UpdateFailed from ex
         except requests.exceptions.HTTPError:
@@ -44,25 +55,33 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
             except LoginError as ex:
                 raise ConfigEntryAuthFailed from ex
             self.fritz.update_devices()
+            self.fritz.update_templates()
 
         devices = self.fritz.get_devices()
-        data = {}
+        device_data = {}
         for device in devices:
             # assume device as unavailable, see #55799
             if (
                 device.has_powermeter
                 and device.present
-                and hasattr(device, "voltage")
+                and isinstance(device.voltage, int)
                 and device.voltage <= 0
+                and isinstance(device.power, int)
                 and device.power <= 0
                 and device.energy <= 0
             ):
                 LOGGER.debug("Assume device %s as unavailable", device.name)
                 device.present = False
 
-            data[device.ain] = device
-        return data
+            device_data[device.ain] = device
 
-    async def _async_update_data(self) -> dict[str, FritzhomeDevice]:
+        templates = self.fritz.get_templates()
+        template_data = {}
+        for template in templates:
+            template_data[template.ain] = template
+
+        return FritzboxCoordinatorData(devices=device_data, templates=template_data)
+
+    async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
         return await self.hass.async_add_executor_job(self._update_fritz_devices)

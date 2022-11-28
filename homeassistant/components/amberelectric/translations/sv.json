@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Ogiltig API-nyckel",
+            "no_site": "Ingen plats har tillhandah\u00e5llits.",
+            "unknown_error": "Ov\u00e4ntat fel"
+        },
         "step": {
             "site": {
                 "data": {

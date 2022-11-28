@@ -1,0 +1,12 @@
+{
+    "issues": {
+        "deprecation_warning_characteristic": {
+            "description": "Konfigurasjonsparameteren `state_characteristic` for statistikkintegrasjonen vil bli obligatorisk. \n\n Vennligst legg til `state_characteristic: {characteristic} ` til konfigurasjonen av sensor ` {entity} ` for \u00e5 beholde gjeldende oppf\u00f8rsel. \n\n Les dokumentasjonen av statistikkintegrasjonen for ytterligere detaljer: https://www.home-assistant.io/integrations/statistics/",
+            "title": "Obligatorisk \"state_characteristic\" antatt for en statistikkenhet"
+        },
+        "deprecation_warning_size": {
+            "description": "Konfigurasjonsparameteren `sampling_size` for statistikkintegrasjonen har standardverdien 20 s\u00e5 langt, som vil endres. \n\n Vennligst sjekk konfigurasjonen for sensor ` {entity} ` og legg til passende grenser, f.eks. `sampling_size: 20` for \u00e5 beholde gjeldende virkem\u00e5te. Konfigurasjonen av statistikkintegrasjonen vil bli mer fleksibel med versjon 2022.12.0 og godta enten `sampling_size` eller `max_age`, eller begge innstillingene. Foresp\u00f8rselen ovenfor forbereder konfigurasjonen din for denne ellers \u00f8deleggende endringen. \n\n Les dokumentasjonen av statistikkintegrasjonen for ytterligere detaljer: https://www.home-assistant.io/integrations/statistics/",
+            "title": "Implisitt 'sampling_size' antatt for en statistikkenhet"
+        }
+    }
+}

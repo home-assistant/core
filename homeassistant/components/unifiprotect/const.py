@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 DOMAIN = "unifiprotect"
 
 ATTR_EVENT_SCORE = "event_score"
+ATTR_EVENT_ID = "event_id"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -20,7 +21,7 @@ CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
 CONF_MAX_MEDIA = "max_media"
-CONF_IGNORED = "ignored_devices"
+CONF_ALLOW_EA = "allow_ea"
 
 CONFIG_OPTIONS = [
     CONF_ALL_UPDATES,
@@ -67,3 +68,5 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"

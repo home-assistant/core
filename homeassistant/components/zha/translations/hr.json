@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ve\u0107 konfigurirano. Mogu\u0107a samo jedna konfiguracija."
+        },
+        "error": {
+            "cannot_connect": "Povezivanje nije uspjelo"
+        }
+    },
+    "options": {
+        "abort": {
+            "single_instance_allowed": "Ve\u0107 konfigurirano. Mogu\u0107a samo jedna konfiguracija."
+        },
+        "error": {
+            "cannot_connect": "Povezivanje nije uspjelo"
+        },
+        "step": {
+            "intent_migrate": {
+                "title": "Migracija na novi radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Migrirate li na novi radio ili rekonfigurirate trenutni radio?",
+                "menu_options": {
+                    "intent_migrate": "Migracija na novi radio",
+                    "intent_reconfigure": "Ponovno konfiguriranje trenutnog radija"
+                },
+                "title": "Migracija ili ponovna konfiguracija"
+            }
+        }
+    }
+}

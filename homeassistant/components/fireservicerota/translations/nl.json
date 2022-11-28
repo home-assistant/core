@@ -11,12 +11,6 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Wachtwoord"
-                },
-                "description": "Authenticatietokens zijn ongeldig geworden, log in om ze opnieuw te maken."
-            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

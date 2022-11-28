@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Neplatn\u00e9 ID miesta alebo slu\u017eby"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "service_id": "ID slu\u017eby"
+                }
+            }
+        }
+    }
+}

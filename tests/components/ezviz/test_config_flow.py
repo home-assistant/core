@@ -1,4 +1,4 @@
-"""Test the Ezviz config flow."""
+"""Test the EZVIZ config flow."""
 
 from unittest.mock import patch
 

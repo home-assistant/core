@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_serial_ports": "Nena\u0161li sa \u017eiadne komunika\u010dn\u00e9 porty. Na komunik\u00e1ciu potrebujete platn\u00e9 zariadenie RS485."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adresa meni\u010da"
+                }
+            }
+        }
+    }
+}

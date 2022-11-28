@@ -1,6 +1,44 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "{entity_name} bat\u00e9ria je vybit\u00e1",
+            "is_co": "{entity_name} zis\u0165uje oxid uho\u013enat\u00fd",
+            "is_motion": "{entity_name} zaznamen\u00e1va pohyb",
+            "is_moving": "{entity_name} sa h\u00fdbe",
+            "is_no_co": "{entity_name} nezaznamen\u00e1va oxid uho\u013enat\u00fd",
+            "is_no_gas": "{entity_name} nedetekuje plyn",
+            "is_no_light": "{entity_name} nezaznamen\u00e1va svetlo",
+            "is_no_motion": "{entity_name} nezaznamen\u00e1va pohyb",
+            "is_no_problem": "{entity_name} nedetekuje probl\u00e9m",
+            "is_no_smoke": "{entity_name} nezis\u0165uje dym",
+            "is_no_sound": "{entity_name} nerozpozn\u00e1va zvuk",
+            "is_no_update": "{entity_name} je aktu\u00e1lne",
+            "is_no_vibration": "{entity_name} nezaznamen\u00e1va vibr\u00e1cie",
+            "is_not_bat_low": "{entity_name} bat\u00e9ria je norm\u00e1lna",
+            "is_not_cold": "{entity_name} nie je studen\u00e9",
+            "is_not_connected": "{entity_name} je odpojen\u00fd",
+            "is_not_hot": "{entity_name} nie je hor\u00face",
+            "is_not_locked": "{entity_name} je odomknut\u00e9",
+            "is_not_moist": "{entity_name} je such\u00e9",
+            "is_not_moving": "{entity_name} sa neh\u00fdbe"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} bat\u00e9ria vybit\u00e1",
+            "connected": "{entity_name} je pripojen\u00fd",
+            "not_bat_low": "{entity_name} bat\u00e9ria norm\u00e1lna",
+            "not_plugged_in": "{entity_name} odpojen\u00fd",
+            "not_powered": "{entity_name} nie je nap\u00e1jan\u00e9"
+        }
+    },
     "device_class": {
+        "cold": "chlad",
+        "gas": "plyn",
+        "heat": "teplo",
+        "moisture": "vlhkos\u0165",
         "motion": "pohyb",
+        "power": "nap\u00e1janie",
+        "smoke": "dym",
+        "sound": "zvuk",
         "vibration": "vibr\u00e1cia"
     },
     "state": {
@@ -11,6 +49,14 @@
         "battery": {
             "off": "Norm\u00e1lna",
             "on": "Slab\u00e1"
+        },
+        "battery_charging": {
+            "off": "Nenab\u00edja sa",
+            "on": "Nab\u00edja sa"
+        },
+        "carbon_monoxide": {
+            "off": "\u017diadny plyn",
+            "on": "Zachyten\u00fd plyn"
         },
         "cold": {
             "off": "Norm\u00e1lny",
@@ -35,6 +81,10 @@
         "heat": {
             "off": "Norm\u00e1lny",
             "on": "Hor\u00faci"
+        },
+        "light": {
+            "off": "Bez svetla",
+            "on": "Detekovan\u00e9 svetlo"
         },
         "lock": {
             "off": "Zamknut\u00fd",
@@ -64,6 +114,10 @@
             "off": "OK",
             "on": "Probl\u00e9m"
         },
+        "running": {
+            "off": "Nie je spusten\u00e9",
+            "on": "Spusten\u00e9"
+        },
         "safety": {
             "off": "Zabezpe\u010den\u00e9",
             "on": "Nezabezpe\u010den\u00e9"
@@ -75,6 +129,10 @@
         "sound": {
             "off": "Ticho",
             "on": "Zachyten\u00fd zvuk"
+        },
+        "update": {
+            "off": "Aktu\u00e1lne",
+            "on": "Aktualiz\u00e1cia k dispoz\u00edcii"
         },
         "vibration": {
             "off": "K\u013eud",

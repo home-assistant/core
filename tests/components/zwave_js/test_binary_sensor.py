@@ -3,7 +3,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -68,6 +68,29 @@ async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
 
     state = hass.states.get(ENABLED_LEGACY_BINARY_SENSOR)
     assert state.state == STATE_ON
+
+    # Test state updates from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 53,
+            "args": {
+                "commandClassName": "Binary Sensor",
+                "commandClass": 48,
+                "endpoint": 0,
+                "property": "Any",
+                "newValue": None,
+                "prevValue": True,
+                "propertyName": "Any",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(ENABLED_LEGACY_BINARY_SENSOR)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_disabled_legacy_sensor(hass, multisensor_6, integration):
@@ -141,7 +164,7 @@ async def test_notification_off_state(
 
     state = door_states[0]
     assert state
-    assert state.entity_id == "binary_sensor.node_62_access_control_window_door_is_open"
+    assert state.entity_id == "binary_sensor.node_62_window_door_is_open"
 
 
 async def test_property_sensor_door_status(hass, lock_august_pro, integration):
@@ -198,3 +221,26 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
     assert state
     assert state.state == STATE_OFF
+
+    # door state unknown
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 6,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "doorStatus",
+                "newValue": None,
+                "prevValue": "open",
+                "propertyName": "doorStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
+    assert state
+    assert state.state == STATE_UNKNOWN

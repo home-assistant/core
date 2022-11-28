@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "base": "Moeda base"
+                },
+                "data_description": {
+                    "base": "Usar outra moeda base que n\u00e3o seja USD requer um [plano pago]( {signup} )."
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 from typing import NamedTuple
 
 from miio.fan_common import LedBrightness as FanLedBrightness
@@ -47,6 +48,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_V1,
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_PROH,
@@ -64,6 +67,9 @@ ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 @dataclass
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
@@ -72,7 +78,6 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options_map: dict = field(default_factory=dict)
     set_method: str = ""
     set_method_error_message: str = ""
-    options: tuple = ()
 
 
 class AttributeEnumMapping(NamedTuple):
@@ -111,6 +116,12 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRPURIFIER_3H: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
+    MODEL_AIRPURIFIER_4: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_4_PRO: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
     MODEL_AIRPURIFIER_M1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
     ],
@@ -142,7 +153,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
         device_class="xiaomi_miio__display_orientation",
-        options=("forward", "left", "right"),
+        options=["forward", "left", "right"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -153,7 +164,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
-        options=("bright", "dim", "off"),
+        options=["bright", "dim", "off"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -164,7 +175,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
         device_class="xiaomi_miio__ptc_level",
-        options=("low", "medium", "high"),
+        options=["low", "medium", "high"],
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -212,7 +223,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
-        self._attr_options = list(description.options)
         self.entity_description = description
 
 
@@ -242,11 +252,17 @@ class XiaomiGenericSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        attr = self._enum_class(
-            self._extract_value_from_attribute(
+        try:
+            value = self._extract_value_from_attribute(
                 self.coordinator.data, self.entity_description.attr_name
             )
-        )
+            attr = self._enum_class(value)
+        except ValueError:  # if the value does not exist in
+            _LOGGER.debug(
+                "Value '%s' does not exist in enum %s", value, self._enum_class
+            )
+            attr = None
+
         if attr is not None:
             self._current_attr = attr
             self.async_write_ha_state()

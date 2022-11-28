@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Vodn\u00e1r",
+            "aries": "Baran",
+            "cancer": "Rak",
+            "capricorn": "Kozoro\u017eec",
+            "gemini": "Bl\u00ed\u017eenci",
+            "leo": "Lev",
+            "libra": "V\u00e1hy",
+            "pisces": "Ryby",
+            "sagittarius": "Strelec",
+            "scorpio": "\u0160korpi\u00f3n",
+            "taurus": "B\u00fdk",
+            "virgo": "Panna"
+        }
+    }
+}

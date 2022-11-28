@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "device_not_supported": "Toto zariadenie nie je podporovan\u00e9",
+            "invalid_discovery_parameters": "Zisten\u00e1 nepodporovan\u00e1 verzia API"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {product_type} ({serial}) na {ip_address}?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP adresa"
+                },
+                "title": "Konfigur\u00e1cia zariadenia"
+            }
+        }
+    }
+}

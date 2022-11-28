@@ -50,11 +50,12 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -63,6 +64,17 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
+    CONF_HUB,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -216,6 +228,21 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+            vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_MODE_VALUES: {
+                        vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
+                    },
+                }
+            ),
         }
     ),
 )
@@ -266,7 +293,12 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
-            [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
+            [
+                CALL_TYPE_COIL,
+                CALL_TYPE_DISCRETE,
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
         ),
         vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }
@@ -354,4 +386,3 @@ async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> No
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()
-    del hass.data[DOMAIN]

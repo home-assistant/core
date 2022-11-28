@@ -1,12 +1,28 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
+        "error": {
+            "credential_timeout": "\u010casov\u00fd limit slu\u017eby poveren\u00ed vypr\u0161al. Re\u0161tartujte stla\u010den\u00edm tla\u010didla Odosla\u0165.",
+            "login_failed": "Nepodarilo sa sp\u00e1rova\u0165 s PlayStation 4. Overte, \u010di je PIN k\u00f3d spr\u00e1vny.",
+            "no_ipaddress": "Zadajte IP adresa konzoly PlayStation 4, ktor\u00fa chcete nakonfigurova\u0165."
         },
         "step": {
             "link": {
                 "data": {
+                    "code": "PIN k\u00f3d",
+                    "ip_address": "IP adresa",
                     "name": "N\u00e1zov"
+                }
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP adresa (Ak pou\u017e\u00edvate automatick\u00e9 zis\u0165ovanie, nechajte pr\u00e1zdne)."
+                },
+                "data_description": {
+                    "ip_address": "Ak vyberiete automatick\u00e9 zis\u0165ovanie, ponechajte pr\u00e1zdne."
                 }
             }
         }

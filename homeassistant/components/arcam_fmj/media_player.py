@@ -9,17 +9,15 @@ from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -63,18 +61,17 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        device_name,
+        device_name: str,
         state: State,
         uuid: str,
-    ):
+    ) -> None:
         """Initialize device."""
         self._state = state
-        self._device_name = device_name
-        self._attr_name = f"{device_name} - Zone: {state.zn}"
-        self._uuid = uuid
+        self._attr_name = f"Zone {state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -89,26 +86,21 @@ class ArcamFmj(MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self._uuid),
-                (DOMAIN, self._state.client.host, self._state.client.port),
+                (DOMAIN, uuid),
             },
             manufacturer="Arcam",
             model="Arcam FMJ AVR",
-            name=self._device_name,
+            name=device_name,
         )
+
+    @property
+    def state(self) -> MediaPlayerState:
+        """Return the state of the device."""
+        if self._state.get_power():
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
@@ -116,17 +108,17 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.update()
 
         @callback
-        def _data(host):
+        def _data(host: str) -> None:
             if host == self._state.client.host:
                 self.async_write_ha_state()
 
         @callback
-        def _started(host):
+        def _started(host: str) -> None:
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         @callback
-        def _stopped(host):
+        def _stopped(host: str) -> None:
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
@@ -202,7 +194,9 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_power(False)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id not in (None, "root"):
@@ -215,9 +209,9 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             BrowseMedia(
                 title=preset.name,
-                media_class=MEDIA_CLASS_MUSIC,
+                media_class=MediaClass.MUSIC,
                 media_content_id=f"preset:{preset.index}",
-                media_content_type=MEDIA_TYPE_MUSIC,
+                media_content_type=MediaType.MUSIC,
                 can_play=True,
                 can_expand=False,
             )
@@ -226,7 +220,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Arcam FMJ Receiver",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,
@@ -237,7 +231,7 @@ class ArcamFmj(MediaPlayerEntity):
         return root
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
 
@@ -249,59 +243,59 @@ class ArcamFmj(MediaPlayerEntity):
             return
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         if (value := self._state.get_source()) is None:
             return None
         return value.name
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return [x.name for x in self._state.get_source_list()]
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
         if (value := self._state.get_decode_mode()) is None:
             return None
         return value.name
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         if (values := self._state.get_decode_modes()) is None:
             return None
         return [x.name for x in values]
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if (value := self._state.get_mute()) is None:
             return None
         return value
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of device."""
         if (value := self._state.get_volume()) is None:
             return None
         return value / 99.0
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         elif source == SourceCodes.FM:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         else:
             value = None
         return value
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
@@ -315,7 +309,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Channel currently playing."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
@@ -327,7 +321,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._state.get_source() == SourceCodes.DAB:
             value = self._state.get_dls_pdt()
@@ -336,7 +330,7 @@ class ArcamFmj(MediaPlayerEntity):
         return value
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         if (source := self._state.get_source()) is None:
             return None

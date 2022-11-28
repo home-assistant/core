@@ -11,6 +11,14 @@
             },
             "title": "Toiteallikas ei ole stabiilne"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Teed ei saa praegu uuesti soojendada."
+                }
+            },
+            "title": "Tee on k\u00fclm"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

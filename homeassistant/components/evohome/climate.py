@@ -5,12 +5,12 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -321,9 +321,8 @@ class EvoController(EvoClimateEntity):
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
-        )
+        if self._attr_preset_modes:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.

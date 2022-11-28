@@ -1,9 +1,10 @@
 """Test util methods."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -19,16 +20,16 @@ from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
+    resolve_period,
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session
+from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
-from tests.components.recorder.common import wait_recording_done
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -41,8 +42,14 @@ def test_session_scope_not_setup(hass_recorder):
             pass
 
 
-def test_recorder_bad_commit(hass_recorder):
+def test_recorder_bad_commit(hass_recorder, recorder_db_url):
     """Bad _commit should retry 3 times."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: mysql does not raise an OperationalError
+        # which triggers retries for the bad query below, it raises ProgrammingError
+        # on which we give up
+        return
+
     hass = hass_recorder()
 
     def work(session):
@@ -543,8 +550,12 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
     assert message in caplog.text
 
 
-def test_basic_sanity_check(hass_recorder):
+def test_basic_sanity_check(hass_recorder, recorder_db_url):
     """Test the basic sanity checks with a missing table."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
 
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
@@ -557,8 +568,12 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder, caplog):
+def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     """Run Checks on the open database."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
@@ -636,8 +651,12 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(hass_recorder):
+def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     """Test periodic db cleanups."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
@@ -652,8 +671,8 @@ def test_periodic_db_cleanups(hass_recorder):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test database write lock."""
@@ -759,3 +778,80 @@ def test_execute_stmt_lambda_element(hass_recorder):
         with patch.object(session, "execute", MockExecutor):
             rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+async def test_resolve_period(hass):
+    """Test statistic_during_period."""
+
+    now = dt_util.utcnow()
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
+    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
+    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
+    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
+    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
+    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+
+    # Fixed period
+    assert resolve_period({}) == (None, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now}}) == (None, now)
+
+    assert resolve_period({"fixed_period": {"start_time": now}}) == (now, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now, "start_time": now}}) == (
+        now,
+        now,
+    )
+
+    # Rolling window
+    assert resolve_period(
+        {"rolling_window": {"duration": timedelta(hours=1, minutes=25)}}
+    ) == (now - timedelta(hours=1, minutes=25), now)
+
+    assert resolve_period(
+        {
+            "rolling_window": {
+                "duration": timedelta(hours=1),
+                "offset": timedelta(minutes=-25),
+            }
+        }
+    ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))

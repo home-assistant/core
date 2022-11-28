@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-import time
 from typing import Any, Generic, TypeVar
+
+from bleak import BleakError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
@@ -92,7 +94,7 @@ class ActiveBluetoothProcessorCoordinator(
         """Return true if time to try and poll."""
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = time.monotonic() - self._last_poll
+            poll_age = monotonic_time_coarse() - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(
@@ -109,13 +111,20 @@ class ActiveBluetoothProcessorCoordinator(
 
         try:
             update = await self._async_poll_data(self._last_service_info)
+        except BleakError as exc:
+            if self.last_poll_successful:
+                self.logger.error(
+                    "%s: Bluetooth error whilst polling: %s", self.address, str(exc)
+                )
+                self.last_poll_successful = False
+            return
         except Exception:  # pylint: disable=broad-except
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False
-                return
+            return
         finally:
-            self._last_poll = time.monotonic()
+            self._last_poll = monotonic_time_coarse()
 
         if not self.last_poll_successful:
             self.logger.debug("%s: Polling recovered")

@@ -70,17 +70,18 @@ SENSOR_DESCRIPTIONS = {
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Heat Index",
+        name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
-        name="Wind Speed",
+        name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -104,7 +105,7 @@ async def async_setup_entry(
     sensors: list[Sensor] = coordinator.data
 
     sensor_list = []
-    for sensor in sensors:
+    for i, sensor in enumerate(sensors):
         for field in sensor.sensor_field_names:
             description = SENSOR_DESCRIPTIONS.get(field)
             if description is None:
@@ -124,6 +125,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     sensor=sensor,
+                    index=i,
                 )
             )
 
@@ -136,31 +138,32 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
         description: LaCrosseSensorEntityDescription,
         coordinator: DataUpdateCoordinator[list[Sensor]],
         sensor: Sensor,
+        index: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_name = f"{sensor.location.name} {description.name}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
-            "name": sensor.name.split(" ")[0],
+            "name": sensor.name,
             "manufacturer": "LaCrosse Technology",
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),
         }
-        self._sensor = sensor
+        self.index = index
 
     @property
     def native_value(self) -> float | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self._sensor, self.entity_description.key
+            self.coordinator.data[self.index], self.entity_description.key
         )

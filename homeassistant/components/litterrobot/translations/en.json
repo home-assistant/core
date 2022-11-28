@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "The vacuum entity attributes are now available as diagnostic sensors.\n\nPlease adjust any automations or scripts you may have that use these attributes.",
+            "title": "Litter-Robot attributes are now their own sensors"
+        }
     }
 }

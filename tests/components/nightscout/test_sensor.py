@@ -7,7 +7,7 @@ from homeassistant.components.nightscout.const import (
 )
 from homeassistant.const import ATTR_DATE, ATTR_ICON, STATE_UNAVAILABLE
 
-from tests.components.nightscout import (
+from . import (
     GLUCOSE_READINGS,
     init_integration,
     init_integration_empty_response,

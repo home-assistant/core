@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -16,10 +17,10 @@ from xbox.webapi.api.provider.smartglass.models import (
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_APP, MEDIA_TYPE_GAME
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,13 +43,13 @@ SUPPORT_XBOX = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
-XBOX_STATE_MAP = {
-    PlaybackState.Playing: STATE_PLAYING,
-    PlaybackState.Paused: STATE_PAUSED,
-    PowerState.On: STATE_ON,
-    PowerState.SystemUpdate: STATE_OFF,
-    PowerState.ConnectedStandby: STATE_OFF,
-    PowerState.Off: STATE_OFF,
+XBOX_STATE_MAP: dict[PlaybackState | PowerState, MediaPlayerState | None] = {
+    PlaybackState.Playing: MediaPlayerState.PLAYING,
+    PlaybackState.Paused: MediaPlayerState.PAUSED,
+    PowerState.On: MediaPlayerState.ON,
+    PowerState.SystemUpdate: MediaPlayerState.OFF,
+    PowerState.ConnectedStandby: MediaPlayerState.OFF,
+    PowerState.Off: MediaPlayerState.OFF,
     PowerState.Unknown: None,
 }
 
@@ -98,7 +99,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return self.coordinator.data.consoles[self._console.id]
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:
@@ -106,9 +107,9 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return XBOX_STATE_MAP[status.power_state]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.state not in [STATE_PLAYING, STATE_PAUSED]:
+        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
             return (
                 SUPPORT_XBOX
                 & ~MediaPlayerEntityFeature.NEXT_TRACK
@@ -121,8 +122,8 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         """Media content type."""
         app_details = self.data.app_details
         if app_details and app_details.product_family == "Games":
-            return MEDIA_TYPE_GAME
-        return MEDIA_TYPE_APP
+            return MediaType.GAME
+        return MediaType.APP
 
     @property
     def media_title(self):
@@ -154,42 +155,42 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         """If the image url is remotely accessible."""
         return True
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.client.smartglass.wake_up(self._console.id)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.client.smartglass.turn_off(self._console.id)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.client.smartglass.play(self._console.id)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.client.smartglass.pause(self._console.id)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.client.smartglass.previous(self._console.id)
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
 
@@ -203,7 +204,9 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
             media_content_id,
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Launch an app on the Xbox."""
         if media_id == "Home":
             await self.client.smartglass.go_home(self._console.id)

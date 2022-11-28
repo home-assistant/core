@@ -155,7 +155,8 @@ class WebSocketHandler:
             return
 
         self._logger.error(
-            "Client unable to keep up with pending messages. Stayed over %s for %s seconds",
+            "Client unable to keep up with pending messages. Stayed over %s for %s seconds. "
+            "The system's load is too high or an integration is misbehaving",
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
         )

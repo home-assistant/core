@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

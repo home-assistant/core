@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
+from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
@@ -137,6 +138,13 @@ class ActiveConnection:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s (%s)", err_message, code)
-
         self.send_message(messages.error_message(msg["id"], code, err_message))
+
+        if code:
+            err_message += f" ({code})"
+        if request := current_request.get():
+            err_message += f" from {request.remote}"
+            if user_agent := request.headers.get("user-agent"):
+                err_message += f" ({user_agent})"
+
+        log_handler("Error handling message: %s", err_message)

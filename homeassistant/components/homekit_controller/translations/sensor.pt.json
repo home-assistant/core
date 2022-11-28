@@ -1,0 +1,10 @@
+{
+    "state": {
+        "homekit_controller__thread_node_capabilities": {
+            "border_router_capable": "Capacidade de roteador de borda",
+            "full": "Dispositivo final completo",
+            "minimal": "Dispositivo final m\u00ednimo",
+            "none": "Nenhum"
+        }
+    }
+}

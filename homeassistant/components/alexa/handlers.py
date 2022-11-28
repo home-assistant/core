@@ -10,9 +10,11 @@ from homeassistant import core as ha
 from homeassistant.components import (
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_button,
     input_number,
     light,
@@ -20,7 +22,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -50,10 +51,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import network
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-import homeassistant.util.dt as dt_util
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .config import AbstractConfig
 from .const import (
@@ -155,6 +155,8 @@ async def async_api_turn_on(
         service = cover.SERVICE_OPEN_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -202,6 +204,8 @@ async def async_api_turn_off(
         service = cover.SERVICE_CLOSE_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -449,19 +453,30 @@ async def async_api_set_percentage(
     """Process a set percentage request."""
     entity = directive.entity
 
-    if entity.domain != fan.DOMAIN:
+    if entity.domain == fan.DOMAIN:
+        percentage = int(directive.payload["percentage"])
+        service = fan.SERVICE_SET_PERCENTAGE
+        data = {
+            ATTR_ENTITY_ID: entity.entity_id,
+            fan.ATTR_PERCENTAGE: percentage,
+        }
+
+        await hass.services.async_call(
+            entity.domain, service, data, blocking=False, context=context
+        )
+    elif entity.domain == humidifier.DOMAIN:
+        percentage = int(directive.payload["percentage"])
+        service = humidifier.SERVICE_SET_HUMIDITY
+        data = {
+            ATTR_ENTITY_ID: entity.entity_id,
+            humidifier.ATTR_HUMIDITY: percentage,
+        }
+
+        await hass.services.async_call(
+            entity.domain, service, data, blocking=False, context=context
+        )
+    else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
-
-    percentage = int(directive.payload["percentage"])
-    service = fan.SERVICE_SET_PERCENTAGE
-    data = {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_PERCENTAGE: percentage,
-    }
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
 
     return directive.response()
 
@@ -820,7 +835,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
         # convert to Celsius if absolute temperature
         temp -= 273.15
 
-    return convert_temperature(temp, from_unit, to_unit, interval)
+    if interval:
+        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+    return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))
@@ -1129,6 +1146,18 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
             raise AlexaInvalidValueError(msg)
 
+    # Humidifier mode
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+        mode = mode.split(".")[1]
+        if mode != PRESET_MODE_NA and mode in entity.attributes.get(
+            humidifier.ATTR_AVAILABLE_MODES
+        ):
+            service = humidifier.SERVICE_SET_MODE
+            data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
@@ -1305,6 +1334,12 @@ async def async_api_set_range(
             else:
                 service = fan.SERVICE_TURN_ON
 
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        range_value = int(range_value)
+        service = humidifier.SERVICE_SET_HUMIDITY
+        data[humidifier.ATTR_HUMIDITY] = range_value
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
@@ -1412,6 +1447,26 @@ async def async_api_adjust_range(
             data[fan.ATTR_PERCENTAGE] = percentage
         else:
             service = fan.SERVICE_TURN_OFF
+
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        percentage_step = 5
+        range_delta = (
+            int(range_delta * percentage_step)
+            if range_delta_default
+            else int(range_delta)
+        )
+        service = humidifier.SERVICE_SET_HUMIDITY
+        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
+            msg = f"Unable to determine {entity.entity_id} current target humidity"
+            raise AlexaInvalidValueError(msg)
+        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
+        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+        percentage = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+        if percentage:
+            data[humidifier.ATTR_HUMIDITY] = percentage
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":

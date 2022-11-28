@@ -94,6 +94,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.title, push_lock
     )
 
+    @callback
+    def _async_device_unavailable(
+        _service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> None:
+        """Handle device not longer being seen by the bluetooth stack."""
+        push_lock.reset_advertisement_state()
+
+    entry.async_on_unload(
+        bluetooth.async_track_unavailable(
+            hass, _async_device_unavailable, push_lock.address
+        )
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True

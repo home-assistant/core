@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -141,7 +143,7 @@ class ZhongHongClimate(ClimateEntity):
         self._current_fan_mode = None
         self.is_initialized = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
         self.is_initialized = True
@@ -219,15 +221,15 @@ class ZhongHongClimate(ClimateEntity):
         """Return the maximum temperature."""
         return self._device.max_temp
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on ac."""
         return self._device.turn_on()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off ac."""
         return self._device.turn_off()
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._device.set_temperature(temperature)
@@ -247,6 +249,6 @@ class ZhongHongClimate(ClimateEntity):
 
         self._device.set_operation_mode(hvac_mode.upper())
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         self._device.set_fan_mode(fan_mode)

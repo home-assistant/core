@@ -1,10 +1,31 @@
 {
     "state": {
+        "overkiz__battery": {
+            "full": "Pln\u00e1",
+            "low": "N\u00edzke",
+            "normal": "Norm\u00e1lne",
+            "verylow": "Ve\u013emi n\u00edzke"
+        },
         "overkiz__discrete_rssi_level": {
-            "good": "Dobr\u00e1"
+            "good": "Dobr\u00e1",
+            "low": "N\u00edzke",
+            "normal": "Norm\u00e1lne",
+            "verylow": "Ve\u013emi n\u00edzke"
         },
         "overkiz__priority_lock_originator": {
+            "local_user": "Miestny pou\u017e\u00edvate\u013e",
+            "temperature": "Teplota",
+            "timer": "\u010casova\u010d",
+            "ups": "UPS",
+            "user": "Pou\u017e\u00edvate\u013e",
             "wind": "Vietor"
+        },
+        "overkiz__sensor_defect": {
+            "low_battery": "Slab\u00e1 bat\u00e9ria"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Zatvoren\u00e9",
+            "open": "Otvori\u0165"
         }
     }
 }

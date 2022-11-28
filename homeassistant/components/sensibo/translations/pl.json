@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Klucz API"
+                },
+                "data_description": {
+                    "api_key": "Post\u0119puj zgodnie z dokumentacj\u0105, aby uzyska\u0107 klucz API"
                 }
             },
             "user": {
                 "data": {
                     "api_key": "Klucz API"
+                },
+                "data_description": {
+                    "api_key": "Post\u0119puj zgodnie z dokumentacj\u0105, aby uzyska\u0107 klucz API"
                 }
             }
         }

@@ -1,4 +1,6 @@
 """Provides device automations for Philips Hue events in V1 bridge/api."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
@@ -173,9 +175,7 @@ async def async_attach_trigger(
 
 
 @callback
-def async_get_triggers(
-    bridge: "HueBridge", device: DeviceEntry
-) -> list[dict[str, str]]:
+def async_get_triggers(bridge: HueBridge, device: DeviceEntry) -> list[dict[str, str]]:
     """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.

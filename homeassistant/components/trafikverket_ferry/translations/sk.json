@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "incorrect_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d pre vybran\u00fd \u00fa\u010det",
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "weekday": "Pracovn\u00e9 dni"
+                }
+            }
+        }
+    }
+}

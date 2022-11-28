@@ -73,7 +73,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         self._react_to_signal = react_to_signal
         self._satel = controller
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
             if self._device_number in self._satel.violated_outputs:

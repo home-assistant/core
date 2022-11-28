@@ -267,7 +267,7 @@ class JewishCalendarSensor(SensorEntity):
 
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
-    """Implement attrbutes for sensors returning times."""
+    """Implement attributes for sensors returning times."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 

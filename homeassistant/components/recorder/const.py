@@ -8,8 +8,14 @@ from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-im
 
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
+MARIADB_URL_PREFIX = "mariadb://"
+MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
 MYSQLDB_URL_PREFIX = "mysql://"
+MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
+
+EVENT_RECORDER_5MIN_STATISTICS_GENERATED = "recorder_5min_statistics_generated"
+EVENT_RECORDER_HOURLY_STATISTICS_GENERATED = "recorder_hourly_statistics_generated"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 

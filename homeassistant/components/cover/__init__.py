@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, TypeVar, final
@@ -83,8 +83,10 @@ DEVICE_CLASS_SHADE = CoverDeviceClass.SHADE.value
 DEVICE_CLASS_SHUTTER = CoverDeviceClass.SHUTTER.value
 DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 
+# mypy: disallow-any-generics
 
-class CoverEntityFeature(IntEnum):
+
+class CoverEntityFeature(IntFlag):
     """Supported features of the cover entity."""
 
     OPEN = 1
@@ -122,7 +124,7 @@ def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for covers."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[CoverEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -202,13 +204,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -230,6 +232,7 @@ class CoverEntity(Entity):
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
+    _attr_supported_features: CoverEntityFeature | None
 
     _cover_is_last_toggle_direction_open = True
 
@@ -289,7 +292,7 @@ class CoverEntity(Entity):
         return data
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if self._attr_supported_features is not None:
             return self._attr_supported_features

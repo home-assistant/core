@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "user_key": "Chave do usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

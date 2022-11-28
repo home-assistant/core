@@ -30,6 +30,13 @@ async def async_setup_entry(
             ]
         )
 
+    if coordinator.data["system"]:
+        async_add_entities(
+            [
+                HWEnergyEnableCloudEntity(hass, coordinator, entry),
+            ]
+        )
+
 
 class HWEnergySwitchEntity(
     CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SwitchEntity
@@ -124,3 +131,47 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return bool(self.coordinator.data["state"].switch_lock)
+
+
+class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
+    """
+    Representation of the enable cloud configuration.
+
+    Turning off 'cloud connection' turns off all communication to HomeWizard Cloud.
+    At this point, the device is fully local.
+    """
+
+    _attr_name = "Cloud connection"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: HWEnergyDeviceUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, entry, "cloud_connection")
+        self.hass = hass
+        self.entry = entry
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn cloud connection on."""
+        await self.coordinator.api.system_set(cloud_enabled=True)
+        await self.coordinator.async_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn cloud connection off."""
+        await self.coordinator.api.system_set(cloud_enabled=False)
+        await self.coordinator.async_refresh()
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        return "mdi:cloud" if self.is_on else "mdi:cloud-off-outline"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if cloud connection is active."""
+        return bool(self.coordinator.data["system"].cloud_enabled)

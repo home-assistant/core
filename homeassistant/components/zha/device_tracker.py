@@ -4,8 +4,7 @@ from __future__ import annotations
 import functools
 import time
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -59,7 +58,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         self._keepalive_interval = 60
         self._battery_level = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._battery_channel:
@@ -69,7 +68,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self.async_battery_percentage_remaining_updated,
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Handle polling."""
         if self.zha_device.last_seen is None:
             self._connected = False

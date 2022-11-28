@@ -10,7 +10,6 @@
             "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "unknown_authorize_url_generation": "Errore sconosciuto durante la generazione di un URL di autorizzazione."
         },
         "create_entry": {
@@ -26,13 +25,6 @@
             "wrong_project_id": "Inserisci un ID progetto cloud valido (uguale all'ID progetto di accesso al dispositivo)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Token di accesso"
-                },
-                "description": "Per collegare l'account Google, [authorize your account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito.",
-                "title": "Connetti l'account Google"
-            },
             "auth_upgrade": {
                 "description": "App Auth \u00e8 stato ritirato da Google per migliorare la sicurezza ed \u00e8 necessario intervenire creando nuove credenziali per l'applicazione. \n\nApri la [documentazione]({more_info_url}) per seguire i passaggi successivi che ti guideranno attraverso gli stadi necessari per ripristinare l'accesso ai tuoi dispositivi Nest.",
                 "title": "Nest: ritiro dell'autenticazione dell'app"
@@ -52,7 +44,7 @@
                 "data": {
                     "project_id": "ID progetto di accesso al dispositivo"
                 },
-                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di  5 $ USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID Client OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\nInserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
+                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di 5 $ USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID Client OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\nInserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
                 "title": "Nest: crea un progetto di accesso al dispositivo"
             },
             "device_project_upgrade": {
