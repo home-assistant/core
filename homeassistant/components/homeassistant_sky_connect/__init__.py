@@ -9,6 +9,7 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
+    is_hassio,
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     get_addon_manager,
@@ -24,20 +25,10 @@ from .util import get_usb_service_info
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Home Assistant Sky Connect config entry."""
-    matcher = usb.USBCallbackMatcher(
-        domain=DOMAIN,
-        vid=entry.data["vid"].upper(),
-        pid=entry.data["pid"].upper(),
-        serial_number=entry.data["serial_number"].lower(),
-        manufacturer=entry.data["manufacturer"].lower(),
-        description=entry.data["description"].lower(),
-    )
-
-    if not usb.async_is_plugged_in(hass, matcher):
-        # The USB dongle is not plugged in
-        raise ConfigEntryNotReady
+async def _multi_pan_addon_info(hass, entry: ConfigEntry) -> AddonInfo | None:
+    """Return AddonInfo if the multi-PAN addon is enabled for our SkyConnect."""
+    if not is_hassio(hass):
+        return None
 
     addon_manager: AddonManager = get_addon_manager(hass)
     try:
@@ -58,6 +49,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     if addon_info.state == AddonState.NOT_INSTALLED:
+        return None
+
+    usb_dev = entry.data["device"]
+    dev_path = await hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
+
+    if addon_info.options["device"] != dev_path:
+        return None
+
+    return addon_info
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a Home Assistant Sky Connect config entry."""
+    matcher = usb.USBCallbackMatcher(
+        domain=DOMAIN,
+        vid=entry.data["vid"].upper(),
+        pid=entry.data["pid"].upper(),
+        serial_number=entry.data["serial_number"].lower(),
+        manufacturer=entry.data["manufacturer"].lower(),
+        description=entry.data["description"].lower(),
+    )
+
+    if not usb.async_is_plugged_in(hass, matcher):
+        # The USB dongle is not plugged in
+        raise ConfigEntryNotReady
+
+    addon_info = await _multi_pan_addon_info(hass, entry)
+
+    if not addon_info:
         usb_info = get_usb_service_info(entry)
         await hass.config_entries.flow.async_init(
             "zha",

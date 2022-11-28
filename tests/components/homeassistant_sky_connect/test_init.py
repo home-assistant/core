@@ -1,7 +1,7 @@
 """Test the Home Assistant Sky Connect integration."""
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -146,6 +146,8 @@ async def test_setup_zha_multipan(
     hass: HomeAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
+    addon_info.return_value["options"]["device"] = CONFIG_ENTRY_DATA["device"]
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -159,6 +161,9 @@ async def test_setup_zha_multipan(
         return_value=True,
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -227,6 +232,9 @@ async def test_setup_entry_addon_info_fails(
         return_value=True,
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -250,6 +258,9 @@ async def test_setup_entry_addon_not_running(
         return_value=True,
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
