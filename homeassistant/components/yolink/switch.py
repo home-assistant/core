@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from yolink.device import YoLinkDevice
+from yolink.outlet_reqeust_builder import OutletReqeustBuilder
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -34,7 +35,7 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     device_type: str | None = None
-    plug_index: int = 0
+    plug_index: int | None = None
 
 
 DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
@@ -65,6 +66,7 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
         device_type=ATTR_DEVICE_MULTI_OUTLET,
+        plug_index=0,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_1",
@@ -154,10 +156,10 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         )
 
     def _get_state(
-        self, state_value: str | list[str] | None, plug_index: int
+        self, state_value: str | list[str] | None, plug_index: int | None
     ) -> bool | None:
         """Parse state value."""
-        if isinstance(state_value, list):
+        if isinstance(state_value, list) and plug_index is not None:
             return state_value[plug_index] == "open"
         return state_value == "open" if state_value is not None else None
 
@@ -171,10 +173,13 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
-        params: dict[str, str | int] = {"state": state}
-        if self.entity_description.device_type == ATTR_DEVICE_MULTI_OUTLET:
-            params["chs"] = 1 << self.entity_description.plug_index
-        await self.call_device_api("setState", params)
+        await self.call_device(
+            OutletReqeustBuilder()
+            .method("setState")
+            .plug_index(self.entity_description.plug_index)
+            .state(state)
+            .build()
+        )
         self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
 
