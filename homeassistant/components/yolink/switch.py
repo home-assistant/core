@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from yolink.device import YoLinkDevice
-from yolink.outlet_reqeust_builder import OutletReqeustBuilder
+from yolink.outlet_request_builder import OutletRequestBuilder
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -174,11 +174,9 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""
         await self.call_device(
-            OutletReqeustBuilder()
-            .method("setState")
-            .plug_index(self.entity_description.plug_index)
-            .state(state)
-            .build()
+            OutletRequestBuilder.set_state_request(
+                state, self.entity_description.plug_index
+            )
         )
         self._attr_is_on = self._get_state(state, self.entity_description.plug_index)
         self.async_write_ha_state()
