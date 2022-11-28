@@ -107,8 +107,6 @@ STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
 
-CONF_PERIOD = "period"
-
 # Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = {
     STAT_AVERAGE_LINEAR,

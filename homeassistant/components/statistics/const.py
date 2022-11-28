@@ -2,6 +2,7 @@
 
 DOMAIN = "statistics"
 
+CONF_PERIOD = "period"
 CONF_PRECISION = "precision"
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 

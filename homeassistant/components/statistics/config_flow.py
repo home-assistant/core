@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_PERIOD,
     CONF_PRECISION,
     CONF_STATE_CHARACTERISTIC,
     DOMAIN,
@@ -101,25 +102,44 @@ ROLLING_WINDOW_PERIOD_SCHEMA = vol.Schema(
     }
 )
 
+RECORDER_CHARACTERISTIC_TO_STATS_LTS: dict[
+    Literal["max", "mean", "min", "change"], str
+] = {
+    "change": STAT_SUM_DIFFERENCES_LTS,
+    "max": STAT_VALUE_MAX_LTS,
+    "mean": STAT_AVERAGE_STEP_LTS,
+    "min": STAT_VALUE_MIN_LTS,
+}
+
 
 @callback
-def choose_initial_config_step(options: dict[str, Any]) -> str | None:
+def _import_or_user_config(options: dict[str, Any]) -> str | None:
     """Choose the initial config step."""
-    return "step_1" if not options else None
+    if not options:
+        return "_user"
+
+    # Rewrite frontend statistic card config
+    options[CONF_ENTITY_ID] = options.pop("entity")
+    options[CONF_PERIOD] = options.pop("period")
+    options[CONF_STATE_CHARACTERISTIC] = RECORDER_CHARACTERISTIC_TO_STATS_LTS[
+        options.pop("state_type")
+    ]
+
+    return None
 
 
 @callback
 def set_period_suggested_values(options: dict[str, Any]) -> str:
     """Add suggested values for editing the period."""
 
-    if calendar_period := options["period"].get("calendar"):
+    if calendar_period := options[CONF_PERIOD].get("calendar"):
         options["calendar_offset"] = calendar_period["offset"]
         options["calendar_period"] = calendar_period["period"]
-    elif fixed_period := options["period"].get("fixed_period"):
+    elif fixed_period := options[CONF_PERIOD].get("fixed_period"):
         options["fixed_period_start_time"] = fixed_period["start_time"]
         options["fixed_period_end_time"] = fixed_period["end_time"]
     else:  # rolling_window
-        rolling_window_period = options["period"]["rolling_window"]
+        rolling_window_period = options[CONF_PERIOD]["rolling_window"]
         options["rolling_window_duration"] = rolling_window_period["duration"]
         options["rolling_window_offset"] = rolling_window_period["offset"]
 
@@ -171,15 +191,15 @@ def set_period(
                     "offset": user_input.pop("rolling_window_offset"),
                 }
             }
-        user_input["period"] = period
+        user_input[CONF_PERIOD] = period
         return user_input
 
     return _set_period_type
 
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(None, next_step=choose_initial_config_step),
-    "step_1": SchemaFlowFormStep(
+    "user": SchemaFlowFormStep(None, next_step=_import_or_user_config),
+    "_user": SchemaFlowFormStep(
         CONFIG_SCHEMA_STEP_1, next_step=lambda _: "period_type"
     ),
     "period_type": SchemaFlowMenuStep(PERIOD_TYPES),

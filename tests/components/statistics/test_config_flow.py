@@ -138,11 +138,11 @@ async def test_config_flow_import(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                "entity_id": input_sensor,
+                "entity": input_sensor,
                 "name": "My statistics",
                 "period": {period_type: period_definition},
                 "precision": 2.0,
-                "state_characteristic": "value_max_lts",
+                "state_type": "max",
             },
         )
     assert result["type"] == FlowResultType.CREATE_ENTRY
