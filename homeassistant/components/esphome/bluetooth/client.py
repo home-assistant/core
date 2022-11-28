@@ -35,6 +35,7 @@ GATT_HEADER_SIZE = 3
 DISCONNECT_TIMEOUT = 5.0
 CONNECT_FREE_SLOT_TIMEOUT = 2.0
 GATT_READ_TIMEOUT = 30.0
+CLIENT_CONFIG_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb"
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -137,6 +138,7 @@ class ESPHomeClient(BaseBleakClient):
         self._cancel_connection_state: CALLBACK_TYPE | None = None
         self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
         self._disconnected_event: asyncio.Event | None = None
+        self._has_cache = False
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -208,7 +210,7 @@ class ESPHomeClient(BaseBleakClient):
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         entry_data = self.entry_data
         self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
-        has_cache = bool(
+        self._has_cache = bool(
             dangerous_use_bleak_cache
             and entry_data.device_info
             and entry_data.device_info.bluetooth_proxy_version >= 3
@@ -281,7 +283,7 @@ class ESPHomeClient(BaseBleakClient):
                         self._address_as_int,
                         _on_bluetooth_connection_state,
                         timeout=timeout,
-                        has_cache=has_cache,
+                        has_cache=self._has_cache,
                     )
                 )
             except Exception:  # pylint: disable=broad-except
@@ -527,6 +529,35 @@ class ESPHomeClient(BaseBleakClient):
                 f"characteristic:{characteristic.uuid} "
                 f"handle:{ble_handle}"
             )
+        if (
+            "notify" not in characteristic.properties
+            and "indicate" not in characteristic.properties
+        ):
+            raise BleakError(
+                f"Characteristic {characteristic.uuid} does not have notify or indicate property set."
+            )
+
+        if self._has_cache:
+            # If we have a cache, we are responsible for enabling notifications
+            # on the cccd (characteristic client config descriptor) handle since
+            # the esp32 will not have resolved the
+            # characteristic descriptors and cannot do it for us
+            cccd_descriptor = characteristic.get_descriptor(
+                CLIENT_CONFIG_DESCRIPTOR_UUID
+            )
+
+            if not cccd_descriptor:
+                raise BleakError(
+                    f"Characteristic {characteristic.uuid} does not have a "
+                    "characteristic client config descriptor."
+                )
+
+            await self._client.bluetooth_gatt_write_descriptor(
+                self._address_as_int,
+                cccd_descriptor.handle,
+                b"\x01" if "notify" in characteristic.properties else b"\x02",
+            )
+
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
             ble_handle,
