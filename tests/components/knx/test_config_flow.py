@@ -1034,8 +1034,10 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
     )
 
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    with patch("xknx.io.gateway_scanner.GatewayScanner.scan") as gateways:
-        gateways.return_value = [gateway]
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock([gateway])
         result = await hass.config_entries.options.async_configure(
             menu_step["flow_id"],
             {"next_step_id": "connection_type"},
