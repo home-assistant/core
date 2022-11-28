@@ -374,7 +374,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if self._config[CONF_COLOR_MODE] and "color_mode" in values:
                 self._update_color(values)
 
-            if brightness_supported(self.supported_color_modes):
+            if brightness_supported(self.supported_color_modes) or color_supported(
+                self.supported_color_modes
+            ):
                 try:
                     self._attr_brightness = int(
                         values["brightness"]
