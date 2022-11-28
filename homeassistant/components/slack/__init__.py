@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from aiohttp.client_exceptions import ClientError
 from slack import WebClient
@@ -97,7 +98,7 @@ class SlackEntity(Entity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize a Slack entity."""
-        self._client = data[DATA_CLIENT]
+        self._client = cast(WebClient, data[DATA_CLIENT])
         self.entity_description = description
         self._attr_unique_id = f"{data[ATTR_USER_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
