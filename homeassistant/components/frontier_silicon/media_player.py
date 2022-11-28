@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from afsapi import (
     AFSAPI,
@@ -232,6 +233,20 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Turn off the device."""
         await self.fs_device.set_power(False)
 
+    # preset control
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play a media from the preset."""
+        preset_list = await self.fs_device.get_presets()
+        if media_id.isdigit() and int(media_id) in (p.key for p in preset_list):
+            # Preset found
+            await self.fs_device.select_preset(media_id)
+        else:
+            # Station not found in preset list.
+            _LOGGER.warning("Unable to find preset with id %s", media_id)
+
+    # media control
     async def async_media_play(self) -> None:
         """Send play command."""
         await self.fs_device.play()
