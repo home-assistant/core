@@ -18,6 +18,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service import async_register_admin_service
 
 from .adapter import MatterAdapter, get_matter_store
+from .api import async_register_api
 from .const import DOMAIN
 from .device_platform import DEVICE_PLATFORM
 
@@ -43,6 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
+
+    async_register_api(hass)
 
     matter.listen()
     try:
