@@ -155,9 +155,7 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowMenuStep(
-        ["resource", "add_sensor", "select_edit_sensor", "remove_sensor"]
-    ),
+    "init": SchemaFlowMenuStep(["resource", "add_sensor"]),
     "resource": SchemaFlowFormStep(
         DATA_SCHEMA_RESOURCE,
         validate_user_input=validate_rest_setup,
