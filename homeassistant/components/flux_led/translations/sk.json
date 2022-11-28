@@ -7,6 +7,9 @@
         },
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
+            "discovery_confirm": {
+                "description": "Chcete nastavi\u0165 {model} {id} ({ipaddr})?"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"

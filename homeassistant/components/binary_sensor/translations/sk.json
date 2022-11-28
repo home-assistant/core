@@ -2,8 +2,10 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} bat\u00e9ria je vybit\u00e1",
+            "is_co": "{entity_name} zis\u0165uje oxid uho\u013enat\u00fd",
             "is_motion": "{entity_name} zaznamen\u00e1va pohyb",
             "is_moving": "{entity_name} sa h\u00fdbe",
+            "is_no_co": "{entity_name} nezaznamen\u00e1va oxid uho\u013enat\u00fd",
             "is_no_gas": "{entity_name} nedetekuje plyn",
             "is_no_light": "{entity_name} nezaznamen\u00e1va svetlo",
             "is_no_motion": "{entity_name} nezaznamen\u00e1va pohyb",
@@ -51,6 +53,10 @@
         "battery_charging": {
             "off": "Nenab\u00edja sa",
             "on": "Nab\u00edja sa"
+        },
+        "carbon_monoxide": {
+            "off": "\u017diadny plyn",
+            "on": "Zachyten\u00fd plyn"
         },
         "cold": {
             "off": "Norm\u00e1lny",

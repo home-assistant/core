@@ -10,12 +10,14 @@
         "step": {
             "user": {
                 "data": {
+                    "mydevolo_url": "mydevolo URL",
                     "password": "Heslo",
                     "username": "Email / devolo ID"
                 }
             },
             "zeroconf_confirm": {
                 "data": {
+                    "mydevolo_url": "mydevolo URL",
                     "password": "Heslo",
                     "username": "Email / devolo ID"
                 }

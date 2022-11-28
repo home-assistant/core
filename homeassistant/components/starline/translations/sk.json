@@ -4,6 +4,16 @@
             "error_auth_user": "Nespr\u00e1vne u\u017e\u00edvate\u013esk\u00e9 meno alebo heslo"
         },
         "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "ID aplik\u00e1cie"
+                }
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS k\u00f3d"
+                }
+            },
             "auth_user": {
                 "data": {
                     "password": "Heslo"

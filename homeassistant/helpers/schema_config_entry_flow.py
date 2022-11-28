@@ -50,7 +50,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` function is called if the schema validates successfully.
     - The first argument is a reference to the current `SchemaCommonFlowHandler`.
     - The second argument is the user input from the current step.
-    - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
+    - The `validate_user_input` should raise `SchemaFlowError` if user input is invalid.
     """
 
     next_step: Callable[[dict[str, Any]], str | None] | str | None = None

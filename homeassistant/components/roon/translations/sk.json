@@ -10,7 +10,8 @@
             "fallback": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Server Roon sa nepodarilo objavi\u0165, zadajte n\u00e1zov hostite\u013ea a port."
             }
         }
     }
