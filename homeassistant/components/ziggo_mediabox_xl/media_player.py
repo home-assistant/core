@@ -100,17 +100,16 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
         self._host = host
         self._name = name
         self._available = available
-        self._state = None
 
     def update(self) -> None:
         """Retrieve the state of the device."""
         try:
             if self._mediabox.test_connection():
                 if self._mediabox.turned_on():
-                    if self._state != MediaPlayerState.PAUSED:
-                        self._state = MediaPlayerState.PLAYING
+                    if self.state != MediaPlayerState.PAUSED:
+                        self._attr_state = MediaPlayerState.PLAYING
                 else:
-                    self._state = MediaPlayerState.OFF
+                    self._attr_state = MediaPlayerState.OFF
                 self._available = True
             else:
                 self._available = False
@@ -129,11 +128,6 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def available(self):
@@ -159,30 +153,30 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     def media_play(self) -> None:
         """Send play command."""
         self.send_keys(["PLAY"])
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def media_pause(self) -> None:
         """Send pause command."""
         self.send_keys(["PAUSE"])
-        self._state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
 
     def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self.send_keys(["PAUSE"])
-        if self._state == MediaPlayerState.PAUSED:
-            self._state = MediaPlayerState.PLAYING
+        if self.state == MediaPlayerState.PAUSED:
+            self._attr_state = MediaPlayerState.PLAYING
         else:
-            self._state = MediaPlayerState.PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
 
     def media_next_track(self) -> None:
         """Channel up."""
         self.send_keys(["CHAN_UP"])
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def media_previous_track(self) -> None:
         """Channel down."""
         self.send_keys(["CHAN_DOWN"])
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def select_source(self, source):
         """Select the channel."""
@@ -201,4 +195,4 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
             return
 
         self.send_keys([f"NUM_{digit}" for digit in str(digits)])
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
