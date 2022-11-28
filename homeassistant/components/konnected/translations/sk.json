@@ -22,18 +22,28 @@
         }
     },
     "options": {
+        "error": {
+            "bad_host": "Neplatn\u00e1 adresa URL hostite\u013ea API Override"
+        },
         "step": {
             "options_binary": {
                 "data": {
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
                     "type": "Typ sn\u00edma\u010da"
                 },
+                "description": "mo\u017enosti {zone}",
                 "title": "Konfigur\u00e1cia sn\u00edma\u010da"
             },
             "options_digital": {
                 "data": {
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
                     "type": "Typ sn\u00edma\u010da"
+                },
+                "description": "mo\u017enosti {zone}"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Prep\u00edsanie adresy URL hostite\u013ea API"
                 }
             },
             "options_switch": {

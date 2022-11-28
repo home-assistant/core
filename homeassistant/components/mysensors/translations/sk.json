@@ -9,6 +9,7 @@
             "invalid_ip": "Neplatn\u00e1 IP adresa",
             "invalid_port": "Neplatn\u00e9 \u010d\u00edslo portu",
             "invalid_serial": "Neplatn\u00fd s\u00e9riov\u00fd port",
+            "invalid_version": "Neplatn\u00e1 verzia MySensors",
             "not_a_number": "Zadajte \u010d\u00edslo",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
@@ -22,6 +23,7 @@
             "invalid_ip": "Neplatn\u00e1 IP adresa",
             "invalid_port": "Neplatn\u00e9 \u010d\u00edslo portu",
             "invalid_serial": "Neplatn\u00fd s\u00e9riov\u00fd port",
+            "invalid_version": "Neplatn\u00e1 verzia MySensors",
             "not_a_number": "Zadajte \u010d\u00edslo",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },

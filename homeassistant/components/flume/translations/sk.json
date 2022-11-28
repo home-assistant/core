@@ -13,10 +13,12 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Heslo pre {username} u\u017e nie je platn\u00e9."
             },
             "user": {
                 "data": {
+                    "client_id": "ID klienta",
                     "password": "Heslo"
                 }
             }
