@@ -18,13 +18,13 @@ async def test_pause_job(hass: HomeAssistant):
     """Test the pause job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    corrdinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
         "coordinator"
     ]
 
     # Test pausing the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": True}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -40,7 +40,7 @@ async def test_pause_job(hass: HomeAssistant):
 
     # Test pausing the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": False, "paused": True}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -58,7 +58,7 @@ async def test_pause_job(hass: HomeAssistant):
     with patch(
         "pyoctoprintapi.OctoprintClient.pause_job"
     ) as pause_command, pytest.raises(InvalidPrinterState):
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
                 "temperature": [],
@@ -78,13 +78,13 @@ async def test_resume_job(hass: HomeAssistant):
     """Test the resume job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    corrdinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
         "coordinator"
     ]
 
     # Test resuming the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": False, "paused": True}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -100,7 +100,7 @@ async def test_resume_job(hass: HomeAssistant):
 
     # Test resuming the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": True, "paused": False}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -118,7 +118,7 @@ async def test_resume_job(hass: HomeAssistant):
     with patch(
         "pyoctoprintapi.OctoprintClient.resume_job"
     ) as resume_command, pytest.raises(InvalidPrinterState):
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
                 "temperature": [],
@@ -138,13 +138,13 @@ async def test_stop_job(hass: HomeAssistant):
     """Test the stop job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    corrdinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
         "coordinator"
     ]
 
     # Test stopping the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": False, "paused": True}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -160,7 +160,7 @@ async def test_stop_job(hass: HomeAssistant):
 
     # Test stopping the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {"state": {"flags": {"printing": True, "paused": False}}, "temperature": []}
         )
         await hass.services.async_call(
@@ -176,7 +176,7 @@ async def test_stop_job(hass: HomeAssistant):
 
     # Test stopping the printer when it is stopped
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
-        corrdinator.data["printer"] = OctoprintPrinterInfo(
+        coordinator.data["printer"] = OctoprintPrinterInfo(
             {
                 "state": {"flags": {"printing": False, "paused": False}},
                 "temperature": [],
