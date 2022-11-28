@@ -213,7 +213,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         position = self._progress
 
-        if self._attr_state == MediaPlayerState.PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             position += int(
                 (dt_util.utcnow() - self._progress_updated_at).total_seconds()
             )
