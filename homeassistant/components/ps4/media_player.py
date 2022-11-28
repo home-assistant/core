@@ -85,9 +85,7 @@ class PS4Device(MediaPlayerEntity):
         self._region = region
         self._creds = creds
         self._media_image = None
-        self._source = None
         self._games = {}
-        self._source_list = []
         self._retry = 0
         self._disconnected = False
 
@@ -201,7 +199,7 @@ class PS4Device(MediaPlayerEntity):
             # If locked get attributes from file.
             if store.get(ATTR_LOCKED):
                 self._attr_media_title = store.get(ATTR_MEDIA_TITLE)
-                self._source = self._attr_media_title
+                self._attr_source = self._attr_media_title
                 self._media_image = store.get(ATTR_MEDIA_IMAGE_URL)
                 self._attr_media_content_type = store.get(ATTR_MEDIA_CONTENT_TYPE)
                 return True
@@ -268,7 +266,7 @@ class PS4Device(MediaPlayerEntity):
 
         finally:
             self._attr_media_title = app_name or name
-            self._source = self._attr_media_title
+            self._attr_source = self._attr_media_title
             self._media_image = art or None
             self._attr_media_content_type = media_type
 
@@ -297,12 +295,12 @@ class PS4Device(MediaPlayerEntity):
 
         self.get_source_list()
 
-    def get_source_list(self):
+    def get_source_list(self) -> None:
         """Parse data entry and update source list."""
         games = []
         for data in self._games.values():
             games.append(data[ATTR_MEDIA_TITLE])
-        self._source_list = sorted(games)
+        self._attr_source_list = sorted(games)
 
     def add_games(self, title_id, app_name, image, g_type, is_locked=False):
         """Add games to list."""
@@ -384,16 +382,6 @@ class PS4Device(MediaPlayerEntity):
         if self.media_content_id is None:
             return MEDIA_IMAGE_DEFAULT
         return self._media_image
-
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_list
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
