@@ -37,7 +37,7 @@ from .device_platform import DEVICE_PLATFORM
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
-        await async_ensure_addon_running(hass, entry)
+        await _async_ensure_addon_running(hass, entry)
 
     matter = Matter(MatterAdapter(hass, entry))
     try:
@@ -302,7 +302,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
     )
 
 
-async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Ensure that Matter Server add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
