@@ -37,11 +37,6 @@ DHWP_AWAY_MODES = [
     OverkizCommandParam.FROSTPROTECTION,
 ]
 
-ALTERNATE_WATER_TEMPERATURE: str = "core:WaterTargetTemperatureState"
-ALTERNATE_WATER_SET_TEMPERATURE: str = "setWaterTargetTemperature"
-ALTERNATE_REFRESH_WATER_TEMPERATURE: str = "refreshWaterTargetTemperature"
-ALTERNATE_REFRESH_DHW_MODE: str = "refreshDHWMode"
-
 DEFAULT_MIN_TEMP: float = 30
 DEFAULT_MAX_TEMP: float = 70
 
@@ -195,7 +190,9 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
 
-        target_temperature = self.device.states[ALTERNATE_WATER_TEMPERATURE]
+        target_temperature = self.device.states[
+            OverkizState.CORE_WATER_TARGET_TEMPERATURE
+        ]
         if target_temperature:
             return target_temperature.value_as_float
 
@@ -239,18 +236,18 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             await self.executor.async_execute_command(
                 OverkizCommand.SET_TARGET_TEMPERATURE, target_temperature
             )
-        elif self.executor.has_command(ALTERNATE_WATER_SET_TEMPERATURE):
+        elif self.executor.has_command(OverkizCommand.SET_WATER_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
-                ALTERNATE_WATER_SET_TEMPERATURE, target_temperature
+                OverkizCommand.SET_WATER_TARGET_TEMPERATURE, target_temperature
             )
 
         if self.executor.has_command(OverkizCommand.REFRESH_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE
             )
-        elif self.executor.has_command(ALTERNATE_REFRESH_WATER_TEMPERATURE):
+        elif self.executor.has_command(OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE):
             await self.executor.async_execute_command(
-                ALTERNATE_REFRESH_WATER_TEMPERATURE
+                OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE
             )
 
     @property
@@ -334,5 +331,5 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             OverkizCommand.SET_DHW_MODE, self.overkiz_to_operation_mode[operation_mode]
         )
 
-        if self.executor.has_command(ALTERNATE_REFRESH_DHW_MODE):
-            await self.executor.async_execute_command(ALTERNATE_REFRESH_DHW_MODE)
+        if self.executor.has_command(OverkizCommand.REFRESH_DHW_MODE):
+            await self.executor.async_execute_command(OverkizCommand.REFRESH_DHW_MODE)
