@@ -95,6 +95,7 @@ from .const import (
     CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
+    DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_NOT_AVAILABLE,
@@ -722,7 +723,7 @@ async def webhook_scan_tag(
     await tag.async_scan_tag(
         hass,
         data["tag_id"],
-        config_entry.data[ATTR_DEVICE_ID],
+        hass.data[DOMAIN][DATA_DEVICES][config_entry.data[CONF_WEBHOOK_ID]].id,
         registration_context(config_entry.data),
     )
     return empty_okay_response()

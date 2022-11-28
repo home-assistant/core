@@ -73,7 +73,7 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return None
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
-        """Prepare confiugration for the RTSPtoWebRTC server add-on discovery."""
+        """Prepare configuration for the RTSPtoWebRTC server add-on discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 

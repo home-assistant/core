@@ -486,7 +486,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
     ),
 )
 async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
-    """Test HVAC modee."""
+    """Test HVAC mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)

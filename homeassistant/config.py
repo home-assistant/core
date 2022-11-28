@@ -206,16 +206,36 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 
 
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
-    if currency in HISTORIC_CURRENCIES:
-        ir.async_create_issue(
-            hass,
-            "homeassistant",
-            "historic_currency",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="historic_currency",
-            translation_placeholders={"currency": currency},
-        )
+    if currency not in HISTORIC_CURRENCIES:
+        ir.async_delete_issue(hass, "homeassistant", "historic_currency")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "historic_currency",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="historic_currency",
+        translation_placeholders={"currency": currency},
+    )
+
+
+def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None:
+    if country is not None:
+        ir.async_delete_issue(hass, "homeassistant", "country_not_configured")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "country_not_configured",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="country_not_configured",
+    )
 
 
 def _validate_currency(data: Any) -> Any:
@@ -587,6 +607,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             setattr(hac, attr, config[key])
 
     _raise_issue_if_historic_currency(hass, hass.config.currency)
+    _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])

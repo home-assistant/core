@@ -171,7 +171,7 @@ aiohue==4.5.0
 aiokafka==0.7.2
 
 # homeassistant.components.lifx
-aiolifx==0.8.6
+aiolifx==0.8.7
 
 # homeassistant.components.lifx
 aiolifx_effects==0.3.0
@@ -670,7 +670,7 @@ home-assistant-frontend==20221108.0
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.7
+homematicip==1.0.11
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
