@@ -3,7 +3,8 @@
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "containerUser": "vscode",
-  "postCreateCommand": "script/setup && pre-commit install --install-hooks",
+  "updateContentCommand": "pre-commit install --install-hooks",
+  "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {
     "DEVCONTAINER": "1",
