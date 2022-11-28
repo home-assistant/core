@@ -367,6 +367,11 @@ class ESPHomeClient(BaseBleakClient):
         """
         address_as_int = self._address_as_int
         entry_data = self.entry_data
+        if self._connection_version >= 2:
+            # If the connection version >= 2, we must use the cache
+            # because the esp has already wiped the services list to
+            # save memory.
+            dangerous_use_bleak_cache = True
         if dangerous_use_bleak_cache and (
             cached_services := entry_data.get_gatt_services_cache(address_as_int)
         ):
