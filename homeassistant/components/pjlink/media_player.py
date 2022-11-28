@@ -83,7 +83,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._password = password
         self._encoding = encoding
         self._muted = False
-        self._pwstate = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self._current_source = None
         with self.projector() as projector:
             if not self._name:
@@ -108,23 +108,23 @@ class PjLinkDevice(MediaPlayerEntity):
             try:
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
-                    self._pwstate = MediaPlayerState.ON
+                    self._attr_state = MediaPlayerState.ON
                     self._muted = projector.get_mute()[1]
                     self._current_source = format_input_source(*projector.get_input())
                 else:
-                    self._pwstate = MediaPlayerState.OFF
+                    self._attr_state = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
-                    self._pwstate = MediaPlayerState.OFF
+                    self._attr_state = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:
                     raise
             except ProjectorError as err:
                 if str(err) == "unavailable time":
-                    self._pwstate = MediaPlayerState.OFF
+                    self._attr_state = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:
@@ -134,11 +134,6 @@ class PjLinkDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._pwstate
 
     @property
     def is_volume_muted(self):
