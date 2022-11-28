@@ -1,7 +1,7 @@
 PyJWT==2.5.0
 PyNaCl==1.5.0
 aiodiscover==1.4.13
-aiohttp==3.8.1
+aiohttp==3.8.3
 aiohttp_cors==0.7.0
 astral==2.2
 async-upnp-client==0.32.2
