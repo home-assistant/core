@@ -554,13 +554,14 @@ class ESPHomeClient(BaseBleakClient):
         )
         self._notify_cancels[ble_handle] = cancel_coro
 
-        if not self._connection_version < 2:
+        if self._connection_version < 2:
             return
 
-        # If we have a cache, we are responsible for enabling notifications
+        # For connection v2 we are responsible for enabling notifications
         # on the cccd (characteristic client config descriptor) handle since
-        # the esp32 will not have resolved the
-        # characteristic descriptors and cannot do it for us
+        # the esp32 will not have resolved the characteristic descriptors to
+        # save memory since doing so can exhaust the memory and cause a soft
+        # reset
         cccd_descriptor = characteristic.get_descriptor(CCCD_UUID)
         if not cccd_descriptor:
             raise BleakError(
