@@ -69,7 +69,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     ] | None | UndefinedType = UNDEFINED
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is None, each key in the schema will get a suggested value
+    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested value
     from an option with the same key.
 
     Note: if a step is retried due to a validation failure, then the user input will have
