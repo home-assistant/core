@@ -1473,13 +1473,6 @@ def statistic_during_period(
             main_start_time = start_time if head_end_time is None else head_end_time
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
-        # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
-        if not metadata:
-            return result
-
-        metadata_id = metadata[statistic_id][0]
-
         if not types.isdisjoint({"max", "mean", "min"}):
             result = _get_max_mean_min_statistic(
                 session,
