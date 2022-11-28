@@ -205,8 +205,11 @@ class KNXCommonFlow(ABC, FlowHandler):
             return await self.async_step_manual_tunnel()
 
         errors: dict = {}
-        tunnel_options = [str(tunnel) for tunnel in self._found_tunnels]
-        tunnel_options.append(OPTION_MANUAL_TUNNEL)
+        tunnel_options = {
+            str(tunnel): f"{tunnel}{' 🔐' if tunnel.tunnelling_requires_secure else ''}"
+            for tunnel in self._found_tunnels
+        }
+        tunnel_options |= {OPTION_MANUAL_TUNNEL: OPTION_MANUAL_TUNNEL}
         fields = {vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_options)}
 
         return self.async_show_form(
