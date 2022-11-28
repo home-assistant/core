@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from typing import Any, Final
 
 import voluptuous as vol
@@ -95,6 +96,9 @@ class KNXCommonFlow(ABC, FlowHandler):
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
 
+        self._gatewayscanner: GatewayScanner | None = None
+        self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
+
     @abstractmethod
     def finish_flow(self, title: str) -> FlowResult:
         """Finish the flow."""
@@ -104,6 +108,13 @@ class KNXCommonFlow(ABC, FlowHandler):
     ) -> FlowResult:
         """Handle connection type configuration."""
         if user_input is not None:
+            if self._async_scan_gen:
+                await self._async_scan_gen.aclose()  # stop the scan
+                self._async_scan_gen = None
+            if self._gatewayscanner:
+                self._found_gateways = list(
+                    self._gatewayscanner.found_gateways.values()
+                )
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
             if connection_type == CONF_KNX_ROUTING:
                 return await self.async_step_routing()
@@ -129,8 +140,21 @@ class KNXCommonFlow(ABC, FlowHandler):
             CONF_KNX_TUNNELING: CONF_KNX_TUNNELING.capitalize(),
             CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
         }
-        self._found_gateways = await scan_for_gateways()
-        if self._found_gateways:
+
+        if isinstance(self, OptionsFlow) and (knx_module := self.hass.data.get(DOMAIN)):
+            xknx = knx_module.xknx
+        else:
+            xknx = XKNX()
+        self._gatewayscanner = GatewayScanner(
+            xknx, stop_on_found=0, timeout_in_seconds=2
+        )
+        # keep a reference to the generator to scan in background until user selects a connection type
+        self._async_scan_gen = self._gatewayscanner.async_scan()
+        try:
+            await self._async_scan_gen.__anext__()  # pylint: disable=unnecessary-dunder-call
+        except StopAsyncIteration:
+            pass  # scan finished, no interfaces discovered
+        else:
             # add automatic at first position only if a gateway responded
             supported_connection_types = {
                 CONF_KNX_AUTOMATIC: CONF_KNX_AUTOMATIC.capitalize()
@@ -614,12 +638,3 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             data_schema=vol.Schema(data_schema),
             last_step=True,
         )
-
-
-async def scan_for_gateways(stop_on_found: int = 0) -> list[GatewayDescriptor]:
-    """Scan for gateways within the network."""
-    xknx = XKNX()
-    gatewayscanner = GatewayScanner(
-        xknx, stop_on_found=stop_on_found, timeout_in_seconds=2
-    )
-    return await gatewayscanner.scan()
