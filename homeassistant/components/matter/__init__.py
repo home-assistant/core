@@ -326,7 +326,10 @@ async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -
 
 @callback
 def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
-    """Ensure that Matter Server add-on is updated and running."""
+    """Ensure that Matter Server add-on is updated and running.
+
+    May only be used as part of async_setup_entry above.
+    """
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
