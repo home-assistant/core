@@ -13,6 +13,12 @@
                     "device_path": "Cesta k zariadeniu",
                     "host": "Hostite\u013e",
                     "port": "Port"
+                },
+                "title": "Nakonfigurujte nastavenia pripojenia"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokol"
                 }
             }
         }
@@ -26,7 +32,8 @@
             "init": {
                 "data": {
                     "edit_select": "Upravi\u0165"
-                }
+                },
+                "description": "\u010co by ste chceli upravi\u0165?"
             },
             "zone_details": {
                 "data": {

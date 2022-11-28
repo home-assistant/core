@@ -15,14 +15,16 @@
         "step": {
             "discovered_connection": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "protocol": "Protokol"
                 },
                 "description": "Pripojte sa k objaven\u00e9mu syst\u00e9mu: {mac_address} ({host})"
             },
             "manual_connection": {
                 "data": {
                     "address": "IP adresa alebo dom\u00e9na alebo s\u00e9riov\u00fd port, ak sa prip\u00e1jate cez s\u00e9riov\u00fd port.",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "protocol": "Protokol"
                 }
             },
             "user": {

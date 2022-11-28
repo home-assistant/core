@@ -13,7 +13,8 @@
                 "data": {
                     "ip_address": "IP adresa",
                     "password": "Heslo"
-                }
+                },
+                "description": "Ni\u017e\u0161ie uve\u010fte po\u017eadovan\u00e9 inform\u00e1cie."
             }
         }
     }

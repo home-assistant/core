@@ -13,12 +13,21 @@
             "reauth_validate": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Zadajte heslo pre {username}."
             },
             "user_validate": {
                 "data": {
-                    "password": "Heslo"
+                    "login_method": "Sp\u00f4sob prihl\u00e1senia",
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
+            },
+            "validation": {
+                "data": {
+                    "code": "Overovac\u00ed k\u00f3d"
+                },
+                "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
             }
         }
     }

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL."
+        },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9"
         }
