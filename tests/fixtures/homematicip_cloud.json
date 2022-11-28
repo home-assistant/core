@@ -6830,6 +6830,55 @@
       "serializedGlobalTradeItemNumber": "3014F7110000000000000WGC",
       "type": "WALL_MOUNTED_GARAGE_DOOR_CONTROLLER",
       "updateState": "UP_TO_DATE"
+    },
+    "HUE00000-0000-0000-0000-000000000008": {
+      "connectionType": "EXTERNAL",
+      "deviceArchetype": "EXTERNAL",
+      "externalService": "HUE",
+      "firmwareVersion": "1.88.1",
+      "functionalChannels": {
+        "0": {
+          "channelId": "HUE00000-0000-0000-0000-000000000009",
+          "deviceId": "HUE00000-0000-0000-0000-000000000008",
+          "functionalChannelType": "EXTERNAL_BASE_CHANNEL",
+          "groupIndex": 0,
+          "groups": ["HUE00000-0000-0000-0000-000000000010"],
+          "index": 0,
+          "label": "",
+          "unreach": false
+        },
+        "1": {
+          "channelId": "HUE00000-0000-0000-0000-000000000011",
+          "channelRole": "UNIVERSAL_LIGHT_ACTUATOR",
+          "colorTemperature": 3165,
+          "deviceId": "HUE00000-0000-0000-0000-000000000008",
+          "dimLevel": 0.0,
+          "functionalChannelType": "EXTERNAL_UNIVERSAL_LIGHT_CHANNEL",
+          "groupIndex": 1,
+          "groups": ["HUE00000-0000-0000-0000-000000000012"],
+          "hue": null,
+          "index": 1,
+          "label": "",
+          "maximumColorTemperature": 6500,
+          "minimalColorTemperature": 2000,
+          "on": false,
+          "saturationLevel": null,
+          "supportedOptionalFeatures": {
+            "IFeatureLightGroupActuatorChannel": true,
+            "IOptionalFeatureColorTemperature": true,
+            "IOptionalFeatureDimmerState": true
+          }
+        }
+      },
+      "hasCustomLabel": false,
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "HUE00000-0000-0000-0000-000000000008",
+      "label": "Hinten rechts",
+      "lastStatusUpdate": 1669539365772,
+      "modelType": "LTW013",
+      "permanentlyReachable": true,
+      "supported": true,
+      "type": "EXTERNAL"
     }
   },
   "groups": {
