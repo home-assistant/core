@@ -87,7 +87,6 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._sources = sources
         self._zone_id = zone_id
 
-        self._state = None
         self._volume = None
         self._source = None
 
@@ -101,9 +100,9 @@ class RussoundRNETDevice(MediaPlayerEntity):
         if ret is not None:
             _LOGGER.debug("Updating status for zone %s", self._zone_id)
             if ret[0] == 0:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
             else:
-                self._state = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             self._volume = ret[2] * 2 / 100.0
             # Returns 0 based index for source.
             index = ret[1]
@@ -122,11 +121,6 @@ class RussoundRNETDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the zone."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def source(self):
