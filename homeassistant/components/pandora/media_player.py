@@ -81,21 +81,16 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, name):
         """Initialize the Pandora device."""
-        self._name = name
+        self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
-        self._station = ""
-        self._media_title = ""
-        self._media_artist = ""
-        self._media_album = ""
-        self._stations = []
+        self._attr_source = ""
+        self._attr_media_title = ""
+        self._attr_media_artist = ""
+        self._attr_media_album_name = ""
+        self._attr_source_list = []
         self._time_remaining = 0
-        self._media_duration = 0
+        self._attr_media_duration = 0
         self._pianobar = None
-
-    @property
-    def name(self):
-        """Return the name of the media player."""
-        return self._name
 
     def turn_on(self) -> None:
         """Turn the media player on."""
@@ -162,40 +157,16 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self.schedule_update_ha_state()
 
     @property
-    def source(self):
-        """Name of the current input source."""
-        return self._station
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._stations
-
-    @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         self.update_playing_status()
-        return self._media_title
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._media_artist
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._media_album
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self._media_duration
+        return self._attr_media_title
 
     def select_source(self, source: str) -> None:
         """Choose a different Pandora station and play it."""
+        assert self.source_list is not None
         try:
-            station_index = self._stations.index(source)
+            station_index = self.source_list.index(source)
         except ValueError:
             _LOGGER.warning("Station %s is not in list", source)
             return
@@ -264,8 +235,8 @@ class PandoraMediaPlayer(MediaPlayerEntity):
     def _update_current_station(self, response):
         """Update current station."""
         if station_match := re.search(STATION_PATTERN, response):
-            self._station = station_match.group(1)
-            _LOGGER.debug("Got station as: %s", self._station)
+            self._attr_source = station_match.group(1)
+            _LOGGER.debug("Got station as: %s", self._attr_source)
         else:
             _LOGGER.warning("No station match")
 
@@ -273,11 +244,11 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """Update info about current song."""
         if song_match := re.search(CURRENT_SONG_PATTERN, response):
             (
-                self._media_title,
-                self._media_artist,
-                self._media_album,
+                self._attr_media_title,
+                self._attr_media_artist,
+                self._attr_media_album_name,
             ) = song_match.groups()
-            _LOGGER.debug("Got song as: %s", self._media_title)
+            _LOGGER.debug("Got song as: %s", self._attr_media_title)
         else:
             _LOGGER.warning("No song match")
 
@@ -297,9 +268,9 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             total_seconds,
         ) = self._pianobar.match.groups()
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
-        self._media_duration = int(total_minutes) * 60 + int(total_seconds)
+        self._attr_media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if time_remaining not in (self._time_remaining, self._media_duration):
+        if time_remaining not in (self._time_remaining, self._attr_media_duration):
             self._attr_state = MediaPlayerState.PLAYING
         elif self.state == MediaPlayerState.PLAYING:
             self._attr_state = MediaPlayerState.PAUSED
@@ -328,12 +299,12 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._send_station_list_command()
         station_lines = self._pianobar.before.decode("utf-8")
         _LOGGER.debug("Getting stations: %s", station_lines)
-        self._stations = []
+        self._attr_source_list = []
         for line in station_lines.split("\r\n"):
             if match := re.search(r"\d+\).....(.+)", line):
                 station = match.group(1).strip()
                 _LOGGER.debug("Found station %s", station)
-                self._stations.append(station)
+                self._attr_source_list.append(station)
             else:
                 _LOGGER.debug("No station match on %s", line)
         self._pianobar.sendcontrol("m")  # press enter with blank line
