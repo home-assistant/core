@@ -3,17 +3,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -22,26 +14,16 @@ from .entity import SkybellEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="do_not_disturb",
-        name="Do Not Disturb",
+        name="Do not disturb",
     ),
     SwitchEntityDescription(
         key="do_not_ring",
-        name="Do Not Ring",
+        name="Do not ring",
     ),
     SwitchEntityDescription(
         key="motion_sensor",
-        name="Motion Sensor",
+        name="Motion sensor",
     ),
-)
-
-# Deprecated in Home Assistant 2022.6
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_TYPES)]
-        ),
-    }
 )
 
 

@@ -35,7 +35,10 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
+    CONF_IGNORED,
+    CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
+    DEFAULT_MAX_MEDIA,
     DEFAULT_PORT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -44,7 +47,7 @@ from .const import (
 )
 from .data import async_last_update_was_successful
 from .discovery import async_start_discovery
-from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
+from .utils import _async_resolve, async_short_mac, async_unifi_mac, convert_mac_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +121,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle integration discovery."""
         self._discovered_device = discovery_info
-        mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
+        mac = async_unifi_mac(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
         source_ip = discovery_info["source_ip"]
         direct_connect_domain = discovery_info["direct_connect_domain"]
@@ -180,7 +183,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {
             "name": discovery_info["hostname"]
             or discovery_info["platform"]
-            or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
+            or f"NVR {async_short_mac(discovery_info['hw_addr'])}",
             "ip_address": discovery_info["source_ip"],
         }
         self.context["title_placeholders"] = placeholders
@@ -221,6 +224,8 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DISABLE_RTSP: False,
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
+                CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+                CONF_IGNORED: "",
             },
         )
 
@@ -362,27 +367,53 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
+
+        values = user_input or self.config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DISABLE_RTSP,
+                    description={
+                        "suggested_value": values.get(CONF_DISABLE_RTSP, False)
+                    },
+                ): bool,
+                vol.Optional(
+                    CONF_ALL_UPDATES,
+                    description={
+                        "suggested_value": values.get(CONF_ALL_UPDATES, False)
+                    },
+                ): bool,
+                vol.Optional(
+                    CONF_OVERRIDE_CHOST,
+                    description={
+                        "suggested_value": values.get(CONF_OVERRIDE_CHOST, False)
+                    },
+                ): bool,
+                vol.Optional(
+                    CONF_MAX_MEDIA,
+                    description={
+                        "suggested_value": values.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
+                    },
+                ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                vol.Optional(
+                    CONF_IGNORED,
+                    description={"suggested_value": values.get(CONF_IGNORED, "")},
+                ): str,
+            }
+        )
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            try:
+                convert_mac_list(user_input.get(CONF_IGNORED, ""), raise_exception=True)
+            except vol.Invalid:
+                errors[CONF_IGNORED] = "invalid_mac_list"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_DISABLE_RTSP,
-                        default=self.config_entry.options.get(CONF_DISABLE_RTSP, False),
-                    ): bool,
-                    vol.Optional(
-                        CONF_ALL_UPDATES,
-                        default=self.config_entry.options.get(CONF_ALL_UPDATES, False),
-                    ): bool,
-                    vol.Optional(
-                        CONF_OVERRIDE_CHOST,
-                        default=self.config_entry.options.get(
-                            CONF_OVERRIDE_CHOST, False
-                        ),
-                    ): bool,
-                }
-            ),
+            data_schema=schema,
+            errors=errors,
         )

@@ -4,13 +4,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     NVR,
     Camera,
     Event,
     Light,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     ProtectModelWithId,
@@ -201,13 +202,22 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="lens_type",
+        name="Lens Type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:camera-iris",
+        ufp_required_field="has_removable_lens",
+        ufp_value="feature_flags.lens_type",
+    ),
+    ProtectSensorEntityDescription(
         key="mic_level",
         name="Microphone Level",
         icon="mdi:microphone",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -641,12 +651,10 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     devices = (
-        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for device in devices:
-        if not device.is_adopted_by_us:
-            continue
-
+        device = cast(Camera, device)
         for description in MOTION_TRIP_SENSORS:
             entities.append(ProtectDeviceSensor(data, device, description))
             _LOGGER.debug(

@@ -142,9 +142,11 @@ async def async_setup_entry(
 class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the climate device."""
@@ -250,11 +252,6 @@ class ViCareClimate(ClimateEntity):
         return self._name
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
@@ -323,11 +320,6 @@ class ViCareClimate(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return VICARE_TEMP_HEATING_MAX
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def target_temperature_step(self) -> float:

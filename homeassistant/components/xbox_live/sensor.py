@@ -83,6 +83,8 @@ def get_user_gamercard(api, xuid):
 class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, xuid, gamercard, interval):
         """Initialize the sensor."""
         self._state = None
@@ -99,11 +101,6 @@ class XboxSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._gamertag
-
-    @property
-    def should_poll(self):
-        """Return False as this entity has custom polling."""
-        return False
 
     @property
     def native_value(self):

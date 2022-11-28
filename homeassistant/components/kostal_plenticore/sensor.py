@@ -36,7 +36,18 @@ async def async_setup_entry(
         timedelta(seconds=10),
         plenticore,
     )
-    for module_id, data_id, name, sensor_data, fmt in SENSOR_PROCESS_DATA:
+    module_id: str
+    data_id: str
+    name: str
+    sensor_data: dict[str, Any]
+    fmt: str
+    for (  # type: ignore[assignment]
+        module_id,
+        data_id,
+        name,
+        sensor_data,
+        fmt,
+    ) in SENSOR_PROCESS_DATA:
         if (
             module_id not in available_process_data
             or data_id not in available_process_data[module_id]
@@ -78,7 +89,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         sensor_data: dict[str, Any],
         formatter: Callable[[str], Any],
         device_info: DeviceInfo,
-        entity_category: EntityCategory,
+        entity_category: EntityCategory | None,
     ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)

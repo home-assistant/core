@@ -59,10 +59,6 @@ _STATES: EsphomeEnumMapper[MediaPlayerState, str] = EsphomeEnumMapper(
 )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeMediaPlayer(
     EsphomeEntity[MediaPlayerInfo, MediaPlayerEntityState], MediaPlayerEntity
 ):
@@ -70,16 +66,19 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def state(self) -> str | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""

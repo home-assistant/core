@@ -1,6 +1,7 @@
 """Support to set a numeric value from a slider or text box."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 import voluptuous as vol
@@ -204,6 +205,8 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
+    _attr_should_poll = False
+
     def __init__(self, config: dict) -> None:
         """Initialize an input number."""
         self._config = config
@@ -217,11 +220,6 @@ class InputNumber(RestoreEntity):
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
         return input_num
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def _minimum(self) -> float:
@@ -281,8 +279,10 @@ class InputNumber(RestoreEntity):
         if self._current_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        value = state and float(state.state)
+        value: float | None = None
+        if state := await self.async_get_last_state():
+            with suppress(ValueError):
+                value = float(state.state)
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:

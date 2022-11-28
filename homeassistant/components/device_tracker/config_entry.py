@@ -30,6 +30,7 @@ from .const import (
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
+    SourceType,
 )
 
 
@@ -187,7 +188,7 @@ class BaseTrackerEntity(Entity):
         return None
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
         raise NotImplementedError
 

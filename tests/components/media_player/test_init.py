@@ -1,6 +1,5 @@
 """Test the base functions of the media player."""
 import asyncio
-import base64
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -12,39 +11,6 @@ from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
-
-
-async def test_get_image(hass, hass_ws_client, caplog):
-    """Test get image via WS command."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity."
-        "async_get_media_image",
-        return_value=(b"image", "image/jpeg"),
-    ):
-        await client.send_json(
-            {
-                "id": 5,
-                "type": "media_player_thumbnail",
-                "entity_id": "media_player.bedroom",
-            }
-        )
-
-        msg = await client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpeg"
-    assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
-
-    assert "media_player_thumbnail is deprecated" in caplog.text
 
 
 async def test_get_image_http(hass, hass_client_no_auth):

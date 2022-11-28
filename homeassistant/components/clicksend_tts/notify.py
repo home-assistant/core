@@ -3,7 +3,6 @@ from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -20,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BASE_API_URL = "https://rest.clicksend.com/v3"
 
-HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
+HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"

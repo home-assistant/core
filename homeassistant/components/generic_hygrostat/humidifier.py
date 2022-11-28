@@ -112,6 +112,8 @@ async def async_setup_platform(
 class GenericHygrostat(HumidifierEntity, RestoreEntity):
     """Representation of a Generic Hygrostat device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -173,7 +175,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if self._keep_alive:
             async_track_time_interval(self.hass, self._async_operate, self._keep_alive)
 
-        @callback
         async def _async_startup(event):
             """Init on startup."""
             sensor_state = self.hass.states.get(self._sensor_entity_id)
@@ -218,11 +219,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if self._saved_target_humidity:
             return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
         return None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def name(self):
@@ -309,7 +305,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         # Get default humidity from super class
         return super().max_humidity
 
-    @callback
     async def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle ambient humidity changes."""
         if new_state is None:
@@ -328,7 +323,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await self._async_operate()
         await self.async_update_ha_state()
 
-    @callback
     async def _async_sensor_not_responding(self, now=None):
         """Handle sensor stale event."""
 

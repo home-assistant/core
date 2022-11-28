@@ -2,7 +2,7 @@
   "domain": "feedreader",
   "name": "Feedreader",
   "documentation": "https://www.home-assistant.io/integrations/feedreader",
-  "requirements": ["feedparser==6.0.2"],
+  "requirements": ["feedparser==6.0.10"],
   "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["feedparser", "sgmllib3k"]

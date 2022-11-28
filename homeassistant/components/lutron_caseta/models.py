@@ -6,8 +6,6 @@ from typing import Any
 
 from pylutron_caseta.smartbridge import Smartbridge
 
-from homeassistant.helpers.device_registry import DeviceEntry
-
 
 @dataclass
 class LutronCasetaData:
@@ -15,4 +13,4 @@ class LutronCasetaData:
 
     bridge: Smartbridge
     bridge_device: dict[str, Any]
-    button_devices: dict[str, DeviceEntry]
+    button_devices: dict[str, dict]

@@ -66,6 +66,8 @@ def setup_platform(
 class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, sensor, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name
@@ -83,11 +85,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
 
         self._sensor.when_deactivated = read_gpio
         self._sensor.when_activated = read_gpio
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

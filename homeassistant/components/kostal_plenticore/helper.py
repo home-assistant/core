@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -122,17 +122,20 @@ class Plenticore:
 class DataUpdateCoordinatorMixin:
     """Base implementation for read and write data."""
 
-    async def async_read_data(self, module_id: str, data_id: str) -> list[str, bool]:
+    _plenticore: Plenticore
+    name: str
+
+    async def async_read_data(
+        self, module_id: str, data_id: str
+    ) -> dict[str, dict[str, str]] | None:
         """Read data from Plenticore."""
         if (client := self._plenticore.client) is None:
-            return False
+            return None
 
         try:
-            val = await client.get_setting_values(module_id, data_id)
+            return await client.get_setting_values(module_id, data_id)
         except PlenticoreApiException:
-            return False
-        else:
-            return val
+            return None
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
         """Write settings back to Plenticore."""
@@ -170,7 +173,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_inverval,
         )
         # data ids to poll
-        self._fetch = defaultdict(list)
+        self._fetch: dict[str, list[str]] = defaultdict(list)
         self._plenticore = plenticore
 
     def start_fetch_data(self, module_id: str, data_id: str) -> None:
@@ -246,7 +249,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_inverval,
         )
         # data ids to poll
-        self._fetch = defaultdict(list)
+        self._fetch: dict[str, list[str]] = defaultdict(list)
         self._plenticore = plenticore
 
     def start_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
@@ -284,20 +287,23 @@ class SelectDataUpdateCoordinator(
 
     async def _async_get_current_option(
         self,
-        module_id: str | dict[str, Iterable[str]],
+        module_id: dict[str, list[str]],
     ) -> dict[str, dict[str, str]]:
         """Get current option."""
         for mid, pids in module_id.items():
             all_options = pids[1]
             for all_option in all_options:
-                if all_option != "None":
-                    val = await self.async_read_data(mid, all_option)
-                    for option in val.values():
-                        if option[all_option] == "1":
-                            fetched = {mid: {pids[0]: all_option}}
-                            return fetched
+                if all_option == "None" or not (
+                    val := await self.async_read_data(mid, all_option)
+                ):
+                    continue
+                for option in val.values():
+                    if option[all_option] == "1":
+                        fetched = {mid: {pids[0]: all_option}}
+                        return fetched
 
             return {mid: {pids[0]: "None"}}
+        return {}
 
 
 class PlenticoreDataFormatter:
@@ -361,7 +367,7 @@ class PlenticoreDataFormatter:
             return ""
 
     @staticmethod
-    def format_float(state: str) -> int | str:
+    def format_float(state: str) -> float | str:
         """Return the given state value as float rounded to three decimal places."""
         try:
             return round(float(state), 3)
@@ -377,7 +383,7 @@ class PlenticoreDataFormatter:
             return state
 
     @staticmethod
-    def format_inverter_state(state: str) -> str:
+    def format_inverter_state(state: str) -> str | None:
         """Return a readable string of the inverter state."""
         try:
             value = int(state)
@@ -387,7 +393,7 @@ class PlenticoreDataFormatter:
         return PlenticoreDataFormatter.INVERTER_STATES.get(value)
 
     @staticmethod
-    def format_em_manager_state(state: str) -> str:
+    def format_em_manager_state(state: str) -> str | None:
         """Return a readable state of the energy manager."""
         try:
             value = int(state)

@@ -1,30 +1,44 @@
 """The Mikrotik component."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import ATTR_MANUFACTURER, DOMAIN, PLATFORMS
-from .hub import MikrotikHub
+from .const import ATTR_MANUFACTURER, DOMAIN
+from .errors import CannotConnect, LoginError
+from .hub import MikrotikDataUpdateCoordinator, get_api
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Mikrotik component."""
-
-    hub = MikrotikHub(hass, config_entry)
-    if not await hub.async_setup():
+    try:
+        api = await hass.async_add_executor_job(get_api, dict(config_entry.data))
+    except CannotConnect as api_error:
+        raise ConfigEntryNotReady from api_error
+    except LoginError:
         return False
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
+    coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, api)
+    await hass.async_add_executor_job(coordinator.api.get_hub_details)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(DOMAIN, hub.serial_num)},
+        connections={(DOMAIN, coordinator.serial_num)},
         manufacturer=ATTR_MANUFACTURER,
-        model=hub.model,
-        name=hub.hostname,
-        sw_version=hub.firmware,
+        model=coordinator.model,
+        name=coordinator.hostname,
+        sw_version=coordinator.firmware,
     )
 
     return True
@@ -32,10 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
-    )
-
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    ):
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

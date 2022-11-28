@@ -29,7 +29,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -53,7 +53,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
 
 
@@ -70,7 +70,7 @@ async def test_show_option_form(
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
 
@@ -91,7 +91,7 @@ async def test_create_option_entry(
         user_input={CONF_COOL_AWAY_TEMPERATURE: 1, CONF_HEAT_AWAY_TEMPERATURE: 2},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_COOL_AWAY_TEMPERATURE: 1,
         CONF_HEAT_AWAY_TEMPERATURE: 2,

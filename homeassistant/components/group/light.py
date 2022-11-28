@@ -25,10 +25,8 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_WHITE_VALUE,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -71,10 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    LightEntityFeature.EFFECT
-    | LightEntityFeature.FLASH
-    | LightEntityFeature.TRANSITION
-    | SUPPORT_WHITE_VALUE
+    LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +123,6 @@ FORWARDED_ATTRIBUTES = frozenset(
         ATTR_RGBWW_COLOR,
         ATTR_TRANSITION,
         ATTR_WHITE,
-        ATTR_WHITE_VALUE,
         ATTR_XY_COLOR,
     }
 )
@@ -148,7 +142,6 @@ class LightGroup(GroupEntity, LightEntity):
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
-        self._white_value: int | None = None
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
@@ -173,11 +166,6 @@ class LightGroup(GroupEntity, LightEntity):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def white_value(self) -> int | None:
-        """Return the white value of this light group between 0..255."""
-        return self._white_value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all lights in the light group."""
@@ -250,8 +238,6 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_xy_color = reduce_attribute(
             on_states, ATTR_XY_COLOR, reduce=mean_tuple
         )
-
-        self._white_value = reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
         self._attr_color_temp = reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._attr_min_mireds = reduce_attribute(

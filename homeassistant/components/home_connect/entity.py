@@ -15,12 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: HomeConnectDevice, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
         self.desc = desc
         self._name = f"{self.device.appliance.name} {desc}"
-        self.device.entities.append(self)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -35,11 +36,6 @@ class HomeConnectEntity(Entity):
         """Update data."""
         if ha_id == self.device.appliance.haId:
             self.async_entity_update()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

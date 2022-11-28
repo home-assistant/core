@@ -20,7 +20,7 @@ async def test_flow_works(hass, aioclient_mock):
         result = await flow.async_step_user(
             {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == EMAIL
 
 
@@ -38,7 +38,7 @@ async def test_flow_works_with_authcode(hass, aioclient_mock):
                 "authorization_code": "c29tZXJhbmRvbXN0cmluZw==",
             }
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == EMAIL
 
 
@@ -57,12 +57,12 @@ async def test_flow_works_with_2fa(hass, aioclient_mock):
         result = await flow.async_step_user(
             {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "2fa"
 
     with patch("homeassistant.components.hangouts.config_flow.get_auth"):
         result = await flow.async_step_2fa({"2fa": 123456})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == EMAIL
 
 
@@ -81,7 +81,7 @@ async def test_flow_with_unknown_2fa(hass, aioclient_mock):
         result = await flow.async_step_user(
             {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"]["base"] == "invalid_2fa_method"
 
 
@@ -100,7 +100,7 @@ async def test_flow_invalid_login(hass, aioclient_mock):
         result = await flow.async_step_user(
             {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"]["base"] == "invalid_login"
 
 
@@ -119,7 +119,7 @@ async def test_flow_invalid_2fa(hass, aioclient_mock):
         result = await flow.async_step_user(
             {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "2fa"
 
     with patch(
@@ -128,5 +128,5 @@ async def test_flow_invalid_2fa(hass, aioclient_mock):
     ):
         result = await flow.async_step_2fa({"2fa": 123456})
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"]["base"] == "invalid_2fa"

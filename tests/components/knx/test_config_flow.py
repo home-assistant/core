@@ -41,11 +41,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-    RESULT_TYPE_MENU,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -84,7 +80,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -94,7 +90,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "routing"
     assert not result2["errors"]
 
@@ -111,7 +107,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["title"] == CONF_KNX_ROUTING.capitalize()
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
@@ -136,7 +132,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
                 "show_advanced_options": True,
             },
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -146,7 +142,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "routing"
     assert not result2["errors"]
 
@@ -161,7 +157,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result_invalid_input["type"] == RESULT_TYPE_FORM
+    assert result_invalid_input["type"] == FlowResultType.FORM
     assert result_invalid_input["step_id"] == "routing"
     assert result_invalid_input["errors"] == {
         CONF_KNX_MCAST_GRP: "invalid_ip_address",
@@ -184,7 +180,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["title"] == CONF_KNX_ROUTING.capitalize()
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
@@ -261,7 +257,7 @@ async def test_tunneling_setup(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -271,7 +267,7 @@ async def test_tunneling_setup(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "manual_tunnel"
     assert not result2["errors"]
 
@@ -284,7 +280,7 @@ async def test_tunneling_setup(
             user_input,
         )
         await hass.async_block_till_done()
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["title"] == "Tunneling @ 192.168.0.1"
         assert result3["data"] == config_entry_data
 
@@ -303,7 +299,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
                 "show_advanced_options": True,
             },
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -313,7 +309,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "manual_tunnel"
     assert not result2["errors"]
 
@@ -328,7 +324,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result_invalid_host["type"] == RESULT_TYPE_FORM
+    assert result_invalid_host["type"] == FlowResultType.FORM
     assert result_invalid_host["step_id"] == "manual_tunnel"
     assert result_invalid_host["errors"] == {CONF_HOST: "invalid_ip_address"}
     # invalid local ip address
@@ -342,7 +338,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result_invalid_local["type"] == RESULT_TYPE_FORM
+    assert result_invalid_local["type"] == FlowResultType.FORM
     assert result_invalid_local["step_id"] == "manual_tunnel"
     assert result_invalid_local["errors"] == {CONF_KNX_LOCAL_IP: "invalid_ip_address"}
 
@@ -361,7 +357,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["title"] == "Tunneling @ 192.168.0.2"
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
@@ -385,7 +381,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     tunnel_flow = await hass.config_entries.flow.async_configure(
@@ -395,7 +391,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         },
     )
     await hass.async_block_till_done()
-    assert tunnel_flow["type"] == RESULT_TYPE_FORM
+    assert tunnel_flow["type"] == FlowResultType.FORM
     assert tunnel_flow["step_id"] == "tunnel"
     assert not tunnel_flow["errors"]
 
@@ -404,7 +400,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     await hass.async_block_till_done()
-    assert manual_tunnel["type"] == RESULT_TYPE_FORM
+    assert manual_tunnel["type"] == FlowResultType.FORM
     assert manual_tunnel["step_id"] == "manual_tunnel"
 
     with patch(
@@ -420,7 +416,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
             },
         )
         await hass.async_block_till_done()
-        assert manual_tunnel_flow["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert manual_tunnel_flow["type"] == FlowResultType.CREATE_ENTRY
         assert manual_tunnel_flow["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
@@ -441,7 +437,7 @@ async def test_manual_tunnel_step_when_no_gateway(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     tunnel_flow = await hass.config_entries.flow.async_configure(
@@ -451,7 +447,7 @@ async def test_manual_tunnel_step_when_no_gateway(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert tunnel_flow["type"] == RESULT_TYPE_FORM
+    assert tunnel_flow["type"] == FlowResultType.FORM
     assert tunnel_flow["step_id"] == "manual_tunnel"
     assert not tunnel_flow["errors"]
 
@@ -463,7 +459,7 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     with patch(
@@ -478,7 +474,7 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == CONF_KNX_AUTOMATIC.capitalize()
     assert result2["data"] == {
         **DEFAULT_ENTRY_DATA,
@@ -496,7 +492,7 @@ async def _get_menu_step(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -506,7 +502,7 @@ async def _get_menu_step(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "manual_tunnel"
     assert not result2["errors"]
 
@@ -519,7 +515,7 @@ async def _get_menu_step(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_MENU
+    assert result3["type"] == FlowResultType.MENU
     assert result3["step_id"] == "secure_tunneling"
     return result3
 
@@ -532,7 +528,7 @@ async def test_configure_secure_manual(hass: HomeAssistant):
         menu_step["flow_id"],
         {"next_step_id": "secure_manual"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "secure_manual"
     assert not result["errors"]
 
@@ -549,7 +545,7 @@ async def test_configure_secure_manual(hass: HomeAssistant):
             },
         )
         await hass.async_block_till_done()
-        assert secure_manual["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert secure_manual["type"] == FlowResultType.CREATE_ENTRY
         assert secure_manual["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
@@ -574,7 +570,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
         menu_step["flow_id"],
         {"next_step_id": "secure_knxkeys"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
@@ -592,7 +588,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
             },
         )
         await hass.async_block_till_done()
-        assert secure_knxkeys["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert secure_knxkeys["type"] == FlowResultType.CREATE_ENTRY
         assert secure_knxkeys["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
@@ -616,7 +612,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
         menu_step["flow_id"],
         {"next_step_id": "secure_knxkeys"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
@@ -632,7 +628,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
             },
         )
         await hass.async_block_till_done()
-        assert secure_knxkeys["type"] == RESULT_TYPE_FORM
+        assert secure_knxkeys["type"] == FlowResultType.FORM
         assert secure_knxkeys["errors"]
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_FILENAME] == "file_not_found"
 
@@ -645,7 +641,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         menu_step["flow_id"],
         {"next_step_id": "secure_knxkeys"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
@@ -661,7 +657,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
             },
         )
         await hass.async_block_till_done()
-        assert secure_knxkeys["type"] == RESULT_TYPE_FORM
+        assert secure_knxkeys["type"] == FlowResultType.FORM
         assert secure_knxkeys["errors"]
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD] == "invalid_signature"
 
@@ -679,7 +675,7 @@ async def test_options_flow(
             mock_config_entry.entry_id
         )
 
-        assert result.get("type") == RESULT_TYPE_FORM
+        assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "init"
         assert "flow_id" in result
 
@@ -694,7 +690,7 @@ async def test_options_flow(
         )
 
         await hass.async_block_till_done()
-        assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+        assert result2.get("type") == FlowResultType.CREATE_ENTRY
         assert not result2.get("data")
 
         assert mock_config_entry.data == {
@@ -787,7 +783,7 @@ async def test_tunneling_options_flow(
             mock_config_entry.entry_id
         )
 
-        assert result.get("type") == RESULT_TYPE_FORM
+        assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "init"
         assert "flow_id" in result
 
@@ -801,7 +797,7 @@ async def test_tunneling_options_flow(
             },
         )
 
-        assert result2.get("type") == RESULT_TYPE_FORM
+        assert result2.get("type") == FlowResultType.FORM
         assert not result2.get("data")
         assert "flow_id" in result2
 
@@ -811,7 +807,7 @@ async def test_tunneling_options_flow(
         )
 
         await hass.async_block_till_done()
-        assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+        assert result3.get("type") == FlowResultType.CREATE_ENTRY
         assert not result3.get("data")
 
         assert mock_config_entry.data == config_entry_data
@@ -880,7 +876,7 @@ async def test_advanced_options(
             mock_config_entry.entry_id, context={"show_advanced_options": True}
         )
 
-        assert result.get("type") == RESULT_TYPE_FORM
+        assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "init"
         assert "flow_id" in result
 
@@ -890,7 +886,7 @@ async def test_advanced_options(
         )
 
         await hass.async_block_till_done()
-        assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+        assert result2.get("type") == FlowResultType.CREATE_ENTRY
         assert not result2.get("data")
 
         assert mock_config_entry.data == config_entry_data

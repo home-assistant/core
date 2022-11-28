@@ -41,7 +41,7 @@ async def test_show_set_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -54,7 +54,7 @@ async def test_urlize_plain_host(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert user_input[CONF_URL] == f"http://{host}/"
 
@@ -85,7 +85,7 @@ async def test_already_configured(hass, requests_mock, login_requests_mock):
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -96,7 +96,7 @@ async def test_connection_error(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_URL: "unknown"}
 
@@ -142,7 +142,7 @@ async def test_login_error(hass, login_requests_mock, code, errors):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
@@ -164,7 +164,7 @@ async def test_success(hass, login_requests_mock):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
@@ -195,7 +195,7 @@ async def test_ssdp(hass):
         ),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({})[CONF_URL] == url
 
@@ -209,7 +209,7 @@ async def test_options(hass):
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     recipient = "+15555550000"

@@ -99,7 +99,7 @@ class CurrencylayerSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def update(self):
+    def update(self) -> None:
         """Update current date."""
         self.rest.update()
         if (value := self.rest.data) is not None:

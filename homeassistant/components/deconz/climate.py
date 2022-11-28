@@ -28,7 +28,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
@@ -85,8 +84,6 @@ async def async_setup_entry(
     def async_add_climate(_: EventType, climate_id: str) -> None:
         """Add climate from deCONZ."""
         climate = gateway.api.sensors.thermostat[climate_id]
-        if not gateway.option_allow_clip_sensor and climate.type.startswith("CLIP"):
-            return
         async_add_entities([DeconzThermostat(climate, gateway)])
 
     gateway.register_platform_add_device_callback(
@@ -94,27 +91,11 @@ async def async_setup_entry(
         gateway.api.sensors.thermostat,
     )
 
-    @callback
-    def async_reload_clip_sensors() -> None:
-        """Load clip sensors from deCONZ."""
-        for climate_id, climate in gateway.api.sensors.thermostat.items():
-            if climate.type.startswith("CLIP"):
-                async_add_climate(EventType.ADDED, climate_id)
 
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_clip_sensors,
-            async_reload_clip_sensors,
-        )
-    )
-
-
-class DeconzThermostat(DeconzDevice, ClimateEntity):
+class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
     TYPE = DOMAIN
-    _device: Thermostat
 
     _attr_temperature_unit = TEMP_CELSIUS
 

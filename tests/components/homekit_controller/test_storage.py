@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
+from homeassistant.components.homekit_controller.storage import EntityMapStorage
 
 from tests.common import flush_store
 from tests.components.homekit_controller.common import (
@@ -68,7 +69,7 @@ async def test_storage_is_updated_on_add(hass, hass_storage, utcnow):
     """Test entity map storage is cleaned up on adding an accessory."""
     await setup_test_component(hass, create_lightbulb_service)
 
-    entity_map = hass.data[ENTITY_MAP]
+    entity_map: EntityMapStorage = hass.data[ENTITY_MAP]
     hkid = "00:00:00:00:00:00"
 
     # Is in memory store updated?

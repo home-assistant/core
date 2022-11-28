@@ -173,6 +173,8 @@ class CounterStorageCollection(collection.StorageCollection):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
+    _attr_should_poll: bool = False
+
     def __init__(self, config: dict) -> None:
         """Initialize a counter."""
         self._config: dict = config
@@ -186,11 +188,6 @@ class Counter(RestoreEntity):
         counter.editable = False
         counter.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         return counter
-
-    @property
-    def should_poll(self) -> bool:
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self) -> str | None:

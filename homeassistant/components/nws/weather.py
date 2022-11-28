@@ -94,6 +94,8 @@ async def async_setup_entry(
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_should_poll = False
+
     def __init__(self, entry_data, hass_data, mode, units):
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
@@ -132,11 +134,6 @@ class NWSWeather(WeatherEntity):
             self._forecast = self.nws.forecast_hourly
 
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Entities do not individually poll."""
-        return False
 
     @property
     def attribution(self):

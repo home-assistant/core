@@ -27,7 +27,7 @@ async def test_import_shows_user_step(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -52,7 +52,7 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -60,7 +60,7 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -69,14 +69,14 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "select_location"
 
     # Select location and advance to external auth
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_LOCATION_ID: location.location_id}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "authorize"
     assert result["url"] == format_install_url(app.app_id, location.location_id)
 
@@ -85,7 +85,7 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
 
     # Finish
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["app_id"] == app.app_id
     assert result["data"]["installed_app_id"] == installed_app_id
     assert result["data"]["location_id"] == location.location_id
@@ -123,7 +123,7 @@ async def test_entry_created_from_update_event(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -131,7 +131,7 @@ async def test_entry_created_from_update_event(
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -140,14 +140,14 @@ async def test_entry_created_from_update_event(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "select_location"
 
     # Select location and advance to external auth
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_LOCATION_ID: location.location_id}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "authorize"
     assert result["url"] == format_install_url(app.app_id, location.location_id)
 
@@ -156,7 +156,7 @@ async def test_entry_created_from_update_event(
 
     # Finish
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["app_id"] == app.app_id
     assert result["data"]["installed_app_id"] == installed_app_id
     assert result["data"]["location_id"] == location.location_id
@@ -194,7 +194,7 @@ async def test_entry_created_existing_app_new_oauth_client(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -202,7 +202,7 @@ async def test_entry_created_existing_app_new_oauth_client(
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -211,14 +211,14 @@ async def test_entry_created_existing_app_new_oauth_client(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "select_location"
 
     # Select location and advance to external auth
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_LOCATION_ID: location.location_id}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "authorize"
     assert result["url"] == format_install_url(app.app_id, location.location_id)
 
@@ -227,7 +227,7 @@ async def test_entry_created_existing_app_new_oauth_client(
 
     # Finish
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["app_id"] == app.app_id
     assert result["data"]["installed_app_id"] == installed_app_id
     assert result["data"]["location_id"] == location.location_id
@@ -278,7 +278,7 @@ async def test_entry_created_existing_app_copies_oauth_client(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -286,7 +286,7 @@ async def test_entry_created_existing_app_copies_oauth_client(
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -297,14 +297,14 @@ async def test_entry_created_existing_app_copies_oauth_client(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "select_location"
 
     # Select location and advance to external auth
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_LOCATION_ID: location.location_id}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "authorize"
     assert result["url"] == format_install_url(app.app_id, location.location_id)
 
@@ -313,7 +313,7 @@ async def test_entry_created_existing_app_copies_oauth_client(
 
     # Finish
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["app_id"] == app.app_id
     assert result["data"]["installed_app_id"] == installed_app_id
     assert result["data"]["location_id"] == location.location_id
@@ -370,7 +370,7 @@ async def test_entry_created_with_cloudhook(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["description_placeholders"][
             "webhook_url"
@@ -379,7 +379,7 @@ async def test_entry_created_with_cloudhook(
 
         # Advance to PAT screen
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "pat"
         assert "token_url" in result["description_placeholders"]
         assert "component_url" in result["description_placeholders"]
@@ -388,14 +388,14 @@ async def test_entry_created_with_cloudhook(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: token}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "select_location"
 
         # Select location and advance to external auth
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_LOCATION_ID: location.location_id}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "authorize"
         assert result["url"] == format_install_url(app.app_id, location.location_id)
 
@@ -404,7 +404,7 @@ async def test_entry_created_with_cloudhook(
 
         # Finish
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"]["app_id"] == app.app_id
         assert result["data"]["installed_app_id"] == installed_app_id
         assert result["data"]["location_id"] == location.location_id
@@ -432,7 +432,7 @@ async def test_invalid_webhook_aborts(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "invalid_webhook_url"
     assert result["description_placeholders"][
         "webhook_url"
@@ -448,7 +448,7 @@ async def test_invalid_token_shows_error(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -456,7 +456,7 @@ async def test_invalid_token_shows_error(hass):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -465,7 +465,7 @@ async def test_invalid_token_shows_error(hass):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {CONF_ACCESS_TOKEN: "token_invalid_format"}
@@ -485,7 +485,7 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -493,7 +493,7 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -502,7 +502,7 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {CONF_ACCESS_TOKEN: "token_unauthorized"}
@@ -522,7 +522,7 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -530,7 +530,7 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -539,7 +539,7 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {CONF_ACCESS_TOKEN: "token_forbidden"}
@@ -565,7 +565,7 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -573,7 +573,7 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -582,7 +582,7 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {"base": "webhook_error"}
@@ -607,7 +607,7 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -615,7 +615,7 @@ async def test_api_error_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -624,7 +624,7 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {"base": "app_setup_error"}
@@ -645,7 +645,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -653,7 +653,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -662,7 +662,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {"base": "app_setup_error"}
@@ -679,7 +679,7 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -687,7 +687,7 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -696,7 +696,7 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert result["data_schema"]({}) == {CONF_ACCESS_TOKEN: token}
     assert result["errors"] == {"base": "app_setup_error"}
@@ -721,7 +721,7 @@ async def test_no_available_locations_aborts(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["description_placeholders"][
         "webhook_url"
@@ -729,7 +729,7 @@ async def test_no_available_locations_aborts(
 
     # Advance to PAT screen
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pat"
     assert "token_url" in result["description_placeholders"]
     assert "component_url" in result["description_placeholders"]
@@ -738,5 +738,5 @@ async def test_no_available_locations_aborts(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_ACCESS_TOKEN: token}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_available_locations"

@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -76,7 +77,8 @@ async def async_discover(hass):
     gdm = GDM()
     await hass.async_add_executor_job(gdm.scan)
     for server_data in gdm.entries:
-        await hass.config_entries.flow.async_init(
+        discovery_flow.async_create_flow(
+            hass,
             DOMAIN,
             context={CONF_SOURCE: config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=server_data,

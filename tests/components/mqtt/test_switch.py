@@ -42,11 +42,12 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.switch import common
 
 DEFAULT_CONFIG = {
@@ -107,27 +108,24 @@ async def test_sending_mqtt_commands_and_optimistic(
 ):
     """Test the sending MQTT commands in optimistic mode."""
     fake_state = ha.State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            switch.DOMAIN,
-            {
-                switch.DOMAIN: {
-                    "platform": "mqtt",
-                    "name": "test",
-                    "command_topic": "command-topic",
-                    "payload_on": "beer on",
-                    "payload_off": "beer off",
-                    "qos": "2",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            switch.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": "beer on",
+                "payload_off": "beer off",
+                "qos": "2",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -664,3 +662,12 @@ async def test_setup_manual_entity_from_yaml(hass):
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = switch.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

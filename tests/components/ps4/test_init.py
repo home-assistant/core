@@ -43,7 +43,7 @@ MOCK_DATA = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE]}
 MOCK_FLOW_RESULT = {
     "version": VERSION,
     "handler": DOMAIN,
-    "type": data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
     "title": "test_ps4",
     "data": MOCK_DATA,
     "options": {},
@@ -125,7 +125,7 @@ async def test_creating_entry_sets_up_media_player(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

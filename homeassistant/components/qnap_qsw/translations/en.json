@@ -9,6 +9,12 @@
             "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Password",

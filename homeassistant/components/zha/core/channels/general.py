@@ -365,7 +365,7 @@ class OnOffChannel(ZigbeeChannel):
             should_accept = args[0]
             on_time = args[1]
             # 0 is always accept 1 is only accept when already on
-            if should_accept == 0 or (should_accept == 1 and self._state):
+            if should_accept == 0 or (should_accept == 1 and bool(self.on_off)):
                 if self._off_listener is not None:
                     self._off_listener()
                     self._off_listener = None

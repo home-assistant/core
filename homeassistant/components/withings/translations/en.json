@@ -27,6 +27,10 @@
             "reauth": {
                 "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
                 "title": "Reauthenticate Integration"
+            },
+            "reauth_confirm": {
+                "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
+                "title": "Reauthenticate Integration"
             }
         }
     }

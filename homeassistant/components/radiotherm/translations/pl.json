@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfiguracja platformy klimatycznej Radio Thermostat za pomoc\u0105 YAML zostanie usuni\u0119ta w Home Assistant 2022.9. \n\nTwoja istniej\u0105ca konfiguracja zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. Usu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Radio Thermostat zostanie usuni\u0119ta"
+        }
+    },
     "options": {
         "step": {
             "init": {

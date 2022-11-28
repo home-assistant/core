@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from directv import DIRECTV
 
@@ -98,14 +99,13 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         self._last_update = None
         self._paused = None
         self._program = None
-        self._state = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self._state = await self.dtv.state(self._address)
-        self._attr_available = self._state.available
-        self._is_standby = self._state.standby
-        self._program = self._state.program
+        state = await self.dtv.state(self._address)
+        self._attr_available = state.available
+        self._is_standby = state.standby
+        self._program = state.program
 
         if self._is_standby:
             self._attr_assumed_state = False
@@ -117,7 +117,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._paused = self._last_position == self._program.position
             self._is_recorded = self._program.recorded
             self._last_position = self._program.position
-            self._last_update = self._state.at
+            self._last_update = state.at
             self._attr_assumed_state = self._is_recorded
 
     @property
@@ -278,7 +278,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
 
         return dt_util.as_local(self._program.start_time)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the receiver."""
         if self._is_client:
             raise NotImplementedError()
@@ -286,7 +286,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         _LOGGER.debug("Turn on %s", self.name)
         await self.dtv.remote("poweron", self._address)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the receiver."""
         if self._is_client:
             raise NotImplementedError()
@@ -294,32 +294,34 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         _LOGGER.debug("Turn off %s", self.name)
         await self.dtv.remote("poweroff", self._address)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         _LOGGER.debug("Play on %s", self.name)
         await self.dtv.remote("play", self._address)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         _LOGGER.debug("Pause on %s", self.name)
         await self.dtv.remote("pause", self._address)
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         _LOGGER.debug("Stop on %s", self.name)
         await self.dtv.remote("stop", self._address)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send rewind command."""
         _LOGGER.debug("Rewind on %s", self.name)
         await self.dtv.remote("rew", self._address)
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send fast forward command."""
         _LOGGER.debug("Fast forward on %s", self.name)
         await self.dtv.remote("ffwd", self._address)
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Select input source."""
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error(

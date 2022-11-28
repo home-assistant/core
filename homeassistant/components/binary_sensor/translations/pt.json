@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "a bateria {entity_name} est\u00e1 baixa",
+            "is_co": "{entity_name} est\u00e1 detectando mon\u00f3xido de carbono",
             "is_cold": "{entity_name} est\u00e1 frio",
             "is_connected": "{entity_name} est\u00e1 ligado",
             "is_gas": "{entity_name} est\u00e1 a detectar g\u00e1s",
@@ -89,6 +90,11 @@
             "vibration": "foram detectadas vibra\u00e7\u00f5es em {entity_name}"
         }
     },
+    "device_class": {
+        "heat": "aquecer",
+        "moisture": "humidade",
+        "problem": "problema"
+    },
     "state": {
         "_": {
             "off": "Desligado",
@@ -101,6 +107,9 @@
         "battery_charging": {
             "off": "Sem carregar",
             "on": "A carregar"
+        },
+        "carbon_monoxide": {
+            "on": "Detectado"
         },
         "cold": {
             "off": "Normal",
@@ -178,9 +187,13 @@
             "off": "Limpo",
             "on": "Detectado"
         },
+        "update": {
+            "off": "Actualizado",
+            "on": "Atualiza\u00e7\u00e3o dispon\u00edvel"
+        },
         "vibration": {
             "off": "Limpo",
-            "on": "Detetado"
+            "on": "Detectado"
         },
         "window": {
             "off": "Fechada",

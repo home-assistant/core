@@ -12,6 +12,9 @@
                 "data": {
                     "host": "Nome servidor ou endere\u00e7o IP"
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "Dispositivo WLED descoberto"
             }
         }
     }

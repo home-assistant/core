@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "Arsitektur CPU",
+            "config_dir": "Direktori Konfigurasi",
             "dev": "Pengembangan",
             "docker": "Docker",
             "hassio": "Supervisor",

@@ -1,6 +1,8 @@
 """Support for Homematic thermostats."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     PRESET_BOOST,
@@ -56,11 +58,7 @@ class HMThermostat(HMDevice, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -135,7 +133,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         """Return the target temperature."""
         return self._data.get(self._state)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return None

@@ -25,7 +25,7 @@ async def test_show_form(hass):
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -98,7 +98,7 @@ async def test_create_entry(hass):
 
         result = await flow.async_step_user(user_input=CONFIG)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "Test Name 1"
         assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
 

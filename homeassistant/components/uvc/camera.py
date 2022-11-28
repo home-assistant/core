@@ -86,6 +86,8 @@ def setup_platform(
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
+    _attr_should_poll = True  # Cameras default to False
+
     def __init__(self, camera, uuid, name, password):
         """Initialize an Unifi camera."""
         super().__init__()
@@ -103,11 +105,6 @@ class UnifiVideoCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """If this entity should be polled."""
-        return True
 
     @property
     def supported_features(self):

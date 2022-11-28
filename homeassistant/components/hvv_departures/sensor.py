@@ -1,6 +1,7 @@
 """Sensor platform for hvv."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
@@ -66,7 +67,7 @@ class HVVDepartureSensor(SensorEntity):
         self.gti = hub.gti
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Update the sensor."""
         departure_time = utcnow() + timedelta(
             minutes=self.config_entry.options.get("offset", 0)

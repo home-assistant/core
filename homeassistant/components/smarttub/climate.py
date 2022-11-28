@@ -61,15 +61,11 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_action(self) -> HVACAction | None:

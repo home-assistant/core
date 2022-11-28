@@ -36,6 +36,8 @@ def setup_platform(
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
+    _attr_should_poll = True  # Cameras default to False
+
     def __init__(self, monitor, verify_ssl):
         """Initialize as a subclass of MjpegCamera."""
         super().__init__(
@@ -47,11 +49,6 @@ class ZoneMinderCamera(MjpegCamera):
         self._is_recording = None
         self._is_available = None
         self._monitor = monitor
-
-    @property
-    def should_poll(self):
-        """Update the recording state periodically."""
-        return True
 
     def update(self):
         """Update our recording state from the ZM API."""

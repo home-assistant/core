@@ -1,4 +1,6 @@
 """Config flow for solax integration."""
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -40,7 +42,9 @@ async def validate_api(data) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solax."""
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
         if user_input is None:

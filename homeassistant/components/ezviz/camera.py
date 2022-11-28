@@ -17,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_platform,
+)
 
 from .const import (
     ATTR_DIRECTION,
@@ -93,15 +97,14 @@ async def async_setup_entry(
 
         else:
 
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                    data={
-                        ATTR_SERIAL: camera,
-                        CONF_IP_ADDRESS: value["local_ip"],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    ATTR_SERIAL: camera,
+                    CONF_IP_ADDRESS: value["local_ip"],
+                },
             )
 
             _LOGGER.warning(

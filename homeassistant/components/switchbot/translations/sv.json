@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "no_unconfigured_devices": "Inga okonfigurerade enheter hittades.",
+            "switchbot_unsupported_type": "Switchbot-typ som inte st\u00f6ds.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{name} ({address})",
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Enhetsadress",
+                    "mac": "Enhetens MAC-adress",
+                    "name": "Namn",
+                    "password": "L\u00f6senord"
+                },
+                "title": "Konfigurera Switchbot-enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Antal ompr\u00f6vningar",
+                    "retry_timeout": "Timeout mellan \u00e5terf\u00f6rs\u00f6k",
+                    "scan_timeout": "Hur l\u00e4nge ska man s\u00f6ka efter annonsdata",
+                    "update_time": "Tid mellan uppdateringar (sekunder)"
+                }
+            }
+        }
+    }
+}

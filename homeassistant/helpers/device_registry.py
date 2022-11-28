@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Coroutine
 import logging
 import time
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
@@ -33,10 +34,11 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
+CONNECTION_BLUETOOTH = "bluetooth"
 CONNECTION_NETWORK_MAC = "mac"
 CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
@@ -81,15 +83,16 @@ class DeviceEntry:
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
+    hw_version: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
-    hw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
@@ -164,7 +167,7 @@ def _async_get_device_id_from_index(
     return None
 
 
-class DeviceRegistryStore(storage.Store):
+class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
@@ -202,6 +205,10 @@ class DeviceRegistryStore(storage.Store):
                 # Introduced in 2022.2
                 for device in old_data["devices"]:
                     device["hw_version"] = device.get("hw_version")
+            if old_minor_version < 4:
+                # Introduced in 2022.10
+                for device in old_data["devices"]:
+                    device["serial_number"] = device.get("serial_number")
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -316,13 +323,14 @@ class DeviceRegistry:
         # To disable a device if it gets created
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
+        hw_version: str | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None = None,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
@@ -380,14 +388,15 @@ class DeviceRegistry:
             configuration_url=configuration_url,
             disabled_by=disabled_by,
             entry_type=entry_type,
+            hw_version=hw_version,
             manufacturer=manufacturer,
             merge_connections=connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
+            serial_number=serial_number,
             suggested_area=suggested_area,
             sw_version=sw_version,
-            hw_version=hw_version,
             via_device_id=via_device_id,
         )
 
@@ -406,6 +415,7 @@ class DeviceRegistry:
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
+        hw_version: str | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -414,9 +424,9 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
-        hw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
@@ -490,17 +500,18 @@ class DeviceRegistry:
             old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
+            ("area_id", area_id),
             ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
             ("entry_type", entry_type),
+            ("hw_version", hw_version),
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
             ("name_by_user", name_by_user),
-            ("area_id", area_id),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
-            ("hw_version", hw_version),
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
@@ -569,7 +580,6 @@ class DeviceRegistry:
         deleted_devices = OrderedDict()
 
         if data is not None:
-            data = cast("dict[str, Any]", data)
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     area_id=device["area_id"],
@@ -583,14 +593,15 @@ class DeviceRegistry:
                     entry_type=DeviceEntryType(device["entry_type"])
                     if device["entry_type"]
                     else None,
+                    hw_version=device["hw_version"],
                     id=device["id"],
                     identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
+                    serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
-                    hw_version=device["hw_version"],
                     via_device_id=device["via_device_id"],
                 )
             # Introduced in 0.111
@@ -616,25 +627,26 @@ class DeviceRegistry:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data of device registry to store in a file."""
-        data = {}
+        data: dict[str, list[dict[str, Any]]] = {}
 
         data["devices"] = [
             {
+                "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
+                "configuration_url": entry.configuration_url,
                 "connections": list(entry.connections),
+                "disabled_by": entry.disabled_by,
+                "entry_type": entry.entry_type,
+                "hw_version": entry.hw_version,
+                "id": entry.id,
                 "identifiers": list(entry.identifiers),
                 "manufacturer": entry.manufacturer,
                 "model": entry.model,
-                "name": entry.name,
-                "sw_version": entry.sw_version,
-                "hw_version": entry.hw_version,
-                "entry_type": entry.entry_type,
-                "id": entry.id,
-                "via_device_id": entry.via_device_id,
-                "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
-                "disabled_by": entry.disabled_by,
-                "configuration_url": entry.configuration_url,
+                "name": entry.name,
+                "serial_number": entry.serial_number,
+                "sw_version": entry.sw_version,
+                "via_device_id": entry.via_device_id,
             }
             for entry in self.devices.values()
         ]
@@ -833,7 +845,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup = Debouncer(
+    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
         hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
     )
 

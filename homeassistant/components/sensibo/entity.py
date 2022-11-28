@@ -37,6 +37,8 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
@@ -114,21 +116,21 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo motion entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
         device_id: str,
         sensor_id: str,
         sensor_data: MotionSensor,
-        name: str | None,
     ) -> None:
         """Initiate Sensibo Number."""
         super().__init__(coordinator, device_id)
         self._sensor_id = sensor_id
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
-            name=f"{self.device_data.name} Motion Sensor {name}",
+            name=f"{self.device_data.name} Motion Sensor",
             via_device=(DOMAIN, device_id),
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",

@@ -36,6 +36,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -97,6 +98,80 @@ async def test_run_camera_b64_encoded(
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
+
+    url = hass.states.get("camera.test_camera").attributes["entity_picture"]
+
+    async_fire_mqtt_message(hass, topic, b64encode(b"grass"))
+
+    client = await hass_client_no_auth()
+    resp = await client.get(url)
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "grass"
+
+
+# Using CONF_ENCODING to set b64 encoding for images is deprecated Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
+async def test_legacy_camera_b64_encoded_with_availability(
+    hass, hass_client_no_auth, mqtt_mock_entry_with_yaml_config
+):
+    """Test availability works if b64 encoding (legacy mode) is turned on."""
+    topic = "test/camera"
+    topic_availability = "test/camera_availability"
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "platform": "mqtt",
+                "topic": topic,
+                "name": "Test Camera",
+                "encoding": "b64",
+                "availability": {"topic": topic_availability},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    # Make sure we are available
+    async_fire_mqtt_message(hass, topic_availability, "online")
+
+    url = hass.states.get("camera.test_camera").attributes["entity_picture"]
+
+    async_fire_mqtt_message(hass, topic, b64encode(b"grass"))
+
+    client = await hass_client_no_auth()
+    resp = await client.get(url)
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "grass"
+
+
+async def test_camera_b64_encoded_with_availability(
+    hass, hass_client_no_auth, mqtt_mock_entry_with_yaml_config
+):
+    """Test availability works if b64 encoding is turned on."""
+    topic = "test/camera"
+    topic_availability = "test/camera_availability"
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "platform": "mqtt",
+                "topic": topic,
+                "name": "Test Camera",
+                "encoding": "utf-8",
+                "image_encoding": "b64",
+                "availability": {"topic": topic_availability},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    # Make sure we are available
+    async_fire_mqtt_message(hass, topic_availability, "online")
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 
@@ -346,3 +421,12 @@ async def test_setup_manual_entity_from_yaml(hass):
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = camera.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

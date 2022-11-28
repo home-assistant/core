@@ -80,6 +80,8 @@ async def async_setup_platform(
 class MoldIndicator(SensorEntity):
     """Represents a MoldIndication sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -352,11 +354,6 @@ class MoldIndicator(SensorEntity):
             self._state = f"{int(crit_humidity):d}"
 
         _LOGGER.debug("Mold indicator humidity: %s", self._state)
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def name(self):

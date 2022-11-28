@@ -11,13 +11,12 @@ import requests
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DOMAIN
+from . import DOMAIN
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -105,7 +104,6 @@ class RingCam(RingEntityMixin, Camera):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }

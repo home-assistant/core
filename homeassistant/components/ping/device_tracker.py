@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import subprocess
@@ -13,11 +12,12 @@ import voluptuous as vol
 from homeassistant import const, util
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
 )
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     SCAN_INTERVAL,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -83,7 +83,7 @@ class HostSubProcess:
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Host objects and return the update function."""
@@ -114,7 +114,7 @@ async def async_setup_scanner(
             )
             await asyncio.gather(
                 *(
-                    async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=host.dev_id, source_type=SourceType.ROUTER)
                     for idx, host in enumerate(hosts)
                     if results[idx]
                 )
@@ -133,7 +133,7 @@ async def async_setup_scanner(
             _LOGGER.debug("Multiping responses: %s", responses)
             await asyncio.gather(
                 *(
-                    async_see(dev_id=dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=dev_id, source_type=SourceType.ROUTER)
                     for idx, dev_id in enumerate(ip_to_dev_id.values())
                     if responses[idx].is_alive
                 )

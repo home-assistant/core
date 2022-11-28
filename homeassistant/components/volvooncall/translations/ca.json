@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mutable": "Permet l'engegada / bloqueig / etc, remot.",
+                    "password": "Contrasenya",
+                    "region": "Regi\u00f3",
+                    "scandinavian_miles": "Utilitza milles escandinaves",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configuraci\u00f3 de la plataforma 'Volvo On Call' mitjan\u00e7ant YAML s'eliminar\u00e0 en una versi\u00f3 futura de Home Assistant. \n\nLa configuraci\u00f3 existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Volvo On Call est\u00e0 sent eliminada"
+        }
+    }
+}

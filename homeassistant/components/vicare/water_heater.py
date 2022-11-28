@@ -100,6 +100,7 @@ async def async_setup_entry(
 class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, name, api, circuit, device_config, heating_type):
@@ -196,11 +197,6 @@ class ViCareWater(WaterHeaterEntity):
     def target_temperature_step(self) -> float:
         """Set target temperature step to wholes."""
         return PRECISION_WHOLE
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def current_operation(self):

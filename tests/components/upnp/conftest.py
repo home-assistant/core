@@ -1,7 +1,7 @@
 """Configuration for SSDP tests."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpDevice
@@ -184,7 +184,11 @@ async def mock_config_entry(
 
     # Load config_entry.
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        PropertyMock(return_value=True),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     yield entry

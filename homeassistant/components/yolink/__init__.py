@@ -27,6 +27,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SIREN,
@@ -108,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_coordinator.data = {}
         device_coordinators[device.device_id] = device_coordinator
     hass.data[DOMAIN][entry.entry_id][ATTR_COORDINATORS] = device_coordinators
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

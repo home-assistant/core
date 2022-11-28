@@ -64,6 +64,7 @@ class Touchline(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
@@ -85,19 +86,9 @@ class Touchline(ClimateEntity):
         )
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the climate device."""
         return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

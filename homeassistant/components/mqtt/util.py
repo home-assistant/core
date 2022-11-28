@@ -1,9 +1,13 @@
 """Utility functions for the MQTT integration."""
+
+from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 
 from .const import (
@@ -13,7 +17,15 @@ from .const import (
     ATTR_TOPIC,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
+    DOMAIN,
 )
+
+
+def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
+    """Return true when the MQTT config entry is enabled."""
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        return None
+    return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
 
 
 def valid_topic(value: Any) -> str:

@@ -56,6 +56,8 @@ ATTR_OPTIONS = "options"
 ATTR_TEST_NODE_ID = "test_node_id"
 ATTR_STATUS = "status"
 ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
+ATTR_EVENT_TYPE_LABEL = "event_type_label"
+ATTR_DATA_TYPE_LABEL = "data_type_label"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -118,3 +120,7 @@ ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
+
+# This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
+# your own (https://github.com/zwave-js/firmware-updates/).
+API_KEY_FIRMWARE_UPDATE_SERVICE = "b48e74337db217f44e1e003abb1e9144007d260a17e2b2422e0a45d0eaf6f4ad86f2a9943f17fee6dde343941f238a64"

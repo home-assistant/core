@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mutable": "Autoriser le d\u00e9marrage, le verrouillage, etc. \u00e0 distance",
+                    "password": "Mot de passe",
+                    "region": "R\u00e9gion",
+                    "scandinavian_miles": "Utiliser les miles scandinaves",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

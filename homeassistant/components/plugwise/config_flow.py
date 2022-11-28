@@ -119,6 +119,32 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
+        # This is an Anna, but we already have config entries.
+        # Assuming that the user has already configured Adam, aborting discovery.
+        if self._async_current_entries() and _product == "smile_thermo":
+            return self.async_abort(reason="anna_with_adam")
+
+        # If we have discovered an Adam or Anna, both might be on the network.
+        # In that case, we need to cancel the Anna flow, as the Adam should
+        # be added.
+        for flow in self._async_in_progress():
+            # This is an Anna, and there is already an Adam flow in progress
+            if (
+                _product == "smile_thermo"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_open_therm"
+            ):
+                return self.async_abort(reason="anna_with_adam")
+
+            # This is an Adam, and there is already an Anna flow in progress
+            if (
+                _product == "smile_open_therm"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_thermo"
+                and "flow_id" in flow
+            ):
+                self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
         self.context.update(
             {
                 "title_placeholders": {
@@ -128,6 +154,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: self._username,
                 },
                 "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+                "product": _product,
             }
         )
         return await self.async_step_user()

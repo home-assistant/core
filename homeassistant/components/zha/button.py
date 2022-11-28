@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+
+_ZHAIdentifyButtonSelfT = TypeVar("_ZHAIdentifyButtonSelfT", bound="ZHAIdentifyButton")
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -66,7 +68,7 @@ class ZHAButton(ZhaEntity, ButtonEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this button."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -89,12 +91,12 @@ class ZHAIdentifyButton(ZHAButton):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZHAIdentifyButtonSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZHAIdentifyButtonSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -126,7 +128,7 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this button."""
         super().__init__(unique_id, zha_device, channels, **kwargs)

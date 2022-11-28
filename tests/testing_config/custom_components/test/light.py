@@ -49,7 +49,6 @@ class MockLight(MockToggleEntity, LightEntity):
     rgbw_color = None
     rgbww_color = None
     xy_color = None
-    white_value = None
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -63,7 +62,6 @@ class MockLight(MockToggleEntity, LightEntity):
                 "rgbw_color",
                 "rgbww_color",
                 "color_temp",
-                "white_value",
             ]:
                 setattr(self, key, value)
             if key == "white":

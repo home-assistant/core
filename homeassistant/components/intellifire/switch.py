@@ -5,7 +5,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from intellifire4py import IntellifirePollData
+from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -21,8 +22,8 @@ from .entity import IntellifireEntity
 class IntellifireSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
-    on_fn: Callable[[IntellifireControlAsync], Awaitable]
-    off_fn: Callable[[IntellifireControlAsync], Awaitable]
+    on_fn: Callable[[IntellifireAPILocal], Awaitable]
+    off_fn: Callable[[IntellifireAPILocal], Awaitable]
     value_fn: Callable[[IntellifirePollData], bool]
 
 
@@ -37,24 +38,16 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
     IntellifireSwitchEntityDescription(
         key="on_off",
         name="Flame",
-        on_fn=lambda control_api: control_api.flame_on(
-            fireplace=control_api.default_fireplace
-        ),
-        off_fn=lambda control_api: control_api.flame_off(
-            fireplace=control_api.default_fireplace
-        ),
+        on_fn=lambda control_api: control_api.flame_on(),
+        off_fn=lambda control_api: control_api.flame_off(),
         value_fn=lambda data: data.is_on,
     ),
     IntellifireSwitchEntityDescription(
         key="pilot",
         name="Pilot Light",
         icon="mdi:fire-alert",
-        on_fn=lambda control_api: control_api.pilot_on(
-            fireplace=control_api.default_fireplace
-        ),
-        off_fn=lambda control_api: control_api.pilot_off(
-            fireplace=control_api.default_fireplace
-        ),
+        on_fn=lambda control_api: control_api.pilot_on(),
+        off_fn=lambda control_api: control_api.pilot_off(),
         value_fn=lambda data: data.pilot_on,
     ),
 )
@@ -82,10 +75,12 @@ class IntellifireSwitch(IntellifireEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.on_fn(self.coordinator.control_api)
+        await self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.off_fn(self.coordinator.control_api)
+        await self.async_update_ha_state(force_refresh=True)
 
     @property
     def is_on(self) -> bool | None:

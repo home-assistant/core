@@ -29,7 +29,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
@@ -41,7 +41,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
@@ -53,6 +53,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    get_instance,
     retryable_database_job,
     session_scope,
 )
@@ -209,7 +210,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
     @callback
     def _async_entity_id_changed(event: Event) -> None:
-        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+        get_instance(hass).async_update_statistics_metadata(
             event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
@@ -266,12 +267,14 @@ def _update_or_add_metadata(
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
+        or old_metadata["name"] != new_metadata["name"]
         or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
     ):
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
@@ -575,7 +578,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].items():
+    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
         if not hasattr(platform, "compile_statistics"):
             continue
         compiled: PlatformCompiledStatistics = platform.compile_statistics(
@@ -823,8 +826,12 @@ def list_statistic_ids(
     a recorder platform for statistic_ids which will be added in the next statistics
     period.
     """
-    units = hass.config.units
     result = {}
+
+    def _display_unit(hass: HomeAssistant, unit: str | None) -> str | None:
+        if unit is None:
+            return None
+        return _configured_unit(unit, hass.config.units)
 
     # Query the database
     with session_scope(hass=hass) as session:
@@ -832,39 +839,41 @@ def list_statistic_ids(
             hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
-        for _, meta in metadata.values():
-            if (unit := meta["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            meta["unit_of_measurement"] = unit
-
         result = {
             meta["statistic_id"]: {
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
+                "display_unit_of_measurement": _display_unit(
+                    hass, meta["unit_of_measurement"]
+                ),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
             for _, meta in metadata.values()
         }
 
     # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
             hass, statistic_ids=statistic_ids, statistic_type=statistic_type
         )
 
-        for statistic_id, info in platform_statistic_ids.items():
-            if (unit := info["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
-
-        for key, value in platform_statistic_ids.items():
-            result.setdefault(key, value)
+        for key, meta in platform_statistic_ids.items():
+            if key in result:
+                continue
+            result[key] = {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
+                "name": meta["name"],
+                "source": meta["source"],
+                "display_unit_of_measurement": _display_unit(
+                    hass, meta["unit_of_measurement"]
+                ),
+                "unit_of_measurement": meta["unit_of_measurement"],
+            }
 
     # Return a list of statistic_id + metadata
     return [
@@ -874,7 +883,8 @@ def list_statistic_ids(
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
-            "unit_of_measurement": info["unit_of_measurement"],
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
+            "statistics_unit_of_measurement": info["unit_of_measurement"],
         }
         for _id, info in result.items()
     ]
@@ -1338,7 +1348,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "validate_statistics"):
             continue
         platform_validation.update(platform.validate_statistics(hass))
@@ -1361,6 +1371,54 @@ def _statistics_exists(
 
 
 @callback
+def _async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    for statistic in statistics:
+        start = statistic["start"]
+        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+            raise HomeAssistantError("Naive timestamp")
+        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+            raise HomeAssistantError("Invalid timestamp")
+        statistic["start"] = dt_util.as_utc(start)
+
+        if "last_reset" in statistic and statistic["last_reset"] is not None:
+            last_reset = statistic["last_reset"]
+            if (
+                last_reset.tzinfo is None
+                or last_reset.tzinfo.utcoffset(last_reset) is None
+            ):
+                raise HomeAssistantError("Naive timestamp")
+            statistic["last_reset"] = dt_util.as_utc(last_reset)
+
+    # Insert job in recorder's queue
+    get_instance(hass).async_import_statistics(metadata, statistics)
+
+
+@callback
+def async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Import hourly statistics from an internal source.
+
+    This inserts an import_statistics job in the recorder's queue.
+    """
+    if not valid_entity_id(metadata["statistic_id"]):
+        raise HomeAssistantError("Invalid statistic_id")
+
+    # The source must not be empty and must be aligned with the statistic_id
+    if not metadata["source"] or metadata["source"] != DOMAIN:
+        raise HomeAssistantError("Invalid source")
+
+    _async_import_statistics(hass, metadata, statistics)
+
+
+@callback
 def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
@@ -1368,7 +1426,7 @@ def async_add_external_statistics(
 ) -> None:
     """Add hourly statistics from an external source.
 
-    This inserts an add_external_statistics job in the recorder's queue.
+    This inserts an import_statistics job in the recorder's queue.
     """
     # The statistic_id has same limitations as an entity_id, but with a ':' as separator
     if not valid_statistic_id(metadata["statistic_id"]):
@@ -1379,16 +1437,7 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    for statistic in statistics:
-        start = statistic["start"]
-        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
-        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
-        statistic["start"] = dt_util.as_utc(start)
-
-    # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+    _async_import_statistics(hass, metadata, statistics)
 
 
 def _filter_unique_constraint_integrity_error(
@@ -1432,12 +1481,12 @@ def _filter_unique_constraint_integrity_error(
 
 
 @retryable_database_job("statistics")
-def add_external_statistics(
+def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> bool:
-    """Process an add_external_statistics job."""
+    """Process an import_statistics job."""
 
     with session_scope(
         session=instance.get_session(),

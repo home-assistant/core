@@ -5,13 +5,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import zabbix
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .. import zabbix
 
 _LOGGER = logging.getLogger(__name__)
 

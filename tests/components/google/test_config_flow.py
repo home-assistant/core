@@ -242,7 +242,7 @@ async def test_code_error(
     mock_code_flow: Mock,
     component_setup: ComponentSetup,
 ) -> None:
-    """Test successful creds setup."""
+    """Test server error setting up the oauth flow."""
     assert await component_setup()
 
     with patch(
@@ -254,6 +254,25 @@ async def test_code_error(
         )
         assert result.get("type") == "abort"
         assert result.get("reason") == "oauth_error"
+
+
+async def test_timeout_error(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test timeout error setting up the oauth flow."""
+    assert await component_setup()
+
+    with patch(
+        "homeassistant.components.google.api.OAuth2WebServerFlow.step1_get_device_and_user_codes",
+        side_effect=TimeoutError(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result.get("type") == "abort"
+        assert result.get("reason") == "timeout_connect"
 
 
 @pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(seconds=50)])

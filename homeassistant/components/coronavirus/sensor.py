@@ -53,7 +53,7 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
         self.info_type = info_type
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and (
             self.country in self.coordinator.data or self.country == OPTION_WORLDWIDE

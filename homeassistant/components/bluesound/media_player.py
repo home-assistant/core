@@ -6,6 +6,7 @@ from asyncio import CancelledError
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 from urllib import parse
 
 import aiohttp
@@ -22,6 +23,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
@@ -333,7 +335,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             )
             raise
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update internal status of the entity."""
         if not self._is_online:
             return
@@ -930,12 +932,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         while sleep > 0:
             sleep = await self.async_increase_timer()
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         value = "1" if shuffle else "0"
         return await self.send_bluesound_command(f"/Shuffle?state={value}")
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.is_grouped and not self.is_master:
             return
@@ -958,14 +960,14 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(url)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Clear")
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -978,7 +980,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(cmd)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -991,35 +993,37 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(cmd)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Play")
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Pause")
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Pause")
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -1036,21 +1040,21 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(url)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol >= 1:
             return
         return await self.async_set_volume_level(current_vol + 0.01)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol <= 0:
             return
         return await self.async_set_volume_level(current_vol - 0.01)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
         if volume < 0:
             volume = 0
@@ -1058,13 +1062,15 @@ class BluesoundPlayer(MediaPlayerEntity):
             volume = 1
         return await self.send_bluesound_command(f"Volume?level={float(volume) * 100}")
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
         if mute:
             return await self.send_bluesound_command("Volume?mute=1")
         return await self.send_bluesound_command("Volume?mute=0")
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,

@@ -44,10 +44,6 @@ NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapp
 )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
 
@@ -78,6 +74,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return NUMBER_MODES.from_esphome(self._static_info.mode)
         return NumberMode.AUTO
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def native_value(self) -> float | None:
         """Return the state of the entity."""

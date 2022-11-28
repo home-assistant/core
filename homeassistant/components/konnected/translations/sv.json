@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan.",
+            "cannot_connect": "Det gick inte att ansluta.",
             "not_konn_panel": "Inte en erk\u00e4nd Konnected.io-enhet",
             "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
         },
@@ -15,6 +16,7 @@
                 "title": "Konnected-enheten redo"
             },
             "import_confirm": {
+                "description": "En ansluten larmpanel med ID {id} har uppt\u00e4ckts i configuration.yaml. Detta fl\u00f6de l\u00e5ter dig importera det till en konfigurationspost.",
                 "title": "Importera Konnected enhet"
             },
             "user": {
@@ -31,6 +33,7 @@
             "not_konn_panel": "Inte en erk\u00e4nd Konnected.io-enhet"
         },
         "error": {
+            "bad_host": "Ogiltig \u00e5sidos\u00e4tt API-v\u00e4rd-URL",
             "one": "Tom",
             "other": "Tomma"
         },
@@ -83,7 +86,10 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Blinka p\u00e5 panel-LED n\u00e4r du skickar tillst\u00e5nds\u00e4ndring"
+                    "api_host": "\u00c5sidos\u00e4tt API-v\u00e4rdens URL",
+                    "blink": "Blinka p\u00e5 panel-LED n\u00e4r du skickar tillst\u00e5nds\u00e4ndring",
+                    "discovery": "Svara p\u00e5 uppt\u00e4cktsf\u00f6rfr\u00e5gningar i ditt n\u00e4tverk",
+                    "override_api_host": "\u00c5sidos\u00e4tt standardwebbadress f\u00f6r Home Assistant API-v\u00e4rdpanel"
                 },
                 "description": "V\u00e4lj \u00f6nskat beteende f\u00f6r din panel",
                 "title": "Konfigurera \u00d6vrigt"
@@ -92,6 +98,7 @@
                 "data": {
                     "activation": "Utdata n\u00e4r den \u00e4r p\u00e5",
                     "momentary": "Pulsvarighet (ms) (valfritt)",
+                    "more_states": "Konfigurera ytterligare tillst\u00e5nd f\u00f6r denna zon",
                     "name": "Namn (valfritt)",
                     "pause": "Paus mellan pulser (ms) (valfritt)",
                     "repeat": "G\u00e5nger att upprepa (-1=o\u00e4ndligt) (tillval)"

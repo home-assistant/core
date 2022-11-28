@@ -80,6 +80,7 @@ ABBREVIATIONS = {
     "hs_stat_t": "hs_state_topic",
     "hs_val_tpl": "hs_value_template",
     "ic": "icon",
+    "img_e": "image_encoding",
     "init": "initial",
     "hum_cmd_t": "target_humidity_command_topic",
     "hum_cmd_tpl": "target_humidity_command_template",
@@ -98,6 +99,7 @@ ABBREVIATIONS = {
     "min_mirs": "min_mireds",
     "max_temp": "max_temp",
     "min_temp": "min_temp",
+    "mode": "mode",
     "mode_cmd_tpl": "mode_command_template",
     "mode_cmd_t": "mode_command_topic",
     "mode_stat_t": "mode_state_topic",
@@ -262,6 +264,7 @@ DEVICE_ABBREVIATIONS = {
     "name": "name",
     "mf": "manufacturer",
     "mdl": "model",
+    "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
 }

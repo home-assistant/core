@@ -230,7 +230,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -296,7 +296,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
@@ -328,7 +328,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert "errors" not in result
 
 
@@ -362,7 +362,7 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(request_app_key.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

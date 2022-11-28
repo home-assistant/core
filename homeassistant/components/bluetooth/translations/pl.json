@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "no_adapters": "Nie znaleziono nieskonfigurowanych adapter\u00f3w Bluetooth"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Czy chcesz skonfigurowa\u0107 Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Urz\u0105dzenie"
+                },
+                "description": "Wybierz urz\u0105dzenie do skonfigurowania"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Adapter Bluetooth u\u017cywany do skanowania",
+                    "passive": "Skanowanie pasywne"
+                }
+            }
+        }
+    }
+}

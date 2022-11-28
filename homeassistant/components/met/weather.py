@@ -6,7 +6,6 @@ from typing import Any
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -21,12 +20,9 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_INCHES,
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
-    PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -34,19 +30,9 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
 
 from . import MetDataUpdateCoordinator
-from .const import (
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_MAP,
-    CONDITIONS_MAP,
-    CONF_TRACK_HOME,
-    DOMAIN,
-    FORECAST_MAP,
-)
+from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 ATTRIBUTION = (
     "Weather forecast from met.no, delivered by the Norwegian "
@@ -85,6 +71,12 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_has_entity_name = True
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
@@ -120,7 +112,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         name = self._config.get(CONF_NAME)
         name_appendix = ""
         if self._hourly:
-            name_appendix = " Hourly"
+            name_appendix = " hourly"
 
         if name is not None:
             return f"{name}{name_appendix}"
@@ -144,27 +136,18 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         return format_condition(condition)
 
     @property
-    def temperature(self) -> float | None:
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_TEMPERATURE]
         )
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self) -> float | None:
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        pressure_hpa = self.coordinator.data.current_weather_data.get(
+        return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_PRESSURE]
         )
-        if self._is_metric or pressure_hpa is None:
-            return pressure_hpa
-
-        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
 
     @property
     def humidity(self) -> float | None:
@@ -174,18 +157,11 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         )
 
     @property
-    def wind_speed(self) -> float | None:
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        speed_km_h = self.coordinator.data.current_weather_data.get(
+        return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
         )
-        if self._is_metric or speed_km_h is None:
-            return speed_km_h
-
-        speed_mi_h = convert_speed(
-            speed_km_h, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
-        )
-        return int(round(speed_mi_h))
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -206,7 +182,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
-        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
+        required_keys = {"temperature", ATTR_FORECAST_TIME}
         ha_forecast: list[Forecast] = []
         for met_item in met_forecast:
             if not set(met_item).issuperset(required_keys):
@@ -216,14 +192,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
                 for k, v in FORECAST_MAP.items()
                 if met_item.get(v) is not None
             }
-            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
-                if ha_item[ATTR_FORECAST_PRECIPITATION] is not None:
-                    precip_inches = convert_distance(
-                        ha_item[ATTR_FORECAST_PRECIPITATION],
-                        LENGTH_MILLIMETERS,
-                        LENGTH_INCHES,
-                    )
-                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]

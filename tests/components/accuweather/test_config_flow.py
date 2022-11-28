@@ -25,7 +25,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
@@ -134,7 +134,7 @@ async def test_create_entry(hass):
             data=VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "abcd"
         assert result["data"][CONF_NAME] == "abcd"
         assert result["data"][CONF_LATITUDE] == 55.55
@@ -171,14 +171,14 @@ async def test_options_flow(hass):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_FORECAST: True}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_FORECAST: True}
 
         await hass.async_block_till_done()

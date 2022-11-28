@@ -9,6 +9,9 @@
                     "host": "Host",
                     "name": "Nome"
                 },
+                "data_description": {
+                    "host": "L'indirizzo IP o il nome host dell'installazione di P1 Monitor."
+                },
                 "description": "Configura P1 Monitor per l'integrazione con Home Assistant."
             }
         }

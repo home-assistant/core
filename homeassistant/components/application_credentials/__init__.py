@@ -168,7 +168,7 @@ async def async_import_client_credential(
     hass: HomeAssistant,
     domain: str,
     credential: ClientCredential,
-    auth_domain: str = None,
+    auth_domain: str | None = None,
 ) -> None:
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:

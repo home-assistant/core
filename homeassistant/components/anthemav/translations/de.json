@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "cannot_receive_deviceinfo": "MAC-Adresse konnte nicht abgerufen werden. Stelle sicher, dass das Ger\u00e4t eingeschaltet ist."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration von Anthem A/V-Receivern mit YAML wird entfernt.\n\nDeine bestehende YAML-Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert.\n\nEntferne die Anthem A/V Receivers YAML Konfiguration aus deiner configuration.yaml Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die YAML-Konfiguration von Anthem A/V Receivers wird entfernt"
+        }
+    }
+}

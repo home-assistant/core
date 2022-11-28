@@ -157,7 +157,7 @@ class DiscogsSensor(SensorEntity):
 
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Set state to the amount of records in user's collection."""
         if self.entity_description.key == SENSOR_COLLECTION_TYPE:
             self._attr_native_value = self._discogs_data["collection_count"]

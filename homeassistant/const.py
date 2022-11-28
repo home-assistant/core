@@ -6,7 +6,7 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -262,7 +262,6 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
-CONF_WHITE_VALUE: Final = "white_value"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -608,10 +607,12 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 # Speed units
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
+SPEED_FEET_PER_SECOND: Final = "ft/s"
 SPEED_INCHES_PER_DAY: Final = "in/d"
 SPEED_METERS_PER_SECOND: Final = "m/s"
 SPEED_INCHES_PER_HOUR: Final = "in/h"
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+SPEED_KNOTS: Final = "kn"
 SPEED_MILES_PER_HOUR: Final = "mph"
 
 # Signal_strength units

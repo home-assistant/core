@@ -40,7 +40,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         self._attr_name = name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon."""
         if not self.available or self.current_option == ACTIVITY_POWER_OFF:
             return "mdi:remote-tv-off"
@@ -52,7 +52,7 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         return [ACTIVITY_POWER_OFF] + sorted(self._data.activity_names)
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return the current activity."""
         _, activity_name = self._data.current_activity
         return activity_name
@@ -61,18 +61,19 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         """Change the current activity."""
         await self._data.async_start_activity(option)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-
-        callbacks = {
-            "connected": self.async_got_connected,
-            "disconnected": self.async_got_disconnected,
-            "activity_starting": self._async_activity_update,
-            "activity_started": self._async_activity_update,
-            "config_updated": None,
-        }
-
-        self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
+        self.async_on_remove(
+            self._data.async_subscribe(
+                HarmonyCallback(
+                    connected=self.async_got_connected,
+                    disconnected=self.async_got_disconnected,
+                    activity_starting=self._async_activity_update,
+                    activity_started=self._async_activity_update,
+                    config_updated=None,
+                )
+            )
+        )
 
     @callback
     def _async_activity_update(self, activity_info: tuple):

@@ -46,6 +46,7 @@ from .const import (
 from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+    _lutron_model_to_device_type,
 )
 from .models import LutronCasetaData
 from .util import serial_to_unique_id
@@ -143,8 +144,6 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
-    await _async_migrate_unique_ids(hass, config_entry)
-
     try:
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -167,6 +166,7 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(f"Cannot connect to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
+    await _async_migrate_unique_ids(hass, config_entry)
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
@@ -188,7 +188,7 @@ async def async_setup_entry(
         bridge, bridge_device, button_devices
     )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -215,10 +215,10 @@ def _async_register_button_devices(
     config_entry_id: str,
     bridge_device,
     button_devices_by_id: dict[int, dict],
-) -> dict[str, dr.DeviceEntry]:
+) -> dict[str, dict]:
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = dr.async_get(hass)
-    button_devices_by_dr_id = {}
+    button_devices_by_dr_id: dict[str, dict] = {}
     seen = set()
 
     for device in button_devices_by_id.values():
@@ -226,7 +226,7 @@ def _async_register_button_devices(
             continue
         seen.add(device["serial"])
         area, name = _area_and_name_from_name(device["name"])
-        device_args = {
+        device_args: dict[str, Any] = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
@@ -246,8 +246,21 @@ def _async_register_button_devices(
 def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
     """Return the area and name from the devices internal name."""
     if "_" in device_name:
-        return device_name.split("_", 1)
+        area_device_name = device_name.split("_", 1)
+        return area_device_name[0], area_device_name[1]
     return UNASSIGNED_AREA, device_name
+
+
+@callback
+def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
+    """Get the LIP button for a given LEAP button."""
+    if (
+        lip_buttons_name_to_num := DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    ) is None or (
+        leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
+    ) is None:
+        return None
+    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
 
 
 @callback
@@ -269,23 +282,10 @@ def _async_subscribe_pico_remote_events(
         else:
             action = ACTION_RELEASE
 
-        type_ = device["type"]
+        type_ = _lutron_model_to_device_type(device["model"], device["type"])
         area, name = _area_and_name_from_name(device["name"])
-        button_number = device["button_number"]
-        # The original implementation used LIP instead of LEAP
-        # so we need to convert the button number to maintain compat
-        sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
-        leap_button_to_sub_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[type_]
-        if (sub_type := leap_button_to_sub_type.get(button_number)) is None:
-            _LOGGER.error(
-                "Unknown LEAP button number %s is not in %s for %s (%s)",
-                button_number,
-                leap_button_to_sub_type,
-                name,
-                type_,
-            )
-            return
-        lip_button_number = sub_type_to_lip_button[sub_type]
+        leap_button_number = device["button_number"]
+        lip_button_number = async_get_lip_button(type_, leap_button_number)
         hass_device = dev_reg.async_get_device({(DOMAIN, device["serial"])})
 
         hass.bus.async_fire(
@@ -294,7 +294,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_SERIAL: device["serial"],
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
-                ATTR_LEAP_BUTTON_NUMBER: button_number,
+                ATTR_LEAP_BUTTON_NUMBER: leap_button_number,
                 ATTR_DEVICE_NAME: name,
                 ATTR_DEVICE_ID: hass_device.id,
                 ATTR_AREA_NAME: area,
@@ -343,7 +343,7 @@ class LutronCasetaDevice(Entity):
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
@@ -358,6 +358,12 @@ class LutronCasetaDevice(Entity):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
+    def _handle_none_serial(self, serial: str | None) -> str | int:
+        """Handle None serial returned by RA3 and QSX processors."""
+        if serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return serial
+
     @property
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
@@ -369,9 +375,9 @@ class LutronCasetaDevice(Entity):
         return self._device["serial"]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
-        return str(self.serial)
+        return str(self._handle_none_serial(self.serial))
 
     @property
     def extra_state_attributes(self):
@@ -382,13 +388,13 @@ class LutronCasetaDevice(Entity):
 class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
     """A lutron_caseta entity that can update by syncing data from the bridge."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
 
 
-def _id_to_identifier(lutron_id: str) -> None:
+def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
     """Convert a lutron caseta identifier to a device identifier."""
     return (DOMAIN, lutron_id)
 

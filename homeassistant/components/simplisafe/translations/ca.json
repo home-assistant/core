@@ -3,10 +3,13 @@
         "abort": {
             "already_configured": "Aquest compte SimpliSafe ja est\u00e0 en \u00fas.",
             "email_2fa_timed_out": "S'ha esgotat el temps d'espera de l'autenticaci\u00f3 de dos factors a trav\u00e9s de correu electr\u00f2nic.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "wrong_account": "Les credencials d'usuari proporcionades no coincideixen amb les d'aquest compte SimpliSafe."
         },
         "error": {
+            "identifier_exists": "Compte ja est\u00e0 registrat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_auth_code_length": "Els codis d'autoritzaci\u00f3 de SimpliSafe tenen una longitud de 45 car\u00e0cters",
             "unknown": "Error inesperat"
         },
         "progress": {
@@ -28,10 +31,11 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Codi d'autoritzaci\u00f3",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix el teu nom d'usuari i contrasenya."
+                "description": "SimpliSafe autentica els seus usuaris a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) abans de comen\u00e7ar.\n\nQuan ja estiguis, fes clic [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web de SimpliSafe i introdueix les teves credencials. Si ja has iniciat sessi\u00f3 a SimpliSafe a trav\u00e9s del navegador, potser hauries d'obrir una nova pestanya i copiar-hi l'URL de dalt.\n\nQuan el proc\u00e9s s'hagi completat, torna aqu\u00ed i introdueix, a sota, el codi d'autoritzaci\u00f3 de l'URL `com.simplisafe.mobile`."
             }
         }
     },

@@ -38,7 +38,7 @@ class PlugwiseSelectEntityDescription(
 SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
-        name="Thermostat Schedule",
+        name="Thermostat schedule",
         icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, opt, STATE_ON),
         current_option="selected_schedule",
@@ -46,7 +46,7 @@ SELECT_TYPES = (
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
-        name="Regulation Mode",
+        name="Regulation mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
@@ -92,7 +92,6 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = (f"{self.device['name']} {entity_description.name}").lstrip()
 
     @property
     def current_option(self) -> str:

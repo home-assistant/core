@@ -45,7 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_config_schema(
-    hass: core.HomeAssistant, source: str | None, input_dict: dict[str, Any] = None
+    hass: core.HomeAssistant,
+    source: str | None,
+    input_dict: dict[str, Any] | None = None,
 ) -> vol.Schema:
     """
     Return schema defaults for init step based on user input/config dict.
@@ -99,7 +101,9 @@ class TomorrowioOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize Tomorrow.io options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Tomorrow.io options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -134,7 +138,9 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TomorrowioOptionsConfigFlow(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

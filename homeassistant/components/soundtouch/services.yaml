@@ -1,6 +1,6 @@
 play_everywhere:
   name: Play everywhere
-  description: Play on all Bose Soundtouch devices.
+  description: Play on all Bose SoundTouch devices.
   fields:
     master:
       name: Master
@@ -13,7 +13,7 @@ play_everywhere:
 
 create_zone:
   name: Create zone
-  description: Create a Soundtouch multi-room zone.
+  description: Create a SoundTouch multi-room zone.
   fields:
     master:
       name: Master
@@ -35,7 +35,7 @@ create_zone:
 
 add_zone_slave:
   name: Add zone slave
-  description: Add a slave to a Soundtouch multi-room zone.
+  description: Add a slave to a SoundTouch multi-room zone.
   fields:
     master:
       name: Master
@@ -57,7 +57,7 @@ add_zone_slave:
 
 remove_zone_slave:
   name: Remove zone slave
-  description: Remove a slave from the Soundtouch multi-room zone.
+  description: Remove a slave from the SoundTouch multi-room zone.
   fields:
     master:
       name: Master

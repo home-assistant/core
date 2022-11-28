@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from base64 import b64decode
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -17,17 +18,21 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .util import valid_subscribe_topic
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_IMAGE_ENCODING = "image_encoding"
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -40,20 +45,41 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
+
+# Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9
+# use CONF_IMAGE_ENCODING instead, support for the work-a-round will be removed with Home Assistant 2022.11
+def repair_legacy_encoding(config: ConfigType) -> ConfigType:
+    """Check incorrect deprecated config of image encoding."""
+    if config[CONF_ENCODING] == "b64":
+        config[CONF_IMAGE_ENCODING] = "b64"
+        config[CONF_ENCODING] = DEFAULT_ENCODING
+        _LOGGER.warning(
+            "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
+        )
+    return config
+
+
+PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Camera under the camera platform key is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
-    warn_for_legacy_schema(camera.DOMAIN),
+PLATFORM_SCHEMA_MODERN = vol.All(
+    PLATFORM_SCHEMA_BASE.schema,
+    repair_legacy_encoding,
 )
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Camera under the camera platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_BASE.schema),
+    warn_for_legacy_schema(camera.DOMAIN),
+    repair_legacy_encoding,
+)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -80,9 +106,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT camera through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, camera.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, camera.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -91,8 +115,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Camera."""
     async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
 
@@ -122,7 +150,7 @@ class MqttCamera(MqttEntity, Camera):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            if self._config[CONF_ENCODING] == "b64":
+            if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
                 self._last_image = msg.payload

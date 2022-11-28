@@ -255,6 +255,29 @@ async def test_restore_state(hass):
     assert float(state.state) == 10
 
 
+async def test_restore_invalid_state(hass):
+    """Ensure an invalid restore state is handled."""
+    mock_restore_cache(
+        hass, (State("input_number.b1", "="), State("input_number.b2", "200"))
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"b1": {"min": 2, "max": 100}, "b2": {"min": 10, "max": 100}}},
+    )
+
+    state = hass.states.get("input_number.b1")
+    assert state
+    assert float(state.state) == 2
+
+    state = hass.states.get("input_number.b2")
+    assert state
+    assert float(state.state) == 10
+
+
 async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(

@@ -1,7 +1,7 @@
 """Support for ASUSWRT routers."""
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -69,9 +69,9 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.is_connected
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str | None:

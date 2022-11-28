@@ -140,15 +140,15 @@ class Enigma2Device(MediaPlayerEntity):
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if the device is available."""
         return not self.e2_box.is_offline
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.e2_box.turn_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.e2_box.turn_on()
 
@@ -187,15 +187,15 @@ class Enigma2Device(MediaPlayerEntity):
         """Picon url for the channel."""
         return self.e2_box.picon_url
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.e2_box.set_volume(int(volume * 100))
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
 
@@ -204,27 +204,27 @@ class Enigma2Device(MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         return self.e2_box.volume
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self.e2_box.set_stop()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Play media."""
         self.e2_box.toggle_play_pause()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause the media player."""
         self.e2_box.toggle_play_pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self.e2_box.set_channel_up()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send next track command."""
         self.e2_box.set_channel_down()
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
         self.e2_box.mute_volume()
 
@@ -238,11 +238,11 @@ class Enigma2Device(MediaPlayerEntity):
         """List of available input sources."""
         return self.e2_box.source_list
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.e2_box.select_source(self.e2_box.sources[source])
 
-    def update(self):
+    def update(self) -> None:
         """Update state of the media_player."""
         self.e2_box.update()
 

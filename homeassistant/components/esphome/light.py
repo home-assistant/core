@@ -122,10 +122,6 @@ def _filter_color_modes(
     return [mode for mode in supported if mode & features]
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     """A light implementation for ESPHome."""
 
@@ -134,6 +130,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         """Return whether the client supports the new color mode system natively."""
         return self._api_version >= APIVersion(1, 6)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
@@ -263,11 +260,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["transition_length"] = kwargs[ATTR_TRANSITION]
         await self._client.light_command(**data)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return round(self._state.brightness * 255)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
@@ -278,6 +277,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         return _color_mode_to_ha(self._state.color_mode)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
@@ -294,6 +294,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             round(self._state.blue * self._state.color_brightness * 255),
         )
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
@@ -301,6 +302,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         rgb = cast("tuple[int, int, int]", self.rgb_color)
         return (*rgb, white)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value [int, int, int, int, int]."""
@@ -328,11 +330,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             round(self._state.warm_white * 255),
         )
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def color_temp(self) -> float | None:  # type: ignore[override]
         """Return the CT color value in mireds."""
         return self._state.color_temperature
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def effect(self) -> str | None:
         """Return the current effect."""

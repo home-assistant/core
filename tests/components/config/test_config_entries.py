@@ -1075,7 +1075,7 @@ async def test_ignore_flow(hass, hass_ws_client):
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         await ws_client.send_json(
             {

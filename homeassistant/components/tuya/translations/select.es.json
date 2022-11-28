@@ -55,8 +55,8 @@
         "tuya__humidifier_moodlighting": {
             "1": "Estado de \u00e1nimo 1",
             "2": "Estado de \u00e1nimo 2",
-            "3": "Estado 3",
-            "4": "Estado 4",
+            "3": "Estado de \u00e1nimo 3",
+            "4": "Estado de \u00e1nimo 4",
             "5": "Estado de \u00e1nimo 5"
         },
         "tuya__humidifier_spray_mode": {
@@ -68,7 +68,7 @@
         },
         "tuya__ipc_work_mode": {
             "0": "Modo de bajo consumo",
-            "1": "Modo de trabajo continuo"
+            "1": "Modo de funcionamiento continuo"
         },
         "tuya__led_type": {
             "halogen": "Hal\u00f3geno",
@@ -78,7 +78,7 @@
         "tuya__light_mode": {
             "none": "Apagado",
             "pos": "Indicar la ubicaci\u00f3n del interruptor",
-            "relay": "Indica el estado de encendido / apagado"
+            "relay": "Indicar el estado de encendido/apagado del interruptor"
         },
         "tuya__motion_sensitivity": {
             "0": "Sensibilidad baja",
@@ -90,15 +90,15 @@
             "2": "Grabaci\u00f3n continua"
         },
         "tuya__relay_status": {
-            "last": "Recuerda el \u00faltimo estado",
-            "memory": "Recuerda el \u00faltimo estado",
+            "last": "Recordar el \u00faltimo estado",
+            "memory": "Recordar el \u00faltimo estado",
             "off": "Apagado",
             "on": "Encendido",
             "power_off": "Apagado",
             "power_on": "Encendido"
         },
         "tuya__vacuum_cistern": {
-            "closed": "Cerrado",
+            "closed": "Cerrada",
             "high": "Alto",
             "low": "Bajo",
             "middle": "Medio"
@@ -125,7 +125,7 @@
             "single": "\u00danico",
             "smart": "Inteligente",
             "spiral": "Espiral",
-            "standby": "Standby",
+            "standby": "En espera",
             "wall_follow": "Seguir Muro",
             "zone": "Zona"
         }

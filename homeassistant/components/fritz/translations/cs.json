@@ -10,6 +10,7 @@
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

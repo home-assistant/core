@@ -135,7 +135,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def is_on(self) -> bool | None:

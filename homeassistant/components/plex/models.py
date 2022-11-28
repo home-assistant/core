@@ -157,7 +157,7 @@ class PlexMediaSearchResult:
 
     @property
     def offset(self) -> int:
-        """Provide the appropriate offset based on payload contents."""
+        """Provide the appropriate offset in ms based on payload contents."""
         if offset := self._params.get("offset", 0):
             return offset * 1000
         resume = self._params.get("resume", False)

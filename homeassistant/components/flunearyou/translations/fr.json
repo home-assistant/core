@@ -16,5 +16,10 @@
                 "title": "Configurer Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "title": "Flu Near You n'est plus disponible"
+        }
     }
 }

@@ -41,7 +41,10 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_particulate_matter_2_5"
     assert state.state == "3.14"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Particulate Matter < 2.5 μm"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Air quality Particulate matter < 2.5 μm"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -56,7 +59,10 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_particulate_matter_10"
     assert state.state == "5.24"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Particulate Matter < 10 μm"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Air quality Particulate matter < 10 μm"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -71,7 +77,9 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_sulphur_dioxide"
     assert state.state == "0.031"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sulphur Dioxide (SO2)"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Air quality Sulphur dioxide (SO2)"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -86,7 +94,9 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_nitrogen_dioxide"
     assert state.state == "0.66"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Nitrogen Dioxide (NO2)"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Air quality Nitrogen dioxide (NO2)"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -101,7 +111,7 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_ozone"
     assert state.state == "17.067"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Ozone"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Air quality Ozone"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -117,7 +127,9 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_carbon_monoxide"
     assert state.state == "0.105"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Carbon Monoxide (CO)"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Air quality Carbon monoxide (CO)"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -131,7 +143,10 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_air_quality_index"
     assert state.state == "13"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Air Quality Index (AQI)"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Air quality Air quality index (AQI)"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -142,7 +157,7 @@ async def test_air_quality(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_air_quality")}
     assert device_entry.manufacturer == "Ambee"
-    assert device_entry.name == "Air Quality"
+    assert device_entry.name == "Air quality"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
@@ -163,7 +178,7 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_grass"
     assert state.state == "190"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Grass Pollen"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Grass"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
@@ -178,7 +193,7 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_tree"
     assert state.state == "127"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Tree Pollen"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Tree"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
@@ -193,7 +208,7 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_weed"
     assert state.state == "95"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Weed Pollen"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Weed"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
@@ -209,7 +224,7 @@ async def test_pollen(
     assert entry.unique_id == f"{entry_id}_pollen_grass_risk"
     assert state.state == "high"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Grass Pollen Risk"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Grass risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -221,7 +236,7 @@ async def test_pollen(
     assert entry.unique_id == f"{entry_id}_pollen_tree_risk"
     assert state.state == "moderate"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Tree Pollen Risk"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Tree risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree"
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -233,7 +248,7 @@ async def test_pollen(
     assert entry.unique_id == f"{entry_id}_pollen_weed_risk"
     assert state.state == "high"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Weed Pollen Risk"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pollen Weed risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -286,20 +301,20 @@ async def test_pollen_disabled_by_default(
 @pytest.mark.parametrize(
     "key,icon,name,value",
     [
-        ("grass_poaceae", "mdi:grass", "Poaceae Grass Pollen", "190"),
-        ("tree_alder", "mdi:tree", "Alder Tree Pollen", "0"),
-        ("tree_birch", "mdi:tree", "Birch Tree Pollen", "35"),
-        ("tree_cypress", "mdi:tree", "Cypress Tree Pollen", "0"),
-        ("tree_elm", "mdi:tree", "Elm Tree Pollen", "0"),
-        ("tree_hazel", "mdi:tree", "Hazel Tree Pollen", "0"),
-        ("tree_oak", "mdi:tree", "Oak Tree Pollen", "55"),
-        ("tree_pine", "mdi:tree", "Pine Tree Pollen", "30"),
-        ("tree_plane", "mdi:tree", "Plane Tree Pollen", "5"),
-        ("tree_poplar", "mdi:tree", "Poplar Tree Pollen", "0"),
-        ("weed_chenopod", "mdi:sprout", "Chenopod Weed Pollen", "0"),
-        ("weed_mugwort", "mdi:sprout", "Mugwort Weed Pollen", "1"),
-        ("weed_nettle", "mdi:sprout", "Nettle Weed Pollen", "88"),
-        ("weed_ragweed", "mdi:sprout", "Ragweed Weed Pollen", "3"),
+        ("grass_poaceae", "mdi:grass", "Poaceae grass", "190"),
+        ("tree_alder", "mdi:tree", "Alder tree", "0"),
+        ("tree_birch", "mdi:tree", "Birch tree", "35"),
+        ("tree_cypress", "mdi:tree", "Cypress tree", "0"),
+        ("tree_elm", "mdi:tree", "Elm tree", "0"),
+        ("tree_hazel", "mdi:tree", "Hazel tree", "0"),
+        ("tree_oak", "mdi:tree", "Oak tree", "55"),
+        ("tree_pine", "mdi:tree", "Pine tree", "30"),
+        ("tree_plane", "mdi:tree", "Plane tree", "5"),
+        ("tree_poplar", "mdi:tree", "Poplar tree", "0"),
+        ("weed_chenopod", "mdi:sprout", "Chenopod weed", "0"),
+        ("weed_mugwort", "mdi:sprout", "Mugwort weed", "1"),
+        ("weed_nettle", "mdi:sprout", "Nettle weed", "88"),
+        ("weed_ragweed", "mdi:sprout", "Ragweed weed", "3"),
     ],
 )
 async def test_pollen_enable_disable_by_defaults(
@@ -335,7 +350,7 @@ async def test_pollen_enable_disable_by_defaults(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_{key}"
     assert state.state == value
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == name
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == f"Pollen {name}"
     assert state.attributes.get(ATTR_ICON) == icon
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (

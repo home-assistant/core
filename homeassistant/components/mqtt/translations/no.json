@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" trippel klikket"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Manuelt konfigurert MQTT {platform} (er) funnet under plattformn\u00f8kkelen ` {platform} `. \n\n Flytt konfigurasjonen til `mqtt`-integrasjonsn\u00f8kkelen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet. Se [dokumentasjonen]( {more_info_url} ), for mer informasjon.",
+            "title": "Din manuelt konfigurerte MQTT {platform} (er) trenger oppmerksomhet"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Ugyldig f\u00f8dselsemne.",

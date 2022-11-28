@@ -33,14 +33,14 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_TIMESTEP: 1}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_TIMESTEP] == 1
     assert entry.options[CONF_TIMESTEP] == 1

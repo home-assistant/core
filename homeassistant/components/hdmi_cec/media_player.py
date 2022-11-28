@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
@@ -83,69 +84,69 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Send playback status to CEC adapter."""
         self._device.async_send_command(CecCommand(key, dst=self._logical_address))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         self.send_keypress(KEY_MUTE_TOGGLE)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Go to previous track."""
         self.send_keypress(KEY_BACKWARD)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
 
-    def clear_playlist(self):
+    def clear_playlist(self) -> None:
         """Clear players playlist."""
         raise NotImplementedError()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._state = STATE_OFF
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Stop playback."""
         self.send_keypress(KEY_STOP)
         self._state = STATE_IDLE
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Not supported."""
         raise NotImplementedError()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Skip to next track."""
         self.send_keypress(KEY_FORWARD)
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Not supported."""
         raise NotImplementedError()
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         raise NotImplementedError()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause playback."""
         self.send_keypress(KEY_PAUSE)
         self._state = STATE_PAUSED
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Not supported."""
         raise NotImplementedError()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Start playback."""
         self.send_keypress(KEY_PLAY)
         self._state = STATE_PLAYING
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume."""
         _LOGGER.debug("%s: volume up", self._logical_address)
         self.send_keypress(KEY_VOLUME_UP)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume."""
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
@@ -155,7 +156,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Cache state of device."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update device status."""
         device = self._device
         if device.power_status in [POWER_OFF, 3]:

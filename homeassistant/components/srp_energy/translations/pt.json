@@ -5,12 +5,14 @@
         },
         "error": {
             "cannot_connect": "Falha na liga\u00e7\u00e3o",
+            "invalid_account": "O ID da conta deve ser um n\u00famero de 9 d\u00edgitos",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
+                    "id": "ID da conta",
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
                 }

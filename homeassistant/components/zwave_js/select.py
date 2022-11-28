@@ -82,7 +82,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         key = next(
             key
@@ -133,7 +133,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         # We know we can assert because this value is part of the discovery schema
         assert self._tones_value

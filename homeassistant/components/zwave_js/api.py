@@ -11,6 +11,7 @@ import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
+    ExclusionStrategy,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -153,7 +154,7 @@ STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requested_security_classes"
 
 FEATURE = "feature"
-UNPROVISION = "unprovision"
+STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
@@ -414,7 +415,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
-    websocket_api.async_register_command(hass, websocket_get_firmware_update_progress)
+    websocket_api.async_register_command(
+        hass, websocket_is_node_firmware_update_in_progress
+    )
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
     )
@@ -422,7 +425,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_get_firmware_update_capabilities
     )
     websocket_api.async_register_command(
-        hass, websocket_get_any_firmware_update_progress
+        hass, websocket_is_any_ota_firmware_update_in_progress
     )
     websocket_api.async_register_command(hass, websocket_check_for_config_updates)
     websocket_api.async_register_command(hass, websocket_install_config_update)
@@ -478,12 +481,12 @@ async def websocket_network_status(
             "sdk_version": controller.sdk_version,
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
-            "is_secondary": controller.is_secondary,
+            "is_primary": controller.is_primary,
             "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
-            "is_static_update_controller": controller.is_static_update_controller,
-            "is_slave": controller.is_slave,
+            "is_suc": controller.is_suc,
+            "node_type": controller.node_type,
             "firmware_version": controller.firmware_version,
             "manufacturer_id": controller.manufacturer_id,
             "product_id": controller.product_id,
@@ -1054,7 +1057,7 @@ async def websocket_stop_exclusion(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(UNPROVISION): bool,
+        vol.Optional(STRATEGY): vol.Coerce(ExclusionStrategy),
     }
 )
 @websocket_api.async_response
@@ -1104,7 +1107,7 @@ async def websocket_remove_node(
         controller.on("node removed", node_removed),
     ]
 
-    result = await controller.async_begin_exclusion(msg.get(UNPROVISION))
+    result = await controller.async_begin_exclusion(msg.get(STRATEGY))
     connection.send_result(
         msg[ID],
         result,
@@ -1874,21 +1877,21 @@ async def websocket_abort_firmware_update(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_firmware_update_progress",
+        vol.Required(TYPE): "zwave_js/is_node_firmware_update_in_progress",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_node
-async def websocket_get_firmware_update_progress(
+async def websocket_is_node_firmware_update_in_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
     node: Node,
 ) -> None:
-    """Get whether firmware update is in progress."""
-    connection.send_result(msg[ID], await node.async_get_firmware_update_progress())
+    """Get whether firmware update is in progress for given node."""
+    connection.send_result(msg[ID], await node.async_is_firmware_update_in_progress())
 
 
 def _get_firmware_update_progress_dict(
@@ -1995,14 +1998,14 @@ async def websocket_get_firmware_update_capabilities(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_any_firmware_update_progress",
+        vol.Required(TYPE): "zwave_js/is_any_ota_firmware_update_in_progress",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_entry
-async def websocket_get_any_firmware_update_progress(
+async def websocket_is_any_ota_firmware_update_in_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
@@ -2012,7 +2015,7 @@ async def websocket_get_any_firmware_update_progress(
 ) -> None:
     """Get whether any firmware updates are in progress."""
     connection.send_result(
-        msg[ID], await driver.controller.async_get_any_firmware_update_progress()
+        msg[ID], await driver.controller.async_is_any_ota_firmware_update_in_progress()
     )
 
 

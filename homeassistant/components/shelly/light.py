@@ -215,7 +215,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.mode == "color":
-            if hasattr(self.block, "white"):
+            if self.wrapper.model in RGBW_MODELS:
                 return ColorMode.RGBW
             return ColorMode.RGB
 

@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "CPU \u67b6\u69cb",
+            "config_dir": "\u8a2d\u5b9a\u76ee\u9304",
             "dev": "\u958b\u767c\u7248",
             "docker": "Docker",
             "hassio": "Supervisor",

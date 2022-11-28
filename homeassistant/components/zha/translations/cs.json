@@ -69,5 +69,8 @@
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
             "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
+    },
+    "options": {
+        "flow_title": "ZHA: {name}"
     }
 }

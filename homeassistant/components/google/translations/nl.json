@@ -8,7 +8,8 @@
             "invalid_access_token": "Ongeldig toegangstoken",
             "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
             "oauth_error": "Ongeldige tokengegevens ontvangen.",
-            "reauth_successful": "Herauthenticatie geslaagd"
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "timeout_connect": "Time-out bij het maken van verbinding"
         },
         "create_entry": {
             "default": "Authenticatie geslaagd"
@@ -27,6 +28,11 @@
                 "description": "De Google Agenda-integratie moet uw account opnieuw verifi\u00ebren",
                 "title": "Integratie herauthenticeren"
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De Google Calendar YAML-configuratie wordt verwijderd"
         }
     },
     "options": {

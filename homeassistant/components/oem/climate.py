@@ -64,6 +64,7 @@ class ThermostatDevice(ClimateEntity):
 
     _attr_hvac_modes = SUPPORT_HVAC
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
@@ -92,11 +93,6 @@ class ThermostatDevice(ClimateEntity):
     def name(self):
         """Return the name of this Thermostat."""
         return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_action(self) -> HVACAction:

@@ -19,8 +19,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
+from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .entity import CharacteristicEntity, HomeKitEntity
 
 OUTLET_IN_USE = "outlet_in_use"
 
@@ -47,6 +48,12 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
+        icon="mdi:lock-open",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
+        name="Lock Physical Controls",
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -147,11 +154,11 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the device if any."""
-        if prefix := super().name:
-            return f"{prefix} {self.entity_description.name}"
-        return self.entity_description.name
+        if name := self.accessory.name:
+            return f"{name} {self.entity_description.name}"
+        return f"{self.entity_description.name}"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""

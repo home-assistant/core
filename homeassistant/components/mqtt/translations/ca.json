@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" clicat tres vegades"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "S'ha trobat el MQTT {platform}(s) sota el codi de la integraci\u00f3 `{platform}`.\n\nSi us plau, moveu la configuraci\u00f3 a la integraci\u00f3 `mqtt`i reinicieu el Home Assistant per solucionar aquesta incid\u00e8ncia. Vegeu la [documentaci\u00f3]({more_info_url}) per a m\u00e9s informaci\u00f3.",
+            "title": "El MQTT {platform}(s) configurat manualment necessita la vostra atenci\u00f3"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Topic del missatge de naixement inv\u00e0lid.",

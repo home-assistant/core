@@ -1,13 +1,15 @@
 """A risco entity base class."""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import RiscoDataUpdateCoordinator
 
-def binary_sensor_unique_id(risco, zone_id):
+
+def binary_sensor_unique_id(risco, zone_id: int) -> str:
     """Return unique id for the binary sensor."""
     return f"{risco.site_uuid}_zone_{zone_id}"
 
 
-class RiscoEntity(CoordinatorEntity):
+class RiscoEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
     """Risco entity base class."""
 
     def _get_data_from_coordinator(self):

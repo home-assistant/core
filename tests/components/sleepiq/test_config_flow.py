@@ -46,7 +46,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
 
@@ -67,7 +67,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SLEEPIQ_CONFIG
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": error}
 
@@ -90,7 +90,7 @@ async def test_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
     assert len(mock_setup_entry.mock_calls) == 1
@@ -128,5 +128,5 @@ async def test_reauth_password(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

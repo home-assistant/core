@@ -31,25 +31,25 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="smr_version",
-        name="DSMR Version",
+        name="DSMR version",
         icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="meter_model",
-        name="Smart Meter Model",
+        name="Smart meter model",
         icon="mdi:gauge",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_ssid",
-        name="Wifi SSID",
+        name="Wi-Fi SSID",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_strength",
-        name="Wifi Strength",
+        name="Wi-Fi strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -58,65 +58,79 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         key="total_power_import_t1_kwh",
-        name="Total Power Import T1",
+        name="Total power import T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_import_t2_kwh",
-        name="Total Power Import T2",
+        name="Total power import T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t1_kwh",
-        name="Total Power Export T1",
+        name="Total power export T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="total_power_export_t2_kwh",
-        name="Total Power Export T2",
+        name="Total power export T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="active_power_w",
-        name="Active Power",
+        name="Active power",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l1_w",
-        name="Active Power L1",
+        name="Active power L1",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l2_w",
-        name="Active Power L2",
+        name="Active power L2",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="active_power_l3_w",
-        name="Active Power L3",
+        name="Active power L3",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="total_gas_m3",
-        name="Total Gas",
+        name="Total gas",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="active_liter_lpm",
+        name="Active water usage",
+        native_unit_of_measurement="l/min",
+        icon="mdi:water",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="total_liter_m3",
+        name="Total water usage",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        icon="mdi:gauge",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -139,6 +153,8 @@ async def async_setup_entry(
 class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorEntity):
     """Representation of a HomeWizard Sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
@@ -152,7 +168,6 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         self.entry = entry
 
         # Config attributes.
-        self._attr_name = f"{entry.title} {description.name}"
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 

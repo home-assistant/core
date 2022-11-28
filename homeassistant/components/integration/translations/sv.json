@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Integrationsmetod",
+                    "name": "Namn",
+                    "round": "Precision",
+                    "source": "Ing\u00e5ngssensor",
+                    "unit_prefix": "Metriskt prefix",
+                    "unit_time": "Tidsenhet"
+                },
+                "data_description": {
+                    "round": "Anger antal decimaler i resultatet.",
+                    "unit_prefix": "Utdata kommer att skalas enligt det valda metriska prefixet.",
+                    "unit_time": "Utg\u00e5ngen kommer att skalas enligt den valda tidsenheten."
+                },
+                "description": "Skapa en sensor som ber\u00e4knar en Riemanns summa f\u00f6r att uppskatta integralen av en sensor.",
+                "title": "L\u00e4gg till Riemann summa integral sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Precision"
+                },
+                "data_description": {
+                    "round": "Anger antal decimaler i resultatet."
+                }
+            }
+        }
+    },
+    "title": "Integration - Riemann summa integral sensor"
+}

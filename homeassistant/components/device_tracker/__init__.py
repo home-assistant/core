@@ -26,6 +26,7 @@ from .const import (  # noqa: F401
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
     SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from .legacy import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -33,7 +34,9 @@ from .legacy import (  # noqa: F401
     SERVICE_SEE,
     SERVICE_SEE_PAYLOAD_SCHEMA,
     SOURCE_TYPES,
+    AsyncSeeCallback,
     DeviceScanner,
+    SeeCallback,
     async_setup_integration as async_setup_legacy_integration,
     see,
 )
@@ -47,6 +50,14 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
+
+    # We need to add the component here break the deadlock
+    # when setting up integrations from config entries as
+    # they would otherwise wait for the device tracker to be
+    # setup and thus the config entries would not be able to
+    # setup their platforms.
+    hass.config.components.add(DOMAIN)
+
     await async_setup_legacy_integration(hass, config)
 
     return True

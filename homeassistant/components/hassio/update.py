@@ -101,7 +101,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug]
 
     @property
-    def auto_update(self):
+    def auto_update(self) -> bool:
         """Return true if auto-update is enabled for the add-on."""
         return self._addon_data[ATTR_AUTO_UPDATE]
 
@@ -159,7 +159,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     async def async_install(
         self,
         version: str | None = None,
-        backup: bool | None = False,
+        backup: bool = False,
         **kwargs: Any,
     ) -> None:
         """Install an update."""

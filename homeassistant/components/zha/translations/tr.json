@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "{name} kurulumunu yapmak istiyor musunuz?"
             },
+            "confirm_hardware": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radyo Tipi"
@@ -46,10 +49,13 @@
             "title": "Alarm Kontrol Paneli Se\u00e7enekleri"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Her zaman XY renk modunu tercih edin",
             "consider_unavailable_battery": "Pille \u00e7al\u0131\u015fan ayg\u0131tlar\u0131n kullan\u0131lamad\u0131\u011f\u0131n\u0131 g\u00f6z \u00f6n\u00fcnde bulundurun (saniye)",
             "consider_unavailable_mains": "\u015eebekeyle \u00e7al\u0131\u015fan ayg\u0131tlar\u0131n kullan\u0131lamad\u0131\u011f\u0131n\u0131 g\u00f6z \u00f6n\u00fcnde bulundurun (saniye)",
             "default_light_transition": "Varsay\u0131lan \u0131\u015f\u0131k ge\u00e7i\u015f s\u00fcresi (saniye)",
             "enable_identify_on_join": "Cihazlar a\u011fa kat\u0131ld\u0131\u011f\u0131nda tan\u0131mlama efektini etkinle\u015ftir",
+            "enhanced_light_transition": "Kapal\u0131 durumdan geli\u015fmi\u015f \u0131\u015f\u0131k rengi/s\u0131cakl\u0131\u011f\u0131 ge\u00e7i\u015fini etkinle\u015ftirme",
+            "light_transitioning_flag": "I\u015f\u0131k ge\u00e7i\u015fi s\u0131ras\u0131nda geli\u015fmi\u015f parlakl\u0131k kayd\u0131r\u0131c\u0131s\u0131n\u0131 etkinle\u015ftirin",
             "title": "Genel Se\u00e7enekler"
         }
     },

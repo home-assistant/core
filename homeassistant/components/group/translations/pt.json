@@ -1,10 +1,36 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "title": "Adicionar Grupo"
+            },
+            "fan": {
+                "title": "Adicionar Grupo"
+            },
+            "light": {
+                "title": "Adicionar Grupo"
+            },
             "media_player": {
                 "data": {
-                    "entities": "Membros",
-                    "name": "Nome"
+                    "entities": "Membros"
+                },
+                "title": "Adicionar Grupo"
+            },
+            "switch": {
+                "title": "Adicionar Grupo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "fan": {
+                "data": {
+                    "hide_members": "Esconder membros"
+                }
+            },
+            "switch": {
+                "data": {
+                    "hide_members": "Esconder membros"
                 }
             }
         }

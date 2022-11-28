@@ -158,7 +158,7 @@ async def test_entry_diagnostics(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",

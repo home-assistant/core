@@ -33,6 +33,8 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, switch_type, switch_name, tm_client, name):
         """Initialize the Transmission switch."""
         self._name = switch_name
@@ -52,11 +54,6 @@ class TransmissionSwitch(SwitchEntity):
     def unique_id(self):
         """Return the unique id of the entity."""
         return f"{self._tm_client.api.host}-{self.name}"
-
-    @property
-    def should_poll(self):
-        """Poll for status regularly."""
-        return False
 
     @property
     def is_on(self):

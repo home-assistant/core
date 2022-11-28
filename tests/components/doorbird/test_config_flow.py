@@ -43,7 +43,7 @@ async def test_user_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     doorbirdapi = _get_mock_doorbirdapi_return_values(
@@ -188,7 +188,7 @@ async def test_form_zeroconf_correct_oui(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -251,7 +251,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_doorbird_device"
 
 
@@ -271,7 +271,7 @@ async def test_form_user_cannot_connect(hass):
             VALID_CONFIG,
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -312,12 +312,12 @@ async def test_options_flow(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_EVENTS: "eventa,   eventc,    eventq"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_EVENTS: ["eventa", "eventc", "eventq"]}

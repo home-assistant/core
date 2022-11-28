@@ -42,12 +42,12 @@ SENSOR_TYPE_USER_TOTAL = "total"
 CDC_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_CDC_LEVEL,
-        name="CDC Level",
+        name="CDC level",
         icon="mdi:biohazard",
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_CDC_LEVEL2,
-        name="CDC Level 2",
+        name="CDC level 2",
         icon="mdi:biohazard",
     ),
 )
@@ -55,49 +55,49 @@ CDC_SENSOR_DESCRIPTIONS = (
 USER_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_CHICK,
-        name="Avian Flu Symptoms",
+        name="Avian flu symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_DENGUE,
-        name="Dengue Fever Symptoms",
+        name="Dengue fever symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_FLU,
-        name="Flu Symptoms",
+        name="Flu symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_LEPTO,
-        name="Leptospirosis Symptoms",
+        name="Leptospirosis symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_NO_SYMPTOMS,
-        name="No Symptoms",
+        name="No symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_SYMPTOMS,
-        name="Flu-like Symptoms",
+        name="Flu-like symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_TOTAL,
-        name="Total Symptoms",
+        name="Total symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
@@ -132,6 +132,8 @@ async def async_setup_entry(
 
 class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

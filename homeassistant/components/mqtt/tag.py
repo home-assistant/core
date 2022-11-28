@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -128,7 +128,6 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
 
-        @callback
         async def tag_scanned(msg: ReceiveMessage) -> None:
             tag_id = self._value_template(msg.payload, "").strip()
             if not tag_id:  # No output from template, ignore

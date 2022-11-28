@@ -2,8 +2,15 @@
   "domain": "lametric",
   "name": "LaMetric",
   "documentation": "https://www.home-assistant.io/integrations/lametric",
-  "requirements": ["lmnotify==0.0.4"],
+  "requirements": ["demetriek==0.2.2"],
   "codeowners": ["@robbiet480", "@frenck"],
-  "iot_class": "cloud_push",
-  "loggers": ["lmnotify"]
+  "iot_class": "local_polling",
+  "dependencies": ["application_credentials"],
+  "loggers": ["demetriek"],
+  "config_flow": true,
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:LaMetric:1"
+    }
+  ]
 }

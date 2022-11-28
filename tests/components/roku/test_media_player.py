@@ -68,7 +68,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
-    STATE_HOME,
     STATE_IDLE,
     STATE_ON,
     STATE_PAUSED,
@@ -195,7 +194,7 @@ async def test_availability(
         mock_roku.update.side_effect = None
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_HOME
+        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
 
 
 async def test_supported_features(
@@ -253,7 +252,7 @@ async def test_attributes(
     """Test attributes."""
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert state.state == STATE_HOME
+    assert state.state == STATE_IDLE
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
     assert state.attributes.get(ATTR_APP_ID) is None

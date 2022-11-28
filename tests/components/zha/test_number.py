@@ -133,7 +133,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
-        == "FakeManufacturer FakeModel e769900a analog_output PWM1"
+        == "FakeManufacturer FakeModel Number PWM1"
     )
 
     # change value from device
@@ -210,7 +210,7 @@ async def test_level_control_number(
         Platform.NUMBER,
         zha_device,
         hass,
-        qualifier=attr,
+        qualifier=attr.replace("_", ""),
     )
     assert entity_id is not None
 

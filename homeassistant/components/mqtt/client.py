@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -15,6 +15,7 @@ import uuid
 
 import attr
 import certifi
+from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -23,8 +24,9 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, HassJob, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -59,6 +61,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .util import mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -95,6 +98,10 @@ async def async_publish(
 ) -> None:
     """Publish message to a MQTT topic."""
 
+    if DATA_MQTT not in hass.data or not mqtt_config_entry_enabled(hass):
+        raise HomeAssistantError(
+            f"Cannot publish to topic '{topic}', MQTT is not enabled"
+        )
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -174,6 +181,10 @@ async def async_subscribe(
 
     Call the return value to unsubscribe.
     """
+    if DATA_MQTT not in hass.data or not mqtt_config_entry_enabled(hass):
+        raise HomeAssistantError(
+            f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
+        )
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
@@ -236,7 +247,7 @@ class Subscription:
 
     topic: str = attr.ib()
     matcher: Any = attr.ib()
-    job: HassJob = attr.ib()
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str | None = attr.ib(default="utf-8")
 
@@ -315,9 +326,11 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
-        self._paho_lock = asyncio.Lock()
+        self._cleanup_on_unload: list[Callable] = []
 
-        self._pending_operations: dict[str, asyncio.Event] = {}
+        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
+        self._pending_operations: dict[int, asyncio.Event] = {}
+        self._pending_operations_condition = asyncio.Condition()
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -330,6 +343,19 @@ class MQTT:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
+
+        async def async_stop_mqtt(_event: Event):
+            """Stop MQTT component."""
+            await self.async_disconnect()
+
+        self._cleanup_on_unload.append(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
+        )
+
+    def cleanup(self):
+        """Clean up listeners."""
+        while self._cleanup_on_unload:
+            self._cleanup_on_unload.pop()()
 
     def init_client(self):
         """Initialize paho client."""
@@ -405,12 +431,21 @@ class MQTT:
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
+        def no_more_acks() -> bool:
+            """Return False if there are unprocessed ACKs."""
+            return not bool(self._pending_operations)
+
+        # wait for ACK-s to be processesed (unsubscribe only)
+        async with self._pending_operations_condition:
+            await self._pending_operations_condition.wait_for(no_more_acks)
+
+        # stop the MQTT loop
         await self.hass.async_add_executor_job(stop)
 
     async def async_subscribe(
         self,
         topic: str,
-        msg_callback: MessageCallbackType,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
         qos: int,
         encoding: str | None = None,
     ) -> Callable[[], None]:
@@ -440,7 +475,7 @@ class MQTT:
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
-            # Only unsubscribe if currently connected.
+            # Only unsubscribe if currently connected
             if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
 
@@ -451,18 +486,22 @@ class MQTT:
 
         This method is a coroutine.
         """
+
+        def _client_unsubscribe(topic: str) -> int:
+            result: int | None = None
+            result, mid = self._mqttc.unsubscribe(topic)
+            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+            _raise_on_error(result)
+            return mid
+
         if any(other.topic == topic for other in self.subscriptions):
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
 
         async with self._paho_lock:
-            result: int | None = None
-            result, mid = await self.hass.async_add_executor_job(
-                self._mqttc.unsubscribe, topic
-            )
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
-            _raise_on_error(result)
-        await self._wait_for_mid(mid)
+            mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
+            await self._register_mid(mid)
+            self.hass.async_create_task(self._wait_for_mid(mid))
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
@@ -559,15 +598,15 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @lru_cache(2048)
-    def _matching_subscriptions(self, topic):
-        subscriptions = []
+    def _matching_subscriptions(self, topic: str) -> list[Subscription]:
+        subscriptions: list[Subscription] = []
         for subscription in self.subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg) -> None:
+    def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
         _LOGGER.debug(
             "Received message on %s%s: %s",
             msg.topic,
@@ -610,13 +649,17 @@ class MQTT:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
-    @callback
-    def _mqtt_handle_mid(self, mid) -> None:
+    async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         self._pending_operations[mid].set()
+
+    async def _register_mid(self, mid: int) -> None:
+        """Create Event for an expected ACK."""
+        async with self._pending_operations_condition:
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
@@ -629,12 +672,11 @@ class MQTT:
             result_code,
         )
 
-    async def _wait_for_mid(self, mid):
+    async def _wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
@@ -642,7 +684,10 @@ class MQTT:
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
-            del self._pending_operations[mid]
+            async with self._pending_operations_condition:
+                # Cleanup ACK sync buffer
+                del self._pending_operations[mid]
+                self._pending_operations_condition.notify_all()
 
     async def _discovery_cooldown(self):
         now = time.time()

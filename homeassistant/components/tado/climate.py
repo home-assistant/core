@@ -213,6 +213,8 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(
         self,
         tado,
@@ -366,11 +368,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         self._tado.set_presence(preset_mode)
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def target_temperature_step(self):

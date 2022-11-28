@@ -126,7 +126,7 @@ class BroadlinkDevice:
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         # Forward entry setup to related domains.
-        self.hass.config_entries.async_setup_platforms(
+        await self.hass.config_entries.async_forward_entry_setups(
             config, get_domains(self.api.type)
         )
 

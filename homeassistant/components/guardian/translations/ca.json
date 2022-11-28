@@ -17,5 +17,18 @@
                 "description": "Configura un dispositiu Elexa Guardian local."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualitza totes les automatitzacions o 'scripts' que utilitzin aquest servei perqu\u00e8 passin a utilitzar el servei `{alternate_service}` amb un ID d'entitat objectiu o 'target' `{alternate_target}`. Despr\u00e9s, fes clic a ENVIAR per marcar aquest problema com a resolt.",
+                        "title": "El servei {deprecated_service} est\u00e0 sent eliminat"
+                    }
+                }
+            },
+            "title": "El servei {deprecated_service} est\u00e0 sent eliminat"
+        }
     }
 }

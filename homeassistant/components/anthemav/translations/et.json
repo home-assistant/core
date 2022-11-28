@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "cannot_receive_deviceinfo": "MAC-aadressi toomine eba\u00f5nnestus. Veendu, et seade oleks sisse l\u00fclitatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Anthem A/V-vastuv\u00f5tjate konfigureerimine YAML-i abil eemaldatakse. \n\n Teie olemasolev YAML-i konfiguratsioon imporditi kasutajaliidesesse automaatselt. \n\n Selle probleemi lahendamiseks eemaldage failist configuration.yaml konfiguratsioon Anthem A/V Receivers YAML ja taask\u00e4ivitage Home Assistant.",
+            "title": "Anthem A/V-vastuv\u00f5tjate YAML-konfiguratsioon eemaldatakse"
+        }
+    }
+}

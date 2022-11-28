@@ -52,6 +52,7 @@ components: &components
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
@@ -87,6 +88,7 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/repairs/**
   - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**

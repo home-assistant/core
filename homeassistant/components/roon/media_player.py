@@ -76,6 +76,7 @@ async def async_setup_entry(
 class RoonDevice(MediaPlayerEntity):
     """Representation of an Roon device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.GROUPING
@@ -294,11 +295,6 @@ class RoonDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return the id of this roon client."""
         return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     @property
     def zone_id(self):

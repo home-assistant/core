@@ -15,6 +15,7 @@ from async_upnp_client.utils import CaseInsensitiveDict
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import (
@@ -161,17 +162,16 @@ class YeelightScanner:
     def _async_discovered_by_ssdp(self, response: CaseInsensitiveDict) -> None:
         @callback
         def _async_start_flow(*_) -> None:
-            asyncio.create_task(
-                self._hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_SSDP},
-                    data=ssdp.SsdpServiceInfo(
-                        ssdp_usn="",
-                        ssdp_st=SSDP_ST,
-                        ssdp_headers=response,
-                        upnp={},
-                    ),
-                )
+            discovery_flow.async_create_flow(
+                self._hass,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_SSDP},
+                data=ssdp.SsdpServiceInfo(
+                    ssdp_usn="",
+                    ssdp_st=SSDP_ST,
+                    ssdp_headers=response,
+                    upnp={},
+                ),
             )
 
         # Delay starting the flow in case the discovery is the result

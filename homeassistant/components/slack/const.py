@@ -15,3 +15,5 @@ DATA_CLIENT = "client"
 DEFAULT_NAME = "Slack"
 DEFAULT_TIMEOUT_SECONDS = 15
 DOMAIN: Final = "slack"
+
+DATA_HASS_CONFIG = "slack_hass_config"

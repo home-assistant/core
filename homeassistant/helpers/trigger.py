@@ -5,11 +5,17 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_ENABLED,
+    CONF_ID,
+    CONF_PLATFORM,
+    CONF_VARIABLES,
+)
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -25,6 +31,35 @@ _PLATFORM_ALIASES = {
     "device_automation": ("device",),
     "homeassistant": ("event", "numeric_state", "state", "time_pattern", "time"),
 }
+
+
+class TriggerActionType(Protocol):
+    """Protocol type for trigger action callback."""
+
+    async def __call__(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+    ) -> None:
+        """Define action callback type."""
+
+
+class TriggerData(TypedDict):
+    """Trigger data."""
+
+    id: str
+    idx: str
+    alias: str | None
+
+
+class TriggerInfo(TypedDict):
+    """Information about trigger."""
+
+    domain: str
+    name: str
+    home_assistant_start: bool
+    variables: TemplateVarsType
+    trigger_data: TriggerData
 
 
 async def _async_get_trigger_platform(
@@ -93,11 +128,6 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    from homeassistant.components.automation import (  # pylint:disable=[import-outside-toplevel]
-        AutomationTriggerData,
-        AutomationTriggerInfo,
-    )
-
     triggers = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
@@ -107,8 +137,9 @@ async def async_initialize_triggers(
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"
-        trigger_data = AutomationTriggerData(id=trigger_id, idx=trigger_idx)
-        info = AutomationTriggerInfo(
+        trigger_alias = conf.get(CONF_ALIAS)
+        trigger_data = TriggerData(id=trigger_id, idx=trigger_idx, alias=trigger_alias)
+        info = TriggerInfo(
             domain=domain,
             name=name,
             home_assistant_start=home_assistant_start,

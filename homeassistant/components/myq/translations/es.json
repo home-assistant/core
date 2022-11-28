@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "MyQ ya est\u00e1 configurado",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -15,14 +15,14 @@
                     "password": "Contrase\u00f1a"
                 },
                 "description": "La contrase\u00f1a de {username} ya no es v\u00e1lida.",
-                "title": "Reautenticar tu cuenta MyQ"
+                "title": "Volver a autenticar tu cuenta MyQ"
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
-                "title": "Conectar con el Gateway "
+                "title": "Conectar a la puerta de enlace MyQ"
             }
         }
     }

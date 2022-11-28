@@ -19,5 +19,18 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_service": {
+      "title": "The speedtest service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The speedtest service is being removed",
+            "description": "Update any automations or scripts that use this service to instead use the `homeassistant.update_entity` service with a target Speedtest entity_id. Then, click SUBMIT below to mark this issue as resolved."
+          }
+        }
+      }
+    }
   }
 }

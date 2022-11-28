@@ -16,5 +16,18 @@
                 "title": "Configure Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The external data source powering the Flu Near You integration is no longer available; thus, the integration no longer works.\n\nPress SUBMIT to remove Flu Near You from your Home Assistant instance.",
+                        "title": "Remove Flu Near You"
+                    }
+                }
+            },
+            "title": "Flu Near You is no longer available"
+        }
     }
 }

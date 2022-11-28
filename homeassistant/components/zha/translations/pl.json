@@ -46,10 +46,13 @@
             "title": "Opcje panelu alarmowego"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Zawsze preferuj tryb kolor\u00f3w XY",
             "consider_unavailable_battery": "Uznaj urz\u0105dzenia zasilane bateryjnie za niedost\u0119pne po (sekundach)",
             "consider_unavailable_mains": "Uznaj urz\u0105dzenia zasilane z gniazdka za niedost\u0119pne po (sekundach)",
             "default_light_transition": "Domy\u015blny czas efektu przej\u015bcia dla \u015bwiat\u0142a (w sekundach)",
             "enable_identify_on_join": "W\u0142\u0105cz efekt identyfikacji, gdy urz\u0105dzenia do\u0142\u0105czaj\u0105 do sieci",
+            "enhanced_light_transition": "W\u0142\u0105cz ulepszone przej\u015bcie koloru \u015bwiat\u0142a/temperatury ze stanu wy\u0142\u0105czenia",
+            "light_transitioning_flag": "W\u0142\u0105cz suwak zwi\u0119kszonej jasno\u015bci podczas przej\u015bcia \u015bwiat\u0142a",
             "title": "Opcje og\u00f3lne"
         }
     },

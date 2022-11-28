@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "existing_instance_updated": "Oppdatert eksisterende konfigurasjon."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            }
+        }
+    }
+}

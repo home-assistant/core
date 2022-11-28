@@ -101,19 +101,19 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == f"{base_name} Humidity status"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    state = hass.states.get(f"{base_id}_rssi_numeric")
+    state = hass.states.get(f"{base_id}_signal_strength")
     assert state
     assert state.state == "unknown"
-    assert state.attributes.get("friendly_name") == f"{base_name} Rssi numeric"
+    assert state.attributes.get("friendly_name") == f"{base_name} Signal strength"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
 
-    state = hass.states.get(f"{base_id}_battery_numeric")
+    state = hass.states.get(f"{base_id}_battery")
     assert state
     assert state.state == "unknown"
-    assert state.attributes.get("friendly_name") == f"{base_name} Battery numeric"
+    assert state.attributes.get("friendly_name") == f"{base_name} Battery"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
@@ -179,7 +179,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "normal"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    state = hass.states.get(f"{base_id}_rssi_numeric")
+    state = hass.states.get(f"{base_id}_signal_strength")
     assert state
     assert state.state == "-64"
     assert (
@@ -192,7 +192,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "18.4"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    state = hass.states.get(f"{base_id}_battery_numeric")
+    state = hass.states.get(f"{base_id}_battery")
     assert state
     assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
@@ -211,7 +211,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "normal"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    state = hass.states.get(f"{base_id}_rssi_numeric")
+    state = hass.states.get(f"{base_id}_signal_strength")
     assert state
     assert state.state == "-64"
     assert (
@@ -224,7 +224,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "14.9"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    state = hass.states.get(f"{base_id}_battery_numeric")
+    state = hass.states.get(f"{base_id}_battery")
     assert state
     assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
@@ -243,7 +243,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "normal"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    state = hass.states.get(f"{base_id}_rssi_numeric")
+    state = hass.states.get(f"{base_id}_signal_strength")
     assert state
     assert state.state == "-64"
     assert (
@@ -256,7 +256,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert state.state == "17.9"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    state = hass.states.get(f"{base_id}_battery_numeric")
+    state = hass.states.get(f"{base_id}_battery")
     assert state
     assert state.state == "100"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
@@ -328,19 +328,19 @@ async def test_rssi_sensor(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
     assert state
     assert state.state == "unknown"
-    assert state.attributes.get("friendly_name") == "PT2262 22670e Rssi numeric"
+    assert state.attributes.get("friendly_name") == "PT2262 22670e Signal strength"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
 
-    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    state = hass.states.get("sensor.ac_213c7f2_48_signal_strength")
     assert state
     assert state.state == "unknown"
-    assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Rssi numeric"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Signal strength"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -349,21 +349,21 @@ async def test_rssi_sensor(hass, rfxtrx):
     await rfxtrx.signal("0913000022670e013b70")
     await rfxtrx.signal("0b1100cd0213c7f230010f71")
 
-    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
     assert state
     assert state.state == "-64"
 
-    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    state = hass.states.get("sensor.ac_213c7f2_48_signal_strength")
     assert state
     assert state.state == "-64"
 
     await rfxtrx.signal("0913000022670e013b60")
     await rfxtrx.signal("0b1100cd0213c7f230010f61")
 
-    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
     assert state
     assert state.state == "-72"
 
-    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    state = hass.states.get("sensor.ac_213c7f2_48_signal_strength")
     assert state
     assert state.state == "-72"

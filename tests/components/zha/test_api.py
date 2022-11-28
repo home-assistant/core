@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
+import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
@@ -33,6 +34,7 @@ from homeassistant.components.zha.core.const import (
     CLUSTER_TYPE_IN,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -620,3 +622,121 @@ async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_key.call_count == 0
+
+
+async def test_get_network_settings(app_controller, zha_client):
+    """Test current network settings are returned."""
+
+    await app_controller.backups.create_backup()
+
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/settings"})
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "radio_type" in msg["result"]
+    assert "network_info" in msg["result"]["settings"]
+
+
+async def test_list_network_backups(app_controller, zha_client):
+    """Test backups are serialized."""
+
+    await app_controller.backups.create_backup()
+
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/backups/list"})
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "network_info" in msg["result"][0]
+
+
+async def test_create_network_backup(app_controller, zha_client):
+    """Test creating backup."""
+
+    assert not app_controller.backups.backups
+    await zha_client.send_json({ID: 6, TYPE: f"{DOMAIN}/network/backups/create"})
+    msg = await zha_client.receive_json()
+    assert len(app_controller.backups.backups) == 1
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert "backup" in msg["result"] and "is_complete" in msg["result"]
+
+
+async def test_restore_network_backup_success(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    p.assert_called_once_with(backup)
+    assert "ezsp" not in backup.network_info.stack_specific
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+async def test_restore_network_backup_force_write_eui64(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+                "ezsp_force_write_eui64": True,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    # EUI64 will be overwritten
+    p.assert_called_once_with(
+        backup.replace(
+            network_info=backup.network_info.replace(
+                stack_specific={"ezsp": {EZSP_OVERWRITE_EUI64: True}}
+            )
+        )
+    )
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+@patch("zigpy.backups.NetworkBackup.from_dict", new=lambda v: v)
+async def test_restore_network_backup_failure(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    with patch.object(
+        app_controller.backups,
+        "restore_backup",
+        new=AsyncMock(side_effect=ValueError("Restore failed")),
+    ) as p:
+        await zha_client.send_json(
+            {ID: 6, TYPE: f"{DOMAIN}/network/backups/restore", "backup": "a backup"}
+        )
+        msg = await zha_client.receive_json()
+
+    p.assert_called_once_with("a backup")
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT

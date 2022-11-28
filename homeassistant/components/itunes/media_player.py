@@ -1,6 +1,8 @@
 """Support for interfacing to iTunes API."""
 from __future__ import annotations
 
+from typing import Any
+
 import requests
 import voluptuous as vol
 
@@ -268,7 +270,7 @@ class ItunesDevice(MediaPlayerEntity):
 
         return STATE_PLAYING
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         now_playing = self.client.now_playing()
         self.update_state(now_playing)
@@ -354,48 +356,48 @@ class ItunesDevice(MediaPlayerEntity):
         """Boolean if shuffle is enabled."""
         return self.shuffled
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         response = self.client.set_volume(int(volume * 100))
         self.update_state(response)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         response = self.client.set_muted(mute)
         self.update_state(response)
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Shuffle (true) or no shuffle (false) media player."""
         response = self.client.set_shuffle(shuffle)
         self.update_state(response)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send media_play command to media player."""
         response = self.client.play()
         self.update_state(response)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media_pause command to media player."""
         response = self.client.pause()
         self.update_state(response)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send media_next command to media player."""
         response = self.client.next()
         self.update_state(response)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send media_previous command media player."""
         response = self.client.previous()
         self.update_state(response)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the media player."""
         if media_type == MEDIA_TYPE_PLAYLIST:
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         response = self.client.stop()
         self.update_state(response)
@@ -471,7 +473,7 @@ class AirPlayDevice(MediaPlayerEntity):
 
         return STATE_OFF
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
 
     @property
@@ -484,20 +486,20 @@ class AirPlayDevice(MediaPlayerEntity):
         """Flag of media content that is supported."""
         return MEDIA_TYPE_MUSIC
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = int(volume * 100)
         response = self.client.set_volume_airplay_device(self._id, volume)
         self.update_state(response)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Select AirPlay."""
         self.update_state({"selected": True})
         self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Deselect AirPlay."""
         self.update_state({"selected": False})
         self.schedule_update_ha_state()

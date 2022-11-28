@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, Optional, TypedDict, Union, cast
+from typing import Literal, TypedDict, Union
 
 import voluptuous as vol
 
@@ -54,7 +54,7 @@ class FlowToGridSourceType(TypedDict):
     stat_compensation: str | None
 
     # Used to generate costs if stat_compensation is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
+    entity_energy_to: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_to
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
 
@@ -263,13 +263,15 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = storage.Store[EnergyPreferences](
+            hass, STORAGE_VERSION, STORAGE_KEY
+        )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
 
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
-        self.data = cast(Optional[EnergyPreferences], await self._store.async_load())
+        self.data = await self._store.async_load()
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
@@ -294,7 +296,7 @@ class EnergyManager:
                 data[key] = update[key]  # type: ignore[literal-required]
 
         self.data = data
-        self._store.async_delay_save(lambda: cast(dict, self.data), 60)
+        self._store.async_delay_save(lambda: data, 60)
 
         if not self._update_listeners:
             return

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u91d1\u9470\u7121\u6548",
+            "invalid_user_key": "\u4f7f\u7528\u8005\u91d1\u9470\u7121\u6548"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u91d1\u9470"
+                },
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470",
+                    "name": "\u540d\u7a31",
+                    "user_key": "\u4f7f\u7528\u8005\u91d1\u9470"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a\u7684 Pushover \u5373\u5c07\u9032\u884c\u79fb\u9664\u3002\n\n\u65e2\u6709\u7684 YAML \u8a2d\u5b9a\u5c07\u81ea\u52d5\u532f\u5165\u81f3 UI \u5167\u3002\n\n\u8acb\u65bc configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 Pushover YAML \u8a2d\u5b9a\u4e26\u91cd\u65b0\u555f\u52d5 Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Pushover YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "no_locations": "\u5834\u6240\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    }
+}

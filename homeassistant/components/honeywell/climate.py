@@ -252,7 +252,7 @@ class HoneywellUSThermostat(ClimateEntity):
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
-    def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
             self._set_temperature(**kwargs)
@@ -352,6 +352,6 @@ class HoneywellUSThermostat(ClimateEntity):
         else:
             self.set_hvac_mode(HVACMode.OFF)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state from the service."""
         await self._data.async_update()

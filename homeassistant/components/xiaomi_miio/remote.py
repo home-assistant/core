@@ -181,6 +181,8 @@ async def async_setup_platform(
 class XiaomiMiioRemote(RemoteEntity):
     """Representation of a Xiaomi Miio Remote device."""
 
+    _attr_should_poll = False
+
     def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
         self._name = friendly_name
@@ -224,11 +226,6 @@ class XiaomiMiioRemote(RemoteEntity):
             return True
         except DeviceException:
             return False
-
-    @property
-    def should_poll(self):
-        """We should not be polled for device up state."""
-        return False
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

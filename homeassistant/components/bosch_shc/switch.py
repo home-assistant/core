@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from boschshcpy import (
     SHCCamera360,
@@ -183,11 +184,11 @@ class SHCSwitch(SHCEntity, SwitchEntity):
             == self.entity_description.on_value
         )
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         setattr(self._device, self.entity_description.on_key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         setattr(self._device, self.entity_description.on_key, False)
 
@@ -218,10 +219,10 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
         """Return the state of the switch."""
         return self._device.routing.name == "ENABLED"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._device.routing = True
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._device.routing = False

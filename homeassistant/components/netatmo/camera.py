@@ -112,6 +112,8 @@ async def async_setup_entry(
 class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
+    _attr_brand = MANUFACTURER
+    _attr_has_entity_name = True
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
@@ -126,14 +128,13 @@ class NetatmoCamera(NetatmoBase, Camera):
         Camera.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append(
+        self._publishers.append(
             {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
         )
 
         self._id = camera_id
         self._home_id = home_id
         self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
-        self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
         self._netatmo_type = TYPE_SECURITY
         self._attr_unique_id = f"{self._id}-{self._model}"
@@ -193,7 +194,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Return data for this entity."""
         return cast(
             pyatmo.AsyncCameraData,
-            self.data_handler.data[self._data_classes[0]["name"]],
+            self.data_handler.data[self._publishers[0]["name"]],
         )
 
     async def async_camera_image(
@@ -218,11 +219,6 @@ class NetatmoCamera(NetatmoBase, Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._alim_status == "on" or self._status == "disconnected")
-
-    @property
-    def brand(self) -> str:
-        """Return the camera brand."""
-        return MANUFACTURER
 
     @property
     def motion_detection_enabled(self) -> bool:

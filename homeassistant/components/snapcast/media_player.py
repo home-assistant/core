@@ -116,6 +116,7 @@ async def handle_set_latency(entity, service_call):
 class SnapcastGroupDevice(MediaPlayerEntity):
     """Representation of a Snapcast group device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -124,9 +125,16 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 
     def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
-        group.set_callback(self.schedule_update_ha_state)
         self._group = group
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to group events."""
+        self._group.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect group object when removed."""
+        self._group.set_callback(None)
 
     @property
     def state(self):
@@ -173,11 +181,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
 
-    @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
-
     async def async_select_source(self, source):
         """Set input source."""
         streams = self._group.streams_by_name()
@@ -208,6 +211,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 class SnapcastClientDevice(MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -216,9 +220,16 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     def __init__(self, client, uid_part):
         """Initialize the Snapcast client device."""
-        client.set_callback(self.schedule_update_ha_state)
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to client events."""
+        self._client.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect client object when removed."""
+        self._client.set_callback(None)
 
     @property
     def unique_id(self):
@@ -275,11 +286,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
         state_attrs["friendly_name"] = name
         return state_attrs
-
-    @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
 
     @property
     def latency(self):

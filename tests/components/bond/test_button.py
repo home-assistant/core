@@ -30,6 +30,7 @@ def light_brightness_increase_decrease_only(name: str):
         "actions": [
             Action.TURN_LIGHT_ON,
             Action.TURN_LIGHT_OFF,
+            Action.START_DIMMER,
             Action.START_INCREASING_BRIGHTNESS,
             Action.START_DECREASING_BRIGHTNESS,
             Action.STOP,
@@ -75,6 +76,8 @@ async def test_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id_startincreasingbrightness"
     entity = registry.entities["button.name_1_start_decreasing_brightness"]
     assert entity.unique_id == "test-hub-id_test-device-id_startdecreasingbrightness"
+    entity = registry.entities["button.name_1_start_dimmer"]
+    assert entity.unique_id == "test-hub-id_test-device-id_startdimmer"
 
 
 async def test_mutually_exclusive_actions(hass: core.HomeAssistant):

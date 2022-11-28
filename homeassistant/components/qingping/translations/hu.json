@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r be van \u00e1ll\u00edtva",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "not_supported": "Eszk\u00f6z nem t\u00e1mogatott"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Be\u00e1ll\u00edtja a k\u00f6vetkez\u0151t: {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Eszk\u00f6z"
+                },
+                "description": "V\u00e1lasszon ki egy eszk\u00f6zt a be\u00e1ll\u00edt\u00e1shoz"
+            }
+        }
+    }
+}

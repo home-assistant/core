@@ -47,9 +47,11 @@ class LyricSensorEntityDescription(SensorEntityDescription):
     value: Callable[[LyricDevice], StateType | datetime] = round
 
 
-def get_datetime_from_future_time(time: str) -> datetime:
+def get_datetime_from_future_time(time_str: str) -> datetime:
     """Get datetime from future time provided."""
-    time = dt_util.parse_time(time)
+    time = dt_util.parse_time(time_str)
+    if time is None:
+        raise ValueError(f"Unable to parse time {time_str}")
     now = dt_util.utcnow()
     if time <= now.time():
         now = now + timedelta(days=1)
@@ -64,7 +66,7 @@ async def async_setup_entry(
 
     entities = []
 
-    def get_setpoint_status(status: str, time: str) -> str:
+    def get_setpoint_status(status: str, time: str) -> str | None:
         if status == PRESET_HOLD_UNTIL:
             return f"Held until {time}"
         return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)

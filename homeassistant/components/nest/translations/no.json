@@ -96,5 +96,15 @@
             "camera_sound": "Lyd oppdaget",
             "doorbell_chime": "Ringeklokke trykket"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av Nest i configuration.yaml blir fjernet i Home Assistant 2022.10. \n\n Din eksisterende OAuth-applikasjonslegitimasjon og tilgangsinnstillinger er automatisk importert til brukergrensesnittet. Fjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Nest YAML-konfigurasjonen fjernes"
+        },
+        "removed_app_auth": {
+            "description": "For \u00e5 forbedre sikkerheten og redusere phishing-risikoen har Google avviklet autentiseringsmetoden som brukes av Home Assistant. \n\n **Dette krever handling fra deg for \u00e5 l\u00f8se det** ([mer info]( {more_info_url} )) \n\n 1. G\u00e5 til integreringssiden\n 1. Klikk p\u00e5 Reconfigure p\u00e5 Nest-integrasjonen.\n 1. Home Assistant vil lede deg gjennom trinnene for \u00e5 oppgradere til webautentisering. \n\n Se Nest [integrasjonsinstruksjoner]( {documentation_url} ) for feils\u00f8kingsinformasjon.",
+            "title": "Nest-autentiseringslegitimasjonen m\u00e5 oppdateres"
+        }
     }
 }

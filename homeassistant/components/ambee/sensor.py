@@ -42,6 +42,8 @@ async def async_setup_entry(
 class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines an Ambee sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,

@@ -48,7 +48,7 @@ def get_alarm_system_id_for_unique_id(
     gateway: DeconzGateway, unique_id: str
 ) -> str | None:
     """Retrieve alarm system ID the unique ID is registered to."""
-    for alarm_system in gateway.api.alarmsystems.values():
+    for alarm_system in gateway.api.alarm_systems.values():
         if unique_id in alarm_system.devices:
             return alarm_system.resource_id
     return None
@@ -80,11 +80,11 @@ async def async_setup_entry(
     )
 
 
-class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
+class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelEntity):
     """Representation of a deCONZ alarm control panel."""
 
+    _update_key = "panel"
     TYPE = DOMAIN
-    _device: AncillaryControl
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
@@ -106,11 +106,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the control panels state."""
-        keys = {"panel", "reachable"}
-        if (
-            self._device.changed_keys.intersection(keys)
-            and self._device.panel in DECONZ_TO_ALARM_STATE
-        ):
+        if self._device.panel in DECONZ_TO_ALARM_STATE:
             super().async_update_callback()
 
     @property
@@ -123,27 +119,27 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code:
-            await self.gateway.api.alarmsystems.arm(
+            await self.gateway.api.alarm_systems.arm(
                 self.alarm_system_id, AlarmSystemArmAction.AWAY, code
             )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
-            await self.gateway.api.alarmsystems.arm(
+            await self.gateway.api.alarm_systems.arm(
                 self.alarm_system_id, AlarmSystemArmAction.STAY, code
             )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code:
-            await self.gateway.api.alarmsystems.arm(
+            await self.gateway.api.alarm_systems.arm(
                 self.alarm_system_id, AlarmSystemArmAction.NIGHT, code
             )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
-            await self.gateway.api.alarmsystems.arm(
+            await self.gateway.api.alarm_systems.arm(
                 self.alarm_system_id, AlarmSystemArmAction.DISARM, code
             )

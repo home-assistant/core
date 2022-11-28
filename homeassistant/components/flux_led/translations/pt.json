@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "flow_title": "",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "description": "Se voc\u00ea deixar o host vazio, a descoberta ser\u00e1 usada para localizar dispositivos."
+            }
+        }
+    }
+}

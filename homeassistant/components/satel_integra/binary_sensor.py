@@ -60,6 +60,8 @@ async def async_setup_platform(
 class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, controller, device_number, device_name, zone_type, react_to_signal
     ):
@@ -99,11 +101,6 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         """Icon for device by its type."""
         if self._zone_type is BinarySensorDeviceClass.SMOKE:
             return "mdi:fire"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):

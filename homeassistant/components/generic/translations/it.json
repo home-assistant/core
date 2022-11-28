@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Esiste gi\u00e0 una telecamera con queste impostazioni URL.",
             "invalid_still_image": "L'URL non ha restituito un'immagine fissa valida",
+            "malformed_url": "URL non valido",
             "no_still_image_or_stream_url": "Devi specificare almeno un'immagine fissa o un URL di un flusso",
+            "relative_url": "Non sono consentiti URL relativi",
             "stream_file_not_found": "File non trovato durante il tentativo di connessione al  (\u00e8 installato ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Non trovato durante il tentativo di connessione al flusso",
             "stream_io_error": "Errore di input/output durante il tentativo di connessione al flusso. Protocollo di trasporto RTSP errato?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Esiste gi\u00e0 una telecamera con queste impostazioni URL.",
             "invalid_still_image": "L'URL non ha restituito un'immagine fissa valida",
+            "malformed_url": "URL non valido",
             "no_still_image_or_stream_url": "Devi specificare almeno un'immagine fissa o un URL di un flusso",
+            "relative_url": "Non sono consentiti URL relativi",
             "stream_file_not_found": "File non trovato durante il tentativo di connessione al  (\u00e8 installato ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Non trovato durante il tentativo di connessione al flusso",
             "stream_io_error": "Errore di input/output durante il tentativo di connessione al flusso. Protocollo di trasporto RTSP errato?",

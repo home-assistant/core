@@ -9,12 +9,10 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    SUPPORT_WHITE_VALUE,
     ColorMode,
     LightEntityFeature,
 )
@@ -87,19 +85,6 @@ OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
             "caller": "{{ this.entity_id }}",
             "s": "{{s}}",
             "h": "{{h}}",
-        },
-    },
-}
-
-
-OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG = {
-    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-    "set_white_value": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "set_white_value",
-            "caller": "{{ this.entity_id }}",
-            "white_value": "{{white_value}}",
         },
     },
 }
@@ -612,97 +597,6 @@ async def test_off_action_optimistic(
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
-
-
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "supported_features,supported_color_modes,expected_color_mode",
-    [(SUPPORT_WHITE_VALUE, [ColorMode.RGBW], ColorMode.UNKNOWN)],
-)
-@pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG,
-                "value_template": "{{1 == 1}}",
-            }
-        },
-    ],
-)
-async def test_white_value_action_no_template(
-    hass,
-    setup_light,
-    calls,
-    supported_color_modes,
-    supported_features,
-    expected_color_mode,
-):
-    """Test setting white value with optimistic template."""
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("white_value") is None
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_WHITE_VALUE: 124},
-        blocking=True,
-    )
-
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_white_value"
-    assert calls[-1].data["caller"] == "light.test_template_light"
-    assert calls[-1].data["white_value"] == 124
-
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("white_value") == 124
-    assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
-
-
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "supported_features,supported_color_modes,expected_color_mode",
-    [(SUPPORT_WHITE_VALUE, [ColorMode.RGBW], ColorMode.UNKNOWN)],
-)
-@pytest.mark.parametrize(
-    "expected_white_value,white_value_template",
-    [
-        (255, "{{255}}"),
-        (None, "{{256}}"),
-        (None, "{{x-12}}"),
-        (None, "{{ none }}"),
-        (None, ""),
-    ],
-)
-async def test_white_value_template(
-    hass,
-    expected_white_value,
-    supported_features,
-    supported_color_modes,
-    expected_color_mode,
-    count,
-    white_value_template,
-):
-    """Test the template for the white value."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "white_value_template": white_value_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-
-    state = hass.states.get("light.test_template_light")
-    assert state is not None
-    assert state.attributes.get("white_value") == expected_white_value
-    assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 

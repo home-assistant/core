@@ -102,7 +102,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
             ATTR_VCPUS: self.data.vcpus,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._digital_ocean.update()
 

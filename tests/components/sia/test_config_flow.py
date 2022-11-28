@@ -160,7 +160,9 @@ async def test_form_start_account(hass, flow_at_add_account_step):
 
 async def test_create(hass, entry_with_basic_config):
     """Test we create a entry through the form."""
-    assert entry_with_basic_config["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert (
+        entry_with_basic_config["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    )
     assert (
         entry_with_basic_config["title"]
         == f"SIA Alarm on port {BASIC_CONFIG[CONF_PORT]}"
@@ -173,7 +175,7 @@ async def test_create_additional_account(hass, entry_with_additional_account_con
     """Test we create a config with two accounts."""
     assert (
         entry_with_additional_account_config["type"]
-        == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        == data_entry_flow.FlowResultType.CREATE_ENTRY
     )
     assert (
         entry_with_additional_account_config["title"]
@@ -314,14 +316,14 @@ async def test_options_basic(hass):
     )
     await setup_sia(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options"
     assert result["last_step"]
 
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], BASIC_OPTIONS
     )
-    assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert updated["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert updated["data"] == {
         CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}
     }
@@ -339,13 +341,13 @@ async def test_options_additional(hass):
     )
     await setup_sia(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options"
     assert not result["last_step"]
 
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], BASIC_OPTIONS
     )
-    assert updated["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert updated["type"] == data_entry_flow.FlowResultType.FORM
     assert updated["step_id"] == "options"
     assert updated["last_step"]

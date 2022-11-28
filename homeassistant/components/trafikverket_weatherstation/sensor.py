@@ -165,6 +165,7 @@ class TrafikverketWeatherStation(
 
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -176,7 +177,6 @@ class TrafikverketWeatherStation(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{sensor_station} {description.name}"
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

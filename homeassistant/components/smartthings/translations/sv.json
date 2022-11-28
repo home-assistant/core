@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant \u00e4r inte korrekt konfigurerad f\u00f6r att ta emot uppdateringar fr\u00e5n SmartThings. Webhook-adressen \u00e4r ogiltig:\n > {webhook_url} \n\n Uppdatera din konfiguration enligt [instruktionerna]( {component_url} ), starta om Home Assistant och f\u00f6rs\u00f6k igen.",
+            "no_available_locations": "Det finns inga tillg\u00e4ngliga SmartThings-platser att st\u00e4lla in i Home Assistant."
+        },
         "error": {
             "app_setup_error": "Det gick inte att installera Home Assistant SmartApp. V\u00e4nligen f\u00f6rs\u00f6k igen.",
             "token_forbidden": "Token har inte det som kr\u00e4vs inom omf\u00e5ng f\u00f6r OAuth.",
@@ -11,10 +15,18 @@
             "authorize": {
                 "title": "Auktorisera Home Assistant"
             },
+            "pat": {
+                "data": {
+                    "access_token": "\u00c5tkomstnyckel"
+                },
+                "description": "V\u00e4nligen ange en [personlig \u00e5tkomsttoken]({token_url}) f\u00f6r SmartThings som har skapats enligt [instruktionerna]({component_url}).",
+                "title": "Ange personlig \u00e5tkomsttoken"
+            },
             "select_location": {
                 "data": {
                     "location_id": "Position"
                 },
+                "description": "V\u00e4lj den SmartThings-plats du vill l\u00e4gga till i Home Assistant. Vi \u00f6ppnar sedan ett nytt f\u00f6nster och ber dig att logga in och godk\u00e4nna installationen av Home Assistant-integrationen p\u00e5 den valda platsen.",
                 "title": "V\u00e4lj plats"
             },
             "user": {

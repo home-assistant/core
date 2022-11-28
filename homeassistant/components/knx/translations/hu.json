@@ -48,7 +48,7 @@
                     "knxkeys_filename": "A f\u00e1jl a `.storage/knx/` konfigur\u00e1ci\u00f3s k\u00f6nyvt\u00e1r\u00e1ban helyezend\u0151.\nHome Assistant oper\u00e1ci\u00f3s rendszer eset\u00e9n ez a k\u00f6vetkez\u0151 lenne: `/config/.storage/knx/`\nP\u00e9lda: \"my_project.knxkeys\".",
                     "knxkeys_password": "Ez a be\u00e1ll\u00edt\u00e1s a f\u00e1jl ETS-b\u0151l t\u00f6rt\u00e9n\u0151 export\u00e1l\u00e1sakor t\u00f6rt\u00e9nt."
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a '.knxkeys' f\u00e1jl adatait."
+                "description": "K\u00e9rem, adja meg a '.knxkeys' f\u00e1jl adatait."
             },
             "secure_manual": {
                 "data": {
@@ -61,7 +61,7 @@
                     "user_id": "Ez gyakran a tunnel sz\u00e1ma +1. Teh\u00e1t a \"Tunnel 2\" felhaszn\u00e1l\u00f3i azonos\u00edt\u00f3ja \"3\".",
                     "user_password": "Jelsz\u00f3 az adott tunnelhez, amely a tunnel \u201eProperties\u201d panelj\u00e9n van be\u00e1ll\u00edtva az ETS-ben."
                 },
-                "description": "K\u00e9rj\u00fck, adja meg az IP secure adatokat."
+                "description": "K\u00e9rem, adja meg az IP secure adatokat."
             },
             "secure_tunneling": {
                 "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",

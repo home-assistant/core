@@ -172,6 +172,40 @@ async def test_zha_logbook_event_device_no_triggers(hass, mock_devices):
                     },
                 },
             ),
+            MockRow(
+                ZHA_EVENT,
+                {
+                    CONF_DEVICE_ID: reg_device.id,
+                    "device_ieee": str(ieee_address),
+                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    "endpoint_id": 1,
+                    "cluster_id": 6,
+                    "params": {
+                        "test": "test",
+                    },
+                },
+            ),
+            MockRow(
+                ZHA_EVENT,
+                {
+                    CONF_DEVICE_ID: reg_device.id,
+                    "device_ieee": str(ieee_address),
+                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    "endpoint_id": 1,
+                    "cluster_id": 6,
+                    "params": {},
+                },
+            ),
+            MockRow(
+                ZHA_EVENT,
+                {
+                    CONF_DEVICE_ID: reg_device.id,
+                    "device_ieee": str(ieee_address),
+                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    "endpoint_id": 1,
+                    "cluster_id": 6,
+                },
+            ),
         ],
     )
 
@@ -181,6 +215,20 @@ async def test_zha_logbook_event_device_no_triggers(hass, mock_devices):
         events[0]["message"]
         == "Shake event was fired with parameters: {'test': 'test'}"
     )
+
+    assert events[1]["name"] == "FakeManufacturer FakeModel"
+    assert events[1]["domain"] == "zha"
+    assert (
+        events[1]["message"] == "Zha Event was fired with parameters: {'test': 'test'}"
+    )
+
+    assert events[2]["name"] == "FakeManufacturer FakeModel"
+    assert events[2]["domain"] == "zha"
+    assert events[2]["message"] == "Zha Event was fired"
+
+    assert events[3]["name"] == "FakeManufacturer FakeModel"
+    assert events[3]["domain"] == "zha"
+    assert events[3]["message"] == "Zha Event was fired"
 
 
 async def test_zha_logbook_event_device_no_device(hass, mock_devices):

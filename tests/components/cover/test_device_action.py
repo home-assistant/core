@@ -181,6 +181,8 @@ async def test_get_action_capabilities(
         ),
     )
     ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -191,9 +193,6 @@ async def test_get_action_capabilities(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -215,6 +214,8 @@ async def test_get_action_capabilities_set_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -225,9 +226,6 @@ async def test_get_action_capabilities_set_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -264,6 +262,8 @@ async def test_get_action_capabilities_set_tilt_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[3]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -274,9 +274,6 @@ async def test_get_action_capabilities_set_tilt_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [

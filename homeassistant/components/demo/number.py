@@ -1,9 +1,9 @@
 """Demo platform that offers a fake Number entity."""
 from __future__ import annotations
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import DEVICE_DEFAULT_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,10 +35,10 @@ async def async_setup_platform(
                 0.42,
                 "mdi:square-wave",
                 False,
-                0.0,
-                1.0,
-                0.01,
-                NumberMode.BOX,
+                native_min_value=0.0,
+                native_max_value=1.0,
+                native_step=0.01,
+                mode=NumberMode.BOX,
             ),
             DemoNumber(
                 "large_range",
@@ -46,9 +46,9 @@ async def async_setup_platform(
                 500,
                 "mdi:square-wave",
                 False,
-                1,
-                1000,
-                1,
+                native_min_value=1,
+                native_max_value=1000,
+                native_step=1,
             ),
             DemoNumber(
                 "small_range",
@@ -56,9 +56,22 @@ async def async_setup_platform(
                 128,
                 "mdi:square-wave",
                 False,
-                1,
-                255,
-                1,
+                native_min_value=1,
+                native_max_value=255,
+                native_step=1,
+            ),
+            DemoNumber(
+                "temp1",
+                "Temperature setting",
+                22,
+                "mdi:thermometer",
+                False,
+                device_class=NumberDeviceClass.TEMPERATURE,
+                native_min_value=15.0,
+                native_max_value=35.0,
+                native_step=1,
+                mode=NumberMode.BOX,
+                unit_of_measurement=TEMP_CELSIUS,
             ),
         ]
     )
@@ -84,19 +97,24 @@ class DemoNumber(NumberEntity):
         name: str,
         state: float,
         icon: str,
-        assumed: bool,
+        assumed_state: bool,
+        *,
+        device_class: NumberDeviceClass | None = None,
+        mode: NumberMode = NumberMode.AUTO,
         native_min_value: float | None = None,
         native_max_value: float | None = None,
         native_step: float | None = None,
-        mode: NumberMode = NumberMode.AUTO,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize the Demo Number entity."""
-        self._attr_assumed_state = assumed
+        self._attr_assumed_state = assumed_state
+        self._attr_device_class = device_class
         self._attr_icon = icon
-        self._attr_name = name or DEVICE_DEFAULT_NAME
-        self._attr_unique_id = unique_id
-        self._attr_native_value = state
         self._attr_mode = mode
+        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_value = state
+        self._attr_unique_id = unique_id
 
         if native_min_value is not None:
             self._attr_native_min_value = native_min_value
@@ -113,7 +131,7 @@ class DemoNumber(NumberEntity):
             name=self.name,
         )
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._attr_native_value = value
         self.async_write_ha_state()

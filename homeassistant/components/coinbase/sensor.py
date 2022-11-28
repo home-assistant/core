@@ -161,7 +161,7 @@ class AccountSensor(SensorEntity):
             ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
@@ -233,7 +233,7 @@ class ExchangeRateSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         self._state = round(

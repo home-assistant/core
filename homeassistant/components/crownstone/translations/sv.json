@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "usb_setup_complete": "Crownstone USB-installation klar.",
+            "usb_setup_unsuccessful": "Crownstone USB-installationen misslyckades."
+        },
+        "error": {
+            "account_not_verified": "Kontot \u00e4r inte verifierat. V\u00e4nligen aktivera ditt konto via aktiveringsmailet fr\u00e5n Crownstone.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "V\u00e4lj den seriella porten p\u00e5 Crownstone USB-dongeln, eller v\u00e4lj \"Anv\u00e4nd inte USB\" om du inte vill st\u00e4lla in en USB-dongel. \n\n Leta efter en enhet med VID 10C4 och PID EA60.",
+                "title": "Crownstone USB-dongelkonfiguration"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "Ange s\u00f6kv\u00e4gen f\u00f6r en Crownstone USB-dongel manuellt.",
+                "title": "Crownstone USB-dongel manuell v\u00e4g"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "V\u00e4lj en Crownstone Sphere d\u00e4r USB-enheten finns.",
+                "title": "Crownstone USB Sphere"
+            },
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "L\u00f6senord"
+                },
+                "title": "Crownstone konto"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "usb_sphere_option": "Crownstone Sphere d\u00e4r USB-enheten finns",
+                    "use_usb_option": "Anv\u00e4nd en Crownstone USB-dongel f\u00f6r lokal data\u00f6verf\u00f6ring"
+                }
+            },
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "V\u00e4lj serieporten p\u00e5 Crownstone USB-dongeln. \n\n Leta efter en enhet med VID 10C4 och PID EA60.",
+                "title": "Crownstone USB-dongelkonfiguration"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "Ange s\u00f6kv\u00e4gen f\u00f6r en Crownstone USB-dongel manuellt.",
+                "title": "Crownstone USB-dongel manuell v\u00e4g"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "V\u00e4lj en Crownstone Sphere d\u00e4r USB-enheten finns.",
+                "title": "Crownstone USB Sphere"
+            }
+        }
+    }
+}

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SystemBridgeDeviceEntity
+from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
 
@@ -125,6 +125,15 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
 
 
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="boot_time",
+        name="Boot Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:av-timer",
+        value=lambda data: datetime.fromtimestamp(
+            data.system.boot_time, tz=timezone.utc
+        ),
+    ),
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
@@ -503,7 +512,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
+class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
     """Define a System Bridge sensor."""
 
     entity_description: SystemBridgeSensorEntityDescription

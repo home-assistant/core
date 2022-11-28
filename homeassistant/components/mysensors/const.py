@@ -22,11 +22,6 @@ ConfGatewayType = Literal["Serial", "TCP", "MQTT"]
 CONF_GATEWAY_TYPE_SERIAL: ConfGatewayType = "Serial"
 CONF_GATEWAY_TYPE_TCP: ConfGatewayType = "TCP"
 CONF_GATEWAY_TYPE_MQTT: ConfGatewayType = "MQTT"
-CONF_GATEWAY_TYPE_ALL: list[str] = [
-    CONF_GATEWAY_TYPE_MQTT,
-    CONF_GATEWAY_TYPE_SERIAL,
-    CONF_GATEWAY_TYPE_TCP,
-]
 
 DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
