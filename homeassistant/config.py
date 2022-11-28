@@ -215,6 +215,7 @@ def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> Non
         "homeassistant",
         "historic_currency",
         is_fixable=False,
+        learn_more_url="homeassistant://config/general",
         severity=ir.IssueSeverity.WARNING,
         translation_key="historic_currency",
         translation_placeholders={"currency": currency},
@@ -231,6 +232,7 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
         "homeassistant",
         "country_not_configured",
         is_fixable=False,
+        learn_more_url="homeassistant://config/general",
         severity=ir.IssueSeverity.WARNING,
         translation_key="country_not_configured",
     )

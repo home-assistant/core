@@ -1,7 +1,7 @@
 {
     "issues": {
         "country_not_configured": {
-            "description": "No country has been configured, please update the configuration.",
+            "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
             "title": "The country has not been configured"
         },
         "historic_currency": {
