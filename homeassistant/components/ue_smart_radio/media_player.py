@@ -100,7 +100,6 @@ class UERadioDevice(MediaPlayerEntity):
         self._session = session
         self._player_id = player_id
         self._name = player_name
-        self._state = None
         self._volume = 0
         self._last_volume = 0
         self._media_title = None
@@ -128,13 +127,13 @@ class UERadioDevice(MediaPlayerEntity):
         )
 
         if request["error"] is not None:
-            self._state = None
+            self._attr_state = None
             return
 
         if request["result"]["power"] == 0:
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
-            self._state = PLAYBACK_DICT[request["result"]["mode"]]
+            self._attr_state = PLAYBACK_DICT[request["result"]["mode"]]
 
         media_info = request["result"]["playlist_loop"][0]
 
@@ -150,11 +149,6 @@ class UERadioDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def icon(self):
