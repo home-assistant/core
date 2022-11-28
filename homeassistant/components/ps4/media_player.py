@@ -83,7 +83,6 @@ class PS4Device(MediaPlayerEntity):
         self._name = name
         self._region = region
         self._creds = creds
-        self._state = None
         self._media_content_id = None
         self._media_title = None
         self._media_image = None
@@ -172,7 +171,7 @@ class PS4Device(MediaPlayerEntity):
                 name = status.get("running-app-name")
 
                 if title_id and name is not None:
-                    self._state = MediaPlayerState.PLAYING
+                    self._attr_state = MediaPlayerState.PLAYING
 
                     if self._media_content_id != title_id:
                         self._media_content_id = title_id
@@ -186,10 +185,10 @@ class PS4Device(MediaPlayerEntity):
                         # Get data from PS Store.
                         asyncio.ensure_future(self.async_get_title_data(title_id, name))
                 else:
-                    if self._state != MediaPlayerState.IDLE:
+                    if self.state != MediaPlayerState.IDLE:
                         self.idle()
             else:
-                if self._state != MediaPlayerState.STANDBY:
+                if self.state != MediaPlayerState.STANDBY:
                     self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
@@ -214,17 +213,17 @@ class PS4Device(MediaPlayerEntity):
     def idle(self):
         """Set states for state idle."""
         self.reset_title()
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
     def state_standby(self):
         """Set states for state standby."""
         self.reset_title()
-        self._state = MediaPlayerState.STANDBY
+        self._attr_state = MediaPlayerState.STANDBY
 
     def state_unknown(self):
         """Set states for state unknown."""
         self.reset_title()
-        self._state = None
+        self._attr_state = None
         if self._disconnected is False:
             _LOGGER.warning("PS4 could not be reached")
         self._disconnected = True
@@ -377,7 +376,7 @@ class PS4Device(MediaPlayerEntity):
     def entity_picture(self):
         """Return picture."""
         if (
-            self._state == MediaPlayerState.PLAYING
+            self.state == MediaPlayerState.PLAYING
             and self._media_content_id is not None
             and (image_hash := self.media_image_hash) is not None
         ):
@@ -391,11 +390,6 @@ class PS4Device(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def icon(self):
