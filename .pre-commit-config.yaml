@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=alot,ba,bre,bund,datas,dof,dur,ether,farenheit,falsy,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nam,nd,pres,pullrequests,referer,rime,ser,serie,sur,te,technik,ue,uint,visability,wan,wanna,withing,zar
+          - --ignore-words-list=additionals,alot,ba,bre,bund,datas,dof,dur,ether,farenheit,falsy,fo,haa,hass,hist,iam,iff,iif,incomfort,ines,ist,lightsensor,mut,nam,nd,pres,pullrequests,referer,resset,rime,ser,serie,sur,te,technik,ue,uint,unsecure,visability,wan,wanna,withing,zar
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
