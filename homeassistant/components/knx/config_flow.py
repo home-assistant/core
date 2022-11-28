@@ -243,7 +243,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 except CommunicationError:
                     errors["base"] = "cannot_connect"
                 else:
-                    if self._selected_tunnel.tunnelling_requires_secure and not (
+                    if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
                         selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE
                     ):
                         errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"

@@ -551,6 +551,29 @@ async def test_tunneling_setup_manual_request_description_error(
             "base": "no_tunnel_discovered",
             "tunneling_type": "unsupported_tunnel_type",
         }
+    # Secure configured but not enabled on gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        return_value=_gateway_descriptor(
+            "192.168.0.1",
+            3671,
+            supports_tunnelling_tcp=True,
+            requires_secure=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {
+            "base": "no_tunnel_discovered",
+            "tunneling_type": "unsupported_tunnel_type",
+        }
     # No connection to gateway
     with patch(
         "homeassistant.components.knx.config_flow.request_description",
@@ -847,7 +870,12 @@ async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
 
 @patch(
     "homeassistant.components.knx.config_flow.request_description",
-    return_value=_gateway_descriptor("192.168.0.1", 3675),
+    return_value=_gateway_descriptor(
+        "192.168.0.1",
+        3675,
+        supports_tunnelling_tcp=True,
+        requires_secure=True,
+    ),
 )
 async def test_get_secure_menu_step_manual_tunnelling(
     _request_description_mock,
