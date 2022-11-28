@@ -207,7 +207,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         entry_data = self.entry_data
-        self._mtu = self.entry_data.get_gatt_mtu_cache(self._address_as_int)
+        self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
             and entry_data.device_info
@@ -268,7 +268,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._ble_device.name,
                 self._ble_device.address,
             )
-            self.entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
+            entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
