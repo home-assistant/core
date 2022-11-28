@@ -178,7 +178,7 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
+                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(
