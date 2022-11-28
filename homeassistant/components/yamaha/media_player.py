@@ -195,7 +195,7 @@ class YamahaDevice(MediaPlayerEntity):
         self.receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self._current_source = None
         self._sound_mode = None
         self._sound_mode_list = None
@@ -220,13 +220,13 @@ class YamahaDevice(MediaPlayerEntity):
 
         if self.receiver.on:
             if self._play_status is None:
-                self._pwstate = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             elif self._play_status.playing:
-                self._pwstate = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             else:
-                self._pwstate = MediaPlayerState.IDLE
+                self._attr_state = MediaPlayerState.IDLE
         else:
-            self._pwstate = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
         self._muted = self.receiver.mute
         self._volume = (self.receiver.volume / 100) + 1
@@ -269,11 +269,6 @@ class YamahaDevice(MediaPlayerEntity):
             # Zone will be one of Main_Zone, Zone_2, Zone_3
             name += f" {zone_name.replace('_', ' ')}"
         return name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._pwstate
 
     @property
     def volume_level(self):
