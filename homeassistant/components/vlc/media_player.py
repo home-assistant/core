@@ -67,12 +67,7 @@ class VlcDevice(MediaPlayerEntity):
         """Initialize the vlc device."""
         self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
-        self._name = name
-        self._volume = None
-        self._muted = None
-        self._media_position_updated_at = None
-        self._media_position = None
-        self._media_duration = None
+        self._attr_name = name
 
     def update(self):
         """Get the latest details from the device."""
@@ -83,46 +78,16 @@ class VlcDevice(MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PAUSED
         else:
             self._attr_state = MediaPlayerState.IDLE
-        self._media_duration = self._vlc.get_length() / 1000
-        position = self._vlc.get_position() * self._media_duration
-        if position != self._media_position:
-            self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = position
+        self._attr_media_duration = self._vlc.get_length() / 1000
+        position = self._vlc.get_position() * self._attr_media_duration
+        if position != self._attr_media_position:
+            self._attr_media_position_updated_at = dt_util.utcnow()
+            self._attr_media_position = position
 
-        self._volume = self._vlc.audio_get_volume() / 100
-        self._muted = self._vlc.audio_get_mute() == 1
+        self._attr_volume_level = self._vlc.audio_get_volume() / 100
+        self._attr_is_volume_muted = self._vlc.audio_get_mute() == 1
 
         return True
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self._media_duration
-
-    @property
-    def media_position(self):
-        """Position of current playing media in seconds."""
-        return self._media_position
-
-    @property
-    def media_position_updated_at(self):
-        """When was the position of the current playing media valid."""
-        return self._media_position_updated_at
 
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
@@ -132,12 +97,12 @@ class VlcDevice(MediaPlayerEntity):
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._vlc.audio_set_mute(mute)
-        self._muted = mute
+        self._attr_is_volume_muted = mute
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._vlc.audio_set_volume(int(volume * 100))
-        self._volume = volume
+        self._attr_volume_level = volume
 
     def media_play(self) -> None:
         """Send play command."""
