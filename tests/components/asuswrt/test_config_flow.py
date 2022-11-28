@@ -249,8 +249,8 @@ async def test_on_connect_failed(hass, side_effect, error):
         assert result["errors"] == {"base": error}
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
+async def test_options_flow_ap(hass: HomeAssistant) -> None:
+    """Test config flow options for ap mode."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -286,8 +286,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_REQUIRE_IP] is False
 
 
-async def test_options_flow_minimal_schema(hass: HomeAssistant) -> None:
-    """Test config flow options."""
+async def test_options_flow_router(hass: HomeAssistant) -> None:
+    """Test config flow options for router mode."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={**CONFIG_DATA, CONF_MODE: "router"},
