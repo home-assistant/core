@@ -101,7 +101,7 @@ class RoonDevice(MediaPlayerEntity):
         self._available = True
         self._last_position_update = None
         self._supports_standby = False
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self._unique_id = None
         self._zone_id = None
         self._output_id = None
@@ -167,7 +167,7 @@ class RoonDevice(MediaPlayerEntity):
         if not self.player_data["is_available"]:
             # this player was removed
             self._available = False
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
             self._available = True
             # determine player state
@@ -263,7 +263,7 @@ class RoonDevice(MediaPlayerEntity):
                 new_state = MediaPlayerState.PAUSED
             else:
                 new_state = MediaPlayerState.IDLE
-        self._state = new_state
+        self._attr_state = new_state
         self._unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
         self._output_id = self.player_data["output_id"]
@@ -364,11 +364,6 @@ class RoonDevice(MediaPlayerEntity):
     def supports_standby(self):
         """Return power state of source controls."""
         return self._supports_standby
-
-    @property
-    def state(self):
-        """Return current playstate of the device."""
-        return self._state
 
     @property
     def shuffle(self):
