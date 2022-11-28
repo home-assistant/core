@@ -98,8 +98,8 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
         """Initialize the device."""
         self._mediabox = mediabox
         self._host = host
-        self._name = name
-        self._available = available
+        self._attr_name = name
+        self._attr_available = available
 
     def update(self) -> None:
         """Retrieve the state of the device."""
@@ -110,12 +110,12 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
                         self._attr_state = MediaPlayerState.PLAYING
                 else:
                     self._attr_state = MediaPlayerState.OFF
-                self._available = True
+                self._attr_available = True
             else:
-                self._available = False
+                self._attr_available = False
         except OSError:
             _LOGGER.error("Couldn't fetch state from %s", self._host)
-            self._available = False
+            self._attr_available = False
 
     def send_keys(self, keys):
         """Send keys to the device and handle exceptions."""
@@ -125,17 +125,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
             _LOGGER.error("Couldn't send keys to %s", self._host)
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return True if the device is available."""
-        return self._available
-
-    @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available sources (channels)."""
         return [
             self._mediabox.channels()[c]
