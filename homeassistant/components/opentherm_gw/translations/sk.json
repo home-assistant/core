@@ -7,6 +7,8 @@
         "step": {
             "init": {
                 "data": {
+                    "device": "Cesta alebo URL",
+                    "id": "ID",
                     "name": "N\u00e1zov"
                 }
             }

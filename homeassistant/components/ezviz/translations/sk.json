@@ -17,13 +17,18 @@
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "url": "URL"
                 }
             },
             "user_custom_url": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "url": "URL",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Ru\u010dne zadajte adresu URL v\u00e1\u0161ho regi\u00f3nu",
+                "title": "Pripojenie k vlastnej adrese URL EZVIZ"
             }
         }
     }

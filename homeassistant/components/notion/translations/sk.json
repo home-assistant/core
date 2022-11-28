@@ -11,7 +11,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Znova zadajte heslo pre {username}."
             },
             "user": {
                 "data": {

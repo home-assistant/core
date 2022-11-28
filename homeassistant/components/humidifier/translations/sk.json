@@ -6,5 +6,12 @@
         "trigger_type": {
             "changed_states": "{entity_name} zapnut\u00e9 alebo vypnut\u00e9"
         }
-    }
+    },
+    "state": {
+        "_": {
+            "off": "Neakt\u00edvny",
+            "on": "Akt\u00edvny"
+        }
+    },
+    "title": "Zvlh\u010dova\u010d"
 }

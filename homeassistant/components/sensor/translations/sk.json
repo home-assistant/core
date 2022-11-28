@@ -36,7 +36,14 @@
             "is_weight": "Aktu\u00e1lna hmotnos\u0165 {entity_name}"
         },
         "trigger_type": {
+            "carbon_dioxide": "{entity_name} sa men\u00ed koncentr\u00e1cia oxidu uhli\u010dit\u00e9ho",
+            "carbon_monoxide": "{entity_name} sa men\u00ed koncentr\u00e1cia oxidu uho\u013enat\u00e9ho",
             "current": "{entity_name} pr\u00fad sa zmen\u00ed",
+            "humidity": "{n\u00e1zov_objektu} zmeny vlhkosti",
+            "nitrogen_dioxide": "{entity_name} zmeny koncentr\u00e1cie oxidu dusi\u010dit\u00e9ho",
+            "nitrogen_monoxide": "{entity_name} zmeny koncentr\u00e1cie oxidu dusnat\u00e9ho",
+            "nitrous_oxide": "{entity_name} zmeny koncentr\u00e1cie oxidu dusn\u00e9ho",
+            "sulphur_dioxide": "{entity_name} zmeny koncentr\u00e1cie oxidu siri\u010dit\u00e9ho",
             "temperature": "Zmena teploty {entity_name}",
             "value": "Zmena hodnoty {entity_name}",
             "voltage": "{entity_name} zmen\u00ed nap\u00e4tie"

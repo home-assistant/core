@@ -12,7 +12,8 @@
         "step": {
             "api_config": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Email"
                 }
             },
             "dhcp_confirm": {
