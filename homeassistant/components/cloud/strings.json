@@ -20,7 +20,6 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "title inside",
             "description": "You are using a legacy subscription. Please update your subscription to continue using Home Assistant Cloud."
           }
         },
