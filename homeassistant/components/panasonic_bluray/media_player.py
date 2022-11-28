@@ -48,6 +48,7 @@ def setup_platform(
 class PanasonicBluRay(MediaPlayerEntity):
     """Representation of a Panasonic Blu-ray device."""
 
+    _attr_icon = "mdi:disc-player"
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
@@ -59,36 +60,10 @@ class PanasonicBluRay(MediaPlayerEntity):
     def __init__(self, ip, name):
         """Initialize the Panasonic Blue-ray device."""
         self._device = PanasonicBD(ip)
-        self._name = name
+        self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
-        self._position = 0
-        self._duration = 0
-        self._position_valid = 0
-
-    @property
-    def icon(self):
-        """Return a disc player icon for the device."""
-        return "mdi:disc-player"
-
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return self._name
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self._duration
-
-    @property
-    def media_position(self):
-        """Position of current playing media in seconds."""
-        return self._position
-
-    @property
-    def media_position_updated_at(self):
-        """When was the position of the current playing media valid."""
-        return self._position_valid
+        self._attr_media_position = 0
+        self._attr_media_duration = 0
 
     def update(self) -> None:
         """Update the internal state by querying the device."""
@@ -109,11 +84,11 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         # Update our current media position + length
         if state[1] >= 0:
-            self._position = state[1]
+            self._attr_media_position = state[1]
         else:
-            self._position = 0
-        self._position_valid = utcnow()
-        self._duration = state[2]
+            self._attr_media_position = 0
+        self._attr_media_position_updated_at = utcnow()
+        self._attr_media_duration = state[2]
 
     def turn_off(self) -> None:
         """
