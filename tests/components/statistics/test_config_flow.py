@@ -21,10 +21,7 @@ from tests.common import MockConfigEntry
     (
         (
             "calendar",
-            {
-                "calendar_offset": 2,
-                "calendar_period": "day",
-            },
+            {"calendar_offset": 2, "calendar_period": "day"},
             {"offset": 2, "period": "day"},
         ),
         (
@@ -115,24 +112,15 @@ async def test_config_flow(
     (
         (
             "calendar",
-            {
-                "period": "day",
-                "offset": 2,
-            },
+            {"period": "day", "offset": 2},
         ),
         (
             "fixed_period",
-            {
-                "start_time": "2022-03-24 00:00",
-                "end_time": "2022-03-24 00:00",
-            },
+            {"start_time": "2022-03-24 00:00", "end_time": "2022-03-24 00:00"},
         ),
         (
             "rolling_window",
-            {
-                "duration": {"days": 365},
-                "offset": {"days": -365},
-            },
+            {"duration": {"days": 365}, "offset": {"days": -365}},
         ),
     ),
 )
@@ -292,3 +280,75 @@ async def test_options(recorder_mock, hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("sensor.my_statistics")
     assert state.state == "-12.0"
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+@pytest.mark.parametrize(
+    "period_type, period, suggested_values",
+    (
+        (
+            "calendar",
+            {"offset": -2, "period": "day"},
+            {"calendar_offset": -2, "calendar_period": "day"},
+        ),
+        (
+            "fixed_period",
+            {"start_time": "2022-03-24 00:00", "end_time": "2022-03-24 00:00"},
+            {},
+        ),
+        (
+            "rolling_window",
+            {"duration": {"days": 365}, "offset": {"days": -365}},
+            {},
+        ),
+    ),
+)
+async def test_options_edit_period(
+    recorder_mock, hass: HomeAssistant, period_type, period, suggested_values
+) -> None:
+    """Test reconfiguring period."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_id": "sensor.input_one",
+            "name": "My statistics",
+            "period": {period_type: period},
+            "precision": 2.0,
+            "state_characteristic": "value_max_lts",
+        },
+        title="My statistics",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert get_suggested(schema, "entity_id") == "sensor.input_one"
+    assert get_suggested(schema, "precision") == 2.0
+    assert get_suggested(schema, "state_characteristic") == "value_max_lts"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "entity_id": "sensor.input_two",
+            "precision": 1,
+            "state_characteristic": "value_max_lts",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": period_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == period_type
+
+    schema = result["data_schema"].schema
+    for key, configured_value in period.items():
+        assert get_suggested(schema, f"{period_type}_{key}") == configured_value

@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import statistics
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant import config as hass_config
+from homeassistant.components.recorder import EVENT_RECORDER_5MIN_STATISTICS_GENERATED
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -28,7 +31,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from .common import generate_statistics
+
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
@@ -1275,3 +1280,113 @@ async def test_reload(recorder_mock, hass: HomeAssistant):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
+
+
+async def test_lts_missing(recorder_mock, hass: HomeAssistant) -> None:
+    """Test updating when there is no lts data for the input sensor."""
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=STATISTICS_DOMAIN,
+        options={
+            "entity_id": "sensor.input_one",
+            "name": "My statistics",
+            "period": {"calendar": {"offset": -2, "period": "day"}},
+            "precision": 2.0,
+            "state_characteristic": "value_max_lts",
+        },
+        title="My statistics",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the initial state of the entity
+    state = hass.states.get("sensor.my_statistics")
+    assert state.state == "unavailable"
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+async def test_lts_updated(recorder_mock, hass: HomeAssistant) -> None:
+    """Test updating when lts has been generated."""
+
+    now = dt_util.utcnow()
+
+    zero = now
+    start = zero.replace(minute=0, second=0, microsecond=0) + timedelta(days=-2)
+
+    await generate_statistics(hass, "sensor.input_one", start, 6)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=STATISTICS_DOMAIN,
+        options={
+            "entity_id": "sensor.input_one",
+            "name": "My statistics",
+            "period": {"calendar": {"offset": -2, "period": "day"}},
+            "precision": 2.0,
+            "state_characteristic": "value_max_lts",
+        },
+        title="My statistics",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the initial state of the entity
+    state = hass.states.get("sensor.my_statistics")
+    assert state.state == "10.0"
+
+    await generate_statistics(hass, "sensor.input_one", start + timedelta(hours=6), 12)
+    hass.bus.async_fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_statistics")
+    assert state.state == "22.0"
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+async def test_lts_unit(recorder_mock, hass: HomeAssistant) -> None:
+    """Test state unit is preferred."""
+
+    now = dt_util.utcnow()
+
+    zero = now
+    start = zero.replace(minute=0, second=0, microsecond=0) + timedelta(days=-2)
+
+    await generate_statistics(hass, "sensor.input_one", start, 6)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=STATISTICS_DOMAIN,
+        options={
+            "entity_id": "sensor.input_one",
+            "name": "My statistics",
+            "period": {"calendar": {"offset": -2, "period": "day"}},
+            "precision": 2.0,
+            "state_characteristic": "value_max_lts",
+        },
+        title="My statistics",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the initial state of the entity
+    state = hass.states.get("sensor.my_statistics")
+    assert state.state == "10.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+
+    hass.states.async_set("sensor.input_one", "blah", {ATTR_UNIT_OF_MEASUREMENT: "°F"})
+    await generate_statistics(hass, "sensor.input_one", start + timedelta(hours=6), 6)
+    hass.bus.async_fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_statistics")
+    assert state.state == "50.0"  # 10 °C = 50 °F
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"

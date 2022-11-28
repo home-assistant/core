@@ -284,8 +284,6 @@ async def async_setup_entry(
     )
     state_characteristic = config_entry.options[CONF_STATE_CHARACTERISTIC]
 
-    entity: SensorEntity | None = None
-
     if state_characteristic in STATS_NUMERIC_SUPPORT_LTS:
         entity = LTSStatisticsSensor(
             source_entity_id=source_entity_id,
@@ -295,11 +293,7 @@ async def async_setup_entry(
             precision=DEFAULT_PRECISION,
             period=PERIOD_SCHEMA(config_entry.options["period"]),
         )
-
-    if not entity:
-        return
-
-    async_add_entities([entity], update_before_add=True)
+        async_add_entities([entity], update_before_add=True)
 
 
 async def async_setup_platform(
@@ -327,6 +321,14 @@ async def async_setup_platform(
         ],
         update_before_add=True,
     )
+
+
+def _round_state(value: StateType | datetime, precision: int) -> StateType | datetime:
+    with contextlib.suppress(TypeError):
+        value = round(cast(float, value), precision)
+        if precision == 0:
+            value = int(value)
+    return value
 
 
 class StatisticsSensor(SensorEntity):
@@ -626,10 +628,7 @@ class StatisticsSensor(SensorEntity):
         value = self._state_characteristic_fn()
 
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
-            with contextlib.suppress(TypeError):
-                value = round(cast(float, value), self._precision)
-                if self._precision == 0:
-                    value = int(value)
+            value = _round_state(value, self._precision)
         self._value = value
 
     # Statistics for numeric sensor
@@ -886,17 +885,22 @@ class LTSStatisticsSensor(SensorEntity):
             self._update_long_term_stats_from_database
         )
 
-    def _update_long_term_stats_from_database(self) -> None:
-        """Update the long term statistics from the database."""
+    def _unit_of_measurement(self) -> str | None:
+        """Return unit_of_measurement."""
 
-        result = get_metadata(
+        metadata_result = get_metadata(
             self.hass,
             statistic_ids=[self._source_entity_id],
         ).get(self._source_entity_id)
-        if result:
-            self._attr_native_unit_of_measurement = result[1].get("unit_of_measurement")
-        else:
-            self._attr_native_unit_of_measurement = None
+        if not metadata_result:
+            return None
+
+        return metadata_result[1].get("unit_of_measurement")
+
+    def _update_long_term_stats_from_database(self) -> None:
+        """Update the long term statistics from the database."""
+
+        self._attr_native_unit_of_measurement = self._unit_of_measurement()
 
         start_time, end_time = resolve_period(self._period)
         stat = statistic_during_period(
@@ -908,10 +912,7 @@ class LTSStatisticsSensor(SensorEntity):
             None,
         )
         value = stat.get(self._recorder_characteristic)
-        with contextlib.suppress(TypeError):
-            value = round(cast(float, value), self._precision)
-            if self._precision == 0:
-                value = int(value)
+        value = _round_state(value, self._precision)
 
         self._attr_native_value = value
         self._attr_available = self._attr_native_value is not None
