@@ -254,7 +254,7 @@ class OnkyoDevice(MediaPlayerEntity):
         self._receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         if name:
             # not discovered
             self._name = name
@@ -298,9 +298,9 @@ class OnkyoDevice(MediaPlayerEntity):
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = MediaPlayerState.ON
+            self._attr_state = MediaPlayerState.ON
         else:
-            self._pwstate = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
             self._attributes.pop(ATTR_PRESET, None)
@@ -361,11 +361,6 @@ class OnkyoDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._pwstate
 
     @property
     def volume_level(self):
@@ -509,9 +504,9 @@ class OnkyoDeviceZone(OnkyoDevice):
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = MediaPlayerState.ON
+            self._attr_state = MediaPlayerState.ON
         else:
-            self._pwstate = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
             return
 
         volume_raw = self.command(f"zone{self._zone}.volume=query")
