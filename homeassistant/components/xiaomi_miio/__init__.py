@@ -44,7 +44,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_LAZY_DISCOVER,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -287,7 +286,7 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
-    lazy_discover = entry.options.get(CONF_LAZY_DISCOVER, False)
+    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator] = DataUpdateCoordinator
 

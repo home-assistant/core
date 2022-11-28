@@ -58,8 +58,7 @@
         "step": {
             "init": {
                 "data": {
-                    "cloud_subdevices": "Use cloud to get connected subdevices",
-                    "lazy_discover": "Use lazy discover to optimize device connectivity"
+                    "cloud_subdevices": "Use cloud to get connected subdevices"
                 }
             }
         }

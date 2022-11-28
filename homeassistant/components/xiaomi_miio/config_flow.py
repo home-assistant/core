@@ -26,7 +26,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_LAZY_DISCOVER,
     CONF_MAC,
     CONF_MANUAL,
     DEFAULT_CLOUD_COUNTRY,
@@ -98,11 +97,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_CLOUD_SUBDEVICES,
                     default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
-                ): bool,
-                vol.Optional(
-                    CONF_LAZY_DISCOVER,
-                    default=self.config_entry.options.get(CONF_LAZY_DISCOVER, False),
-                ): bool,
+                ): bool
             }
         )
 
