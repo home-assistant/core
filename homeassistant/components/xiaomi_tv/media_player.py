@@ -58,6 +58,7 @@ def setup_platform(
 class XiaomiTV(MediaPlayerEntity):
     """Represent the Xiaomi TV for Home Assistant."""
 
+    _attr_assumed_state = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
@@ -70,18 +71,8 @@ class XiaomiTV(MediaPlayerEntity):
         # Initialize the Xiaomi TV.
         self._tv = pymitv.TV(ip)
         # Default name value, only to be overridden by user.
-        self._name = name
+        self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
-
-    @property
-    def name(self):
-        """Return the display name of this TV."""
-        return self._name
-
-    @property
-    def assumed_state(self):
-        """Indicate that state is assumed."""
-        return True
 
     def turn_off(self) -> None:
         """
