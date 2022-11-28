@@ -35,7 +35,11 @@ GATT_HEADER_SIZE = 3
 DISCONNECT_TIMEOUT = 5.0
 CONNECT_FREE_SLOT_TIMEOUT = 2.0
 GATT_READ_TIMEOUT = 30.0
-CLIENT_CONFIG_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb"
+
+# CCCD (Characteristic Client Config Descriptor)
+CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb"
+CCCD_NOTIFY_BYTES = b"\x01\x00"
+CCCD_INDICATE_BYTES = b"\x02\x00"
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -537,34 +541,42 @@ class ESPHomeClient(BaseBleakClient):
                 f"Characteristic {characteristic.uuid} does not have notify or indicate property set."
             )
 
-        if self._has_cache:
-            # If we have a cache, we are responsible for enabling notifications
-            # on the cccd (characteristic client config descriptor) handle since
-            # the esp32 will not have resolved the
-            # characteristic descriptors and cannot do it for us
-            cccd_descriptor = characteristic.get_descriptor(
-                CLIENT_CONFIG_DESCRIPTOR_UUID
-            )
-
-            if not cccd_descriptor:
-                raise BleakError(
-                    f"Characteristic {characteristic.uuid} does not have a "
-                    "characteristic client config descriptor."
-                )
-
-            await self._client.bluetooth_gatt_write_descriptor(
-                self._address_as_int,
-                cccd_descriptor.handle,
-                b"\x01" if "notify" in characteristic.properties else b"\x02",
-                wait_for_response=False,
-            )
-
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
             ble_handle,
             lambda handle, data: callback(data),
         )
         self._notify_cancels[ble_handle] = cancel_coro
+
+        if not self._has_cache:
+            return
+
+        # If we have a cache, we are responsible for enabling notifications
+        # on the cccd (characteristic client config descriptor) handle since
+        # the esp32 will not have resolved the
+        # characteristic descriptors and cannot do it for us
+        cccd_descriptor = characteristic.get_descriptor(CCCD_UUID)
+        if not cccd_descriptor:
+            raise BleakError(
+                f"Characteristic {characteristic.uuid} does not have a "
+                "characteristic client config descriptor."
+            )
+
+        _LOGGER.debug(
+            "%s: %s - %s: Writing to CCD descriptor %s for notifications with properties=%s",
+            self._source,
+            self._ble_device.name,
+            self._ble_device.address,
+            cccd_descriptor.handle,
+            characteristic.properties,
+        )
+        supports_notify = "notify" in characteristic.properties
+        await self._client.bluetooth_gatt_write_descriptor(
+            self._address_as_int,
+            cccd_descriptor.handle,
+            CCCD_NOTIFY_BYTES if supports_notify else CCCD_INDICATE_BYTES,
+            wait_for_response=False,
+        )
 
     @api_error_as_bleak_error
     async def stop_notify(
