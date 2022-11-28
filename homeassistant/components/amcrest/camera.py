@@ -225,7 +225,7 @@ class AmcrestCam(Camera):
             # Amcrest cameras only support one snapshot command at a time.
             # Hence need to wait if a previous snapshot has not yet finished.
             # Also need to check that camera is online and turned on before each wait
-            # and before initiating shapshot.
+            # and before initiating snapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
                 _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
