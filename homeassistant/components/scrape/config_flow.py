@@ -163,7 +163,7 @@ OPTIONS_FLOW = {
     ),
     "add_sensor": SchemaFlowFormStep(
         DATA_SCHEMA_SENSOR,
-        suggested_values=lambda _: {},
+        suggested_values=None,
         validate_user_input=validate_sensor_setup,
     ),
 }
