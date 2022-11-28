@@ -138,12 +138,14 @@ class RoonDevice(MediaPlayerEntity):
         return [self._server.entity_id(roon_name) for roon_name in roon_names]
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
+        if self.unique_id is None:
+            return None
         if self.player_data.get("source_controls"):
             dev_model = self.player_data["source_controls"][0].get("display_name")
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)} if self.unique_id else set(),
+            identifiers={(DOMAIN, self.unique_id)},
             name=self.name,
             manufacturer="RoonLabs",
             model=dev_model,
