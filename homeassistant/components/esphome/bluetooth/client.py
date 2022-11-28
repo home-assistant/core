@@ -556,6 +556,7 @@ class ESPHomeClient(BaseBleakClient):
                 self._address_as_int,
                 cccd_descriptor.handle,
                 b"\x01" if "notify" in characteristic.properties else b"\x02",
+                response=False,
             )
 
         cancel_coro = await self._client.bluetooth_gatt_start_notify(
