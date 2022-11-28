@@ -9,12 +9,14 @@
         "step": {
             "cloud": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "pin": "PIN k\u00f3d"
                 }
             },
             "local": {
                 "data": {
-                    "host": "Hostite\u013e"
+                    "host": "Hostite\u013e",
+                    "pin": "PIN k\u00f3d"
                 }
             }
         }

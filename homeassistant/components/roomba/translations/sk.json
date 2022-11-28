@@ -5,6 +5,9 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
+            "link": {
+                "title": "Op\u00e4tovne z\u00edska\u0165 heslo"
+            },
             "link_manual": {
                 "data": {
                     "password": "Heslo"

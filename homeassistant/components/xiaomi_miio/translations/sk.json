@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "incomplete_info": "Ne\u00fapln\u00e9 inform\u00e1cie na nastavenie zariadenia, \u017eiadny hostite\u013e alebo token.",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
@@ -13,6 +14,11 @@
         },
         "flow_title": "{name}",
         "step": {
+            "cloud": {
+                "data": {
+                    "cloud_password": "Heslo do cloudu"
+                }
+            },
             "connect": {
                 "data": {
                     "model": "Model zariadenia"

@@ -10,6 +10,9 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "2fa": {
+                "description": "Zadajte PIN zaslan\u00fd na v\u00e1\u0161 e-mail"
+            },
             "user": {
                 "data": {
                     "password": "Heslo"

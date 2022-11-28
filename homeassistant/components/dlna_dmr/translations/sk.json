@@ -11,11 +11,24 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
                 }
             }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Neplatn\u00e1 adresa URL"
         }
     }
 }
