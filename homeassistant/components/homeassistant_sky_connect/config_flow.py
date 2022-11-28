@@ -76,3 +76,7 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return "Sky Connect Multi-PAN"
+
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+        return "Home Assistant Sky Connect"

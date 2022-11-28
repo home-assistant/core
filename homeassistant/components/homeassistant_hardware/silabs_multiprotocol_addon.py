@@ -99,6 +99,10 @@ class BaseMultiPanFlow(FlowHandler):
         """
 
     @abstractmethod
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+
+    @abstractmethod
     def _zha_name(self) -> str:
         """Return the ZHA name."""
 
@@ -254,6 +258,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 data_schema=vol.Schema(
                     {vol.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
                 ),
+                description_placeholders={"hardware_name": self._hardware_name()},
             )
         if not user_input[CONF_ENABLE_MULTI_PAN]:
             return self.async_create_entry(title="", data={})

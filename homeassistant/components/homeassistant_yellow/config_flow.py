@@ -56,3 +56,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return "Yellow Multi-PAN"
+
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+        return "Home Assistant Yellow"
