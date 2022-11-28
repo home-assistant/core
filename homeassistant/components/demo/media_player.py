@@ -105,7 +105,6 @@ NETFLIX_PLAYER_SUPPORT = (
 class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
-    _attr_sound_mode_list = SOUND_MODE_LIST
     _attr_should_poll = False
     _attr_sound_mode_list = SOUND_MODE_LIST
 
@@ -195,16 +194,11 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     ) -> None:
         """Initialize the demo device."""
         super().__init__(name)
-        self.youtube_id = youtube_id
+        self._attr_media_content_id = youtube_id
         self._attr_media_title = media_title
         self._attr_media_duration = duration
         self._progress: int | None = int(duration * 0.15)
         self._progress_updated_at = dt_util.utcnow()
-
-    @property
-    def media_content_id(self) -> str:
-        """Return the content ID of current playing media."""
-        return self.youtube_id
 
     @property
     def media_image_url(self) -> str:
@@ -232,7 +226,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        if self._attr_state == MediaPlayerState.PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             return self._progress_updated_at
         return None
 
@@ -240,7 +234,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        self.youtube_id = media_id
+        self._attr_media_content_id = media_id
         self.schedule_update_ha_state()
 
     def media_pause(self) -> None:
@@ -361,6 +355,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     _attr_media_season = "1"
     _attr_media_series_title = "House of Cards"
     _attr_source_list = ["dvd", "youtube"]
+    _attr_supported_features = NETFLIX_PLAYER_SUPPORT
 
     def __init__(self) -> None:
         """Initialize the demo device."""
@@ -378,11 +373,6 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def media_episode(self) -> str:
         """Return the episode of current playing media (TV Show only)."""
         return str(self._cur_episode)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return NETFLIX_PLAYER_SUPPORT
 
     def media_previous_track(self) -> None:
         """Send previous track command."""
