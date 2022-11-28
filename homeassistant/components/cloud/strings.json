@@ -20,7 +20,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "You are using a legacy subscription. Please update your subscription to continue using Home Assistant Cloud."
+            "description": "We've recently updated our subscription system. To continue using Home Assistant Cloud you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
           }
         },
         "abort": {
