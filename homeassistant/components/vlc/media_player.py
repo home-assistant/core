@@ -70,7 +70,6 @@ class VlcDevice(MediaPlayerEntity):
         self._name = name
         self._volume = None
         self._muted = None
-        self._state = None
         self._media_position_updated_at = None
         self._media_position = None
         self._media_duration = None
@@ -79,11 +78,11 @@ class VlcDevice(MediaPlayerEntity):
         """Get the latest details from the device."""
         status = self._vlc.get_state()
         if status == vlc.State.Playing:
-            self._state = MediaPlayerState.PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif status == vlc.State.Paused:
-            self._state = MediaPlayerState.PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         else:
-            self._state = MediaPlayerState.IDLE
+            self._attr_state = MediaPlayerState.IDLE
         self._media_duration = self._vlc.get_length() / 1000
         position = self._vlc.get_position() * self._media_duration
         if position != self._media_position:
@@ -99,11 +98,6 @@ class VlcDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def volume_level(self):
@@ -148,17 +142,17 @@ class VlcDevice(MediaPlayerEntity):
     def media_play(self) -> None:
         """Send play command."""
         self._vlc.play()
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def media_pause(self) -> None:
         """Send pause command."""
         self._vlc.pause()
-        self._state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
 
     def media_stop(self) -> None:
         """Send stop command."""
         self._vlc.stop()
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -186,7 +180,7 @@ class VlcDevice(MediaPlayerEntity):
             self._vlc.play()
 
         await self.hass.async_add_executor_job(play)
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     async def async_browse_media(
         self,
