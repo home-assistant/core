@@ -164,7 +164,8 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def select_source(self, source: str) -> None:
         """Choose a different Pandora station and play it."""
-        assert self.source_list is not None
+        if self.source_list is None:
+            return
         try:
             station_index = self.source_list.index(source)
         except ValueError:
