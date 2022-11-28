@@ -26,6 +26,13 @@
     "options": {
         "error": {
             "code_format_mismatch": "K\u00f3d nezodpoved\u00e1 po\u017eadovan\u00e9mu po\u010dtu \u010d\u00edslic"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Po\u010det \u010d\u00edslic v PIN k\u00f3de pre z\u00e1mky"
+                }
+            }
         }
     }
 }

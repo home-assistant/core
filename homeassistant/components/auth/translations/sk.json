@@ -14,7 +14,8 @@
                 "setup": {
                     "description": "Jednorazov\u00e9 heslo bolo odoslan\u00e9 prostredn\u00edctvom **notify.{notify_service}**. Zadajte ho, pros\u00edm, ni\u017e\u0161ie:"
                 }
-            }
+            },
+            "title": "Ozn\u00e1menie jednorazov\u00e9ho hesla"
         }
     }
 }

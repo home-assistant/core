@@ -11,7 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostite\u013e"
+                    "host": "Hostite\u013e",
+                    "password": "Heslo API (ak heslo nem\u00e1te, nechajte pr\u00e1zdne)",
+                    "port": "API port"
                 }
             }
         }

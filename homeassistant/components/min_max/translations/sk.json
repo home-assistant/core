@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Vstupn\u00e9 entity"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Vstupn\u00e9 entity"
+                }
+            }
+        }
+    }
+}

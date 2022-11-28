@@ -11,7 +11,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Heslo pre {username} je neplatn\u00e9."
             },
             "user": {
                 "data": {

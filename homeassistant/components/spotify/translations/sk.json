@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL."
+        },
         "step": {
             "pick_implementation": {
                 "title": "Vyberte met\u00f3du overenia"

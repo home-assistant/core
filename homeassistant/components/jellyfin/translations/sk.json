@@ -8,7 +8,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "url": "URL"
                 }
             }
         }
