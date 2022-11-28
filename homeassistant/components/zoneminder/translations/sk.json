@@ -1,9 +1,13 @@
 {
     "config": {
         "abort": {
+            "auth_fail": "U\u017eivate\u013esk\u00e9 meno alebo heslo je nespr\u00e1vne.",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "error": {
+            "auth_fail": "U\u017eivate\u013esk\u00e9 meno alebo heslo je nespr\u00e1vne.",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {

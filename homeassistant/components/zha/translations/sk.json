@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_backup_json": "Neplatn\u00e1 z\u00e1loha JSON"
+        },
         "flow_title": "{name}",
         "step": {
             "confirm": {
@@ -19,6 +23,15 @@
             "button_4": "\u0160tvrt\u00e9 tla\u010didlo",
             "button_5": "Piate tla\u010didlo",
             "button_6": "\u0160ieste tla\u010didlo"
+        },
+        "trigger_type": {
+            "device_offline": "Zariadenie je offline"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_backup_json": "Neplatn\u00e1 z\u00e1loha JSON"
         }
     }
 }

@@ -11,7 +11,8 @@
                 "data": {
                     "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "title": "Vyberte adresu pripojenia"
             },
             "setup_serial": {
                 "data": {

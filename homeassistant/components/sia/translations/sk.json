@@ -1,8 +1,23 @@
 {
     "config": {
+        "error": {
+            "invalid_account_format": "\u00da\u010det nie je hexadecim\u00e1lna hodnota, pou\u017e\u00edvajte len 0-9 a A-F.",
+            "invalid_account_length": "\u00da\u010det nem\u00e1 spr\u00e1vnu d\u013a\u017eku, mus\u00ed ma\u0165 od 3 do 16 znakov.",
+            "invalid_key_format": "K\u013e\u00fa\u010d nie je hexadecim\u00e1lna hodnota, pou\u017e\u00edvajte len 0-9 a A-F.",
+            "invalid_key_length": "K\u013e\u00fa\u010d nem\u00e1 spr\u00e1vnu d\u013a\u017eku, mus\u00ed ma\u0165 16, 24 alebo 32 hexadecim\u00e1lnych znakov.",
+            "invalid_ping": "Interval pingu mus\u00ed by\u0165 medzi 1 a 1440 min\u00fatami."
+        },
         "step": {
+            "additional_account": {
+                "data": {
+                    "ping_interval": "Ping Interval (min)"
+                },
+                "title": "Pridajte \u010fal\u0161\u00ed \u00fa\u010det k aktu\u00e1lnemu portu."
+            },
             "user": {
                 "data": {
+                    "account": "ID \u00fa\u010dtu",
+                    "ping_interval": "Ping Interval (min)",
                     "port": "Port",
                     "protocol": "Protokol"
                 }

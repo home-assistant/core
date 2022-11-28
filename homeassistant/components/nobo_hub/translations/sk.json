@@ -2,6 +2,17 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "invalid_ip": "Neplatn\u00e1 IP adresa",
+            "invalid_serial": "Neplatn\u00e9 s\u00e9riov\u00e9 \u010d\u00edslo"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "IP adresa"
+                }
+            }
         }
     }
 }

@@ -1,15 +1,39 @@
 {
     "config": {
+        "error": {
+            "already_exists": "Kamera s t\u00fdmito nastaveniami URL u\u017e existuje.",
+            "invalid_still_image": "Adresa URL nevr\u00e1tila platn\u00fd statick\u00fd obr\u00e1zok",
+            "malformed_url": "Chybne vytvoren\u00e1 adresa URL",
+            "relative_url": "Relat\u00edvne adresy URL nie s\u00fa povolen\u00e9",
+            "stream_no_route_to_host": "Pri pokuse o pripojenie k streamu sa nepodarilo n\u00e1js\u0165 hostite\u013ea",
+            "timeout": "\u010casov\u00fd limit pri na\u010d\u00edtan\u00ed adresy URL",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Zadajte nastavenia na pripojenie ku kamere."
+            },
+            "user_confirm_still": {
+                "description": "![Uk\u00e1\u017eka statick\u00e9ho obr\u00e1zka z fotoapar\u00e1tu]({preview_url})"
             }
         }
     },
     "options": {
+        "error": {
+            "already_exists": "Kamera s t\u00fdmito nastaveniami URL u\u017e existuje.",
+            "invalid_still_image": "Adresa URL nevr\u00e1tila platn\u00fd statick\u00fd obr\u00e1zok",
+            "malformed_url": "Chybne vytvoren\u00e1 adresa URL",
+            "stream_no_route_to_host": "Pri pokuse o pripojenie k streamu sa nepodarilo n\u00e1js\u0165 hostite\u013ea",
+            "timeout": "\u010casov\u00fd limit pri na\u010d\u00edtan\u00ed adresy URL",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
         "step": {
+            "confirm_still": {
+                "description": "![Uk\u00e1\u017eka statick\u00e9ho obr\u00e1zka z fotoapar\u00e1tu]({preview_url})"
+            },
             "init": {
                 "data": {
                     "password": "Heslo"

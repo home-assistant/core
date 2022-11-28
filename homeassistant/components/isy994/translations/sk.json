@@ -4,7 +4,9 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_host": "Z\u00e1znam hostite\u013ea nemal \u00fapln\u00fd form\u00e1t adresy URL, napr. http://192.168.10.100:80",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -18,8 +20,14 @@
                 "data": {
                     "host": "URL",
                     "password": "Heslo"
-                }
+                },
+                "description": "Polo\u017eka hostite\u013ea mus\u00ed by\u0165 v \u00faplnom form\u00e1te URL, napr. http://192.168.10.100:80"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "host_reachable": "Hostite\u013e je dostupn\u00fd"
         }
     }
 }

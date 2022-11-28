@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d"
+        },
         "step": {
             "user": {
                 "data": {

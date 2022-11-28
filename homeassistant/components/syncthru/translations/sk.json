@@ -1,15 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "invalid_url": "Neplatn\u00e1 adresa URL",
+            "unknown_state": "Nezn\u00e1my stav tla\u010diarne, overte URL a sie\u0165ov\u00e9 pripojenie"
+        },
         "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "url": "URL webov\u00e9ho rozhrania"
                 }
             },
             "user": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "url": "URL webov\u00e9ho rozhrania"
                 }
             }
         }

@@ -414,3 +414,8 @@ async def test_setup_config_entry(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.current_version")
+
+    assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"

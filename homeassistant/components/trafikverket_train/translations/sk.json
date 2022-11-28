@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "incorrect_api_key": "Neplatn\u00fd k\u013e\u00fa\u010d API pre vybran\u00e9 konto"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "weekday": "Dni"
+                }
+            }
+        }
+    }
+}

@@ -1,9 +1,27 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "error": {
+            "bad_pin_format": "PIN by mal ma\u0165 4 \u010d\u00edslice",
+            "bad_validation_code_format": "Overovac\u00ed k\u00f3d by mal ma\u0165 6 \u010d\u00edslic",
+            "incorrect_pin": "Nespr\u00e1vny PIN",
+            "incorrect_validation_code": "Nespr\u00e1vny overovac\u00ed k\u00f3d",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Overovac\u00ed k\u00f3d"
+                },
+                "description": "Zadajte prijat\u00fd overovac\u00ed k\u00f3d"
+            },
             "user": {
                 "data": {
                     "password": "Heslo"

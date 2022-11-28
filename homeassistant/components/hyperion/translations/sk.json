@@ -1,10 +1,30 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "auth_new_token_not_granted_error": "Novovytvoren\u00fd token nebol schv\u00e1len\u00fd v pou\u017e\u00edvate\u013eskom rozhran\u00ed Hyperion",
+            "auth_new_token_not_work_error": "Nepodarilo sa overi\u0165 pomocou novovytvoren\u00e9ho tokenu",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_access_token": "Neplatn\u00fd pr\u00edstupov\u00fd token"
+        },
         "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Automaticky vytvori\u0165 nov\u00fd token",
+                    "token": "Alebo poskytnite u\u017e existuj\u00faci token"
+                }
+            },
+            "create_token": {
+                "title": "Automaticky vytvori\u0165 nov\u00fd autentifika\u010dn\u00fd token"
+            },
+            "create_token_external": {
+                "title": "Prijmite nov\u00fd token v pou\u017e\u00edvate\u013eskom rozhran\u00ed Hyperion"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",

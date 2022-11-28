@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -10,7 +11,17 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API k\u013e\u00fa\u010d"
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wanted_max_items": "Maxim\u00e1lny po\u010det po\u017eadovan\u00fdch polo\u017eiek na zobrazenie"
                 }
             }
         }

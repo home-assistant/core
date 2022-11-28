@@ -1,7 +1,9 @@
 {
     "config": {
         "error": {
-            "service_unavailable_error": "Rozhranie API je moment\u00e1lne nedostupn\u00e9, sk\u00faste to pros\u00edm nesk\u00f4r."
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "service_unavailable_error": "Rozhranie API je moment\u00e1lne nedostupn\u00e9, sk\u00faste to pros\u00edm nesk\u00f4r.",
+            "unknown_auth_error": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "reauth_confirm": {
@@ -12,6 +14,9 @@
             "user": {
                 "data": {
                     "password": "Heslo"
+                },
+                "data_description": {
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno slu\u017eby Meater Cloud, zvy\u010dajne e-mailov\u00e1 adresa."
                 }
             }
         }

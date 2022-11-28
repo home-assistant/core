@@ -1,7 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "account_not_verified": "\u00da\u010det nie je overen\u00fd. Aktivujte si svoj \u00fa\u010det prostredn\u00edctvom aktiva\u010dn\u00e9ho e-mailu od Crownstone.",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {

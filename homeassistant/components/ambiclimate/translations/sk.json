@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "access_token": "Nezn\u00e1ma chyba pri generovan\u00ed pr\u00edstupov\u00e9ho tokenu.",
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
             "missing_configuration": "Komponent nie je nakonfigurovan\u00fd. Postupujte pod\u013ea dokument\u00e1cie."
         },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9"
+        },
+        "error": {
+            "no_token": "Neoveren\u00e9 pomocou Ambiclimate"
         }
     }
 }

@@ -1,7 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "invalid_discovery_info": "Prijat\u00e9 neplatn\u00e9 inform\u00e1cie o zis\u0165ovan\u00ed",
+            "link_local_address": "Lok\u00e1lne adresy odkazov nie s\u00fa podporovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "manual_entry": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "host": "Hostite\u013e"
+                }
+            }
         }
     }
 }

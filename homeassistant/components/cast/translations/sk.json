@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_known_hosts": "Zn\u00e1mi hostitelia musia by\u0165 v  zozname hostite\u013eov oddelen\u00fd \u010diarkami."
+        },
         "step": {
             "config": {
                 "data": {
@@ -12,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_known_hosts": "Zn\u00e1mi hostitelia musia by\u0165 v  zozname hostite\u013eov oddelen\u00fd \u010diarkami."
+        },
         "step": {
             "basic_options": {
                 "data": {

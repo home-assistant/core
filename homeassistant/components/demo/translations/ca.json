@@ -11,6 +11,14 @@
             },
             "title": "La font d'alimentaci\u00f3 no \u00e9s estable"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "No es pot tornar a escalfar el te en aquest moment"
+                }
+            },
+            "title": "El te \u00e9s fred"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

@@ -87,6 +87,7 @@ def _mocked_bulb() -> Light:
     bulb.set_reboot = Mock()
     bulb.try_sending = AsyncMock()
     bulb.set_infrared = MockLifxCommand(bulb)
+    bulb.get_label = MockLifxCommand(bulb)
     bulb.get_color = MockLifxCommand(bulb)
     bulb.set_power = MockLifxCommand(bulb)
     bulb.set_color = MockLifxCommand(bulb)

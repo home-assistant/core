@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia.",
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL."
+        },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9"
         },

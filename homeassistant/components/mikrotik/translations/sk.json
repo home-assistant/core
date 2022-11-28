@@ -1,13 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "name_exists": "N\u00e1zov existuje"
         },
         "step": {
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Heslo pre {username} je neplatn\u00e9."
             },
             "user": {
                 "data": {
@@ -15,6 +21,15 @@
                     "name": "N\u00e1zov",
                     "password": "Heslo",
                     "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "Povoli\u0165 ARP ping"
                 }
             }
         }

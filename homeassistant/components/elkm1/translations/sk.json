@@ -1,21 +1,30 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "{mac_address} ({host})",
         "step": {
             "discovered_connection": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "protocol": "Protokol"
+                },
+                "description": "Pripojte sa k objaven\u00e9mu syst\u00e9mu: {mac_address} ({host})"
             },
             "manual_connection": {
                 "data": {
-                    "password": "Heslo"
+                    "address": "IP adresa alebo dom\u00e9na alebo s\u00e9riov\u00fd port, ak sa prip\u00e1jate cez s\u00e9riov\u00fd port.",
+                    "password": "Heslo",
+                    "protocol": "Protokol"
                 }
             },
             "user": {

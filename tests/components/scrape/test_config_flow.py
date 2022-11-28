@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -78,6 +79,7 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             }
         ],
     }
@@ -148,6 +150,7 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             }
         ],
     }
@@ -192,6 +195,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
                     CONF_NAME: "Current version",
                     CONF_SELECT: ".current-version h1",
                     CONF_INDEX: 0.0,
+                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
                 }
             ],
         }

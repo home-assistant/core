@@ -1,11 +1,16 @@
 {
     "config": {
+        "error": {
+            "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d",
+            "rate_limited": "Moment\u00e1lne je r\u00fdchlos\u0165 obmedzen\u00e1, sk\u00faste to pros\u00edm nesk\u00f4r."
+        },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d",
                     "name": "Meno"
-                }
+                },
+                "description": "Ak chcete z\u00edska\u0165 k\u013e\u00fa\u010d API, zaregistrujte sa na [Tomorrow.io] (https://app.tomorrow.io/signup)."
             }
         }
     }

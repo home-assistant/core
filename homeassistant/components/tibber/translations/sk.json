@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "error": {
+            "invalid_access_token": "Neplatn\u00fd pr\u00edstupov\u00fd token"
+        },
         "step": {
             "user": {
                 "data": {

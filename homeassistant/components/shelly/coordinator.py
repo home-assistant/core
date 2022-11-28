@@ -169,6 +169,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                 "inputEvent" not in block.sensor_ids
                 or "inputEventCnt" not in block.sensor_ids
             ):
+                LOGGER.debug("Skipping non-input event block %s", block.description)
                 continue
 
             channel = int(block.channel or 0) + 1
@@ -181,6 +182,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                 or last_event_count == block.inputEventCnt
                 or event_type == ""
             ):
+                LOGGER.debug("Skipping block event %s", event_type)
                 continue
 
             if event_type in INPUTS_EVENTS_DICT:
@@ -193,12 +195,6 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                         ATTR_CLICK_TYPE: INPUTS_EVENTS_DICT[event_type],
                         ATTR_GENERATION: 1,
                     },
-                )
-            else:
-                LOGGER.warning(
-                    "Shelly input event %s for device %s is not supported, please open issue",
-                    event_type,
-                    self.name,
                 )
 
         if self._last_cfg_changed is not None and cfg_changed > self._last_cfg_changed:
@@ -611,11 +607,6 @@ class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
             self.entry.async_start_reauth(self.hass)
 
     @property
-    def model(self) -> str:
-        """Model of the device."""
-        return cast(str, self.entry.data["model"])
-
-    @property
     def mac(self) -> str:
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
@@ -625,9 +616,6 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
     dev_reg = device_registry.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
@@ -644,9 +632,6 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
     dev_reg = device_registry.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
