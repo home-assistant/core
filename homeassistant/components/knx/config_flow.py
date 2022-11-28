@@ -313,7 +313,6 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         if user_input is not None:
             self.new_entry_data |= KNXConfigEntryData(
-                connection_type=CONF_KNX_TUNNELING_TCP_SECURE,
                 device_authentication=user_input[CONF_KNX_SECURE_DEVICE_AUTHENTICATION],
                 user_id=user_input[CONF_KNX_SECURE_USER_ID],
                 user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
@@ -428,10 +427,13 @@ class KNXCommonFlow(ABC, FlowHandler):
 
             if not errors:
                 self.new_entry_data |= KNXConfigEntryData(
-                    backbone_key=None,
-                    sync_latency_tolerance=None,
                     knxkeys_filename=storage_key,
                     knxkeys_password=user_input[CONF_KNX_KNXKEY_PASSWORD],
+                    backbone_key=None,
+                    sync_latency_tolerance=None,
+                    device_authentication=None,
+                    user_id=None,
+                    user_password=None,
                 )
                 if (
                     self.new_entry_data[CONF_KNX_CONNECTION_TYPE]
@@ -442,10 +444,11 @@ class KNXCommonFlow(ABC, FlowHandler):
                     title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
                 return self.finish_flow(title=title)
 
+        if _default_filename := self.initial_data.get(CONF_KNX_KNXKEY_FILENAME):
+            _default_filename = _default_filename.lstrip(CONST_KNX_STORAGE_KEY)
         fields = {
             vol.Required(
-                CONF_KNX_KNXKEY_FILENAME,
-                default=self.initial_data.get(CONF_KNX_KNXKEY_FILENAME),
+                CONF_KNX_KNXKEY_FILENAME, default=_default_filename
             ): selector.TextSelector(),
             vol.Required(
                 CONF_KNX_KNXKEY_PASSWORD,
