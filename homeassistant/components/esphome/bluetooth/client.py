@@ -206,10 +206,14 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
-        resolve_services = not (
+        entry_data = self.entry_data
+        self._mtu = self.entry_data.get_gatt_mtu_cache(self._address_as_int)
+        has_cache = bool(
             dangerous_use_bleak_cache
-            and self.entry_data.device_info.bluetooth_proxy_version >= 3
-            and self.entry_data.get_gatt_services_cache(self._address_as_int)
+            and entry_data.device_info
+            and entry_data.device_info.bluetooth_proxy_version >= 3
+            and entry_data.get_gatt_services_cache(self._address_as_int)
+            and self._mtu
         )
         connected_future: asyncio.Future[bool] = asyncio.Future()
 
@@ -228,7 +232,9 @@ class ESPHomeClient(BaseBleakClient):
             )
             if connected:
                 self._is_connected = True
-                self._mtu = mtu
+                if not self._mtu:
+                    self._mtu = mtu
+                    entry_data.set_gatt_mtu_cache(self._address_as_int, mtu)
             else:
                 self._async_ble_device_disconnected()
 
@@ -275,7 +281,7 @@ class ESPHomeClient(BaseBleakClient):
                         self._address_as_int,
                         _on_bluetooth_connection_state,
                         timeout=timeout,
-                        resolve_services=resolve_services,
+                        has_cache=has_cache,
                     )
                 )
             except Exception:  # pylint: disable=broad-except
