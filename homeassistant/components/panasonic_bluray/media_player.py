@@ -60,7 +60,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         """Initialize the Panasonic Blue-ray device."""
         self._device = PanasonicBD(ip)
         self._name = name
-        self._state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self._position = 0
         self._duration = 0
         self._position_valid = 0
@@ -74,11 +74,6 @@ class PanasonicBluRay(MediaPlayerEntity):
     def name(self):
         """Return the display name of this device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return _state variable, containing the appropriate constant."""
-        return self._state
 
     @property
     def media_duration(self):
@@ -101,16 +96,16 @@ class PanasonicBluRay(MediaPlayerEntity):
         state = self._device.get_play_status()
 
         if state[0] == "error":
-            self._state = None
+            self._attr_state = None
         elif state[0] in ["off", "standby"]:
             # We map both of these to off. If it's really off we can't
             # turn it on, but from standby we can go to idle by pressing
             # POWER.
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         elif state[0] in ["paused", "stopped"]:
-            self._state = MediaPlayerState.IDLE
+            self._attr_state = MediaPlayerState.IDLE
         elif state[0] == "playing":
-            self._state = MediaPlayerState.PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
 
         # Update our current media position + length
         if state[1] >= 0:
@@ -129,17 +124,17 @@ class PanasonicBluRay(MediaPlayerEntity):
         our favour as it means the device is still accepting commands and we
         can thus turn it back on when desired.
         """
-        if self._state != MediaPlayerState.OFF:
+        if self.state != MediaPlayerState.OFF:
             self._device.send_key("POWER")
 
-        self._state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
 
     def turn_on(self) -> None:
         """Wake the device back up from standby."""
-        if self._state == MediaPlayerState.OFF:
+        if self.state == MediaPlayerState.OFF:
             self._device.send_key("POWER")
 
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
     def media_play(self) -> None:
         """Send play command."""
