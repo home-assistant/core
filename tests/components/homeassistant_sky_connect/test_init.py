@@ -193,6 +193,57 @@ async def test_setup_zha_multipan(
     assert config_entry.title == "Sky Connect Multi-PAN"
 
 
+async def test_setup_zha_multipan_other_device(
+    mock_zha_config_flow_setup, hass: HomeAssistant, addon_info, addon_running
+) -> None:
+    """Test zha gets the right config."""
+    addon_info.return_value["options"]["device"] = "/dev/not_our_sky_connect"
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
+        return_value=True,
+    ) as mock_is_plugged_in, patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_is_plugged_in.mock_calls) == 1
+
+    # Finish setting up ZHA
+    zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
+    assert len(zha_flows) == 1
+    assert zha_flows[0]["step_id"] == "choose_formation_strategy"
+
+    await hass.config_entries.flow.async_configure(
+        zha_flows[0]["flow_id"],
+        user_input={"next_step_id": zha.config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries("zha")[0]
+    assert config_entry.data == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": "software",
+            "path": CONFIG_ENTRY_DATA["device"],
+        },
+        "radio_type": "ezsp",
+    }
+    assert config_entry.options == {}
+    assert config_entry.title == CONFIG_ENTRY_DATA["description"]
+
+
 async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
     """Test setup of a config entry when the dongle is not plugged in."""
     # Setup the config entry
