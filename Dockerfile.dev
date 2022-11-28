@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM mcr.microsoft.com/devcontainers/python:0-3.9
 
 # Ensure RUN fails if any command fails
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]

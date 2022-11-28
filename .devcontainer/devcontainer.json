@@ -2,9 +2,6 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:1": {}
-  },
   "containerUser": "vscode",
   "postCreateCommand": "script/setup && pre-commit install --install-hooks",
   "postStartCommand": "script/bootstrap",
