@@ -200,7 +200,7 @@ class SchemaCommonFlowHandler:
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
-            data_schema = self._handler.schema_with_suggested_values(
+            data_schema = self._handler.add_suggested_values_to_schema(
                 data_schema, suggested_values
             )
 
