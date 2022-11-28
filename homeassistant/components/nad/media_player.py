@@ -92,7 +92,9 @@ class NAD(MediaPlayerEntity):
         self._source_dict = config[CONF_SOURCE_DICT]
         self._reverse_mapping = {value: key for key, value in self._source_dict.items()}
 
-        self._volume = self._state = self._mute = self._source = None
+        self._volume = None
+        self._mute = None
+        self._source = None
 
     def _instantiate_nad_receiver(self) -> NADReceiver:
         if self.config[CONF_TYPE] == "RS232":
@@ -106,11 +108,6 @@ class NAD(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self.config[CONF_NAME]
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def icon(self):
@@ -171,21 +168,21 @@ class NAD(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return if device is available."""
-        return self._state is not None
+        return self.state is not None
 
     def update(self) -> None:
         """Retrieve latest state."""
         power_state = self._nad_receiver.main_power("?")
         if not power_state:
-            self._state = None
+            self._attr_state = None
             return
-        self._state = (
+        self._attr_state = (
             MediaPlayerState.ON
             if self._nad_receiver.main_power("?") == "On"
             else MediaPlayerState.OFF
         )
 
-        if self._state == MediaPlayerState.ON:
+        if self.state == MediaPlayerState.ON:
             self._mute = self._nad_receiver.main_mute("?") == "On"
             volume = self._nad_receiver.main_volume("?")
             # Some receivers cannot report the volume, e.g. C 356BEE,
@@ -226,7 +223,6 @@ class NADtcp(MediaPlayerEntity):
         self._min_vol = (config[CONF_MIN_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._max_vol = (config[CONF_MAX_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._volume_step = config[CONF_VOLUME_STEP]
-        self._state = None
         self._mute = None
         self._nad_volume = None
         self._volume = None
@@ -237,11 +233,6 @@ class NADtcp(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def volume_level(self):
@@ -308,9 +299,9 @@ class NADtcp(MediaPlayerEntity):
 
         # Update on/off state
         if nad_status["power"]:
-            self._state = MediaPlayerState.ON
+            self._attr_state = MediaPlayerState.ON
         else:
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
         # Update current volume
         self._volume = self.nad_vol_to_internal_vol(nad_status["volume"])
