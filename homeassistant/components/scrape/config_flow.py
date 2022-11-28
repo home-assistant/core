@@ -134,7 +134,8 @@ def validate_sensor_setup(
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
     user_input[CONF_UNIQUE_ID] = str(uuid.uuid1())
 
-    # Bypass standard behavior to update sub-items
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
     sensors: list[dict[str, Any]] = handler.options.setdefault("sensor", [])
     sensors.append(user_input)
     return {}
