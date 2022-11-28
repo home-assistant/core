@@ -67,7 +67,9 @@ async def async_connect_scanner(
         source=source,
         can_connect=_async_can_connect_factory(entry_data, source),
     )
-    scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
+    scanner = ESPHomeScanner(
+        hass, source, entry.title, new_info_callback, connector, connectable
+    )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),

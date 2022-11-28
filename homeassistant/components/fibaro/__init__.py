@@ -79,11 +79,13 @@ FIBARO_TYPEMAP = {
     "com.fibaro.colorController": Platform.LIGHT,
     "com.fibaro.securitySensor": Platform.BINARY_SENSOR,
     "com.fibaro.hvac": Platform.CLIMATE,
+    "com.fibaro.hvacSystem": Platform.CLIMATE,
     "com.fibaro.setpoint": Platform.CLIMATE,
     "com.fibaro.FGT001": Platform.CLIMATE,
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(

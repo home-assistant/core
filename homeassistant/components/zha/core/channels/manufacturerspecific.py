@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from zigpy import types
+from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
@@ -110,6 +110,11 @@ class OppleRemote(ZigbeeChannel):
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
             }
+        elif self.cluster.endpoint.model == "lumi.motion.agl04":
+            self.ZCL_INIT_ATTRS = {
+                "detection_interval": True,
+                "motion_sensitivity": True,
+            }
         elif self.cluster.endpoint.model == "lumi.motion.ac01":
             self.ZCL_INIT_ATTRS = {
                 "presence": True,
@@ -121,10 +126,21 @@ class OppleRemote(ZigbeeChannel):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
             }
+        elif self.cluster.endpoint.model == "aqara.feeder.acn001":
+            self.ZCL_INIT_ATTRS = {
+                "portions_dispensed": True,
+                "weight_dispensed": True,
+                "error_detected": True,
+                "disable_led_indicator": True,
+                "child_lock": True,
+                "feeding_mode": True,
+                "serving_size": True,
+                "portion_weight": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
-        if self.cluster.endpoint.model == "lumi.motion.ac02":
+        if self.cluster.endpoint.model in ("lumi.motion.ac02", "lumi.motion.agl04"):
             interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
             if interval is not None:
                 self.debug("Loaded detection interval at startup: %s", interval)
@@ -183,59 +199,47 @@ class InovelliNotificationChannel(ClientChannel):
 class InovelliConfigEntityChannel(ZigbeeChannel):
     """Inovelli Configuration Entity channel."""
 
-    class LEDEffectType(types.enum8):
-        """Effect type for Inovelli Blue Series switch."""
-
-        Off = 0x00
-        Solid = 0x01
-        Fast_Blink = 0x02
-        Slow_Blink = 0x03
-        Pulse = 0x04
-        Chase = 0x05
-        Open_Close = 0x06
-        Small_To_Big = 0x07
-        Clear = 0xFF
-
     REPORT_CONFIG = ()
     ZCL_INIT_ATTRS = {
-        "dimming_speed_up_remote": False,
-        "dimming_speed_up_local": False,
-        "ramp_rate_off_to_on_local": False,
-        "ramp_rate_off_to_on_remote": False,
-        "dimming_speed_down_remote": False,
-        "dimming_speed_down_local": False,
-        "ramp_rate_on_to_off_local": False,
-        "ramp_rate_on_to_off_remote": False,
-        "minimum_level": False,
-        "maximum_level": False,
-        "invert_switch": False,
-        "auto_off_timer": False,
-        "default_level_local": False,
-        "default_level_remote": False,
-        "state_after_power_restored": False,
-        "load_level_indicator_timeout": False,
-        "active_power_reports": False,
-        "periodic_power_and_energy_reports": False,
-        "active_energy_reports": False,
+        "dimming_speed_up_remote": True,
+        "dimming_speed_up_local": True,
+        "ramp_rate_off_to_on_local": True,
+        "ramp_rate_off_to_on_remote": True,
+        "dimming_speed_down_remote": True,
+        "dimming_speed_down_local": True,
+        "ramp_rate_on_to_off_local": True,
+        "ramp_rate_on_to_off_remote": True,
+        "minimum_level": True,
+        "maximum_level": True,
+        "invert_switch": True,
+        "auto_off_timer": True,
+        "default_level_local": True,
+        "default_level_remote": True,
+        "state_after_power_restored": True,
+        "load_level_indicator_timeout": True,
+        "active_power_reports": True,
+        "periodic_power_and_energy_reports": True,
+        "active_energy_reports": True,
         "power_type": False,
         "switch_type": False,
         "button_delay": False,
         "smart_bulb_mode": False,
-        "double_tap_up_for_full_brightness": False,
-        "led_color_when_on": False,
-        "led_color_when_off": False,
-        "led_intensity_when_on": False,
-        "led_intensity_when_off": False,
+        "double_tap_up_for_full_brightness": True,
+        "led_color_when_on": True,
+        "led_color_when_off": True,
+        "led_intensity_when_on": True,
+        "led_intensity_when_off": True,
         "local_protection": False,
         "output_mode": False,
-        "on_off_led_mode": False,
-        "firmware_progress_led": False,
-        "relay_click_in_on_off_mode": False,
+        "on_off_led_mode": True,
+        "firmware_progress_led": True,
+        "relay_click_in_on_off_mode": True,
+        "disable_clear_notifications_double_tap": True,
     }
 
     async def issue_all_led_effect(
         self,
-        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        effect_type: AllLEDEffectType | int = AllLEDEffectType.Fast_Blink,
         color: int = 200,
         level: int = 100,
         duration: int = 3,
@@ -251,7 +255,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
     async def issue_individual_led_effect(
         self,
         led_number: int = 1,
-        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        effect_type: SingleLEDEffectType | int = SingleLEDEffectType.Fast_Blink,
         color: int = 200,
         level: int = 100,
         duration: int = 3,

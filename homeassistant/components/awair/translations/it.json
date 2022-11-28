@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
             "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
@@ -26,9 +25,6 @@
                 "description": "Vuoi configurare {model} ({device_id})?"
             },
             "local": {
-                "data": {
-                    "host": "Indirizzo IP"
-                },
                 "description": "Segui [queste istruzioni]({url}) su come abilitare l'API Awair Local. \n\n Fai clic su Invia quando hai finito."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Dispositivo",
                     "host": "Indirizzo IP"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Token di accesso",
-                    "email": "Email"
-                },
-                "description": "Inserisci nuovamente il tuo token di accesso per sviluppatori Awair."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Inserisci nuovamente il tuo token di accesso sviluppatore Awair."
             },
             "user": {
-                "data": {
-                    "access_token": "Token di accesso",
-                    "email": "Email"
-                },
                 "description": "Scegli locale per la migliore esperienza. Utilizza il cloud solo se il dispositivo non \u00e8 connesso alla stessa rete di Home Assistant o se disponi di un dispositivo legacy.",
                 "menu_options": {
                     "cloud": "Connettiti tramite il cloud",

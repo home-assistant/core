@@ -1,10 +1,14 @@
 {
     "config": {
+        "error": {
+            "token_request_failed": "Chyba pri vy\u017eiadan\u00ed tokenov od ecobee; pros\u00edm sk\u00faste znova."
+        },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "title": "ecobee API k\u013e\u00fa\u010d"
             }
         }
     }

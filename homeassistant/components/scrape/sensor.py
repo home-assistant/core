@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
@@ -43,12 +45,17 @@ from homeassistant.helpers.template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -83,6 +90,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
+    coordinator: ScrapeCoordinator
+    sensors_config: list[ConfigType]
     if discovery_info is None:
         async_create_issue(
             hass,
@@ -96,37 +105,74 @@ async def async_setup_platform(
         resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
         rest = create_rest_data_from_config(hass, resource_config)
 
-        coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
-        await coordinator.async_refresh()
-        if coordinator.data is None:
-            raise PlatformNotReady
+        scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        coordinator = ScrapeCoordinator(hass, rest, scan_interval)
 
-        sensor_config = config
-        template_config = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-        )(sensor_config)
+        sensors_config = [
+            vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA)(
+                config
+            )
+        ]
 
     else:
         coordinator = discovery_info["coordinator"]
-        sensor_config = discovery_info["config"]
-        template_config = sensor_config
+        sensors_config = discovery_info["configs"]
 
-    name: str = template_config[CONF_NAME]
-    unique_id: str | None = template_config.get(CONF_UNIQUE_ID)
-    select: str | None = sensor_config.get(CONF_SELECT)
-    attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
-    index: int = sensor_config[CONF_INDEX]
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
 
-    if value_template is not None:
-        value_template.hass = hass
+    entities: list[ScrapeSensor] = []
+    for sensor_config in sensors_config:
+        value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = hass
 
-    async_add_entities(
-        [
+        entities.append(
             ScrapeSensor(
                 hass,
                 coordinator,
-                template_config,
+                sensor_config,
+                sensor_config[CONF_NAME],
+                sensor_config.get(CONF_UNIQUE_ID),
+                sensor_config[CONF_SELECT],
+                sensor_config.get(CONF_ATTRIBUTE),
+                sensor_config[CONF_INDEX],
+                value_template,
+            )
+        )
+
+    async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Scrape sensor entry."""
+    entities: list = []
+
+    coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    config = dict(entry.options)
+    for sensor in config["sensor"]:
+        sensor_config: ConfigType = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+        )(sensor)
+
+        name: str = sensor_config[CONF_NAME]
+        select: str = sensor_config[CONF_SELECT]
+        attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
+        index: int = int(sensor_config[CONF_INDEX])
+        value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        unique_id: str = sensor_config[CONF_UNIQUE_ID]
+
+        value_template: Template | None = (
+            Template(value_string, hass) if value_string is not None else None
+        )
+        entities.append(
+            ScrapeSensor(
+                hass,
+                coordinator,
+                sensor_config,
                 name,
                 unique_id,
                 select,
@@ -134,8 +180,9 @@ async def async_setup_platform(
                 index,
                 value_template,
             )
-        ],
-    )
+        )
+
+    async_add_entities(entities)
 
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
@@ -148,7 +195,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         config: ConfigType,
         name: str,
         unique_id: str | None,
-        select: str | None,
+        select: str,
         attr: str | None,
         index: int,
         value_template: Template | None,

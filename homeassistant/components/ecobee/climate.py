@@ -351,7 +351,7 @@ class Thermostat(ClimateEntity):
         return self.thermostat["runtime"]["connected"]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.has_humidifier_control:
             return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY

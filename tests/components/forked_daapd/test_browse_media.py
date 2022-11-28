@@ -379,7 +379,7 @@ async def test_async_browse_image(hass, hass_client, config_entry):
                 (MediaType.ARTIST, "3815427709949443149"),
                 (MediaType.TRACK, "456"),
             ):
-                mock_fetch_image.return_value = (b"image_bytes", media_type)
+                mock_fetch_image.return_value = (b"image_bytes", "image/jpeg")
                 media_content_id = create_media_content_id(
                     "title", media_type=media_type, id_or_path=media_id
                 )
@@ -391,7 +391,7 @@ async def test_async_browse_image(hass, hass_client, config_entry):
                     == f"http://owntone_instance/some_{media_type}_image"
                 )
                 assert resp.status == HTTPStatus.OK
-                assert resp.content_type == media_type
+                assert resp.content_type == "image/jpeg"
                 assert await resp.read() == b"image_bytes"
 
 

@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "invalid_address": "Adresa sa nena\u0161la v servisnej oblasti Twente Milieu."
+        }
+    }
+}

@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 from pytest import approx
 
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -927,3 +928,11 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+def test_device_classes_aligned():
+    """Make sure all number device classes are also available in SensorDeviceClass."""
+
+    for device_class in NumberDeviceClass:
+        assert hasattr(SensorDeviceClass, device_class.name)
+        assert getattr(SensorDeviceClass, device_class.name).value == device_class.value

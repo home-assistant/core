@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "no_auth_token": "Mus\u00edte prida\u0165 autoriza\u010dn\u00fd token"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "token": "Sem vlo\u017ete autoriza\u010dn\u00fd token"
+                },
+                "title": "Vyberte met\u00f3du API"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Pomenujte svoje zariadenie"
+                },
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Interval aktualiz\u00e1cie (v min\u00fatach)"
+                },
+                "description": "Nastavte interval aktualiz\u00e1cie (v min\u00fatach)"
+            }
+        }
+    }
+}

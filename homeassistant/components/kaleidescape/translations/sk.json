@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba",
+            "unsupported": "Nepodporovan\u00e9 zariadenie"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unsupported": "Nepodporovan\u00e9 zariadenie"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

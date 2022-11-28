@@ -31,9 +31,9 @@
             "description": "Die Konfiguration von Radarr mit YAML wird entfernt. \n\nDeine vorhandene YAML-Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert. \n\nEntferne die Radarr-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
             "title": "Die Radarr-YAML-Konfiguration wird entfernt"
         },
-        "removed_attributes": {
-            "description": "Es wurden einige \u00c4nderungen vorgenommen, um den Filmz\u00e4hlsensor aus Vorsicht zu deaktivieren.\n\nDieser Sensor kann bei gro\u00dfen Datenbanken Probleme verursachen. Wenn du ihn dennoch verwenden m\u00f6chtest, kannst du dies tun.\n\nFilmnamen werden nicht mehr als Attribute in den Filmsensor aufgenommen.\n\nUpcoming wurde entfernt. Er wird modernisiert, so wie es bei Kalenderelementen sein sollte. Der Speicherplatz ist jetzt in verschiedene Sensoren aufgeteilt, einen f\u00fcr jeden Ordner.\n\nStatus und Befehle wurden entfernt, da sie f\u00fcr Automatisierungen keinen wirklichen Wert zu haben scheinen.",
-            "title": "\u00c4nderungen an der Radarr-Integration"
+        "removed_yaml": {
+            "description": "Die Konfiguration von Radarr mittels YAML wurde entfernt.\n\nIhre bestehende YAML-Konfiguration wird vom Home Assistant nicht verwendet.\n\nEntfernen Sie die YAML-Konfiguration aus Ihrer configuration.yaml Datei und starten Sie Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Radarr YAML-Konfiguration wurde entfernt"
         }
     },
     "options": {
