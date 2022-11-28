@@ -1,5 +1,6 @@
 """Class to hold all light accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_FAN
 
@@ -54,15 +55,16 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any, category: str = CATEGORY_FAN) -> None:
         """Initialize a new Fan accessory object."""
-        super().__init__(*args, category=CATEGORY_FAN)
+        super().__init__(*args, category=category)
         self.chars = []
         state = self.hass.states.get(self.entity_id)
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
-        self.preset_modes = state.attributes.get(ATTR_PRESET_MODES)
+        if state is not None:
+            features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
+            self.preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
         if features & FanEntityFeature.DIRECTION:
             self.chars.append(CHAR_ROTATION_DIRECTION)
@@ -70,12 +72,8 @@ class Fan(HomeAccessory):
             self.chars.append(CHAR_SWING_MODE)
         if features & FanEntityFeature.SET_SPEED:
             self.chars.append(CHAR_ROTATION_SPEED)
-        if self.preset_modes and len(self.preset_modes) == 1:
-            self.chars.append(CHAR_TARGET_FAN_STATE)
 
-        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
-        self.set_primary_service(serv_fan)
-        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
+        serv_fan = self.create_services()
 
         self.char_direction = None
         self.char_speed = None
@@ -128,6 +126,15 @@ class Fan(HomeAccessory):
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
         self.async_update_state(state)
         serv_fan.setter_callback = self._set_chars
+
+    def create_services(self):
+        """Create and configure the primary service for this accessory."""
+        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
+        self.set_primary_service(serv_fan)
+        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.chars.append(CHAR_TARGET_FAN_STATE)
+        return serv_fan
 
     def _set_chars(self, char_values):
         _LOGGER.debug("Fan _set_chars: %s", char_values)
