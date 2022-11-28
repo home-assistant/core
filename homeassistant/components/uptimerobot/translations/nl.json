@@ -19,7 +19,7 @@
                     "api_key": "API-sleutel"
                 },
                 "description": "U moet een nieuwe 'hoofd'-API-sleutel van UptimeRobot opgeven",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

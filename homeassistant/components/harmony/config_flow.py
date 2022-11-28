@@ -1,6 +1,9 @@
 """Config flow for Logitech Harmony Hub integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
@@ -55,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Harmony config flow."""
-        self.harmony_config = {}
+        self.harmony_config: dict[str, Any] = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -137,7 +140,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

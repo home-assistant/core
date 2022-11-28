@@ -2,55 +2,58 @@
 
 from pyunifiprotect.data import NVR, Light
 
+from homeassistant.components.unifiprotect.const import CONF_ALLOW_EA
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockEntityFixture
+from .utils import MockUFPFixture, init_entry
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light, hass_client
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, hass_client
 ):
     """Test generating diagnostics for a config entry."""
 
-    light1 = mock_light.copy()
-    light1._api = mock_entry.api
-    light1.name = "Test Light 1"
-    light1.id = "lightid1"
+    await init_entry(hass, ufp, [light])
 
-    mock_entry.api.bootstrap.lights = {
-        light1.id: light1,
-    }
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    options = dict(ufp.entry.options)
+    options[CONF_ALLOW_EA] = True
+    hass.config_entries.async_update_entry(ufp.entry, options=options)
     await hass.async_block_till_done()
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry.entry)
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
 
-    nvr_obj: NVR = mock_entry.api.bootstrap.nvr
+    assert "options" in diag and isinstance(diag["options"], dict)
+    options = diag["options"]
+    assert options[CONF_ALLOW_EA] is True
+
+    assert "bootstrap" in diag and isinstance(diag["bootstrap"], dict)
+    bootstrap = diag["bootstrap"]
+    nvr: NVR = ufp.api.bootstrap.nvr
     # validate some of the data
-    assert "nvr" in diag and isinstance(diag["nvr"], dict)
-    nvr = diag["nvr"]
+    assert "nvr" in bootstrap and isinstance(bootstrap["nvr"], dict)
+    nvr_dict = bootstrap["nvr"]
     # should have been anonymized
-    assert nvr["id"] != nvr_obj.id
-    assert nvr["mac"] != nvr_obj.mac
-    assert nvr["host"] != str(nvr_obj.host)
+    assert nvr_dict["id"] != nvr.id
+    assert nvr_dict["mac"] != nvr.mac
+    assert nvr_dict["host"] != str(nvr.host)
     # should have been kept
-    assert nvr["firmwareVersion"] == nvr_obj.firmware_version
-    assert nvr["version"] == str(nvr_obj.version)
-    assert nvr["type"] == nvr_obj.type
+    assert nvr_dict["firmwareVersion"] == nvr.firmware_version
+    assert nvr_dict["version"] == str(nvr.version)
+    assert nvr_dict["type"] == nvr.type
 
     assert (
-        "lights" in diag
-        and isinstance(diag["lights"], list)
-        and len(diag["lights"]) == 1
+        "lights" in bootstrap
+        and isinstance(bootstrap["lights"], list)
+        and len(bootstrap["lights"]) == 1
     )
-    light = diag["lights"][0]
+    light_dict = bootstrap["lights"][0]
     # should have been anonymized
-    assert light["id"] != light1.id
-    assert light["name"] != light1.mac
-    assert light["mac"] != light1.mac
-    assert light["host"] != str(light1.host)
+    assert light_dict["id"] != light.id
+    assert light_dict["name"] != light.mac
+    assert light_dict["mac"] != light.mac
+    assert light_dict["host"] != str(light.host)
     # should have been kept
-    assert light["firmwareVersion"] == light1.firmware_version
-    assert light["type"] == light1.type
+    assert light_dict["firmwareVersion"] == light.firmware_version
+    assert light_dict["type"] == light.type

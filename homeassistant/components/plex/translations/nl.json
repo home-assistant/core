@@ -50,7 +50,7 @@
                 "data": {
                     "ignore_new_shared_users": "Negeer nieuwe beheerde/gedeelde gebruikers",
                     "ignore_plex_web_clients": "Negeer Plex-webclients",
-                    "monitored_users": "Gecontroleerde gebruikers",
+                    "monitored_users": "Gemonitorde gebruikers",
                     "use_episode_art": "Gebruik aflevering kunst"
                 },
                 "description": "Opties voor Plex-mediaspelers"

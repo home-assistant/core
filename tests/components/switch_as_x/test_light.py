@@ -7,7 +7,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
@@ -50,7 +49,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
-    assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]

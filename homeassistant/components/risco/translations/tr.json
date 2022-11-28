@@ -9,11 +9,24 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Parola",
                     "pin": "PIN Kodu",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Sunucu",
+                    "pin": "PIN Kodu",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (\u00f6nerilir)",
+                    "local": "Yerel Risco Paneli (geli\u015fmi\u015f)"
                 }
             }
         }

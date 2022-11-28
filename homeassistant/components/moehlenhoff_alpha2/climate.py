@@ -1,8 +1,9 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -29,7 +30,8 @@ async def async_setup_entry(
     coordinator: Alpha2BaseCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        Alpha2Climate(coordinator, heat_area_id) for heat_area_id in coordinator.data
+        Alpha2Climate(coordinator, heat_area_id)
+        for heat_area_id in coordinator.data["heat_areas"]
     )
 
 
@@ -51,26 +53,34 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self.heat_area_id = heat_area_id
         self._attr_unique_id = heat_area_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self.coordinator.data[self.heat_area_id]["HEATAREA_NAME"]
+        self._attr_name = self.coordinator.data["heat_areas"][heat_area_id][
+            "HEATAREA_NAME"
+        ]
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return float(self.coordinator.data[self.heat_area_id].get("T_TARGET_MIN", 0.0))
+        return float(
+            self.coordinator.data["heat_areas"][self.heat_area_id].get(
+                "T_TARGET_MIN", 0.0
+            )
+        )
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return float(self.coordinator.data[self.heat_area_id].get("T_TARGET_MAX", 30.0))
+        return float(
+            self.coordinator.data["heat_areas"][self.heat_area_id].get(
+                "T_TARGET_MAX", 30.0
+            )
+        )
 
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return float(self.coordinator.data[self.heat_area_id].get("T_ACTUAL", 0.0))
+        return float(
+            self.coordinator.data["heat_areas"][self.heat_area_id].get("T_ACTUAL", 0.0)
+        )
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -86,7 +96,9 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
-        if not self.coordinator.data[self.heat_area_id]["_HEATCTRL_STATE"]:
+        if not self.coordinator.data["heat_areas"][self.heat_area_id][
+            "_HEATCTRL_STATE"
+        ]:
             return HVACAction.IDLE
         if self.coordinator.get_cooling():
             return HVACAction.COOLING
@@ -95,9 +107,11 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return float(self.coordinator.data[self.heat_area_id].get("T_TARGET", 0.0))
+        return float(
+            self.coordinator.data["heat_areas"][self.heat_area_id].get("T_TARGET", 0.0)
+        )
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -109,9 +123,9 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode."""
-        if self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] == 1:
+        if self.coordinator.data["heat_areas"][self.heat_area_id]["HEATAREA_MODE"] == 1:
             return PRESET_DAY
-        if self.coordinator.data[self.heat_area_id]["HEATAREA_MODE"] == 2:
+        if self.coordinator.data["heat_areas"][self.heat_area_id]["HEATAREA_MODE"] == 2:
             return PRESET_NIGHT
         return PRESET_AUTO
 

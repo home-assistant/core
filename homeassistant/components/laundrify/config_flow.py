@@ -1,6 +1,7 @@
 """Config flow for laundrify integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -76,9 +77,7 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="init", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

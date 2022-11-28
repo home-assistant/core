@@ -1,41 +1,25 @@
 """Config flow for Fjäråskupan integration."""
 from __future__ import annotations
 
-import asyncio
+from fjaraskupan import device_filter
 
-import async_timeout
-from bleak import BleakScanner
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import UUID_SERVICE, device_filter
-
+from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import register_discovery_flow
 
 from .const import DOMAIN
 
-CONST_WAIT_TIME = 5.0
-
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
-    event = asyncio.Event()
+    service_infos = async_discovered_service_info(hass)
 
-    def detection(device: BLEDevice, advertisement_data: AdvertisementData):
-        if device_filter(device, advertisement_data):
-            event.set()
+    for service_info in service_infos:
+        if device_filter(service_info.device, service_info.advertisement):
+            return True
 
-    async with BleakScanner(
-        detection_callback=detection, filters={"UUIDs": [str(UUID_SERVICE)]}
-    ):
-        try:
-            async with async_timeout.timeout(CONST_WAIT_TIME):
-                await event.wait()
-        except asyncio.TimeoutError:
-            return False
-
-    return True
+    return False
 
 
 register_discovery_flow(DOMAIN, "Fjäråskupan", _async_has_devices)

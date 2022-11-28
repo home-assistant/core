@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +39,7 @@ class BAFSensorDescription(
     """Class describing BAF sensor entities."""
 
 
-BASE_SENSORS = (
+AUTO_COMFORT_SENSORS = (
     BAFSensorDescription(
         key="temperature",
         name="Temperature",
@@ -65,7 +65,7 @@ FAN_SENSORS = (
     BAFSensorDescription(
         key="current_rpm",
         name="Current RPM",
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(Optional[int], device.current_rpm),
@@ -73,7 +73,7 @@ FAN_SENSORS = (
     BAFSensorDescription(
         key="target_rpm",
         name="Target RPM",
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: cast(Optional[int], device.target_rpm),
@@ -103,10 +103,12 @@ async def async_setup_entry(
     """Set up BAF fan sensors."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    sensors_descriptions = list(BASE_SENSORS)
+    sensors_descriptions: list[BAFSensorDescription] = []
     for description in DEFINED_ONLY_SENSORS:
         if getattr(device, description.key):
             sensors_descriptions.append(description)
+    if device.has_auto_comfort:
+        sensors_descriptions.extend(AUTO_COMFORT_SENSORS)
     if device.has_fan:
         sensors_descriptions.extend(FAN_SENSORS)
     async_add_entities(

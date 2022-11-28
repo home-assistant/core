@@ -63,6 +63,8 @@ PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
 ]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
@@ -219,7 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "name": name,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

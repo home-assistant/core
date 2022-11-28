@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
@@ -156,9 +156,11 @@ class UserOnboardingView(_BaseOnboardingView):
             area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                area_registry.async_create(
-                    translations[f"component.onboarding.area.{area}"]
-                )
+                name = translations[f"component.onboarding.area.{area}"]
+                # Guard because area might have been created by an automatically
+                # set up integration.
+                if not area_registry.async_get_area_by_name(name):
+                    area_registry.async_create(name)
 
             await self._async_mark_done(hass)
 

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "default_channel": "Standardkanal",
+                    "icon": "Ikon",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "data_description": {
+                    "api_key": "Slack API-token som ska anv\u00e4ndas f\u00f6r att skicka Slack-meddelanden.",
+                    "default_channel": "Kanalen att posta till om ingen kanal anges n\u00e4r ett meddelande skickas.",
+                    "icon": "Anv\u00e4nd en av Slack-emojis som en ikon f\u00f6r det angivna anv\u00e4ndarnamnet.",
+                    "username": "Home Assistant kommer att skicka inl\u00e4gg till Slack med det angivna anv\u00e4ndarnamnet."
+                },
+                "description": "Se dokumentationen om hur du skaffar din Slack API-nyckel."
+            }
+        }
+    }
+}

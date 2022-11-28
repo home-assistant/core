@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -9,6 +10,13 @@
             "name_exists": "Nimi on juba olemas"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Kasutaja {username} salas\u00f5na on kehtetu",
+                "title": "Taastuvasta sidumine"
+            },
             "user": {
                 "data": {
                     "host": "",
@@ -19,6 +27,19 @@
                 },
                 "title": "Seadista Transmission'i klient"
             }
+        }
+    },
+    "issues": {
+        "deprecated_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "V\u00e4rskenda k\u00f5iki seda teenust kasutavaid automatiseerimisi v\u00f5i skripte ja asenda nimev\u00f5ti v\u00f5tmega entry_id-ga.",
+                        "title": "Transmission teenuste nimev\u00f5ti eemaldatakse"
+                    }
+                }
+            },
+            "title": "Transmission teenuste nimev\u00f5ti eemaldatakse"
         }
     },
     "options": {

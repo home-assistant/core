@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "title": "Herverifieer integrasie"
+            }
+        }
+    }
+}

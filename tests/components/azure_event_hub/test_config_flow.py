@@ -63,7 +63,7 @@ async def test_form(
         result2["flow_id"],
         step2_config.copy(),
     )
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] == "test-instance"
     assert result3["data"] == data_config
     mock_setup_entry.assert_called_once()
@@ -79,7 +79,7 @@ async def test_import(hass, mock_setup_entry):
         data=IMPORT_CONFIG.copy(),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-instance"
     options = {
         CONF_SEND_INTERVAL: import_config.pop(CONF_SEND_INTERVAL),
@@ -109,7 +109,7 @@ async def test_single_instance(hass, source):
         context={"source": source},
         data=BASE_CONFIG_CS.copy(),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -138,7 +138,7 @@ async def test_connection_error_sas(
         result["flow_id"],
         SAS_CONFIG.copy(),
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
 
 
@@ -168,7 +168,7 @@ async def test_connection_error_cs(
         result["flow_id"],
         CS_CONFIG.copy(),
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
 
 
@@ -176,13 +176,13 @@ async def test_options_flow(hass, entry):
     """Test options flow."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["last_step"]
 
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], UPDATE_OPTIONS
     )
-    assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert updated["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert updated["data"] == UPDATE_OPTIONS
     await hass.async_block_till_done()

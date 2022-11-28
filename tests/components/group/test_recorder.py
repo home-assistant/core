@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components import group
 from homeassistant.components.group import ATTR_AUTO, ATTR_ENTITY_ID, ATTR_ORDER
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
 from homeassistant.core import State
@@ -16,7 +16,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass, recorder_mock):
+async def test_exclude_attributes(recorder_mock, hass):
     """Test number registered attributes to be excluded."""
     hass.states.async_set("light.bowl", STATE_ON)
 

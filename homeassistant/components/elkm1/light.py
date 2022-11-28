@@ -26,7 +26,7 @@ async def async_setup_entry(
     entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.lights, "plc", ElkLight, entities)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkLight(ElkEntity, LightEntity):

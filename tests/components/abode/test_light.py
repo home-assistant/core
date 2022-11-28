@@ -4,9 +4,12 @@ from unittest.mock import patch
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,13 +44,18 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 204
     assert state.attributes.get(ATTR_RGB_COLOR) == (0, 63, 255)
-    assert state.attributes.get(ATTR_COLOR_TEMP) == 280
+    assert state.attributes.get(ATTR_COLOR_TEMP) is None
     assert state.attributes.get(ATTR_DEVICE_ID) == "ZB:db5b1a"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "RGB Dimmer"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Living Room Lamp"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 19
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
 
 
 async def test_switch_off(hass: HomeAssistant) -> None:

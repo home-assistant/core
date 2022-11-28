@@ -31,7 +31,6 @@ from . import (
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN,
     ColorMode,
@@ -46,7 +45,6 @@ ATTR_GROUP = [
     ATTR_BRIGHTNESS_PCT,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_WHITE_VALUE,
     ATTR_TRANSITION,
 ]
 
@@ -157,8 +155,6 @@ async def _async_reproduce_state(
             state.attributes.get(ATTR_COLOR_MODE, ColorMode.UNKNOWN)
             != ColorMode.UNKNOWN
         ):
-            # Remove deprecated white value if we got a valid color mode
-            service_data.pop(ATTR_WHITE_VALUE, None)
             color_mode = state.attributes[ATTR_COLOR_MODE]
             if color_mode_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
                 if color_mode_attr.state_attr not in state.attributes:

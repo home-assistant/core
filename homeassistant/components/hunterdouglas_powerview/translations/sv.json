@@ -7,9 +7,10 @@
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "unknown": "Ov\u00e4ntat fel"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Do vill du konfigurera {name} ({host})?",
+                "description": "Vill du konfigurera {name} ({host})?",
                 "title": "Anslut till PowerView Hub"
             },
             "user": {

@@ -367,23 +367,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
-        get_entities, onewirehub, config_entry.options
+        get_entities, onewire_hub, config_entry.options
     )
     async_add_entities(entities, True)
 
 
 def get_entities(
-    onewirehub: OneWireHub, options: MappingProxyType[str, Any]
+    onewire_hub: OneWireHub, options: MappingProxyType[str, Any]
 ) -> list[OneWireSensor]:
     """Get a list of entities."""
-    if not onewirehub.devices:
+    if not onewire_hub.devices:
         return []
 
     entities: list[OneWireSensor] = []
-    assert onewirehub.owproxy
-    for device in onewirehub.devices:
+    assert onewire_hub.owproxy
+    for device in onewire_hub.devices:
         family = device.family
         device_type = device.type
         device_id = device.id
@@ -403,7 +403,7 @@ def get_entities(
             if description.key.startswith("moisture/"):
                 s_id = description.key.split(".")[1]
                 is_leaf = int(
-                    onewirehub.owproxy.read(
+                    onewire_hub.owproxy.read(
                         f"{device_path}moisture/is_leaf.{s_id}"
                     ).decode()
                 )
@@ -427,7 +427,7 @@ def get_entities(
                     device_file=device_file,
                     device_info=device_info,
                     name=name,
-                    owproxy=onewirehub.owproxy,
+                    owproxy=onewire_hub.owproxy,
                 )
             )
     return entities

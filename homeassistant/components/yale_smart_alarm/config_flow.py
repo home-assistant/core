@@ -1,6 +1,7 @@
 """Adds config flow for Yale Smart Alarm integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -53,9 +54,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Yale."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()

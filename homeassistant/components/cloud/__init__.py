@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from enum import Enum
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components.alexa import const as alexa_const
-from homeassistant.components.google_assistant import const as ga_c
+from homeassistant.components import alexa, google_assistant
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -56,6 +57,8 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
+from .repairs import async_manage_legacy_subscription_issue
+from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
@@ -68,7 +71,7 @@ SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
+        vol.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
         vol.Optional(CONF_NAME): cv.string,
     }
 )
@@ -77,7 +80,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
+        vol.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
 
@@ -259,6 +262,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loaded = False
 
+    async def async_startup_repairs(_=None) -> None:
+        """Create repair issues after startup."""
+        if not cloud.is_logged_in:
+            return
+
+        if subscription_info := await async_subscription_info(cloud):
+            async_manage_legacy_subscription_issue(hass, subscription_info)
+
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
         nonlocal loaded
@@ -294,6 +305,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    async_call_later(
+        hass=hass,
+        delay=timedelta(hours=1),
+        action=async_startup_repairs,
+    )
 
     return True
 

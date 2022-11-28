@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from canary.api import Api, Location
+from canary.api import Api
+from canary.model import Location
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.core import HomeAssistant

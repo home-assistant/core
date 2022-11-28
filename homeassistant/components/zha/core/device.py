@@ -5,33 +5,40 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from zigpy import types
+import zigpy.device
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.types.named import EUI64, NWK
-from zigpy.zcl.clusters.general import Groups
+from zigpy.zcl.clusters import Cluster
+from zigpy.zcl.clusters.general import Groups, Identify
+from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import channels, typing as zha_typing
+from . import channels
 from .const import (
+    ATTR_ACTIVE_COORDINATOR,
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
+    ATTR_CLUSTER_TYPE,
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
@@ -46,6 +53,7 @@ from .const import (
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
+    ATTR_PARAMS,
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
@@ -62,8 +70,6 @@ from .const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
-    EFFECT_DEFAULT_VARIANT,
-    EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -73,14 +79,17 @@ from .const import (
     UNKNOWN_MODEL,
     ZHA_OPTIONS,
 )
-from .helpers import LogMixin, async_get_zha_config_value
+from .helpers import LogMixin, async_get_zha_config_value, convert_to_zcl_values
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
+    from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
+
+_ZHADeviceSelfT = TypeVar("_ZHADeviceSelfT", bound="ZHADevice")
 
 
 class DeviceStatus(Enum):
@@ -98,8 +107,8 @@ class ZHADevice(LogMixin):
     def __init__(
         self,
         hass: HomeAssistant,
-        zigpy_device: zha_typing.ZigpyDeviceType,
-        zha_gateway: zha_typing.ZhaGatewayType,
+        zigpy_device: zigpy.device.Device,
+        zha_gateway: ZHAGateway,
     ) -> None:
         """Initialize the gateway."""
         self.hass = hass
@@ -149,17 +158,17 @@ class ZHADevice(LogMixin):
         self._ha_device_id = device_id
 
     @property
-    def device(self) -> zha_typing.ZigpyDeviceType:
+    def device(self) -> zigpy.device.Device:
         """Return underlying Zigpy device."""
         return self._zigpy_device
 
     @property
-    def channels(self) -> zha_typing.ChannelsType:
+    def channels(self) -> channels.Channels:
         """Return ZHA channels."""
         return self._channels
 
     @channels.setter
-    def channels(self, value: zha_typing.ChannelsType) -> None:
+    def channels(self, value: channels.Channels) -> None:
         """Channels setter."""
         assert isinstance(value, channels.Channels)
         self._channels = value
@@ -249,11 +258,19 @@ class ZHADevice(LogMixin):
 
     @property
     def is_coordinator(self) -> bool | None:
-        """Return true if this device represents the coordinator."""
+        """Return true if this device represents a coordinator."""
         if self._zigpy_device.node_desc is None:
             return None
 
         return self._zigpy_device.node_desc.is_coordinator
+
+    @property
+    def is_active_coordinator(self) -> bool:
+        """Return true if this device is the active coordinator."""
+        if not self.is_coordinator:
+            return False
+
+        return self.ieee == self.gateway.coordinator_ieee
 
     @property
     def is_end_device(self) -> bool | None:
@@ -273,14 +290,23 @@ class ZHADevice(LogMixin):
     @property
     def skip_configuration(self) -> bool:
         """Return true if the device should not issue configuration related commands."""
-        return self._zigpy_device.skip_configuration
+        return self._zigpy_device.skip_configuration or bool(self.is_coordinator)
 
     @property
     def gateway(self):
         """Return the gateway for this device."""
         return self._zha_gateway
 
-    @property
+    @cached_property
+    def device_automation_commands(self) -> dict[str, list[tuple[str, str]]]:
+        """Return the a lookup of commands to etype/sub_type."""
+        commands: dict[str, list[tuple[str, str]]] = {}
+        for etype_subtype, trigger in self.device_automation_triggers.items():
+            if command := trigger.get(ATTR_COMMAND):
+                commands.setdefault(command, []).append(etype_subtype)
+        return commands
+
+    @cached_property
     def device_automation_triggers(self) -> dict[tuple[str, str], dict[str, str]]:
         """Return the device automation triggers for this device."""
         triggers = {
@@ -319,12 +345,12 @@ class ZHADevice(LogMixin):
 
     @classmethod
     def new(
-        cls,
+        cls: type[_ZHADeviceSelfT],
         hass: HomeAssistant,
-        zigpy_dev: zha_typing.ZigpyDeviceType,
-        gateway: zha_typing.ZhaGatewayType,
+        zigpy_dev: zigpy.device.Device,
+        gateway: ZHAGateway,
         restored: bool = False,
-    ):
+    ) -> _ZHADeviceSelfT:
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)
@@ -458,8 +484,6 @@ class ZHADevice(LogMixin):
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
-        entry = self.gateway.zha_storage.async_create_or_update_device(self)
-        self.debug("stored in registry: %s", entry)
 
         if (
             should_identify
@@ -467,7 +491,8 @@ class ZHADevice(LogMixin):
             and not self.skip_configuration
         ):
             await self._channels.identify_ch.trigger_effect(
-                EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
+                effect_id=Identify.EffectIdentifier.Okay,
+                effect_variant=Identify.EffectVariant.Default,
             )
 
     async def async_initialize(self, from_cache: bool = False) -> None:
@@ -484,17 +509,12 @@ class ZHADevice(LogMixin):
         for unsubscribe in self.unsubs:
             unsubscribe()
 
-    @callback
-    def async_update_last_seen(self, last_seen: float | None) -> None:
-        """Set last seen on the zigpy device."""
-        if self._zigpy_device.last_seen is None and last_seen is not None:
-            self._zigpy_device.last_seen = last_seen
-
     @property
     def zha_device_info(self) -> dict[str, Any]:
         """Get ZHA device information."""
         device_info: dict[str, Any] = {}
         device_info.update(self.device_info)
+        device_info[ATTR_ACTIVE_COORDINATOR] = self.is_active_coordinator
         device_info["entities"] = [
             {
                 "entity_id": entity_ref.reference_id,
@@ -543,7 +563,7 @@ class ZHADevice(LogMixin):
         return device_info
 
     @callback
-    def async_get_clusters(self):
+    def async_get_clusters(self) -> dict[int, dict[str, dict[int, Cluster]]]:
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -577,9 +597,11 @@ class ZHADevice(LogMixin):
         }
 
     @callback
-    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN):
+    def async_get_cluster(
+        self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
+    ) -> Cluster:
         """Get zigbee cluster from this entity."""
-        clusters = self.async_get_clusters()
+        clusters: dict[int, dict[str, dict[int, Cluster]]] = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
     @callback
@@ -645,36 +667,62 @@ class ZHADevice(LogMixin):
 
     async def issue_cluster_command(
         self,
-        endpoint_id,
-        cluster_id,
-        command,
-        command_type,
-        *args,
-        cluster_type=CLUSTER_TYPE_IN,
-        manufacturer=None,
-    ):
-        """Issue a command against specified zigbee cluster on this entity."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
-        if cluster is None:
-            return None
-        if command_type == CLUSTER_COMMAND_SERVER:
-            response = await cluster.command(
-                command, *args, manufacturer=manufacturer, expect_reply=True
+        endpoint_id: int,
+        cluster_id: int,
+        command: int,
+        command_type: str,
+        args: list | None,
+        params: dict[str, Any] | None,
+        cluster_type: str = CLUSTER_TYPE_IN,
+        manufacturer: int | None = None,
+    ) -> None:
+        """Issue a command against specified zigbee cluster on this device."""
+        try:
+            cluster: Cluster = self.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type
             )
-        else:
-            response = await cluster.client_command(command, *args)
-
-        self.debug(
-            "Issued cluster command: %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: {cluster_id}",
-            f"{ATTR_COMMAND}: {command}",
-            f"{ATTR_COMMAND_TYPE}: {command_type}",
-            f"{ATTR_ARGS}: {args}",
-            f"{ATTR_CLUSTER_ID}: {cluster_type}",
-            f"{ATTR_MANUFACTURER}: {manufacturer}",
-            f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
+        except KeyError as exc:
+            raise ValueError(
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while issuing command {command} with args {args}"
+            ) from exc
+        commands: dict[int, ZCLCommandDef] = (
+            cluster.server_commands
+            if command_type == CLUSTER_COMMAND_SERVER
+            else cluster.client_commands
         )
-        return response
+        if args is not None:
+            self.warning(
+                "args [%s] are deprecated and should be passed with the params key. The parameter names are: %s",
+                args,
+                [field.name for field in commands[command].schema.fields],
+            )
+            response = await getattr(cluster, commands[command].name)(*args)
+        else:
+            assert params is not None
+            response = await (
+                getattr(cluster, commands[command].name)(
+                    **convert_to_zcl_values(params, commands[command].schema)
+                )
+            )
+        self.debug(
+            "Issued cluster command: %s %s %s %s %s %s %s %s",
+            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
+            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
+            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
+            f"{ATTR_COMMAND}: [{command}]",
+            f"{ATTR_COMMAND_TYPE}: [{command_type}]",
+            f"{ATTR_ARGS}: [{args}]",
+            f"{ATTR_PARAMS}: [{params}]",
+            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
+        )
+        if response is None:
+            return  # client commands don't return a response
+        if isinstance(response, Exception):
+            raise HomeAssistantError("Failed to issue cluster command") from response
+        if response[1] is not ZclStatus.SUCCESS:
+            raise HomeAssistantError(
+                f"Failed to issue cluster command with status: {response[1]}"
+            )
 
     async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""
@@ -807,7 +855,7 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args

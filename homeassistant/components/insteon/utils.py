@@ -196,9 +196,8 @@ def async_register_services(hass):
         for address in devices:
             device = devices[address]
             if device != devices.modem and device.cat != 0x03:
-                await device.aldb.async_load(
-                    refresh=reload, callback=async_srv_save_devices
-                )
+                await device.aldb.async_load(refresh=reload)
+                await async_srv_save_devices()
 
     async def async_srv_save_devices():
         """Write the Insteon device configuration to file."""
@@ -393,5 +392,4 @@ def async_add_insteon_entities(
         groups = get_platform_groups(device, platform)
         for group in groups:
             new_entities.append(entity_type(device, group))
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "no_unconfigured_devices": "\u627e\u4e0d\u5230\u4efb\u4f55\u672a\u8a2d\u5b9a\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_key_format": "\u96e2\u7dda\u91d1\u9470\u5fc5\u9808\u70ba  32 \u4f4d\u5143\u5341\u516d\u9032\u4f4d\u5b57\u4e32\u3002",
+            "invalid_key_index": "\u96e2\u7dda\u91d1\u9470\u5fc5\u9808\u70ba 0 \u81f3 255 \u4e4b\u9593\u7684\u6574\u6578\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u4f4d\u5740\u70ba {address}\u3001\u540d\u7a31\u70ba {name} \u4e4b\u85cd\u7259\u88dd\u7f6e\uff1f"
+            },
+            "user": {
+                "data": {
+                    "address": "\u85cd\u7259\u4f4d\u5740",
+                    "key": "\u96e2\u7dda\u91d1\u9470\uff0832 \u4f4d\u5143 16 \u9032\u4f4d\u5b57\u4e32\uff09",
+                    "slot": "\u96e2\u7dda\u91d1\u9470\uff080 \u81f3 255 \u9593\u7684\u6574\u6578\uff09"
+                },
+                "description": "\u8acb\u53c3\u8003\u6587\u4ef6\u4ee5\u7372\u5f97\u53d6\u7684\u96e2\u7dda\u91d1\u9470\u8a73\u7d30\u8cc7\u8a0a\u3002"
+            }
+        }
+    }
+}

@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass, field
 import datetime
 from functools import partial
 import logging
 import socket
+from typing import TYPE_CHECKING, Any, Optional, cast
 from urllib.parse import urlparse
 
 from soco import events_asyncio
@@ -20,8 +22,8 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
 from homeassistant.helpers.typing import ConfigType
@@ -74,6 +76,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@dataclass
+class UnjoinData:
+    """Class to track data necessary for unjoin coalescing."""
+
+    speakers: list[SonosSpeaker]
+    event: asyncio.Event = field(default_factory=asyncio.Event)
+
+
 class SonosData:
     """Storage class for platform global data."""
 
@@ -84,11 +94,12 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat = None
+        self.hosts_heartbeat: CALLBACK_TYPE | None = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
         self.entity_id_mappings: dict[str, SonosSpeaker] = {}
+        self.unjoin_data: dict[str, UnjoinData] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -133,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = SonosDiscoveryManager(
         hass, entry, data, hosts
     )
-    hass.async_create_task(manager.setup_platforms_and_discovery())
+    await manager.setup_platforms_and_discovery()
     return True
 
 
@@ -158,10 +169,10 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.discovery_lock = asyncio.Lock()
-        self._known_invisible = set()
+        self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
 
-    async def async_shutdown(self):
+    async def async_shutdown(self) -> None:
         """Stop all running tasks."""
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
@@ -190,6 +201,18 @@ class SonosDiscoveryManager:
         for speaker in self.data.discovered.values():
             speaker.activity_stats.log_report()
             speaker.event_stats.log_report()
+        if zgs := next(
+            (
+                speaker.soco.zone_group_state
+                for speaker in self.data.discovered.values()
+            ),
+            None,
+        ):
+            _LOGGER.debug(
+                "ZoneGroupState stats: (%s/%s) processed",
+                zgs.processed_count,
+                zgs.total_requests,
+            )
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
@@ -214,6 +237,8 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
+                if TYPE_CHECKING:
+                    coord_dict = cast(dict[str, Any], coord_dict)
                 if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
@@ -276,7 +301,7 @@ class SonosDiscoveryManager:
         )
 
     async def _async_handle_discovery_message(
-        self, uid: str, discovered_ip: str, boot_seqnum: int
+        self, uid: str, discovered_ip: str, boot_seqnum: int | None
     ) -> None:
         """Handle discovered player creation and activity."""
         async with self.discovery_lock:
@@ -316,22 +341,27 @@ class SonosDiscoveryManager:
             async_dispatcher_send(self.hass, f"{SONOS_VANISHED}-{uid}", reason)
             return
 
-        discovered_ip = urlparse(info.ssdp_location).hostname
-        boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
             "SSDP",
             info,
-            discovered_ip,
+            cast(str, urlparse(info.ssdp_location).hostname),
             uid,
-            boot_seqnum,
-            info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME),
+            info.ssdp_headers.get("X-RINCON-BOOTSEQ"),
+            cast(str, info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)),
             None,
         )
 
     @callback
     def async_discovered_player(
-        self, source, info, discovered_ip, uid, boot_seqnum, model, mdns_name
-    ):
+        self,
+        source: str,
+        info: ssdp.SsdpServiceInfo,
+        discovered_ip: str,
+        uid: str,
+        boot_seqnum: str | int | None,
+        model: str,
+        mdns_name: str | None,
+    ) -> None:
         """Handle discovery via ssdp or zeroconf."""
         if self._manual_config_required:
             _LOGGER.warning(
@@ -354,17 +384,14 @@ class SonosDiscoveryManager:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
-            self._async_handle_discovery_message(uid, discovered_ip, boot_seqnum)
-        )
-
-    async def setup_platforms_and_discovery(self):
-        """Set up platforms and discovery."""
-        await asyncio.gather(
-            *(
-                self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
-                for platform in PLATFORMS
+            self._async_handle_discovery_message(
+                uid, discovered_ip, cast(Optional[int], boot_seqnum)
             )
         )
+
+    async def setup_platforms_and_discovery(self) -> None:
+        """Set up platforms and discovery."""
+        await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, self._async_stop_event_listener
@@ -396,3 +423,17 @@ class SonosDiscoveryManager:
                 AVAILABILITY_CHECK_INTERVAL,
             )
         )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove Sonos config entry from a device."""
+    known_devices = hass.data[DATA_SONOS].discovered.keys()
+    for identifier in device_entry.identifiers:
+        if identifier[0] != DOMAIN:
+            continue
+        uid = identifier[1]
+        if uid not in known_devices:
+            return True
+    return False

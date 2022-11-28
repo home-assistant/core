@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            }
+        }
+    }
+}

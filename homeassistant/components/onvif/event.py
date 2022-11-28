@@ -8,7 +8,7 @@ import datetime as dt
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
@@ -20,6 +20,7 @@ from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
 SUBSCRIPTION_ERRORS = (
+    XMLParseError,
     Fault,
     asyncio.TimeoutError,
     TransportError,
@@ -114,7 +115,7 @@ class EventManager:
         await self._subscription.Unsubscribe()
         self._subscription = None
 
-    async def async_restart(self, _now: dt = None) -> None:
+    async def async_restart(self, _now: dt.datetime | None = None) -> None:
         """Restart the subscription assuming the camera rebooted."""
         if not self.started:
             return
@@ -153,13 +154,14 @@ class EventManager:
             .isoformat(timespec="seconds")
             .replace("+00:00", "Z")
         )
-        await self._subscription.Renew(termination_time)
+        with suppress(*SUBSCRIPTION_ERRORS):
+            await self._subscription.Renew(termination_time)
 
     def async_schedule_pull(self) -> None:
         """Schedule async_pull_messages to run."""
         self._unsub_refresh = async_call_later(self.hass, 1, self.async_pull_messages)
 
-    async def async_pull_messages(self, _now: dt = None) -> None:
+    async def async_pull_messages(self, _now: dt.datetime | None = None) -> None:
         """Pull messages from device."""
         if self.hass.state == CoreState.running:
             try:
@@ -174,7 +176,7 @@ class EventManager:
                 ).total_seconds() < 7200:
                     await self.async_renew()
             except RemoteProtocolError:
-                # Likley a shutdown event, nothing to see here
+                # Likely a shutdown event, nothing to see here
                 return
             except SUBSCRIPTION_ERRORS as err:
                 LOGGER.warning(

@@ -10,16 +10,16 @@ import pytest
 from homeassistant import const, core, setup
 from homeassistant.components import (
     alarm_control_panel,
+    climate,
     cover,
     fan,
     google_assistant as ga,
+    humidifier,
     light,
     lock,
     media_player,
     switch,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -225,7 +225,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert len(devices) == 4
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
-    assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["brightness"] == 71
     assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,

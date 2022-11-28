@@ -7,7 +7,9 @@
             "user": {
                 "data": {
                     "name": "Jm\u00e9no",
-                    "url": "URL"
+                    "password": "Heslo",
+                    "url": "URL",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 }
             }
         }

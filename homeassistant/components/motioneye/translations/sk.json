@@ -1,10 +1,20 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_url": "Neplatn\u00e1 adresa URL"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Spr\u00e1vca Heslo",
+                    "surveillance_password": "Doh\u013ead Heslo"
+                }
+            }
         }
     }
 }

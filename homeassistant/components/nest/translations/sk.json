@@ -1,20 +1,49 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
+            "invalid_access_token": "Neplatn\u00fd pr\u00edstupov\u00fd token",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9"
         },
         "error": {
-            "invalid_pin": "Nespr\u00e1vny PIN"
+            "internal_error": "Intern\u00e1 chyba pri overovan\u00ed k\u00f3du",
+            "invalid_pin": "Nespr\u00e1vny PIN",
+            "timeout": "Overovac\u00ed k\u00f3d \u010dasov\u00e9ho limitu"
         },
         "step": {
-            "auth": {
+            "cloud_project": {
                 "data": {
-                    "code": "Pr\u00edstupov\u00fd token"
-                }
+                    "cloud_project_id": "ID projektu Google Cloud"
+                },
+                "title": "Hniezdo: Zadajte ID projektu Cloud"
+            },
+            "init": {
+                "description": "Vyberte met\u00f3du overenia"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN k\u00f3d"
+                },
+                "description": "Ak chcete prepoji\u0165 svoje konto Nest, [autorizujte svoje konto]({url}).\n\nPo autoriz\u00e1cii skop\u00edrujte a vlo\u017ete poskytnut\u00fd k\u00f3d PIN uveden\u00fd ni\u017e\u0161ie."
+            },
+            "pubsub": {
+                "data": {
+                    "cloud_project_id": "ID projektu Google Cloud"
+                },
+                "description": "Nav\u0161t\u00edvte [Cloud Console]({url}) a vyh\u013eadajte svoje ID projektu Google Cloud.",
+                "title": "Nakonfigurujte Google Cloud"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Zisten\u00fd pohyb",
+            "camera_person": "Zisten\u00e1 osoba",
+            "camera_sound": "Rozpoznan\u00fd zvuk",
+            "doorbell_chime": "Zvon\u010dek stla\u010den\u00fd"
         }
     }
 }

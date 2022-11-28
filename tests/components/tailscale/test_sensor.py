@@ -35,7 +35,7 @@ async def test_tailscale_sensors(
     assert entry.unique_id == "123457_last_seen"
     assert entry.entity_category is None
     assert state.state == "2021-11-15T20:37:03+00:00"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router Last Seen"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router Last seen"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
 
@@ -46,7 +46,7 @@ async def test_tailscale_sensors(
     assert entry.unique_id == "123457_ip"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "100.11.11.112"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router IP Address"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router IP address"
     assert state.attributes.get(ATTR_ICON) == "mdi:ip-network"
     assert ATTR_DEVICE_CLASS not in state.attributes
 

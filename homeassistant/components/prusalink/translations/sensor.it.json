@@ -1,0 +1,11 @@
+{
+    "state": {
+        "prusalink__printer_state": {
+            "cancelling": "In annullamento",
+            "idle": "Inattiva",
+            "paused": "Fermata",
+            "pausing": "In pausa",
+            "printing": "In stampa"
+        }
+    }
+}

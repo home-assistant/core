@@ -47,9 +47,9 @@ def client_fixture(account):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -77,9 +77,3 @@ async def setup_ridwell_fixture(hass, client, config):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "user@email.com"

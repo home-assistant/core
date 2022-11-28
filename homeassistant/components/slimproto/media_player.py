@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from aioslimproto.client import PlayerState, SlimClient
 from aioslimproto.const import EventType, SlimEvent
@@ -13,12 +14,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,9 +26,9 @@ from homeassistant.util.dt import utcnow
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
-    PlayerState.IDLE: STATE_IDLE,
-    PlayerState.PLAYING: STATE_PLAYING,
-    PlayerState.PAUSED: STATE_PAUSED,
+    PlayerState.IDLE: MediaPlayerState.IDLE,
+    PlayerState.PLAYING: MediaPlayerState.PLAYING,
+    PlayerState.PAUSED: MediaPlayerState.PAUSED,
 }
 
 
@@ -74,6 +73,7 @@ async def async_setup_entry(
 class SlimProtoPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from SlimProto Player."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -130,16 +130,15 @@ class SlimProtoPlayer(MediaPlayerEntity):
         return self.player.connected
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """Return current state."""
         if not self.player.powered:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         return STATE_MAPPING[self.player.state]
 
     @callback
     def update_attributes(self) -> None:
         """Handle player updates."""
-        self._attr_name = self.player.name
         self._attr_volume_level = self.player.volume_level / 100
         self._attr_media_position = self.player.elapsed_seconds
         self._attr_media_position_updated_at = utcnow()
@@ -175,12 +174,16 @@ class SlimProtoPlayer(MediaPlayerEntity):
         """Turn off device."""
         await self.player.power(False)
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         to_send_media_type: str | None = media_type
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
             to_send_media_type = sourced_media.mime_type
 
@@ -191,7 +194,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.play_url(media_id, mime_type=to_send_media_type)
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

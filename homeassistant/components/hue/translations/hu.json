@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
+            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lva van",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "discover_timeout": "Nem tal\u00e1lhat\u00f3 a Hue bridge",
             "invalid_host": "\u00c9rv\u00e9nytelen c\u00edm",
-            "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridget",
+            "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridge",
             "not_hue_bridge": "Nem egy Hue Bridge",
             "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "linking": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
+            "register_failed": "A regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
         },
         "step": {
             "init": {
@@ -44,6 +44,8 @@
             "button_2": "M\u00e1sodik gomb",
             "button_3": "Harmadik gomb",
             "button_4": "Negyedik gomb",
+            "clock_wise": "Forgat\u00e1s az \u00f3ramutat\u00f3 j\u00e1r\u00e1s\u00e1val megegyez\u0151 ir\u00e1nyba",
+            "counter_clock_wise": "Forgat\u00e1s az \u00f3ramutat\u00f3 j\u00e1r\u00e1s\u00e1val ellent\u00e9tes ir\u00e1nyba",
             "dim_down": "S\u00f6t\u00e9t\u00edt",
             "dim_up": "Vil\u00e1gos\u00edt",
             "double_buttons_1_3": "Els\u0151 \u00e9s harmadik gomb",
@@ -55,13 +57,14 @@
             "double_short_release": "Mindk\u00e9t \"{subtype}\" felengedve",
             "initial_press": "\"{subtype}\" lenyomva el\u0151sz\u00f6r",
             "long_release": "\"{subtype}\" felengedve hossz\u00fa nyomva tart\u00e1s ut\u00e1n",
-            "remote_button_long_release": "A \"{subtype}\" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
-            "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
-            "remote_button_short_release": "\"{subtype}\" gomb elengedve",
+            "remote_button_long_release": "\"{subtype}\" hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
+            "remote_button_short_press": "\"{subtype}\" lenyomva",
+            "remote_button_short_release": "\"{subtype}\" elengedve",
             "remote_double_button_long_press": "Mindk\u00e9t \"{subtype}\" hossz\u00fa megnyom\u00e1st k\u00f6vet\u0151en megjelent",
             "remote_double_button_short_press": "Mindk\u00e9t \"{subtype}\" megjelent",
-            "repeat": "\"{subtype}\"gomb lenyomva tartava",
-            "short_release": "\"{subtype}\" felengedve r\u00f6vid nyomva tart\u00e1s ut\u00e1n"
+            "repeat": "\"{subtype}\" lenyomva tartava",
+            "short_release": "\"{subtype}\" felengedve r\u00f6vid nyomva tart\u00e1s ut\u00e1n",
+            "start": "\"{subtype}\" lenyomva el\u0151sz\u00f6r"
         }
     },
     "options": {

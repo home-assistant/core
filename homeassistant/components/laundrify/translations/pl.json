@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_format": "Niepoprawny format. Prosz\u0119 poda\u0107 jako xxx-xxx.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kod autoryzacyjny (xxx-xxx)"
+                },
+                "description": "Wprowad\u017a sw\u00f3j osobisty kod autoryzacyjny, kt\u00f3ry jest widoczny w aplikacji laundrify."
+            },
+            "reauth_confirm": {
+                "description": "Integracja laundrify wymaga ponownego uwierzytelnienia Twojego konta.",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            }
+        }
+    }
+}

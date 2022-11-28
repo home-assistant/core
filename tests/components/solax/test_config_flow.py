@@ -1,8 +1,9 @@
 """Tests for the solax config flow."""
 from unittest.mock import patch
 
-from solax import RealTimeAPI, inverter
+from solax import RealTimeAPI
 from solax.inverter import InverterResponse
+from solax.inverters import X1MiniV34
 
 from homeassistant import config_entries
 from homeassistant.components.solax.const import DOMAIN
@@ -10,7 +11,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 
 
 def __mock_real_time_api_success():
-    return RealTimeAPI(inverter.X1MiniV34)
+    return RealTimeAPI(X1MiniV34)
 
 
 def __mock_get_data():

@@ -2,7 +2,7 @@
   "domain": "elkm1",
   "name": "Elk-M1 Control",
   "documentation": "https://www.home-assistant.io/integrations/elkm1",
-  "requirements": ["elkm1-lib==2.0.0"],
+  "requirements": ["elkm1-lib==2.0.2"],
   "dhcp": [{ "registered_devices": true }, { "macaddress": "00409D*" }],
   "codeowners": ["@gwww", "@bdraco"],
   "dependencies": ["network"],

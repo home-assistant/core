@@ -6,9 +6,11 @@ import array
 import asyncio
 from datetime import datetime, timedelta
 import functools
+import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -923,7 +925,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-def test_config_defaults():
+async def test_config_defaults():
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -946,23 +948,25 @@ def test_config_defaults():
     assert config.safe_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
+    assert config.country is None
+    assert config.language == "en"
 
 
-def test_config_path_with_file():
+async def test_config_path_with_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-def test_config_as_dict():
+async def test_config_as_dict():
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -987,12 +991,14 @@ def test_config_as_dict():
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
+        "country": None,
+        "language": "en",
     }
 
     assert expected == config.as_dict()
 
 
-def test_config_is_allowed_path():
+async def test_config_is_allowed_path():
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1024,7 +1030,7 @@ def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url():
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1271,7 +1277,7 @@ async def test_additional_data_in_core_config(hass, hass_storage):
 
 
 async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
-    """Test that we warn when detecting invalid internal/extenral url."""
+    """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
@@ -1284,6 +1290,8 @@ async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
     await config.async_load()
     assert "Invalid external_url set" not in caplog.text
     assert "Invalid internal_url set" not in caplog.text
+
+    config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
@@ -1799,3 +1807,76 @@ async def test_state_firing_event_matches_context_id_ulid_time(hass):
     assert _ulid_timestamp(event.context.id) == int(
         events[0].time_fired.timestamp() * 1000
     )
+
+
+async def test_event_context(hass):
+    """Test we can lookup the origin of a context from an event."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        nonlocal events
+        events.append(event)
+
+    cancel = hass.bus.async_listen("dummy_event", capture_events)
+    cancel2 = hass.bus.async_listen("dummy_event_2", capture_events)
+
+    hass.bus.async_fire("dummy_event")
+    await hass.async_block_till_done()
+
+    dummy_event: ha.Event = events[0]
+
+    hass.bus.async_fire("dummy_event_2", context=dummy_event.context)
+    await hass.async_block_till_done()
+    context_id = dummy_event.context.id
+
+    dummy_event2: ha.Event = events[1]
+    assert dummy_event2.context == dummy_event.context
+    assert dummy_event2.context.id == context_id
+    cancel()
+    cancel2()
+
+    assert dummy_event2.context.origin_event == dummy_event
+
+
+def _get_full_name(obj) -> str:
+    """Get the full name of an object in memory."""
+    objtype = type(obj)
+    name = objtype.__name__
+    if module := getattr(objtype, "__module__", None):
+        return f"{module}.{name}"
+    return name
+
+
+def _get_by_type(full_name: str) -> list[Any]:
+    """Get all objects in memory with a specific type."""
+    return [obj for obj in gc.get_objects() if _get_full_name(obj) == full_name]
+
+
+# The logger will hold a strong reference to the event for the life of the tests
+# so we must patch it out
+@pytest.mark.skipif(
+    not os.environ.get("DEBUG_MEMORY"),
+    reason="Takes too long on the CI",
+)
+@patch.object(ha._LOGGER, "debug", lambda *args: None)
+async def test_state_changed_events_to_not_leak_contexts(hass):
+    """Test state changed events do not leak contexts."""
+    gc.collect()
+    # Other tests can log Contexts which keep them in memory
+    # so we need to look at how many exist at the start
+    init_count = len(_get_by_type("homeassistant.core.Context"))
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
+    for i in range(20):
+        hass.states.async_set("light.switch", str(i))
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count + 2
+
+    hass.states.async_remove("light.switch")
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count

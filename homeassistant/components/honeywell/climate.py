@@ -6,8 +6,7 @@ from typing import Any
 
 import somecomfort
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -17,11 +16,15 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -70,12 +73,14 @@ HW_FAN_MODE_TO_HA = {
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Honeywell thermostat."""
-    cool_away_temp = config.options.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.options.get(CONF_HEAT_AWAY_TEMPERATURE)
+    cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data = hass.data[DOMAIN][config.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -247,7 +252,7 @@ class HoneywellUSThermostat(ClimateEntity):
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
-    def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
             self._set_temperature(**kwargs)
@@ -347,6 +352,6 @@ class HoneywellUSThermostat(ClimateEntity):
         else:
             self.set_hvac_mode(HVACMode.OFF)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state from the service."""
         await self._data.async_update()

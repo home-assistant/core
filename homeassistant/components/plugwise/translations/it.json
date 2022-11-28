@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "anna_with_adam": "Sia Anna che Adam sono stati rilevati. Aggiungi il tuo Adamo al posto della tua Anna"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -9,16 +10,8 @@
             "invalid_setup": "Aggiungi il tuo Adam invece di Anna, consulta la documentazione sull'integrazione di Home Assistant Plugwise per ulteriori informazioni",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
-                "data": {
-                    "flow_type": "Tipo di connessione"
-                },
-                "description": "Prodotto:",
-                "title": "Tipo di Plugwise"
-            },
-            "user_gateway": {
                 "data": {
                     "host": "Indirizzo IP",
                     "password": "ID Smile",
@@ -27,16 +20,6 @@
                 },
                 "description": "Inserisci",
                 "title": "Connettiti allo Smile"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervallo di scansione (secondi)"
-                },
-                "description": "Regolare le opzioni Plugwise"
             }
         }
     }

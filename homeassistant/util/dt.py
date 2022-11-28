@@ -4,7 +4,9 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
+import platform
 import re
+import time
 from typing import Any
 import zoneinfo
 
@@ -13,6 +15,7 @@ import ciso8601
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
+CLOCK_MONOTONIC_COARSE = 6
 
 # EPOCHORDINAL is not exposed as a constant
 # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
@@ -26,6 +29,49 @@ DATETIME_RE = re.compile(
     r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
     r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
     r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+STANDARD_DURATION_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days?, )?)?"
+    r"(?P<sign>-?)"
+    r"((?:(?P<hours>\d+):)(?=\d+:\d+))?"
+    r"(?:(?P<minutes>\d+):)?"
+    r"(?P<seconds>\d+)"
+    r"(?:[\.,](?P<microseconds>\d{1,6})\d{0,6})?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+ISO8601_DURATION_RE = re.compile(
+    r"^(?P<sign>[-+]?)"
+    r"P"
+    r"(?:(?P<days>\d+([\.,]\d+)?)D)?"
+    r"(?:T"
+    r"(?:(?P<hours>\d+([\.,]\d+)?)H)?"
+    r"(?:(?P<minutes>\d+([\.,]\d+)?)M)?"
+    r"(?:(?P<seconds>\d+([\.,]\d+)?)S)?"
+    r")?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+POSTGRES_INTERVAL_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days? ?))?"
+    r"(?:(?P<sign>[-+])?"
+    r"(?P<hours>\d+):"
+    r"(?P<minutes>\d\d):"
+    r"(?P<seconds>\d\d)"
+    r"(?:\.(?P<microseconds>\d{1,6}))?"
+    r")?$"
 )
 
 
@@ -169,6 +215,35 @@ def parse_date(dt_str: str) -> dt.date | None:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
     except ValueError:  # If dt_str did not match our format
         return None
+
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+def parse_duration(value: str) -> dt.timedelta | None:
+    """Parse a duration string and return a datetime.timedelta.
+
+    Also supports ISO 8601 representation and PostgreSQL's day-time interval
+    format.
+    """
+    match = (
+        STANDARD_DURATION_RE.match(value)
+        or ISO8601_DURATION_RE.match(value)
+        or POSTGRES_INTERVAL_RE.match(value)
+    )
+    if match:
+        kws = match.groupdict()
+        sign = -1 if kws.pop("sign", "+") == "-" else 1
+        if kws.get("microseconds"):
+            kws["microseconds"] = kws["microseconds"].ljust(6, "0")
+        time_delta_args: dict[str, float] = {
+            k: float(v.replace(",", ".")) for k, v in kws.items() if v is not None
+        }
+        days = dt.timedelta(float(time_delta_args.pop("days", 0.0) or 0.0))
+        if match.re == ISO8601_DURATION_RE:
+            days *= sign
+        return days + sign * dt.timedelta(**time_delta_args)
+    return None
 
 
 def parse_time(time_str: str) -> dt.time | None:
@@ -389,3 +464,26 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     assert dattim.tzinfo is not None
     opposite_fold = dattim.replace(fold=not dattim.fold)
     return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
+
+
+def __monotonic_time_coarse() -> float:
+    """Return a monotonic time in seconds.
+
+    This is the coarse version of time_monotonic, which is faster but less accurate.
+
+    Since many arm64 and 32-bit platforms don't support VDSO with time.monotonic
+    because of errata, we can't rely on the kernel to provide a fast
+    monotonic time.
+
+    https://lore.kernel.org/lkml/20170404171826.25030-1-marc.zyngier@arm.com/
+    """
+    return time.clock_gettime(CLOCK_MONOTONIC_COARSE)
+
+
+monotonic_time_coarse = time.monotonic
+with suppress(Exception):
+    if (
+        platform.system() == "Linux"
+        and abs(time.monotonic() - __monotonic_time_coarse()) < 1
+    ):
+        monotonic_time_coarse = __monotonic_time_coarse

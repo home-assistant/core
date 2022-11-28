@@ -4,12 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aiosenz import AUTHORIZATION_ENDPOINT, SENZAPI, TOKEN_ENDPOINT, Thermostat
+from aiosenz import SENZAPI, Thermostat
 from httpx import RequestError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -17,10 +16,10 @@ from homeassistant.helpers import (
     config_validation as cv,
     httpx_client,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import config_flow
 from .api import SENZConfigEntryAuth
 from .const import DOMAIN
 
@@ -28,17 +27,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -46,23 +35,17 @@ SENZDataUpdateCoordinator = DataUpdateCoordinator[dict[str, Thermostat]]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the SENZ OAuth2 configuration."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    config_flow.OAuth2FlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+    """Set up the SENZ integration."""
+    if DOMAIN in config:
+        async_create_issue(
             hass,
             DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            AUTHORIZATION_ENDPOINT,
-            TOKEN_ENDPOINT,
-        ),
-    )
+            "removed_yaml",
+            breaks_in_ha_version="2022.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
 
     return True
 
@@ -101,9 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

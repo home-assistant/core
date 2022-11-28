@@ -24,6 +24,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Weather forecast"
+                },
+                "description": "Due to the limitations of the free version of the AccuWeather API key, when you enable weather forecast, data updates will be performed every 80 minutes instead of every 40 minutes."
+            },
             "user": {
                 "data": {
                     "forecast": "Weather forecast"

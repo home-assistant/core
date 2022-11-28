@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Misslyckades att ansluta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Enhetsnyckeln f\u00f6r din enhet",
+                    "event": "H\u00e4ndelsen f\u00f6r h\u00e4ndelserna.",
+                    "name": "Namn",
+                    "password": "L\u00f6senordet f\u00f6r krypteringen som anv\u00e4nds av din enhet",
+                    "salt": "Det salt som anv\u00e4nds av din enhet."
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Simplepush med YAML har tagits bort. \n\n Din befintliga YAML-konfiguration anv\u00e4nds inte av Home Assistant. \n\n Ta bort Simplepush YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "Simplepush YAML-konfigurationen har tagits bort"
+        }
+    }
+}

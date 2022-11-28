@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
+
+from pycec.const import POWER_OFF, POWER_ON
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,28 +42,24 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
         CecEntity.__init__(self, device, logical)
         self.entity_id = f"{SWITCH_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._state = STATE_ON
+        self._attr_is_on = True
         self.schedule_update_ha_state(force_refresh=False)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = STATE_OFF
+        self._attr_is_on = False
         self.schedule_update_ha_state(force_refresh=False)
 
-    def toggle(self, **kwargs):
-        """Toggle the entity."""
-        self._device.toggle()
-        if self._state == STATE_ON:
-            self._state = STATE_OFF
+    def update(self) -> None:
+        """Update device status."""
+        device = self._device
+        if device.power_status in {POWER_OFF, 3}:
+            self._attr_is_on = False
+        elif device.power_status in {POWER_ON, 4}:
+            self._attr_is_on = True
         else:
-            self._state = STATE_ON
-        self.schedule_update_ha_state(force_refresh=False)
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._state == STATE_ON
+            _LOGGER.warning("Unknown state: %d", device.power_status)

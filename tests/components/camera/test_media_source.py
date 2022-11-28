@@ -62,7 +62,7 @@ async def test_resolving(hass, mock_camera_hls):
         return_value="http://example.com/stream",
     ):
         item = await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert item is not None
     assert item.url == "http://example.com/stream"
@@ -74,7 +74,7 @@ async def test_resolving_errors(hass, mock_camera_hls):
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Stream integration not loaded"
 
@@ -82,7 +82,7 @@ async def test_resolving_errors(hass, mock_camera_hls):
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.non_existing"
+            hass, "media-source://camera/camera.non_existing", None
         )
     assert str(exc_info.value) == "Could not resolve media item: camera.non_existing"
 
@@ -91,13 +91,13 @@ async def test_resolving_errors(hass, mock_camera_hls):
         new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
     ):
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Camera does not support MJPEG or HLS streaming."
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert (
         str(exc_info.value) == "camera.demo_camera does not support play stream service"

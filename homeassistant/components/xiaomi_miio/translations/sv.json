@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "incomplete_info": "Ofullst\u00e4ndig information till installationsenheten, ingen v\u00e4rd eller token tillhandah\u00e5lls.",
+            "not_xiaomi_miio": "Enheten st\u00f6ds (\u00e4nnu) inte av Xiaomi Miio.",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "cloud_credentials_incomplete": "Cloud-uppgifterna \u00e4r ofullst\u00e4ndiga, v\u00e4nligen fyll i anv\u00e4ndarnamn, l\u00f6senord och land",
+            "cloud_login_error": "Kunde inte logga in p\u00e5 Xiaomi Miio Cloud, kontrollera anv\u00e4ndaruppgifterna.",
+            "cloud_no_devices": "Inga enheter hittades i detta Xiaomi Miio molnkonto.",
+            "unknown_device": "Enhetsmodellen \u00e4r inte k\u00e4nd, kan inte st\u00e4lla in enheten med hj\u00e4lp av konfigurationsfl\u00f6de.",
+            "wrong_token": "Kontrollsummafel, fel token"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Molnserverland",
+                    "cloud_password": "Molnl\u00f6senord",
+                    "cloud_username": "Molnanv\u00e4ndarnamn",
+                    "manual": "Konfigurera manuellt (rekommenderas inte)"
+                },
+                "description": "Logga in p\u00e5 Xiaomi Miio-molnet, se https://www.openhab.org/addons/bindings/miio/#country-servers f\u00f6r molnservern att anv\u00e4nda."
+            },
+            "connect": {
+                "data": {
+                    "model": "Enhetsmodell"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "IP-adress",
+                    "token": "API  Token"
+                },
+                "description": "Du beh\u00f6ver de 32 tecknen API  Token , se https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00f6r instruktioner. Observera att denna API  Token skiljer sig fr\u00e5n nyckeln som anv\u00e4nds av Xiaomi Aqara-integrationen."
+            },
+            "reauth_confirm": {
+                "description": "Xiaomi Miio-integrationen m\u00e5ste autentisera ditt konto igen f\u00f6r att uppdatera tokens eller l\u00e4gga till saknade molnuppgifter.",
+                "title": "\u00c5terautenticera integration"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Miio-enhet"
+                },
+                "description": "V\u00e4lj Xiaomi Miio-enheten f\u00f6r att st\u00e4lla in."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Molnuppgifter \u00e4r ofullst\u00e4ndiga, v\u00e4nligen fyll i anv\u00e4ndarnamn, l\u00f6senord och land"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Anv\u00e4nd moln f\u00f6r att f\u00e5 anslutna underenheter"
+                }
+            }
+        }
+    }
+}

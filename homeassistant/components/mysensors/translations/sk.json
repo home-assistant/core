@@ -1,10 +1,44 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "duplicate_persistence_file": "Perzistentn\u00fd s\u00fabor sa u\u017e pou\u017e\u00edva",
+            "duplicate_topic": "T\u00e9ma sa u\u017e pou\u017e\u00edva",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_device": "Neplatn\u00e9 zariadenie",
+            "invalid_ip": "Neplatn\u00e1 IP adresa",
+            "invalid_port": "Neplatn\u00e9 \u010d\u00edslo portu",
+            "invalid_serial": "Neplatn\u00fd s\u00e9riov\u00fd port",
+            "invalid_version": "Neplatn\u00e1 verzia MySensors",
+            "not_a_number": "Zadajte \u010d\u00edslo",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "duplicate_persistence_file": "Perzistentn\u00fd s\u00fabor sa u\u017e pou\u017e\u00edva",
+            "duplicate_topic": "T\u00e9ma sa u\u017e pou\u017e\u00edva",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_device": "Neplatn\u00e9 zariadenie",
+            "invalid_ip": "Neplatn\u00e1 IP adresa",
+            "invalid_port": "Neplatn\u00e9 \u010d\u00edslo portu",
+            "invalid_serial": "Neplatn\u00fd s\u00e9riov\u00fd port",
+            "invalid_version": "Neplatn\u00e1 verzia MySensors",
+            "not_a_number": "Zadajte \u010d\u00edslo",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "gw_serial": {
+                "data": {
+                    "device": "S\u00e9riov\u00fd port"
+                }
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "IP adresa br\u00e1ny",
+                    "tcp_port": "port"
+                }
+            }
         }
     }
 }

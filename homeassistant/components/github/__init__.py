@@ -38,13 +38,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         await coordinator.async_config_entry_first_refresh()
-        await coordinator.subscribe()
+
+        if not entry.pref_disable_polling:
+            await coordinator.subscribe()
 
         hass.data[DOMAIN][repository] = coordinator
 
     async_cleanup_device_registry(hass=hass, entry=entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 

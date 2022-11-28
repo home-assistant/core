@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Generator
 import contextlib
 import logging
-from typing import cast
 
 from pywemo.exceptions import ActionException
 
@@ -89,4 +88,4 @@ class WemoBinaryStateEntity(WemoEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the state is on."""
-        return cast(int, self.wemo.get_state()) != 0
+        return self.wemo.get_state() != 0

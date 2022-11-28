@@ -14,7 +14,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "De SleepIQ-integratie moet uw account {username} opnieuw verifi\u00ebren.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

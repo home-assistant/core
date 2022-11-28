@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.slimproto.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -15,7 +15,7 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEFAULT_NAME
     assert result.get("data") == {}
 
@@ -34,5 +34,5 @@ async def test_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

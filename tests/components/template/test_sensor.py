@@ -624,20 +624,32 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
     }
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize("count,domain", [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test_template_sensor": {
-                        "value_template": "{{ this.attributes.test }}: {{ this.entity_id }}",
-                        "attribute_templates": {
-                            "test": "It {{ states.sensor.test_state.state }}"
-                        },
-                    }
+            "template": {
+                "sensor": {
+                    "name": "test_template_sensor",
+                    "state": "{{ this.attributes.test }}: {{ this.entity_id }}",
+                    "attributes": {"test": "It {{ states.sensor.test_state.state }}"},
+                },
+            },
+        },
+        {
+            "template": {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": [
+                        "sensor.test_state",
+                        "sensor.test_template_sensor",
+                    ],
+                },
+                "sensor": {
+                    "name": "test_template_sensor",
+                    "state": "{{ this.attributes.test }}: {{ this.entity_id }}",
+                    "attributes": {"test": "It {{ states.sensor.test_state.state }}"},
                 },
             },
         },

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from functools import lru_cache
-import json
 import logging
 import os
 import pathlib
@@ -22,6 +21,7 @@ from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
@@ -135,7 +135,7 @@ class Manifest:
         return self._serialized
 
     def _serialize(self) -> None:
-        self._serialized = json.dumps(self.manifest, sort_keys=True)
+        self._serialized = json_dumps_sorted(self.manifest)
 
     def update_key(self, key: str, val: str) -> None:
         """Add a keyval to the manifest.json."""
@@ -460,7 +460,7 @@ async def _async_setup_themes(
     async def reload_themes(_: ServiceCall) -> None:
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
-        new_themes = config[DOMAIN].get(CONF_THEMES, {})
+        new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
@@ -548,11 +548,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return a dict with additional info useful for introspection."""
         return {"panels": list(self.hass.data[DATA_PANELS])}
 
-    def freeze(self) -> None:
-        """Freeze the resource."""
-
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
+        return False
 
     def get_template(self) -> jinja2.Template:
         """Get template."""
@@ -616,7 +614,7 @@ class ManifestJSONView(HomeAssistantView):
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
@@ -632,7 +630,7 @@ def websocket_get_panels(
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
     if hass.config.safe_mode:
@@ -675,7 +673,7 @@ def websocket_get_themes(
 )
 @websocket_api.async_response
 async def websocket_get_translations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command."""
     resources = await async_get_translations(
@@ -693,7 +691,7 @@ async def websocket_get_translations(
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
 async def websocket_get_version(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get version command."""
     integration = await async_get_integration(hass, "frontend")

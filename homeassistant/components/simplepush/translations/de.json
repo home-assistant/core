@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Der Ger\u00e4teschl\u00fcssel deines Ger\u00e4ts",
+                    "event": "Das Ereignis f\u00fcr die Ereignisse.",
+                    "name": "Name",
+                    "password": "Das Passwort der von deinem Ger\u00e4t verwendeten Verschl\u00fcsselung",
+                    "salt": "Das von deinem Ger\u00e4t verwendete Salt."
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Die Konfiguration von Simplepush mittels YAML wurde entfernt.\n\nDeine bestehende YAML-Konfiguration wird vom Home Assistant nicht verwendet.\n\nEntferne die Simplepush-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte den Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Simplepush YAML-Konfiguration wurde entfernt"
+        }
+    }
+}

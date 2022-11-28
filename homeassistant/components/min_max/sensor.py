@@ -1,26 +1,38 @@
 """Support for displaying minimal, maximal, mean or median values."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 import statistics
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -35,6 +47,8 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_RANGE = "range"
+ATTR_SUM = "sum"
 
 ICON = "mdi:calculator"
 
@@ -44,6 +58,8 @@ SENSOR_TYPES = {
     ATTR_MEAN: "mean",
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
+    ATTR_RANGE: "range",
+    ATTR_SUM: "sum",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -55,6 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -92,22 +109,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the min/max/mean sensor."""
-    entity_ids = config.get(CONF_ENTITY_IDS)
-    name = config.get(CONF_NAME)
-    sensor_type = config.get(CONF_TYPE)
-    round_digits = config.get(CONF_ROUND_DIGITS)
+    entity_ids: list[str] = config[CONF_ENTITY_IDS]
+    name: str | None = config.get(CONF_NAME)
+    sensor_type: str = config[CONF_TYPE]
+    round_digits: int = config[CONF_ROUND_DIGITS]
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, None)]
+        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
     )
 
 
-def calc_min(sensor_values):
+def calc_min(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
     """Calculate min value, honoring unknown states."""
-    val = None
-    entity_id = None
+    val: float | None = None
+    entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
             val is None or val > sensor_value
@@ -116,10 +134,10 @@ def calc_min(sensor_values):
     return entity_id, val
 
 
-def calc_max(sensor_values):
+def calc_max(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
     """Calculate max value, honoring unknown states."""
-    val = None
-    entity_id = None
+    val: float | None = None
+    entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
             val is None or val < sensor_value
@@ -128,7 +146,7 @@ def calc_max(sensor_values):
     return entity_id, val
 
 
-def calc_mean(sensor_values, round_digits):
+def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate mean value, honoring unknown states."""
     result = [
         sensor_value
@@ -138,10 +156,13 @@ def calc_mean(sensor_values, round_digits):
 
     if not result:
         return None
-    return round(statistics.mean(result), round_digits)
+    value: float = round(statistics.mean(result), round_digits)
+    return value
 
 
-def calc_median(sensor_values, round_digits):
+def calc_median(
+    sensor_values: list[tuple[str, Any]], round_digits: int
+) -> float | None:
     """Calculate median value, honoring unknown states."""
     result = [
         sensor_value
@@ -151,13 +172,51 @@ def calc_median(sensor_values, round_digits):
 
     if not result:
         return None
-    return round(statistics.median(result), round_digits)
+    value: float = round(statistics.median(result), round_digits)
+    return value
+
+
+def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+    """Calculate range value, honoring unknown states."""
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
+        return None
+    value: float = round(max(result) - min(result), round_digits)
+    return value
+
+
+def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+    """Calculate a sum of values, not honoring unknown states."""
+    result = 0
+    for _, sensor_value in sensor_values:
+        if sensor_value in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            return None
+        result += sensor_value
+
+    value: float = round(result, round_digits)
+    return value
 
 
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, entity_ids, name, sensor_type, round_digits, unique_id):
+    _attr_icon = ICON
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self,
+        entity_ids: list[str],
+        name: str | None,
+        sensor_type: str,
+        round_digits: int,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the min/max sensor."""
         self._attr_unique_id = unique_id
         self._entity_ids = entity_ids
@@ -165,18 +224,26 @@ class MinMaxSensor(SensorEntity):
         self._round_digits = round_digits
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"{sensor_type} sensor".capitalize()
+            self._attr_name = f"{sensor_type} sensor".capitalize()
         self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = self.last = self.median = None
-        self.min_entity_id = self.max_entity_id = self.last_entity_id = None
+        self.min_value: float | None = None
+        self.max_value: float | None = None
+        self.mean: float | None = None
+        self.last: float | None = None
+        self.median: float | None = None
+        self.range: float | None = None
+        self.sum: float | None = None
+        self.min_entity_id: str | None = None
+        self.max_entity_id: str | None = None
+        self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
-        self.states = {}
+        self.states: dict[str, Any] = {}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
@@ -193,31 +260,22 @@ class MinMaxSensor(SensorEntity):
         self._calc_values()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
             return None
-        return getattr(self, self._sensor_attr)
+        value: StateType | datetime = getattr(self, self._sensor_attr)
+        return value
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
             return "ERR"
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._sensor_type == "min":
             return {ATTR_MIN_ENTITY_ID: self.min_entity_id}
@@ -227,16 +285,13 @@ class MinMaxSensor(SensorEntity):
             return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
         return None
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
     @callback
-    def _async_min_max_sensor_state_listener(self, event, update_state=True):
+    def _async_min_max_sensor_state_listener(
+        self, event: EventType, update_state: bool = True
+    ) -> None:
         """Handle the sensor state changes."""
-        new_state = event.data.get("new_state")
-        entity = event.data.get("entity_id")
+        new_state: State | None = event.data.get("new_state")
+        entity: str = event.data["entity_id"]
 
         if (
             new_state is None
@@ -284,7 +339,7 @@ class MinMaxSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def _calc_values(self):
+    def _calc_values(self) -> None:
         """Calculate the values."""
         sensor_values = [
             (entity_id, self.states[entity_id])
@@ -295,3 +350,5 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
+        self.range = calc_range(sensor_values, self._round_digits)
+        self.sum = calc_sum(sensor_values, self._round_digits)

@@ -7,11 +7,14 @@ from typing import Any
 from aioqsw.const import (
     QSD_FIRMWARE,
     QSD_FIRMWARE_INFO,
+    QSD_LACP_PORTS,
     QSD_MAC,
+    QSD_PORTS,
     QSD_PRODUCT,
     QSD_SYSTEM_BOARD,
 )
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import callback
@@ -20,20 +23,29 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER
-from .coordinator import QswUpdateCoordinator
+from .coordinator import QswDataCoordinator, QswFirmwareCoordinator
 
 
-class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
+class QswEntityType(StrEnum):
+    """QNAP QSW Entity Type."""
+
+    LACP_PORT = QSD_LACP_PORTS
+    PORT = QSD_PORTS
+
+
+class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
     """Define an QNAP QSW entity."""
 
     def __init__(
         self,
-        coordinator: QswUpdateCoordinator,
+        coordinator: QswDataCoordinator,
         entry: ConfigEntry,
+        type_id: int | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
+        self.type_id = type_id
         self.product = self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)
         self._attr_device_info = DeviceInfo(
             configuration_url=entry.data[CONF_URL],
@@ -49,12 +61,24 @@ class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
             sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
         )
 
-    def get_device_value(self, key: str, subkey: str) -> Any:
+    def get_device_value(
+        self,
+        key: str,
+        subkey: str,
+        qsw_type: QswEntityType | None = None,
+    ) -> Any:
         """Return device value by key."""
         value = None
         if key in self.coordinator.data:
             data = self.coordinator.data[key]
-            if subkey in data:
+            if qsw_type is not None and self.type_id is not None:
+                if (
+                    qsw_type in data
+                    and self.type_id in data[qsw_type]
+                    and subkey in data[qsw_type][self.type_id]
+                ):
+                    value = data[qsw_type][self.type_id][subkey]
+            elif subkey in data:
                 value = data[subkey]
         return value
 
@@ -72,7 +96,7 @@ class QswEntityDescription(EntityDescription, QswEntityDescriptionMixin):
     attributes: dict[str, list[str]] | None = None
 
 
-class QswSensorEntity(QswEntity):
+class QswSensorEntity(QswDataEntity):
     """Base class for QSW sensor entities."""
 
     entity_description: QswEntityDescription
@@ -91,3 +115,38 @@ class QswSensorEntity(QswEntity):
                 key: self.get_device_value(val[0], val[1])
                 for key, val in self.entity_description.attributes.items()
             }
+
+
+class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
+    """Define a QNAP QSW firmware entity."""
+
+    def __init__(
+        self,
+        coordinator: QswFirmwareCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self._attr_device_info = DeviceInfo(
+            configuration_url=entry.data[CONF_URL],
+            connections={
+                (
+                    CONNECTION_NETWORK_MAC,
+                    self.get_device_value(QSD_SYSTEM_BOARD, QSD_MAC),
+                )
+            },
+            manufacturer=MANUFACTURER,
+            model=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
+            name=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
+            sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
+        )
+
+    def get_device_value(self, key: str, subkey: str) -> Any:
+        """Return device value by key."""
+        value = None
+        if key in self.coordinator.data:
+            data = self.coordinator.data[key]
+            if subkey in data:
+                value = data[subkey]
+        return value

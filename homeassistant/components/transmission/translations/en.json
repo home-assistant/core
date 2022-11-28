@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -9,6 +10,13 @@
             "name_exists": "Name already exists"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is invalid.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -19,6 +27,19 @@
                 },
                 "title": "Setup Transmission Client"
             }
+        }
+    },
+    "issues": {
+        "deprecated_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update any automations or scripts that use this service and replace the name key with the entry_id key.",
+                        "title": "The name key in Transmission services is being removed"
+                    }
+                }
+            },
+            "title": "The name key in Transmission services is being removed"
         }
     },
     "options": {

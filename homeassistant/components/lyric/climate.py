@@ -4,15 +4,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from time import localtime, strftime, time
+from typing import Any
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -167,13 +169,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         self.entity_description = description
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.device.changeableValues.thermostatSetpointStatus:
-            support_flags = SUPPORT_FLAGS_LCC
-        else:
-            support_flags = SUPPORT_FLAGS_TCC
-        return support_flags
+            return SUPPORT_FLAGS_LCC
+        return SUPPORT_FLAGS_TCC
 
     @property
     def temperature_unit(self) -> str:
@@ -186,7 +186,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return self.device.indoorTemperature
 
     @property
-    def hvac_action(self) -> HVACAction:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current hvac action."""
         action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
         if action == HVACAction.OFF and self.hvac_mode != HVACMode.OFF:
@@ -265,7 +265,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             return device.maxHeatSetpoint
         return device.maxCoolSetpoint
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self.hvac_mode == HVACMode.OFF:
             return

@@ -148,8 +148,7 @@ def setup_platform(
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
 
-    if entities:
-        add_entities(entities)
+    add_entities(entities)
 
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
@@ -162,7 +161,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
         await super().async_added_to_hass()

@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
-            "auth_new_token_not_granted_error": "El token reci\u00e9n creado no se aprob\u00f3 en la interfaz de usuario de Hyperion",
-            "auth_new_token_not_work_error": "Error al autenticarse con el token reci\u00e9n creado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
+            "auth_new_token_not_granted_error": "El token reci\u00e9n creado no se aprob\u00f3 en la IU de Hyperion",
+            "auth_new_token_not_work_error": "No se pudo autenticar usando un token reci\u00e9n creado",
             "auth_required_error": "No se pudo determinar si se requiere autorizaci\u00f3n",
             "cannot_connect": "No se pudo conectar",
-            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su id",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -18,20 +18,20 @@
             "auth": {
                 "data": {
                     "create_token": "Crea un nuevo token autom\u00e1ticamente",
-                    "token": "O proporcionar un token preexistente"
+                    "token": "O proporciona un token preexistente"
                 },
-                "description": "Configurar autorizaci\u00f3n a tu servidor Hyperion Ambilight"
+                "description": "Configura la autorizaci\u00f3n a tu servidor Hyperion Ambilight"
             },
             "confirm": {
-                "description": "\u00bfQuieres a\u00f1adir el siguiente Hyperion Ambilight en Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
-                "title": "Confirmar la adici\u00f3n del servicio Hyperion Ambilight"
+                "description": "\u00bfQuieres a\u00f1adir el siguiente Hyperion Ambilight a Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**ID**: {id}",
+                "title": "Confirmar para a\u00f1adir el servicio Hyperion Ambilight"
             },
             "create_token": {
-                "description": "Elige ** Enviar ** a continuaci\u00f3n para solicitar un nuevo token de autenticaci\u00f3n. Se te redirigir\u00e1 a la interfaz de usuario de Hyperion para aprobar la solicitud. Verifica que la identificaci\u00f3n que se muestra sea \"{auth_id}\"",
+                "description": "Elige **Enviar** a continuaci\u00f3n para solicitar un nuevo token de autenticaci\u00f3n. Ser\u00e1s redirigido a la IU de Hyperion para aprobar la solicitud. Por favor, verifica que la identificaci\u00f3n que se muestra sea \"{auth_id}\"",
                 "title": "Crear autom\u00e1ticamente un nuevo token de autenticaci\u00f3n"
             },
             "create_token_external": {
-                "title": "Aceptar nuevo token en la interfaz de usuario de Hyperion"
+                "title": "Aceptar nuevo token en la IU de Hyperion"
             },
             "user": {
                 "data": {

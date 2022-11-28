@@ -28,7 +28,7 @@
             },
             "zeroconf_confirm": {
                 "description": "Vuoi configurare {name}?",
-                "title": "Stampante rilevata"
+                "title": "Rilevata stampante"
             }
         }
     }

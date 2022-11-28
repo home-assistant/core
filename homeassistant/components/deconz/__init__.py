@@ -43,18 +43,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    if not hass.data[DOMAIN]:
+        async_setup_services(hass)
+
     gateway = hass.data[DOMAIN][config_entry.entry_id] = DeconzGateway(
         hass, config_entry, api
     )
-
-    config_entry.add_update_listener(gateway.async_config_entry_updated)
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
-
-    await async_setup_events(gateway)
     await gateway.async_update_device_registry()
 
-    if len(hass.data[DOMAIN]) == 1:
-        async_setup_services(hass)
+    config_entry.add_update_listener(gateway.async_config_entry_updated)
+
+    await async_setup_events(gateway)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     api.start()
 

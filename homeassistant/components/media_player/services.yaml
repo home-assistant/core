@@ -151,6 +151,29 @@ play_media:
       selector:
         text:
 
+    enqueue:
+      name: Enqueue
+      description: If the content should be played now or be added to the queue.
+      required: false
+      selector:
+        select:
+          options:
+            - label: "Play now"
+              value: "play"
+            - label: "Play next"
+              value: "next"
+            - label: "Add to queue"
+              value: "add"
+            - label: "Play now and clear queue"
+              value: "replace"
+    announce:
+      name: Announce
+      description: If the media should be played as an announcement.
+      required: false
+      example: "true"
+      selector:
+        boolean:
+
 select_source:
   name: Select source
   description: Send the media player the command to change input source.
@@ -234,11 +257,14 @@ join:
     group_members:
       name: Group members
       description: The players which will be synced with the target player.
-      example:
-        - "media_player.multiroom_player2"
-        - "media_player.multiroom_player3"
+      required: true
+      example: |
+        - media_player.multiroom_player2
+        - media_player.multiroom_player3
       selector:
-        object:
+        entity:
+          multiple: true
+          domain: media_player
 
 unjoin:
   description:

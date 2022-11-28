@@ -4,6 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -80,11 +81,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
 )
-async def websocket_process(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_process(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Process text."""
     connection.send_result(
         msg["id"],
@@ -94,9 +99,13 @@ async def websocket_process(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "conversation/agent/info"})
-async def websocket_get_agent_info(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_get_agent_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Do we need onboarding."""
     agent = await _get_agent(hass)
 
@@ -109,9 +118,13 @@ async def websocket_get_agent_info(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
-async def websocket_set_onboarding(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_set_onboarding(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Set onboarding status."""
     agent = await _get_agent(hass)
 
@@ -120,7 +133,7 @@ async def websocket_set_onboarding(hass, connection, msg):
     if success:
         connection.send_result(msg["id"])
     else:
-        connection.send_error(msg["id"])
+        connection.send_error(msg["id"], "error", "Failed to set onboarding")
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -165,7 +178,10 @@ async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
 
 
 async def _async_converse(
-    hass: core.HomeAssistant, text: str, conversation_id: str, context: core.Context
+    hass: core.HomeAssistant,
+    text: str,
+    conversation_id: str | None,
+    context: core.Context,
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)

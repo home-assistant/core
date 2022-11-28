@@ -1,7 +1,6 @@
 """The motionEye integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import contextlib
 from http import HTTPStatus
@@ -36,8 +35,8 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.media_source.const import URI_SCHEME
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_source import URI_SCHEME
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
@@ -177,7 +176,7 @@ def async_generate_motioneye_webhook(
     except NoURLAvailableError:
         _LOGGER.warning(
             "Unable to get Home Assistant URL. Have you set the internal and/or "
-            "external URLs in Configuration -> General?"
+            "external URLs in Settings -> System -> Network?"
         )
         return None
 
@@ -329,7 +328,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    @callback
     async def async_update_data() -> dict[str, Any] | None:
         try:
             return await client.async_get_cameras()
@@ -392,20 +390,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 device_registry.async_remove_device(device_entry.id)
 
-    async def setup_then_listen() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        entry.async_on_unload(
-            coordinator.async_add_listener(_async_process_motioneye_cameras)
-        )
-        await coordinator.async_refresh()
-        entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.async_create_task(setup_then_listen())
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_process_motioneye_cameras)
+    )
+    await coordinator.async_refresh()
+    entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+
     return True
 
 
@@ -552,7 +544,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
-        entity_description: EntityDescription = None,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]

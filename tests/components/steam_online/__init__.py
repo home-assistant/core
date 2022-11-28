@@ -1,6 +1,8 @@
 """Tests for Steam integration."""
 from unittest.mock import patch
 
+import steam
+
 from homeassistant.components.steam_online import DOMAIN
 from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
 from homeassistant.const import CONF_API_KEY
@@ -27,15 +29,6 @@ CONF_OPTIONS_2 = {
         ACCOUNT_2: ACCOUNT_NAME_2,
     }
 }
-
-CONF_IMPORT_OPTIONS = {
-    CONF_ACCOUNTS: {
-        ACCOUNT_1: ACCOUNT_NAME_1,
-        ACCOUNT_2: ACCOUNT_NAME_2,
-    }
-}
-
-CONF_IMPORT_DATA = {CONF_API_KEY: API_KEY, CONF_ACCOUNTS: [ACCOUNT_1, ACCOUNT_2]}
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -96,9 +89,22 @@ class MockedInterface(dict):
         return {"response": {"player_level": 10}}
 
 
+class MockedInterfacePrivate(MockedInterface):
+    """Mocked interface for private friends list."""
+
+    def GetFriendList(self, steamid: str) -> None:
+        """Get friend list."""
+        raise steam.api.HTTPError
+
+
 def patch_interface() -> MockedInterface:
     """Patch interface."""
     return patch("steam.api.interface", return_value=MockedInterface())
+
+
+def patch_interface_private() -> MockedInterfacePrivate:
+    """Patch interface for private friends list."""
+    return patch("steam.api.interface", return_value=MockedInterfacePrivate())
 
 
 def patch_user_interface_null() -> MockedUserInterfaceNull:

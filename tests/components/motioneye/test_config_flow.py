@@ -75,17 +75,21 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
+        data=HassioServiceInfo(
+            config={"addon": "motionEye", "url": TEST_URL},
+            name="motionEye",
+            slug="motioneye",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "motionEye"}
     assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert "flow_id" in result2
 
@@ -109,7 +113,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "Add-on"
     assert result3.get("data") == {
         CONF_URL: TEST_URL,
@@ -259,6 +263,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": config_entry.entry_id,
         },
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert not result["errors"]
@@ -286,7 +291,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert dict(config_entry.data) == {**new_data, CONF_WEBHOOK_ID: "test-webhook-id"}
 
@@ -336,7 +341,7 @@ async def test_duplicate(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_client.async_client_close.called
 
@@ -350,10 +355,14 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
+        data=HassioServiceInfo(
+            config={"addon": "motionEye", "url": TEST_URL},
+            name="motionEye",
+            slug="motioneye",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -365,10 +374,14 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
+        data=HassioServiceInfo(
+            config={"addon": "motionEye", "url": TEST_URL},
+            name="motionEye",
+            slug="motioneye",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -377,14 +390,18 @@ async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
+        data=HassioServiceInfo(
+            config={"addon": "motionEye", "url": TEST_URL},
+            name="motionEye",
+            slug="motioneye",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result2.get("reason") == "already_in_progress"
 
 
@@ -393,15 +410,19 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
+        data=HassioServiceInfo(
+            config={"addon": "motionEye", "url": TEST_URL},
+            name="motionEye",
+            slug="motioneye",
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert "flow_id" in result2
 
     mock_client = create_mock_motioneye_client()
@@ -425,7 +446,7 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
     flows = hass.config_entries.flow.async_progress()
@@ -448,7 +469,7 @@ async def test_options(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -459,7 +480,7 @@ async def test_options(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
@@ -491,7 +512,7 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
@@ -510,7 +531,7 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert result["data"][CONF_STREAM_URL_TEMPLATE] == "http://moo"

@@ -4,7 +4,12 @@ import logging
 import pytest
 
 from homeassistant.components import automation, zone
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
@@ -187,6 +192,41 @@ async def test_if_fires_on_zone_leave(hass, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+
+
+async def test_if_fires_on_zone_leave_2(hass, calls):
+    """Test for firing on zone leave for unavailable entity."""
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564, "source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "geo_location",
+                    "source": "test_source",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "geo_location.entity",
+        STATE_UNAVAILABLE,
+        {"source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):

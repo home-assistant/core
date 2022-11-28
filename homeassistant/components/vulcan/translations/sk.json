@@ -1,8 +1,30 @@
 {
     "config": {
+        "abort": {
+            "all_student_already_configured": "V\u0161etci \u0161tudenti u\u017e boli pridan\u00ed.",
+            "already_configured": "Tento \u0161tudent u\u017e bol pridan\u00fd."
+        },
+        "error": {
+            "expired_token": "Platnos\u0165 tokenu vypr\u0161ala \u2013 vygenerujte si nov\u00fd token",
+            "invalid_pin": "Neplatn\u00fd k\u00f3d PIN",
+            "invalid_token": "Neplatn\u00fd token",
+            "unknown": "Vyskytla sa nezn\u00e1ma chyba"
+        },
         "step": {
             "add_next_config_entry": {
                 "description": "Prida\u0165 \u010fal\u0161ieho \u0161tudenta."
+            },
+            "auth": {
+                "data": {
+                    "pin": "Pin",
+                    "token": "Token"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Pin",
+                    "token": "Token"
+                }
             }
         }
     }

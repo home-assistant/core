@@ -3,15 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-import logging
 from typing import Any, TypeVar
 
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
 from typing_extensions import Concatenate, ParamSpec
 
-from .entity import RokuEntity
+from homeassistant.exceptions import HomeAssistantError
 
-_LOGGER = logging.getLogger(__name__)
+from .entity import RokuEntity
 
 _RokuEntityT = TypeVar("_RokuEntityT", bound=RokuEntity)
 _P = ParamSpec("_P")
@@ -43,14 +42,14 @@ def roku_exception_handler(
             try:
                 await func(self, *args, **kwargs)
             except RokuConnectionTimeoutError as error:
-                if not ignore_timeout and self.available:
-                    _LOGGER.error("Error communicating with API: %s", error)
+                if not ignore_timeout:
+                    raise HomeAssistantError(
+                        "Timeout communicating with Roku API"
+                    ) from error
             except RokuConnectionError as error:
-                if self.available:
-                    _LOGGER.error("Error communicating with API: %s", error)
+                raise HomeAssistantError("Error communicating with Roku API") from error
             except RokuError as error:
-                if self.available:
-                    _LOGGER.error("Invalid response from API: %s", error)
+                raise HomeAssistantError("Invalid response from Roku API") from error
 
         return wrapper
 

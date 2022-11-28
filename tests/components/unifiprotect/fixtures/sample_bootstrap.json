@@ -1,0 +1,633 @@
+{
+  "authUserId": "4c5f03a8c8bd48ad8e066285",
+  "accessKey": "8528571101220:340ff666bffb58bc404b859a:8f3f41a7b180b1ff7463fe4f7f13b528ac3d28668f25d0ecaa30c8e7888559e782b38d4335b40861030b75126eb7cea8385f3f9ab59dfa9a993e50757c277053",
+  "users": [
+    {
+      "permissions": [],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": true,
+      "enableNotifications": false,
+      "settings": {
+        "flags": {}
+      },
+      "groups": ["b061186823695fb901973177"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "custom",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [
+            {
+              "inheritFromParent": true,
+              "motion": [],
+              "person": [],
+              "vehicle": [],
+              "camera": "61b3f5c7033ea703e7000424",
+              "trigger": {
+                "when": "always",
+                "location": "away",
+                "schedules": []
+              }
+            }
+          ],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "fe4c12ae2c1348edb7854e2f",
+      "hasAcceptedInvite": true,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "cloudAccount": {
+        "firstName": "Qpvfly",
+        "lastName": "Ikjzilt",
+        "email": "QhoFvCv@example.com",
+        "profileImg": null,
+        "user": "fe4c12ae2c1348edb7854e2f",
+        "id": "9efc4511-4539-4402-9581-51cee8b65cf5",
+        "cloudId": "9efc4511-4539-4402-9581-51cee8b65cf5",
+        "name": "Qpvfly Ikjzilt",
+        "modelKey": "cloudIdentity"
+      },
+      "name": "Qpvfly Ikjzilt",
+      "firstName": "Qpvfly",
+      "lastName": "Ikjzilt",
+      "email": "QhoFvCv@example.com",
+      "localUsername": "QhoFvCv",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": false,
+      "enableNotifications": false,
+      "settings": null,
+      "groups": ["a7f3b2eb71b4c4e56f1f45ac", "b061186823695fb901973177"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "auto",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "dcaef9cb8aed05c7db658a46",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*",
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "cloudAccount": null,
+      "name": "Uxqg Wcbz",
+      "firstName": "Uxqg",
+      "lastName": "Wcbz",
+      "email": "epHDEhE@example.com",
+      "localUsername": "epHDEhE",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [
+        "liveview:*:d65bb41c14d6aa92bfa4a6d1",
+        "liveview:*:49bbb5005424a0d35152671a",
+        "liveview:*:b28c38f1220f6b43f3930dff",
+        "liveview:*:b9861b533a87ea639fa4d438"
+      ],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": false,
+      "enableNotifications": false,
+      "settings": {
+        "flags": {},
+        "web": {
+          "dewarp": {
+            "61ddb66b018e2703e7008c19": {
+              "dewarp": false,
+              "state": {
+                "pan": 0,
+                "tilt": -1.5707963267948966,
+                "zoom": 1.5707963267948966,
+                "panning": 0,
+                "tilting": 0
+              }
+            }
+          },
+          "liveview.includeGlobal": true,
+          "elements.events_viewmode": "grid",
+          "elements.viewmode": "list"
+        }
+      },
+      "groups": ["b061186823695fb901973177"],
+      "location": {
+        "isAway": true,
+        "latitude": null,
+        "longitude": null
+      },
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "custom",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [
+            {
+              "inheritFromParent": true,
+              "motion": [],
+              "camera": "61b3f5c703d2a703e7000427",
+              "trigger": {
+                "when": "always",
+                "location": "away",
+                "schedules": []
+              }
+            },
+            {
+              "inheritFromParent": true,
+              "motion": [],
+              "person": [],
+              "vehicle": [],
+              "camera": "61b3f5c7033ea703e7000424",
+              "trigger": {
+                "when": "always",
+                "location": "away",
+                "schedules": []
+              }
+            }
+          ],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "4c5f03a8c8bd48ad8e066285",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "liveview:*:d65bb41c14d6aa92bfa4a6d1",
+        "liveview:*:49bbb5005424a0d35152671a",
+        "liveview:*:b28c38f1220f6b43f3930dff",
+        "liveview:*:b9861b533a87ea639fa4d438",
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "cloudAccount": null,
+      "name": "Ptcmsdo Tfiyoep",
+      "firstName": "Ptcmsdo",
+      "lastName": "Tfiyoep",
+      "email": "EQAoXL@example.com",
+      "localUsername": "EQAoXL",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": false,
+      "enableNotifications": false,
+      "settings": {
+        "flags": {},
+        "web": {
+          "dewarp": {
+            "61c4d1db02c82a03e700429c": {
+              "dewarp": false,
+              "state": {
+                "pan": 0,
+                "tilt": 0,
+                "zoom": 1.5707963267948966,
+                "panning": 0,
+                "tilting": 0
+              }
+            }
+          },
+          "liveview.includeGlobal": true
+        }
+      },
+      "groups": ["a7f3b2eb71b4c4e56f1f45ac"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "auto",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "bc3dd633553907952a6fe20d",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*"
+      ],
+      "cloudAccount": null,
+      "name": "Evdxou Zgyv",
+      "firstName": "Evdxou",
+      "lastName": "Zgyv",
+      "email": "FMZuD@example.com",
+      "localUsername": "FMZuD",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": false,
+      "enableNotifications": false,
+      "settings": null,
+      "groups": ["a7f3b2eb71b4c4e56f1f45ac", "b061186823695fb901973177"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "auto",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "adec5334b69f56f6a6c47520",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*",
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "cloudAccount": null,
+      "name": "Qpv Elqfgq",
+      "firstName": "Qpv",
+      "lastName": "Elqfgq",
+      "email": "xdr@example.com",
+      "localUsername": "xdr",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [],
+      "lastLoginIp": null,
+      "lastLoginTime": null,
+      "isOwner": false,
+      "enableNotifications": false,
+      "settings": null,
+      "groups": ["a7f3b2eb71b4c4e56f1f45ac", "b061186823695fb901973177"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "auto",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "8593657a25b7826a4288b6af",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*",
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "cloudAccount": null,
+      "name": "Sgpy Ooevsme",
+      "firstName": "Sgpy",
+      "lastName": "Ooevsme",
+      "email": "WQJNT@example.com",
+      "localUsername": "WQJNT",
+      "modelKey": "user"
+    },
+    {
+      "permissions": [],
+      "isOwner": false,
+      "enableNotifications": false,
+      "groups": ["a7f3b2eb71b4c4e56f1f45ac"],
+      "alertRules": [],
+      "notificationsV2": {
+        "state": "off",
+        "motionNotifications": {
+          "trigger": {
+            "when": "inherit",
+            "location": "away",
+            "schedules": []
+          },
+          "cameras": [],
+          "doorbells": [],
+          "lights": [],
+          "doorlocks": [],
+          "sensors": []
+        },
+        "systemNotifications": {}
+      },
+      "featureFlags": {
+        "notificationsV2": true
+      },
+      "id": "abf647aed3650a781ceba13f",
+      "hasAcceptedInvite": false,
+      "allPermissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*"
+      ],
+      "cloudAccount": null,
+      "name": "Yiiyq Glx",
+      "firstName": "Yiiyq",
+      "lastName": "Glx",
+      "email": "fBjmm@example.com",
+      "localUsername": "fBjmm",
+      "modelKey": "user"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Kubw Xnbb",
+      "permissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "nvr:write,delete:*",
+        "group:create,read,write,delete:*",
+        "user:create,read,write,delete:*",
+        "schedule:create,read,write,delete:*",
+        "legacyUFV:read,write,delete:*",
+        "bridge:create,read,write,delete:*",
+        "camera:create,read,write,delete,readmedia,deletemedia:*",
+        "light:create,read,write,delete:*",
+        "sensor:create,read,write,delete:*",
+        "doorlock:create,read,write,delete:*",
+        "viewer:create,read,write,delete:*",
+        "display:create,read,write,delete:*",
+        "chime:create,read,write,delete:*"
+      ],
+      "type": "preset",
+      "isDefault": true,
+      "id": "b061186823695fb901973177",
+      "modelKey": "group"
+    },
+    {
+      "name": "Pmbrvp Wyzqs",
+      "permissions": [
+        "nvr:read:*",
+        "liveview:create",
+        "user:read,write,delete:$",
+        "bridge:read:*",
+        "camera:read,readmedia:*",
+        "doorlock:read:*",
+        "light:read:*",
+        "sensor:read:*",
+        "viewer:read:*",
+        "display:read:*",
+        "chime:read:*"
+      ],
+      "type": "preset",
+      "isDefault": false,
+      "id": "a7f3b2eb71b4c4e56f1f45ac",
+      "modelKey": "group"
+    }
+  ],
+  "schedules": [],
+  "legacyUFVs": [],
+  "lastUpdateId": "ebf25bac-d5a1-4f1d-a0ee-74c15981eb70",
+  "displays": [],
+  "bridges": [
+    {
+      "mac": "A28D0DB15AE1",
+      "host": "192.168.231.68",
+      "connectionHost": "192.168.102.63",
+      "type": "UFP-UAP-B",
+      "name": "Sffde Gxcaqe",
+      "upSince": 1639807977891,
+      "uptime": 3247782,
+      "lastSeen": 1643055759891,
+      "connectedSince": 1642374159304,
+      "state": "CONNECTED",
+      "hardwareRevision": 19,
+      "firmwareVersion": "0.3.1",
+      "latestFirmwareVersion": null,
+      "firmwareBuild": null,
+      "isUpdating": false,
+      "isAdopting": false,
+      "isAdopted": true,
+      "isAdoptedByOther": false,
+      "isProvisioned": false,
+      "isRebooting": false,
+      "isSshEnabled": false,
+      "canAdopt": false,
+      "isAttemptingToConnect": false,
+      "wiredConnectionState": {
+        "phyRate": null
+      },
+      "id": "1f5a055254fb9169d7536fb9",
+      "isConnected": true,
+      "platform": "mt7621",
+      "modelKey": "bridge"
+    },
+    {
+      "mac": "C65C557CCA95",
+      "host": "192.168.87.68",
+      "connectionHost": "192.168.102.63",
+      "type": "UFP-UAP-B",
+      "name": "Axiwj Bbd",
+      "upSince": 1641257260772,
+      "uptime": null,
+      "lastSeen": 1643052750862,
+      "connectedSince": 1643052754695,
+      "state": "CONNECTED",
+      "hardwareRevision": 19,
+      "firmwareVersion": "0.3.1",
+      "latestFirmwareVersion": null,
+      "firmwareBuild": null,
+      "isUpdating": false,
+      "isAdopting": false,
+      "isAdopted": true,
+      "isAdoptedByOther": false,
+      "isProvisioned": false,
+      "isRebooting": false,
+      "isSshEnabled": false,
+      "canAdopt": false,
+      "isAttemptingToConnect": false,
+      "wiredConnectionState": {
+        "phyRate": null
+      },
+      "id": "e6901e3665a4c0eab0d9c1a5",
+      "isConnected": true,
+      "platform": "mt7621",
+      "modelKey": "bridge"
+    }
+  ]
+}

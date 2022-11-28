@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "De Steam integratie moet handmatig opnieuw geauthenticeerd worden\n\nU kunt uw sleutel hier vinden: {api_key_url}",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {
@@ -24,7 +24,15 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Steam YAML-configuratie wordt verwijderd"
+        }
+    },
     "options": {
+        "error": {
+            "unauthorized": "Vriendenlijst beperkt: raadpleeg de documentatie over hoe je alle andere vrienden kunt zien"
+        },
         "step": {
             "init": {
                 "data": {

@@ -7,9 +7,11 @@
         },
         "flow_title": "{name}",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Chcete nastavit {name}?"
+            },
+            "password": {
                 "data": {
-                    "name": "Jm\u00e9no",
                     "password": "Heslo"
                 }
             }

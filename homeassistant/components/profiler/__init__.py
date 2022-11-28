@@ -7,7 +7,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -123,10 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for thread in threading.enumerate():
             if thread == main_thread:
                 continue
+            ident = cast(int, thread.ident)
             _LOGGER.critical(
                 "Thread [%s]: %s",
                 thread.name,
-                "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
+                "".join(traceback.format_stack(frames.get(ident))).strip(),
             )
 
     async def _async_dump_scheduled(call: ServiceCall) -> None:
@@ -136,13 +137,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         original_maxother = arepr.maxother
         arepr.maxstring = 300
         arepr.maxother = 300
+        handle: asyncio.Handle
         try:
-            for handle in hass.loop._scheduled:  # pylint: disable=protected-access
+            for handle in getattr(hass.loop, "_scheduled"):
                 if not handle.cancelled():
                     _LOGGER.critical("Scheduled: %s", handle)
         finally:
-            arepr.max_string = original_maxstring
-            arepr.max_other = original_maxother
+            arepr.maxstring = original_maxstring
+            arepr.maxother = original_maxother
 
     async_register_admin_service(
         hass,

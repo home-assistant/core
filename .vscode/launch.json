@@ -13,6 +13,14 @@
       "args": ["--debug", "-c", "config"]
     },
     {
+      "name": "Home Assistant (skip pip)",
+      "type": "python",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": ["--debug", "-c", "config", "--skip-pip"]
+    },
+    {
       // Debug by attaching to local Home Asistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Local",

@@ -1,11 +1,13 @@
 """Support for mill wifi-enabled home heaters."""
+from typing import Any
+
 import mill
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -15,6 +17,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
+    PRECISION_HALVES,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
@@ -89,7 +92,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, FAN_OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, heater):
@@ -117,21 +119,23 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
             )
+            self._attr_target_temperature_step = PRECISION_WHOLE
         else:
             self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_target_temperature_step = PRECISION_HALVES
 
         self._update_attr(heater)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
-            self._id, int(temperature)
+            self._id, float(temperature)
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         fan_status = 1 if fan_mode == FAN_ON else 0
         await self.coordinator.mill_data_connection.heater_control(
@@ -200,7 +204,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator):
@@ -220,12 +224,12 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
 
         self._update_attr()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_target_temperature(
-            int(temperature)
+            float(temperature)
         )
         await self.coordinator.async_request_refresh()
 

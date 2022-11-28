@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "cannot_receive_deviceinfo": "Falha ao recuperar o endere\u00e7o MAC. Verifique se o dispositivo est\u00e1 ligado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pprint import pformat
+from typing import Any
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -13,7 +14,11 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -40,7 +45,7 @@ def wsdiscovery() -> list[Service]:
     return services
 
 
-async def async_discovery(hass) -> bool:
+async def async_discovery(hass) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
@@ -72,7 +77,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
 
@@ -258,7 +265,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle ONVIF options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize ONVIF options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
@@ -272,8 +279,22 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
+            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
+                CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+            )
             return self.async_create_entry(title="", data=self.options)
 
+        advanced_options = {}
+        if self.show_advanced_options:
+            advanced_options[
+                vol.Optional(
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                    default=self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
+                )
+            ] = bool
         return self.async_show_form(
             step_id="onvif_devices",
             data_schema=vol.Schema(
@@ -290,6 +311,7 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
+                    **advanced_options,
                 }
             ),
         )

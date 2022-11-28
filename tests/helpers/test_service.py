@@ -19,12 +19,12 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
     template,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
@@ -1206,17 +1206,3 @@ async def test_async_extract_config_entry_ids(hass):
     )
 
     assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}
-
-
-async def test_current_entity_context(hass, mock_entities):
-    """Test we set the current entity context var."""
-
-    async def mock_service(entity, call):
-        assert entity.entity_id == service.async_get_current_entity()
-
-    await service.entity_service_call(
-        hass,
-        [Mock(entities=mock_entities)],
-        mock_service,
-        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
-    )

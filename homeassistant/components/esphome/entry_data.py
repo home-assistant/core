@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from dataclasses import dataclass, field
+import logging
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -29,31 +30,36 @@ from aioesphomeapi import (
     UserService,
 )
 from aioesphomeapi.model import ButtonInfo
+from bleak.backends.service import BleakGATTServiceCollection
+from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
 SAVE_DELAY = 120
+_LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
-    BinarySensorInfo: "binary_sensor",
-    ButtonInfo: "button",
-    CameraInfo: "camera",
-    ClimateInfo: "climate",
-    CoverInfo: "cover",
-    FanInfo: "fan",
-    LightInfo: "light",
-    LockInfo: "lock",
-    MediaPlayerInfo: "media_player",
-    NumberInfo: "number",
-    SelectInfo: "select",
-    SensorInfo: "sensor",
-    SwitchInfo: "switch",
-    TextSensorInfo: "sensor",
+    BinarySensorInfo: Platform.BINARY_SENSOR,
+    ButtonInfo: Platform.BUTTON,
+    CameraInfo: Platform.CAMERA,
+    ClimateInfo: Platform.CLIMATE,
+    CoverInfo: Platform.COVER,
+    FanInfo: Platform.FAN,
+    LightInfo: Platform.LIGHT,
+    LockInfo: Platform.LOCK,
+    MediaPlayerInfo: Platform.MEDIA_PLAYER,
+    NumberInfo: Platform.NUMBER,
+    SelectInfo: Platform.SELECT,
+    SensorInfo: Platform.SENSOR,
+    SwitchInfo: Platform.SWITCH,
+    TextSensorInfo: Platform.SENSOR,
 }
+MAX_CACHED_SERVICES = 128
 
 
 @dataclass
@@ -63,7 +69,7 @@ class RuntimeEntryData:
     entry_id: str
     client: APIClient
     store: Store
-    state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
+    state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
@@ -78,17 +84,62 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    state_subscriptions: dict[
+        tuple[type[EntityState], int], Callable[[], None]
+    ] = field(default_factory=dict)
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
+    ble_connections_free: int = 0
+    ble_connections_limit: int = 0
+    _ble_connection_free_futures: list[asyncio.Future[int]] = field(
+        default_factory=list
+    )
+    _gatt_services_cache: MutableMapping[int, BleakGATTServiceCollection] = field(
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+    )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device_info.name if self.device_info else self.entry_id
+
+    def get_gatt_services_cache(
+        self, address: int
+    ) -> BleakGATTServiceCollection | None:
+        """Get the BleakGATTServiceCollection for the given address."""
+        return self._gatt_services_cache.get(address)
+
+    def set_gatt_services_cache(
+        self, address: int, services: BleakGATTServiceCollection
+    ) -> None:
+        """Set the BleakGATTServiceCollection for the given address."""
+        self._gatt_services_cache[address] = services
 
     @callback
-    def async_update_entity(
-        self, hass: HomeAssistant, component_key: str, key: int
-    ) -> None:
-        """Schedule the update of an entity."""
-        signal = f"esphome_{self.entry_id}_update_{component_key}_{key}"
-        async_dispatcher_send(hass, signal)
+    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
+        """Update the BLE connection limits."""
+        _LOGGER.debug(
+            "%s: BLE connection limits: used=%s free=%s limit=%s",
+            self.name,
+            limit - free,
+            free,
+            limit,
+        )
+        self.ble_connections_free = free
+        self.ble_connections_limit = limit
+        if free:
+            for fut in self._ble_connection_free_futures:
+                fut.set_result(free)
+            self._ble_connection_free_futures.clear()
+
+    async def wait_for_ble_connections_free(self) -> int:
+        """Wait until there are free BLE connections."""
+        if self.ble_connections_free > 0:
+            return self.ble_connections_free
+        fut: asyncio.Future[int] = asyncio.Future()
+        self._ble_connection_free_futures.append(fut)
+        return await fut
 
     @callback
     def async_remove_entity(
@@ -103,13 +154,8 @@ class RuntimeEntryData:
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
-            tasks = []
-            for platform in needed:
-                tasks.append(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
-                )
-            if tasks:
-                await asyncio.wait(tasks)
+            if needed:
+                await hass.config_entries.async_forward_entry_setups(entry, needed)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
@@ -130,10 +176,33 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
-        """Distribute an update of state information to all platforms."""
-        signal = f"esphome_{self.entry_id}_on_state"
-        async_dispatcher_send(hass, signal, state)
+    def async_subscribe_state_update(
+        self,
+        state_type: type[EntityState],
+        state_key: int,
+        entity_callback: Callable[[], None],
+    ) -> Callable[[], None]:
+        """Subscribe to state updates."""
+
+        def _unsubscribe() -> None:
+            self.state_subscriptions.pop((state_type, state_key))
+
+        self.state_subscriptions[(state_type, state_key)] = entity_callback
+        return _unsubscribe
+
+    @callback
+    def async_update_state(self, state: EntityState) -> None:
+        """Distribute an update of state information to the target."""
+        subscription_key = (type(state), state.key)
+        self.state[type(state)][state.key] = state
+        _LOGGER.debug(
+            "%s: dispatching update with key %s: %s",
+            self.name,
+            subscription_key,
+            state,
+        )
+        if subscription_key in self.state_subscriptions:
+            self.state_subscriptions[subscription_key]()
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:

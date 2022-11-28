@@ -1,5 +1,7 @@
 """Tests for the UpCloud config flow."""
 
+from unittest.mock import patch
+
 import requests.exceptions
 from requests_mock import ANY
 from upcloud_api import UpCloudAPIError
@@ -26,7 +28,7 @@ async def test_show_set_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -37,7 +39,7 @@ async def test_connection_error(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -56,7 +58,7 @@ async def test_login_error(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -68,7 +70,7 @@ async def test_success(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
@@ -81,8 +83,12 @@ async def test_options(hass):
     )
     config_entry.add_to_hass(hass)
 
+    with patch("homeassistant.components.upcloud.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(

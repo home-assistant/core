@@ -8,6 +8,7 @@
             "unknown": "Erro inesperado",
             "unsupported_version": "O dispositivo BleBox possui firmware desatualizado. Atualize-o primeiro."
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

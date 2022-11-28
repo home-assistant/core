@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass low battery"
+                },
+                "description": "Automatically bypass zones the moment they report a low battery.",
+                "title": "TotalConnect Options"
+            }
+        }
     }
 }

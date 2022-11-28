@@ -16,7 +16,7 @@
             "external_gateway": "bramka zewn\u0119trzna",
             "local_user": "u\u017cytkownik lokalny",
             "lsc": "LSC",
-            "myself": "Ja",
+            "myself": "ja",
             "rain": "deszcz",
             "saac": "SAAC",
             "security": "bezpiecze\u0144stwo",
@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "czysto",
             "dirty": "brudno"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "zamkni\u0119ta",
+            "open": "otwarta",
+            "tilt": "uchylona"
         }
     }
 }

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "sensibo__sensitivity": {
+            "n": "Tavaline",
+            "s": "Tundlik"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Tundub nagu",
+            "humidity": "Niiskus",
+            "temperature": "Temperatuur"
+        }
+    }
+}

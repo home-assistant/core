@@ -4,14 +4,14 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components import media_player
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_SOUND_MODE_LIST,
 )
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import State
@@ -22,7 +22,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass, recorder_mock):
+async def test_exclude_attributes(recorder_mock, hass):
     """Test media_player registered attributes to be excluded."""
     await async_setup_component(
         hass, media_player.DOMAIN, {media_player.DOMAIN: {"platform": "demo"}}

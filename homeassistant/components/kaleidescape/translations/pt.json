@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "unsupported": "Dispositivo n\u00e3o compat\u00edvel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    }
+}

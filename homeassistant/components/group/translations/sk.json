@@ -1,18 +1,102 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "V\u0161etky entity",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
+                }
+            },
+            "light": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
+                }
+            },
             "media_player": {
                 "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
                     "name": "Meno"
+                }
+            },
+            "switch": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "name": "N\u00e1zov"
                 }
             }
         }
     },
     "options": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "V\u0161etky entity",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
             "light": {
                 "data": {
-                    "entities": "\u010clenovia"
+                    "all": "V\u0161etky entity",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
+            "lock": {
+                "data": {
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "V\u0161etky entity",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov"
                 }
             }
         }

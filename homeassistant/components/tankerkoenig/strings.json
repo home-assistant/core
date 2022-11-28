@@ -11,6 +11,11 @@
           "radius": "Search radius"
         }
       },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
       "select_station": {
         "title": "Select stations to add",
         "description": "found {stations_count} stations in radius",
@@ -20,7 +25,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -32,7 +38,7 @@
       "init": {
         "title": "Tankerkoenig options",
         "data": {
-          "scan_interval": "Update Interval",
+          "stations": "Stations",
           "show_on_map": "Show stations on map"
         }
       }

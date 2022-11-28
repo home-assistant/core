@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import sucks
 
@@ -93,21 +94,21 @@ class EcovacsVacuum(VacuumEntity):
         return self.device.vacuum.get("did")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if vacuum is currently cleaning."""
         return self.device.is_cleaning
 
     @property
-    def is_charging(self):
+    def is_charging(self) -> bool:
         """Return true if vacuum is currently charging."""
         return self.device.is_charging
 
     @property
-    def status(self):
+    def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self.device.vacuum_status
 
-    def return_to_base(self, **kwargs):
+    def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
 
         self.device.run(sucks.Charge())
@@ -132,44 +133,49 @@ class EcovacsVacuum(VacuumEntity):
         """Return the fan speed of the vacuum cleaner."""
         return self.device.fan_speed
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning."""
 
         self.device.run(sucks.Clean())
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off stopping the cleaning and returning home."""
         self.return_to_base()
 
-    def stop(self, **kwargs):
+    def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
 
         self.device.run(sucks.Stop())
 
-    def clean_spot(self, **kwargs):
+    def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
 
         self.device.run(sucks.Spot())
 
-    def locate(self, **kwargs):
+    def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
 
         self.device.run(sucks.PlaySound())
 
-    def set_fan_speed(self, fan_speed, **kwargs):
+    def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self.is_on:
 
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
-    def send_command(self, command, params=None, **kwargs):
+    def send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes of this vacuum."""
-        data = {}
+        data: dict[str, Any] = {}
         data[ATTR_ERROR] = self._error
 
         for key, val in self.device.components.items():

@@ -48,13 +48,16 @@ BASE_SWITCHES = [
     ),
 ]
 
-FAN_SWITCHES = [
+AUTO_COMFORT_SWITCHES = [
     BAFSwitchDescription(
         key="comfort_heat_assist_enable",
         name="Auto Comfort Heat Assist",
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda device: cast(Optional[bool], device.comfort_heat_assist_enable),
     ),
+]
+
+FAN_SWITCHES = [
     BAFSwitchDescription(
         key="fan_beep_enable",
         name="Beep",
@@ -120,6 +123,8 @@ async def async_setup_entry(
         descriptions.extend(FAN_SWITCHES)
     if device.has_light:
         descriptions.extend(LIGHT_SWITCHES)
+    if device.has_auto_comfort:
+        descriptions.extend(AUTO_COMFORT_SWITCHES)
     async_add_entities(BAFSwitch(device, description) for description in descriptions)
 
 

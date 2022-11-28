@@ -1,7 +1,7 @@
 """Tests for the Bond cover device."""
 from datetime import timedelta
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 
 from homeassistant import core
 from homeassistant.components.cover import (

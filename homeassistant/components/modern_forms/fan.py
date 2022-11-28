@@ -127,7 +127,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     async def async_turn_on(
         self,
         percentage: int | None = None,
-        preset_mode: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""

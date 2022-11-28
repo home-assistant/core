@@ -37,7 +37,7 @@
             "90": "90\u00b0"
         },
         "tuya__fingerbot_mode": {
-            "click": "\u62bc\u3059",
+            "click": "\u30d7\u30c3\u30b7\u30e5",
             "switch": "\u30b9\u30a4\u30c3\u30c1"
         },
         "tuya__humidifier_level": {
@@ -109,24 +109,24 @@
             "small": "\u5c0f"
         },
         "tuya__vacuum_mode": {
-            "bow": "\u66f2\u304c\u308b",
+            "bow": "\u5f13",
             "chargego": "\u30c9\u30c3\u30af\u306b\u623b\u308b",
-            "left_bow": "\u5de6\u306b\u66f2\u304c\u308b",
+            "left_bow": "\u5f13\u5de6",
             "left_spiral": "\u30b9\u30d1\u30a4\u30e9\u30eb\u30ec\u30d5\u30c8",
             "mop": "\u30e2\u30c3\u30d7",
-            "part": "\u90e8\u5206",
-            "partial_bow": "\u90e8\u5206\u7684\u306b\u66f2\u304c\u308b",
+            "part": "\u90e8",
+            "partial_bow": "\u90e8\u5206\u7684\u306b\u5f13",
             "pick_zone": "\u30d4\u30c3\u30af\u30be\u30fc\u30f3",
             "point": "\u30dd\u30a4\u30f3\u30c8",
             "pose": "\u30dd\u30fc\u30ba",
             "random": "\u30e9\u30f3\u30c0\u30e0",
-            "right_bow": "\u53f3\u306b\u66f2\u304c\u308b",
+            "right_bow": "\u5f13\u53f3",
             "right_spiral": "\u30b9\u30d1\u30a4\u30e9\u30eb\u30e9\u30a4\u30c8",
             "single": "\u30b7\u30f3\u30b0\u30eb",
             "smart": "\u30b9\u30de\u30fc\u30c8",
             "spiral": "\u30b9\u30d1\u30a4\u30e9\u30eb(Spiral)",
             "standby": "\u30b9\u30bf\u30f3\u30d0\u30a4",
-            "wall_follow": "\u58c1\u3092\u305f\u3069\u308b",
+            "wall_follow": "\u30d5\u30a9\u30ed\u30fc\u30a6\u30a9\u30fc\u30eb",
             "zone": "\u30be\u30fc\u30f3"
         }
     }

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import lw12
 import voluptuous as vol
@@ -58,6 +59,7 @@ class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
@@ -114,12 +116,7 @@ class LW12WiFi(LightEntity):
         """Return True if unable to access real state of the entity."""
         return True
 
-    @property
-    def should_poll(self) -> bool:
-        """Return False to not poll the state of this entity."""
-        return False
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._light.light_on()
         if ATTR_HS_COLOR in kwargs:
@@ -127,7 +124,7 @@ class LW12WiFi(LightEntity):
             self._light.set_color(*self._rgb_color)
             self._effect = None
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs.get(ATTR_BRIGHTNESS)
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int(self._brightness / 255 * 100)
             self._light.set_light_option(lw12.LW12_LIGHT.BRIGHTNESS, brightness)
         if ATTR_EFFECT in kwargs:
@@ -146,7 +143,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False

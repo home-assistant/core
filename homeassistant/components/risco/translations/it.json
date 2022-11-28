@@ -9,11 +9,24 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Password",
                     "pin": "Codice PIN",
                     "username": "Nome utente"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "Codice PIN",
+                    "port": "Porta"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (consigliato)",
+                    "local": "Pannello Risco locale (avanzato)"
                 }
             }
         }

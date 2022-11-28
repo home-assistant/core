@@ -24,7 +24,6 @@ class RenaultSelectRequiredKeysMixin:
 
     data_key: str
     icon_lambda: Callable[[RenaultSelectEntity], str]
-    options: list[str]
 
 
 @dataclass
@@ -74,11 +73,6 @@ class RenaultSelectEntity(
         """Icon handling."""
         return self.entity_description.icon_lambda(self)
 
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.vehicle.vehicle.set_charge_mode(option)
@@ -98,7 +92,7 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         icon_lambda=_get_charge_mode_icon,
-        name="Charge Mode",
+        name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],
     ),
 )

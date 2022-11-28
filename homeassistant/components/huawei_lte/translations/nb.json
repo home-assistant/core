@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

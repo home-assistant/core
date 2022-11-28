@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u30fc\u30b5\u30a4\u30c8\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
-            "configuration_updated": "\u8a2d\u5b9a\u304c\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f\u3002",
+            "configuration_updated": "\u69cb\u6210\u304c\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f",
             "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
         },
         "error": {
@@ -27,7 +27,7 @@
     },
     "options": {
         "abort": {
-            "integration_not_setup": "UniFi\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u304c\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
+            "integration_not_setup": "UniFi\u7d71\u5408\u304c\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
         },
         "step": {
             "client_control": {
@@ -57,7 +57,7 @@
                     "track_clients": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u3092\u8ffd\u8de1\u3059\u308b",
                     "track_devices": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30c7\u30d0\u30a4\u30b9\u306e\u8ffd\u8de1(\u30e6\u30d3\u30ad\u30c6\u30a3\u30c7\u30d0\u30a4\u30b9)"
                 },
-                "description": "UniFi\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u8a2d\u5b9a"
+                "description": "UniFi\u7d71\u5408\u306e\u8a2d\u5b9a"
             },
             "statistics_sensors": {
                 "data": {

@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import logging
 import math
+from typing import Any
+
+from pysmarty import Smarty
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -31,8 +34,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Smarty Fan Platform."""
-    smarty = hass.data[DOMAIN]["api"]
-    name = hass.data[DOMAIN]["name"]
+    smarty: Smarty = hass.data[DOMAIN]["api"]
+    name: str = hass.data[DOMAIN]["name"]
 
     async_add_entities([SmartyFan(name, smarty)], True)
 
@@ -40,31 +43,18 @@ async def async_setup_platform(
 class SmartyFan(FanEntity):
     """Representation of a Smarty Fan."""
 
+    _attr_icon = "mdi:air-conditioner"
+    _attr_should_poll = False
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, name, smarty):
         """Initialize the entity."""
-        self._name = name
+        self._attr_name = name
         self._smarty_fan_speed = 0
         self._smarty = smarty
 
     @property
-    def should_poll(self):
-        """Do not poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the fan."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:air-conditioner"
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return state of the fan."""
         return bool(self._smarty_fan_speed)
 
@@ -96,12 +86,17 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         _LOGGER.debug("Turning off fan")
         if not self._smarty.turn_off():
@@ -110,7 +105,7 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = 0
         self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call to update fan."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -119,7 +114,7 @@ class SmartyFan(FanEntity):
         )
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Call update method."""
         _LOGGER.debug("Updating state")
         self._smarty_fan_speed = self._smarty.fan_speed

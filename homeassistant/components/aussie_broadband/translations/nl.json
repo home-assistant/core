@@ -16,7 +16,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Update wachtwoord voor {username}",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "service": {
                 "data": {

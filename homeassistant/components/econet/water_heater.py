@@ -1,5 +1,6 @@
 """Support for Rheem EcoNet water heaters."""
 import logging
+from typing import Any
 
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.water_heater import WaterHeaterOperationMode
@@ -61,7 +62,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Initialize."""
         super().__init__(water_heater)
         self._running = water_heater.running
-        self._poll = True
+        self._attr_should_poll = True  # Override False default from EcoNetEntity
         self.water_heater = water_heater
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
@@ -71,7 +72,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Update was pushed from the ecoent API."""
         if self._running != self.water_heater.running:
             # Water heater running state has changed so check usage on next update
-            self._poll = True
+            self._attr_should_poll = True
             self._running = self.water_heater.running
         self.async_write_ha_state()
 
@@ -105,7 +106,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         return op_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         if self.water_heater.modes:
             if self.water_heater.supports_away:
@@ -118,14 +119,14 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
             )
         return WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self.water_heater.set_set_point(target_temp)
         else:
             _LOGGER.error("A target temperature must be provided")
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
         op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
         if op_mode_to_set is not None:
@@ -148,25 +149,17 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Return the maximum temperature."""
         return self.water_heater.set_point_limits[1]
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return self._poll
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest energy usage."""
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
         self.async_write_ha_state()
-        self._poll = False
+        self._attr_should_poll = False
 
-    def turn_away_mode_on(self):
+    def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         self.water_heater.set_away_mode(True)
 
-    def turn_away_mode_off(self):
+    def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         self.water_heater.set_away_mode(False)

@@ -14,7 +14,7 @@
                     "token": "Toegangstoken"
                 },
                 "description": "De Nuki integratie moet opnieuw authenticeren met uw bridge.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

@@ -10,15 +10,13 @@ import requests
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DOMAIN
+from . import DOMAIN
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -33,6 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
     for camera in chain(
@@ -41,7 +40,7 @@ async def async_setup_entry(
         if not camera.has_subscription:
             continue
 
-        cams.append(RingCam(config_entry.entry_id, hass.data[DATA_FFMPEG], camera))
+        cams.append(RingCam(config_entry.entry_id, ffmpeg_manager, camera))
 
     async_add_entities(cams)
 
@@ -61,7 +60,7 @@ class RingCam(RingEntityMixin, Camera):
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -69,7 +68,7 @@ class RingCam(RingEntityMixin, Camera):
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -105,7 +104,6 @@ class RingCam(RingEntityMixin, Camera):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }
@@ -146,7 +144,7 @@ class RingCam(RingEntityMixin, Camera):
         finally:
             await stream.close()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
         if self._last_event is None:
             return

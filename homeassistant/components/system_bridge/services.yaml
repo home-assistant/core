@@ -1,32 +1,6 @@
-send_command:
-  name: Send Command
-  description: Sends a command to the server to run.
-  fields:
-    bridge:
-      name: Bridge
-      description: The server to send the command to.
-      required: true
-      selector:
-        device:
-          integration: system_bridge
-    command:
-      name: Command
-      description: Command to send to the server.
-      required: true
-      example: "echo"
-      selector:
-        text:
-    arguments:
-      name: Arguments
-      description: Arguments to send to the server.
-      required: false
-      default: ""
-      example: "hello"
-      selector:
-        text:
-open:
-  name: Open Path/URL
-  description: Open a URL or file on the server using the default application.
+open_path:
+  name: Open Path
+  description: Open a file on the server using the default application.
   fields:
     bridge:
       name: Bridge
@@ -36,8 +10,26 @@ open:
         device:
           integration: system_bridge
     path:
-      name: Path/URL
-      description: Path/URL to open.
+      name: Path
+      description: Path to open.
+      required: true
+      example: "C:\\test\\image.png"
+      selector:
+        text:
+open_url:
+  name: Open URL
+  description: Open a URL on the server using the default application.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to talk to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    url:
+      name: URL
+      description: URL to open.
       required: true
       example: "https://www.home-assistant.io"
       selector:
@@ -58,16 +50,6 @@ send_keypress:
       description: "Key to press. List available here: http://robotjs.io/docs/syntax#keys"
       required: true
       example: "audio_play"
-      selector:
-        text:
-    modifiers:
-      name: Modifiers
-      description: "List of modifier(s). Accepts alt, command/win, control, and shift."
-      required: false
-      default: ""
-      example:
-        - "control"
-        - "shift"
       selector:
         text:
 send_text:

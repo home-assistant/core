@@ -1,0 +1,13 @@
+{
+    "state": {
+        "sensibo__sensitivity": {
+            "n": "Normal",
+            "s": "Sensible"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Sensaci\u00f3 de",
+            "humidity": "Humitat",
+            "temperature": "Temperatura"
+        }
+    }
+}

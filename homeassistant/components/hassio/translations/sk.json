@@ -1,0 +1,20 @@
+{
+    "issues": {
+        "unsupported_dns_server": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my so serverom DNS"
+        },
+        "unsupported_docker_configuration": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Docker je nespr\u00e1vne nakonfigurovan\u00fd"
+        },
+        "unsupported_docker_version": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 verzia Docker"
+        }
+    },
+    "system_health": {
+        "info": {
+            "docker_version": "Verzia Dockera",
+            "host_os": "Hostite\u013esk\u00fd opera\u010dn\u00fd syst\u00e9m",
+            "version_api": "Verzia API"
+        }
+    }
+}

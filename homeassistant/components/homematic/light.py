@@ -1,6 +1,8 @@
 """Support for Homematic lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -80,7 +82,7 @@ class HMLight(HMDevice, LightEntity):
         return color_modes
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         features = LightEntityFeature.TRANSITION
         if "PROGRAM" in self._hmdevice.WRITENODE:
@@ -117,7 +119,7 @@ class HMLight(HMDevice, LightEntity):
             return None
         return self._hmdevice.get_effect()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and/or change color or color effect settings."""
         if ATTR_TRANSITION in kwargs:
             self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
@@ -146,7 +148,7 @@ class HMLight(HMDevice, LightEntity):
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs:
             self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)

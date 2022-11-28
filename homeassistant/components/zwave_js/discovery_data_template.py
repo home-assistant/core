@@ -1,10 +1,10 @@
 """Data template classes for discovery used to generate additional data for setup."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, Union, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -80,7 +80,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
@@ -96,37 +96,25 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     FREQUENCY_KILOHERTZ,
     IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_CENTIMETERS,
-    LENGTH_FEET,
-    LENGTH_METERS,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
-    MASS_POUNDS,
     PERCENTAGE,
-    POWER_BTU_PER_HOUR,
-    POWER_WATT,
-    PRECIPITATION_INCHES_PER_HOUR,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_INHG,
-    PRESSURE_MMHG,
-    PRESSURE_PSI,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 
 from .const import (
@@ -174,21 +162,21 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
 
 METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
     ELECTRIC_CURRENT_AMPERE: METER_UNIT_AMPERE,
-    VOLUME_CUBIC_FEET: UNIT_CUBIC_FEET,
-    VOLUME_CUBIC_METERS: METER_UNIT_CUBIC_METER,
-    VOLUME_GALLONS: UNIT_US_GALLON,
-    ENERGY_KILO_WATT_HOUR: UNIT_KILOWATT_HOUR,
+    UnitOfVolume.CUBIC_FEET: UNIT_CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS: METER_UNIT_CUBIC_METER,
+    UnitOfVolume.GALLONS: UNIT_US_GALLON,
+    UnitOfEnergy.KILO_WATT_HOUR: UNIT_KILOWATT_HOUR,
     ELECTRIC_POTENTIAL_VOLT: METER_UNIT_VOLT,
-    POWER_WATT: METER_UNIT_WATT,
+    UnitOfPower.WATT: METER_UNIT_WATT,
 }
 
 MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     ELECTRIC_CURRENT_AMPERE: SENSOR_UNIT_AMPERE,
-    POWER_BTU_PER_HOUR: UNIT_BTU_H,
-    TEMP_CELSIUS: UNIT_CELSIUS,
-    LENGTH_CENTIMETERS: UNIT_CENTIMETER,
+    UnitOfPower.BTU_PER_HOUR: UNIT_BTU_H,
+    UnitOfTemperature.CELSIUS: UNIT_CELSIUS,
+    UnitOfLength.CENTIMETERS: UNIT_CENTIMETER,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
-    VOLUME_CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
+    UnitOfVolume.CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
     SIGNAL_STRENGTH_DECIBELS: UNIT_DECIBEL,
     DEGREE: UNIT_DEGREES,
@@ -196,31 +184,31 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
     },
-    TEMP_FAHRENHEIT: UNIT_FAHRENHEIT,
-    LENGTH_FEET: UNIT_FEET,
-    VOLUME_GALLONS: UNIT_GALLONS,
+    UnitOfTemperature.FAHRENHEIT: UNIT_FAHRENHEIT,
+    UnitOfLength.FEET: UNIT_FEET,
+    UnitOfVolume.GALLONS: UNIT_GALLONS,
     FREQUENCY_HERTZ: UNIT_HERTZ,
-    PRESSURE_INHG: UNIT_INCHES_OF_MERCURY,
-    PRECIPITATION_INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
-    MASS_KILOGRAMS: UNIT_KILOGRAM,
+    UnitOfPressure.INHG: UNIT_INCHES_OF_MERCURY,
+    UnitOfVolumetricFlux.INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
+    UnitOfMass.KILOGRAMS: UNIT_KILOGRAM,
     FREQUENCY_KILOHERTZ: UNIT_KILOHERTZ,
-    VOLUME_LITERS: UNIT_LITER,
+    UnitOfVolume.LITERS: UNIT_LITER,
     LIGHT_LUX: UNIT_LUX,
-    LENGTH_METERS: UNIT_METER,
+    UnitOfLength.METERS: UNIT_METER,
     ELECTRIC_CURRENT_MILLIAMPERE: UNIT_MILLIAMPERE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
+    UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
     ELECTRIC_POTENTIAL_MILLIVOLT: UNIT_MILLIVOLT,
-    SPEED_MILES_PER_HOUR: UNIT_MPH,
-    SPEED_METERS_PER_SECOND: UNIT_M_S,
+    UnitOfSpeed.MILES_PER_HOUR: UNIT_MPH,
+    UnitOfSpeed.METERS_PER_SECOND: UNIT_M_S,
     CONCENTRATION_PARTS_PER_MILLION: UNIT_PARTS_MILLION,
     PERCENTAGE: {*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI},
-    MASS_POUNDS: UNIT_POUNDS,
-    PRESSURE_PSI: UNIT_POUND_PER_SQUARE_INCH,
+    UnitOfMass.POUNDS: UNIT_POUNDS,
+    UnitOfPressure.PSI: UNIT_POUND_PER_SQUARE_INCH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT: UNIT_POWER_LEVEL,
     TIME_SECONDS: UNIT_SECOND,
-    PRESSURE_MMHG: UNIT_SYSTOLIC,
+    UnitOfPressure.MMHG: UNIT_SYSTOLIC,
     ELECTRIC_POTENTIAL_VOLT: SENSOR_UNIT_VOLT,
-    POWER_WATT: SENSOR_UNIT_WATT,
+    UnitOfPower.WATT: SENSOR_UNIT_WATT,
     IRRADIATION_WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
 }
 
@@ -242,7 +230,7 @@ class BaseDiscoverySchemaDataTemplate:
         """
         return {}
 
-    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
+    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
@@ -261,9 +249,9 @@ class BaseDiscoverySchemaDataTemplate:
     @staticmethod
     def _get_value_from_id(
         node: ZwaveNode, value_id_obj: ZwaveValueID
-    ) -> ZwaveValue | None:
+    ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             value_id_obj.command_class,
             value_id_obj.property_,
@@ -295,7 +283,9 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
 
         return data
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [
             *resolved_data["lookup_table"].values(),
@@ -331,8 +321,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     @staticmethod
     def find_key_from_matching_set(
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
-        set_map: dict[
-            str, set[MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType]
+        set_map: Mapping[
+            str,
+            set[MultilevelSensorType]
+            | set[MultilevelSensorScaleType]
+            | set[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
@@ -354,11 +347,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            scale_type = get_meter_scale_type(value)
-            unit = self.find_key_from_matching_set(scale_type, METER_UNIT_MAP)
+            meter_scale_type = get_meter_scale_type(value)
+            unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
-            if scale_type in (
+            if meter_scale_type in (
                 ElectricScale.PULSE_COUNT,
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
@@ -368,19 +361,21 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 )
             # We do this because even though these are power scales, they don't meet
             # the unit requirements for the power device class.
-            if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
+            if meter_scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
                 return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
 
             return NumericSensorDataTemplateData(
-                self.find_key_from_matching_set(scale_type, METER_DEVICE_CLASS_MAP),
+                self.find_key_from_matching_set(
+                    meter_scale_type, METER_DEVICE_CLASS_MAP
+                ),
                 unit,
             )
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
             sensor_type = get_multilevel_sensor_type(value)
-            scale_type = get_multilevel_sensor_scale_type(value)
+            multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
             unit = self.find_key_from_matching_set(
-                scale_type, MULTILEVEL_SENSOR_UNIT_MAP
+                multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
                 return NumericSensorDataTemplateData(
@@ -406,16 +401,20 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
         """Resolve helper class data for a discovered value."""
         return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [resolved_data["tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+    def current_tilt_value(
+        resolved_data: dict[str, ZwaveValue | None]
+    ) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
 
@@ -490,24 +489,29 @@ class ConfigurableFanValueMappingDataTemplate(
     `configuration_option` to the value mapping object.
     """
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
+    def resolve_data(
+        self, value: ZwaveValue
+    ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
-        zwave_value: ZwaveValue = self._get_value_from_id(
-            value.node, self.configuration_option
+        zwave_value = cast(
+            Union[ZwaveConfigurationValue, None],
+            self._get_value_from_id(value.node, self.configuration_option),
         )
         return {"configuration_value": zwave_value}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
+    ) -> Iterable[ZwaveConfigurationValue | None]:
         """Return list of all ZwaveValues that should be watched."""
         return [
             resolved_data["configuration_value"],
         ]
 
     def get_fan_value_mapping(
-        self, resolved_data: dict[str, ZwaveConfigurationValue]
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
     ) -> FanValueMapping | None:
         """Get current fan properties from resolved data."""
-        zwave_value: ZwaveValue = resolved_data["configuration_value"]
+        zwave_value = resolved_data["configuration_value"]
 
         if zwave_value is None:
             _LOGGER.warning("Unable to read device configuration value")

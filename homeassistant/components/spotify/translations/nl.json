@@ -15,8 +15,13 @@
             },
             "reauth_confirm": {
                 "description": "De Spotify integratie moet opnieuw worden geverifieerd met Spotify voor account: {account}",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Spotify YAML-configuratie wordt verwijderd"
         }
     },
     "system_health": {

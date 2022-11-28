@@ -14,8 +14,13 @@
             },
             "reauth_confirm": {
                 "description": "De Lyric-integratie moet uw account opnieuw verifi\u00ebren.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Honeywell Lyric YAML-configuratie is verwijderd"
         }
     }
 }

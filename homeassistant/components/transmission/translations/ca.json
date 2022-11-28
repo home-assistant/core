@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -9,6 +10,13 @@
             "name_exists": "Nom ja existeix"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "La contrasenya de {username} \u00e9s inv\u00e0lida.",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
@@ -19,6 +27,19 @@
                 },
                 "title": "Configuraci\u00f3 del client de Transmission"
             }
+        }
+    },
+    "issues": {
+        "deprecated_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualitza totes les automatitzacions o 'scripts' que utilitzin aquest servei. S'han de substituir totes les claus o entrades anomenades 'name' per 'entry_id'.",
+                        "title": "S'est\u00e0 eliminant la clau 'name' del servei Transmission"
+                    }
+                }
+            },
+            "title": "S'est\u00e0 eliminant la clau 'name' del servei Transmission"
         }
     },
     "options": {

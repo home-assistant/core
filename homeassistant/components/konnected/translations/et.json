@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Vaheta avatud / suletud olek",
-                    "name": "Nimi (valikuline)",
+                    "name": "Nimi",
                     "type": "Binaaranduri t\u00fc\u00fcp"
                 },
                 "description": "{zone} suvandid",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nimi (valikuline)",
-                    "poll_interval": "P\u00e4ringute intervall (sekundites) (valikuline)",
+                    "name": "Nimi",
+                    "poll_interval": "P\u00e4ringute intervall (minutites)",
                     "type": "Anduri t\u00fc\u00fcp"
                 },
                 "description": "{zone} valikud",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Alista API hosti URL (valikuline)",
+                    "api_host": "Alista API hosti URL",
                     "blink": "Vilguts paneeli LEDi oleku muudatuse saatmisel",
                     "discovery": "V\u00f5rgus esitatud tuvastusp\u00e4ringutele vastamine",
                     "override_api_host": "Alista Home Assistanti API hostipaneeli vaikimisi URL"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "V\u00e4ljund sissel\u00fclitatuna",
-                    "momentary": "Impulsi kestus (ms) (valikuline)",
+                    "momentary": "Impulsi kestus (ms)",
                     "more_states": "Selle tsooni t\u00e4iendavate olekute konfigureerimine",
-                    "name": "Nimi (valikuline)",
-                    "pause": "Paus impulsside vahel (ms) (valikuline)",
-                    "repeat": "Korduste arv (-1 = l\u00f5pmatu) (valikuline)"
+                    "name": "Nimi",
+                    "pause": "Paus impulsside vahel (ms)",
+                    "repeat": "Korduste arv (-1 = l\u00f5pmatu)"
                 },
                 "description": "{tsooni} suvandid: olek {state}",
                 "title": "Seadista l\u00fclitatav v\u00e4ljund"

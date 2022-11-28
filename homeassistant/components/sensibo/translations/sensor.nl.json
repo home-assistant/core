@@ -1,0 +1,12 @@
+{
+    "state": {
+        "sensibo__sensitivity": {
+            "n": "Normaal",
+            "s": "Gevoelig"
+        },
+        "sensibo__smart_type": {
+            "humidity": "Vochtigheid",
+            "temperature": "Temperatuur"
+        }
+    }
+}

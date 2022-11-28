@@ -1,7 +1,9 @@
 """Support for iTach IR devices."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
+from typing import Any
 
 import pyitachip2ir
 import voluptuous as vol
@@ -123,19 +125,19 @@ class ITachIP2IRRemote(remote.RemoteEntity):
         """Return true if device is on."""
         return self._power
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._power = True
         self.itachip2ir.send(self._name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._power = False
         self.itachip2ir.send(self._name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
-    def send_command(self, command, **kwargs):
+    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         for single_command in command:
@@ -143,6 +145,6 @@ class ITachIP2IRRemote(remote.RemoteEntity):
                 self._name, single_command, self._ir_count * num_repeats
             )
 
-    def update(self):
+    def update(self) -> None:
         """Update the device."""
         self.itachip2ir.update()

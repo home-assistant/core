@@ -21,16 +21,8 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.service import entity_service_call
 
-from .const import (
-    _LOGGER,
-    DOMAIN,
-    ISY994_ISY,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
-    ISY994_VARIABLES,
-    PLATFORMS,
-    PROGRAM_PLATFORMS,
-)
+from .const import _LOGGER, DOMAIN, ISY994_ISY
+from .util import unique_ids_for_config_entry_id
 
 # Common Services for All Platforms:
 SERVICE_SYSTEM_QUERY = "system_query"
@@ -282,7 +274,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         """Remove extra entities that are no longer part of the integration."""
         entity_registry = er.async_get(hass)
         config_ids = []
-        current_unique_ids = []
+        current_unique_ids: set[str] = set()
 
         for config_entry_id in hass.data[DOMAIN]:
             entries_for_this_config = er.async_entries_for_config_entry(
@@ -294,23 +286,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     for entity in entries_for_this_config
                 ]
             )
-
-            hass_isy_data = hass.data[DOMAIN][config_entry_id]
-            uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
-
-            for platform in PLATFORMS:
-                for node in hass_isy_data[ISY994_NODES][platform]:
-                    if hasattr(node, "address"):
-                        current_unique_ids.append(f"{uuid}_{node.address}")
-
-            for platform in PROGRAM_PLATFORMS:
-                for _, node, _ in hass_isy_data[ISY994_PROGRAMS][platform]:
-                    if hasattr(node, "address"):
-                        current_unique_ids.append(f"{uuid}_{node.address}")
-
-            for node in hass_isy_data[ISY994_VARIABLES]:
-                if hasattr(node, "address"):
-                    current_unique_ids.append(f"{uuid}_{node.address}")
+            current_unique_ids |= unique_ids_for_config_entry_id(hass, config_entry_id)
 
         extra_entities = [
             entity_id

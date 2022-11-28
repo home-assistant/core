@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=data.device_info.firmware,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -148,7 +148,7 @@ def _serial_from_status(status: dict[str, str]) -> str | None:
     """Find the best serialvalue from the status."""
     serial = status.get("device.serial") or status.get("ups.serial")
     if serial and (
-        serial.lower() in NUT_FAKE_SERIAL or serial.count("0") == len(serial)
+        serial.lower() in NUT_FAKE_SERIAL or serial.count("0") == len(serial.strip())
     ):
         return None
     return serial

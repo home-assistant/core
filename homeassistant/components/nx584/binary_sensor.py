@@ -87,6 +87,8 @@ def setup_platform(
 class NX584ZoneSensor(BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, zone, zone_type):
         """Initialize the nx594 binary sensor."""
         self._zone = zone
@@ -96,11 +98,6 @@ class NX584ZoneSensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -116,7 +113,10 @@ class NX584ZoneSensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {"zone_number": self._zone["number"]}
+        return {
+            "zone_number": self._zone["number"],
+            "bypassed": self._zone.get("bypassed", False),
+        }
 
 
 class NX584Watcher(threading.Thread):

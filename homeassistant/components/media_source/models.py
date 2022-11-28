@@ -5,12 +5,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, cast
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_APPS,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
@@ -26,8 +21,6 @@ class PlayMedia:
 
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
-
-    children: list[BrowseMediaSource | BrowseMedia] | None
 
     def __init__(
         self, *, domain: str | None, identifier: str | None, **kwargs: Any
@@ -50,6 +43,7 @@ class MediaSourceItem:
     hass: HomeAssistant
     domain: str | None
     identifier: str
+    target_media_player: str | None
 
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
@@ -57,20 +51,20 @@ class MediaSourceItem:
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
-                media_class=MEDIA_CLASS_APP,
-                media_content_type=MEDIA_TYPE_APPS,
+                media_class=MediaClass.APP,
+                media_content_type=MediaType.APPS,
                 title="Media Sources",
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_APP,
+                children_media_class=MediaClass.APP,
             )
             base.children = sorted(
                 (
                     BrowseMediaSource(
                         domain=source.domain,
                         identifier=None,
-                        media_class=MEDIA_CLASS_APP,
-                        media_content_type=MEDIA_TYPE_APP,
+                        media_class=MediaClass.APP,
+                        media_content_type=MediaType.APP,
                         thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
                         title=source.name,
                         can_play=False,
@@ -94,7 +88,9 @@ class MediaSourceItem:
         return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
 
     @classmethod
-    def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
+    def from_uri(
+        cls, hass: HomeAssistant, uri: str, target_media_player: str | None
+    ) -> MediaSourceItem:
         """Create an item from a uri."""
         if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
@@ -102,7 +98,7 @@ class MediaSourceItem:
         domain = match.group("domain")
         identifier = match.group("identifier")
 
-        return cls(hass, domain, identifier)
+        return cls(hass, domain, identifier, target_media_player)
 
 
 class MediaSource(ABC):

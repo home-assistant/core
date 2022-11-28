@@ -1,4 +1,6 @@
 """Support for Meteo-France raining forecast sensor."""
+from __future__ import annotations
+
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
     readeable_phenomenoms_dict,
@@ -6,7 +8,6 @@ from meteofrance_api.helpers import (
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -79,6 +80,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
     entity_description: MeteoFranceSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -92,11 +94,15 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
             city_name = coordinator.data.position["name"]
             self._attr_name = f"{city_name} {description.name}"
             self._attr_unique_id = f"{coordinator.data.position['lat']},{coordinator.data.position['lon']}_{description.key}"
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert (
+            self.platform
+            and self.platform.config_entry
+            and self.platform.config_entry.unique_id
+        )
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
@@ -155,7 +161,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
                 f"{int((item['dt'] - reference_dt) / 60)} min": item["desc"]
                 for item in self.coordinator.data.forecast
             },
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 
@@ -185,13 +190,12 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         """Return the state attributes."""
         return {
             **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 
 def _find_first_probability_forecast_not_null(
     probability_forecast: list, path: list
-) -> int:
+) -> int | None:
     """Search the first not None value in the first forecast elements."""
     for forecast in probability_forecast[0:3]:
         if forecast[path[1]][path[2]] is not None:

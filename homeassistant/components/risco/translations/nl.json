@@ -9,11 +9,18 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Wachtwoord",
                     "pin": "Pincode",
                     "username": "Gebruikersnaam"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "Pincode",
+                    "port": "Poort"
                 }
             }
         }

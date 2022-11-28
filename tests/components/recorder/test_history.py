@@ -12,25 +12,22 @@ from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import LazyState, process_timestamp
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done, wait_recording_done
+
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
-from tests.components.recorder.common import (
-    async_wait_recording_done,
-    wait_recording_done,
-)
 
 
 async def _async_get_states(
@@ -257,6 +254,9 @@ def test_state_changes_during_period_descending(hass_recorder):
 
     start = dt_util.utcnow()
     point = start + timedelta(seconds=1)
+    point2 = start + timedelta(seconds=1, microseconds=2)
+    point3 = start + timedelta(seconds=1, microseconds=3)
+    point4 = start + timedelta(seconds=1, microseconds=4)
     end = point + timedelta(seconds=1)
 
     with patch(
@@ -268,12 +268,19 @@ def test_state_changes_during_period_descending(hass_recorder):
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
-        states = [
-            set_state("idle"),
-            set_state("Netflix"),
-            set_state("Plex"),
-            set_state("YouTube"),
-        ]
+        states = [set_state("idle")]
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+    ):
+        states.append(set_state("Netflix"))
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
+    ):
+        states.append(set_state("Plex"))
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
+    ):
+        states.append(set_state("YouTube"))
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
@@ -653,10 +660,15 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
 
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -703,10 +715,15 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -749,10 +766,15 @@ async def test_get_states_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+        return
+
     instance = await async_setup_recorder_instance(hass, {})
 
     start = dt_util.utcnow()
@@ -798,8 +820,8 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test getting states when last_changed is null."""
     await async_setup_recorder_instance(hass, {})
@@ -878,3 +900,32 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     assert db_sensor_one_states[0].last_updated is not None
     assert db_sensor_one_states[1].last_updated is not None
     assert db_sensor_one_states[0].last_updated != db_sensor_one_states[1].last_updated
+
+
+def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):
+    """Test state change during period with multiple entities in the same test.
+
+    This test ensures the sqlalchemy query cache does not
+    generate incorrect results.
+    """
+    hass = hass_recorder()
+    start = dt_util.utcnow()
+    test_entites = {f"sensor.{i}": str(i) for i in range(30)}
+    for entity_id, value in test_entites.items():
+        hass.states.set(entity_id, value)
+
+    wait_recording_done(hass)
+    end = dt_util.utcnow()
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value
+
+    for entity_id, value in test_entites.items():
+        hist = history.state_changes_during_period(hass, start, end, entity_id)
+        assert len(hist) == 1
+        hist[entity_id][0].state == value
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value

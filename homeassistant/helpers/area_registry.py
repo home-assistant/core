@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import cast
+from typing import Optional, cast
 
 import attr
 
@@ -49,7 +49,9 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
+        self._store = Store[dict[str, list[dict[str, Optional[str]]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -176,8 +178,9 @@ class AreaRegistry:
 
         areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
-        if isinstance(data, dict):
+        if data is not None:
             for area in data["areas"]:
+                assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     name=area["name"],

@@ -15,7 +15,7 @@
                     "longitude": "Bujur",
                     "station": "Kode stasiun METAR"
                 },
-                "description": "Jika kode stasiun METAR tidak ditentukan, informasi lintang dan bujur akan digunakan untuk menemukan stasiun terdekat. Untuk saat ini, Kunci API bisa berupa nilai sebarang. Disarankan untuk menggunakan alamat email yang valid.",
+                "description": "Jika kode stasiun METAR tidak ditentukan, informasi lintang dan bujur akan digunakan untuk menemukan stasiun terdekat. Untuk saat ini, Kunci API bisa berupa nilai sebarang. Disarankan untuk menggunakan alamat email yang valid.fsilak",
                 "title": "Hubungkan ke National Weather Service"
             }
         }

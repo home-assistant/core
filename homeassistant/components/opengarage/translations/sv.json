@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Enhetsnyckel",
+                    "host": "V\u00e4rd",
+                    "port": "Port",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                }
+            }
+        }
+    }
+}
