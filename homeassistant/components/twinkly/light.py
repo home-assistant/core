@@ -205,7 +205,6 @@ class TwinklyLight(LightEntity):
                 if isinstance(self._attr_rgb_color, tuple):
 
                     await self._client.interview()
-                    # Reagarrange from rgbw to wrgb
                     await self._client.set_static_colour(self._attr_rgb_color)
                     await self._client.set_mode("color")
                     self._client.default_mode = "color"
