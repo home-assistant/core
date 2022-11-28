@@ -143,11 +143,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
             __version__,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
         )
-
-    @property
-    def supervisor(self) -> bool:
-        """Return bool if a supervisor is present."""
-        return is_hassio(self.hass)
+        self.supervisor = is_hassio(self.hass)
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
         response = await async_get_clientsession(self.hass).get(
