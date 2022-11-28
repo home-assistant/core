@@ -8,10 +8,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "bluetooth_confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
             "user": {
                 "data": {
                     "address": "Zaradenie"
-                }
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nastavi\u0165"
             }
         }
     }

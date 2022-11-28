@@ -10,7 +10,8 @@
                     "client_id": "API k\u013e\u00fa\u010d",
                     "password": "Heslo",
                     "username": "Email"
-                }
+                },
+                "description": "Nastavte integr\u00e1ciu ViCare. Ak chcete vygenerova\u0165 k\u013e\u00fa\u010d API, prejdite na https://developer.viessmann.com"
             }
         }
     }

@@ -18,5 +18,28 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Za\u010diarknut\u00edm tejto mo\u017enosti odstr\u00e1nite t\u00fato aplik\u00e1ciu",
+                    "app_id": "ID aplik\u00e1cie",
+                    "app_name": "N\u00e1zov aplik\u00e1cie"
+                },
+                "description": "Konfigurova\u0165 ID aplik\u00e1cie {app_id}",
+                "title": "Konfigur\u00e1cia aplik\u00e1ci\u00ed Android TV"
+            },
+            "init": {
+                "data": {
+                    "apps": "Konfigur\u00e1cia zoznamu aplik\u00e1ci\u00ed"
+                }
+            },
+            "rules": {
+                "data": {
+                    "rule_values": "Zoznam pravidiel zis\u0165ovania stavu (pozri dokument\u00e1ciu)"
+                }
+            }
+        }
     }
 }

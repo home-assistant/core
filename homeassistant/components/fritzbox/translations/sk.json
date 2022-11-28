@@ -28,7 +28,8 @@
                 "data": {
                     "host": "Hostite\u013e",
                     "password": "Heslo"
-                }
+                },
+                "description": "Zadajte inform\u00e1cie o va\u0161om AVM FRITZ!Box."
             }
         }
     }
