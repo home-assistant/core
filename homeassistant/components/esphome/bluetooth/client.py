@@ -142,7 +142,7 @@ class ESPHomeClient(BaseBleakClient):
         self._cancel_connection_state: CALLBACK_TYPE | None = None
         self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
         self._disconnected_event: asyncio.Event | None = None
-        self._has_cache = False
+        self._connection_version: int = 1
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -213,11 +213,16 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         entry_data = self.entry_data
+        device_info = entry_data.device_info
+        assert device_info is not None
         self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
-        self._has_cache = bool(
+        # Ask for connection version 2 if the device supports it
+        # since it can significantly improve performance and reduce
+        # the memory usage of the ESP32.
+        self._connection_version = 2 if device_info.bluetooth_proxy_version >= 3 else 1
+        has_cache = bool(
             dangerous_use_bleak_cache
-            and entry_data.device_info
-            and entry_data.device_info.bluetooth_proxy_version >= 3
+            and self._connection_version >= 2
             and entry_data.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
@@ -287,7 +292,8 @@ class ESPHomeClient(BaseBleakClient):
                         self._address_as_int,
                         _on_bluetooth_connection_state,
                         timeout=timeout,
-                        has_cache=self._has_cache,
+                        has_cache=has_cache,
+                        version=self._connection_version,
                     )
                 )
             except Exception:  # pylint: disable=broad-except
@@ -548,7 +554,7 @@ class ESPHomeClient(BaseBleakClient):
         )
         self._notify_cancels[ble_handle] = cancel_coro
 
-        if not self._has_cache:
+        if not self._connection_version < 2:
             return
 
         # If we have a cache, we are responsible for enabling notifications
