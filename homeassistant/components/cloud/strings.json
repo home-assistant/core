@@ -19,7 +19,7 @@
       "title": "Legacy subscription detected",
       "fix_flow": {
         "step": {
-          "confirm": {
+          "confirm_change_plan": {
             "description": "We've recently updated our subscription system. To continue using Home Assistant Cloud you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
           }
         },
