@@ -190,7 +190,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
         def handle_state_message_received(msg: ReceiveMessage) -> None:
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
-            self._attr_native_value = payload or None
+            self._attr_native_value = payload
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)

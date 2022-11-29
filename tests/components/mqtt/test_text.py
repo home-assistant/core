@@ -110,7 +110,7 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "")
 
     state = hass.states.get("text.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == ""
 
 
 async def test_controlling_validation_state_via_topic(
