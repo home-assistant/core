@@ -227,7 +227,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
     @property
     def model(self) -> str:
         """Model of the device."""
-        return cast(str, self.entry.data["model"])
+        return cast(str, self.entry.data.get("model", "dev"))
 
     @property
     def mac(self) -> str:
