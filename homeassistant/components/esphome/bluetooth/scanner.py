@@ -40,6 +40,7 @@ class ESPHomeScanner(BaseHaRemoteScanner):
                     "address": device_adv[0].address,
                     "rssi": device_adv[0].rssi,
                     "advertisement_data": device_adv[1],
+                    "details": device_adv[0].details,
                 }
                 for device_adv in self.discovered_devices_and_advertisement_data.values()
             ],
