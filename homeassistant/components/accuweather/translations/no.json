@@ -24,6 +24,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "V\u00e6rmelding"
+                },
+                "description": "P\u00e5 grunn av begrensningene til gratisversjonen av AccuWeather API-n\u00f8kkelen, n\u00e5r du aktiverer v\u00e6rmelding, vil dataoppdateringer utf\u00f8res hvert 80. minutt i stedet for hvert 40. minutt."
+            },
             "user": {
                 "data": {
                     "forecast": "V\u00e6rmelding"

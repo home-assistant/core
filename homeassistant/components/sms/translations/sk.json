@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "R\u00fdchlos\u0165 prenosu",
                     "device": "Zariadenie"
                 },
                 "title": "Pripojte sa k modemu"

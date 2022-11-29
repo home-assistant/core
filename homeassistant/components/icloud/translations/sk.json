@@ -13,7 +13,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "trusted_device": {
                 "data": {
@@ -26,7 +27,15 @@
                 "data": {
                     "password": "Heslo",
                     "username": "Email"
-                }
+                },
+                "title": "iCloud poverenia"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Overovac\u00ed k\u00f3d"
+                },
+                "description": "Zadajte overovac\u00ed k\u00f3d, ktor\u00fd ste pr\u00e1ve dostali z iCloud",
+                "title": "iCloud overovac\u00ed k\u00f3d"
             }
         }
     }

@@ -7,8 +7,10 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_setup": "Legg til din Adam i stedet for din Anna, se integrasjonsdokumentasjonen for Home Assistant Plugwise for mer informasjon",
-            "unknown": "Uventet feil"
+            "invalid_setup": "Legg til din Adam i stedet for din Anna, se dokumentasjonen",
+            "response_error": "Ugyldige XML-data, eller feilindikasjon mottatt",
+            "unknown": "Uventet feil",
+            "unsupported": "Enhet med fastvare som ikke st\u00f8ttes"
         },
         "step": {
             "user": {

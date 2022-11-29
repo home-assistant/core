@@ -17,6 +17,9 @@
                     "select_ip": "IP adresa"
                 }
             },
+            "settings": {
+                "title": "Volite\u013en\u00e9 nastavenia"
+            },
             "user": {
                 "data": {
                     "host": "IP adresa (volite\u013en\u00e1)",

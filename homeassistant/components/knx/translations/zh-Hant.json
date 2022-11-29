@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "file_not_found": "\u8def\u5f91 config/.storage/knx/ \u5167\u627e\u4e0d\u5230\u6307\u5b9a `.knxkeys` \u6a94\u6848",
+            "invalid_backbone_key": "Backbone \u91d1\u9470\u7121\u6548\u3002\u61c9\u70ba 32 \u500b\u5341\u516d\u9032\u4f4d\u6578\u5b57\u3002",
             "invalid_individual_address": "\u6578\u503c\u8207 KNX \u500b\u5225\u4f4d\u5740\u4e0d\u76f8\u7b26\u3002\n'area.line.device'",
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
@@ -41,13 +42,22 @@
                     "individual_address": "\u500b\u5225\u4f4d\u5740",
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP",
                     "multicast_group": "Multicast \u7fa4\u7d44",
-                    "multicast_port": "Multicast \u901a\u8a0a\u57e0"
+                    "multicast_port": "Multicast \u901a\u8a0a\u57e0",
+                    "routing_secure": "\u4f7f\u7528 KNX IP \u52a0\u5bc6"
                 },
                 "data_description": {
                     "individual_address": "Home Assistant \u6240\u4f7f\u7528\u4e4b KNX \u4f4d\u5740\u3002\u4f8b\u5982\uff1a`0.0.4`",
                     "local_ip": "\u4fdd\u6301\u7a7a\u767d\u4ee5\u4f7f\u7528\u81ea\u52d5\u641c\u7d22\u3002"
                 },
                 "description": "\u8acb\u8a2d\u5b9a\u8def\u7531\u9078\u9805\u3002"
+            },
+            "secure_key_source": {
+                "description": "\u9078\u64c7\u5982\u4f55\u8a2d\u5b9a KNX/IP \u52a0\u5bc6\u3002",
+                "menu_options": {
+                    "secure_knxkeys": "\u4f7f\u7528\u5305\u542b IP \u52a0\u5bc6\u91d1\u8000\u7684 knxkeys \u6a94\u6848",
+                    "secure_routing_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6 backbone \u91d1\u9470",
+                    "secure_tunnel_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6\u6191\u8b49"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +69,17 @@
                     "knxkeys_password": "\u81ea ETS \u532f\u51fa\u6a94\u6848\u4e2d\u9032\u884c\u8a2d\u5b9a\u3002"
                 },
                 "description": "\u8acb\u8f38\u5165 `.knxkeys` \u6a94\u6848\u8cc7\u8a0a\u3002"
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone \u91d1\u9470",
+                    "sync_latency_tolerance": "\u7db2\u8def\u5ef6\u9072\u5bb9\u5fcd\u5ea6"
+                },
+                "data_description": {
+                    "backbone_key": "\u65bc ETS \u9805\u76ee\u7684 'Security' \u56de\u5831\u4e2d\u767c\u73fe\u3002\u4f8b\u5982\uff1a'00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "\u9810\u8a2d\u503c\u70ba 1000\u3002"
+                },
+                "description": "\u8acb\u8f38\u5165 IP \u52a0\u5bc6\u8cc7\u8a0a\u3002"
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -92,6 +113,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "file_not_found": "\u8def\u5f91 config/.storage/knx/ \u5167\u627e\u4e0d\u5230\u6307\u5b9a `.knxkeys` \u6a94\u6848",
+            "invalid_backbone_key": "Backbone \u91d1\u9470\u7121\u6548\u3002\u61c9\u70ba 32 \u500b\u5341\u516d\u9032\u4f4d\u6578\u5b57\u3002",
             "invalid_individual_address": "\u6578\u503c\u8207 KNX \u500b\u5225\u4f4d\u5740\u4e0d\u76f8\u7b26\u3002\n'area.line.device'",
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
             "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
@@ -142,13 +164,22 @@
                     "individual_address": "\u500b\u5225\u4f4d\u5740",
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP",
                     "multicast_group": "Multicast \u7fa4\u7d44",
-                    "multicast_port": "Multicast \u901a\u8a0a\u57e0"
+                    "multicast_port": "Multicast \u901a\u8a0a\u57e0",
+                    "routing_secure": "\u4f7f\u7528 KNX IP \u52a0\u5bc6"
                 },
                 "data_description": {
                     "individual_address": "Home Assistant \u6240\u4f7f\u7528\u4e4b KNX \u4f4d\u5740\u3002\u4f8b\u5982\uff1a`0.0.4`",
                     "local_ip": "\u4fdd\u6301\u7a7a\u767d\u4ee5\u4f7f\u7528\u81ea\u52d5\u641c\u7d22\u3002"
                 },
                 "description": "\u8acb\u8a2d\u5b9a\u8def\u7531\u9078\u9805\u3002"
+            },
+            "secure_key_source": {
+                "description": "\u9078\u64c7\u5982\u4f55\u8a2d\u5b9a KNX/IP \u52a0\u5bc6\u3002",
+                "menu_options": {
+                    "secure_knxkeys": "\u4f7f\u7528\u5305\u542b IP \u52a0\u5bc6\u91d1\u8000\u7684 knxkeys \u6a94\u6848",
+                    "secure_routing_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6 backbone \u91d1\u9470",
+                    "secure_tunnel_manual": "\u624b\u52d5\u8a2d\u5b9a IP \u52a0\u5bc6\u6191\u8b49"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +191,17 @@
                     "knxkeys_password": "\u81ea ETS \u532f\u51fa\u6a94\u6848\u4e2d\u9032\u884c\u8a2d\u5b9a\u3002"
                 },
                 "description": "\u8acb\u8f38\u5165 `.knxkeys` \u6a94\u6848\u8cc7\u8a0a\u3002"
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone \u91d1\u9470",
+                    "sync_latency_tolerance": "\u7db2\u8def\u5ef6\u9072\u5bb9\u5fcd\u5ea6"
+                },
+                "data_description": {
+                    "backbone_key": "\u65bc ETS \u9805\u76ee\u7684 'Security' \u56de\u5831\u4e2d\u767c\u73fe\u3002\u4f8b\u5982\uff1a'00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "\u9810\u8a2d\u503c\u70ba 1000\u3002"
+                },
+                "description": "\u8acb\u8f38\u5165 IP \u52a0\u5bc6\u8cc7\u8a0a\u3002"
             },
             "secure_tunnel_manual": {
                 "data": {
