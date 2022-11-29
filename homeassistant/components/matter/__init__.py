@@ -161,7 +161,7 @@ async def async_remove_config_entry_device(
 
     for node in await matter_client.get_nodes():
         if node.unique_id == unique_id:
-            await matter_client.delete_node(node.node_id)
+            await matter_client.remove_node(node.node_id)
             break
 
     return True
@@ -179,7 +179,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def commission(call: ServiceCall) -> None:
         """Handle commissioning."""
-        matter_client: MatterClient = list(hass.data[DOMAIN].values())[0]
+        matter_client = get_matter_client(hass)
         try:
             await matter_client.commission_with_code(call.data["code"])
         except FailedCommand as err:
@@ -237,7 +237,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         matter_client = get_matter_client(hass)
         thread_dataset = bytes.fromhex(call.data["dataset"])
         try:
-            await matter_client.set_thread_dataset(thread_dataset)
+            await matter_client.set_thread_operational_dataset(thread_dataset)
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
 
@@ -249,8 +249,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         vol.Schema({"dataset": str}),
     )
 
-    @callback
-    def _node_id_from_ha_device_id(ha_device_id: str) -> int | None:
+    async def _node_id_from_ha_device_id(ha_device_id: str) -> int | None:
         """Get node id from ha device id."""
         dev_reg = dr.async_get(hass)
         device = dev_reg.async_get(ha_device_id)
@@ -275,7 +274,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         matter_client = get_matter_client(hass)
 
         # This could be more efficient
-        for node in matter_client.get_nodes():
+        for node in await matter_client.get_nodes():
             if node.unique_id == unique_id:
                 return cast(int, node.node_id)
 
@@ -283,7 +282,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def open_commissioning_window(call: ServiceCall) -> None:
         """Open commissioning window on specific node."""
-        node_id = _node_id_from_ha_device_id(call.data["device_id"])
+        node_id = await _node_id_from_ha_device_id(call.data["device_id"])
 
         if node_id is None:
             raise HomeAssistantError("This is not a Matter device")

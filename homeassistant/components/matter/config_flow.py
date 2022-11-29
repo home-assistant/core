@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from matter_server.client.client import Client
+from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import voluptuous as vol
 
@@ -45,7 +45,7 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    client = Client(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
+    client = MatterClient(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
 
 
