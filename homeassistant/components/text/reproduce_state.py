@@ -45,7 +45,7 @@ async def async_reproduce_states(
     context: Context | None = None,
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
-    """Reproduce multiple Number states."""
+    """Reproduce multiple Text states."""
     # Reproduce states in parallel.
     await asyncio.gather(
         *(

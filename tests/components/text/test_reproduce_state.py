@@ -17,7 +17,7 @@ VALID_TEXT2 = "World"
 
 
 async def test_reproducing_states(hass, caplog):
-    """Test reproducing Number states."""
+    """Test reproducing Text states."""
 
     hass.states.async_set(
         "text.test_text",
