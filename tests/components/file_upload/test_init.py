@@ -95,7 +95,9 @@ async def test_upload_large_file(hass: HomeAssistant, hass_client, large_file_io
         assert file_path.read_bytes() == large_file_io.read().encode("utf-8")
 
 
-async def test_upload_with_wrong_key_fails(hass: HomeAssistant, hass_client):
+async def test_upload_with_wrong_key_fails(
+    hass: HomeAssistant, hass_client, large_file_io
+):
     """Test uploading fails."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
@@ -104,7 +106,7 @@ async def test_upload_with_wrong_key_fails(hass: HomeAssistant, hass_client):
         # Patch temp dir name to avoid tests fail running in parallel
         "homeassistant.components.file_upload.TEMP_DIR_NAME",
         file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
-    ), TEST_IMAGE.open("rb") as fp:
-        res = await client.post("/api/file_upload", data={"wrong_key": fp})
+    ):
+        res = await client.post("/api/file_upload", data={"wrong_key": large_file_io})
 
     assert res.status == 400
