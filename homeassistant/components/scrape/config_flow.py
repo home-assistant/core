@@ -40,7 +40,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
+    SchemaFlowMenuStep,
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -130,16 +130,15 @@ def validate_rest_setup(
 def validate_sensor_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate sensor setup."""
-    return {
-        "sensor": [
-            {
-                **user_input,
-                CONF_INDEX: int(user_input[CONF_INDEX]),
-                CONF_UNIQUE_ID: str(uuid.uuid1()),
-            }
-        ]
-    }
+    """Validate sensor input."""
+    user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
+    user_input[CONF_UNIQUE_ID] = str(uuid.uuid1())
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    sensors: list[dict[str, Any]] = handler.options.setdefault("sensor", [])
+    sensors.append(user_input)
+    return {}
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
@@ -157,7 +156,16 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA_RESOURCE),
+    "init": SchemaFlowMenuStep(["resource", "add_sensor"]),
+    "resource": SchemaFlowFormStep(
+        DATA_SCHEMA_RESOURCE,
+        validate_user_input=validate_rest_setup,
+    ),
+    "add_sensor": SchemaFlowFormStep(
+        DATA_SCHEMA_SENSOR,
+        suggested_values=None,
+        validate_user_input=validate_sensor_setup,
+    ),
 }
 
 
@@ -170,7 +178,3 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return options[CONF_RESOURCE]
-
-
-class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
-    """Handle a config flow for Scrape."""
