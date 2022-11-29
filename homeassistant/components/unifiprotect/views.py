@@ -13,7 +13,7 @@ from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .data import ProtectData
@@ -97,31 +97,10 @@ class ProtectProxyView(HomeAssistantView):
 
     requires_auth = True
 
-    _er: entity_registry.EntityRegistry | None
-    _dr: device_registry.DeviceRegistry | None
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a thumbnail proxy view."""
         self.hass = hass
         self.data = hass.data[DOMAIN]
-        self._er = None
-        self._dr = None
-
-    @property
-    def er(self) -> entity_registry.EntityRegistry:
-        """Return entity registry."""
-        if self._er is None:
-            self._er = entity_registry.async_get(self.hass)
-
-        return self._er
-
-    @property
-    def dr(self) -> device_registry.DeviceRegistry:
-        """Return device registry."""
-        if self._dr is None:
-            self._dr = device_registry.async_get(self.hass)
-
-        return self._dr
 
     def _get_data_or_404(self, nvr_id: str) -> ProtectData | web.Response:
         all_data: list[ProtectData] = []
@@ -189,21 +168,20 @@ class VideoProxyView(ProtectProxyView):
         if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
             return camera
 
-        if (entity := self.er.async_get(camera_id)) is None or (
-            device := self.dr.async_get(entity.device_id)
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        if (entity := entity_registry.async_get(camera_id)) is None or (
+            device := device_registry.async_get(entity.device_id or "")
         ) is None:
             return None
 
-        macs = [
-            c[1]
-            for c in device.connections
-            if c[0] == device_registry.CONNECTION_NETWORK_MAC
-        ]
+        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
         for mac in macs:
-            if (camera := data.api.bootstrap.get_device_from_mac(mac)) is not None:
-                if isinstance(camera, Camera):
+            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
+                if isinstance(ufp_device, Camera):
+                    camera = ufp_device
                     break
-                camera = None
         return camera
 
     async def get(
