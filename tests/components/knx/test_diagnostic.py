@@ -14,6 +14,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
@@ -107,6 +108,7 @@ async def test_diagnostic_redact(
             CONF_KNX_KNXKEY_PASSWORD: "password",
             CONF_KNX_SECURE_USER_PASSWORD: "user_password",
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_authentication",
+            CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
     )
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry)
@@ -128,6 +130,7 @@ async def test_diagnostic_redact(
                 "knxkeys_password": "**REDACTED**",
                 "user_password": "**REDACTED**",
                 "device_authentication": "**REDACTED**",
+                "backbone_key": "**REDACTED**",
             },
             "configuration_error": None,
             "configuration_yaml": None,

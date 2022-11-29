@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vyberte miesto, ktor\u00e9 chcete pou\u017ei\u0165 na predpove\u010f po\u010dasia"
+            }
+        }
+    }
+}

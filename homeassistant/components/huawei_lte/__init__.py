@@ -183,7 +183,7 @@ class Router:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
-            _LOGGER.debug("Skipping already inflight get for %s", key)
+            _LOGGER.debug("Skipping already in-flight get for %s", key)
             return
         self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])

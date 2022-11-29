@@ -110,9 +110,6 @@ hyperframe>=5.2.0
 # Ensure we run compatible with musllinux build env
 numpy==1.23.2
 
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
-
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
 # https://github.com/jkeljo/sisyphus-control/issues/6
@@ -261,10 +258,6 @@ def gather_requirements_from_manifests(
     integrations = Integration.load_dir(Path("homeassistant/components"))
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest:
-            errors.append(f"The manifest for integration {domain} is invalid.")
-            continue
 
         if integration.disabled:
             continue

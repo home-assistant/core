@@ -1,7 +1,7 @@
 PyJWT==2.5.0
 PyNaCl==1.5.0
 aiodiscover==1.4.13
-aiohttp==3.8.1
+aiohttp==3.8.3
 aiohttp_cors==0.7.0
 astral==2.2
 async-upnp-client==0.32.2
@@ -12,8 +12,8 @@ awesomeversion==22.9.0
 bcrypt==3.1.7
 bleak-retry-connector==2.8.5
 bleak==0.19.2
-bluetooth-adapters==0.8.0
-bluetooth-auto-recovery==0.4.0
+bluetooth-adapters==0.11.0
+bluetooth-auto-recovery==0.5.3
 bluetooth-data-tools==0.3.0
 certifi>=2021.5.30
 ciso8601==2.2.0
@@ -97,9 +97,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.23.2
-
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated

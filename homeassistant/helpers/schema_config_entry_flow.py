@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult, UnknownHandler
 
 from . import entity_registry as er, selector
+from .typing import UNDEFINED, UndefinedType
 
 
 class SchemaFlowError(Exception):
@@ -50,7 +51,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` function is called if the schema validates successfully.
     - The first argument is a reference to the current `SchemaCommonFlowHandler`.
     - The second argument is the user input from the current step.
-    - The `validate_user_input` should raise `SchemaFlowError` is user input is invalid.
+    - The `validate_user_input` should raise `SchemaFlowError` if user input is invalid.
     """
 
     next_step: Callable[[dict[str, Any]], str | None] | str | None = None
@@ -63,10 +64,12 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
-    suggested_values: Callable[[SchemaCommonFlowHandler], dict[str, Any]] | None = None
+    suggested_values: Callable[
+        [SchemaCommonFlowHandler], dict[str, Any]
+    ] | None | UndefinedType = UNDEFINED
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is None, each key in the schema will get a suggested value
+    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested value
     from an option with the same key.
 
     Note: if a step is retried due to a validation failure, then the user input will have
@@ -100,6 +103,11 @@ class SchemaCommonFlowHandler:
     def parent_handler(self) -> SchemaConfigFlowHandler | SchemaOptionsFlowHandler:
         """Return parent handler."""
         return self._handler
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return the options linked to the current flow handler."""
+        return self._options
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -189,10 +197,12 @@ class SchemaCommonFlowHandler:
         if (data_schema := self._get_schema(form_step)) is None:
             return self._show_next_step_or_create_entry(form_step)
 
-        if form_step.suggested_values:
-            suggested_values = form_step.suggested_values(self)
-        else:
+        suggested_values: dict[str, Any] = {}
+        if form_step.suggested_values is UNDEFINED:
             suggested_values = self._options
+        elif form_step.suggested_values:
+            suggested_values = form_step.suggested_values(self)
+
         if user_input:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
@@ -200,25 +210,9 @@ class SchemaCommonFlowHandler:
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
-            schema = {}
-            for key, val in data_schema.schema.items():
-
-                if isinstance(key, vol.Marker):
-                    # Exclude advanced field
-                    if (
-                        key.description
-                        and key.description.get("advanced")
-                        and not self._handler.show_advanced_options
-                    ):
-                        continue
-
-                new_key = key
-                if key in suggested_values and isinstance(key, vol.Marker):
-                    # Copy the marker to not modify the flow schema
-                    new_key = copy.copy(key)
-                    new_key.description = {"suggested_value": suggested_values[key]}
-                schema[new_key] = val
-            data_schema = vol.Schema(schema)
+            data_schema = self._handler.add_suggested_values_to_schema(
+                data_schema, suggested_values
+            )
 
         errors = {"base": str(error)} if error else None
 

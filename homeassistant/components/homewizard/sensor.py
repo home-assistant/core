@@ -18,7 +18,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -171,6 +171,7 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         # Config attributes.
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_device_info = coordinator.device_info
 
         # Special case for export, not everyone has solarpanels
         # The chance that 'export' is non-zero when you have solar panels is nil
@@ -180,17 +181,6 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         ]:
             if self.native_value == 0:
                 self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return {
-            "name": self.entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": self.data["device"].firmware_version,
-            "model": self.data["device"].product_type,
-            "identifiers": {(DOMAIN, self.data["device"].serial)},
-        }
 
     @property
     def data(self) -> DeviceResponseEntry:

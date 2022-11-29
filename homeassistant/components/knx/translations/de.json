@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "file_not_found": "Die angegebene `.knxkeys`-Datei wurde im Pfad config/.storage/knx/ nicht gefunden.",
+            "invalid_backbone_key": "Ung\u00fcltiger Backbone-Schl\u00fcssel. 32 Hexadezimalzahlen erwartet.",
             "invalid_individual_address": "Wert ist keine g\u00fcltige physikalische Adresse. 'Bereich.Linie.Teilnehmer'",
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys`-Datei ist ung\u00fcltig.",
@@ -41,13 +42,22 @@
                     "individual_address": "Physikalische Adresse",
                     "local_ip": "Lokale IP von Home Assistant",
                     "multicast_group": "Multicast-Gruppe",
-                    "multicast_port": "Multicast-Port"
+                    "multicast_port": "Multicast-Port",
+                    "routing_secure": "KNX IP-Secure verwenden"
                 },
                 "data_description": {
                     "individual_address": "Physikalische Adresse, die von Home Assistant verwendet werden soll, z. B. \u201e0.0.4\u201c.",
                     "local_ip": "Lasse das Feld leer, um die automatische Erkennung zu verwenden."
                 },
                 "description": "Bitte konfiguriere die Routing-Optionen."
+            },
+            "secure_key_source": {
+                "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
+                "menu_options": {
+                    "secure_knxkeys": "Verwenden einer \"knxkeys\"-Datei mit IP-Secure-Schl\u00fcsseln",
+                    "secure_routing_manual": "IP-Secure Backbone-Schl\u00fcssel manuell konfigurieren",
+                    "secure_tunnel_manual": "IP-Secure-Anmeldeinformationen manuell konfigurieren"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +69,17 @@
                     "knxkeys_password": "Dies wurde beim Exportieren der Datei aus ETS gesetzt."
                 },
                 "description": "Bitte gib die Informationen f\u00fcr deine `.knxkeys`-Datei ein."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone-Schl\u00fcssel",
+                    "sync_latency_tolerance": "Netzwerklatenztoleranz"
+                },
+                "data_description": {
+                    "backbone_key": "Kann im Bericht \"Sicherheit\" eines ETS-Projekts eingesehen werden. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Der Standardwert ist 1000."
+                },
+                "description": "Bitte gib deine IP-Secure Informationen ein."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -92,6 +113,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "file_not_found": "Die angegebene `.knxkeys`-Datei wurde im Pfad config/.storage/knx/ nicht gefunden.",
+            "invalid_backbone_key": "Ung\u00fcltiger Backbone-Schl\u00fcssel. 32 Hexadezimalzahlen erwartet.",
             "invalid_individual_address": "Wert ist keine g\u00fcltige physikalische Adresse. 'Bereich.Linie.Teilnehmer'",
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
             "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys`-Datei ist ung\u00fcltig.",
@@ -142,13 +164,22 @@
                     "individual_address": "Physikalische Adresse",
                     "local_ip": "Lokale IP von Home Assistant",
                     "multicast_group": "Multicast-Gruppe",
-                    "multicast_port": "Multicast-Port"
+                    "multicast_port": "Multicast-Port",
+                    "routing_secure": "KNX IP-Secure verwenden"
                 },
                 "data_description": {
                     "individual_address": "Physikalische Adresse, die von Home Assistant verwendet werden soll, z. B. \u201e0.0.4\u201c.",
                     "local_ip": "Lasse das Feld leer, um die automatische Erkennung zu verwenden."
                 },
                 "description": "Bitte konfiguriere die Routing-Optionen."
+            },
+            "secure_key_source": {
+                "description": "W\u00e4hle aus, wie du KNX/IP-Secure konfigurieren m\u00f6chtest.",
+                "menu_options": {
+                    "secure_knxkeys": "Verwenden einer \"knxkeys\"-Datei mit IP-Secure-Schl\u00fcsseln",
+                    "secure_routing_manual": "IP-Secure Backbone-Schl\u00fcssel manuell konfigurieren",
+                    "secure_tunnel_manual": "IP-Secure-Anmeldeinformationen manuell konfigurieren"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +191,17 @@
                     "knxkeys_password": "Dies wurde beim Exportieren der Datei aus ETS gesetzt."
                 },
                 "description": "Bitte gib die Informationen f\u00fcr deine `.knxkeys`-Datei ein."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone-Schl\u00fcssel",
+                    "sync_latency_tolerance": "Netzwerklatenztoleranz"
+                },
+                "data_description": {
+                    "backbone_key": "Kann im Bericht \"Sicherheit\" eines ETS-Projekts eingesehen werden. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Der Standardwert ist 1000."
+                },
+                "description": "Bitte gib deine IP-Secure Informationen ein."
             },
             "secure_tunnel_manual": {
                 "data": {

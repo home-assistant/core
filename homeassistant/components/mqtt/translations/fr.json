@@ -20,7 +20,10 @@
                     "port": "Port",
                     "protocol": "Protocole MQTT",
                     "set_client_cert": "Utiliser un certificat client",
-                    "username": "Nom d'utilisateur"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'utilisateur",
+                    "ws_headers": "En-t\u00eates WebSocket au format JSON",
+                    "ws_path": "Chemin WebSocket"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
             },
@@ -77,7 +80,10 @@
                     "port": "Port",
                     "protocol": "Protocole MQTT",
                     "set_client_cert": "Utiliser un certificat client",
-                    "username": "Nom d'utilisateur"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'utilisateur",
+                    "ws_headers": "En-t\u00eates WebSocket au format JSON",
+                    "ws_path": "Chemin WebSocket"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
                 "title": "Options de courtier"

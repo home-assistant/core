@@ -5,7 +5,7 @@ import asyncio
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.api.remotes import SwitcherBreezeRemote, SwitcherBreezeRemoteManager
+from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
@@ -37,6 +37,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
     ThermostatMode.COOL: HVACMode.COOL,
@@ -64,13 +65,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
-    remote_manager = SwitcherBreezeRemoteManager()
 
     async def async_add_climate(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add climate from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
-                remote_manager.get_remote, coordinator.data.remote_id
+                get_breeze_remote_manager(hass).get_remote, coordinator.data.remote_id
             )
             async_add_entities([SwitcherClimateEntity(coordinator, remote)])
 

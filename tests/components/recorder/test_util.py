@@ -110,7 +110,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 
 async def test_last_run_was_recently_clean(
-    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    event_loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
 ):
     """Test we can check if the last recorder run was recently clean."""
     config = {

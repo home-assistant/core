@@ -7,9 +7,26 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ws_url": "Neplatn\u00e1 adresa URL webov\u00e9ho soketu",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "usb_path": "Cesta k zariadeniu USB"
+                },
+                "description": "Ak tieto polia zostan\u00fa pr\u00e1zdne, doplnok vygeneruje bezpe\u010dnostn\u00e9 k\u013e\u00fa\u010de."
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "title": "Vyberte sp\u00f4sob pripojenia"
+            }
+        }
     },
     "device_automation": {
         "action_type": {
@@ -27,7 +44,25 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_ws_url": "Neplatn\u00e1 adresa URL webov\u00e9ho soketu",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "\u00darove\u0148 denn\u00edka",
+                    "usb_path": "Cesta k zariadeniu USB"
+                },
+                "description": "Ak tieto polia zostan\u00fa pr\u00e1zdne, doplnok vygeneruje bezpe\u010dnostn\u00e9 k\u013e\u00fa\u010de."
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "title": "Vyberte sp\u00f4sob pripojenia"
+            }
         }
     }
 }

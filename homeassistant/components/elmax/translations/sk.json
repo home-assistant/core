@@ -10,9 +10,16 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "panels": {
+                "data": {
+                    "panel_id": "ID panela",
+                    "panel_pin": "PIN k\u00f3d"
+                }
+            },
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             }
         }

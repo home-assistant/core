@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -248,8 +249,8 @@ async def test_on_connect_failed(hass, side_effect, error):
         assert result["errors"] == {"base": error}
 
 
-async def test_options_flow(hass):
-    """Test config flow options."""
+async def test_options_flow_ap(hass: HomeAssistant) -> None:
+    """Test config flow options for ap mode."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -264,6 +265,7 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -282,3 +284,37 @@ async def test_options_flow(hass):
         assert config_entry.options[CONF_INTERFACE] == "aaa"
         assert config_entry.options[CONF_DNSMASQ] == "bbb"
         assert config_entry.options[CONF_REQUIRE_IP] is False
+
+
+async def test_options_flow_router(hass: HomeAssistant) -> None:
+    """Test config flow options for router mode."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_DATA, CONF_MODE: "router"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with PATCH_SETUP_ENTRY:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP not in result["data_schema"].schema
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 20,
+                CONF_TRACK_UNKNOWN: True,
+                CONF_INTERFACE: "aaa",
+                CONF_DNSMASQ: "bbb",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_TRACK_UNKNOWN] is True
+        assert config_entry.options[CONF_INTERFACE] == "aaa"
+        assert config_entry.options[CONF_DNSMASQ] == "bbb"

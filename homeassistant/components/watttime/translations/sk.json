@@ -14,21 +14,36 @@
                 "data": {
                     "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka"
-                }
+                },
+                "description": "Zadajte zemepisn\u00fa \u0161\u00edrku a d\u013a\u017eku, ktor\u00e9 chcete sledova\u0165:"
             },
             "location": {
                 "data": {
                     "location_type": "Umiestnenie"
-                }
+                },
+                "description": "Vyberte miesto, ktor\u00e9 chcete monitorova\u0165:"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Znova zadajte heslo pre {username}:",
+                "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Zadajte pou\u017e\u00edvate\u013esk\u00e9 meno a heslo:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zobrazi\u0165 monitorovan\u00fa polohu na mape"
                 }
             }
         }
