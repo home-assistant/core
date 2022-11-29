@@ -78,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     if coordinator.api_disabled:
+        await coordinator.async_listen_for_api_enabled()
         raise ConfigEntryAuthFailed
 
     # Abort reauth config flow if active
@@ -97,7 +98,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data.api.close()
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator.async_stop_listen_for_api_enabled()
+        await coordinator.api.close()
 
     return unload_ok
