@@ -13,7 +13,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
@@ -108,6 +112,28 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
+    # mcu temperature
+    YoLinkSensorEntityDescription(
+        key="devTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: device.device_type
+        in [
+            ATTR_DEVICE_LEAK_SENSOR,
+            ATTR_DEVICE_MOTION_SENSOR,
+            ATTR_DEVICE_CO_SMOKE_SENSOR,
+        ],
+    ),
+    YoLinkSensorEntityDescription(
+        key="loraInfo",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        name="Signal",
+        value=lambda value: value["signal"] if value is not None else None,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -161,7 +187,10 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
-        self._attr_native_value = self.entity_description.value(
-            state.get(self.entity_description.key)
-        )
-        self.async_write_ha_state()
+        if (
+            attr_val := self.entity_description.value(
+                state.get(self.entity_description.key)
+            )
+        ) is not None:
+            self._attr_native_value = attr_val
+            self.async_write_ha_state()
