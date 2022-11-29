@@ -1,7 +1,7 @@
 """The Homewizard integration."""
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -79,6 +79,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if coordinator.api_disabled:
         raise ConfigEntryAuthFailed
+
+    # Abort reauth config flow if active
+    for progress_flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+        if progress_flow["context"].get("source") == SOURCE_REAUTH:
+            hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
