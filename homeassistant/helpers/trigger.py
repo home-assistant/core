@@ -79,7 +79,11 @@ class PluggableActionsEntry:
 
     plugs: set[PluggableAction] = field(default_factory=set)
     actions: dict[
-        object, tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]]
+        object,
+        tuple[
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            dict[str, Any],
+        ],
     ] = field(default_factory=dict)
 
 
