@@ -217,8 +217,6 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         entry_data = self.entry_data
-        device_info = entry_data.device_info
-        assert device_info is not None
         self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
@@ -367,14 +365,13 @@ class ESPHomeClient(BaseBleakClient):
         """
         address_as_int = self._address_as_int
         entry_data = self.entry_data
-        if self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE:
-            # If the connection version >= 3, we must use the cache
-            # because the esp has already wiped the services list to
-            # save memory.
-            dangerous_use_bleak_cache = True
-        if dangerous_use_bleak_cache and (
-            cached_services := entry_data.get_gatt_services_cache(address_as_int)
-        ):
+        # If the connection version >= 3, we must use the cache
+        # because the esp has already wiped the services list to
+        # save memory.
+        if (
+            self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
+            or dangerous_use_bleak_cache
+        ) and (cached_services := entry_data.get_gatt_services_cache(address_as_int)):
             _LOGGER.debug(
                 "%s: %s - %s: Cached services hit",
                 self._source,
