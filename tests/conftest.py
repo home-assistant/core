@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import functools
+import gc
 import itertools
 from json import JSONDecoder, loads
 import logging
@@ -13,6 +14,7 @@ import ssl
 import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
+import warnings
 
 from aiohttp import client
 from aiohttp.pytest_plugin import AiohttpClient
@@ -188,11 +190,13 @@ util.get_local_ip = lambda: "127.0.0.1"
 
 
 @pytest.fixture(autouse=True)
-def verify_cleanup():
+def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
-
+    tasks_before = asyncio.all_tasks(event_loop)
     yield
+
+    event_loop.run_until_complete(event_loop.shutdown_default_executor())
 
     if len(INSTANCES) >= 2:
         count = len(INSTANCES)
@@ -203,6 +207,26 @@ def verify_cleanup():
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
         assert isinstance(thread, threading._DummyThread)
+
+    # Warn and clean-up lingering tasks and timers
+    # before moving on to the next test.
+    tasks = asyncio.all_tasks(event_loop) - tasks_before
+    for task in tasks:
+        warnings.warn(f"Linger task after test {task}")
+        task.cancel()
+    if tasks:
+        event_loop.run_until_complete(asyncio.wait(tasks))
+
+    for handle in event_loop._scheduled:  # pylint: disable=protected-access
+        if not handle.cancelled():
+            warnings.warn(f"Lingering timer after test {handle}")
+            handle.cancel()
+
+    # Make sure garbage collect run in same test as allocation
+    # this is to mimic the behavior of pytest-aiohttp, and is
+    # required to avoid warnings from spilling over into next
+    # test case.
+    gc.collect()
 
 
 @pytest.fixture(autouse=True)
@@ -278,7 +302,7 @@ def aiohttp_client_cls():
 
 @pytest.fixture
 def aiohttp_client(
-    loop: asyncio.AbstractEventLoop,
+    event_loop: asyncio.AbstractEventLoop,
 ) -> Generator[AiohttpClient, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
@@ -289,6 +313,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
+    loop = event_loop
     clients = []
 
     async def go(
@@ -335,9 +360,10 @@ def hass_fixture_setup():
 
 
 @pytest.fixture
-def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
+def hass(hass_fixture_setup, event_loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    loop = event_loop
     hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
@@ -382,7 +408,7 @@ def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
 
 
 @pytest.fixture
-async def stop_hass():
+async def stop_hass(event_loop):
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
@@ -403,6 +429,7 @@ async def stop_hass():
         with patch.object(hass_inst.loop, "stop"):
             await hass_inst.async_block_till_done()
             await hass_inst.async_stop(force=True)
+            await event_loop.shutdown_default_executor()
 
 
 @pytest.fixture
