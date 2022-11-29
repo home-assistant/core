@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaCommonFlowHandler,
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
@@ -35,19 +34,8 @@ SIMPLE_OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-def _get_options_init_schema(handler: SchemaCommonFlowHandler) -> None:
-    """Initialise handler, and return `None` to jump to next step."""
-    parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
-    entry_id = parent_handler.config_entry.entry_id
-    blink: Blink = parent_handler.hass.data[DOMAIN][entry_id]
-    parent_handler.options[CONF_SCAN_INTERVAL] = blink.refresh_rate
-
-
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(
-        _get_options_init_schema,
-        next_step="simple_options",
-    ),
+    "init": SchemaFlowFormStep(next_step="simple_options"),
     "simple_options": SchemaFlowFormStep(SIMPLE_OPTIONS_SCHEMA),
 }
 
