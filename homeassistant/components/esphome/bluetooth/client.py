@@ -217,8 +217,6 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         entry_data = self.entry_data
-        device_info = entry_data.device_info
-        assert device_info is not None
         self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
