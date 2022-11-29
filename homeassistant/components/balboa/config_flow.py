@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_SYNC_TIME, default=False): bool,
+        vol.Required(CONF_SYNC_TIME, default=False): bool,
     }
 )
 OPTIONS_FLOW = {
