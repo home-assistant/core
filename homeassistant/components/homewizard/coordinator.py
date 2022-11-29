@@ -6,8 +6,10 @@ import logging
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
@@ -19,16 +21,26 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     """Gather data for the energy device."""
 
     api: HomeWizardEnergy
+    _config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         host: str,
     ) -> None:
         """Initialize Update Coordinator."""
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        self._config_entry = config_entry
         self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device_info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.data["device"].serial)},
+        )
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
