@@ -1976,9 +1976,18 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""

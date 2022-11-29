@@ -554,6 +554,7 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -650,6 +651,7 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,

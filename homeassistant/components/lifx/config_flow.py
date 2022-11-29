@@ -31,7 +31,7 @@ from .util import (
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for tplink."""
+    """Handle a config flow for LIFX."""
 
     VERSION = 1
 
@@ -41,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device: Light | None = None
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
-        """Handle discovery via dhcp."""
+        """Handle discovery via DHCP."""
         mac = discovery_info.macaddress
         host = discovery_info.ip
         hass = self.hass
@@ -70,8 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
-        _LOGGER.debug("async_step_integration_discovery %s", discovery_info)
+        """Handle LIFX UDP broadcast discovery."""
         serial = discovery_info[CONF_SERIAL]
         host = discovery_info[CONF_HOST]
         await self.async_set_unique_id(formatted_serial(serial))
@@ -82,7 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, serial: str | None = None
     ) -> FlowResult:
         """Handle any discovery."""
-        _LOGGER.debug("Discovery %s %s", host, serial)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         if any(
@@ -222,20 +220,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except socket.gaierror:
             return None
         device: Light = connection.device
-        device.get_hostfirmware()
         try:
-            message = await async_execute_lifx(device.get_color)
+            # get_hostfirmware required for MAC address offset
+            # get_version required for lifx_features()
+            # get_label required to log the name of the device
+            messages = await asyncio.gather(
+                *[
+                    async_execute_lifx(device.get_hostfirmware),
+                    async_execute_lifx(device.get_version),
+                    async_execute_lifx(device.get_label),
+                ]
+            )
         except asyncio.TimeoutError:
             return None
         finally:
             connection.async_stop()
         if (
-            lifx_features(device)["relays"] is True
+            messages is None
+            or len(messages) != 3
+            or lifx_features(device)["relays"] is True
             or device.host_firmware_version is None
         ):
             return None  # relays not supported
         # device.mac_addr is not the mac_address, its the serial number
-        device.mac_addr = serial or message.target_addr
+        device.mac_addr = serial or messages[0].target_addr
         await self.async_set_unique_id(
             formatted_serial(device.mac_addr), raise_on_progress=raise_on_progress
         )

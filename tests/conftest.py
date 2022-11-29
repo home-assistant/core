@@ -1050,6 +1050,10 @@ def mock_bluetooth_adapters():
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):

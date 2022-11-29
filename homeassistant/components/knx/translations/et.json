@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "file_not_found": "M\u00e4\u00e4ratud faili \".knxkeys\" ei leitud asukohas config/.storage/knx/",
+            "invalid_backbone_key": "Kehtetu magistraalv\u00f5ti. Eeldatakse 32 kuueteistk\u00fcmnendarvu.",
             "invalid_individual_address": "V\u00e4\u00e4rtus ei \u00fchti KNX-i individuaalse aadressi mustriga.\n 'area.line.device'",
             "invalid_ip_address": "Kehtetu IPv4 aadress.",
             "invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
@@ -41,13 +42,22 @@
                     "individual_address": "Individuaalne aadress",
                     "local_ip": "Home Assistanti kohalik IP aadress",
                     "multicast_group": "Multicast grupp",
-                    "multicast_port": "Mulicasti port"
+                    "multicast_port": "Mulicasti port",
+                    "routing_secure": "Kasuta KNX IP Secure'i"
                 },
                 "data_description": {
                     "individual_address": "Home Assistantis kasutatav KNX-aadress, nt \"0.0.4\".",
                     "local_ip": "Automaatse avastamise kasutamiseks j\u00e4ta t\u00fchjaks."
                 },
                 "description": "Konfigureeri marsruutimissuvandid."
+            },
+            "secure_key_source": {
+                "description": "Vali kuidas soovid KNX/IP Secure'i seadistada.",
+                "menu_options": {
+                    "secure_knxkeys": "Kasuta knxkeys faili mis sisaldab IP Secure teavet.",
+                    "secure_routing_manual": "Seadista IP secure magistraalv\u00f5ti k\u00e4sitsi",
+                    "secure_tunnel_manual": "Seadista IP secure mandaadid k\u00e4sitsi"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +69,17 @@
                     "knxkeys_password": "See m\u00e4\u00e4rati faili eksportimisel ETSist."
                 },
                 "description": "Sisesta oma `.knxkeys` faili teave."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone v\u00f5ti",
+                    "sync_latency_tolerance": "V\u00f5rguviivituse taluvus"
+                },
+                "data_description": {
+                    "backbone_key": "Kuvatakse ETS projekti 'Turvalisus' vaates. N\u00e4iteks '0011223344...'",
+                    "sync_latency_tolerance": "Vaikev\u00e4\u00e4rtus on 1000."
+                },
+                "description": "Sisesta IP Secure teave."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -92,6 +113,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "file_not_found": "M\u00e4\u00e4ratud kirjet '.knxkeys' ei leitud asukohast config/.storage/knx/",
+            "invalid_backbone_key": "Kehtetu magistraalv\u00f5ti. Eeldatakse 32 kuueteistk\u00fcmnendarvu.",
             "invalid_individual_address": "V\u00e4\u00e4rtuse mall ei vasta KNX seadme \u00fcksuse aadressile.\n'area.line.device'",
             "invalid_ip_address": "Vigane IPv4 aadress",
             "invalid_signature": "'.knxkeys' kirje dekr\u00fcptimisv\u00f5ti on vale.",
@@ -142,13 +164,22 @@
                     "individual_address": "\u00dcksuse aadress",
                     "local_ip": "Home Assistati kohtv\u00f5rgu IP aadress",
                     "multicast_group": "Multicasti grupp",
-                    "multicast_port": "Multicasti port"
+                    "multicast_port": "Multicasti port",
+                    "routing_secure": "Kasuta KNX IP Secure'i"
                 },
                 "data_description": {
                     "individual_address": "Home Assistantis kasutatav KNX aadress, n\u00e4iteks '0.0.4''",
                     "local_ip": "Automaatseks tuvastamiseks j\u00e4ta t\u00fchjaks."
                 },
                 "description": "Seadista marsruutimine"
+            },
+            "secure_key_source": {
+                "description": "Vali kuidas soovid KNX/IP Secure'i seadistada.",
+                "menu_options": {
+                    "secure_knxkeys": "Kasuta knxkeys faili mis sisaldab IP Secure teavet.",
+                    "secure_routing_manual": "Seadista IP secure magistraalv\u00f5ti k\u00e4sitsi",
+                    "secure_tunnel_manual": "Seadista IP secure mandaadid k\u00e4sitsi"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +191,17 @@
                     "knxkeys_password": "See saadi kirje eksportisel ETS-ist."
                 },
                 "description": "Sisesta oma '.knxkeys' kirje teave"
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Backbone v\u00f5ti",
+                    "sync_latency_tolerance": "V\u00f5rguviivituse taluvus"
+                },
+                "data_description": {
+                    "backbone_key": "Kuvatakse ETS projekti 'Turvalisus' vaates. N\u00e4iteks '0011223344...'",
+                    "sync_latency_tolerance": "Vaikev\u00e4\u00e4rtus on 1000."
+                },
+                "description": "Sisesta IP Secure teave."
             },
             "secure_tunnel_manual": {
                 "data": {

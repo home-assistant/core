@@ -6,9 +6,9 @@
                     "entity_id": "Brytare",
                     "target_domain": "Typ"
                 },
-                "description": "V\u00e4lj en str\u00f6mbrytare som du vill visa i Home Assistant som lampa, skal eller n\u00e5got annat. Den ursprungliga switchen kommer att d\u00f6ljas."
+                "description": "V\u00e4lj en brytare som du vill visa i Home Assistant som lampa, gardin eller n\u00e5got annat. Den ursprungliga brytaren kommer att d\u00f6ljas."
             }
         }
     },
-    "title": "\u00c4ndra enhetstyp f\u00f6r en c"
+    "title": "\u00c4ndra enhetstyp f\u00f6r en brytare"
 }

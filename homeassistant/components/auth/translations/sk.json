@@ -9,12 +9,18 @@
             },
             "step": {
                 "init": {
-                    "description": "Vyberte si jednu z notifika\u010dn\u00fdch slu\u017eieb:"
+                    "description": "Vyberte si jednu z notifika\u010dn\u00fdch slu\u017eieb:",
+                    "title": "Nastavenie jednorazov\u00e9ho hesla doru\u010den\u00e9ho prostredn\u00edctvom komponentu notifik\u00e1cie"
                 },
                 "setup": {
-                    "description": "Jednorazov\u00e9 heslo bolo odoslan\u00e9 prostredn\u00edctvom **notify.{notify_service}**. Zadajte ho, pros\u00edm, ni\u017e\u0161ie:"
+                    "description": "Jednorazov\u00e9 heslo bolo odoslan\u00e9 prostredn\u00edctvom **notify.{notify_service}**. Zadajte ho, pros\u00edm, ni\u017e\u0161ie:",
+                    "title": "Overenie nastavenia"
                 }
-            }
+            },
+            "title": "Ozn\u00e1menie jednorazov\u00e9ho hesla"
+        },
+        "totp": {
+            "title": "TOTP"
         }
     }
 }

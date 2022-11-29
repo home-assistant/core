@@ -147,6 +147,30 @@ def _get_unit_class(unit: str | None) -> str | None:
     return None
 
 
+def get_display_unit(
+    hass: HomeAssistant,
+    statistic_id: str,
+    statistic_unit: str | None,
+) -> str | None:
+    """Return the unit which the statistic will be displayed in."""
+
+    if statistic_unit is None:
+        return None
+
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+        return statistic_unit
+
+    state_unit: str | None = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
+        # Guard against invalid state unit in the DB
+        return statistic_unit
+
+    return state_unit
+
+
 def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
@@ -902,6 +926,9 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
+                "display_unit_of_measurement": get_display_unit(
+                    hass, meta["statistic_id"], meta["unit_of_measurement"]
+                ),
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -924,6 +951,7 @@ def list_statistic_ids(
             if key in result:
                 continue
             result[key] = {
+                "display_unit_of_measurement": meta["unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -936,6 +964,7 @@ def list_statistic_ids(
     return [
         {
             "statistic_id": _id,
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
             "has_mean": info["has_mean"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
@@ -1472,13 +1501,6 @@ def statistic_during_period(
         if not tail_only:
             main_start_time = start_time if head_end_time is None else head_end_time
             main_end_time = end_time if tail_start_time is None else tail_start_time
-
-        # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
-        if not metadata:
-            return result
-
-        metadata_id = metadata[statistic_id][0]
 
         if not types.isdisjoint({"max", "mean", "min"}):
             result = _get_max_mean_min_statistic(

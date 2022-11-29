@@ -42,6 +42,10 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Der einheitliche Sensor \u201eErkanntes Objekt\u201c f\u00fcr intelligente Erkennungen ist jetzt veraltet. Er wurde durch einzelne bin\u00e4re Smart-Detection-Sensoren f\u00fcr jeden Smart-Detection-Typ ersetzt. Bitte aktualisiere alle Vorlagen oder Automatisierungen entsprechend.",
+            "title": "Smart Detection Sensor veraltet"
+        },
         "ea_setup_failed": {
             "description": "Du verwendest v{version} von UniFi Protect, eine Early-Access-Version. Beim Versuch, die Integration zu laden, ist ein nicht behebbarer Fehler aufgetreten. Bitte f\u00fchre ein [Downgrade auf eine stabile Version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) von UniFi Protect durch, um die Integration weiterhin zu verwenden. \n\nFehler: {error}",
             "title": "Einrichtungsfehler bei Verwendung der Early-Access-Version"

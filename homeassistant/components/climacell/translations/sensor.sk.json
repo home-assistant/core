@@ -11,6 +11,7 @@
         },
         "climacell__precipitation_type": {
             "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
+            "ice_pellets": "\u013dadovec",
             "rain": "D\u00e1\u017e\u010f",
             "snow": "Sneh"
         }
