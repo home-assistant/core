@@ -16,9 +16,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
@@ -76,6 +77,12 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
 
+MCU_DEV_TEMPERATURE_SENSOR = [
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
+]
+
 
 def cvt_battery(val: int | None) -> int | None:
     """Convert battery to percentage."""
@@ -107,7 +114,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
@@ -116,15 +123,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="devTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type
-        in [
-            ATTR_DEVICE_LEAK_SENSOR,
-            ATTR_DEVICE_MOTION_SENSOR,
-            ATTR_DEVICE_CO_SMOKE_SENSOR,
-        ],
+        exists_fn=lambda device: device.device_type in MCU_DEV_TEMPERATURE_SENSOR,
     ),
     YoLinkSensorEntityDescription(
         key="loraInfo",
@@ -133,6 +135,8 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         name="Signal",
         value=lambda value: value["signal"] if value is not None else None,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
