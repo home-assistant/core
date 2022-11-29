@@ -3,7 +3,7 @@
   "name": "Matter",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/matter",
-  "requirements": ["python-matter-server==0.3.0"],
+  "requirements": ["python-matter-server==1.0.0"],
   "dependencies": ["websocket_api"],
   "codeowners": ["@MartinHjelmare"],
   "iot_class": "local_push"

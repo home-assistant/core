@@ -2,24 +2,24 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 from typing import cast
 
 import async_timeout
+from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
     FailedCommand,
     InvalidServerVersion,
 )
-from matter_server.client.matter import Matter
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -27,7 +27,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_register_admin_service
 
-from .adapter import MatterAdapter, get_matter_store
 from .addon import get_addon_manager
 from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
@@ -39,9 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
 
-    matter = Matter(MatterAdapter(hass, entry))
+    matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
-        await matter.connect()
+        await matter_client.connect()
     except CannotConnect as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
@@ -60,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
-        matter.adapter.logger.exception("Failed to connect to matter server")
+        matter_client.logger.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
@@ -69,26 +68,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
-        await matter.disconnect()
+        await matter_client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
+    # register websocket api
     async_register_api(hass)
 
-    matter.listen()
+    # launch the matter client listen task in the background
+    # use the init_ready event to keep track if it did initialize successfully
+    init_ready = asyncio.Event()
+    listen_task = asyncio.create_task(matter_client.start_listening(init_ready))
+
     try:
         async with async_timeout.timeout(30):
-            await matter.driver_ready.wait()
+            await init_ready.wait()
     except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady("Matter driver not ready") from err
+        listen_task.cancel()
+        raise ConfigEntryNotReady("Matter client not ready") from err
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
         _async_init_services(hass)
 
-    hass.data[DOMAIN][entry.entry_id] = matter
+    hass.data[DOMAIN][entry.entry_id] = matter_client
 
     await hass.config_entries.async_forward_entry_setups(entry, DEVICE_PLATFORM)
 
@@ -100,8 +105,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
 
     if unload_ok:
-        matter: Matter = hass.data[DOMAIN].pop(entry.entry_id)
-        await matter.disconnect()
+        matter_client: MatterClient = hass.data[DOMAIN].pop(entry.entry_id)
+        await matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -117,9 +122,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Config entry is being removed."""
-    # Remove storage file.
-    storage_path = get_matter_store(hass, entry).path
-    await hass.async_add_executor_job(Path(storage_path).unlink)
 
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
         return
@@ -155,14 +157,20 @@ async def async_remove_config_entry_device(
     if not unique_id:
         return True
 
-    matter: Matter = hass.data[DOMAIN][config_entry.entry_id]
+    matter_client: MatterClient = hass.data[DOMAIN][config_entry.entry_id]
 
-    for node in matter.get_nodes():
+    for node in await matter_client.get_nodes():
         if node.unique_id == unique_id:
-            await matter.delete_node(node.node_id)
+            await matter_client.delete_node(node.node_id)
             break
 
     return True
+
+
+@callback
+def get_matter_client(hass: HomeAssistant) -> MatterClient:
+    """Return MatterClient instance."""
+    return next(iter(hass.data[DOMAIN].values()))
 
 
 @callback
@@ -171,9 +179,9 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def commission(call: ServiceCall) -> None:
         """Handle commissioning."""
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter_client: MatterClient = list(hass.data[DOMAIN].values())[0]
         try:
-            await matter.commission(call.data["code"])
+            await matter_client.commission_with_code(call.data["code"])
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
 
@@ -187,9 +195,9 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def accept_shared_device(call: ServiceCall) -> None:
         """Accept a shared device."""
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter_client = get_matter_client(hass)
         try:
-            await matter.commission_on_network(call.data["pin"])
+            await matter_client.commission_on_network(call.data["pin"])
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
 
@@ -203,10 +211,10 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
     async def set_wifi(call: ServiceCall) -> None:
         """Handle set wifi creds."""
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter_client = get_matter_client(hass)
         try:
-            await matter.client.driver.device_controller.set_wifi_credentials(
-                call.data["network_name"], call.data["password"]
+            await matter_client.set_wifi_credentials(
+                call.data["ssid"], call.data["password"]
             )
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
@@ -218,20 +226,18 @@ def _async_init_services(hass: HomeAssistant) -> None:
         set_wifi,
         vol.Schema(
             {
-                "network_name": str,
+                "ssid": str,
                 "password": str,
             }
         ),
     )
 
-    async def set_thread(call: ServiceCall) -> None:
+    async def set_thread_dataset(call: ServiceCall) -> None:
         """Handle set Thread creds."""
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
-        thread_dataset = bytes.fromhex(call.data["thread_operation_dataset"])
+        matter_client = get_matter_client(hass)
+        thread_dataset = bytes.fromhex(call.data["dataset"])
         try:
-            await matter.client.driver.device_controller.set_thread_operational_dataset(
-                thread_dataset
-            )
+            await matter_client.set_thread_dataset(thread_dataset)
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
 
@@ -239,8 +245,8 @@ def _async_init_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "set_thread",
-        set_thread,
-        vol.Schema({"thread_operation_dataset": str}),
+        set_thread_dataset,
+        vol.Schema({"dataset": str}),
     )
 
     @callback
@@ -266,10 +272,10 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
         unique_id = matter_id[1]
 
-        matter: Matter = next(iter(hass.data[DOMAIN].values()))
+        matter_client = get_matter_client(hass)
 
         # This could be more efficient
-        for node in matter.get_nodes():
+        for node in matter_client.get_nodes():
             if node.unique_id == unique_id:
                 return cast(int, node.node_id)
 
@@ -282,14 +288,12 @@ def _async_init_services(hass: HomeAssistant) -> None:
         if node_id is None:
             raise HomeAssistantError("This is not a Matter device")
 
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter_client = get_matter_client(hass)
 
         # We are sending device ID .
 
         try:
-            await matter.client.driver.device_controller.open_commissioning_window(
-                node_id
-            )
+            await matter_client.open_commissioning_window(node_id)
         except FailedCommand as err:
             raise HomeAssistantError(str(err)) from err
 
