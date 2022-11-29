@@ -60,6 +60,7 @@
             "init": {
                 "menu_options": {
                     "add_sensor": "Add sensor",
+                    "remove_sensor": "Remove sensor",
                     "resource": "Configure resource"
                 }
             },
