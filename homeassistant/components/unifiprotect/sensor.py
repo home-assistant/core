@@ -15,6 +15,7 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -527,6 +528,15 @@ MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_event_obj="last_smart_detect_event",
     ),
+    ProtectSensorEventEntityDescription(
+        key="smart_obj_licenseplate",
+        name="License Plate Detected",
+        icon="mdi:car",
+        device_class=DEVICE_CLASS_DETECTION,
+        ufp_value="is_smart_detected",
+        ufp_event_obj="last_smart_detect_event",
+        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
+    ),
 )
 
 
@@ -756,7 +766,20 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
         EventEntityMixin._async_update_device_from_protect(self, device)
-        if self._event is None:
-            self._attr_native_value = OBJECT_TYPE_NONE
+        if (
+            self.entity_description.ufp_smart_type
+            == SmartDetectObjectType.LICENSE_PLATE
+        ):
+            if (
+                self._event is None
+                or self._event.metadata is None
+                or self._event.metadata.license_plate is None
+            ):
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.metadata.license_plate.name
         else:
-            self._attr_native_value = self._event.smart_detect_types[0].value
+            if self._event is None:
+                self._attr_native_value = OBJECT_TYPE_NONE
+            else:
+                self._attr_native_value = self._event.smart_detect_types[0].value
