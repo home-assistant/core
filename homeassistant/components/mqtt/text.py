@@ -33,7 +33,6 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_STATE_VALUE_TEMPLATE,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -55,6 +54,15 @@ CONF_PATTERN = "pattern"
 DEFAULT_NAME = "MQTT Text"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_RESET = "None"
+
+MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        text.ATTR_MAX,
+        text.ATTR_MIN,
+        text.ATTR_MODE,
+        text.ATTR_PATTERN,
+    }
+)
 
 
 def valid_text_size_configuration(config: ConfigType) -> ConfigType:
@@ -78,7 +86,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PATTERN): cv.is_regex,
-        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -117,6 +125,7 @@ async def _async_setup_entity(
 class MqttTextEntity(MqttEntity, TextEntity):
     """Representation of the MQTT text entity."""
 
+    _attributes_extra_blocked = MQTT_TEXT_ATTRIBUTES_BLOCKED
     _entity_id_format = text.ENTITY_ID_FORMAT
 
     _compiled_pattern: re.Pattern[Any] | None
@@ -164,13 +173,22 @@ class MqttTextEntity(MqttEntity, TextEntity):
     def _validate_text_value(self, payload: str, topic: str) -> str | None:
         """Return an error string if a text value is invalid."""
         if len(payload) > self._attr_native_max:
-            return f"for {self.entity_id} on '{topic}', size > max size ({self._attr_native_max})"
+            return (
+                f"{self.entity_id} on '{topic}', "
+                f"size > max size ({self._attr_native_max})"
+            )
 
         if len(payload) < self._attr_native_min:
-            return f"for {self.entity_id} on '{topic}', size < min size ({self._attr_native_min})"
+            return (
+                f"{self.entity_id} on '{topic}', "
+                f"size < min size ({self._attr_native_min})"
+            )
 
         if self._compiled_pattern and not self._compiled_pattern.match(payload):
-            return f"for {self.entity_id} on '{topic}', text does not match pattern '{self._attr_pattern}'"
+            return (
+                f"{self.entity_id} on '{topic}', "
+                f"text does not match pattern '{self._attr_pattern}'"
+            )
 
         return None
 
@@ -195,9 +213,9 @@ class MqttTextEntity(MqttEntity, TextEntity):
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
             if error := self._validate_text_value(payload, msg.topic):
-                _LOGGER.warning("Ignoring text update %s", error)
+                _LOGGER.warning("Ignoring text update for %s", error)
 
-            self._attr_native_value = payload
+            self._attr_native_value = payload or None
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
@@ -217,10 +235,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
-        if error := self._validate_text_value(value, self._config[CONF_COMMAND_TOPIC]):
-            raise ValueError(f"Cannot set value {error}")
-
-        payload = self._command_template(value)
+        payload = str(self._command_template(value))
 
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
@@ -230,4 +245,5 @@ class MqttTextEntity(MqttEntity, TextEntity):
             self._config[CONF_ENCODING],
         )
         if self._optimistic:
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            self._attr_native_value = payload
+            self.async_write_ha_state()
