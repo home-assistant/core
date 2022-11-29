@@ -9,7 +9,6 @@ from typing import Any, cast
 from pyunifiprotect.data import (
     NVR,
     Camera,
-    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -41,20 +40,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
+from .const import DEVICE_CLASS_DETECTION, DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
-    EventThumbnailMixin,
+    EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectRequiredKeysMixin, T
+from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin, T
 from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -72,6 +70,13 @@ class ProtectSensorEntityDescription(
         if isinstance(value, float) and self.precision:
             value = round(value, self.precision)
         return value
+
+
+@dataclass
+class ProtectSensorEventEntityDescription(
+    ProtectEventMixin[T], SensorEntityDescription
+):
+    """Describes UniFi Protect Sensor entity."""
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -513,11 +518,14 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+MOTION_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
+    ProtectSensorEventEntityDescription(
         key="detected_object",
         name="Detected Object",
         device_class=DEVICE_CLASS_DETECTION,
+        entity_registry_enabled_default=False,
+        ufp_value="is_smart_detected",
+        ufp_event_obj="last_smart_detect_event",
     ),
 )
 
@@ -666,8 +674,8 @@ def _async_motion_entities(
         if not device.feature_flags.has_smart_detect:
             continue
 
-        for description in MOTION_SENSORS:
-            entities.append(ProtectEventSensor(data, device, description))
+        for event_desc in MOTION_SENSORS:
+            entities.append(ProtectEventSensor(data, device, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
                 description.name,
@@ -730,29 +738,24 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
-class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
+class ProtectEventSensor(EventEntityMixin, SensorEntity):
     """A UniFi Protect Device Sensor with access tokens."""
 
-    device: Camera
+    entity_description: ProtectSensorEventEntityDescription
 
-    @callback
-    def _async_get_event(self) -> Event | None:
-        """Get event from Protect device."""
-
-        event: Event | None = None
-        if (
-            self.device.is_smart_detected
-            and self.device.last_smart_detect_event is not None
-            and len(self.device.last_smart_detect_event.smart_detect_types) > 0
-        ):
-            event = self.device.last_smart_detect_event
-
-        return event
+    def __init__(
+        self,
+        data: ProtectData,
+        device: ProtectAdoptableDeviceModel,
+        description: ProtectSensorEventEntityDescription,
+    ) -> None:
+        """Initialize an UniFi Protect sensor."""
+        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
-        EventThumbnailMixin._async_update_device_from_protect(self, device)
+        EventEntityMixin._async_update_device_from_protect(self, device)
         if self._event is None:
             self._attr_native_value = OBJECT_TYPE_NONE
         else:

@@ -10,6 +10,9 @@
                 "data": {
                     "location_id": "Umiestnenie"
                 }
+            },
+            "user": {
+                "title": "Potvr\u010fte URL sp\u00e4tn\u00e9ho volania"
             }
         }
     }

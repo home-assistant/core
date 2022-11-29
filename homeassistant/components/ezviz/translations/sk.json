@@ -9,21 +9,30 @@
             "invalid_auth": "Neplatn\u00e9 overenie",
             "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa"
         },
+        "flow_title": "{serial}",
         "step": {
             "confirm": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "url": "URL",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Pripojte sa k EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "url": "URL",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Ru\u010dne zadajte adresu URL v\u00e1\u0161ho regi\u00f3nu",
+                "title": "Pripojenie k vlastnej adrese URL EZVIZ"
             }
         }
     }

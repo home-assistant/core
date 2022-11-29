@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -22,7 +23,13 @@
                 "data": {
                     "host": "IP adresa",
                     "password": "Heslo",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            },
+            "plm": {
+                "data": {
+                    "device": "Cesta k zariadeniu USB"
                 }
             }
         }
@@ -41,11 +48,18 @@
                     "subcat": "Podkateg\u00f3ria zariadenia (napr. 0x0a)"
                 }
             },
+            "add_x10": {
+                "data": {
+                    "housecode": "K\u00f3d domu (a - p)",
+                    "platform": "Platforma"
+                }
+            },
             "change_hub_config": {
                 "data": {
                     "host": "IP adresa",
                     "password": "Heslo",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
             "remove_override": {

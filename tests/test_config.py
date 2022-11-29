@@ -1315,6 +1315,41 @@ async def test_core_store_historic_currency(hass, hass_storage):
     await config_util.async_process_ha_core_config(hass, {})
 
     issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
+    issue_id = "historic_currency"
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
+
+    await hass.config.async_update(**{"currency": "EUR"})
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert not issue
+
+
+async def test_core_config_schema_no_country(hass):
+    """Test core config schema."""
+    await config_util.async_process_ha_core_config(hass, {})
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("homeassistant", "country_not_configured")
+    assert issue
+
+
+async def test_core_store_no_country(hass, hass_storage):
+    """Test core config store."""
+    core_data = {
+        "data": {},
+        "key": "core.config",
+        "version": 1,
+        "minor_version": 1,
+    }
+    hass_storage["core.config"] = dict(core_data)
+    await config_util.async_process_ha_core_config(hass, {})
+
+    issue_registry = ir.async_get(hass)
+    issue_id = "country_not_configured"
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue
+
+    await hass.config.async_update(**{"country": "SE"})
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert not issue

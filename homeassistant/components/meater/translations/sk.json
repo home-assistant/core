@@ -13,8 +13,13 @@
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "data_description": {
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno slu\u017eby Meater Cloud, zvy\u010dajne e-mailov\u00e1 adresa."
+                },
+                "description": "Nastavte si \u00fa\u010det Meater Cloud."
             }
         }
     }

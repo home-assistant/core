@@ -11,7 +11,8 @@
             "user": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "description": "Zadajte k\u013e\u00fa\u010d API z\u00edskan\u00fd z https://home.freedompro.eu"
             }
         }
     }

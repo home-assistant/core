@@ -24,6 +24,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Ilmateade"
+                },
+                "description": "AccuWeather API tasuta versioonis toimub ilmaennustuse lubamisel andmete v\u00e4rskendamine iga 80 minuti  j\u00e4rel (muidu 40 minutit)."
+            },
             "user": {
                 "data": {
                     "forecast": "Ilmateade"
