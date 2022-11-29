@@ -141,6 +141,7 @@ def test_compile_hourly_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -214,6 +215,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -282,6 +284,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -290,6 +293,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
             "unit_class": "temperature",
         },
         {
+            "display_unit_of_measurement": "invalid",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -299,6 +303,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
             "unit_class": None,
         },
         {
+            "display_unit_of_measurement": None,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -309,6 +314,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         },
         {
             "statistic_id": "sensor.test6",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -318,6 +324,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         },
         {
             "statistic_id": "sensor.test7",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -473,6 +480,7 @@ async def test_compile_hourly_sum_statistics_amount(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": statistics_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -662,6 +670,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -758,6 +767,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -841,6 +851,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -965,6 +976,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert {
+        "display_unit_of_measurement": display_unit,
         "has_mean": False,
         "has_sum": True,
         "name": None,
@@ -1052,6 +1064,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1151,6 +1164,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1261,6 +1275,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1352,6 +1367,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1441,6 +1457,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1450,6 +1467,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         },
         {
             "statistic_id": "sensor.test2",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1459,6 +1477,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         },
         {
             "statistic_id": "sensor.test3",
+            "display_unit_of_measurement": "Wh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -1814,6 +1833,7 @@ def test_list_statistic_ids(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": statistic_type == "mean",
             "has_sum": statistic_type == "sum",
             "name": None,
@@ -1828,6 +1848,7 @@ def test_list_statistic_ids(
             assert statistic_ids == [
                 {
                     "statistic_id": "sensor.test1",
+                    "display_unit_of_measurement": display_unit,
                     "has_mean": statistic_type == "mean",
                     "has_sum": statistic_type == "sum",
                     "name": None,
@@ -1921,6 +1942,7 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1955,6 +1977,7 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2029,6 +2052,7 @@ def test_compile_hourly_statistics_changing_units_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "cats",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2094,6 +2118,7 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2128,6 +2153,7 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2206,6 +2232,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2236,6 +2263,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit2,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2319,6 +2347,7 @@ def test_compile_hourly_statistics_equivalent_units_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2384,6 +2413,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2428,6 +2458,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2482,6 +2513,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2568,6 +2600,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2612,6 +2645,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2690,6 +2724,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": None,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2725,6 +2760,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": None,
             "has_mean": False,
             "has_sum": True,
             "name": None,
@@ -2916,6 +2952,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2925,6 +2962,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         },
         {
             "statistic_id": "sensor.test2",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2934,6 +2972,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         },
         {
             "statistic_id": "sensor.test3",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2943,6 +2982,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         },
         {
             "statistic_id": "sensor.test4",
+            "display_unit_of_measurement": "EUR",
             "has_mean": False,
             "has_sum": True,
             "name": None,

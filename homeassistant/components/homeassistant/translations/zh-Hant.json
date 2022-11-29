@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "\u5c1a\u672a\u8a2d\u5b9a\u570b\u5bb6\u3001\u8acb\u9ede\u9078\u4e0b\u65b9 \"\u4e86\u89e3\u66f4\u591a\" \u6309\u9215\u4ee5\u66f4\u65b0\u8a2d\u5b9a\u3002",
+            "title": "\u5c1a\u672a\u8a2d\u5b9a\u570b\u5bb6"
+        },
         "historic_currency": {
             "description": "\u8ca8\u5e63 {currency} \u4e0d\u518d\u4f7f\u7528\u3001\u8acb\u91cd\u65b0\u8a2d\u5b9a\u5176\u4ed6\u8ca8\u5e63\u3002",
             "title": "\u8a2d\u5b9a\u8ca8\u5e63\u4e0d\u518d\u4f7f\u7528"

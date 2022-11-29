@@ -176,7 +176,7 @@ class EventManager:
                 ).total_seconds() < 7200:
                     await self.async_renew()
             except RemoteProtocolError:
-                # Likley a shutdown event, nothing to see here
+                # Likely a shutdown event, nothing to see here
                 return
             except SUBSCRIPTION_ERRORS as err:
                 LOGGER.warning(

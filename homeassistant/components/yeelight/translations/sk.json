@@ -23,5 +23,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model"
+                }
+            }
+        }
     }
 }

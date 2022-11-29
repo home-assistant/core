@@ -70,8 +70,7 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
 
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
+        if not integration.config_flow:
             continue
 
         _validate_integration(config, integration)

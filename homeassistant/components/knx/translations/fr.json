@@ -55,6 +55,9 @@
                 },
                 "description": "Veuillez saisir les informations relatives \u00e0 votre fichier `.knxkeys`."
             },
+            "secure_routing_manual": {
+                "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
+            },
             "secure_tunnel_manual": {
                 "data": {
                     "device_authentication": "Mot de passe d\u2019authentification de l\u2019appareil",
@@ -140,6 +143,9 @@
                     "knxkeys_password": "D\u00e9fini lors de l'exportation du fichier depuis ETS."
                 },
                 "description": "Veuillez saisir les informations relatives \u00e0 votre fichier `.knxkeys`."
+            },
+            "secure_routing_manual": {
+                "description": "Veuillez saisir vos informations de s\u00e9curit\u00e9 IP."
             },
             "secure_tunnel_manual": {
                 "data": {

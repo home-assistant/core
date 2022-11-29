@@ -10,10 +10,14 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "mode": "Re\u017eim",
                     "name": "N\u00e1zov",
                     "password": "Heslo",
-                    "port": "Port"
-                }
+                    "port": "Port",
+                    "protocol": "Komunika\u010dn\u00fd protokol, ktor\u00fd sa m\u00e1 pou\u017ei\u0165",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Nastavte po\u017eadovan\u00fd parameter na pripojenie k smerova\u010du"
             }
         }
     },
