@@ -23,6 +23,8 @@ TYPE = "type"
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_commission)
+    websocket_api.async_register_command(hass, websocket_commission_on_network)
+    websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
 
 
 def async_get_matter_adapter(func: Callable) -> Callable:
@@ -78,4 +80,49 @@ async def websocket_commission(
 ) -> None:
     """Commission a device to the Matter network."""
     await matter.matter_client.commission_with_code(msg["code"])
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/commission_on_network",
+        vol.Required("pin"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter
+async def websocket_commission_on_network(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: Matter,
+) -> None:
+    """Commission a device already on the network."""
+    await matter.commission_on_network(msg["pin"])
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/set_wifi_credentials",
+        vol.Required("network_name"): str,
+        vol.Required("password"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter
+async def websocket_set_wifi_credentials(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: Matter,
+) -> None:
+    """Set WiFi credentials for a device."""
+    await matter.client.driver.device_controller.set_wifi_credentials(
+        ssid=msg["network_name"], credentials=msg["password"]
+    )
     connection.send_result(msg[ID])
