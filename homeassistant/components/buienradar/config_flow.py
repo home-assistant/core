@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -34,11 +35,13 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_COUNTRY, default=DEFAULT_COUNTRY): vol.In(
             SUPPORTED_COUNTRY_CODES
         ),
-        vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
+        vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
+            selector.NumberSelectorConfig(min=0, step=1),
         ),
-        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
-            vol.Coerce(int), vol.Range(min=5, max=120)
+        vol.Optional(
+            CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(min=5, max=120, step=1),
         ),
     }
 )
