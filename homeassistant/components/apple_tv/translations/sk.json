@@ -31,6 +31,7 @@
                 "title": "P\u00e1rovanie"
             },
             "password": {
+                "description": "`{protocol}` vy\u017eaduje heslo. Toto zatia\u013e nie je podporovan\u00e9. Ak chcete pokra\u010dova\u0165, deaktivujte heslo.",
                 "title": "Vy\u017eaduje sa heslo"
             },
             "protocol_disabled": {

@@ -10,7 +10,9 @@
         "step": {
             "user": {
                 "data": {
+                    "column": "St\u013apec",
                     "db_url": "URL datab\u00e1zy",
+                    "name": "N\u00e1zov",
                     "unit_of_measurement": "Mern\u00e1 jednotka"
                 },
                 "data_description": {
@@ -28,7 +30,9 @@
         "step": {
             "init": {
                 "data": {
+                    "column": "St\u013apec",
                     "db_url": "URL datab\u00e1zy",
+                    "name": "N\u00e1zov",
                     "unit_of_measurement": "Mern\u00e1 jednotka"
                 },
                 "data_description": {

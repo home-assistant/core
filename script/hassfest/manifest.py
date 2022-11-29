@@ -299,9 +299,6 @@ def validate_version(integration: Integration) -> None:
 
 def validate_manifest(integration: Integration, core_components_dir: Path) -> None:
     """Validate manifest."""
-    if not integration.manifest:
-        return
-
     try:
         if integration.core:
             manifest_schema(integration.manifest)
