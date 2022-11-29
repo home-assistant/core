@@ -9,7 +9,11 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "error": {
-            "faulty_credentials": "Autoriz\u00e1cia zlyhala, overte token"
+            "faulty_credentials": "Autoriz\u00e1cia zlyhala, overte token",
+            "host_or_token": "Mus\u00ed poskytn\u00fa\u0165 aspo\u0148 jeden z hostite\u013eov alebo tokenov",
+            "no_servers": "\u017diadne servery prepojen\u00e9 s \u00fa\u010dtom Plex",
+            "not_found": "Plex server sa nena\u0161iel",
+            "ssl_error": "Probl\u00e9m s certifik\u00e1tom SSL"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -20,6 +24,21 @@
                     "ssl": "Pou\u017e\u00edva SSL certifik\u00e1t",
                     "token": "Token (volite\u013en\u00fd)",
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
+                },
+                "title": "Manu\u00e1lna konfigur\u00e1cia Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "title": "Vyberte server Plex"
+            },
+            "user": {
+                "description": "Pokra\u010dujte na [plex.tv](https://plex.tv) a prepojte server Plex."
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Sp\u00f4sob nastavenia"
                 }
             }
         }

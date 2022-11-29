@@ -1,7 +1,11 @@
 {
     "system_health": {
         "info": {
-            "google_enabled": "Google povolen\u00e9"
+            "alexa_enabled": "Alexa povolen\u00e1",
+            "can_reach_cert_server": "Dosiahnutie servera certifik\u00e1tov",
+            "google_enabled": "Google povolen\u00e9",
+            "remote_connected": "Vzdialene pripojen\u00e9",
+            "remote_enabled": "Povolen\u00e9 vzdialen\u00e9 ovl\u00e1danie"
         }
     }
 }

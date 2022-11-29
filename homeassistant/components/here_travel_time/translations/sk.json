@@ -13,7 +13,29 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API k\u013e\u00fa\u010d"
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arrival_time": {
+                "data": {
+                    "arrival_time": "\u010cas pr\u00edchodu"
+                },
+                "title": "V\u00fdber \u010dasu pr\u00edchodu"
+            },
+            "departure_time": {
+                "data": {
+                    "departure_time": "\u010cas odchodu"
+                },
+                "title": "V\u00fdber \u010dasu odchodu"
+            },
+            "time_menu": {
+                "menu_options": {
+                    "no_time": "Nekonfigurujte \u010das"
                 }
             }
         }

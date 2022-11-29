@@ -90,9 +90,9 @@ class KNXConfigEntryData(TypedDict, total=False):
     host: str
     port: int
 
-    user_id: int
-    user_password: str
-    device_authentication: str
+    user_id: int | None
+    user_password: str | None
+    device_authentication: str | None
     knxkeys_filename: str
     knxkeys_password: str
     backbone_key: str | None

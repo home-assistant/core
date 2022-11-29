@@ -1,0 +1,37 @@
+{
+    "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Nap\u00e1jac\u00ed zdroj je potrebn\u00e9 vymeni\u0165"
+                    }
+                }
+            },
+            "title": "Nap\u00e1janie nie je stabiln\u00e9"
+        },
+        "cold_tea": {
+            "title": "\u010caj je studen\u00fd"
+        },
+        "unfixable_problem": {
+            "title": "Tento probl\u00e9m sa ned\u00e1 odstr\u00e1ni\u0165"
+        }
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "constant": "Kon\u0161tanta",
+                    "int": "\u010c\u00edseln\u00fd vstup"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Viacn\u00e1sobn\u00fd v\u00fdber",
+                    "select": "Vyberte mo\u017enos\u0165",
+                    "string": "Hodnota re\u0165azca"
+                }
+            }
+        }
+    }
+}

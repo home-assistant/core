@@ -112,7 +112,7 @@ def create_stream(
     dynamic_stream_settings: DynamicStreamSettings,
     stream_label: str | None = None,
 ) -> Stream:
-    """Create a stream with the specified identfier based on the source url.
+    """Create a stream with the specified identifier based on the source url.
 
     The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
     options (see STREAM_OPTIONS_SCHEMA) are converted and passed into pyav / ffmpeg.

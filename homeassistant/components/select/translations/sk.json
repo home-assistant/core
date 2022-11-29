@@ -6,5 +6,6 @@
         "trigger_type": {
             "current_option_changed": "Mo\u017enos\u0165 {entity_name} sa zmenila"
         }
-    }
+    },
+    "title": "Vyberte"
 }

@@ -11,14 +11,18 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "area_id": "ID oblasti",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
             "user": {
                 "data": {
+                    "area_id": "ID oblasti",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             }
         }

@@ -54,13 +54,7 @@ class HWEnergySwitchEntity(
         """Initialize the switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_device_info = {
-            "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
-            "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
-        }
+        self._attr_device_info = coordinator.device_info
 
 
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):

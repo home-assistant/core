@@ -24,13 +24,6 @@ from tests.components.google_assistant import MockConfig
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
-@pytest.fixture(name="mock_auth")
-def mock_auth_fixture():
-    """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"):
-        yield
-
-
 @pytest.fixture(name="mock_cloud_login")
 def mock_cloud_login_fixture(hass, setup_api):
     """Mock cloud is logged in."""
