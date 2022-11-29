@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Nastavte si WLED na integr\u00e1ciu s Home Assistant."
             }
         }
     }

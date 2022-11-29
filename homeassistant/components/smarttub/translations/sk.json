@@ -8,12 +8,16 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "reauth_confirm": {
+                "title": "Znova overi\u0165 integr\u00e1ciu"
+            },
             "user": {
                 "data": {
                     "email": "Email",
                     "password": "Heslo"
                 },
-                "description": "Na prihl\u00e1senie zadajte svoju e-mailov\u00fa adresu a heslo SmartTub"
+                "description": "Na prihl\u00e1senie zadajte svoju e-mailov\u00fa adresu a heslo SmartTub",
+                "title": "Prihl\u00e1si\u0165"
             }
         }
     }
