@@ -48,10 +48,12 @@ class AirPurifier(Fan):
 
     def create_services(self):
         """Create and configure the primary service for this accessory."""
+        self.chars.append(CHAR_ACTIVE)
+        self.chars.append(CHAR_CURRENT_AIR_PURIFIER_STATE)
+        self.chars.append(CHAR_TARGET_AIR_PURIFIER_STATE)
         serv_air_purifier = self.add_preload_service(SERV_AIR_PURIFIER, self.chars)
         self.set_primary_service(serv_air_purifier)
 
-        self.chars.append(CHAR_ACTIVE)
         self.char_active = serv_air_purifier.configure_char(CHAR_ACTIVE, value=0)
 
         self.preset_mode_chars = {}
@@ -59,13 +61,11 @@ class AirPurifier(Fan):
         self.char_pm25_density = None
         self.char_current_temperature = None
 
-        self.chars.append(CHAR_CURRENT_AIR_PURIFIER_STATE)
         self.char_target_air_purifier_state = serv_air_purifier.configure_char(
             CHAR_TARGET_AIR_PURIFIER_STATE,
             value=0,
         )
 
-        self.chars.append(CHAR_TARGET_AIR_PURIFIER_STATE)
         self.char_current_air_purifier_state = serv_air_purifier.configure_char(
             CHAR_CURRENT_AIR_PURIFIER_STATE,
             value=0,

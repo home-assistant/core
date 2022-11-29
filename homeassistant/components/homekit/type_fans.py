@@ -136,11 +136,11 @@ class Fan(HomeAccessory):
 
     def create_services(self):
         """Create and configure the primary service for this accessory."""
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.chars.append(CHAR_TARGET_FAN_STATE)
         serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
         self.set_primary_service(serv_fan)
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
-        if self.preset_modes and len(self.preset_modes) == 1:
-            self.chars.append(CHAR_TARGET_FAN_STATE)
         return serv_fan
 
     def _set_chars(self, char_values):
