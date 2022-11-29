@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from matter_server.vendor import device_types
-from matter_server.vendor.chip.clusters import Objects as clusters
+from chip.clusters import Objects as clusters
+from matter_server.common.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,7 +24,7 @@ from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .util import renormalize
 
 if TYPE_CHECKING:
-    from matter_server.client.matter import Matter
+    from matter_server.client import MatterClient
 
     from .adapter import MatterAdapter
 
@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter: Matter = hass.data[DOMAIN][config_entry.entry_id]
+    matter: MatterClient = hass.data[DOMAIN][config_entry.entry_id]
     adapter: MatterAdapter = matter.adapter
     adapter.register_platform_handler(Platform.LIGHT, async_add_entities)
 

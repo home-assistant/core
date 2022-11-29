@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from .light import DEVICE_ENTITY as LIGHT_DEVICE_ENTITY
 
 if TYPE_CHECKING:
-    from matter_server.vendor.device_types import DeviceType
+    from matter_server.common.models.device_types import DeviceType
 
     from .entity import MatterEntityDescriptionBaseClass
 
