@@ -35,7 +35,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import async_get_hass
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -164,6 +164,17 @@ def validate_remove_sensor(
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to remove sub-items so we update the options directly.
+    entity_registry = er.async_get(handler.parent_handler.hass)
+    sensors: list[dict[str, Any]] = []
+    sensor: dict[str, Any]
+    for index, sensor in enumerate(handler.options["sensor"]):
+        if str(index) not in removed_indexes:
+            sensors.append(sensor)
+        elif entity_id := entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, sensor[CONF_UNIQUE_ID]
+        ):
+            entity_registry.async_remove(entity_id)
+
     handler.options["sensor"] = [
         value
         for index, value in enumerate(handler.options["sensor"])
