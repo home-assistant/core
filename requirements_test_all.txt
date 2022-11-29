@@ -612,7 +612,7 @@ greeneye_monitor==3.0.3
 gridnet==4.0.0
 
 # homeassistant.components.growatt_server
-growattServer==1.2.4
+growattServer==1.3.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
