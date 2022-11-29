@@ -78,7 +78,7 @@ async def websocket_commission(
     msg: dict[str, Any],
     matter: MatterAdapter,
 ) -> None:
-    """Commission a device to the Matter network."""
+    """Add a device to the network and commission the device."""
     await matter.matter_client.commission_with_code(msg["code"])
     connection.send_result(msg[ID])
 
