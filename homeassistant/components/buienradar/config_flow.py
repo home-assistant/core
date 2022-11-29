@@ -36,12 +36,23 @@ OPTIONS_SCHEMA = vol.Schema(
             SUPPORTED_COUNTRY_CODES
         ),
         vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, step=1),
+            selector.NumberSelectorConfig(
+                min=0,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="seconds",
+            ),
         ),
         vol.Optional(
             CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME
         ): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=5, max=120, step=1),
+            selector.NumberSelectorConfig(
+                min=5,
+                max=120,
+                step=5,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="minutes",
+            ),
         ),
     }
 )
