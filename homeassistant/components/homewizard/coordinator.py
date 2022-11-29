@@ -27,11 +27,13 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
     def __init__(
         self,
         hass: HomeAssistant,
+        entry_id: str,
         host: str,
     ) -> None:
         """Initialize Update Coordinator."""
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        self.entry_id = entry_id
         self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
 
     async def _async_update_data(self) -> DeviceResponseEntry:
@@ -54,21 +56,16 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise UpdateFailed(ex) from ex
 
         except DisabledError as ex:
-            if not self.api_disabled and self.config_entry:
+            if not self.api_disabled:
                 self.api_disabled = True
-                self.config_entry.async_start_reauth(self.hass)
 
-            # Exponentially increase update interval
-            if (
-                self.update_interval is not None
-                and self.update_interval < MAX_UPDATE_INTERVAL
-            ):
-                self.update_interval = self.update_interval * 2
+                # Do not reload when performing first refresh
+                if self.data is not None:
+                    await self.hass.config_entries.async_reload(self.entry_id)
+
             raise UpdateFailed(ex) from ex
 
         else:
-            if self.api_disabled:
-                self.api_disabled = False
-                self.update_interval = UPDATE_INTERVAL
+            self.api_disabled = False
 
         return data
