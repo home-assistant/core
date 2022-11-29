@@ -10,7 +10,8 @@
             "user": {
                 "data": {
                     "zip_code": "PS\u010c"
-                }
+                },
+                "description": "Vypl\u0148te PS\u010c v USA alebo Kanade."
             }
         }
     }

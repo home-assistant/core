@@ -6,8 +6,10 @@
         },
         "error": {
             "bad_certificate": "Certifik\u00e1t CA je neplatn\u00fd",
+            "bad_client_cert_key": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d nie s\u00fa platn\u00fdm p\u00e1rom",
             "bad_ws_headers": "Zadajte platn\u00e9 hlavi\u010dky HTTP ako objekt JSON",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_inclusion": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d musia by\u0165 nakonfigurovan\u00e9 spolo\u010dne"
         },
         "step": {
             "broker": {
@@ -23,6 +25,7 @@
                 }
             },
             "hassio_confirm": {
+                "description": "Chcete nakonfigurova\u0165 dom\u00e1ceho asistenta na pripojenie k brokerovi MQTT poskytovan\u00e9mu doplnkom {addon}?",
                 "title": "MQTT Broker cez doplnok Home Assistant"
             }
         }
@@ -37,13 +40,18 @@
             "button_6": "\u0160ieste tla\u010didlo",
             "turn_off": "Vypn\u00fa\u0165",
             "turn_on": "Zapn\u00fa\u0165"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" kliknut\u00e9 dvakr\u00e1t"
         }
     },
     "options": {
         "error": {
             "bad_certificate": "Certifik\u00e1t CA je neplatn\u00fd",
+            "bad_client_cert_key": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d nie s\u00fa platn\u00fdm p\u00e1rom",
             "bad_ws_headers": "Zadajte platn\u00e9 hlavi\u010dky HTTP ako objekt JSON",
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_inclusion": "Certifik\u00e1t klienta a s\u00fakromn\u00fd k\u013e\u00fa\u010d musia by\u0165 nakonfigurovan\u00e9 spolo\u010dne"
         },
         "step": {
             "broker": {
@@ -59,6 +67,10 @@
                 }
             },
             "options": {
+                "data": {
+                    "will_payload": "Odo\u0161le z\u00e1\u0165a\u017e",
+                    "will_qos": "Odo\u0161le QoS"
+                },
                 "title": "MQTT mo\u017enosti"
             }
         }

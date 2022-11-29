@@ -21,6 +21,11 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Predpove\u010f po\u010dasia"
+                }
+            },
             "user": {
                 "data": {
                     "forecast": "Predpove\u010f po\u010dasia"

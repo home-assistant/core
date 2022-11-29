@@ -9,10 +9,34 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Cesta k zariadeniu USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Cesta k zariadeniu USB"
+                }
+            },
             "user": {
                 "data": {
                     "email": "Email",
                     "password": "Heslo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Cesta k zariadeniu USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Cesta k zariadeniu USB"
                 }
             }
         }

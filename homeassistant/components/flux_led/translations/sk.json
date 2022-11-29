@@ -5,6 +5,9 @@
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
         },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {
@@ -13,6 +16,15 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Zvolen\u00fd re\u017eim jasu."
                 }
             }
         }
