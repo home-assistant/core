@@ -195,6 +195,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
             )
-        ) is not None:
-            self._attr_native_value = attr_val
-            self.async_write_ha_state()
+        ) is None and self.entity_description.key in ["devTemperature", "loraInfo"]:
+            return
+        self._attr_native_value = attr_val
+        self.async_write_ha_state()
