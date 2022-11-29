@@ -173,6 +173,17 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a OpenUV options flow."""
 
+    INIT_SCHEMA = vol.Schema(
+        {
+            vol.Optional(
+                CONF_FROM_WINDOW, description={"suggested_value": DEFAULT_FROM_WINDOW}
+            ): vol.Coerce(float),
+            vol.Optional(
+                CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
+            ): vol.Coerce(float),
+        }
+    )
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
         self.entry = entry
@@ -186,24 +197,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FROM_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_TO_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_TO_WINDOW, DEFAULT_TO_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                self.INIT_SCHEMA, self.entry.options
             ),
         )
