@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.47
+AIOAladdinConnect==0.1.48
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -137,13 +137,13 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.09.3
+aioecowitt==2022.11.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==12.0.0
+aioesphomeapi==12.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -171,7 +171,7 @@ aiohue==4.5.0
 aiokafka==0.7.2
 
 # homeassistant.components.lifx
-aiolifx==0.8.6
+aiolifx==0.8.7
 
 # homeassistant.components.lifx
 aiolifx_effects==0.3.0
@@ -248,13 +248,13 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.1.0
+aioswitcher==3.2.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.4
+aiotractive==0.5.5
 
 # homeassistant.components.unifi
 aiounifi==41
@@ -361,10 +361,10 @@ blinkpy==0.19.2
 bluemaestro-ble==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.8.0
+bluetooth-adapters==0.11.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.4.0
+bluetooth-auto-recovery==0.5.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.led_ble
@@ -661,7 +661,7 @@ hlk-sw16==0.0.9
 hole==0.7.0
 
 # homeassistant.components.workday
-holidays==0.16
+holidays==0.17.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20221108.0
@@ -670,7 +670,7 @@ home-assistant-frontend==20221108.0
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.7
+homematicip==1.0.11
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -769,7 +769,7 @@ luftdaten==0.7.4
 lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
-mac-vendor-lookup==0.1.11
+mac-vendor-lookup==0.1.12
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -847,7 +847,7 @@ nexia==2.0.6
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.1.1
+nextdns==1.2.2
 
 # homeassistant.components.nibe_heatpump
 nibe==1.3.0
@@ -956,7 +956,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.7
+plugwise==0.25.12
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1026,7 +1026,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.25.6
+pyTibber==0.26.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1283,7 +1283,7 @@ pyotgw==2.1.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.6
+pyoverkiz==1.7.1
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1328,7 +1328,7 @@ pyruckus==0.16
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.21
+pysensibo==1.0.22
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1399,7 +1399,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.11
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.1.0
+python-homewizard-energy==1.3.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1449,13 +1449,13 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.1
+pytrafikverket==0.2.2
 
 # homeassistant.components.usb
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.4.1
+pyunifiprotect==4.5.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1694,7 +1694,7 @@ total_connect_client==2022.10
 transmissionrpc==0.11
 
 # homeassistant.components.twinkly
-ttls==1.4.3
+ttls==1.5.1
 
 # homeassistant.components.tuya
 tuya-iot-py-sdk==0.6.6
@@ -1793,7 +1793,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.12.2
 
 # homeassistant.components.knx
-xknx==1.2.1
+xknx==2.0.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1807,7 +1807,7 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.9.5
+yalexs-ble==1.9.7
 
 # homeassistant.components.august
 yalexs==1.2.6
@@ -1816,7 +1816,7 @@ yalexs==1.2.6
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.1.0
+yolink-api==0.1.5
 
 # homeassistant.components.youless
 youless-api==0.16

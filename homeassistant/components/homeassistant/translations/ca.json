@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "No s'ha configurat cap pa\u00eds, si us plau, actualitza la configuraci\u00f3 fent clic al bot\u00f3 \"m\u00e9s informaci\u00f3\" a continuaci\u00f3.",
+            "title": "El pa\u00eds no s'ha configurat"
+        },
         "historic_currency": {
             "description": "El valor de moneda {currency} ja no s'utilitza, modifica la configuraci\u00f3 del valor de moneda.",
             "title": "El valor de moneda configurat ja no s'utilitza"

@@ -1138,6 +1138,7 @@ omit =
     homeassistant/components/skybell/switch.py
     homeassistant/components/slack/__init__.py
     homeassistant/components/slack/notify.py
+    homeassistant/components/slack/sensor.py
     homeassistant/components/slide/*
     homeassistant/components/slimproto/__init__.py
     homeassistant/components/slimproto/media_player.py

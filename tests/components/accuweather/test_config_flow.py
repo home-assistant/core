@@ -172,7 +172,7 @@ async def test_options_flow(hass):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_FORECAST: True}

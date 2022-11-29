@@ -1,0 +1,43 @@
+{
+    "issues": {
+        "unsupported": {
+            "description": "Syst\u00e9m nie je podporovan\u00fd z {reason}. Ak sa chcete dozvedie\u0165 viac a ako to opravi\u0165, pou\u017eite odkaz.",
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 {reason}"
+        },
+        "unsupported_cgroup_version": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 verzia CGroup"
+        },
+        "unsupported_connectivity_check": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Kontrola pripojenia je vypnut\u00e1"
+        },
+        "unsupported_dbus": {
+            "title": "Nepodporovan\u00fd syst\u00e9m - probl\u00e9my s D-Bus"
+        },
+        "unsupported_dns_server": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 probl\u00e9my so serverom DNS"
+        },
+        "unsupported_docker_configuration": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Docker je nespr\u00e1vne nakonfigurovan\u00fd"
+        },
+        "unsupported_docker_version": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 verzia Docker"
+        },
+        "unsupported_lxc": {
+            "title": "Nepodporovan\u00fd syst\u00e9m - zisten\u00e9 LXC"
+        },
+        "unsupported_software": {
+            "title": "Nepodporovan\u00fd syst\u00e9m \u2013 Nepodporovan\u00fd softv\u00e9r"
+        }
+    },
+    "system_health": {
+        "info": {
+            "agent_version": "Verzia agenta",
+            "docker_version": "Verzia Dockera",
+            "host_os": "Hostite\u013esk\u00fd opera\u010dn\u00fd syst\u00e9m",
+            "installed_addons": "Nain\u0161talovan\u00e9 doplnky",
+            "supported": "Podporovan\u00e9",
+            "update_channel": "Aktualizova\u0165 kan\u00e1l",
+            "version_api": "Verzia API"
+        }
+    }
+}

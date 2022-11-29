@@ -27,6 +27,7 @@ from .const import (
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
+    CONF_COUNTRY,
     CONF_CURRENCY,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
@@ -35,6 +36,7 @@ from .const import (
     CONF_EXTERNAL_URL,
     CONF_ID,
     CONF_INTERNAL_URL,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
@@ -204,16 +206,36 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 
 
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
-    if currency in HISTORIC_CURRENCIES:
-        ir.async_create_issue(
-            hass,
-            "homeassistant",
-            "historic_currency",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="historic_currency",
-            translation_placeholders={"currency": currency},
-        )
+    if currency not in HISTORIC_CURRENCIES:
+        ir.async_delete_issue(hass, "homeassistant", "historic_currency")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "historic_currency",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="historic_currency",
+        translation_placeholders={"currency": currency},
+    )
+
+
+def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None:
+    if country is not None:
+        ir.async_delete_issue(hass, "homeassistant", "country_not_configured")
+        return
+
+    ir.async_create_issue(
+        hass,
+        "homeassistant",
+        "country_not_configured",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/general",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="country_not_configured",
+    )
 
 
 def _validate_currency(data: Any) -> Any:
@@ -281,6 +303,8 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
+            vol.Optional(CONF_COUNTRY): cv.country,
+            vol.Optional(CONF_LANGUAGE): cv.language,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -560,6 +584,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
             CONF_CURRENCY,
+            CONF_COUNTRY,
+            CONF_LANGUAGE,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -574,11 +600,14 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
+        (CONF_COUNTRY, "country"),
+        (CONF_LANGUAGE, "language"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
 
     _raise_issue_if_historic_currency(hass, hass.config.currency)
+    _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])

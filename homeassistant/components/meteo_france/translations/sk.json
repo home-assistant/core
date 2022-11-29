@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Mesto"
+                },
+                "description": "Vyberte si svoje mesto zo zoznamu"
+            },
+            "user": {
+                "data": {
+                    "city": "Mesto"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Re\u017eim predpovede"
+                }
+            }
+        }
+    }
+}

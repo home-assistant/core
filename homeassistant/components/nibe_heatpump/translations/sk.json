@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "address_in_use": "Vybran\u00fd port po\u010d\u00favania sa u\u017e v tomto syst\u00e9me pou\u017e\u00edva.",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "modbus": {
+                "data": {
+                    "modbus_url": "Modbus URL",
+                    "model": "Model tepeln\u00e9ho \u010derpadla"
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "ip_address": "Vzdialen\u00e1 adresa",
+                    "model": "Model tepeln\u00e9ho \u010derpadla",
+                    "remote_read_port": "Port pre vzdialen\u00e9 \u010d\u00edtanie",
+                    "remote_write_port": "Port pre vzdialen\u00fd z\u00e1pis"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
+                }
+            }
+        }
+    }
+}

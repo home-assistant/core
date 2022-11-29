@@ -67,12 +67,15 @@ class BaseHaScanner:
         """Return diagnostic information about the scanner."""
         return {
             "type": self.__class__.__name__,
-            "discovered_devices": [
+            "discovered_devices_and_advertisement_data": [
                 {
-                    "name": device.name,
-                    "address": device.address,
+                    "name": device_adv[0].name,
+                    "address": device_adv[0].address,
+                    "rssi": device_adv[0].rssi,
+                    "advertisement_data": device_adv[1],
+                    "details": device_adv[0].details,
                 }
-                for device in self.discovered_devices
+                for device_adv in self.discovered_devices_and_advertisement_data.values()
             ],
         }
 
@@ -160,6 +163,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         service_data: dict[str, bytes],
         manufacturer_data: dict[int, bytes],
         tx_power: int | None,
+        details: dict[Any, Any],
     ) -> None:
         """Call the registered callback."""
         now = MONOTONIC_TIME()
@@ -199,7 +203,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=local_name,
-            details=self._details,
+            details=self._details | details,
             rssi=rssi,  # deprecated, will be removed in newer bleak
         )
         self._discovered_device_advertisement_datas[address] = (

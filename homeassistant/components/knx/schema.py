@@ -134,7 +134,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
     if dpt_class is None:
         raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
-    # Inifinity is not supported by Home Assistant frontend so user defined
+    # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if if xknx DPTNumeric subclass defines it as limit.
     if min_config is None and dpt_class.value_min == float("-inf"):
         raise vol.Invalid(f"'min' key required for value type '{value_type}'")

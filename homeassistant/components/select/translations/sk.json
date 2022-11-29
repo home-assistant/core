@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "selected_option": "Aktu\u00e1lna vybrat\u00e1 mo\u017enos\u0165 {entity_name}"
+        },
+        "trigger_type": {
+            "current_option_changed": "Mo\u017enos\u0165 {entity_name} sa zmenila"
+        }
+    },
+    "title": "Vyberte"
+}
