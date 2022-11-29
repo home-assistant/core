@@ -16,7 +16,8 @@ mypy==0.991
 pre-commit==2.20.0
 pylint==2.15.6
 pipdeptree==2.3.1
-pytest-aiohttp==0.3.0
+pytest-asyncio==0.20.2
+pytest-aiohttp==1.0.4
 pytest-cov==3.0.0
 pytest-freezegun==0.4.2
 pytest-socket==0.5.1
