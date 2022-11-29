@@ -1,6 +1,7 @@
 """Tests for the schema based data entry flows."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     wrapped_entity_config_entry_title,
@@ -455,6 +458,13 @@ async def test_suggested_values(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
+    def _validate_user_input(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        if user_input["option1"] == "not a valid value":
+            raise SchemaFlowError("option1 not using a valid value")
+        return user_input
+
     OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "init": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_1"),
         "step_1": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_2"),
@@ -463,7 +473,12 @@ async def test_suggested_values(
             suggested_values=lambda _: {"option1": "a random override"},
             next_step="step_3",
         ),
-        "step_3": SchemaFlowFormStep(OPTIONS_SCHEMA, suggested_values=None),
+        "step_3": SchemaFlowFormStep(
+            OPTIONS_SCHEMA, suggested_values=None, next_step="step_4"
+        ),
+        "step_4": SchemaFlowFormStep(
+            OPTIONS_SCHEMA, validate_user_input=_validate_user_input
+        ),
     }
 
     class TestFlow(SchemaConfigFlowHandler, domain="test"):
@@ -514,3 +529,29 @@ async def test_suggested_values(
     schema_keys: list[vol.Optional] = list(result["data_schema"].schema.keys())
     assert schema_keys == ["option1"]
     assert schema_keys[0].description is None
+
+    # Go to step 4, suggested values should be the user input
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"option1": "blabla"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "step_4"
+    schema_keys: list[vol.Optional] = list(result["data_schema"].schema.keys())
+    assert schema_keys == ["option1"]
+    assert schema_keys[0].description == {"suggested_value": "blabla"}
+
+    # Incorrect value in step 4, suggested values should be the user input
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"option1": "not a valid value"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "step_4"
+    schema_keys: list[vol.Optional] = list(result["data_schema"].schema.keys())
+    assert schema_keys == ["option1"]
+    assert schema_keys[0].description == {"suggested_value": "not a valid value"}
+
+    # Correct value in step 4, end of flow
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"option1": "blabla"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
