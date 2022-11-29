@@ -3,9 +3,7 @@
   "name": "Epic Games Store",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epic_games_store",
-  "requirements": [
-    "http://github.com/Quentame/epicstore_api/tarball/bump-requests-drop-python3.6#egg"
-  ],
+  "requirements": ["epicstore-api==0.1.4"],
   "codeowners": ["@Quentame"],
   "iot_class": "cloud_polling"
 }
