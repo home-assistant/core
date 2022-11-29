@@ -143,7 +143,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==12.0.1
+aioesphomeapi==12.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1455,7 +1455,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.4.1
+pyunifiprotect==4.5.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
