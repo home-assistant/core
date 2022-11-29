@@ -26,7 +26,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
-    ATTR_TRANSLATION_KEY,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
@@ -618,9 +617,6 @@ class Entity(ABC):
 
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
-
-        if (translation_key := self.translation_key) is not None:
-            attr[ATTR_TRANSLATION_KEY] = translation_key
 
         def friendly_name() -> str | None:
             """Return the friendly name.
