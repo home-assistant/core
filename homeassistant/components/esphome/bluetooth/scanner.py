@@ -27,6 +27,7 @@ class ESPHomeScanner(BaseHaRemoteScanner):
             adv.service_data,
             adv.manufacturer_data,
             None,
+            {"address_type": adv.address_type},
         )
 
     async def async_diagnostics(self) -> dict[str, Any]:
@@ -39,6 +40,7 @@ class ESPHomeScanner(BaseHaRemoteScanner):
                     "address": device_adv[0].address,
                     "rssi": device_adv[0].rssi,
                     "advertisement_data": device_adv[1],
+                    "details": device_adv[0].details,
                 }
                 for device_adv in self.discovered_devices_and_advertisement_data.values()
             ],

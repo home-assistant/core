@@ -64,6 +64,7 @@ async def test_remote_scanner(hass, enable_bluetooth):
                 advertisement_data.service_data,
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -134,6 +135,7 @@ async def test_remote_scanner_expires_connectable(hass, enable_bluetooth):
                 advertisement_data.service_data,
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -204,6 +206,7 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
                 advertisement_data.service_data,
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -297,6 +300,7 @@ async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
                 advertisement_data.service_data,
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
             )
 
     new_info_callback = manager.scanner_adv_received
