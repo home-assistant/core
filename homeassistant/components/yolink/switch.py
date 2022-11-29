@@ -34,7 +34,6 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    device_type: str | None = None
     plug_index: int | None = None
 
 
@@ -44,28 +43,24 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.OUTLET,
         name="State",
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
-        device_type=ATTR_DEVICE_OUTLET,
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
         name="State",
         icon="mdi:pipe",
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
-        device_type=ATTR_DEVICE_MANIPULATOR,
     ),
     YoLinkSwitchEntityDescription(
         key="switch_state",
         name="State",
         device_class=SwitchDeviceClass.SWITCH,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
-        device_type=ATTR_DEVICE_SWITCH,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_usb_ports",
         name="UsbPorts",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
-        device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=0,
     ),
     YoLinkSwitchEntityDescription(
@@ -73,7 +68,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         name="Plug1",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
-        device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=1,
     ),
     YoLinkSwitchEntityDescription(
@@ -81,7 +75,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         name="Plug2",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
-        device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=2,
     ),
     YoLinkSwitchEntityDescription(
@@ -89,7 +82,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         name="Plug3",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
-        device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=3,
     ),
     YoLinkSwitchEntityDescription(
@@ -97,7 +89,6 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         name="Plug4",
         device_class=SwitchDeviceClass.OUTLET,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET,
-        device_type=ATTR_DEVICE_MULTI_OUTLET,
         plug_index=4,
     ),
 )

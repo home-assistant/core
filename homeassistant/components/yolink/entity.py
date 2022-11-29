@@ -72,7 +72,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(yl_client_err) from yl_client_err
 
-    async def call_device(self, request: ClientRequest):
+    async def call_device(self, request: ClientRequest) -> None:
         """Call device api."""
         try:
             # call_device will check result, fail by raise YoLinkClientError
