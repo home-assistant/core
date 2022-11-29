@@ -15,12 +15,16 @@
             "configure_addon": {
                 "data": {
                     "usb_path": "Cesta k zariadeniu USB"
-                }
+                },
+                "description": "Ak tieto polia zostan\u00fa pr\u00e1zdne, doplnok vygeneruje bezpe\u010dnostn\u00e9 k\u013e\u00fa\u010de."
             },
             "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "title": "Vyberte sp\u00f4sob pripojenia"
             }
         }
     },
@@ -48,12 +52,16 @@
                 "data": {
                     "log_level": "\u00darove\u0148 denn\u00edka",
                     "usb_path": "Cesta k zariadeniu USB"
-                }
+                },
+                "description": "Ak tieto polia zostan\u00fa pr\u00e1zdne, doplnok vygeneruje bezpe\u010dnostn\u00e9 k\u013e\u00fa\u010de."
             },
             "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "title": "Vyberte sp\u00f4sob pripojenia"
             }
         }
     }

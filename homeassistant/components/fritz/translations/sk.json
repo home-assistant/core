@@ -17,19 +17,36 @@
         "step": {
             "confirm": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Objavil FRITZ!Box: {name} \n\n Nastavte n\u00e1stroje FRITZ!Box na ovl\u00e1danie v\u00e1\u0161ho {name}",
+                "title": "Nastavte n\u00e1stroje FRITZ!Box"
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Aktualizujte poverenia FRITZ!Box Tools pre: {host}. \n\n FRITZ!Box Tools sa nedok\u00e1\u017ee prihl\u00e1si\u0165 do v\u00e1\u0161ho FRITZ!Box.",
+                "title": "Aktualiz\u00e1cia FRITZ!Box Tools \u2013 poverenia"
             },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
                     "password": "Heslo",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Nastavte n\u00e1stroje FRITZ!Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "old_discovery": "Povoli\u0165 star\u00fa met\u00f3du zis\u0165ovania"
                 }
             }
         }

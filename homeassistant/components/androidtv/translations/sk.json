@@ -1,17 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "invalid_unique_id": "Nie je mo\u017en\u00e9 ur\u010di\u0165 platn\u00e9 jedine\u010dn\u00e9 ID zariadenia"
         },
         "error": {
+            "adbkey_not_file": "S\u00fabor k\u013e\u00fa\u010da ADB sa nena\u0161iel",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_host": "Neplatn\u00fd n\u00e1zov hostite\u013ea alebo IP adresa",
+            "key_and_server": "Poskytnite iba k\u013e\u00fa\u010d ADB alebo server ADB",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {
                 "data": {
                     "adb_server_ip": "IP adresa servera ADB (nechajte pr\u00e1zdnu, ak sa nepou\u017e\u00edva)",
+                    "adb_server_port": "Port servera ADB",
+                    "adbkey": "Cesta k s\u00faboru k\u013e\u00fa\u010da ADB (pre automatick\u00e9 vygenerovanie nechajte pr\u00e1zdne)",
                     "device_class": "Typ zariadenia",
                     "host": "Hostite\u013e",
                     "port": "Port"
@@ -37,6 +42,7 @@
             },
             "rules": {
                 "data": {
+                    "rule_id": "ID aplik\u00e1cie",
                     "rule_values": "Zoznam pravidiel zis\u0165ovania stavu (pozri dokument\u00e1ciu)"
                 }
             }

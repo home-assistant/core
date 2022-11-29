@@ -9,7 +9,8 @@
         "step": {
             "cloud": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
             "local": {
@@ -17,6 +18,11 @@
                     "ip_address": "IP adresa"
                 },
                 "description": "Lok\u00e1lna IP adresa zariadenia."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Vyberte typ pripojenia"
+                }
             }
         }
     }

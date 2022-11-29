@@ -6,12 +6,19 @@
             "no_unconfigured_devices": "Nena\u0161li sa \u017eiadne nenakonfigurovan\u00e9 zariadenia.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
+        "error": {
+            "linking": "P\u00e1rovanie zlyhalo, sk\u00faste to znova. Je MicroBot v re\u017eime p\u00e1rovania?"
+        },
         "flow_title": "{name}",
         "step": {
             "init": {
                 "data": {
-                    "address": "Adresa zariadenia"
+                    "address": "Adresa zariadenia",
+                    "name": "N\u00e1zov"
                 }
+            },
+            "link": {
+                "title": "P\u00e1rovanie"
             }
         }
     }

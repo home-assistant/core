@@ -6,6 +6,13 @@
         },
         "error": {
             "not_found": "V sieti sa nena\u0161li \u017eiadne zariadenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "K\u00f3d stanice"
+                }
+            }
         }
     }
 }

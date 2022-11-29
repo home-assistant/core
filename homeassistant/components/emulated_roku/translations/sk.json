@@ -8,7 +8,8 @@
                 "data": {
                     "host_ip": "IP adresa hostite\u013ea",
                     "name": "N\u00e1zov"
-                }
+                },
+                "title": "Definujte konfigur\u00e1ciu servera"
             }
         }
     }
