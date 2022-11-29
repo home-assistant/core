@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES,
     SensorEntity,
 )
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    CONF_TYPE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -54,11 +60,14 @@ class KNXSensor(KnxEntity, SensorEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         super().__init__(_create_sensor(xknx, config))
-        self._attr_device_class = (
-            self._device.ha_device_class()
-            if self._device.ha_device_class() in DEVICE_CLASSES
-            else None
-        )
+        if device_class := config.get(CONF_DEVICE_CLASS):
+            self._attr_device_class = device_class
+        else:
+            self._attr_device_class = (
+                self._device.ha_device_class()
+                if self._device.ha_device_class() in DEVICE_CLASSES
+                else None
+            )
         self._attr_force_update = self._device.always_callback
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)

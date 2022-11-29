@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "init": {
+                "description": "Chcete nastavi\u0165 {name} ({host})?"
+            }
+        }
+    }
+}

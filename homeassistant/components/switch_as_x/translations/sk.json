@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Prep\u00edna\u010d",
+                    "target_domain": "Nov\u00fd typ"
+                }
+            }
+        }
+    }
+}

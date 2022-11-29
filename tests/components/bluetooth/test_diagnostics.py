@@ -4,9 +4,9 @@
 from unittest.mock import ANY, patch
 
 from bleak.backends.scanner import BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
 from . import generate_advertisement_data, inject_advertisement
 
@@ -24,8 +24,13 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
-        [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
+        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        {
+            "44:44:33:11:23:45": (
+                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                generate_advertisement_data(local_name="x"),
+            )
+        },
     ), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Linux",
@@ -68,15 +73,23 @@ async def test_diagnostics(
             "adapters": {
                 "hci0": {
                     "address": "00:00:00:00:00:01",
-                    "hw_version": "usbid:1234",
+                    "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": False,
-                    "sw_version": "BlueZ 4.63",
+                    "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
+                    "product": "Bluetooth Adapter 5.0",
+                    "product_id": "aa01",
+                    "vendor_id": "cc01",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
-                    "hw_version": "usbid:1234",
+                    "hw_version": "usb:v1D6Bp0246d053F",
                     "passive_scan": True,
-                    "sw_version": "BlueZ 4.63",
+                    "sw_version": "homeassistant",
+                    "manufacturer": "ACME",
+                    "product": "Bluetooth Adapter 5.0",
+                    "product_id": "aa01",
+                    "vendor_id": "cc01",
                 },
             },
             "dbus": {
@@ -99,15 +112,23 @@ async def test_diagnostics(
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
-                        "hw_version": "usbid:1234",
+                        "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": False,
-                        "sw_version": "BlueZ 4.63",
+                        "sw_version": "homeassistant",
+                        "manufacturer": "ACME",
+                        "product": "Bluetooth Adapter 5.0",
+                        "product_id": "aa01",
+                        "vendor_id": "cc01",
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
-                        "hw_version": "usbid:1234",
+                        "hw_version": "usb:v1D6Bp0246d053F",
                         "passive_scan": True,
-                        "sw_version": "BlueZ 4.63",
+                        "sw_version": "homeassistant",
+                        "manufacturer": "ACME",
+                        "product": "Bluetooth Adapter 5.0",
+                        "product_id": "aa01",
+                        "vendor_id": "cc01",
                     },
                 },
                 "advertisement_tracker": {
@@ -120,8 +141,22 @@ async def test_diagnostics(
                 "scanners": [
                     {
                         "adapter": "hci0",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                                "details": None,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -131,8 +166,22 @@ async def test_diagnostics(
                     },
                     {
                         "adapter": "hci0",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                                "details": None,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -142,8 +191,22 @@ async def test_diagnostics(
                     },
                     {
                         "adapter": "hci1",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "x",
+                                    {},
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                                "details": None,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -171,8 +234,13 @@ async def test_diagnostics_macos(
     )
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
-        [BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45")],
+        "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices_and_advertisement_data",
+        {
+            "44:44:33:11:23:45": (
+                BLEDevice(name="x", rssi=-60, address="44:44:33:11:23:45"),
+                switchbot_adv,
+            )
+        },
     ), patch(
         "homeassistant.components.bluetooth.diagnostics.platform.system",
         return_value="Darwin",
@@ -200,6 +268,10 @@ async def test_diagnostics_macos(
                     "address": "00:00:00:00:00:00",
                     "passive_scan": False,
                     "sw_version": ANY,
+                    "manufacturer": "Apple",
+                    "product": "Unknown MacOS Model",
+                    "product_id": "Unknown",
+                    "vendor_id": "Unknown",
                 }
             },
             "manager": {
@@ -208,6 +280,10 @@ async def test_diagnostics_macos(
                         "address": "00:00:00:00:00:00",
                         "passive_scan": False,
                         "sw_version": ANY,
+                        "manufacturer": "Apple",
+                        "product": "Unknown MacOS Model",
+                        "product_id": "Unknown",
+                        "vendor_id": "Unknown",
                     }
                 },
                 "advertisement_tracker": {
@@ -227,6 +303,10 @@ async def test_diagnostics_macos(
                             -127,
                             [[]],
                         ],
+                        "device": {
+                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                        },
                         "connectable": True,
                         "manufacturer_data": {
                             "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
@@ -251,6 +331,10 @@ async def test_diagnostics_macos(
                             -127,
                             [[]],
                         ],
+                        "device": {
+                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                        },
                         "connectable": True,
                         "manufacturer_data": {
                             "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
@@ -266,8 +350,27 @@ async def test_diagnostics_macos(
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
-                        "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x"}
+                        "discovered_devices_and_advertisement_data": [
+                            {
+                                "address": "44:44:33:11:23:45",
+                                "advertisement_data": [
+                                    "wohand",
+                                    {
+                                        "1": {
+                                            "__type": "<class " "'bytes'>",
+                                            "repr": "b'\\x01'",
+                                        }
+                                    },
+                                    {},
+                                    [],
+                                    -127,
+                                    -127,
+                                    [[]],
+                                ],
+                                "name": "x",
+                                "rssi": -60,
+                                "details": None,
+                            }
                         ],
                         "last_detection": ANY,
                         "name": "Core Bluetooth",

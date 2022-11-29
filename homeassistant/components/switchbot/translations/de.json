@@ -20,12 +20,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Ger\u00e4teadresse",
-                    "mac": "MAC-Adresse des Ger\u00e4ts",
-                    "name": "Name",
-                    "password": "Passwort"
-                },
-                "title": "Switchbot-Ger\u00e4t einrichten"
+                    "address": "Ger\u00e4teadresse"
+                }
             }
         }
     },
@@ -33,10 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Anzahl der Wiederholungen",
-                    "retry_timeout": "Zeit\u00fcberschreitung zwischen Wiederholungsversuchen",
-                    "scan_timeout": "Wie lange nach Anzeigendaten suchen",
-                    "update_time": "Zeit zwischen Aktualisierungen (Sekunden)"
+                    "retry_count": "Anzahl der Wiederholungen"
                 }
             }
         }

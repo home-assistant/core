@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Tingkat konsentrasi senyawa organik volatil {entity_name} saat ini",
             "is_voltage": "Tegangan {entity_name} saat ini",
             "is_volume": "Volume {entity_name} saat ini",
+            "is_water": "Air pada {entity_name} saat ini",
             "is_weight": "Berat {entity_name} saat ini"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "Perubahan konsentrasi senyawa organik volatil {entity_name}",
             "voltage": "Perubahan tegangan {entity_name}",
             "volume": "Perubahan volume {entity_name}",
+            "water": "Perubahan air {entity_name}",
             "weight": "Perubahan berat {entity_name}"
         }
     },

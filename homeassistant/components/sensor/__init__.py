@@ -88,6 +88,30 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
+    # Non-numerical device classes
+    DATE = "date"
+    """Date.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    DURATION = "duration"
+    """Fixed duration.
+
+    Unit of measurement: `d`, `h`, `min`, `s`
+    """
+
+    TIMESTAMP = "timestamp"
+    """Timestamp.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    # Numerical device classes, these should be aligned with NumberDeviceClass
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
@@ -124,26 +148,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `A`
     """
 
-    DATE = "date"
-    """Date.
-
-    Unit of measurement: `None`
-
-    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
-    """
-
     DISTANCE = "distance"
     """Generic distance.
 
     Unit of measurement: `LENGTH_*` units
     - SI /metric: `mm`, `cm`, `m`, `km`
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
-    """
-
-    DURATION = "duration"
-    """Fixed duration.
-
-    Unit of measurement: `d`, `h`, `min`, `s`
     """
 
     ENERGY = "energy"
@@ -244,6 +254,14 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    PRECIPITATION = "precipitation"
+    """Precipitation.
+
+    Unit of measurement:
+    - SI / metric: `mm`
+    - USCS / imperial: `in`
+    """
+
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
@@ -293,14 +311,6 @@ class SensorDeviceClass(StrEnum):
     """Temperature.
 
     Unit of measurement: `°C`, `°F`
-    """
-
-    TIMESTAMP = "timestamp"
-    """Timestamp.
-
-    Unit of measurement: `None`
-
-    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -392,6 +402,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,

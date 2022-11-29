@@ -1,4 +1,6 @@
 """Test the Shelly config flow."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import (
@@ -10,8 +12,15 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    CONF_BLE_SCANNER_MODE,
+    DOMAIN,
+    BLEScannerMode,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.setup import async_setup_component
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 
@@ -513,18 +522,26 @@ async def test_form_auth_errors_test_connection_gen2(hass, error):
     assert result3["errors"] == {"base": base_error}
 
 
-async def test_zeroconf(hass):
+@pytest.mark.parametrize(
+    "gen, get_info",
+    [
+        (1, {"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": 1}),
+        (2, {"mac": "test-mac", "model": "SHSW-1", "auth": False, "gen": 2}),
+    ],
+)
+async def test_zeroconf(hass, gen, get_info):
     """Test we get the form."""
 
-    with patch(
-        "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
-    ), patch(
+    with patch("aioshelly.common.get_info", return_value=get_info), patch(
         "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(return_value=Mock(model="SHSW-1", settings=MOCK_SETTINGS)),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
-                settings=MOCK_SETTINGS,
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
             )
         ),
     ):
@@ -560,7 +577,7 @@ async def test_zeroconf(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
-        "gen": 1,
+        "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -880,3 +897,170 @@ async def test_reauth_get_info_error(hass, error):
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
+
+
+async def test_options_flow_disabled_gen_1(hass, mock_block_device, hass_ws_client):
+    """Test options are disabled for gen1 devices."""
+    await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass, 1)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+            "domain": "shelly",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_enabled_gen_2(hass, mock_rpc_device, hass_ws_client):
+    """Test options are enabled for gen2 devices."""
+    await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass, 2)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+            "domain": "shelly",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["result"][0]["supports_options"] is True
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_disabled_sleepy_gen_2(
+    hass, mock_rpc_device, hass_ws_client
+):
+    """Test options are disabled for sleepy gen2 devices."""
+    await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass, 2, sleep_period=10)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+            "domain": "shelly",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_ble(hass, mock_rpc_device):
+    """Test setting ble options for gen2 devices."""
+    entry = await init_integration(hass, 2)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_flow_pre_ble_device(hass, mock_pre_ble_rpc_device):
+    """Test setting ble options for gen2 devices with pre ble firmware."""
+    entry = await init_integration(hass, 2)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "ble_unsupported"
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "ble_unsupported"
+
+    await hass.config_entries.async_unload(entry.entry_id)

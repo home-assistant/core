@@ -253,7 +253,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Cloud ceiling",
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda metric: LENGTH_METERS if metric else LENGTH_FEET,
-        value_fn=lambda data, unit: round(data[unit][ATTR_VALUE]),
+        value_fn=lambda data, unit: round(cast(float, data[unit][ATTR_VALUE])),
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",

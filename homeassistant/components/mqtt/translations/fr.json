@@ -13,12 +13,17 @@
                 "data": {
                     "advanced_options": "Options avanc\u00e9es",
                     "broker": "Broker",
-                    "discovery": "Activer la d\u00e9couverte",
+                    "certificate": "T\u00e9l\u00e9verser le certificat de l\u2019autorit\u00e9 de certification personnalis\u00e9",
+                    "client_cert": "T\u00e9l\u00e9verser le certificat client",
+                    "client_key": "T\u00e9l\u00e9verser la cl\u00e9 priv\u00e9e",
                     "password": "Mot de passe",
                     "port": "Port",
                     "protocol": "Protocole MQTT",
                     "set_client_cert": "Utiliser un certificat client",
-                    "username": "Nom d'utilisateur"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'utilisateur",
+                    "ws_headers": "En-t\u00eates WebSocket au format JSON",
+                    "ws_path": "Chemin WebSocket"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
             },
@@ -60,9 +65,7 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Sujet de la naissance non valide.",
             "bad_discovery_prefix": "Pr\u00e9fixe de d\u00e9couverte non valide",
-            "bad_will": "Sujet du testament non valide.",
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
@@ -70,11 +73,17 @@
                 "data": {
                     "advanced_options": "Options avanc\u00e9es",
                     "broker": "Broker",
+                    "certificate": "T\u00e9l\u00e9verser le certificat de l\u2019autorit\u00e9 de certification personnalis\u00e9",
+                    "client_cert": "T\u00e9l\u00e9verser le certificat client",
+                    "client_key": "T\u00e9l\u00e9verser la cl\u00e9 priv\u00e9e",
                     "password": "Mot de passe",
                     "port": "Port",
                     "protocol": "Protocole MQTT",
                     "set_client_cert": "Utiliser un certificat client",
-                    "username": "Nom d'utilisateur"
+                    "transport": "Transport MQTT",
+                    "username": "Nom d'utilisateur",
+                    "ws_headers": "En-t\u00eates WebSocket au format JSON",
+                    "ws_path": "Chemin WebSocket"
                 },
                 "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
                 "title": "Options de courtier"

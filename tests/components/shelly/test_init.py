@@ -1,4 +1,5 @@
 """Test cases for the Shelly component."""
+from __future__ import annotations
 
 from unittest.mock import AsyncMock
 

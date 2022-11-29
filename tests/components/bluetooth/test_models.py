@@ -4,50 +4,24 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import bleak
-from bleak import BleakClient, BleakError
+from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 import pytest
 
-from homeassistant.components.bluetooth.models import (
-    BaseHaScanner,
+from homeassistant.components.bluetooth import BaseHaScanner, HaBluetoothConnector
+from homeassistant.components.bluetooth.wrappers import (
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
-    HaBluetoothConnector,
 )
 
 from . import (
+    MockBleakClient,
     _get_manager,
     generate_advertisement_data,
     inject_advertisement,
     inject_advertisement_with_source,
 )
-
-
-class MockBleakClient(BleakClient):
-    """Mock bleak client."""
-
-    def __init__(self, *args, **kwargs):
-        """Mock init."""
-        super().__init__(*args, **kwargs)
-        self._device_path = "/dev/test"
-
-    @property
-    def is_connected(self) -> bool:
-        """Mock connected."""
-        return True
-
-    async def connect(self, *args, **kwargs):
-        """Mock connect."""
-        return True
-
-    async def disconnect(self, *args, **kwargs):
-        """Mock disconnect."""
-        pass
-
-    async def get_services(self, *args, **kwargs):
-        """Mock get_services."""
-        return []
 
 
 async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
@@ -226,7 +200,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
                 return switchbot_proxy_device_has_connection_slot
             return None
 
-    scanner = FakeScanner(hass, "esp32")
+    scanner = FakeScanner(hass, "esp32", "esp32")
     cancel = manager.async_register_scanner(scanner, True)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
@@ -332,7 +306,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
                 return switchbot_proxy_device_has_connection_slot
             return None
 
-    scanner = FakeScanner(hass, "esp32")
+    scanner = FakeScanner(hass, "esp32", "esp32")
     cancel = manager.async_register_scanner(scanner, True)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot

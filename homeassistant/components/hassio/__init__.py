@@ -47,6 +47,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
+from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .const import (
@@ -55,7 +56,6 @@ from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
     ATTR_COMPRESSED,
-    ATTR_DISCOVERY,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
@@ -74,9 +74,28 @@ from .const import (
     SupervisorEntityModel,
 )
 from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
-from .handler import HassIO, HassioAPIError, api_data
+from .handler import (  # noqa: F401
+    HassIO,
+    HassioAPIError,
+    async_create_backup,
+    async_get_addon_discovery_info,
+    async_get_addon_info,
+    async_get_addon_store_info,
+    async_install_addon,
+    async_restart_addon,
+    async_set_addon_options,
+    async_start_addon,
+    async_stop_addon,
+    async_uninstall_addon,
+    async_update_addon,
+    async_update_core,
+    async_update_diagnostics,
+    async_update_os,
+    async_update_supervisor,
+)
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
+from .repairs import SupervisorRepairs
 from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +122,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_SUPERVISOR_REPAIRS = "supervisor_repairs"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -217,202 +237,6 @@ HARDWARE_INTEGRATIONS = {
     "rpi4-64": "raspberry_pi",
     "yellow": "homeassistant_yellow",
 }
-
-
-@bind_hass
-async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on info.
-
-    The add-on must be installed.
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    return await hassio.get_addon_info(slug)
-
-
-@api_data
-async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on store info.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/store/addons/{slug}"
-    return await hassio.send_command(command, method="get")
-
-
-@bind_hass
-async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> dict:
-    """Update Supervisor diagnostics toggle.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    return await hassio.update_diagnostics(diagnostics)
-
-
-@bind_hass
-@api_data
-async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Install add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/install"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Uninstall add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/uninstall"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_update_addon(
-    hass: HomeAssistant,
-    slug: str,
-    backup: bool = False,
-) -> dict:
-    """Update add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/update"
-    return await hassio.send_command(
-        command,
-        payload={"backup": backup},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Start add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/start"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Restart add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/restart"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Stop add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/stop"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_set_addon_options(
-    hass: HomeAssistant, slug: str, options: dict
-) -> dict:
-    """Set add-on options.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = f"/addons/{slug}/options"
-    return await hassio.send_command(command, payload=options)
-
-
-@bind_hass
-async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
-    """Return discovery data for an add-on."""
-    hassio = hass.data[DOMAIN]
-    data = await hassio.retrieve_discovery_messages()
-    discovered_addons = data[ATTR_DISCOVERY]
-    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
-
-
-@bind_hass
-@api_data
-async def async_create_backup(
-    hass: HomeAssistant, payload: dict, partial: bool = False
-) -> dict:
-    """Create a full or partial backup.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    backup_type = "partial" if partial else "full"
-    command = f"/backups/new/{backup_type}"
-    return await hassio.send_command(command, payload=payload, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
-    """Update Home Assistant Operating System.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = "/os/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_update_supervisor(hass: HomeAssistant) -> dict:
-    """Update Home Assistant Supervisor.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = "/supervisor/update"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_core(
-    hass: HomeAssistant, version: str | None = None, backup: bool = False
-) -> dict:
-    """Update Home Assistant Core.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio = hass.data[DOMAIN]
-    command = "/core/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version, "backup": backup},
-        timeout=None,
-    )
 
 
 @callback
@@ -758,6 +582,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
 
+    # Start listening for problems with supervisor and making repairs
+    hass.data[DATA_SUPERVISOR_REPAIRS] = repairs = SupervisorRepairs(hass, hassio)
+    await repairs.setup()
+
     return True
 
 
@@ -1038,6 +866,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if not scheduled:
@@ -1046,4 +875,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
-        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )

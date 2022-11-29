@@ -176,9 +176,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         self._attr_supported_features = self.get_features()
         self._attr_precision = PRECISION_TENTHS
 
-    def get_features(self) -> int:
+    def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
-        features = 0
+        features = ClimateEntityFeature(0)
         for key in self.device_data.full_features:
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]

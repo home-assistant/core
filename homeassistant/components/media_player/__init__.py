@@ -492,7 +492,7 @@ class MediaPlayerEntity(Entity):
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
     _attr_state: MediaPlayerState | str | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
@@ -692,7 +692,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_group_members
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
@@ -920,9 +920,7 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            await self.hass.async_add_executor_job(
-                self.toggle  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in {
@@ -940,9 +938,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            await self.hass.async_add_executor_job(
-                self.volume_up  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if (
@@ -958,9 +954,7 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            await self.hass.async_add_executor_job(
-                self.volume_down  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if (
@@ -973,9 +967,7 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            await self.hass.async_add_executor_job(
-                self.media_play_pause  # type: ignore[attr-defined]
-            )
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == MediaPlayerState.PLAYING:
@@ -1008,15 +1000,14 @@ class MediaPlayerEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features or 0
         data: dict[str, Any] = {}
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list

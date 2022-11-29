@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Nastavte si WLED na integr\u00e1ciu s Home Assistant."
+            }
+        }
+    }
+}
