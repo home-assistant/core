@@ -256,7 +256,11 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 )
             },
             vol.Optional("entity"): {
-                str: vol.Schema({vol.Optional("state"): {str: cv.string_with_no_html}})
+                str: {
+                    str: vol.Schema(
+                        {vol.Optional("state"): {str: cv.string_with_no_html}}
+                    )
+                }
             },
         }
     )

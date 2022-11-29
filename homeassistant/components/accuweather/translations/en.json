@@ -23,11 +23,13 @@
         }
     },
     "entity": {
-        "pressure_tendency": {
-            "state": {
-                "falling": "Falling",
-                "rising": "Rising",
-                "steady": "Steady"
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Falling",
+                    "rising": "Rising",
+                    "steady": "Steady"
+                }
             }
         }
     },
