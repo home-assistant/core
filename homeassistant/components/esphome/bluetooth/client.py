@@ -41,6 +41,8 @@ CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb"
 CCCD_NOTIFY_BYTES = b"\x01\x00"
 CCCD_INDICATE_BYTES = b"\x02\x00"
 
+MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
+
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +144,9 @@ class ESPHomeClient(BaseBleakClient):
         self._cancel_connection_state: CALLBACK_TYPE | None = None
         self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
         self._disconnected_event: asyncio.Event | None = None
-        self._connection_version: int = 1
+        device_info = self.entry_data.device_info
+        assert device_info is not None
+        self._connection_version = device_info.bluetooth_proxy_version
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -216,13 +220,9 @@ class ESPHomeClient(BaseBleakClient):
         device_info = entry_data.device_info
         assert device_info is not None
         self._mtu = entry_data.get_gatt_mtu_cache(self._address_as_int)
-        # Ask for connection version 2 if the device supports it
-        # since it can significantly improve performance and reduce
-        # the memory usage of the ESP32.
-        self._connection_version = 2 if device_info.bluetooth_proxy_version >= 3 else 1
         has_cache = bool(
             dangerous_use_bleak_cache
-            and self._connection_version >= 2
+            and self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
             and entry_data.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
@@ -367,8 +367,8 @@ class ESPHomeClient(BaseBleakClient):
         """
         address_as_int = self._address_as_int
         entry_data = self.entry_data
-        if self._connection_version >= 2:
-            # If the connection version >= 2, we must use the cache
+        if self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE:
+            # If the connection version >= 3, we must use the cache
             # because the esp has already wiped the services list to
             # save memory.
             dangerous_use_bleak_cache = True
@@ -559,10 +559,10 @@ class ESPHomeClient(BaseBleakClient):
         )
         self._notify_cancels[ble_handle] = cancel_coro
 
-        if self._connection_version < 2:
+        if self._connection_version < MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE:
             return
 
-        # For connection v2 we are responsible for enabling notifications
+        # For connection v3 we are responsible for enabling notifications
         # on the cccd (characteristic client config descriptor) handle since
         # the esp32 will not have resolved the characteristic descriptors to
         # save memory since doing so can exhaust the memory and cause a soft
