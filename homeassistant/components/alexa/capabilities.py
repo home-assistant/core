@@ -656,59 +656,6 @@ class AlexaColorTemperatureController(AlexaCapability):
         return None
 
 
-class AlexaPercentageController(AlexaCapability):
-    """Implements Alexa.PercentageController.
-
-    https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
-    """
-
-    supported_locales = {
-        "de-DE",
-        "en-AU",
-        "en-CA",
-        "en-GB",
-        "en-IN",
-        "en-US",
-        "es-ES",
-        "es-US",
-        "fr-CA",
-        "fr-FR",
-        "hi-IN",
-        "it-IT",
-        "ja-JP",
-        "pt-BR",
-    }
-
-    def name(self):
-        """Return the Alexa API name of this interface."""
-        return "Alexa.PercentageController"
-
-    def properties_supported(self):
-        """Return what properties this entity supports."""
-        return [{"name": "percentage"}]
-
-    def properties_proactively_reported(self):
-        """Return True if properties asynchronously reported."""
-        return True
-
-    def properties_retrievable(self):
-        """Return True if properties can be retrieved."""
-        return True
-
-    def get_property(self, name):
-        """Read and return a property."""
-        if name != "percentage":
-            raise UnsupportedProperty(name)
-
-        if self.entity.domain == fan.DOMAIN:
-            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        if self.entity.domain == cover.DOMAIN:
-            return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
-
-        return 0
-
-
 class AlexaSpeaker(AlexaCapability):
     """Implements Alexa.Speaker.
 
