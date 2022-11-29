@@ -113,8 +113,10 @@ class Analytics:
         if stored:
             self._data = stored
 
-        if self.supervisor:
-            supervisor_info = hassio.get_supervisor_info(self.hass)
+        if (
+            self.supervisor
+            and (supervisor_info := hassio.get_supervisor_info(self.hass)) is not None
+        ):
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
                 if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
