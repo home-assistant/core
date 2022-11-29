@@ -154,7 +154,6 @@ class TwinklyLight(LightEntity):
     def effect(self) -> str | None:
         """Return the current effect."""
         if "name" in self._current_movie:
-            _LOGGER.debug("Current effect '%s'", self._current_movie["name"])
             return f"{self._current_movie['id']} {self._current_movie['name']}"
         return None
 
@@ -164,7 +163,6 @@ class TwinklyLight(LightEntity):
         effect_list = []
         for movie in self._movies:
             effect_list.append(f"{movie['id']} {movie['name']}")
-        _LOGGER.debug("Effect list '%s'", effect_list)
         return effect_list
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -210,7 +208,6 @@ class TwinklyLight(LightEntity):
                     self._client.default_mode = "color"
 
         if ATTR_EFFECT in kwargs:
-            _LOGGER.debug("Setting effect '%s'", kwargs[ATTR_EFFECT])
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
             if "id" not in self._current_movie or int(movie_id) != int(
                 self._current_movie["id"]
@@ -291,7 +288,6 @@ class TwinklyLight(LightEntity):
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
         movies = await self._client.get_saved_movies()
-        _LOGGER.debug("Movies: %s", movies)
         if "movies" in movies:
             self._movies = movies["movies"]
 
