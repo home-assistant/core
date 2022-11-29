@@ -248,7 +248,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Config flow options for Bravia TV."""
 
-    source_list: list[str]
+    data_schema: vol.Schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -263,7 +263,13 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             return self.async_abort(reason="failed_update")
 
         sources = coordinator.source_map.values()
-        self.source_list = [item["title"] for item in sources]
+        source_list = [item["title"] for item in sources]
+        self.data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_IGNORED_SOURCES): cv.multi_select(source_list),
+            }
+        )
+
         return await self.async_step_user()
 
     async def async_step_user(
@@ -275,12 +281,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_IGNORED_SOURCES,
-                        default=self.options.get(CONF_IGNORED_SOURCES),
-                    ): cv.multi_select(self.source_list)
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                self.data_schema, self.options
             ),
         )
