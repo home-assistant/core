@@ -936,7 +936,7 @@ jobs:
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 10
+        timeout-minutes: 15
         shell: bash
         run: |
           . venv/bin/activate
@@ -944,7 +944,7 @@ jobs:
 
           python3 -X dev -m pytest \
             -qq \
-            --timeout=9 \
+            --timeout=20 \
             -n 1 \
             --cov="homeassistant.components.recorder" \
             --cov-report=xml \
