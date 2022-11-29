@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
-from .config import MQTT_BASE_SCHEMA
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -34,7 +34,6 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
-    DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -45,7 +44,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +67,9 @@ def valid_text_size_configuration(config: ConfigType) -> ConfigType:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
         vol.Optional(CONF_MIN, default=0): cv.positive_int,
@@ -80,9 +78,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PATTERN): cv.is_regex,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -168,13 +164,13 @@ class MqttTextEntity(MqttEntity, TextEntity):
     def _validate_text_value(self, payload: str, topic: str) -> str | None:
         """Return an error string if a text value is invalid."""
         if len(payload) > self._attr_native_max:
-            return f"'{topic}', size > max size ({self._attr_native_max})"
+            return f"for {self.entity_id} on '{topic}', size > max size ({self._attr_native_max})"
 
         if len(payload) < self._attr_native_min:
-            return f"'{topic}', size < min size ({self._attr_native_min})"
+            return f"for {self.entity_id} on '{topic}', size < min size ({self._attr_native_min})"
 
         if self._compiled_pattern and not self._compiled_pattern.match(payload):
-            return f"'{topic}', text does not match pattern '{self._attr_pattern}'"
+            return f"for {self.entity_id} on '{topic}', text does not match pattern '{self._attr_pattern}'"
 
         return None
 
@@ -199,7 +195,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
             if error := self._validate_text_value(payload, msg.topic):
-                _LOGGER.warning("Ignoring text update from %s", error)
+                _LOGGER.warning("Ignoring text update %s", error)
 
             self._attr_native_value = payload
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
@@ -221,11 +217,8 @@ class MqttTextEntity(MqttEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
-        if CONF_COMMAND_TOPIC not in self._config:
-            raise ValueError("Command topic not set, cannot set the text value")
-
         if error := self._validate_text_value(value, self._config[CONF_COMMAND_TOPIC]):
-            raise ValueError(f"Cannot set value on {error}")
+            raise ValueError(f"Cannot set value {error}")
 
         payload = self._command_template(value)
 
