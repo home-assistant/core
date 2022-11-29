@@ -1,6 +1,5 @@
 """Test KNX number."""
-
-from homeassistant.components.knx.const import KNX_ADDRESS
+from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import TextSchema
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, State
@@ -59,8 +58,8 @@ async def test_text(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state == "hallo"
 
 
-async def test_text_restore(hass: HomeAssistant, knx: KNXTestKit):
-    """Test KNX text with passive_address and restoring state."""
+async def test_text_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
+    """Test KNX text with passive_address, restoring state and respond_to_read."""
     test_address = "1/1/1"
     test_passive_address = "3/3/3"
 
@@ -72,6 +71,7 @@ async def test_text_restore(hass: HomeAssistant, knx: KNXTestKit):
             TextSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: [test_address, test_passive_address],
+                CONF_RESPOND_TO_READ: True,
             }
         }
     )
@@ -80,9 +80,12 @@ async def test_text_restore(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state == "test test"
     await knx.assert_telegram_count(0)
 
-    # don't respond with restored state - xknx Notification doesn't support it yet
+    # respond with restored state
     await knx.receive_read(test_address)
-    await knx.assert_no_telegram()
+    await knx.assert_response(
+        test_address,
+        (0x74, 0x65, 0x73, 0x74, 0x20, 0x74, 0x65, 0x73, 0x74, 0x0, 0x0, 0x0, 0x0, 0x0),
+    )
 
     # don't respond to passive address
     await knx.receive_read(test_passive_address)

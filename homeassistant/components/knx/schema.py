@@ -898,6 +898,7 @@ class TextSchema(KNXPlatformSchema):
     ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
             vol.Required(KNX_ADDRESS): ga_list_validator,
