@@ -35,6 +35,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import async_get_hass
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -141,6 +142,36 @@ def validate_sensor_setup(
     return {}
 
 
+def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for sensor removal."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_INDEX): cv.multi_select(
+                {
+                    str(index): config[CONF_NAME]
+                    for index, config in enumerate(handler.options["sensor"])
+                },
+            )
+        }
+    )
+
+
+def validate_remove_sensor(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate remove sensor."""
+    removed_indexes: set[str] = set(user_input[CONF_INDEX])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to remove sub-items so we update the options directly.
+    handler.options["sensor"] = [
+        value
+        for index, value in enumerate(handler.options["sensor"])
+        if str(index) not in removed_indexes
+    ]
+    return {}
+
+
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
 DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 
@@ -156,7 +187,7 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowMenuStep(["resource", "add_sensor"]),
+    "init": SchemaFlowMenuStep(["resource", "add_sensor", "remove_sensor"]),
     "resource": SchemaFlowFormStep(
         DATA_SCHEMA_RESOURCE,
         validate_user_input=validate_rest_setup,
@@ -165,6 +196,11 @@ OPTIONS_FLOW = {
         DATA_SCHEMA_SENSOR,
         suggested_values=None,
         validate_user_input=validate_sensor_setup,
+    ),
+    "remove_sensor": SchemaFlowFormStep(
+        get_remove_sensor_schema,
+        suggested_values=None,
+        validate_user_input=validate_remove_sensor,
     ),
 }
 
