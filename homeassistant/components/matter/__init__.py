@@ -6,36 +6,66 @@ from pathlib import Path
 from typing import cast
 
 import async_timeout
-from matter_server.client.exceptions import CannotConnect, FailedCommand
+from matter_server.client.exceptions import (
+    CannotConnect,
+    FailedCommand,
+    InvalidServerVersion,
+)
 from matter_server.client.matter import Matter
 import voluptuous as vol
 
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.service import async_register_admin_service
 
 from .adapter import MatterAdapter, get_matter_store
+from .addon import get_addon_manager
 from .api import async_register_api
-from .const import DOMAIN
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .device_platform import DEVICE_PLATFORM
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Matter from a config entry."""
+    if use_addon := entry.data.get(CONF_USE_ADDON):
+        await _async_ensure_addon_running(hass, entry)
+
     matter = Matter(MatterAdapter(hass, entry))
     try:
         await matter.connect()
     except CannotConnect as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
+    except InvalidServerVersion as err:
+        if use_addon:
+            addon_manager = _get_addon_manager(hass)
+            addon_manager.async_schedule_update_addon(catch_error=True)
+        else:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "invalid_server_version",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="invalid_server_version",
+            )
+        raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
         matter.adapter.logger.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
+    else:
+        async_delete_issue(hass, DOMAIN, "invalid_server_version")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
@@ -73,6 +103,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         matter: Matter = hass.data[DOMAIN].pop(entry.entry_id)
         await matter.disconnect()
 
+    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+        addon_manager: AddonManager = get_addon_manager(hass)
+        LOGGER.debug("Stopping Matter Server add-on")
+        try:
+            await addon_manager.async_stop_addon()
+        except AddonError as err:
+            LOGGER.error("Failed to stop the Matter Server add-on: %s", err)
+            return False
+
     return unload_ok
 
 
@@ -81,6 +120,25 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Remove storage file.
     storage_path = get_matter_store(hass, entry).path
     await hass.async_add_executor_job(Path(storage_path).unlink)
+
+    if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
+        return
+
+    addon_manager: AddonManager = get_addon_manager(hass)
+    try:
+        await addon_manager.async_stop_addon()
+    except AddonError as err:
+        LOGGER.error(err)
+        return
+    try:
+        await addon_manager.async_create_backup()
+    except AddonError as err:
+        LOGGER.error(err)
+        return
+    try:
+        await addon_manager.async_uninstall_addon()
+    except AddonError as err:
+        LOGGER.error(err)
 
 
 async def async_remove_config_entry_device(
@@ -242,3 +300,37 @@ def _async_init_services(hass: HomeAssistant) -> None:
         open_commissioning_window,
         vol.Schema({"device_id": str}),
     )
+
+
+async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Ensure that Matter Server add-on is installed and running."""
+    addon_manager = _get_addon_manager(hass)
+    try:
+        addon_info = await addon_manager.async_get_addon_info()
+    except AddonError as err:
+        raise ConfigEntryNotReady(err) from err
+
+    addon_state = addon_info.state
+
+    if addon_state == AddonState.NOT_INSTALLED:
+        addon_manager.async_schedule_install_setup_addon(
+            addon_info.options,
+            catch_error=True,
+        )
+        raise ConfigEntryNotReady
+
+    if addon_state == AddonState.NOT_RUNNING:
+        addon_manager.async_schedule_start_addon(catch_error=True)
+        raise ConfigEntryNotReady
+
+
+@callback
+def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
+    """Ensure that Matter Server add-on is updated and running.
+
+    May only be used as part of async_setup_entry above.
+    """
+    addon_manager: AddonManager = get_addon_manager(hass)
+    if addon_manager.task_in_progress():
+        raise ConfigEntryNotReady
+    return addon_manager
