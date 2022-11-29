@@ -210,25 +210,9 @@ class SchemaCommonFlowHandler:
 
         if data_schema.schema:
             # Make a copy of the schema with suggested values set to saved options
-            schema = {}
-            for key, val in data_schema.schema.items():
-
-                if isinstance(key, vol.Marker):
-                    # Exclude advanced field
-                    if (
-                        key.description
-                        and key.description.get("advanced")
-                        and not self._handler.show_advanced_options
-                    ):
-                        continue
-
-                new_key = key
-                if key in suggested_values and isinstance(key, vol.Marker):
-                    # Copy the marker to not modify the flow schema
-                    new_key = copy.copy(key)
-                    new_key.description = {"suggested_value": suggested_values[key]}
-                schema[new_key] = val
-            data_schema = vol.Schema(schema)
+            data_schema = self._handler.add_suggested_values_to_schema(
+                data_schema, suggested_values
+            )
 
         errors = {"base": str(error)} if error else None
 
