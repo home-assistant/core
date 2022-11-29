@@ -175,6 +175,7 @@ def validate_remove_sensor(
             SENSOR_DOMAIN, DOMAIN, sensor[CONF_UNIQUE_ID]
         ):
             entity_registry.async_remove(entity_id)
+    handler.options[SENSOR_DOMAIN] = sensors
     return {}
 
 
