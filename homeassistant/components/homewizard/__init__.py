@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
     # Create coordinator
-    coordinator = Coordinator(hass, entry, entry.data[CONF_IP_ADDRESS])
+    coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
