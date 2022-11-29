@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung",
             "file_not_found": "File `.knxkeys` yang ditentukan tidak ditemukan di jalur config/.storage/knx/",
+            "invalid_backbone_key": "Kunci backbone tidak valid. Diharapkan 32 angka heksadesimal.",
             "invalid_individual_address": "Nilai tidak cocok dengan pola untuk alamat individual KNX.\n'area.line.device'",
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
@@ -41,13 +42,22 @@
                     "individual_address": "Alamat individual",
                     "local_ip": "IP lokal Home Assistant",
                     "multicast_group": "Grup multicast",
-                    "multicast_port": "Port multicast"
+                    "multicast_port": "Port multicast",
+                    "routing_secure": "Gunakan KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Alamat KNX yang akan digunakan oleh Home Assistant, misalnya `0.0.4`",
                     "local_ip": "Kosongkan untuk menggunakan penemuan otomatis."
                 },
                 "description": "Konfigurasikan opsi routing."
+            },
+            "secure_key_source": {
+                "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
+                    "secure_routing_manual": "Konfigurasikan kunci backbone aman IP secara manual",
+                    "secure_tunnel_manual": "Konfigurasikan kredensial aman IP secara manual"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +69,17 @@
                     "knxkeys_password": "Ini disetel saat mengekspor file dari ETS."
                 },
                 "description": "Masukkan informasi untuk file `.knxkeys` Anda."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Kunci backbone",
+                    "sync_latency_tolerance": "Toleransi latensi jaringan"
+                },
+                "data_description": {
+                    "backbone_key": "Dapat dilihat dalam laporan 'Security' dari proyek ETS. Mis. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Bawaannya bernilai 1000."
+                },
+                "description": "Masukkan informasi IP aman Anda."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -92,6 +113,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung",
             "file_not_found": "File `.knxkeys` yang ditentukan tidak ditemukan di jalur config/.storage/knx/",
+            "invalid_backbone_key": "Kunci backbone tidak valid. Diharapkan 32 angka heksadesimal.",
             "invalid_individual_address": "Nilai tidak cocok dengan pola untuk alamat individual KNX.\n'area.line.device'",
             "invalid_ip_address": "Alamat IPv4 tidak valid",
             "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
@@ -142,13 +164,22 @@
                     "individual_address": "Alamat individual",
                     "local_ip": "IP lokal Home Assistant",
                     "multicast_group": "Grup multicast",
-                    "multicast_port": "Port multicast"
+                    "multicast_port": "Port multicast",
+                    "routing_secure": "Gunakan KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Alamat KNX yang akan digunakan oleh Home Assistant, misalnya `0.0.4`",
                     "local_ip": "Kosongkan untuk menggunakan penemuan otomatis."
                 },
                 "description": "Konfigurasikan opsi routing."
+            },
+            "secure_key_source": {
+                "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
+                    "secure_routing_manual": "Konfigurasikan kunci backbone aman IP secara manual",
+                    "secure_tunnel_manual": "Konfigurasikan kredensial aman IP secara manual"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +191,17 @@
                     "knxkeys_password": "Ini disetel saat mengekspor file dari ETS."
                 },
                 "description": "Masukkan informasi untuk file `.knxkeys` Anda."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Kunci backbone",
+                    "sync_latency_tolerance": "Toleransi latensi jaringan"
+                },
+                "data_description": {
+                    "backbone_key": "Dapat dilihat dalam laporan 'Security' dari proyek ETS. Mis. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Bawaannya bernilai 1000."
+                },
+                "description": "Masukkan informasi IP aman Anda."
             },
             "secure_tunnel_manual": {
                 "data": {

@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Predvolen\u00e1 aktivita, ktor\u00e1 sa m\u00e1 vykona\u0165, ke\u010f nie je zadan\u00e1 \u017eiadna."
+                }
+            }
+        }
     }
 }

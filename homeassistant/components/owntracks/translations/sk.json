@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "cloud_not_connected": "Nie je pripojen\u00e9 k Home Assistant Cloud.",
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
+        "step": {
+            "user": {
+                "description": "Naozaj chcete nastavi\u0165 OwnTracks?"
+            }
+        }
+    }
+}

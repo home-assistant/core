@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = ">=3.9.0"
 dependencies    = [
-    "aiohttp==3.8.1",
+    "aiohttp==3.8.3",
     "astral==2.2",
     "async_timeout==4.0.2",
     "attrs==21.2.0",
@@ -227,3 +227,4 @@ norecursedirs = [
 ]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_mode = "auto"

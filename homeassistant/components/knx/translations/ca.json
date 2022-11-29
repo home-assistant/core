@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
+            "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
             "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
@@ -41,13 +42,22 @@
                     "individual_address": "Adre\u00e7a individual",
                     "local_ip": "IP local de Home Assistant",
                     "multicast_group": "Grup multidifusi\u00f3",
-                    "multicast_port": "Port multidifusi\u00f3"
+                    "multicast_port": "Port multidifusi\u00f3",
+                    "routing_secure": "Utilitza KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Adre\u00e7a KNX per utilitzar amb Home Assistant, p. ex. `0.0.4`",
                     "local_ip": "Deixa-ho en blanc per utilitzar el descobriment autom\u00e0tic."
                 },
                 "description": "Configura les opcions d'encaminament."
+            },
+            "secure_key_source": {
+                "description": "Selecciona com vols configurar KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Utilitza un fitxer `.knxkeys` que contingui les claus de seguretat IP (IP Secure)",
+                    "secure_routing_manual": "Configura manualment la clau troncal de seguretat IP (IP Secure)",
+                    "secure_tunnel_manual": "Configura manualment les credencials de seguretat IP (IP Secure)"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -59,6 +69,17 @@
                     "knxkeys_password": "S'ha definit durant l'exportaci\u00f3 del fitxer des d'ETS."
                 },
                 "description": "Introdueix la informaci\u00f3 del teu fitxer `.knxkeys`."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Clau troncal ('backbone')",
+                    "sync_latency_tolerance": "Toler\u00e0ncia de lat\u00e8ncia de xarxa"
+                },
+                "data_description": {
+                    "backbone_key": "Es pot veure dins l'informe de 'Seguretat' d'un projecte ETS. Per exemple: '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "El valor per defecte \u00e9s 1000."
+                },
+                "description": "Introdueix la informaci\u00f3 de seguretat IP (IP Secure)."
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -92,6 +113,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
+            "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
             "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
@@ -142,13 +164,22 @@
                     "individual_address": "Adre\u00e7a individual",
                     "local_ip": "IP local de Home Assistant",
                     "multicast_group": "Grup multidifusi\u00f3",
-                    "multicast_port": "Port multidifusi\u00f3"
+                    "multicast_port": "Port multidifusi\u00f3",
+                    "routing_secure": "Utilitza KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Adre\u00e7a KNX per utilitzar amb Home Assistant, p. ex. `0.0.4`",
                     "local_ip": "Deixa-ho en blanc per utilitzar el descobriment autom\u00e0tic."
                 },
                 "description": "Configura les opcions d'encaminament."
+            },
+            "secure_key_source": {
+                "description": "Selecciona com vols configurar KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Utilitza un fitxer `.knxkeys` que contingui les claus de seguretat IP (IP Secure)",
+                    "secure_routing_manual": "Configura manualment la clau troncal de seguretat IP (IP Secure)",
+                    "secure_tunnel_manual": "Configura manualment les credencials de seguretat IP (IP Secure)"
+                }
             },
             "secure_knxkeys": {
                 "data": {
@@ -160,6 +191,17 @@
                     "knxkeys_password": "S'ha definit durant l'exportaci\u00f3 del fitxer des d'ETS."
                 },
                 "description": "Introdueix la informaci\u00f3 del teu fitxer `.knxkeys`."
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Clau troncal ('backbone')",
+                    "sync_latency_tolerance": "Toler\u00e0ncia de lat\u00e8ncia de xarxa"
+                },
+                "data_description": {
+                    "backbone_key": "Es pot veure dins l'informe de 'Seguretat' d'un projecte ETS. Per exemple: '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "El valor per defecte \u00e9s 1000."
+                },
+                "description": "Introdueix la informaci\u00f3 de seguretat IP (IP Secure)."
             },
             "secure_tunnel_manual": {
                 "data": {

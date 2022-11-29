@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostite\u013e"
+                    "host": "Hostite\u013e",
+                    "port": "Port"
                 },
                 "title": "Nastavenie 1-Wire"
             }
@@ -23,7 +24,8 @@
             "configure_device": {
                 "data": {
                     "precision": "Presnos\u0165 sn\u00edma\u010da"
-                }
+                },
+                "description": "Vyberte presnos\u0165 sn\u00edma\u010da pre {sensor_id}"
             }
         }
     }

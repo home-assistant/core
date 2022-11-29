@@ -28,6 +28,7 @@ from .deconz_event import (
     DeconzAlarmEvent,
     DeconzEvent,
     DeconzPresenceEvent,
+    DeconzRelativeRotaryEvent,
 )
 from .gateway import DeconzGateway
 
@@ -635,7 +636,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def _get_deconz_event_from_device(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
-) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent:
+) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
     gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
     for gateway in gateways.values():

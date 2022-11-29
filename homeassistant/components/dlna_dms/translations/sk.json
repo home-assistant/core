@@ -7,6 +7,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
