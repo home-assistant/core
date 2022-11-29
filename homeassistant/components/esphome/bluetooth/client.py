@@ -147,6 +147,7 @@ class ESPHomeClient(BaseBleakClient):
         device_info = self.entry_data.device_info
         assert device_info is not None
         self._connection_version = device_info.bluetooth_proxy_version
+        self._address_type = address_or_ble_device.details["address_type"]
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -292,6 +293,7 @@ class ESPHomeClient(BaseBleakClient):
                         timeout=timeout,
                         has_cache=has_cache,
                         version=self._connection_version,
+                        address_type=self._address_type,
                     )
                 )
             except Exception:  # pylint: disable=broad-except

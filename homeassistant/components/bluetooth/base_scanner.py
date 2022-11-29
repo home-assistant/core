@@ -162,6 +162,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         service_data: dict[str, bytes],
         manufacturer_data: dict[int, bytes],
         tx_power: int | None,
+        details: dict[Any, Any],
     ) -> None:
         """Call the registered callback."""
         now = MONOTONIC_TIME()
@@ -201,7 +202,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=local_name,
-            details=self._details,
+            details=self._details | details,
             rssi=rssi,  # deprecated, will be removed in newer bleak
         )
         self._discovered_device_advertisement_datas[address] = (
