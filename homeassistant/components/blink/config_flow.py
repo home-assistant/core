@@ -35,28 +35,12 @@ SIMPLE_OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-def _get_blink_from_handler(handler: SchemaOptionsFlowHandler) -> Blink:
-    """Extract blink instance from hass.data."""
-    entry_id = handler.config_entry.entry_id
-    blink: Blink = handler.hass.data[DOMAIN][entry_id]
-    return blink
-
-
 def _get_options_init_schema(handler: SchemaCommonFlowHandler) -> None:
     """Initialise handler, and return `None` to jump to next step."""
     parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
-    blink = _get_blink_from_handler(parent_handler)
+    entry_id = parent_handler.config_entry.entry_id
+    blink: Blink = parent_handler.hass.data[DOMAIN][entry_id]
     parent_handler.options[CONF_SCAN_INTERVAL] = blink.refresh_rate
-
-
-def _validate_simple_options(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Update refresh rate on blink instance."""
-    parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
-    blink = _get_blink_from_handler(parent_handler)
-    blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
-    return user_input
 
 
 OPTIONS_FLOW = {
@@ -64,10 +48,7 @@ OPTIONS_FLOW = {
         _get_options_init_schema,
         next_step="simple_options",
     ),
-    "simple_options": SchemaFlowFormStep(
-        SIMPLE_OPTIONS_SCHEMA,
-        validate_user_input=_validate_simple_options,
-    ),
+    "simple_options": SchemaFlowFormStep(SIMPLE_OPTIONS_SCHEMA),
 }
 
 
