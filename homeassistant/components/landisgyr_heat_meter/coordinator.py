@@ -30,5 +30,5 @@ class UltraheatCoordinator(DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
                 return await self.hass.async_add_executor_job(self.api.read)
-        except (serial.serialutil.SerialException) as err:
+        except (FileNotFoundError, serial.serialutil.SerialException) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

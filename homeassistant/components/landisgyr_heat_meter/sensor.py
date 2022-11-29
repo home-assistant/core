@@ -1,7 +1,9 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from dataclasses import asdict
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from ultraheat_api.response import HeatMeterResponse
@@ -9,6 +11,8 @@ from ultraheat_api.response import HeatMeterResponse
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,197 +34,260 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .const import API_KEY, GJ_ONLY_KEYS, MWH_ONLY_KEYS
+from .const import GJ_IDENTITY_KEY, GJ_ONLY_KEYS, MWH_IDENTITY_KEY, MWH_ONLY_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
+
+@dataclass
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
+
+    value_fn: Callable | None = None
+    response_key: str | None = None
+
+
 HEAT_METER_SENSOR_TYPES = (
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="heat_usage",
         icon="mdi:fire",
         name="Heat usage",
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda value: value,
+        response_key="heat_usage_mwh",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
         name="Volume usage",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda value: value,
+        response_key="volume_usage_m3",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="heat_usage_gj",
         icon="mdi:fire",
         name="Heat usage GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        value_fn=lambda value: value,
+        response_key="heat_usage_gj",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="heat_previous_year",
         icon="mdi:fire",
         name="Heat previous year",
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="heat_previous_year_mwh",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="heat_previous_year_gj",
         icon="mdi:fire",
         name="Heat previous year GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="heat_previous_year_gj",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="volume_previous_year_m3",
         icon="mdi:fire",
         name="Volume usage previous year",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="volume_previous_year_m3",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="ownership_number",
         name="Ownership number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="ownership_number",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="error_number",
         name="Error number",
         icon="mdi:home-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="error_number",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="device_number",
         name="Device number",
         icon="mdi:identifier",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="device_number",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="measurement_period_minutes",
         name="Measurement period minutes",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="measurement_period_minutes",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="power_max_kw",
         name="Power max",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="power_max_kw",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="power_max_previous_year_kw",
         name="Power max previous year",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="power_max_previous_year_kw",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="flowrate_max_m3ph",
         name="Flowrate max",
         native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="flowrate_max_m3ph",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="flowrate_max_previous_year_m3ph",
         name="Flowrate max previous year",
         native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="flowrate_max_previous_year_m3ph",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="return_temperature_max_c",
         name="Return temperature max",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="return_temperature_max_c",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="return_temperature_max_previous_year_c",
         name="Return temperature max previous year",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="return_temperature_max_previous_year_c",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="flow_temperature_max_c",
         name="Flow temperature max",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="flow_temperature_max_c",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="flow_temperature_max_previous_year_c",
         name="Flow temperature max previous year",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="flow_temperature_max_previous_year_c",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="operating_hours",
         name="Operating hours",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="operating_hours",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="flow_hours",
         name="Flow hours",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="flow_hours",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="fault_hours",
         name="Fault hours",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="fault_hours",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="fault_hours_previous_year",
         name="Fault hours previous year",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="fault_hours_previous_year",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="yearly_set_day",
         name="Yearly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="yearly_set_day",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="monthly_set_day",
         name="Monthly set day",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="monthly_set_day",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="meter_date_time",
         name="Meter date time",
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=dt_util.as_utc,
+        response_key="meter_date_time",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="measuring_range_m3ph",
         name="Measuring range",
         native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="measuring_range_m3ph",
     ),
-    SensorEntityDescription(
+    HeatMeterSensorEntityDescription(
         key="settings_and_firmware",
         name="Settings and firmware",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda value: value,
+        response_key="settings_and_firmware",
     ),
 )
 
@@ -242,18 +310,7 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    # get energy unit from config
-    if "energy_unit" in entry.data:
-        energy_unit = entry.data["energy_unit"]
-    else:
-        # get energy unit from data
-        energy_unit = energy_unit_from_data(coordinator.data)
-        if energy_unit:
-            # Add energy unit to config entry
-            new_data = {**entry.data}
-            new_data["energy_unit"] = energy_unit
-            hass.config_entries.async_update_entry(entry, data=new_data)
-            _LOGGER.info("Updated config entry with energy unit: %s", energy_unit)
+    energy_unit = energy_unit_from_data(coordinator.data)
     if energy_unit == UnitOfEnergy.GIGA_JOULE:
         exclude_keys = MWH_ONLY_KEYS
     elif energy_unit == UnitOfEnergy.MEGA_WATT_HOUR:
@@ -288,40 +345,20 @@ class HeatMeterSensor(
         self.entity_description = description
 
         self._attr_device_info = device
-        self.update_values_from_api()
 
-    def update_values_from_api(self):
-        """Update attribute values with the data from the api coordinator."""
-        if self.coordinator.data is None:
-            _LOGGER.debug(
-                "Cannot update %s: could not read any data from the Heat Meter",
-                self.key,
-            )
-            return
-
-        api_key = API_KEY[self.key]
-        if api_key in asdict(self.coordinator.data):
-            if self.device_class == SensorDeviceClass.TIMESTAMP:
-                self._attr_native_value = dt_util.as_utc(
-                    asdict(self.coordinator.data)[api_key]
-                )
-            else:
-                self._attr_native_value = asdict(self.coordinator.data)[api_key]
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.update_values_from_api()
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(  # type: ignore[attr-defined]
+            getattr(self.coordinator.data, self.entity_description.response_key, None)  # type: ignore[attr-defined]
+        )
 
 
 def energy_unit_from_data(data) -> str | None:
     """Determine the energy unit of measurement (MWh or GJ) this device uses."""
     if data:
-        mwh_api_key = API_KEY["heat_usage"]
-        mwh_supplied = hasattr(data, mwh_api_key) and asdict(data)[mwh_api_key]
-
-        gj_api_key = API_KEY["heat_usage_gj"]
-        gj_supplied = hasattr(data, gj_api_key) and asdict(data)[gj_api_key]
+        mwh_supplied = getattr(data, MWH_IDENTITY_KEY, None)
+        gj_supplied = getattr(data, GJ_IDENTITY_KEY, None)
 
         if mwh_supplied and not gj_supplied:
             # MWh is returned and GJ not: remove GJ entities

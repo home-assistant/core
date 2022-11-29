@@ -24,16 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
-    reader = ultraheat_api.FileReader(
-        "/workspaces/core/homeassistant/components/landisgyr_heat_meter/LUGCUH50_dummy.txt"
-    )
     api = ultraheat_api.HeatMeterService(reader)
     coordinator = UltraheatCoordinator(hass, api)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # read api without retry, to prevent battery drain
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

@@ -127,6 +127,9 @@ async def test_sensors_gj(mock_heat_meter, hass):
     entity_registry_entry = entity_reg.async_get("sensor.heat_meter_meter_date_time")
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
+    state = hass.states.get("sensor.heat_meter_flowrate_max_m3ph")
+    assert not state
+
 
 @patch(API_HEAT_METER_SERVICE)
 async def test_sensors_mwh(mock_heat_meter, hass):
@@ -224,29 +227,6 @@ async def test_determine_gj_from_data(mock_heat_meter, hass):
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_no_data_from_api(mock_heat_meter, hass):
-    """Test sensor."""
-    entry_data = {
-        "device": "/dev/USB0",
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-        "energy_unit": "MWh",
-    }
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
-
-    mock_entry.add_to_hass(hass)
-
-    mock_heat_meter_response = None  # testing handling of no response data
-    mock_heat_meter().read.return_value = mock_heat_meter_response
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 25
-
-
-@patch(API_HEAT_METER_SERVICE)
 async def test_exception_during_setup(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
@@ -266,15 +246,8 @@ async def test_exception_during_setup(mock_heat_meter, hass):
 
     mock_heat_meter.assert_called_once()
 
-    # check if the right number of attributes have been created
-    assert len(hass.states.async_all()) == 25
-    state = hass.states.get("sensor.heat_meter_heat_previous_year")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    # check if GJ attribute not created
-    state = hass.states.get("sensor.heat_meter_heat_previous_year_gj")
-    assert not state
+    # check if no attributes have been created
+    assert len(hass.states.async_all()) == 0
 
 
 @patch(API_HEAT_METER_SERVICE)
