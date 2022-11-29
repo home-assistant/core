@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult, UnknownHandler
 
 from . import entity_registry as er, selector
+from .typing import UNDEFINED, UndefinedType
 
 
 class SchemaFlowError(Exception):
@@ -63,10 +64,12 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
-    suggested_values: Callable[[SchemaCommonFlowHandler], dict[str, Any]] | None = None
+    suggested_values: Callable[
+        [SchemaCommonFlowHandler], dict[str, Any]
+    ] | None | UndefinedType = UNDEFINED
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is None, each key in the schema will get a suggested value
+    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested value
     from an option with the same key.
 
     Note: if a step is retried due to a validation failure, then the user input will have
@@ -100,6 +103,11 @@ class SchemaCommonFlowHandler:
     def parent_handler(self) -> SchemaConfigFlowHandler | SchemaOptionsFlowHandler:
         """Return parent handler."""
         return self._handler
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return the options linked to the current flow handler."""
+        return self._options
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -189,10 +197,12 @@ class SchemaCommonFlowHandler:
         if (data_schema := self._get_schema(form_step)) is None:
             return self._show_next_step_or_create_entry(form_step)
 
-        if form_step.suggested_values:
-            suggested_values = form_step.suggested_values(self)
-        else:
+        suggested_values: dict[str, Any] = {}
+        if form_step.suggested_values is UNDEFINED:
             suggested_values = self._options
+        elif form_step.suggested_values:
+            suggested_values = form_step.suggested_values(self)
+
         if user_input:
             # We don't want to mutate the existing options
             suggested_values = copy.deepcopy(suggested_values)
