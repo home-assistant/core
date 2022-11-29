@@ -44,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_EXTRA = "extra"
 ATTR_FREE_BIKES = "free_bikes"
+ATTR_FREE_EBIKES = "ebikes"
 ATTR_NETWORK = "network"
 ATTR_NETWORKS_LIST = "networks"
 ATTR_STATIONS_LIST = "stations"
@@ -117,7 +118,10 @@ STATION_SCHEMA = vol.Schema(
         vol.Required(ATTR_NAME): cv.string,
         vol.Required(ATTR_TIMESTAMP): cv.string,
         vol.Optional(ATTR_EXTRA): vol.Schema(
-            {vol.Optional(ATTR_UID): cv.string}, extra=vol.REMOVE_EXTRA
+            {
+                vol.Optional(ATTR_UID): cv.string,
+                vol.Optional(ATTR_FREE_EBIKES): cv.positive_int
+            }, extra=vol.REMOVE_EXTRA
         ),
     },
     extra=vol.REMOVE_EXTRA,
@@ -292,12 +296,14 @@ class CityBikesStation(SensorEntity):
             if station[ATTR_ID] == self._station_id:
                 station_data = station
                 break
+        extra = station_data.get(ATTR_EXTRA, {})
         self._attr_name = station_data.get(ATTR_NAME)
         self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
         self._attr_extra_state_attributes = {
-            ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
+            ATTR_UID: extra.get(ATTR_UID),
             ATTR_LATITUDE: station_data.get(ATTR_LATITUDE),
             ATTR_LONGITUDE: station_data.get(ATTR_LONGITUDE),
             ATTR_EMPTY_SLOTS: station_data.get(ATTR_EMPTY_SLOTS),
+            ATTR_FREE_EBIKES: extra.get(ATTR_FREE_EBIKES),
             ATTR_TIMESTAMP: station_data.get(ATTR_TIMESTAMP),
         }
