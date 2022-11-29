@@ -20,7 +20,7 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, Literal, NoReturn, TypedDict, TypeVar, cast, overload
+from typing import Any, Literal, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -44,7 +44,6 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     HomeAssistant,
-    HomeAssistantError,
     State,
     callback,
     split_entity_id,
@@ -1982,25 +1981,10 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-class _GetinternalURLArgs(TypedDict):
-    require_current_request: bool
-    require_ssl: bool
-    require_standard_port: bool
-    allow_ip: bool
-
-
-class _GetExternalURLArgs(TypedDict):
-    require_current_request: bool
-    require_ssl: bool
-    require_standard_port: bool
-    allow_cloud: bool
-    allow_ip: bool
-
-
-def _get_internal_url(hass: HomeAssistant, **kwargs: _GetinternalURLArgs) -> str:
+def _get_internal_url(hass: HomeAssistant, **kwargs: bool) -> str:
     # Circular dependency prevents us from generating the class at top level
-    # pylint: disable-next=import-outside-toplevel
-    from . import network
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import network
 
     try:
         return network.get_url(hass, allow_external=False, **kwargs)
@@ -2009,15 +1993,15 @@ def _get_internal_url(hass: HomeAssistant, **kwargs: _GetinternalURLArgs) -> str
         for key, value in kwargs.items():
             args.append(f"{key}={value}")
         call = ", ".join(args)
-        raise HomeAssistantError(
+        raise TemplateError(
             f"Template error: Could not resolve URL for internal_url({call})"
         ) from err
 
 
-def _get_external_url(hass: HomeAssistant, **kwargs: _GetExternalURLArgs) -> str:
+def _get_external_url(hass: HomeAssistant, **kwargs: bool) -> str:
     # Circular dependency prevents us from generating the class at top level
-    # pylint: disable-next=import-outside-toplevel
-    from . import network
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import network
 
     try:
         return network.get_url(hass, allow_internal=False, **kwargs)
@@ -2026,8 +2010,33 @@ def _get_external_url(hass: HomeAssistant, **kwargs: _GetExternalURLArgs) -> str
         for key, value in kwargs.items():
             args.append(f"{key}={value}")
         call = ", ".join(args)
-        raise HomeAssistantError(
+        raise TemplateError(
             f"Template error: Could not resolve URL for external_url({call})"
+        ) from err
+
+
+def _sign_path(hass: HomeAssistant, path: str, expiration_sec: int) -> str:
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.http.auth import async_sign_path
+
+    try:
+        expiration = timedelta(seconds=expiration_sec)
+    except TypeError as err:
+        raise TemplateError(
+            f"Template error: Invalid expiration for sign_path filter: {expiration_sec}"
+        ) from err
+
+    if expiration.total_seconds() < 1:
+        raise TemplateError(
+            f"Template error: Invalid expiration for sign_path filter: {expiration_sec}"
+        )
+
+    try:
+        return async_sign_path(hass, path, expiration=expiration)
+    except KeyError as err:
+        raise TemplateError(
+            "Template error: http component is required for the sign_path filter"
         ) from err
 
 
@@ -2145,6 +2154,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["internal_url"] = hassfunction(_get_internal_url)
         self.globals["external_url"] = hassfunction(_get_external_url)
+        self.filters["sign_path"] = hassfunction(_sign_path)
 
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])

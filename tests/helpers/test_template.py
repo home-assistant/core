@@ -9,11 +9,14 @@ import random
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import web
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import group
+from homeassistant.components.http.auth import SIGN_QUERY_PARAM, async_setup_auth
+from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -26,7 +29,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -42,6 +45,17 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.http.test_auth import mock_handler
+
+
+@pytest.fixture
+def app(hass):
+    """Fixture to set up a web.Application."""
+    app = web.Application()
+    app["hass"] = hass
+    app.router.add_get("/", mock_handler)
+    async_setup_forwarded(app, True, [])
+    return app
 
 
 def _set_up_units(hass: HomeAssistant) -> None:
@@ -4073,7 +4087,7 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
 
 
 async def test_template_internal_url(hass: HomeAssistant) -> None:
-    """Test hass internal_url in template."""
+    """Test internal_url in template."""
 
     hass.config.internal_url = "http://homeassistant:8123"
     tpl = template.Template("{{ internal_url() }}", hass)
@@ -4081,15 +4095,15 @@ async def test_template_internal_url(hass: HomeAssistant) -> None:
 
 
 async def test_template_internal_url_no_url(hass: HomeAssistant) -> None:
-    """Test hass internal_url in template with no URL avaiable."""
+    """Test internal_url in template with no URL available."""
 
     tpl = template.Template("{{ internal_url() }}", hass)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(TemplateError):
         tpl.async_render()
 
 
 async def test_template_external_url(hass: HomeAssistant) -> None:
-    """Test hass external_url in template."""
+    """Test external_url in template."""
 
     hass.config.external_url = "http://ha.example.com"
     tpl = template.Template("{{ external_url() }}", hass)
@@ -4097,8 +4111,46 @@ async def test_template_external_url(hass: HomeAssistant) -> None:
 
 
 async def test_template_external_url_no_url(hass: HomeAssistant) -> None:
-    """Test hass external_url in template with no URL avaiable."""
+    """Test external_url in template with no URL available."""
 
     tpl = template.Template("{{ external_url() }}", hass)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+async def test_template_sign_path_filter(hass: HomeAssistant, app) -> None:
+    """Test sign_path filter in template."""
+
+    await async_setup_auth(hass, app)
+    tpl = template.Template("{{ '/'|sign_path(300) }}", hass)
+    assert f"?{SIGN_QUERY_PARAM}" in tpl.async_render()
+
+
+async def test_template_sign_path_filter_invalid_expiration(
+    hass: HomeAssistant, app
+) -> None:
+    """Test sign_path filter in template."""
+
+    await async_setup_auth(hass, app)
+    tpl = template.Template("{{ '/'|sign_path('test') }}", hass)
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+async def test_template_sign_path_filter_negative_expiration(
+    hass: HomeAssistant, app
+) -> None:
+    """Test sign_path filter in template."""
+
+    await async_setup_auth(hass, app)
+    tpl = template.Template("{{ '/'|sign_path(-50) }}", hass)
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+async def test_template_sign_path_filter_no_http(hass: HomeAssistant) -> None:
+    """Test sign_path filter in template."""
+
+    tpl = template.Template("{{ '/'|sign_path(300) }}", hass)
+    with pytest.raises(TemplateError):
         tpl.async_render()
