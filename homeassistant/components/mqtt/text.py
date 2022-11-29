@@ -170,28 +170,6 @@ class MqttTextEntity(MqttEntity, TextEntity):
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
 
-    def _validate_text_value(self, payload: str, topic: str) -> str | None:
-        """Return an error string if a text value is invalid."""
-        if len(payload) > self._attr_native_max:
-            return (
-                f"{self.entity_id} on '{topic}', "
-                f"size > max size ({self._attr_native_max})"
-            )
-
-        if len(payload) < self._attr_native_min:
-            return (
-                f"{self.entity_id} on '{topic}', "
-                f"size < min size ({self._attr_native_min})"
-            )
-
-        if self._compiled_pattern and not self._compiled_pattern.match(payload):
-            return (
-                f"{self.entity_id} on '{topic}', "
-                f"text does not match pattern '{self._attr_pattern}'"
-            )
-
-        return None
-
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
@@ -212,9 +190,6 @@ class MqttTextEntity(MqttEntity, TextEntity):
         def handle_state_message_received(msg: ReceiveMessage) -> None:
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
-            if error := self._validate_text_value(payload, msg.topic):
-                _LOGGER.warning("Ignoring text update for %s", error)
-
             self._attr_native_value = payload or None
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -235,7 +210,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
-        payload = str(self._command_template(value))
+        payload = self._command_template(value)
 
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
@@ -245,5 +220,5 @@ class MqttTextEntity(MqttEntity, TextEntity):
             self._config[CONF_ENCODING],
         )
         if self._optimistic:
-            self._attr_native_value = payload
+            self._attr_native_value = value
             self.async_write_ha_state()
