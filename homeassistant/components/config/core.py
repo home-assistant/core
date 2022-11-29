@@ -49,6 +49,8 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("currency"): cv.currency,
+        vol.Optional("country"): cv.country,
+        vol.Optional("language"): cv.language,
     }
 )
 @websocket_api.async_response

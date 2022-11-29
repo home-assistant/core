@@ -350,6 +350,7 @@ class TibberSensorElPrice(TibberSensor):
         }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
@@ -590,7 +591,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                 )
 
                 last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True
+                    get_last_statistics, self.hass, 1, statistic_id, True, {}
                 )
 
                 if not last_stats:
@@ -612,7 +613,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                         else home.hourly_consumption_data
                     )
 
-                    from_time = dt_util.parse_datetime(hourly_data[0]["from"])
+                    from_time = hourly_data[0]["from"]
                     if from_time is None:
                         continue
                     start = from_time - timedelta(hours=1)
@@ -623,7 +624,8 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                         None,
                         [statistic_id],
                         "hour",
-                        True,
+                        None,
+                        {"sum"},
                     )
                     _sum = stat[statistic_id][0]["sum"]
                     last_stats_time = stat[statistic_id][0]["start"]

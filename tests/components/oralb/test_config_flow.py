@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.oralb.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import NOT_ORALB_SERVICE_INFO, ORALB_SERVICE_INFO
+from . import NOT_ORALB_SERVICE_INFO, ORALB_IO_SERIES_4_SERVICE_INFO, ORALB_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +26,25 @@ async def test_async_step_bluetooth_valid_device(hass):
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Smart Series 7000 48BE"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
+
+
+async def test_async_step_bluetooth_valid_io_series4_device(hass):
+    """Test discovery via bluetooth with a valid device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=ORALB_IO_SERIES_4_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    with patch("homeassistant.components.oralb.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "IO Series 4 48BE"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
 

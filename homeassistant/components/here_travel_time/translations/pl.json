@@ -72,7 +72,7 @@
             "init": {
                 "data": {
                     "route_mode": "Tryb trasy",
-                    "traffic_mode": "Tryb ruchu",
+                    "traffic_mode": "Tryb nat\u0119\u017cenia ruchu",
                     "unit_system": "System metryczny"
                 }
             },

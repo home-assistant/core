@@ -1,0 +1,12 @@
+{
+    "options": {
+        "error": {
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "addon_installed_other_device": {
+                "title": "Podpora viacer\u00fdch protokolov je u\u017e povolen\u00e1 pre in\u00e9 zariadenie"
+            }
+        }
+    }
+}

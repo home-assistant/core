@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "cannot_receive_deviceinfo": "Nepodarilo sa na\u010d\u00edta\u0165 adresu MAC. Uistite sa, \u017ee je zariadenie zapnut\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

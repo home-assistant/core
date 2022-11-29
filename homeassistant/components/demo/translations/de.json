@@ -11,6 +11,14 @@
             },
             "title": "Das Netzteil ist nicht stabil"
         },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Der Tee kann zu diesem Zeitpunkt nicht wieder aufgew\u00e4rmt werden."
+                }
+            },
+            "title": "Der Tee ist kalt"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

@@ -8,7 +8,7 @@
           "url": "Website"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "description": "Authentication tokens became invalid, login to recreate them.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"

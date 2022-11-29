@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "N\u00e1zov",
+                    "source": "Vstupn\u00fd sn\u00edma\u010d",
+                    "tariffs": "Podporovan\u00e9 tarify"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source": "Vstupn\u00fd sn\u00edma\u010d"
+                }
+            }
+        }
+    }
+}

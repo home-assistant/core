@@ -122,7 +122,7 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.split(" ")[0] for key in config.keys()}
+    components = {key.partition(" ")[0] for key in config.keys()}
 
     # Process and validate config
     for domain in components:

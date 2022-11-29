@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from enum import Enum
 
 from hass_nabucasa import Cloud
@@ -26,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -55,6 +57,8 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
+from .repairs import async_manage_legacy_subscription_issue
+from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
@@ -258,6 +262,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     loaded = False
 
+    async def async_startup_repairs(_=None) -> None:
+        """Create repair issues after startup."""
+        if not cloud.is_logged_in:
+            return
+
+        if subscription_info := await async_subscription_info(cloud):
+            async_manage_legacy_subscription_issue(hass, subscription_info)
+
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
         nonlocal loaded
@@ -293,6 +305,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    async_call_later(
+        hass=hass,
+        delay=timedelta(hours=1),
+        action=async_startup_repairs,
+    )
 
     return True
 

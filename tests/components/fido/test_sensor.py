@@ -17,7 +17,6 @@ class FidoClientMock:
 
     def __init__(self, username, password, timeout=None, httpsession=None):
         """Fake Fido client init."""
-        pass
 
     def get_phone_numbers(self):
         """Return Phone numbers."""
@@ -29,7 +28,6 @@ class FidoClientMock:
 
     async def fetch_data(self):
         """Return fake fetching data."""
-        pass
 
 
 class FidoClientMockError(FidoClientMock):

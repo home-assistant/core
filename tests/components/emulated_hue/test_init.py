@@ -8,6 +8,7 @@ from homeassistant.components.emulated_hue.config import (
     SAVE_DELAY,
     Config,
 )
+from homeassistant.components.emulated_hue.upnp import UPNPResponderProtocol
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
@@ -127,6 +128,9 @@ async def test_setup_works(hass):
     ) as mock_create_upnp_datagram_endpoint, patch(
         "homeassistant.components.emulated_hue.async_get_source_ip"
     ):
+        mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
+            spec=UPNPResponderProtocol
+        )
         assert await async_setup_component(hass, "emulated_hue", {})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()

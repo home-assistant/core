@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_POTENTIAL_MILLIVOLT, TEMP_CELSIUS
+from homeassistant.const import ELECTRIC_POTENTIAL_MILLIVOLT, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -48,6 +48,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key="battery",
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
 )
 
 
@@ -67,6 +74,6 @@ class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """State of the sensor."""
         return self.coordinator.data[self.entity_description.key]

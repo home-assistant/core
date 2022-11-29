@@ -240,12 +240,91 @@ class TuyaPowerOnState(types.enum8):
     channel_names=CHANNEL_ON_OFF,
     models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
 )
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_7tdtqgwv",
+        "_TZE200_amp6tsvy",
+        "_TZE200_oisqyl4o",
+        "_TZE200_vhy3iakz",
+        "_TZ3000_uim07oem",
+        "_TZE200_wfxuhoea",
+        "_TZE200_tviaymwx",
+        "_TZE200_g1ib5ldv",
+        "_TZE200_wunufsil",
+        "_TZE200_7deq70b8",
+        "_TZE200_tz32mtza",
+        "_TZE200_2hf7x9n3",
+        "_TZE200_aqnazj70",
+        "_TZE200_1ozguk6x",
+        "_TZE200_k6jhsr0q",
+        "_TZE200_9mahtqtg",
+    },
+)
 class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_state"):
     """Representation of a ZHA power on state select entity."""
 
     _select_attr = "power_on_state"
     _enum = TuyaPowerOnState
     _attr_name = "Power on state"
+
+
+class TuyaBacklightMode(types.enum8):
+    """Tuya switch backlight mode enum."""
+
+    Off = 0x00
+    LightWhenOn = 0x01
+    LightWhenOff = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+class TuyaBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
+    """Representation of a ZHA backlight mode select entity."""
+
+    _select_attr = "backlight_mode"
+    _enum = TuyaBacklightMode
+    _attr_name = "Backlight mode"
+
+
+class MoesBacklightMode(types.enum8):
+    """MOES switch backlight mode enum."""
+
+    Off = 0x00
+    LightWhenOn = 0x01
+    LightWhenOff = 0x02
+    Freeze = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_7tdtqgwv",
+        "_TZE200_amp6tsvy",
+        "_TZE200_oisqyl4o",
+        "_TZE200_vhy3iakz",
+        "_TZ3000_uim07oem",
+        "_TZE200_wfxuhoea",
+        "_TZE200_tviaymwx",
+        "_TZE200_g1ib5ldv",
+        "_TZE200_wunufsil",
+        "_TZE200_7deq70b8",
+        "_TZE200_tz32mtza",
+        "_TZE200_2hf7x9n3",
+        "_TZE200_aqnazj70",
+        "_TZE200_1ozguk6x",
+        "_TZE200_k6jhsr0q",
+        "_TZE200_9mahtqtg",
+    },
+)
+class MoesBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
+    """Moes devices have a different backlight mode select options."""
+
+    _select_attr = "backlight_mode"
+    _enum = MoesBacklightMode
+    _attr_name = "Backlight mode"
 
 
 class AqaraMotionSensitivities(types.enum8):
@@ -257,7 +336,8 @@ class AqaraMotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+    channel_names="opple_cluster",
+    models={"lumi.motion.ac01", "lumi.motion.ac02", "lumi.motion.agl04"},
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA motion sensitivity configuration entity."""
@@ -397,3 +477,20 @@ class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
     _select_attr = "switch_type"
     _enum = InovelliSwitchType
     _attr_name: str = "Switch type"
+
+
+class AqaraFeedingMode(types.enum8):
+    """Feeding mode."""
+
+    Manual = 0x00
+    Schedule = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
+    """Representation of an Aqara pet feeder mode configuration entity."""
+
+    _select_attr = "feeding_mode"
+    _enum = AqaraFeedingMode
+    _attr_name = "Mode"
+    _attr_icon: str = "mdi:wrench-clock"

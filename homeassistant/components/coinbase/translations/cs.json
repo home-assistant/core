@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_auth_key": "P\u0159ihla\u0161ovac\u00ed \u00fadaje API zam\u00edtnuty Coinbasem z d\u016fvodu neplatn\u00e9ho kl\u00ed\u010de API.",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {

@@ -22,3 +22,14 @@ ORALB_SERVICE_INFO = BluetoothServiceInfo(
     service_data={},
     source="local",
 )
+
+
+ORALB_IO_SERIES_4_SERVICE_INFO = BluetoothServiceInfo(
+    name="GXB772CD\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    manufacturer_data={220: b"\x074\x0c\x038\x00\x00\x02\x01\x00\x04"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
