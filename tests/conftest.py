@@ -5,8 +5,8 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import functools
-import itertools
 import gc
+import itertools
 from json import JSONDecoder, loads
 import logging
 import sqlite3
