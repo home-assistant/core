@@ -12,6 +12,7 @@ from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -137,7 +138,7 @@ def validate_sensor_setup(
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
-    sensors: list[dict[str, Any]] = handler.options.setdefault("sensor", [])
+    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
     sensors.append(user_input)
     return {}
 
@@ -149,7 +150,7 @@ def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
             vol.Required(CONF_INDEX): cv.multi_select(
                 {
                     str(index): config[CONF_NAME]
-                    for index, config in enumerate(handler.options["sensor"])
+                    for index, config in enumerate(handler.options[SENSOR_DOMAIN])
                 },
             )
         }
@@ -167,19 +168,13 @@ def validate_remove_sensor(
     entity_registry = er.async_get(handler.parent_handler.hass)
     sensors: list[dict[str, Any]] = []
     sensor: dict[str, Any]
-    for index, sensor in enumerate(handler.options["sensor"]):
+    for index, sensor in enumerate(handler.options[SENSOR_DOMAIN]):
         if str(index) not in removed_indexes:
             sensors.append(sensor)
         elif entity_id := entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, sensor[CONF_UNIQUE_ID]
+            SENSOR_DOMAIN, DOMAIN, sensor[CONF_UNIQUE_ID]
         ):
             entity_registry.async_remove(entity_id)
-
-    handler.options["sensor"] = [
-        value
-        for index, value in enumerate(handler.options["sensor"])
-        if str(index) not in removed_indexes
-    ]
     return {}
 
 
