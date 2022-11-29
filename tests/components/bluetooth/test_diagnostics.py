@@ -155,6 +155,7 @@ async def test_diagnostics(
                                 ],
                                 "name": "x",
                                 "rssi": -60,
+                                "details": None,
                             }
                         ],
                         "last_detection": ANY,
@@ -179,6 +180,7 @@ async def test_diagnostics(
                                 ],
                                 "name": "x",
                                 "rssi": -60,
+                                "details": None,
                             }
                         ],
                         "last_detection": ANY,
@@ -203,6 +205,7 @@ async def test_diagnostics(
                                 ],
                                 "name": "x",
                                 "rssi": -60,
+                                "details": None,
                             }
                         ],
                         "last_detection": ANY,
@@ -366,6 +369,7 @@ async def test_diagnostics_macos(
                                 ],
                                 "name": "x",
                                 "rssi": -60,
+                                "details": None,
                             }
                         ],
                         "last_detection": ANY,
