@@ -10,6 +10,7 @@ from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
@@ -60,6 +61,13 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         """Stop listening to api enabled state."""
         if self._remove_update_listener_callback is not None:
             self._remove_update_listener_callback()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device_info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.data["device"].serial)},
+        )
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""

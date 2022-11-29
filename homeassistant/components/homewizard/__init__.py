@@ -5,7 +5,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEnt
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
@@ -74,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await coordinator.api.close()
             raise
 
+    # Setup entry
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -86,6 +87,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if progress_flow["context"].get("source") == SOURCE_REAUTH:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
+    # Register device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        name=entry.title,
+        manufacturer="HomeWizard",
+        sw_version=coordinator.data["device"].firmware_version,
+        model=coordinator.data["device"].product_type,
+        identifiers={(DOMAIN, coordinator.data["device"].serial)},
+    )
+
+    # Finalize
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

@@ -14,6 +14,7 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectAudioType,
     SmartDetectObjectType,
 )
 from pyunifiprotect.data.nvr import UOSDisk
@@ -201,6 +202,24 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="is_package_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
+    ProtectBinaryEntityDescription(
+        key="smart_licenseplate",
+        name="Detections: License Plate",
+        icon="mdi:car",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="can_detect_license_plate",
+        ufp_value="is_license_plate_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_smoke",
+        name="Detections: Smoke/CO",
+        icon="mdi:fire",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="can_detect_smoke",
+        ufp_value="is_smoke_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
@@ -380,6 +399,37 @@ MOTION_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_enabled="is_package_detection_on",
         ufp_event_obj="last_smart_detect_event",
         ufp_smart_type=SmartDetectObjectType.PACKAGE,
+    ),
+    ProtectBinaryEventEntityDescription(
+        key="smart_audio_any",
+        name="Audio Detected",
+        icon="mdi:eye",
+        device_class=DEVICE_CLASS_DETECTION,
+        ufp_value="is_smart_detected",
+        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_event_obj="last_smart_audio_detect_event",
+    ),
+    ProtectBinaryEventEntityDescription(
+        key="smart_audio_smoke",
+        name="Smoke Alarm Detected",
+        device_class=DEVICE_CLASS_DETECTION,
+        icon="mdi:fire",
+        ufp_value="is_smart_detected",
+        ufp_required_field="can_detect_smoke",
+        ufp_enabled="is_smoke_detection_on",
+        ufp_event_obj="last_smart_audio_detect_event",
+        ufp_smart_type=SmartDetectAudioType.SMOKE,
+    ),
+    ProtectBinaryEventEntityDescription(
+        key="smart_audio_cmonx",
+        name="CO Alarm Detected",
+        device_class=DEVICE_CLASS_DETECTION,
+        icon="mdi:fire",
+        ufp_value="is_smart_detected",
+        ufp_required_field="can_detect_smoke",
+        ufp_enabled="is_smoke_detection_on",
+        ufp_event_obj="last_smart_audio_detect_event",
+        ufp_smart_type=SmartDetectAudioType.CMONX,
     ),
 )
 
