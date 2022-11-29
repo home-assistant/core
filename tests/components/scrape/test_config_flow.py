@@ -334,9 +334,9 @@ async def test_options_add_remove_sensor_flow(
 
     await hass.async_block_till_done()
 
-    # Check the entity was updated, with the new entity
+    # Check the original entity was removed, with only the new entity left
     assert len(hass.states.async_all()) == 1
 
-    # Check the state of the entity has changed as expected
+    # Check the state of the new entity
     state = hass.states.get("sensor.template")
     assert state.state == "Trying to get"
