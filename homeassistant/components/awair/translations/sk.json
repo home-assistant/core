@@ -34,6 +34,12 @@
                     "access_token": "Pr\u00edstupov\u00fd token",
                     "email": "Email"
                 }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Pripojenie cez cloud",
+                    "local": "Lok\u00e1lne pripojenie (preferovan\u00e9)"
+                }
             }
         }
     }

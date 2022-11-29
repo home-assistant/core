@@ -20,8 +20,15 @@ SWING_ON_EID = BASE_ENTITY_ID + "_vertical_swing_on"
 SWING_OFF_EID = BASE_ENTITY_ID + "_vertical_swing_off"
 
 
+@pytest.mark.parametrize(
+    "entity, state",
+    [
+        (ASSUME_ON_EID, DeviceState.ON),
+        (ASSUME_OFF_EID, DeviceState.OFF),
+    ],
+)
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_assume_button(hass: HomeAssistant, mock_bridge, mock_api):
+async def test_assume_button(hass: HomeAssistant, entity, state, mock_bridge, mock_api):
     """Test assume on/off button."""
     await init_integration(hass)
     assert mock_bridge
@@ -37,29 +44,24 @@ async def test_assume_button(hass: HomeAssistant, mock_bridge, mock_api):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ASSUME_ON_EID},
+            {ATTR_ENTITY_ID: entity},
             blocking=True,
         )
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(
-            ANY, state=DeviceState.ON, update_state=True
-        )
-
-        mock_control_device.reset_mock()
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ASSUME_OFF_EID},
-            blocking=True,
-        )
-        assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(
-            ANY, state=DeviceState.OFF, update_state=True
-        )
+        mock_control_device.assert_called_once_with(ANY, state=state, update_state=True)
 
 
+@pytest.mark.parametrize(
+    "entity, swing",
+    [
+        (SWING_ON_EID, ThermostatSwing.ON),
+        (SWING_OFF_EID, ThermostatSwing.OFF),
+    ],
+)
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_swing_button(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch):
+async def test_swing_button(
+    hass: HomeAssistant, entity, swing, mock_bridge, mock_api, monkeypatch
+):
     """Test vertical swing on/off button."""
     monkeypatch.setattr(DEVICE, "remote_id", "ELEC7022")
     await init_integration(hass)
@@ -76,21 +78,11 @@ async def test_swing_button(hass: HomeAssistant, mock_bridge, mock_api, monkeypa
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SWING_ON_EID},
+            {ATTR_ENTITY_ID: entity},
             blocking=True,
         )
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.ON)
-
-        mock_control_device.reset_mock()
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SWING_OFF_EID},
-            blocking=True,
-        )
-        assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(ANY, swing=ThermostatSwing.OFF)
+        mock_control_device.assert_called_once_with(ANY, swing=swing)
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)

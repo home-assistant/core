@@ -6,7 +6,15 @@
         },
         "error": {
             "identifier_exists": "\u00da\u010det je u\u017e zaregistrovan\u00fd",
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "auth_code": "Autoriza\u010dn\u00fd k\u00f3d"
+                }
+            }
         }
     },
     "issues": {

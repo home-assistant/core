@@ -145,7 +145,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return None
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the player."""
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":

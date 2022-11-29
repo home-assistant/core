@@ -42,6 +42,10 @@
         }
     },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "El sensor unificado \"Objeto detectado\" para detecciones inteligentes ahora est\u00e1 obsoleto. Ha sido reemplazado por sensores binarios de detecci\u00f3n inteligente individuales para cada tipo de detecci\u00f3n inteligente. Actualiza cualquier plantilla o automatizaci\u00f3n en consecuencia.",
+            "title": "Sensor de detecci\u00f3n inteligente obsoleto"
+        },
         "ea_setup_failed": {
             "description": "Est\u00e1s utilizando v{version} de UniFi Protect, que es una versi\u00f3n de Early Access. Se produjo un error irrecuperable al intentar cargar la integraci\u00f3n. Por favor, [cambia a una versi\u00f3n estable](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) de UniFi Protect para continuar usando la integraci\u00f3n. \n\nError: {error}",
             "title": "Error de configuraci\u00f3n al usar la versi\u00f3n Early Access"
