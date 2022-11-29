@@ -205,7 +205,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Humidity")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.HUMIDITY
 
@@ -230,7 +230,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Temperature")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
@@ -269,7 +269,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Illuminance")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.ILLUMINANCE
 
@@ -308,7 +308,7 @@ class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Power")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.POWER
 
@@ -333,7 +333,7 @@ class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
         super().__init__(hap, device, post="Energy")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.ENERGY
 
@@ -411,7 +411,7 @@ class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEnt
         super().__init__(hap, device, post="Channel 1 Temperature")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
@@ -436,7 +436,7 @@ class HomematicpTemperatureExternalSensorCh2(HomematicipGenericEntity, SensorEnt
         super().__init__(hap, device, post="Channel 2 Temperature")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
@@ -461,7 +461,7 @@ class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorE
         super().__init__(hap, device, post="Delta Temperature")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
