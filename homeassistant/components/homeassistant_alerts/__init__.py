@@ -9,6 +9,7 @@ import logging
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
+from homeassistant.components.hassio import get_supervisor_info, is_hassio
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -142,6 +143,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
             __version__,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
         )
+        self.supervisor = is_hassio(self.hass)
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
         response = await async_get_clientsession(self.hass).get(
@@ -168,6 +170,23 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                         alert["homeassistant"]["resolved_in_version"],
                     )
                     if self.ha_version >= resolved_in_version:
+                        continue
+
+            if self.supervisor and "supervisor" in alert:
+                if (supervisor_info := get_supervisor_info(self.hass)) is None:
+                    continue
+
+                if "affected_from_version" in alert["supervisor"]:
+                    affected_from_version = AwesomeVersion(
+                        alert["supervisor"]["affected_from_version"],
+                    )
+                    if supervisor_info["version"] < affected_from_version:
+                        continue
+                if "resolved_in_version" in alert["supervisor"]:
+                    resolved_in_version = AwesomeVersion(
+                        alert["supervisor"]["resolved_in_version"],
+                    )
+                    if supervisor_info["version"] >= resolved_in_version:
                         continue
 
             for integration in alert["integrations"]:

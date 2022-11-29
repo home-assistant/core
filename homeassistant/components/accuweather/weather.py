@@ -18,16 +18,11 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,19 +67,19 @@ class AccuWeatherEntity(
         # converted, hence the weather entity's native units follow the configured unit
         # system
         if coordinator.hass.config.units is METRIC_SYSTEM:
-            self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
-            self._attr_native_pressure_unit = PRESSURE_HPA
-            self._attr_native_temperature_unit = TEMP_CELSIUS
-            self._attr_native_visibility_unit = LENGTH_KILOMETERS
-            self._attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+            self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+            self._attr_native_pressure_unit = UnitOfPressure.HPA
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
+            self._attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
             self._unit_system = API_METRIC
         else:
             self._unit_system = API_IMPERIAL
-            self._attr_native_precipitation_unit = LENGTH_INCHES
-            self._attr_native_pressure_unit = PRESSURE_INHG
-            self._attr_native_temperature_unit = TEMP_FAHRENHEIT
-            self._attr_native_visibility_unit = LENGTH_MILES
-            self._attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
+            self._attr_native_precipitation_unit = UnitOfPrecipitationDepth.INCHES
+            self._attr_native_pressure_unit = UnitOfPressure.INHG
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_visibility_unit = UnitOfLength.MILES
+            self._attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
         self._attr_unique_id = coordinator.location_key
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = coordinator.device_info
