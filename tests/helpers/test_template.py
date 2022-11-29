@@ -26,7 +26,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -4070,3 +4070,35 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
     template_state = template.TemplateState(hass, state, True)
     assert template_state.as_dict() is template_state.as_dict()
     assert json_dumps(template_state) == json_dumps(template_state)
+
+
+async def test_template_internal_url(hass: HomeAssistant) -> None:
+    """Test hass internal_url in template."""
+
+    hass.config.internal_url = "http://homeassistant:8123"
+    tpl = template.Template("{{ internal_url() }}", hass)
+    assert tpl.async_render() == "http://homeassistant:8123"
+
+
+async def test_template_internal_url_no_url(hass: HomeAssistant) -> None:
+    """Test hass internal_url in template with no URL avaiable."""
+
+    tpl = template.Template("{{ internal_url() }}", hass)
+    with pytest.raises(HomeAssistantError):
+        tpl.async_render()
+
+
+async def test_template_external_url(hass: HomeAssistant) -> None:
+    """Test hass external_url in template."""
+
+    hass.config.external_url = "http://ha.example.com"
+    tpl = template.Template("{{ external_url() }}", hass)
+    assert tpl.async_render() == "http://ha.example.com"
+
+
+async def test_template_external_url_no_url(hass: HomeAssistant) -> None:
+    """Test hass external_url in template with no URL avaiable."""
+
+    tpl = template.Template("{{ external_url() }}", hass)
+    with pytest.raises(HomeAssistantError):
+        tpl.async_render()

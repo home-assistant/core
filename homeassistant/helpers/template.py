@@ -20,7 +20,7 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, Literal, NoReturn, TypeVar, cast, overload
+from typing import Any, Literal, NoReturn, TypedDict, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -44,6 +44,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     HomeAssistant,
+    HomeAssistantError,
     State,
     callback,
     split_entity_id,
@@ -1981,6 +1982,55 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
+class _GetinternalURLArgs(TypedDict):
+    require_current_request: bool
+    require_ssl: bool
+    require_standard_port: bool
+    allow_ip: bool
+
+
+class _GetExternalURLArgs(TypedDict):
+    require_current_request: bool
+    require_ssl: bool
+    require_standard_port: bool
+    allow_cloud: bool
+    allow_ip: bool
+
+
+def _get_internal_url(hass: HomeAssistant, **kwargs: _GetinternalURLArgs) -> str:
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from . import network
+
+    try:
+        return network.get_url(hass, allow_external=False, **kwargs)
+    except network.NoURLAvailableError as err:
+        args = []
+        for key, value in kwargs.items():
+            args.append(f"{key}={value}")
+        call = ", ".join(args)
+        raise HomeAssistantError(
+            f"Template error: Could not resolve URL for internal_url({call})"
+        ) from err
+
+
+def _get_external_url(hass: HomeAssistant, **kwargs: _GetExternalURLArgs) -> str:
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from . import network
+
+    try:
+        return network.get_url(hass, allow_internal=False, **kwargs)
+    except network.NoURLAvailableError as err:
+        args = []
+        for key, value in kwargs.items():
+            args.append(f"{key}={value}")
+        call = ", ".join(args)
+        raise HomeAssistantError(
+            f"Template error: Could not resolve URL for external_url({call})"
+        ) from err
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2092,6 +2142,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return func(hass, *args, **kwargs)
 
             return pass_context(wrapper)
+
+        self.globals["internal_url"] = hassfunction(_get_internal_url)
+        self.globals["external_url"] = hassfunction(_get_external_url)
 
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
