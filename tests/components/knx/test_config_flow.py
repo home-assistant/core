@@ -958,6 +958,7 @@ async def test_options_flow_connection_type(
     hass.data[DOMAIN] = Mock()  # GatewayScanner uses running XKNX() instance
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     with patch(
@@ -1025,7 +1026,6 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
             CONF_KNX_LOCAL_IP: None,
         },
     )
-    mock_config_entry.add_to_hass(hass)
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1033,6 +1033,8 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
         requires_secure=True,
     )
 
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     with patch(
         "homeassistant.components.knx.config_flow.GatewayScanner"
@@ -1104,7 +1106,7 @@ async def test_options_communication_settings(
 ) -> None:
     """Test options flow changing communication settings."""
     mock_config_entry.add_to_hass(hass)
-
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     result = await hass.config_entries.options.async_configure(
