@@ -21,7 +21,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -99,7 +99,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HERETravelTimeSensor(RestoreSensor, CoordinatorEntity):
+class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -136,6 +136,7 @@ class HERETravelTimeSensor(RestoreSensor, CoordinatorEntity):
 
         self.async_on_remove(async_at_start(self.hass, _update_at_start))
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is not None:
