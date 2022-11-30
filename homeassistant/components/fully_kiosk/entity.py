@@ -23,6 +23,7 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             manufacturer=coordinator.data["deviceManufacturer"],
             model=coordinator.data["deviceModel"],
             sw_version=coordinator.data["appVersionName"],
-            configuration_url=f"http://{coordinator.data['ip4']}:2323",
+            configuration_url=f"http{'s' if coordinator.use_ssl else ''}://"
+            f"{coordinator.data['ip4']}:2323",
             connections={(CONNECTION_NETWORK_MAC, coordinator.data["Mac"])},
         )

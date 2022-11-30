@@ -7,7 +7,7 @@ from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +25,8 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             entry.data[CONF_HOST],
             DEFAULT_PORT,
             entry.data[CONF_PASSWORD],
+            use_ssl=entry.data[CONF_SSL],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
         )
         super().__init__(
             hass,
@@ -32,6 +34,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             name=entry.data[CONF_HOST],
             update_interval=UPDATE_INTERVAL,
         )
+        self.use_ssl = entry.data[CONF_SSL]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
