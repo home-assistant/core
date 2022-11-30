@@ -132,7 +132,7 @@ class Fan(HomeAccessory):
         if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
         self.async_update_state(state)
-        serv_fan.setter_callback = self._set_chars
+        serv_fan.setter_callback = self.set_chars
 
     def create_services(self):
         """Create and configure the primary service for this accessory."""
@@ -143,7 +143,8 @@ class Fan(HomeAccessory):
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
         return serv_fan
 
-    def _set_chars(self, char_values):
+    def set_chars(self, char_values):
+        """Set characteristic values."""
         _LOGGER.debug("Fan _set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:
             if char_values[CHAR_ACTIVE]:

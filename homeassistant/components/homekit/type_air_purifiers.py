@@ -25,7 +25,7 @@ from .const import (
     SERV_HUMIDITY_SENSOR,
     SERV_TEMPERATURE_SENSOR,
 )
-from .type_fans import Fan
+from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
 from .util import cleanup_name_for_homekit, density_to_air_quality
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,18 +33,24 @@ _LOGGER = logging.getLogger(__name__)
 CURRENT_STATE_INACTIVE = 0
 CURRENT_STATE_IDLE = 1
 CURRENT_STATE_PURIFYING_AIR = 2
+TARGET_STATE_MANUAL = 0
+TARGET_STATE_AUTO = 1
 
 
 @TYPES.register("AirPurifier")
 class AirPurifier(Fan):
     """Generate an AirPurifier accessory for an air purifier entity.
 
-    Currently supports: state, speed, oscillate, direction.
+    Currently supports, in addition to Fan properties:
+    temperature; humidity; PM2.5; auto mode.
     """
 
     def __init__(self, *args):
         """Initialize a new AirPurifier accessory object."""
         super().__init__(*args, category=CATEGORY_AIR_PURIFIER)
+        self.auto_preset = next(
+            filter(lambda x: "auto" == x.lower(), self.preset_modes), None
+        )
 
     def create_services(self):
         """Create and configure the primary service for this accessory."""
@@ -277,7 +283,24 @@ class AirPurifier(Fan):
                 else CURRENT_STATE_INACTIVE
             )
 
-        if self.char_target_air_purifier_state is not None:
-            # Handle single preset mode
-            self.char_target_air_purifier_state.set_value(self._state)
-            return
+        # Automatic mode is represented in HASS by a preset called Auto or auto
+        attributes = new_state.attributes
+        current_preset_mode = attributes.get(ATTR_PRESET_MODE)
+        if current_preset_mode is not None:
+            self.char_target_air_purifier_state.set_value(
+                TARGET_STATE_AUTO
+                if "auto" == current_preset_mode.lower()
+                else TARGET_STATE_MANUAL
+            )
+
+    def set_chars(self, char_values):
+        """Handle automatic mode after state change."""
+        super().set_chars(char_values)
+        if (
+            CHAR_TARGET_AIR_PURIFIER_STATE in char_values
+            and self.auto_preset is not None
+        ):
+            if char_values[CHAR_TARGET_AIR_PURIFIER_STATE] == TARGET_STATE_AUTO:
+                super().set_preset_mode(True, self.auto_preset)
+            else:
+                super().set_chars({CHAR_ROTATION_SPEED: self.char_speed.get_value()})
