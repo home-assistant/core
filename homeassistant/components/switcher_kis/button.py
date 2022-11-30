@@ -16,7 +16,7 @@ from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -93,7 +93,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switcher button from config entry."""
 
-    @callback
     async def async_add_buttons(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add button from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
