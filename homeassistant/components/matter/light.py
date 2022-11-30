@@ -93,7 +93,8 @@ class MatterLight(MatterEntity, LightEntity):
             if self._supports_brightness():
                 self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-        self._attr_is_on = self._device_type_instance.get_cluster(clusters.OnOff).onOff
+        if attr := self.get_matter_attribute(clusters.OnOff.Attributes.OnOff):
+            self._attr_is_on = attr.value
 
         if (
             clusters.LevelControl.Attributes.CurrentLevel

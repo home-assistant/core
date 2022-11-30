@@ -86,6 +86,9 @@ class MatterEntity(Entity):
             # not sure if this can happen, but just in case log it.
             LOGGER.warning("Attribute not found on device: %s", attr_cls)
 
+        # make sure to update the attributes once
+        self._update_from_device()
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         for unsub in self._unsubscribes:
