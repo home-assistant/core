@@ -5317,6 +5317,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ted": {
+      "name": "The Energy Detective",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ted5000": {
       "name": "The Energy Detective TED5000",
       "integration_type": "hub",

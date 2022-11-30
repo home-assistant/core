@@ -24,11 +24,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "ted5000"
 DEFAULT_NAME = "ted"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -54,6 +56,20 @@ def setup_platform(
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
     url = f"http://{host}:{port}/api/LiveData.xml"
+
+    # Register a repair issue that the integration is deprecated
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_ted5000_integration",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_ted5000_integration",
+        translation_placeholders={
+            "more_info_url": "https://www.home-assistant.io/integrations/ted",
+        },
+    )
 
     gateway = Ted5000Gateway(url)
 

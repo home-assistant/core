@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "deprecated_ted5000_integration": {
+      "title": "The ted5000 integration has been deprecated",
+      "description": "Please remove the `ted5000` integration from `configuration.yaml` and add the new `ted` integration through the integrations page. See the [documentation]({more_info_url}), for more information"
+    }
+  }
+}
