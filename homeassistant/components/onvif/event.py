@@ -122,8 +122,15 @@ class EventManager:
 
         if self._subscription:
             # Suppressed. The subscription may no longer exist.
-            with suppress(*SUBSCRIPTION_ERRORS):
+            try:
                 await self._subscription.Unsubscribe()
+            except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+                LOGGER.debug(
+                    "Failed to unsubscribe ONVIF PullPoint subscription for '%s';"
+                    " This is normal if the device restarted: %s",
+                    self.unique_id,
+                    err,
+                )
             self._subscription = None
 
         try:
@@ -136,7 +143,8 @@ class EventManager:
             # Device may not support subscriptions so log at debug level
             LOGGER.log(
                 level,
-                "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
+                "Failed to restart ONVIF PullPoint subscription for '%s'; "
+                "Retrying later: %s",
                 self.unique_id,
                 err,
             )
