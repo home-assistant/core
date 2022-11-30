@@ -50,8 +50,8 @@ def fixture_knx_setup():
     """Mock KNX entry setup."""
     with patch("homeassistant.components.knx.async_setup", return_value=True), patch(
         "homeassistant.components.knx.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
 
 
 def _gateway_descriptor(
@@ -109,7 +109,9 @@ async def test_user_single_instance(hass):
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
 )
-async def test_routing_setup(gateway_scanner_mock, hass: HomeAssistant) -> None:
+async def test_routing_setup(
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup
+) -> None:
     """Test routing setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -146,6 +148,7 @@ async def test_routing_setup(gateway_scanner_mock, hass: HomeAssistant) -> None:
         CONF_KNX_LOCAL_IP: None,
         CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
     }
+    knx_setup.assert_called_once()
 
 
 @patch(
@@ -153,7 +156,7 @@ async def test_routing_setup(gateway_scanner_mock, hass: HomeAssistant) -> None:
     return_value=GatewayScannerMock(),
 )
 async def test_routing_setup_advanced(
-    gateway_scanner_mock, hass: HomeAssistant
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
     """Test routing setup with advanced options."""
     result = await hass.config_entries.flow.async_init(
@@ -216,6 +219,7 @@ async def test_routing_setup_advanced(
         CONF_KNX_LOCAL_IP: "192.168.1.112",
         CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
     }
+    knx_setup.assert_called_once()
 
 
 @patch(
@@ -223,7 +227,7 @@ async def test_routing_setup_advanced(
     return_value=GatewayScannerMock(),
 )
 async def test_routing_secure_manual_setup(
-    gateway_scanner_mock, hass: HomeAssistant
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
     """Test routing secure setup with manual key config."""
     result = await hass.config_entries.flow.async_init(
@@ -301,6 +305,7 @@ async def test_routing_secure_manual_setup(
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
     }
+    knx_setup.assert_called_once()
 
 
 @patch(
@@ -308,7 +313,7 @@ async def test_routing_secure_manual_setup(
     return_value=GatewayScannerMock(),
 )
 async def test_routing_secure_keyfile(
-    gateway_scanner_mock, hass: HomeAssistant
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
     """Test routing secure setup with keyfile."""
     result = await hass.config_entries.flow.async_init(
@@ -372,6 +377,7 @@ async def test_routing_secure_keyfile(
         CONF_KNX_SECURE_USER_PASSWORD: None,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
     }
+    knx_setup.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -435,7 +441,7 @@ async def test_routing_secure_keyfile(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual(
-    gateway_scanner_mock, hass: HomeAssistant, user_input, config_entry_data
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup, user_input, config_entry_data
 ) -> None:
     """Test tunneling if no gateway was found found (or `manual` option was chosen)."""
     result = await hass.config_entries.flow.async_init(
@@ -462,6 +468,7 @@ async def test_tunneling_setup_manual(
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Tunneling @ 192.168.0.1"
     assert result3["data"] == config_entry_data
+    knx_setup.assert_called_once()
 
 
 @patch(
@@ -469,7 +476,7 @@ async def test_tunneling_setup_manual(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_for_local_ip(
-    gateway_scanner_mock, hass: HomeAssistant
+    gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
@@ -547,9 +554,12 @@ async def test_tunneling_setup_for_local_ip(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: "192.168.1.112",
     }
+    knx_setup.assert_called_once()
 
 
-async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) -> None:
+async def test_tunneling_setup_for_multiple_found_gateways(
+    hass: HomeAssistant, knx_setup
+) -> None:
     """Test tunneling if multiple gateways are found."""
     gateway = _gateway_descriptor("192.168.0.1", 3675)
     gateway2 = _gateway_descriptor("192.168.1.100", 3675)
@@ -588,6 +598,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: None,
     }
+    knx_setup.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -635,7 +646,9 @@ async def test_manual_tunnel_step_with_found_gateway(
     assert not manual_tunnel_flow["errors"]
 
 
-async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> None:
+async def test_form_with_automatic_connection_handling(
+    hass: HomeAssistant, knx_setup
+) -> None:
     """Test we get the form."""
     with patch(
         "homeassistant.components.knx.config_flow.GatewayScanner"
@@ -662,6 +675,7 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
     }
+    knx_setup.assert_called_once()
 
 
 async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
@@ -750,7 +764,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     assert result3["step_id"] == "secure_key_source"
 
 
-async def test_configure_secure_tunnel_manual(hass: HomeAssistant):
+async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup):
     """Test configure tunnelling secure keys manually."""
     menu_step = await _get_menu_step(hass)
 
@@ -784,9 +798,10 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant):
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: None,
     }
+    knx_setup.assert_called_once()
 
 
-async def test_configure_secure_knxkeys(hass: HomeAssistant):
+async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
     """Test configure secure knxkeys."""
     menu_step = await _get_menu_step(hass)
 
@@ -826,6 +841,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant):
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: None,
     }
+    knx_setup.assert_called_once()
 
 
 async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
@@ -885,7 +901,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
 
 
 async def test_options_flow_connection_type(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing interface."""
     mock_config_entry.add_to_hass(hass)
@@ -935,9 +951,12 @@ async def test_options_flow_connection_type(
             CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_ROUTE_BACK: False,
         }
+        knx_setup.assert_called_once()
 
 
-async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> None:
+async def test_options_flow_secure_manual_to_keyfile(
+    hass: HomeAssistant, knx_setup
+) -> None:
     """Test options flow changing secure credential source."""
     mock_config_entry = MockConfigEntry(
         title="KNX",
@@ -1031,10 +1050,11 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: None,
     }
+    knx_setup.assert_called_once()
 
 
 async def test_options_communication_settings(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing communication settings."""
     mock_config_entry.add_to_hass(hass)
@@ -1064,3 +1084,4 @@ async def test_options_communication_settings(
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
     }
+    knx_setup.assert_called_once()
