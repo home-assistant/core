@@ -1,0 +1,28 @@
+{
+    "issues": {
+        "country_not_configured": {
+            "description": "Nebola nakonfigurovan\u00e1 \u017eiadna krajina, aktualizujte konfigur\u00e1ciu kliknut\u00edm na tla\u010didlo \u201eviac inform\u00e1ci\u00ed\u201c ni\u017e\u0161ie.",
+            "title": "Krajina nebola nakonfigurovan\u00e1"
+        },
+        "historic_currency": {
+            "title": "Konfigurovan\u00e1 mena sa u\u017e nepou\u017e\u00edva"
+        },
+        "python_version": {
+            "title": "Podpora pre Python {current_python_version} sa odstra\u0148uje"
+        }
+    },
+    "system_health": {
+        "info": {
+            "arch": "Architekt\u00fara CPU",
+            "config_dir": "Adres\u00e1r konfigur\u00e1cie",
+            "docker": "Docker",
+            "installation_type": "Typ in\u0161tal\u00e1cie",
+            "os_name": "Rodina opera\u010dn\u00fdch syst\u00e9mov",
+            "os_version": "Verzia opera\u010dn\u00e9ho syst\u00e9mu",
+            "python_version": "Verzia Pythonu",
+            "timezone": "\u010casov\u00e9 p\u00e1smo",
+            "user": "Pou\u017e\u00edvate\u013e",
+            "version": "Verzia"
+        }
+    }
+}

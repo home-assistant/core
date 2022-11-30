@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_backup_json": "Neplatn\u00e1 z\u00e1loha JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Vyberte si automatick\u00e9 z\u00e1lohovanie"
+                },
+                "description": "Obnovte nastavenia siete z automatickej z\u00e1lohy",
+                "title": "Obnovenie automatickej z\u00e1lohy"
+            },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
+                }
+            },
+            "confirm": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Chcete nastavi\u0165 {name}?"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Obe tla\u010didl\u00e1",
+            "button_1": "Prv\u00e9 tla\u010didlo",
+            "button_2": "Druh\u00e9 tla\u010didlo",
+            "button_3": "Tretie tla\u010didlo",
+            "button_4": "\u0160tvrt\u00e9 tla\u010didlo",
+            "button_5": "Piate tla\u010didlo",
+            "button_6": "\u0160ieste tla\u010didlo"
+        },
+        "trigger_type": {
+            "device_offline": "Zariadenie je offline"
+        }
+    },
+    "options": {
+        "abort": {
+            "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_backup_json": "Neplatn\u00e1 z\u00e1loha JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Vyberte si automatick\u00e9 z\u00e1lohovanie"
+                },
+                "description": "Obnovte nastavenia siete z automatickej z\u00e1lohy",
+                "title": "Obnovenie automatickej z\u00e1lohy"
+            },
+            "choose_formation_strategy": {
+                "menu_options": {
+                    "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
+                }
+            },
+            "prompt_migrate_or_reconfigure": {
+                "title": "Migr\u00e1cia alebo zmena konfigur\u00e1cie"
+            }
+        }
+    }
+}

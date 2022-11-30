@@ -43,5 +43,11 @@
                 "description": "Voer de verbindingsinstellingen van je [ESPHome](https://esphome.io/) apparaat in."
             }
         }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Om de Bluetooth betrouwbaarheid en performance te verbeteren, raden we sterk aan om {name} bij te werken met ESPHome 2022.11.0 of later.",
+            "title": "Werk {name} bij naar ESPHome versie 2022.11.0 of later"
+        }
     }
 }

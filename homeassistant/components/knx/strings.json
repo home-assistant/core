@@ -29,11 +29,12 @@
           "local_ip": "Leave blank to use auto-discovery."
         }
       },
-      "secure_tunneling": {
+      "secure_key_source": {
         "description": "Select how you want to configure KNX/IP Secure.",
         "menu_options": {
           "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-          "secure_tunnel_manual": "Configure IP secure keys manually"
+          "secure_tunnel_manual": "Configure IP secure credentials manually",
+          "secure_routing_manual": "Configure IP secure backbone key manually"
         }
       },
       "secure_knxkeys": {
@@ -60,10 +61,22 @@
           "device_authentication": "This is set in the 'IP' panel of the interface in ETS."
         }
       },
+      "secure_routing_manual": {
+        "description": "Please enter your IP secure information.",
+        "data": {
+          "backbone_key": "Backbone key",
+          "sync_latency_tolerance": "Network latency tolerance"
+        },
+        "data_description": {
+          "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
+          "sync_latency_tolerance": "Default is 1000."
+        }
+      },
       "routing": {
         "description": "Please configure the routing options.",
         "data": {
           "individual_address": "Individual address",
+          "routing_secure": "Use KNX IP Secure",
           "multicast_group": "Multicast group",
           "multicast_port": "Multicast port",
           "local_ip": "Local IP of Home Assistant"
@@ -80,6 +93,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
       "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
       "invalid_ip_address": "Invalid IPv4 address.",
       "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
@@ -134,11 +148,12 @@
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       },
-      "secure_tunneling": {
-        "description": "[%key:component::knx::config::step::secure_tunneling::description%]",
+      "secure_key_source": {
+        "description": "[%key:component::knx::config::step::secure_key_source::description%]",
         "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_tunneling::menu_options::secure_knxkeys%]",
-          "secure_tunnel_manual": "[%key:component::knx::config::step::secure_tunneling::menu_options::secure_tunnel_manual%]"
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_knxkeys%]",
+          "secure_tunnel_manual": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_tunnel_manual%]",
+          "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_routing_manual%]"
         }
       },
       "secure_knxkeys": {
@@ -165,10 +180,22 @@
           "device_authentication": "[%key:component::knx::config::step::secure_tunnel_manual::data_description::device_authentication%]"
         }
       },
+      "secure_routing_manual": {
+        "description": "[%key:component::knx::config::step::secure_routing_manual::description%]",
+        "data": {
+          "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data::backbone_key%]",
+          "sync_latency_tolerance": "[%key:component::knx::config::step::secure_routing_manual::data::sync_latency_tolerance%]"
+        },
+        "data_description": {
+          "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data_description::backbone_key%]",
+          "sync_latency_tolerance": "[%key:component::knx::config::step::secure_routing_manual::data_description::sync_latency_tolerance%]"
+        }
+      },
       "routing": {
         "description": "[%key:component::knx::config::step::routing::description%]",
         "data": {
           "individual_address": "[%key:component::knx::config::step::routing::data::individual_address%]",
+          "routing_secure": "[%key:component::knx::config::step::routing::data::routing_secure%]",
           "multicast_group": "[%key:component::knx::config::step::routing::data::multicast_group%]",
           "multicast_port": "[%key:component::knx::config::step::routing::data::multicast_port%]",
           "local_ip": "[%key:component::knx::config::step::routing::data::local_ip%]"
@@ -181,6 +208,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_backbone_key": "[%key:component::knx::config::error::invalid_backbone_key%]",
       "invalid_individual_address": "[%key:component::knx::config::error::invalid_individual_address%]",
       "invalid_ip_address": "[%key:component::knx::config::error::invalid_ip_address%]",
       "invalid_signature": "[%key:component::knx::config::error::invalid_signature%]",

@@ -86,6 +86,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
 homeassistant.components.demo.*
+homeassistant.components.derivative.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
@@ -182,10 +183,12 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
+homeassistant.components.min_max.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
+homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*

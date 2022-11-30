@@ -12,6 +12,7 @@
             "bad_client_key": "\u79c1\u9470\u7121\u6548\u3001\u8acb\u78ba\u5b9a\u63d0\u4f9b\u70ba PEM \u7de8\u78bc\u6a94\u6848\u4e26\u4e0d\u5177\u5bc6\u78bc",
             "bad_discovery_prefix": "\u641c\u7d22\u4e3b\u984c prefix \u7121\u6548",
             "bad_will": "Will \u4e3b\u984c\u7121\u6548",
+            "bad_ws_headers": "\u63d0\u4f9b\u6709\u6548\u7684 HTTP header \u4f5c\u70ba JSON \u7269\u4ef6",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_inclusion": "\u5ba2\u6236\u7aef\u6191\u8b49\u8207\u79c1\u9470\u5fc5\u9808\u4e00\u8d77\u8a2d\u5b9a"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "\u4e0a\u50b3\u5ba2\u6236\u7aef\u6191\u8b49\u6a94\u6848",
                     "client_id": "\u5ba2\u6236\u7aef ID (\u4fdd\u6301\u7a7a\u767d\u5c07\u81ea\u52d5\u7522\u751f)",
                     "client_key": "\u4e0a\u50b3\u79c1\u9470\u6a94\u6848",
-                    "discovery": "\u958b\u555f\u641c\u5c0b",
                     "keepalive": "\u50b3\u9001\u4fdd\u6301\u6d3b\u52d5\u8a0a\u606f\u9593\u9694\u6642\u9593",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "\u4ee3\u7406\u4f3a\u670d\u5668\u6191\u8b49\u9a57\u8b49",
                     "set_client_cert": "\u4f7f\u7528\u5ba2\u6236\u7aef\u6191\u8b49",
                     "tls_insecure": "\u5ffd\u7565\u4ee3\u7406\u4f3a\u670d\u5668\u6191\u8b49\u9a57\u8b49",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                    "transport": "MQTT \u50b3\u8f38",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "ws_headers": "JSON \u683c\u5f0f\u7684 WebSocket header",
+                    "ws_path": "WebSocket \u8def\u5f91"
                 },
                 "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002"
             },
@@ -86,6 +89,7 @@
             "bad_client_key": "\u79c1\u9470\u7121\u6548\u3001\u8acb\u78ba\u5b9a\u63d0\u4f9b\u70ba PEM \u7de8\u78bc\u6a94\u6848\u4e26\u4e0d\u5177\u5bc6\u78bc",
             "bad_discovery_prefix": "\u641c\u7d22\u4e3b\u984c prefix \u7121\u6548",
             "bad_will": "Will \u4e3b\u984c\u7121\u6548",
+            "bad_ws_headers": "\u63d0\u4f9b\u6709\u6548\u7684 HTTP header \u4f5c\u70ba JSON \u7269\u4ef6",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_inclusion": "\u5ba2\u6236\u7aef\u6191\u8b49\u8207\u79c1\u9470\u5fc5\u9808\u4e00\u8d77\u8a2d\u5b9a"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "\u4ee3\u7406\u4f3a\u670d\u5668\u6191\u8b49\u9a57\u8b49",
                     "set_client_cert": "\u4f7f\u7528\u5ba2\u6236\u7aef\u6191\u8b49",
                     "tls_insecure": "\u5ffd\u7565\u4ee3\u7406\u4f3a\u670d\u5668\u6191\u8b49\u9a57\u8b49",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                    "transport": "MQTT \u50b3\u8f38",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "ws_headers": "JSON \u683c\u5f0f\u7684 WebSocket header",
+                    "ws_path": "WebSocket \u8def\u5f91"
                 },
                 "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002",
                 "title": "Broker \u9078\u9805"

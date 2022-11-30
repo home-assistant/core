@@ -51,14 +51,19 @@ from .const import (
     CONF_CLIENT_KEY,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_ENCODING,
     DEFAULT_PROTOCOL,
     DEFAULT_QOS,
+    DEFAULT_TRANSPORT,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_5,
     PROTOCOL_31,
+    TRANSPORT_WEBSOCKETS,
 )
 from .models import (
     AsyncMessageCallbackType,
@@ -74,7 +79,6 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,16 +147,20 @@ AsyncDeprecatedMessageCallbackType = Callable[
     [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
+DeprecatedMessageCallbackTypes = Union[
+    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
+]
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 def wrap_msg_callback(
-    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+    msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function
     check_func = msg_callback
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]
 
     wrapper_func: AsyncMessageCallbackType | MessageCallbackType
     if asyncio.iscoroutinefunction(check_func):
@@ -165,14 +173,15 @@ def wrap_msg_callback(
             )
 
         wrapper_func = async_wrapper
-    else:
+        return wrapper_func
 
-        @wraps(msg_callback)
-        def wrapper(msg: ReceiveMessage) -> None:
-            """Call with deprecated signature."""
-            msg_callback(msg.topic, msg.payload, msg.qos)
+    @wraps(msg_callback)
+    def wrapper(msg: ReceiveMessage) -> None:
+        """Call with deprecated signature."""
+        msg_callback(msg.topic, msg.payload, msg.qos)
 
-        wrapper_func = wrapper
+    wrapper_func = wrapper
+
     return wrapper_func
 
 
@@ -182,8 +191,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: AsyncMessageCallbackType
     | MessageCallbackType
-    | DeprecatedMessageCallbackType
-    | AsyncDeprecatedMessageCallbackType,
+    | DeprecatedMessageCallbackTypes,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -196,6 +204,7 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
+    # Support for a deprecated callback type will be removed from HA core 2023.2.0
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
@@ -209,12 +218,13 @@ async def async_subscribe(
     if non_default == 3:
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
-            "Signature of MQTT msg_callback '%s.%s' is deprecated",
+            "Signature of MQTT msg_callback '%s.%s' is deprecated, "
+            "this will stop working with HA core 2023.2",
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
         wrapped_msg_callback = wrap_msg_callback(
-            cast(DeprecatedMessageCallbackType, msg_callback)
+            cast(DeprecatedMessageCallbackTypes, msg_callback)
         )
 
     async_remove = await mqtt_data.client.async_subscribe(
@@ -284,7 +294,8 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._client = mqtt.Client(client_id, protocol=proto)
+        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._client = mqtt.Client(client_id, protocol=proto, transport=transport)
 
         # Enable logging
         self._client.enable_logger()
@@ -302,6 +313,10 @@ class MqttClientSetup:
         client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
+        if transport == TRANSPORT_WEBSOCKETS:
+            ws_path = config.get(CONF_WS_PATH)
+            ws_headers = config.get(CONF_WS_HEADERS)
+            self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
                 certificate,

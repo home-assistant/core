@@ -67,7 +67,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Select under the select platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Select under the select platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(select.DOMAIN),
 )

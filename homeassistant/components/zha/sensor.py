@@ -5,6 +5,8 @@ import functools
 import numbers
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from zigpy import types
+
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,6 +38,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
+    UnitOfMass,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -837,3 +840,53 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _unit = TIME_MINUTES
+
+
+class AqaraFeedingSource(types.enum8):
+    """Aqara pet feeder feeding source."""
+
+    Feeder = 0x01
+    HomeAssistant = 0x02
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSource(Sensor, id_suffix="last_feeding_source"):
+    """Sensor that displays the last feeding source of pet feeder."""
+
+    SENSOR_ATTR = "last_feeding_source"
+    _attr_name: str = "Last feeding source"
+    _attr_icon = "mdi:devices"
+
+    def formatter(self, value: int) -> int | float | None:
+        """Numeric pass-through formatter."""
+        return AqaraFeedingSource(value).name
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederLastFeedingSize(Sensor, id_suffix="last_feeding_size"):
+    """Sensor that displays the last feeding size of the pet feeder."""
+
+    SENSOR_ATTR = "last_feeding_size"
+    _attr_name: str = "Last feeding size"
+    _attr_icon: str = "mdi:counter"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
+    """Sensor that displays the number of portions dispensed by the pet feeder."""
+
+    SENSOR_ATTR = "portions_dispensed"
+    _attr_name: str = "Portions dispensed today"
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:counter"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
+    """Sensor that displays the weight weight dispensed by the pet feeder."""
+
+    SENSOR_ATTR = "weight_dispensed"
+    _attr_name: str = "Weight dispensed today"
+    _unit = UnitOfMass.GRAMS
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_icon: str = "mdi:weight-gram"

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto wurde bereits konfiguriert",
             "already_configured_account": "Konto wurde bereits konfiguriert",
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
@@ -26,23 +25,13 @@
                 "description": "M\u00f6chtest du {model} ({device_id}) einrichten?"
             },
             "local": {
-                "data": {
-                    "host": "IP-Adresse"
-                },
-                "description": "Befolge [diese Anweisungen]({url}), um die Awair Local API zu aktivieren. \n\nDr\u00fccke abschlie\u00dfend auf Senden."
+                "description": "Befolge [diese Anweisungen]({url}), um die Awair Lokal API zu aktivieren. \n\nDr\u00fccke abschlie\u00dfend auf Senden."
             },
             "local_pick": {
                 "data": {
                     "device": "Ger\u00e4t",
                     "host": "IP-Adresse"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Zugangstoken",
-                    "email": "E-Mail"
-                },
-                "description": "Bitte gib deinen Awair-Entwicklerzugriffstoken erneut ein."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Bitte gib deinen Awair-Entwicklerzugriffstoken erneut ein."
             },
             "user": {
-                "data": {
-                    "access_token": "Zugangstoken",
-                    "email": "E-Mail"
-                },
                 "description": "W\u00e4hle lokal f\u00fcr die beste Erfahrung. Verwende die Cloud nur, wenn das Ger\u00e4t nicht mit demselben Netzwerk wie Home Assistant verbunden ist oder wenn du ein \u00e4lteres Ger\u00e4t hast.",
                 "menu_options": {
                     "cloud": "Verbindung \u00fcber die Cloud",

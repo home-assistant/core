@@ -1,5 +1,7 @@
 """Tests for the UpCloud config flow."""
 
+from unittest.mock import patch
+
 import requests.exceptions
 from requests_mock import ANY
 from upcloud_api import UpCloudAPIError
@@ -80,6 +82,10 @@ async def test_options(hass):
         domain=DOMAIN, data=FIXTURE_USER_INPUT, options=FIXTURE_USER_INPUT_OPTIONS
     )
     config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.upcloud.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM

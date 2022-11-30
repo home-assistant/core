@@ -47,7 +47,6 @@
             "title": "B\u0142\u0105d konfiguracji w wersji Early Access"
         },
         "ea_warning": {
-            "description": "U\u017cywasz UniFi Protect v{version}, kt\u00f3ra jest wersj\u0105 Early Access. Wersje Early Access nie s\u0105 obs\u0142ugiwane przez Home Assistanta i mog\u0105 spowodowa\u0107 uszkodzenie integracji UniFi Protect lub niedzia\u0142anie zgodnie z oczekiwaniami.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +63,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Musi to by\u0107 lista adres\u00f3w MAC oddzielonych przecinkami"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metryki w czasie rzeczywistym (UWAGA: Znacznie zwi\u0119ksza u\u017cycie CPU)",
                     "allow_ea": "Zezw\u00f3l na wersje UniFi Protect Early Access (OSTRZE\u017bENIE: Twoja integracja zostanie oznaczona jako nieobs\u0142ugiwana)",
                     "disable_rtsp": "Wy\u0142\u0105cz strumie\u0144 RTSP",
-                    "ignored_devices": "Oddzielona przecinkami lista adres\u00f3w MAC urz\u0105dze\u0144 do zignorowania",
                     "max_media": "Maksymalna liczba zdarze\u0144 do za\u0142adowania dla przegl\u0105darki medi\u00f3w (zwi\u0119ksza u\u017cycie pami\u0119ci RAM)",
                     "override_connection_host": "Zast\u0105p host po\u0142\u0105czenia"
                 },

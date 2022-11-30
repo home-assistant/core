@@ -522,18 +522,26 @@ async def test_form_auth_errors_test_connection_gen2(hass, error):
     assert result3["errors"] == {"base": base_error}
 
 
-async def test_zeroconf(hass):
+@pytest.mark.parametrize(
+    "gen, get_info",
+    [
+        (1, {"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": 1}),
+        (2, {"mac": "test-mac", "model": "SHSW-1", "auth": False, "gen": 2}),
+    ],
+)
+async def test_zeroconf(hass, gen, get_info):
     """Test we get the form."""
 
-    with patch(
-        "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
-    ), patch(
+    with patch("aioshelly.common.get_info", return_value=get_info), patch(
         "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(return_value=Mock(model="SHSW-1", settings=MOCK_SETTINGS)),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
-                settings=MOCK_SETTINGS,
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
             )
         ),
     ):
@@ -569,7 +577,7 @@ async def test_zeroconf(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
-        "gen": 1,
+        "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

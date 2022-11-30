@@ -3,5 +3,6 @@
   "name": "Home Assistant Hardware",
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
   "codeowners": ["@home-assistant/core"],
-  "integration_type": "system"
+  "integration_type": "system",
+  "after_dependencies": ["zha"]
 }
