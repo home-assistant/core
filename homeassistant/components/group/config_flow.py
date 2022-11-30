@@ -24,7 +24,7 @@ from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS
 
 
-def basic_group_options_schema(
+async def basic_group_options_schema(
     domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
@@ -52,9 +52,9 @@ def basic_group_config_schema(domain: str) -> vol.Schema:
     )
 
 
-def binary_sensor_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def binary_sensor_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema("binary_sensor", handler).extend(
+    return (await basic_group_options_schema("binary_sensor", handler)).extend(
         {
             vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
@@ -68,11 +68,11 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 )
 
 
-def light_switch_options_schema(
+async def light_switch_options_schema(
     domain: str, handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
-    return basic_group_options_schema(domain, handler).extend(
+    return (await basic_group_options_schema(domain, handler)).extend(
         {
             vol.Required(
                 CONF_ALL, default=False, description={"advanced": True}
@@ -92,8 +92,7 @@ GROUP_TYPES = [
 ]
 
 
-@callback
-def choose_options_step(options: dict[str, Any]) -> str:
+async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to group_type."""
     return cast(str, options["group_type"])
 
