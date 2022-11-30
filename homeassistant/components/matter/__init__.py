@@ -178,7 +178,7 @@ async def async_remove_config_entry_device(
 @callback
 def get_matter(hass: HomeAssistant) -> MatterAdapter:
     """Return MatterAdapter instance."""
-    # NOTE: This assumes only one Matter connection/fabric can exist
+    # NOTE: This assumes only one Matter connection/fabric can exist.
     # Shall we support connecting to multiple servers in the client or by config entries?
     # In case of the config entry we need to fix this.
     return next(iter(hass.data[DOMAIN].values()))  # type: ignore[no-any-return]
