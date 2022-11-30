@@ -57,6 +57,7 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
+    ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
     ATTR_VALUE,
@@ -523,20 +524,32 @@ class ZHADevice(LogMixin):
             for entity_ref in self.gateway.device_registry[self.ieee]
         ]
 
-        # Return the neighbor information
+        topology = self.gateway.application_controller.topology
         device_info[ATTR_NEIGHBORS] = [
             {
-                "device_type": neighbor.neighbor.device_type.name,
-                "rx_on_when_idle": neighbor.neighbor.rx_on_when_idle.name,
-                "relationship": neighbor.neighbor.relationship.name,
-                "extended_pan_id": str(neighbor.neighbor.extended_pan_id),
-                "ieee": str(neighbor.neighbor.ieee),
-                "nwk": str(neighbor.neighbor.nwk),
-                "permit_joining": neighbor.neighbor.permit_joining.name,
-                "depth": str(neighbor.neighbor.depth),
-                "lqi": str(neighbor.neighbor.lqi),
+                "device_type": neighbor.device_type.name,
+                "rx_on_when_idle": neighbor.rx_on_when_idle.name,
+                "relationship": neighbor.relationship.name,
+                "extended_pan_id": str(neighbor.extended_pan_id),
+                "ieee": str(neighbor.ieee),
+                "nwk": str(neighbor.nwk),
+                "permit_joining": neighbor.permit_joining.name,
+                "depth": str(neighbor.depth),
+                "lqi": str(neighbor.lqi),
             }
-            for neighbor in self._zigpy_device.neighbors
+            for neighbor in topology.neighbors[self.ieee]
+        ]
+
+        device_info[ATTR_ROUTES] = [
+            {
+                "dest_nwk": str(route.DstNWK),
+                "route_status": str(route.RouteStatus.name),
+                "memory_constrained": bool(route.MemoryConstrained),
+                "many_to_one": bool(route.ManyToOne),
+                "route_record_required": bool(route.RouteRecordRequired),
+                "next_hop": str(route.NextHop),
+            }
+            for route in topology.routes[self.ieee]
         ]
 
         # Return endpoint device type Names
