@@ -417,7 +417,7 @@ RPC_SENSORS: Final = {
         available=lambda status: status is not None,
     ),
     "analoginput": RpcSensorDescription(
-        key="analoginput",
+        key="input",
         sub_key="percent",
         name="Analog Input",
         native_unit_of_measurement=PERCENTAGE,

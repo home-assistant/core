@@ -2878,6 +2878,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "local_calendar": {
+      "name": "Local Calendar",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
