@@ -1,5 +1,5 @@
 """Test the KNX config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -492,6 +492,7 @@ async def test_tunneling_setup_manual(
 async def test_tunneling_setup_manual_request_description_error(
     _gateway_scanner_mock,
     hass: HomeAssistant,
+    knx_setup,
 ) -> None:
     """Test tunneling if no gateway was found found (or `manual` option was chosen)."""
     result = await hass.config_entries.flow.async_init(
@@ -597,10 +598,7 @@ async def test_tunneling_setup_manual_request_description_error(
             3671,
             supports_tunnelling_tcp=True,
         ),
-    ), patch(
-        "homeassistant.components.knx.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -609,15 +607,16 @@ async def test_tunneling_setup_manual_request_description_error(
                 CONF_PORT: 3671,
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Tunneling @ 192.168.0.1"
-        assert result["data"] == {
-            **DEFAULT_ENTRY_DATA,
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
-            CONF_HOST: "192.168.0.1",
-            CONF_PORT: 3671,
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Tunneling @ 192.168.0.1"
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.0.1",
+        CONF_PORT: 3671,
+    }
+    knx_setup.assert_called_once()
 
 
 @patch(
@@ -1071,6 +1070,7 @@ async def test_options_flow_connection_type(
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    hass.data[DOMAIN] = Mock()  # GatewayScanner uses running XKNX() in options flow
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     with patch(
