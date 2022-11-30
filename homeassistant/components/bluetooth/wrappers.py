@@ -182,22 +182,17 @@ class HaBleakClientWrapper(BleakClient):
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
-        if (
-            not self._backend
-            or not self.__ble_device
-            or not self._async_get_backend_for_ble_device(self.__ble_device)
-        ):
-            assert models.MANAGER is not None
-            (
-                wrapped_backend,
-                self.__ble_device,
-            ) = self._async_get_best_available_backend_and_device()
-            self._backend = wrapped_backend.client(
-                self.__ble_device,
-                disconnected_callback=self.__disconnected_callback,
-                timeout=self.__timeout,
-                hass=models.MANAGER.hass,
-            )
+        assert models.MANAGER is not None
+        (
+            wrapped_backend,
+            self.__ble_device,
+        ) = self._async_get_best_available_backend_and_device()
+        self._backend = wrapped_backend.client(
+            self.__ble_device,
+            disconnected_callback=self.__disconnected_callback,
+            timeout=self.__timeout,
+            hass=models.MANAGER.hass,
+        )
         return await super().connect(**kwargs)
 
     @hass_callback
