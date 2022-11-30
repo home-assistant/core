@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+from yolink.client_request import ClientRequest
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.config_entries import ConfigEntry
@@ -64,6 +65,18 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
         try:
             # call_device_http_api will check result, fail by raise YoLinkClientError
             await self.coordinator.device.call_device_http_api(command, params)
+        except YoLinkAuthFailError as yl_auth_err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(yl_auth_err) from yl_auth_err
+        except YoLinkClientError as yl_client_err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(yl_client_err) from yl_client_err
+
+    async def call_device(self, request: ClientRequest) -> None:
+        """Call device api."""
+        try:
+            # call_device will check result, fail by raise YoLinkClientError
+            await self.coordinator.device.call_device(request)
         except YoLinkAuthFailError as yl_auth_err:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(yl_auth_err) from yl_auth_err
