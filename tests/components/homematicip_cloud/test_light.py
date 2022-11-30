@@ -117,12 +117,12 @@ async def test_hmip_notification_light(hass, default_mock_hap_factory):
 
     for color, hs_color in color_list.items():
         await hass.services.async_call(
-            "light",
-            "turn_on",
-            {"entity_id": entity_id, "hs_color": hs_color},
+            "lock",
+            "open",
+            {"entity_id": entity_id},
             blocking=True,
         )
-        assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
+        assert hmip_device.mock_calls[-1][0] == "set_lock_state"
         assert hmip_device.mock_calls[-1][2] == {
             "channelIndex": 2,
             "dimLevel": 0.0392156862745098,
