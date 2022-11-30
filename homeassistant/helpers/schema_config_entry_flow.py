@@ -32,7 +32,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: vol.Schema | Callable[
-        [SchemaCommonFlowHandler], vol.Schema | None
+        [SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]
     ] | None = None
     """Optional voluptuous schema, or function which returns a schema or None, for
     requesting and validating user input.
@@ -54,7 +54,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` should raise `SchemaFlowError` if user input is invalid.
     """
 
-    next_step: Callable[[dict[str, Any]], str | None] | str | None = None
+    next_step: Callable[
+        [dict[str, Any]], Coroutine[Any, Any, str | None]
+    ] | str | None = None
     """Optional property to identify next step.
 
     - If `next_step` is a function, it is called if the schema validates successfully or
@@ -65,7 +67,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """
 
     suggested_values: Callable[
-        [SchemaCommonFlowHandler], dict[str, Any]
+        [SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]
     ] | None | UndefinedType = UNDEFINED
     """Optional property to populate suggested values.
 
@@ -127,12 +129,12 @@ class SchemaCommonFlowHandler:
             return await self._async_form_step(step_id, user_input)
         return await self._async_menu_step(step_id, user_input)
 
-    def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
+    async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
         if form_step.schema is None:
             return None
         if isinstance(form_step.schema, vol.Schema):
             return form_step.schema
-        return form_step.schema(self)
+        return await form_step.schema(self)
 
     async def _async_form_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
@@ -142,7 +144,7 @@ class SchemaCommonFlowHandler:
 
         if (
             user_input is not None
-            and (data_schema := self._get_schema(form_step))
+            and (data_schema := await self._get_schema(form_step))
             and data_schema.schema
             and not self._handler.show_advanced_options
         ):
@@ -162,33 +164,33 @@ class SchemaCommonFlowHandler:
             try:
                 user_input = await form_step.validate_user_input(self, user_input)
             except SchemaFlowError as exc:
-                return self._show_next_step(step_id, exc, user_input)
+                return await self._show_next_step(step_id, exc, user_input)
 
         if user_input is not None:
             # User input was validated successfully, update options
             self._options.update(user_input)
 
         if user_input is not None or form_step.schema is None:
-            return self._show_next_step_or_create_entry(form_step)
+            return await self._show_next_step_or_create_entry(form_step)
 
-        return self._show_next_step(step_id)
+        return await self._show_next_step(step_id)
 
-    def _show_next_step_or_create_entry(
+    async def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
     ) -> FlowResult:
         next_step_id_or_end_flow: str | None
 
         if callable(form_step.next_step):
-            next_step_id_or_end_flow = form_step.next_step(self._options)
+            next_step_id_or_end_flow = await form_step.next_step(self._options)
         else:
             next_step_id_or_end_flow = form_step.next_step
 
         if next_step_id_or_end_flow is None:
             # Flow done, create entry or update config entry options
             return self._handler.async_create_entry(data=self._options)
-        return self._show_next_step(next_step_id_or_end_flow)
+        return await self._show_next_step(next_step_id_or_end_flow)
 
-    def _show_next_step(
+    async def _show_next_step(
         self,
         next_step_id: str,
         error: SchemaFlowError | None = None,
@@ -204,14 +206,14 @@ class SchemaCommonFlowHandler:
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
-        if (data_schema := self._get_schema(form_step)) is None:
-            return self._show_next_step_or_create_entry(form_step)
+        if (data_schema := await self._get_schema(form_step)) is None:
+            return await self._show_next_step_or_create_entry(form_step)
 
         suggested_values: dict[str, Any] = {}
         if form_step.suggested_values is UNDEFINED:
             suggested_values = self._options
         elif form_step.suggested_values:
-            suggested_values = form_step.suggested_values(self)
+            suggested_values = await form_step.suggested_values(self)
 
         if user_input:
             # We don't want to mutate the existing options

@@ -303,9 +303,12 @@ async def test_menu_step(hass: HomeAssistant) -> None:
     MENU_1 = ["option1", "option2"]
     MENU_2 = ["option3", "option4"]
 
+    async def _option1_next_step(_: dict[str, Any]) -> str:
+        return "menu2"
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowMenuStep(MENU_1),
-        "option1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "menu2"),
+        "option1": SchemaFlowFormStep(vol.Schema({}), next_step=_option1_next_step),
         "menu2": SchemaFlowMenuStep(MENU_2),
         "option3": SchemaFlowFormStep(vol.Schema({}), next_step="option4"),
         "option4": SchemaFlowFormStep(vol.Schema({})),
@@ -384,10 +387,13 @@ async def test_schema_none(hass: HomeAssistant) -> None:
 async def test_last_step(hass: HomeAssistant) -> None:
     """Test SchemaFlowFormStep with schema set to None."""
 
+    async def _step2_next_step(_: dict[str, Any]) -> str:
+        return "step3"
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowFormStep(next_step="step1"),
         "step1": SchemaFlowFormStep(vol.Schema({}), next_step="step2"),
-        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step3"),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
         "step3": SchemaFlowFormStep(vol.Schema({}), next_step=None),
     }
 
@@ -422,10 +428,16 @@ async def test_last_step(hass: HomeAssistant) -> None:
 async def test_next_step_function(hass: HomeAssistant) -> None:
     """Test SchemaFlowFormStep with a next_step function."""
 
+    async def _step1_next_step(_: dict[str, Any]) -> str:
+        return "step2"
+
+    async def _step2_next_step(_: dict[str, Any]) -> None:
+        return None
+
     CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "user": SchemaFlowFormStep(next_step="step1"),
-        "step1": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: "step2"),
-        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=lambda _: None),
+        "step1": SchemaFlowFormStep(vol.Schema({}), next_step=_step1_next_step),
+        "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
     }
 
     class TestConfigFlow(SchemaConfigFlowHandler, domain=TEST_DOMAIN):
@@ -466,12 +478,15 @@ async def test_suggested_values(
             raise SchemaFlowError("option1 not using a valid value")
         return user_input
 
+    async def _step_2_suggested_values(_: SchemaCommonFlowHandler) -> dict[str, Any]:
+        return {"option1": "a random override"}
+
     OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
         "init": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_1"),
         "step_1": SchemaFlowFormStep(OPTIONS_SCHEMA, next_step="step_2"),
         "step_2": SchemaFlowFormStep(
             OPTIONS_SCHEMA,
-            suggested_values=lambda _: {"option1": "a random override"},
+            suggested_values=_step_2_suggested_values,
             next_step="step_3",
         ),
         "step_3": SchemaFlowFormStep(
