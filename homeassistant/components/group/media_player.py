@@ -1,6 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -393,10 +394,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
             if states.count(single_state := states[0]) == len(states):
-                try:
+                self._attr_state = None
+                with suppress(ValueError):
                     self._attr_state = MediaPlayerState(single_state)
-                except ValueError:
-                    self._attr_state = None
             elif any(state for state in states if state not in off_values):
                 self._attr_state = MediaPlayerState.ON
             else:
