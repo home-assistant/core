@@ -115,6 +115,22 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
 
     assert result2["errors"] == {"base": "resource_error"}
 
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=MockRestData("test_scrape_sensor_no_data"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                CONF_VERIFY_SSL: True,
+                CONF_TIMEOUT: 10.0,
+            },
+        )
+
+    assert result2["errors"] == {"base": "resource_error"}
+
     with patch("homeassistant.components.rest.RestData", return_value=get_data,), patch(
         "homeassistant.components.scrape.async_setup_entry",
         return_value=True,
