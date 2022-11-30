@@ -211,18 +211,14 @@ turn_on:
       description: Color temperature for the light in mireds.
       selector:
         color_temp:
-          min_mireds: 153
-          max_mireds: 500
+          unit: Mired
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
       advanced: true
       selector:
-        number:
-          min: 2000
-          max: 6500
-          step: 100
-          unit_of_measurement: K
+        color_temp:
+          unit: Kelvin
     brightness:
       name: Brightness value
       description: Number indicating brightness, where 0 turns the light
@@ -521,16 +517,14 @@ toggle:
       advanced: true
       selector:
         color_temp:
+          unit: Mired
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
       advanced: true
       selector:
-        number:
-          min: 2000
-          max: 6500
-          step: 100
-          unit_of_measurement: K
+        color_temp:
+          unit: Kelvin
     brightness:
       name: Brightness value
       description: Number indicating brightness, where 0 turns the light
