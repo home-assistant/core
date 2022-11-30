@@ -5,31 +5,6 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen"
-        },
-        "step": {
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Typ vun Radio"
-                },
-                "description": "Typ vum Zigbee Radio auswielen",
-                "title": "Typ vun Radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "Vitesse vum Port",
-                    "flow_control": "Data Flow Kontroll",
-                    "path": "Pad zum seriellen Apparat"
-                },
-                "description": "G\u00ebff spezifesch Port Astellungen an.",
-                "title": "Astellungen"
-            },
-            "user": {
-                "data": {
-                    "path": "Pad zum seriellen Apparat"
-                },
-                "description": "Serielle Port fir Zigbee Radio auswielen",
-                "title": "ZHA"
-            }
         }
     },
     "device_automation": {

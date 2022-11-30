@@ -2,14 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Ta ra\u010dun SimpliSafe je \u017ee v uporabi."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Geslo",
-                    "username": "E-po\u0161tni naslov"
-                }
-            }
         }
     },
     "options": {

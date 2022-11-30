@@ -21,9 +21,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    CONF_UNIT_SYSTEM,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -31,7 +30,6 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -47,17 +45,20 @@ from .const import (
     CONF_ROUTE_MODE,
     DEFAULT_NAME,
     DOMAIN,
-    IMPERIAL_UNITS,
-    METRIC_UNITS,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODES,
-    UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_OPTIONS = {
+    CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+    CONF_ARRIVAL_TIME: None,
+    CONF_DEPARTURE_TIME: None,
+}
 
 
 async def async_validate_api_key(api_key: str) -> None:
@@ -88,19 +89,6 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
             ): vol.In(TRAVEL_MODES),
         }
     )
-
-
-def default_options(hass: HomeAssistant) -> dict[str, str | None]:
-    """Get the default options."""
-    default = {
-        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_ARRIVAL_TIME: None,
-        CONF_DEPARTURE_TIME: None,
-        CONF_UNIT_SYSTEM: METRIC_UNITS,
-    }
-    if hass.config.units is US_CUSTOMARY_SYSTEM:
-        default[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
-    return default
 
 
 class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -198,7 +186,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
-                options=default_options(self.hass),
+                options=DEFAULT_OPTIONS,
             )
         schema = vol.Schema(
             {
@@ -227,7 +215,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
-                options=default_options(self.hass),
+                options=DEFAULT_OPTIONS,
             )
         schema = vol.Schema(
             {vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector()}
@@ -254,21 +242,14 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                 menu_options=["departure_time", "arrival_time", "no_time"],
             )
 
-        defaults = default_options(self.hass)
         schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_ROUTE_MODE,
                     default=self.config_entry.options.get(
-                        CONF_ROUTE_MODE, defaults[CONF_ROUTE_MODE]
+                        CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
                     ),
                 ): vol.In(ROUTE_MODES),
-                vol.Optional(
-                    CONF_UNIT_SYSTEM,
-                    default=self.config_entry.options.get(
-                        CONF_UNIT_SYSTEM, defaults[CONF_UNIT_SYSTEM]
-                    ),
-                ): vol.In(UNITS),
             }
         )
 

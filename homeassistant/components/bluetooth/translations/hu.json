@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a Bluetooth-ot?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adapter"
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "A szkennel\u00e9shez haszn\u00e1lhat\u00f3 Bluetooth-adapter",
                     "passive": "Passz\u00edv figyel\u00e9s"
-                },
-                "description": "A passz\u00edv hallgat\u00e1shoz BlueZ 5.63 vagy \u00fajabb verzi\u00f3ra van sz\u00fcks\u00e9g, a k\u00eds\u00e9rleti funkci\u00f3k enged\u00e9lyez\u00e9s\u00e9vel."
+                }
             }
         }
     }

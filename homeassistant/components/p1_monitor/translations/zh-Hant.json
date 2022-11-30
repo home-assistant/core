@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u4e3b\u6a5f\u7aef",
-                    "name": "\u540d\u7a31"
+                    "host": "\u4e3b\u6a5f\u7aef"
                 },
                 "data_description": {
                     "host": "P1 Monitor \u5b89\u88dd IP \u4f4d\u5740\u6216\u4e3b\u6a5f\u540d\u7a31\u3002"

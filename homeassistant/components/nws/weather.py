@@ -14,12 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_METERS,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -153,7 +151,7 @@ class NWSWeather(WeatherEntity):
     @property
     def native_temperature_unit(self):
         """Return the current temperature unit."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def native_pressure(self):
@@ -165,7 +163,7 @@ class NWSWeather(WeatherEntity):
     @property
     def native_pressure_unit(self):
         """Return the current pressure unit."""
-        return PRESSURE_PA
+        return UnitOfPressure.PA
 
     @property
     def humidity(self):
@@ -184,7 +182,7 @@ class NWSWeather(WeatherEntity):
     @property
     def native_wind_speed_unit(self):
         """Return the current windspeed."""
-        return SPEED_KILOMETERS_PER_HOUR
+        return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self):
@@ -216,7 +214,7 @@ class NWSWeather(WeatherEntity):
     @property
     def native_visibility_unit(self):
         """Return visibility unit."""
-        return LENGTH_METERS
+        return UnitOfLength.METERS
 
     @property
     def forecast(self):
@@ -234,7 +232,7 @@ class NWSWeather(WeatherEntity):
 
             if (temp := forecast_entry.get("temperature")) is not None:
                 data[ATTR_FORECAST_NATIVE_TEMP] = TemperatureConverter.convert(
-                    temp, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                    temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
                 )
             else:
                 data[ATTR_FORECAST_NATIVE_TEMP] = None
@@ -254,7 +252,9 @@ class NWSWeather(WeatherEntity):
             wind_speed = forecast_entry.get("windSpeedAvg")
             if wind_speed is not None:
                 data[ATTR_FORECAST_NATIVE_WIND_SPEED] = SpeedConverter.convert(
-                    wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                    wind_speed,
+                    UnitOfSpeed.MILES_PER_HOUR,
+                    UnitOfSpeed.KILOMETERS_PER_HOUR,
                 )
             else:
                 data[ATTR_FORECAST_NATIVE_WIND_SPEED] = None

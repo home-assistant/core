@@ -56,6 +56,9 @@ async def async_setup_entry(
 class DaikinZoneSwitch(SwitchEntity):
     """Representation of a zone."""
 
+    _attr_icon = ZONE_ICON
+    _attr_has_entity_name = True
+
     def __init__(self, daikin_api: DaikinApi, zone_id):
         """Initialize the zone."""
         self._api = daikin_api
@@ -67,14 +70,9 @@ class DaikinZoneSwitch(SwitchEntity):
         return f"{self._api.device.mac}-zone{self._zone_id}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ZONE_ICON
-
-    @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"{self._api.name} {self._api.device.zones[self._zone_id][0]}"
+        return self._api.device.zones[self._zone_id][0]
 
     @property
     def is_on(self) -> bool:
@@ -102,6 +100,10 @@ class DaikinZoneSwitch(SwitchEntity):
 class DaikinStreamerSwitch(SwitchEntity):
     """Streamer state."""
 
+    _attr_icon = STREAMER_ICON
+    _attr_name = "Streamer"
+    _attr_has_entity_name = True
+
     def __init__(self, daikin_api: DaikinApi) -> None:
         """Initialize streamer switch."""
         self._api = daikin_api
@@ -110,16 +112,6 @@ class DaikinStreamerSwitch(SwitchEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._api.device.mac}-streamer"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return STREAMER_ICON
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._api.name} streamer"
 
     @property
     def is_on(self) -> bool:

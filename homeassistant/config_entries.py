@@ -5,6 +5,7 @@ import asyncio
 from collections import ChainMap
 from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
+from copy import deepcopy
 from enum import Enum
 import functools
 import logging
@@ -18,7 +19,12 @@ from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .data_entry_flow import FlowResult
-from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from .helpers import device_registry, entity_registry, storage
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import async_call_later
@@ -370,6 +376,16 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+        except ConfigEntryError as ex:
+            error_reason = str(ex) or "Unknown fatal config entry error"
+            _LOGGER.exception(
+                "Error setting up entry %s for %s: %s",
+                self.title,
+                self.domain,
+                error_reason,
+            )
+            await self._async_process_on_unload()
+            result = False
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
             auth_base_message = "could not authenticate"
@@ -1672,9 +1688,28 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):
-    """Base class for config option flows."""
+    """Base class for config options flows."""
 
     handler: str
+
+
+class OptionsFlowWithConfigEntry(OptionsFlow):
+    """Base class for options flows with config entry and options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+        self._options = deepcopy(dict(config_entry.options))
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry."""
+        return self._config_entry
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
 
 
 class EntityRegistryDisabledHandler:
@@ -1743,7 +1778,7 @@ class EntityRegistryDisabledHandler:
 
         _LOGGER.info(
             "Reloading configuration entries because disabled_by changed in entity registry: %s",
-            ", ".join(self.changed),
+            ", ".join(to_reload),
         )
 
         await asyncio.gather(

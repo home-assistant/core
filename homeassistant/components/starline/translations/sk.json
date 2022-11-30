@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "error_auth_mfa": "Nespr\u00e1vny k\u00f3d",
+            "error_auth_user": "Nespr\u00e1vne u\u017e\u00edvate\u013esk\u00e9 meno alebo heslo"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "ID aplik\u00e1cie"
+                }
+            },
+            "auth_captcha": {
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS k\u00f3d"
+                },
+                "description": "Zadajte k\u00f3d odoslan\u00fd na telef\u00f3n {phone_number}",
+                "title": "Dvojfaktorov\u00e1 autoriz\u00e1cia"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            }
+        }
+    }
+}

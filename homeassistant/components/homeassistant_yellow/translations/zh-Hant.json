@@ -5,7 +5,8 @@
             "addon_install_failed": "\u5b89\u88dd Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
             "addon_set_config_failed": "\u8a2d\u5b9a Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
             "addon_start_failed": "\u555f\u52d5 Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
-            "not_hassio": "\u786c\u9ad4\u9078\u9805\u50c5\u80fd\u65bc HassOS \u5b89\u88dd\u6a21\u5f0f\u9032\u884c\u8a2d\u5b9a\u3002"
+            "not_hassio": "\u786c\u9ad4\u9078\u9805\u50c5\u80fd\u65bc HassOS \u5b89\u88dd\u6a21\u5f0f\u9032\u884c\u8a2d\u5b9a\u3002",
+            "zha_migration_failed": "ZHA \u9077\u79fb\u672a\u6210\u529f\u3002"
         },
         "error": {
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
@@ -22,7 +23,7 @@
                 "data": {
                     "enable_multi_pan": "\u555f\u7528 Multiprotocol \u652f\u63f4"
                 },
-                "description": "\u7576\u555f\u7528 Multiprotocol \u652f\u63f4\u6642\u3001Home Assistant Yellow \u7684 IEEE 802.15.4 radio \u53ef\u540c\u6642\u4f5c\u70ba Zigbee \u8207 Thread \uff08\u7528\u65bc Matter\uff09\u4f7f\u7528\u3002\u6ce8\u610f\uff1a\u76ee\u524d\u70ba\u5be6\u9a57\u6027\u529f\u80fd\u3002",
+                "description": "\u7576\u555f\u7528 Multiprotocol \u652f\u63f4\u6642\u3001Home Assistant Yellow \u7684 IEEE 802.15.4 radio \u53ef\u540c\u6642\u4f5c\u70ba Zigbee \u8207 Thread \uff08\u7528\u65bc Matter\uff09\u4f7f\u7528\u3002\u5047\u5982 Radio \u5df2\u7d93\u88ab ZHA Zigbee \u6574\u5408\u6240\u4f7f\u7528\u3001ZHA \u5c07\u6703\u9032\u884c\u91cd\u65b0\u8a2d\u5b9a\u4ee5\u4f7f\u7528 Multiprotocol \u97cc\u9ad4\u3002\n\n\u6ce8\u610f\uff1a\u76ee\u524d\u70ba\u5be6\u9a57\u6027\u529f\u80fd\u3002",
                 "title": "\u65bc IEEE 802.15.4 radio \u4e0a\u555f\u7528 Multiprotocol \u652f\u63f4"
             },
             "install_addon": {

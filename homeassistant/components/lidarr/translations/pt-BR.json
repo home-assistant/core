@@ -28,15 +28,5 @@
                 "description": "A chave de API pode ser recuperada automaticamente se as credenciais de login n\u00e3o tiverem sido definidas no aplicativo.\n Sua chave de API pode ser encontrada em Configura\u00e7\u00f5es > Geral na IU da Web do Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "N\u00famero m\u00e1ximo de registros a serem exibidos em desejados e em fila",
-                    "upcoming_days": "N\u00famero de pr\u00f3ximos dias a serem exibidos no calend\u00e1rio"
-                }
-            }
-        }
     }
 }

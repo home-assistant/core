@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
-SUPPORT_FLAGS = 0
+SUPPORT_FLAGS = ClimateEntityFeature(0)
 
 
 async def async_setup_platform(

@@ -2,8 +2,10 @@
 
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import State
+from homeassistant.helpers.entity_registry import async_get
 
 from . import (
     init_integration,
@@ -32,6 +34,25 @@ async def test_block_binary_sensor(hass, mock_block_device, monkeypatch):
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_block_binary_sensor_extra_state_attr(
+    hass, mock_block_device, monkeypatch
+):
+    """Test block binary sensor extra state attributes."""
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes.get("detected") == "mild"
+
+    monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
+    mock_block_device.mock_update()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes.get("detected") == "none"
+
+
 async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
     """Test block REST binary sensor."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -43,6 +64,29 @@ async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
     monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
     await mock_rest_update(hass)
 
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_block_rest_binary_sensor_connected_battery_devices(
+    hass, mock_block_device, monkeypatch
+):
+    """Test block REST binary sensor for connected battery devices."""
+    entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHMOS-01")
+    monkeypatch.setitem(mock_block_device.settings["coiot"], "update_period", 3600)
+    await init_integration(hass, 1, model="SHMOS-01")
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
+
+    # Verify no update on fast intervals
+    await mock_rest_update(hass)
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # Verify update on slow intervals
+    await mock_rest_update(hass, seconds=SLEEP_PERIOD_MULTIPLIER * 3600)
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -103,6 +147,21 @@ async def test_rpc_binary_sensor(hass, mock_rpc_device, monkeypatch) -> None:
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_rpc_binary_sensor_removal(hass, mock_rpc_device, monkeypatch):
+    """Test RPC binary sensor is removed due to removal_condition."""
+    entity_registry = async_get(hass)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_cover_0_input", "input:0-input"
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+
+    monkeypatch.setattr(mock_rpc_device, "status", {"input:0": {"state": False}})
+    await init_integration(hass, 2)
+
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_sleeping_binary_sensor(

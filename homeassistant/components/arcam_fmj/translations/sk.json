@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "flow_title": "{host}",
         "step": {
@@ -9,8 +11,14 @@
                 "data": {
                     "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "description": "Zadajte n\u00e1zov hostite\u013ea alebo IP adresu zariadenia."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} bola po\u017eiadan\u00e1 o zapnutie"
         }
     }
 }

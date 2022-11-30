@@ -24,6 +24,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Previs\u00e3o do tempo"
+                },
+                "description": "Devido \u00e0s limita\u00e7\u00f5es da vers\u00e3o gratuita da chave API AccuWeather, quando voc\u00ea ativa a previs\u00e3o do tempo, as atualiza\u00e7\u00f5es de dados s\u00e3o realizadas a cada 80 minutos em vez de 40 minutos."
+            },
             "user": {
                 "data": {
                     "forecast": "Previs\u00e3o do Tempo"

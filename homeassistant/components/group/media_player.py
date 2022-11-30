@@ -405,7 +405,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             else:
                 self._state = MediaPlayerState.OFF
 
-        supported_features = 0
+        supported_features = MediaPlayerEntityFeature(0)
         if self._features[KEY_CLEAR_PLAYLIST]:
             supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
         if self._features[KEY_TRACKS]:

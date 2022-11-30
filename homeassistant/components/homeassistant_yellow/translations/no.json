@@ -5,7 +5,8 @@
             "addon_install_failed": "Kunne ikke installere Silicon Labs Multiprotocol-tillegget.",
             "addon_set_config_failed": "Kunne ikke angi Silicon Labs Multiprotocol-konfigurasjon.",
             "addon_start_failed": "Kunne ikke starte Silicon Labs Multiprotocol-tillegget.",
-            "not_hassio": "Maskinvarealternativene kan bare konfigureres p\u00e5 HassOS-installasjoner."
+            "not_hassio": "Maskinvarealternativene kan bare konfigureres p\u00e5 HassOS-installasjoner.",
+            "zha_migration_failed": "ZHA-migreringen lyktes ikke."
         },
         "error": {
             "unknown": "Uventet feil"
@@ -22,7 +23,7 @@
                 "data": {
                     "enable_multi_pan": "Aktiver st\u00f8tte for multiprotokoll"
                 },
-                "description": "N\u00e5r multiprotokollst\u00f8tte er aktivert, kan Home Assistant Yellows IEEE 802.15.4-radio brukes for b\u00e5de Zigbee og Thread (brukt av Matter) samtidig. Merk: Dette er en eksperimentell funksjon.",
+                "description": "N\u00e5r multiprotokollst\u00f8tte er aktivert, kan Home Assistant Yellows IEEE 802.15.4-radio brukes for b\u00e5de Zigbee og Thread (brukt av Matter) samtidig. Hvis radioen allerede brukes av ZHA Zigbee-integrasjonen, vil ZHA bli rekonfigurert til \u00e5 bruke multiprotokollfastvaren. \n\n Merk: Dette er en eksperimentell funksjon.",
                 "title": "Aktiver st\u00f8tte for multiprotokoll p\u00e5 IEEE 802.15.4-radioen"
             },
             "install_addon": {

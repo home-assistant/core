@@ -42,17 +42,14 @@ REMOVE_CODEOWNERS = """
 """
 
 
-def generate_and_validate(integrations: dict[str, Integration], config: Config):
+def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Generate CODEOWNERS."""
     parts = [BASE]
 
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if (
-            not integration.manifest
-            or integration.manifest.get("integration_type") == "virtual"
-        ):
+        if integration.integration_type == "virtual":
             continue
 
         codeowners = integration.manifest["codeowners"]
@@ -77,7 +74,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
     return "\n".join(parts)
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     config.cache["codeowners"] = content = generate_and_validate(integrations, config)
@@ -95,7 +92,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     with open(str(codeowners_path), "w") as fp:
