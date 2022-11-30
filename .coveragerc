@@ -1224,6 +1224,7 @@ omit =
     homeassistant/components/tautulli/__init__.py
     homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
+    homeassistant/components/ted5000/sensor.py
     homeassistant/components/ted/__init__.py
     homeassistant/components/ted/sensor.py
     homeassistant/components/telegram/notify.py
