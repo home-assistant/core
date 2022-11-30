@@ -2101,7 +2101,6 @@ class Config:
                             and "language" in owner_data["language"]
                         ):
                             with suppress(vol.InInvalid):
-                                # pylint: disable-next=protected-access
                                 data["language"] = cv.language(
                                     owner_data["language"]["language"]
                                 )
