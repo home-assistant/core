@@ -299,7 +299,8 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             return
 
         if self._is_boost_mode_on:
-            # We're setting a non Boost mode and the device is currently in Boost mode, the following code remove all boost operations
+            # We're setting a non Boost mode and the device is currently in Boost mode
+            # The following code remove all boost operations
             if self.executor.has_command(OverkizCommand.SET_BOOST_MODE):
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_BOOST_MODE, OverkizCommand.OFF
