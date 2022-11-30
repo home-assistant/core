@@ -558,8 +558,6 @@ async def test_restore_state(hass):
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    print(hass.states.async_all())
-
     # restore from cache
     state = hass.states.get("sensor.test_duration")
     assert state.state == "1234"
