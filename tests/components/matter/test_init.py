@@ -46,7 +46,7 @@ async def test_raise_addon_task_in_progress(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -86,7 +86,7 @@ async def test_start_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -114,7 +114,7 @@ async def test_install_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -144,7 +144,7 @@ async def test_addon_info_failure(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -196,7 +196,7 @@ async def test_update_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )
@@ -221,7 +221,7 @@ async def test_issue_registry_invalid_version(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": False,
         },
     )
@@ -267,7 +267,7 @@ async def test_stop_addon(
         domain=DOMAIN,
         title="Matter",
         data={
-            "url": "ws://host1:5581/chip_ws",
+            "url": "ws://host1:5581/ws",
             "use_addon": True,
         },
     )

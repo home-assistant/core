@@ -33,7 +33,7 @@ from .const import (
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
-DEFAULT_URL = "ws://localhost:5580/chip_ws"
+DEFAULT_URL = "ws://localhost:5580/ws"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
@@ -51,7 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
 def build_ws_address(host: str, port: int) -> str:
     """Return the websocket address."""
-    return f"ws://{host}:{port}/chip_ws"
+    return f"ws://{host}:{port}/ws"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
