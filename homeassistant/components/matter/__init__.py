@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _async_init_services(hass)
 
     # we create an intermediate layer (adapter) which keeps track of our nodes
-    # and discovery of platformentities from the node's attributes
+    # and discovery of platform entities from the node's attributes
     matter = MatterAdapter(matter_client, hass, entry)
     hass.data[DOMAIN][entry.entry_id] = matter
 
