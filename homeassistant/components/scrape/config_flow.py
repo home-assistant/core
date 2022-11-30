@@ -175,7 +175,7 @@ async def get_edit_sensor_suggested_values(
 async def validate_sensor_edit(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate sensor input."""
+    """Update edited sensor."""
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
