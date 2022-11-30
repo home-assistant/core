@@ -459,7 +459,7 @@ async def test_suggested_values(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
-    def _validate_user_input(
+    async def _validate_user_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         if user_input["option1"] == "not a valid value":
