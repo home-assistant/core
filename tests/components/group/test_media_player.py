@@ -171,6 +171,12 @@ async def test_state_reporting(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert hass.states.get("media_player.media_group").state == STATE_OFF
 
+    # All group members in same invalid state -> unknown
+    hass.states.async_set("media_player.player_1", "invalid_state")
+    hass.states.async_set("media_player.player_2", "invalid_state")
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+
     # All group members removed from the state machine -> unavailable
     hass.states.async_remove("media_player.player_1")
     hass.states.async_remove("media_player.player_2")
