@@ -143,7 +143,7 @@ async def validate_sensor_setup(
     return {}
 
 
-def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return schema for sensor removal."""
     return vol.Schema(
         {
