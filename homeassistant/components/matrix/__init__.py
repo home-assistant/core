@@ -305,7 +305,7 @@ class MatrixBot:
         self._auth_tokens[self._mx_id] = token
 
         await self.hass.async_add_executor_job(
-            save_json, self._session_filepath, self._auth_tokens
+            save_json, self._session_filepath, self._auth_tokens, True  # private=True
         )
 
     async def _login(self) -> None:
