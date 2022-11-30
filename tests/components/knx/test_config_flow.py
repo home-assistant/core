@@ -918,8 +918,8 @@ async def test_options_flow_connection_type(
             menu_step["flow_id"],
             {"next_step_id": "connection_type"},
         )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "connection_type"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "connection_type"
 
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -927,8 +927,8 @@ async def test_options_flow_connection_type(
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             },
         )
-        assert result2.get("type") == FlowResultType.FORM
-        assert result2.get("step_id") == "tunnel"
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "tunnel"
 
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
@@ -937,8 +937,8 @@ async def test_options_flow_connection_type(
             },
         )
         await hass.async_block_till_done()
-        assert result3.get("type") == FlowResultType.CREATE_ENTRY
-        assert not result3.get("data")
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert not result3["data"]
         assert mock_config_entry.data == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
@@ -994,8 +994,8 @@ async def test_options_flow_secure_manual_to_keyfile(
             menu_step["flow_id"],
             {"next_step_id": "connection_type"},
         )
-        assert result.get("type") == FlowResultType.FORM
-        assert result.get("step_id") == "connection_type"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "connection_type"
 
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -1065,8 +1065,8 @@ async def test_options_communication_settings(
         menu_step["flow_id"],
         {"next_step_id": "communication_settings"},
     )
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "communication_settings"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "communication_settings"
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1076,7 +1076,7 @@ async def test_options_communication_settings(
         },
     )
     await hass.async_block_till_done()
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert not result2.get("data")
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
