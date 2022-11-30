@@ -59,7 +59,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
-# Configuring MQTT Device Trackers under the device_tracker platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Device Trackers under the device_tracker platform key was deprecated in HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(warn_for_legacy_schema(device_tracker.DOMAIN))
 

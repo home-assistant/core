@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "address": "Bluetooth-Adresse",
-                    "key": "Offline-Schl\u00fcssel (32-Byte-Hex-String)",
+                    "key": "Offline-Schl\u00fcssel (32-Byte-Hex-Zeichenfolge)",
                     "slot": "Offline-Schl\u00fcssel-Slot (Ganzzahl zwischen 0 und 255)"
                 },
                 "description": "Lies in der Dokumentation nach, wie du den Offline-Schl\u00fcssel finden kannst."

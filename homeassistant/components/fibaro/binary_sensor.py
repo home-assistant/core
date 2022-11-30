@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import json
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT,
@@ -69,7 +69,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         elif fibaro_device.baseType in SENSOR_TYPES:
             self._fibaro_sensor_type = fibaro_device.baseType
         if self._fibaro_sensor_type:
-            self._attr_device_class = SENSOR_TYPES[self._fibaro_sensor_type][2]
+            self._attr_device_class = cast(
+                BinarySensorDeviceClass, SENSOR_TYPES[self._fibaro_sensor_type][2]
+            )
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property

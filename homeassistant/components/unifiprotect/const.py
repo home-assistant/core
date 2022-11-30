@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 DOMAIN = "unifiprotect"
 
 ATTR_EVENT_SCORE = "event_score"
+ATTR_EVENT_ID = "event_id"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -67,3 +68,5 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+
+DEVICE_CLASS_DETECTION = "unifiprotect__detection"

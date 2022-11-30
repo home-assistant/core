@@ -38,7 +38,7 @@ class FidoClientMockError(FidoClientMock):
         raise PyFidoError("Fake Error")
 
 
-async def test_fido_sensor(loop, hass):
+async def test_fido_sensor(event_loop, hass):
     """Test the Fido number sensor."""
     with patch("homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock):
         config = {

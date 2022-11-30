@@ -292,16 +292,13 @@ def validate_version(integration: Integration) -> None:
 
     Will be removed when the version key is no longer optional for custom integrations.
     """
-    if not (integration.manifest and integration.manifest.get("version")):
+    if not integration.manifest.get("version"):
         integration.add_error("manifest", "No 'version' key in the manifest file.")
         return
 
 
 def validate_manifest(integration: Integration, core_components_dir: Path) -> None:
     """Validate manifest."""
-    if not integration.manifest:
-        return
-
     try:
         if integration.core:
             manifest_schema(integration.manifest)

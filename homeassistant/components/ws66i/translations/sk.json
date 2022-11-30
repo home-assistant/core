@@ -12,5 +12,20 @@
                 "title": "Pripojte sa k zariadeniu"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "N\u00e1zov zdroja #1",
+                    "source_2": "N\u00e1zov zdroja #2",
+                    "source_3": "N\u00e1zov zdroja #3",
+                    "source_4": "N\u00e1zov zdroja #4",
+                    "source_5": "N\u00e1zov zdroja #5",
+                    "source_6": "N\u00e1zov zdroja #6"
+                },
+                "title": "Konfigur\u00e1cia zdrojov"
+            }
+        }
     }
 }

@@ -16,7 +16,7 @@
                 "data": {
                     "ip_address": "IP-Adresse"
                 },
-                "description": "Gib die IP-Adresse deines HomeWizard Energy-Ger\u00e4ts ein, um es in Home Assistant zu integrieren.",
+                "description": "Gib die IP-Adresse deines HomeWizard Energy Ger\u00e4ts ein, um es in Home Assistant zu integrieren.",
                 "title": "Ger\u00e4t konfigurieren"
             }
         }

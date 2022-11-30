@@ -275,6 +275,22 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
     )
 
 
+def gen_ha_hardware_schema(config: Config, integration: Integration):
+    """Generate auth schema."""
+    return vol.Schema(
+        {
+            str: {
+                vol.Optional("options"): gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=UNDEFINED,
+                    require_step_title=False,
+                )
+            }
+        }
+    )
+
+
 def gen_platform_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate platform strings schema like strings.sensor.json.
 
@@ -351,6 +367,8 @@ def validate_translation_file(  # noqa: C901
                 )
             }
         )
+    elif integration.domain == "homeassistant_hardware":
+        strings_schema = gen_ha_hardware_schema(config, integration)
     else:
         strings_schema = gen_strings_schema(config, integration)
 

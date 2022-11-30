@@ -2216,11 +2216,12 @@ async def test_discovery_removal_light(hass, mqtt_mock_entry_no_yaml_config, cap
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_discovery_deprecated(hass, mqtt_mock_entry_no_yaml_config, caplog):
-    """Test discovery of mqtt light with deprecated platform option."""
+async def test_discovery_ignores_extra_keys(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
+    """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry_no_yaml_config()
+    # inserted `platform` key should be ignored
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )
