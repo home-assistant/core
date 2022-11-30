@@ -12,7 +12,7 @@ from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
-from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
+from bleak_retry_connector import NO_RSSI_VALUE
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
@@ -182,25 +182,17 @@ class HaBleakClientWrapper(BleakClient):
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
-        if (
-            not self._backend
-            or not self.__ble_device
-            or not self._async_get_backend_for_ble_device(self.__ble_device)
-        ):
-            assert models.MANAGER is not None
-            wrapped_backend = (
-                self._async_get_backend() or self._async_get_fallback_backend()
-            )
-            self.__ble_device = (
-                await freshen_ble_device(wrapped_backend.device)
-                or wrapped_backend.device
-            )
-            self._backend = wrapped_backend.client(
-                self.__ble_device,
-                disconnected_callback=self.__disconnected_callback,
-                timeout=self.__timeout,
-                hass=models.MANAGER.hass,
-            )
+        assert models.MANAGER is not None
+        (
+            wrapped_backend,
+            self.__ble_device,
+        ) = self._async_get_best_available_backend_and_device()
+        self._backend = wrapped_backend.client(
+            self.__ble_device,
+            disconnected_callback=self.__disconnected_callback,
+            timeout=self.__timeout,
+            hass=models.MANAGER.hass,
+        )
         return await super().connect(**kwargs)
 
     @hass_callback
@@ -224,29 +216,14 @@ class HaBleakClientWrapper(BleakClient):
         return _HaWrappedBleakBackend(ble_device, connector.client)
 
     @hass_callback
-    def _async_get_backend(self) -> _HaWrappedBleakBackend | None:
-        """Get the bleak backend for the given address."""
-        assert models.MANAGER is not None
-        address = self.__address
-        ble_device = models.MANAGER.async_ble_device_from_address(address, True)
-        if ble_device is None:
-            raise BleakError(f"No device found for address {address}")
+    def _async_get_best_available_backend_and_device(
+        self,
+    ) -> tuple[_HaWrappedBleakBackend, BLEDevice]:
+        """Get a best available backend and device for the given address.
 
-        if backend := self._async_get_backend_for_ble_device(ble_device):
-            return backend
-
-        return None
-
-    @hass_callback
-    def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
-        """Get a fallback backend for the given address."""
-        #
-        # The preferred backend cannot currently connect the device
-        # because it is likely out of connection slots.
-        #
-        # We need to try all backends to find one that can
-        # connect to the device.
-        #
+        This method will return the backend with the best rssi
+        that has a free connection slot.
+        """
         assert models.MANAGER is not None
         address = self.__address
         device_advertisement_datas = models.MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
@@ -258,10 +235,9 @@ class HaBleakClientWrapper(BleakClient):
             or NO_RSSI_VALUE,
             reverse=True,
         ):
-            if backend := self._async_get_backend_for_ble_device(
-                device_advertisement_data[0]
-            ):
-                return backend
+            ble_device = device_advertisement_data[0]
+            if backend := self._async_get_backend_for_ble_device(ble_device):
+                return backend, ble_device
 
         raise BleakError(
             f"No backend with an available connection slot that can reach address {address} was found"
