@@ -218,6 +218,7 @@ class BluetoothManager:
         self, address: str, connectable: bool
     ) -> list[tuple[BLEDevice, AdvertisementData]]:
         """Get devices and advertisement_data by address."""
+
         types_ = (True,) if connectable else (True, False)
         return [
             device_advertisement_data
