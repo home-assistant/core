@@ -297,19 +297,27 @@ def _async_register_base_station(
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
 
-    # Check for an old system ID format and remove it:
-    if old_device := device_registry.async_get_device(
-        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
-    ):
-        device_registry.async_remove_device(old_device.id)
-
-    device_registry.async_get_or_create(
+    base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
     )
+
+    # Check for an old system ID format and remove it:
+    if old_base_station := device_registry.async_get_device(
+        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+    ):
+        # Update the new base station with any properties the user might have configured
+        # on the old base station:
+        device_registry.async_update_device(
+            base_station.id,
+            disabled_by=old_base_station.disabled_by,
+            name=old_base_station.name,
+            suggested_area=old_base_station.suggested_area,
+        )
+        device_registry.async_remove_device(old_base_station.id)
 
 
 @callback
