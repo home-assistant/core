@@ -8,11 +8,12 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
-from pyunifiprotect.data import Event
+from pyunifiprotect.data import Camera, Event
 from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .data import ProtectData
@@ -104,8 +105,10 @@ class ProtectProxyView(HomeAssistantView):
     def _get_data_or_404(self, nvr_id: str) -> ProtectData | web.Response:
         all_data: list[ProtectData] = []
 
-        for data in self.data.values():
+        for entry_id, data in self.data.items():
             if isinstance(data, ProtectData):
+                if nvr_id == entry_id:
+                    return data
                 if data.api.bootstrap.nvr.id == nvr_id:
                     return data
                 all_data.append(data)
@@ -160,6 +163,27 @@ class VideoProxyView(ProtectProxyView):
     url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{start}/{end}"
     name = "api:unifiprotect_thumbnail"
 
+    @callback
+    def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
+        if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
+            return camera
+
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        if (entity := entity_registry.async_get(camera_id)) is None or (
+            device := device_registry.async_get(entity.device_id or "")
+        ) is None:
+            return None
+
+        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
+        for mac in macs:
+            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
+                if isinstance(ufp_device, Camera):
+                    camera = ufp_device
+                    break
+        return camera
+
     async def get(
         self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
     ) -> web.StreamResponse:
@@ -169,7 +193,7 @@ class VideoProxyView(ProtectProxyView):
         if isinstance(data, web.Response):
             return data
 
-        camera = data.api.bootstrap.cameras.get(camera_id)
+        camera = self._async_get_camera(data, camera_id)
         if camera is None:
             return _404(f"Invalid camera ID: {camera_id}")
         if not camera.can_read_media(data.api.bootstrap.auth_user):
