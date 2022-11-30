@@ -4,17 +4,12 @@ import logging
 from tedpy import MtuType, SystemType
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, ENERGY_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
@@ -29,21 +24,21 @@ def sensors(prefix, stype):
             key=f"{prefix}_now",
             name=f"Current {stype}",
             native_unit_of_measurement=POWER_WATT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key=f"{prefix}_daily",
             name=f"Today's {stype}",
             native_unit_of_measurement=ENERGY_WATT_HOUR,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
         SensorEntityDescription(
             key=f"{prefix}_mtd",
             name=f"Month to Date {stype}",
             native_unit_of_measurement=ENERGY_WATT_HOUR,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
-            device_class=DEVICE_CLASS_ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
         ),
     ]
 
@@ -183,7 +178,7 @@ class TedBreakdownSensor(TedSensor):
         return f"{self._device_id}_{self._group}_{self._position}_{self.entity_description.key}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         _, key, field = self.entity_description.key.split("_")
         return getattr(
