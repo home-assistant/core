@@ -1,5 +1,5 @@
 """Test the KNX config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from xknx.exceptions.exception import InvalidSecureConfiguration
@@ -950,12 +950,12 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD] == "invalid_signature"
 
 
+@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
 async def test_options_flow_connection_type(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing interface."""
     mock_config_entry.add_to_hass(hass)
-    hass.data[DOMAIN] = Mock()  # GatewayScanner uses running XKNX() instance
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -969,7 +969,6 @@ async def test_options_flow_connection_type(
             menu_step["flow_id"],
             {"next_step_id": "connection_type"},
         )
-
         assert result.get("type") == FlowResultType.FORM
         assert result.get("step_id") == "connection_type"
 
@@ -991,7 +990,6 @@ async def test_options_flow_connection_type(
         await hass.async_block_till_done()
         assert result3.get("type") == FlowResultType.CREATE_ENTRY
         assert not result3.get("data")
-
         assert mock_config_entry.data == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
@@ -1006,6 +1004,7 @@ async def test_options_flow_connection_type(
         }
 
 
+@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
 async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> None:
     """Test options flow changing secure credential source."""
     mock_config_entry = MockConfigEntry(
@@ -1082,6 +1081,7 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
+        await hass.async_block_till_done()
     assert secure_knxkeys["type"] == FlowResultType.CREATE_ENTRY
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
@@ -1101,6 +1101,7 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
     }
 
 
+@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
 async def test_options_communication_settings(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -1123,11 +1124,9 @@ async def test_options_communication_settings(
             CONF_KNX_RATE_LIMIT: 40,
         },
     )
-
     await hass.async_block_till_done()
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert not result2.get("data")
-
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
