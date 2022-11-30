@@ -2391,7 +2391,7 @@ tank_utility==1.4.1
 tapsaff==0.2.1
 
 # homeassistant.components.ted
-tedpy==1.0.2
+tedpy==1.0.3
 
 # homeassistant.components.tellstick
 tellcore-net==0.4

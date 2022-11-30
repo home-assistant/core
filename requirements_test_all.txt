@@ -1658,7 +1658,7 @@ systembridgeconnector==3.4.4
 tailscale==0.2.0
 
 # homeassistant.components.ted
-tedpy==1.0.2
+tedpy==1.0.3
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
