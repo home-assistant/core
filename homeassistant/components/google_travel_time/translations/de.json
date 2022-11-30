@@ -15,7 +15,7 @@
                     "name": "Name",
                     "origin": "Startort"
                 },
-                "description": "Bei der Angabe von Ursprung und Ziel kannst du einen oder mehrere durch das Pipe-Zeichen getrennte Orte in Form einer Adresse, L\u00e4ngen- / Breitengradkoordinaten oder einer Google-Orts-ID angeben. Wenn du den Standort mithilfe einer Google-Orts-ID angibst, muss der ID \"place_id:\" vorangestellt werden."
+                "description": "Bei der Angabe von Ursprung und Ziel kannst du einen oder mehrere durch das Pipe-Zeichen getrennte Orte in Form einer Adresse, L\u00e4ngen- / Breitengradkoordinaten oder einer Google-Orts-ID angeben. Wenn du den Standort mithilfe einer Google-Orts-ID angibst, muss der ID 'place_id:' vorangestellt werden."
             }
         }
     },
