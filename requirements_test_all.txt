@@ -1579,7 +1579,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.07.1
+simplisafe-python==2022.11.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
