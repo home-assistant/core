@@ -313,9 +313,9 @@ def _async_register_base_station(
         # on the old base station:
         device_registry.async_update_device(
             base_station.id,
+            area_id=old_base_station.area_id,
             disabled_by=old_base_station.disabled_by,
-            name=old_base_station.name,
-            suggested_area=old_base_station.suggested_area,
+            name_by_user=old_base_station.name_by_user,
         )
         device_registry.async_remove_device(old_base_station.id)
 
