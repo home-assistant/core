@@ -580,16 +580,16 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
-    def _init_schema(handler: SchemaCommonFlowHandler) -> None:
+    async def _init_schema(handler: SchemaCommonFlowHandler) -> None:
         handler.flow_state["idx"] = None
 
-    def _validate_step1_input(
+    async def _validate_step1_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         handler.flow_state["idx"] = user_input["option1"]
         return user_input
 
-    def _validate_step2_input(
+    async def _validate_step2_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         user_input["idx_from_flow_state"] = handler.flow_state["idx"]
