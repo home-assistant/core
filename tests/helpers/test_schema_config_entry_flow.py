@@ -558,26 +558,26 @@ async def test_suggested_values(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_options_context(hass: HomeAssistant) -> None:
-    """Test context handling in SchemaFlowFormStep."""
+async def test_options_flow_state(hass: HomeAssistant) -> None:
+    """Test flow_state handling in SchemaFlowFormStep."""
 
     OPTIONS_SCHEMA = vol.Schema(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
     def _init_schema(handler: SchemaCommonFlowHandler) -> None:
-        handler.context["idx"] = None
+        handler.flow_state["idx"] = None
 
     def _validate_step1_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        handler.context["idx"] = user_input["option1"]
+        handler.flow_state["idx"] = user_input["option1"]
         return user_input
 
     def _validate_step2_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        user_input["idx_from_context"] = handler.context["idx"]
+        user_input["idx_from_flow_state"] = handler.flow_state["idx"]
         return user_input
 
     OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
@@ -604,16 +604,16 @@ async def test_options_context(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    # Start flow in basic mode, local context is initialised with None value
+    # Start flow in basic mode, flow state is initialised with None value
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "step_1"
 
     options_handler: SchemaOptionsFlowHandler
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
-    assert options_handler._common_handler.context == {"idx": None}
+    assert options_handler._common_handler.flow_state == {"idx": None}
 
-    # In step 1, local context is updated with user input
+    # In step 1, flow state is updated with user input
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"option1": "blublu"}
     )
@@ -621,14 +621,14 @@ async def test_options_context(hass: HomeAssistant) -> None:
     assert result["step_id"] == "step_2"
 
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
-    assert options_handler._common_handler.context == {"idx": "blublu"}
+    assert options_handler._common_handler.flow_state == {"idx": "blublu"}
 
-    # In step 2, options were updated from local context
+    # In step 2, options were updated from flow state
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"option1": "blabla"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "idx_from_context": "blublu",
+        "idx_from_flow_state": "blublu",
         "option1": "blabla",
     }
