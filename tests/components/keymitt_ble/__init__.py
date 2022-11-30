@@ -1,5 +1,5 @@
 """Tests for the MicroBot integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 
@@ -28,6 +28,13 @@ def patch_async_setup_entry(return_value=True):
     return patch(
         "homeassistant.components.keymitt_ble.async_setup_entry",
         return_value=return_value,
+    )
+
+
+def patch_microbot_api():
+    """Patch MicroBot API."""
+    return patch(
+        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient", AsyncMock
     )
 
 
