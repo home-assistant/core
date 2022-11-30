@@ -1,5 +1,5 @@
 """Test the KNX config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from xknx.exceptions.exception import InvalidSecureConfiguration
@@ -931,9 +931,9 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD] == "invalid_signature"
 
 
-@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.knx.async_setup_entry", return_value=True)
 async def test_options_flow_connection_type(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    setup_entry_mock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing interface."""
     mock_config_entry.add_to_hass(hass)
@@ -985,8 +985,10 @@ async def test_options_flow_connection_type(
         }
 
 
-@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
-async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> None:
+@patch("homeassistant.components.knx.async_setup_entry", return_value=True)
+async def test_options_flow_secure_manual_to_keyfile(
+    setup_entry_mock, hass: HomeAssistant
+) -> None:
     """Test options flow changing secure credential source."""
     mock_config_entry = MockConfigEntry(
         title="KNX",
@@ -1082,9 +1084,9 @@ async def test_options_flow_secure_manual_to_keyfile(hass: HomeAssistant) -> Non
     }
 
 
-@patch("homeassistant.components.knx.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.knx.async_setup_entry", return_value=True)
 async def test_options_communication_settings(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    setup_entry_mock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow changing communication settings."""
     mock_config_entry.add_to_hass(hass)
