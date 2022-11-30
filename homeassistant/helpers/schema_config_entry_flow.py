@@ -98,7 +98,7 @@ class SchemaCommonFlowHandler:
         self._flow = flow
         self._handler = handler
         self._options = options if options is not None else {}
-        self._local_context: dict[str, Any] = {}
+        self._context: dict[str, Any] = {}
 
     @property
     def parent_handler(self) -> SchemaConfigFlowHandler | SchemaOptionsFlowHandler:
@@ -111,13 +111,13 @@ class SchemaCommonFlowHandler:
         return self._options
 
     @property
-    def local_context(self) -> dict[str, Any]:
+    def context(self) -> dict[str, Any]:
         """Return the local context, used to store temporary data.
 
         It can be used for example to store the key or the index of a sub-item
         that will be edited in the next step.
         """
-        return self._local_context
+        return self._context
 
     async def async_step(
         self, step_id: str, user_input: dict[str, Any] | None = None

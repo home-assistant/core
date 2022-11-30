@@ -558,26 +558,26 @@ async def test_suggested_values(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_options_local_context(hass: HomeAssistant) -> None:
-    """Test local_context handling in SchemaFlowFormStep."""
+async def test_options_context(hass: HomeAssistant) -> None:
+    """Test context handling in SchemaFlowFormStep."""
 
     OPTIONS_SCHEMA = vol.Schema(
         {vol.Optional("option1", default="a very reasonable default"): str}
     )
 
     def _init_schema(handler: SchemaCommonFlowHandler) -> None:
-        handler.local_context["idx"] = None
+        handler.context["idx"] = None
 
     def _validate_step1_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        handler.local_context["idx"] = user_input["option1"]
+        handler.context["idx"] = user_input["option1"]
         return user_input
 
     def _validate_step2_input(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        user_input["idx_from_context"] = handler.local_context["idx"]
+        user_input["idx_from_context"] = handler.context["idx"]
         return user_input
 
     OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
@@ -611,7 +611,7 @@ async def test_options_local_context(hass: HomeAssistant) -> None:
 
     options_handler: SchemaOptionsFlowHandler
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
-    assert options_handler._common_handler.local_context == {"idx": None}
+    assert options_handler._common_handler.context == {"idx": None}
 
     # In step 1, local context is updated with user input
     result = await hass.config_entries.options.async_configure(
@@ -621,7 +621,7 @@ async def test_options_local_context(hass: HomeAssistant) -> None:
     assert result["step_id"] == "step_2"
 
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
-    assert options_handler._common_handler.local_context == {"idx": "blublu"}
+    assert options_handler._common_handler.context == {"idx": "blublu"}
 
     # In step 2, options were updated from local context
     result = await hass.config_entries.options.async_configure(
