@@ -68,7 +68,7 @@ def create_entity(
     livisi_binary = LivisiWindowSensor(
         config_entry,
         coordinator,
-        unique_id=device["id"],
+        unique_id=f"{device['id']}_window_sensor_state",
         manufacturer=device["manufacturer"],
         device_type=device["type"],
         name=config_details["name"],
