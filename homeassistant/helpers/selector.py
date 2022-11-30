@@ -287,8 +287,9 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 class ColorTempSelectorConfig(TypedDict, total=False):
     """Class to represent a color temp selector config."""
 
-    max_mireds: int
-    min_mireds: int
+    unit: str
+    min: int
+    max: int
 
 
 @SELECTORS.register("color_temp")
@@ -314,8 +315,8 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         value: int = vol.All(
             vol.Coerce(float),
             vol.Range(
-                min=self.config.get("min_mireds"),
-                max=self.config.get("max_mireds"),
+                min=self.config.get("min"),
+                max=self.config.get("max"),
             ),
         )(data)
         return value
