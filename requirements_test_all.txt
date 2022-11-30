@@ -1071,7 +1071,7 @@ pybotvac==0.0.23
 pybravia==0.2.3
 
 # homeassistant.components.cloudflare
-pycfdns==2.0.0
+pycfdns==2.0.1
 
 # homeassistant.components.cast
 pychromecast==13.0.1
