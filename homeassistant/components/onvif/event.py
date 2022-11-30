@@ -196,7 +196,7 @@ class EventManager:
                     DEBUG if isinstance(err, XMLParseError) else WARNING,
                     "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
                     self.unique_id,
-                    err
+                    err,
                 )
                 # Treat errors as if the camera restarted. Assume that the pullpoint
                 # subscription is no longer valid.
