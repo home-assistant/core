@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Final
 
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi
