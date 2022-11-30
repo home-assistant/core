@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
-SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
+SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
 WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
@@ -94,14 +94,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def add_item_service(call: ServiceCall) -> None:
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        if (name := call.data.get(ATTR_NAME)) is not None:
-            await data.async_add(name)
+        await data.async_add(call.data[ATTR_NAME])
 
     async def remove_item_service(call: ServiceCall) -> None:
-        """Remove an item with `name`."""
+        """Remove the first item with matching `name`."""
         data = hass.data[DOMAIN]
-        if (name := call.data.get(ATTR_NAME)) is None:
-            return
+        name = call.data[ATTR_NAME]
+
         try:
             item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
@@ -110,22 +109,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             await data.async_remove(item["id"])
 
     async def complete_item_service(call: ServiceCall) -> None:
-        """Mark the item provided via `name` as completed."""
+        """Mark the first item with matching `name` as completed."""
         data = hass.data[DOMAIN]
-        if (name := call.data.get(ATTR_NAME)) is None:
-            return
+        name = call.data[ATTR_NAME]
+
         try:
             item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
-            _LOGGER.error("Removing of item failed: %s cannot be found", name)
+            _LOGGER.error("Updating of item failed: %s cannot be found", name)
         else:
             await data.async_update(item["id"], {"name": name, "complete": True})
 
     async def incomplete_item_service(call: ServiceCall) -> None:
-        """Mark the item provided via `name` as incomplete."""
+        """Mark the first item with matching `name` as incomplete."""
         data = hass.data[DOMAIN]
-        if (name := call.data.get(ATTR_NAME)) is None:
-            return
+        name = call.data[ATTR_NAME]
+
         try:
             item = [item for item in data.items if item["name"] == name][0]
         except IndexError:
