@@ -5,7 +5,6 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from matter_server.client import MatterClient
 from matter_server.client.exceptions import FailedCommand
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
+from .adapter import MatterAdapter
 from .const import DOMAIN
 
 ID = "id"
@@ -26,14 +26,14 @@ def async_register_api(hass: HomeAssistant) -> None:
 
 
 def async_get_matter(func: Callable) -> Callable:
-    """Decorate function to get the Matter client."""
+    """Decorate function to get the MatterAdapter."""
 
     @wraps(func)
     async def _get_matter(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide the Matter client to the function."""
-        matter: MatterClient = next(iter(hass.data[DOMAIN].values()))
+        matter: MatterAdapter = next(iter(hass.data[DOMAIN].values()))
 
         await func(hass, connection, msg, matter)
 
@@ -74,8 +74,8 @@ async def websocket_commission(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    matter: MatterClient,
+    matter: MatterAdapter,
 ) -> None:
     """Commission a device to the Matter network."""
-    await matter.commission_with_code(msg["code"])
+    await matter.matter_client.commission_with_code(msg["code"])
     connection.send_result(msg[ID])

@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # we create an intermediate layer (adapter) which keeps track of our nodes
     # and discovery of platform entities from the node's attributes
-    matter = MatterAdapter(matter_client, hass, entry)
+    matter = MatterAdapter(hass, matter_client, entry)
     hass.data[DOMAIN][entry.entry_id] = matter
 
     # forward platform setup to all platforms in the discovery schema
@@ -181,7 +181,8 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
     # NOTE: This assumes only one Matter connection/fabric can exist.
     # Shall we support connecting to multiple servers in the client or by config entries?
     # In case of the config entry we need to fix this.
-    return next(iter(hass.data[DOMAIN].values()))  # type: ignore[no-any-return]
+    matter: MatterAdapter = next(iter(hass.data[DOMAIN].values()))
+    return matter
 
 
 @callback

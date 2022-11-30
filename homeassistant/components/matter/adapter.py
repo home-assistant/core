@@ -27,8 +27,8 @@ class MatterAdapter:
 
     def __init__(
         self,
-        matter_client: MatterClient,
         hass: HomeAssistant,
+        matter_client: MatterClient,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the adapter."""
@@ -55,7 +55,6 @@ class MatterAdapter:
 
     async def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
-        await self._platforms_set_up.wait()
         self.logger.debug("Setting up entities for node %s", node.node_id)
 
         bridge_unique_id: str | None = None
