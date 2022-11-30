@@ -300,7 +300,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Required("unit"): vol.Any("Kelvin", "Mired"),
+            vol.Required("unit", default="Kelvin"): vol.Any("Kelvin", "Mired"),
             vol.Optional("min"): vol.Coerce(int),
             vol.Optional("max"): vol.Coerce(int),
         }
@@ -313,7 +313,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
         value: int = vol.All(
-            vol.Coerce(float),
+            vol.Coerce(int),
             vol.Range(
                 min=self.config.get("min"),
                 max=self.config.get("max"),
