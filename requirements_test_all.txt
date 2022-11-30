@@ -143,7 +143,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==12.2.0
+aioesphomeapi==12.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -664,7 +664,7 @@ hole==0.7.0
 holidays==0.17.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221108.0
+home-assistant-frontend==20221130.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
