@@ -128,20 +128,17 @@ class EventManager:
 
         try:
             restarted = await self.async_start()
-        except XMLParseError as ex:
+        except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+            restarted = False
             # Device may not support subscriptions so log at debug level
-            restarted = False
-            LOGGER.debug(
+            # when we get an XMLParseError
+            level = logging.DEBUG if isinstance(err, XMLParseError) else logging.WARNING
+            # Device may not support subscriptions so log at debug level
+            LOGGER.log(
+                level,
                 "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
                 self.unique_id,
-                ex,
-            )
-        except SUBSCRIPTION_ERRORS as ex:
-            restarted = False
-            LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
-                self.unique_id,
-                ex,
+                err,
             )
 
         if not restarted:
