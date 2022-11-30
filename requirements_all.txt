@@ -2466,10 +2466,8 @@ xknx==0.21.3
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
-# homeassistant.components.zestimate
-xmltodict==0.13.0
-
 # homeassistant.components.ted5000
+# homeassistant.components.zestimate
 xmltodict==0.13.0
 
 # homeassistant.components.xs1
