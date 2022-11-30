@@ -87,7 +87,6 @@ RESOURCE_SETUP = {
 }
 
 SENSOR_SETUP = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     vol.Required(CONF_SELECT): TextSelector(),
     vol.Optional(CONF_INDEX, default=0): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
@@ -146,6 +145,49 @@ async def validate_sensor_setup(
     return {}
 
 
+async def validate_select_sensor(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Store sensor index in flow state."""
+    handler.flow_state["_idx"] = int(user_input[CONF_INDEX])
+    return {}
+
+
+async def get_select_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return schema for selecting a sensor."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_INDEX): vol.In(
+                {
+                    str(index): config[CONF_NAME]
+                    for index, config in enumerate(handler.options[SENSOR_DOMAIN])
+                },
+            )
+        }
+    )
+
+
+async def get_edit_sensor_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return suggested values for sensor editing."""
+    idx: int = handler.flow_state["_idx"]
+    return handler.options[SENSOR_DOMAIN][idx]
+
+
+async def validate_sensor_edit(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Update edited sensor."""
+    user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    idx: int = handler.flow_state["_idx"]
+    handler.options[SENSOR_DOMAIN][idx].update(user_input)
+    return {}
+
+
 async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return schema for sensor removal."""
     return vol.Schema(
@@ -183,7 +225,13 @@ async def validate_remove_sensor(
 
 
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
-DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
+DATA_SCHEMA_EDIT_SENSOR = vol.Schema(SENSOR_SETUP)
+DATA_SCHEMA_SENSOR = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        **SENSOR_SETUP,
+    }
+)
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
@@ -197,7 +245,9 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowMenuStep(["resource", "add_sensor", "remove_sensor"]),
+    "init": SchemaFlowMenuStep(
+        ["resource", "add_sensor", "select_edit_sensor", "remove_sensor"]
+    ),
     "resource": SchemaFlowFormStep(
         DATA_SCHEMA_RESOURCE,
         validate_user_input=validate_rest_setup,
@@ -206,6 +256,17 @@ OPTIONS_FLOW = {
         DATA_SCHEMA_SENSOR,
         suggested_values=None,
         validate_user_input=validate_sensor_setup,
+    ),
+    "select_edit_sensor": SchemaFlowFormStep(
+        get_select_sensor_schema,
+        suggested_values=None,
+        validate_user_input=validate_select_sensor,
+        next_step="edit_sensor",
+    ),
+    "edit_sensor": SchemaFlowFormStep(
+        DATA_SCHEMA_EDIT_SENSOR,
+        suggested_values=get_edit_sensor_suggested_values,
+        validate_user_input=validate_sensor_edit,
     ),
     "remove_sensor": SchemaFlowFormStep(
         get_remove_sensor_schema,
