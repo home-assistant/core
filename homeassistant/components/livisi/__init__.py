@@ -13,12 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import DOMAIN, SWITCH_PLATFORM
+from .const import DOMAIN, SWITCH_PLATFORM, BINARY_SENSOR_PLATFORM
 from .coordinator import LivisiDataUpdateCoordinator
 
-# PLATFORMS: Final = [SWITCH_PLATFORM]
-
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = [SWITCH_PLATFORM, BINARY_SENSOR_PLATFORM]
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:

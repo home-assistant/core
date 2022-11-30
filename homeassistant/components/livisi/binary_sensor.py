@@ -9,19 +9,16 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
-    PSS_DEVICE_TYPE,
     WDS_DEVICE_TYPE,
 )
 from .coordinator import LivisiDataUpdateCoordinator
@@ -37,13 +34,14 @@ async def async_setup_entry(
 
     @callback
     def handle_coordinator_update() -> None:
-        """Add binary_sensor."""
+        """Added Window Sensor"""
         shc_devices: list[dict[str, Any]] = coordinator.data
         entities: list[BinarySensorEntity] = []
-
-        """ Added Window Sensor """
         for device in shc_devices:
-            if device["type"] == "WDS" and device["id"] not in coordinator.devices:
+            if (
+                device["type"] == WDS_DEVICE_TYPE
+                and device["id"] not in coordinator.devices
+            ):
                 livisi_binary: BinarySensorEntity = create_entity(
                     config_entry, device, coordinator
                 )
@@ -152,4 +150,5 @@ class LivisiWindowSensor(
 
     @property
     def icon(self):
+        """Icon fron Sensor"""
         return "mdi:window-open"
