@@ -16,7 +16,7 @@
                     "unit_time": "Die Ausgabe wird entsprechend der gew\u00e4hlten Zeiteinheit skaliert."
                 },
                 "description": "Erstelle einen Sensor, der eine Riemann-Summe berechnet, um das Integral eines Sensors zu sch\u00e4tzen.",
-                "title": "Riemann-Summenintegralsensor hinzuf\u00fcgen"
+                "title": "Riemann Summenintegralsensor hinzuf\u00fcgen"
             }
         }
     },
@@ -32,5 +32,5 @@
             }
         }
     },
-    "title": "Integration - Riemann-Summenintegralsensor"
+    "title": "Integration - Riemann Summenintegralsensor"
 }

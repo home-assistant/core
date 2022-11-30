@@ -271,7 +271,7 @@ def get_store(hass):
 
 @callback
 @bind_hass
-def get_supervisor_info(hass):
+def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
     Async friendly.
@@ -719,7 +719,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
-        supervisor_info = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass) or {}
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
@@ -866,6 +866,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if not scheduled:
@@ -874,4 +875,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
-        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )

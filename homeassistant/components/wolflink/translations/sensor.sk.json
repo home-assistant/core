@@ -1,0 +1,20 @@
+{
+    "state": {
+        "wolflink__state": {
+            "aus": "Zak\u00e1zan\u00e9",
+            "bereit_keine_ladung": "Pripraven\u00e9, nena\u010d\u00edtava sa",
+            "cooling": "Chladenie",
+            "eco": "Eco",
+            "ein": "Povolen\u00e9",
+            "externe_deaktivierung": "Extern\u00e1 deaktiv\u00e1cia",
+            "fernschalter_ein": "Dia\u013ekov\u00e9 ovl\u00e1danie je povolen\u00e9",
+            "frostschutz": "Ochrana pred mrazom",
+            "gasdruck": "Tlak plynu",
+            "heizung": "Vykurovanie",
+            "initialisierung": "Inicializ\u00e1cia",
+            "kalibration": "Kalibr\u00e1cia",
+            "nur_heizgerat": "Iba kotol",
+            "urlaubsmodus": "Dovolenkov\u00fd re\u017eim"
+        }
+    }
+}

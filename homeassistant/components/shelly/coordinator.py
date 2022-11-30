@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import Any, cast
 
 import aioshelly
+from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, UpdateType
@@ -168,6 +169,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                 "inputEvent" not in block.sensor_ids
                 or "inputEventCnt" not in block.sensor_ids
             ):
+                LOGGER.debug("Skipping non-input event block %s", block.description)
                 continue
 
             channel = int(block.channel or 0) + 1
@@ -180,6 +182,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                 or last_event_count == block.inputEventCnt
                 or event_type == ""
             ):
+                LOGGER.debug("Skipping block event %s", event_type)
                 continue
 
             if event_type in INPUTS_EVENTS_DICT:
@@ -192,12 +195,6 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
                         ATTR_CLICK_TYPE: INPUTS_EVENTS_DICT[event_type],
                         ATTR_GENERATION: 1,
                     },
-                )
-            else:
-                LOGGER.warning(
-                    "Shelly input event %s for device %s is not supported, please open issue",
-                    event_type,
-                    self.name,
                 )
 
         if self._last_cfg_changed is not None and cfg_changed > self._last_cfg_changed:
@@ -516,6 +513,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED:
+            await async_stop_scanner(self.device)
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
             LOGGER.error(
@@ -524,6 +522,10 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
                 self.device.version,
                 BLE_MIN_VERSION,
             )
+            return
+        if await async_ensure_ble_enabled(self.device):
+            # BLE enable required a reboot, don't bother connecting
+            # the scanner since it will be disconnected anyway
             return
         self._disconnected_callbacks.append(
             await async_connect_scanner(self.hass, self, ble_scanner_mode)
@@ -562,6 +564,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
+        await async_stop_scanner(self.device)
         await self.device.shutdown()
         await self._async_disconnected()
 
@@ -604,11 +607,6 @@ class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
             self.entry.async_start_reauth(self.hass)
 
     @property
-    def model(self) -> str:
-        """Model of the device."""
-        return cast(str, self.entry.data["model"])
-
-    @property
     def mac(self) -> str:
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
@@ -618,9 +616,6 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
     dev_reg = device_registry.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
@@ -637,9 +632,6 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
     dev_reg = device_registry.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 from typing import NamedTuple
 
 from miio.fan_common import LedBrightness as FanLedBrightness
@@ -52,6 +53,7 @@ from .const import (
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -64,6 +66,9 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -107,6 +112,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
     ],
     MODEL_AIRPURIFIER_3: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_ZA1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_3H: [
@@ -248,11 +256,17 @@ class XiaomiGenericSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        attr = self._enum_class(
-            self._extract_value_from_attribute(
+        try:
+            value = self._extract_value_from_attribute(
                 self.coordinator.data, self.entity_description.attr_name
             )
-        )
+            attr = self._enum_class(value)
+        except ValueError:  # if the value does not exist in
+            _LOGGER.debug(
+                "Value '%s' does not exist in enum %s", value, self._enum_class
+            )
+            attr = None
+
         if attr is not None:
             self._current_attr = attr
             self.async_write_ha_state()

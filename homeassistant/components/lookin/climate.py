@@ -93,7 +93,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
 
     _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features: int = (
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE

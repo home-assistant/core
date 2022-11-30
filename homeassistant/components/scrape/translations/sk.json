@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "resource_error": "Nepodarilo sa aktualizova\u0165 ostatn\u00e9 \u00fadaje. Overte svoju konfigur\u00e1ciu"
+        },
+        "step": {
+            "sensor": {
+                "data": {
+                    "attribute": "Atrib\u00fat",
+                    "name": "N\u00e1zov",
+                    "select": "Vyberte",
+                    "unit_of_measurement": "Jednotka merania",
+                    "value_template": "\u0160abl\u00f3na hodnoty"
+                },
+                "data_description": {
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
+                },
+                "data_description": {
+                    "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
+                },
+                "data_description": {
+                    "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke"
+                }
+            }
+        }
+    }
+}

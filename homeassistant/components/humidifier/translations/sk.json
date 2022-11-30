@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "Nastavi\u0165 vlhkos\u0165 pre {entity_name}",
+            "turn_off": "Vypn\u00fa\u0165 {entity_name}",
+            "turn_on": "Zapn\u00fa\u0165 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} je vypnut\u00e9",
+            "is_on": "{entity_name} je zapnut\u00e9"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} zapnut\u00e9 alebo vypnut\u00e9",
+            "target_humidity_changed": "Cie\u013eov\u00e1 vlhkos\u0165 {entity_name} sa zmenila"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Neakt\u00edvny",
+            "on": "Akt\u00edvny"
+        }
+    },
+    "title": "Zvlh\u010dova\u010d"
+}

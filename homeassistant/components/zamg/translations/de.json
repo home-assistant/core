@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "station_id": "Stations-ID (standardm\u00e4\u00dfig n\u00e4chste Station)"
+                    "station_id": "Station-ID (standardm\u00e4\u00dfig n\u00e4chste Station)"
                 },
                 "description": "Richte ZAMG f\u00fcr die Integration mit Home Assistant ein."
             }

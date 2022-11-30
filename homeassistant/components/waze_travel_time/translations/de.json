@@ -31,7 +31,7 @@
                     "units": "Einheiten",
                     "vehicle_type": "Fahrzeugtyp"
                 },
-                "description": "Mit den \"Substring\"-Eintr\u00e4gen kannst du die Integration zwingen, eine bestimmte Route zu verwenden oder eine bestimmte Route bei der Zeitreiseberechnung zu vermeiden."
+                "description": "Mit den 'Substring'-Eintr\u00e4gen kannst du die Integration zwingen, eine bestimmte Route zu verwenden oder eine bestimmte Route bei der Zeitreiseberechnung zu vermeiden."
             }
         }
     },

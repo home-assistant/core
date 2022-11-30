@@ -24,6 +24,11 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "forecast": "Pr\u00e9visions m\u00e9t\u00e9orologiques"
+                }
+            },
             "user": {
                 "data": {
                     "forecast": "Pr\u00e9visions m\u00e9t\u00e9orologiques"

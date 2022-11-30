@@ -64,35 +64,12 @@
                 "description": "\u5099\u4efd\u4e2d\u7684 IEEE \u4f4d\u5740\u8207\u73fe\u6709\u7121\u7dda\u96fb\u4e0d\u540c\u3002\u70ba\u4e86\u78ba\u8a8d\u7db2\u8def\u6b63\u5e38\u5de5\u4f5c\uff0c\u7121\u7dda\u96fb\u7684 IEEE \u4f4d\u5740\u5fc5\u9808\u9032\u884c\u8b8a\u66f4\u3002\n\n\u6b64\u70ba\u6c38\u4e45\u6027\u64cd\u4f5c\u3002.",
                 "title": "\u8986\u5beb\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"
-                },
-                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u5225",
-                "title": "\u7121\u7dda\u96fb\u985e\u5225"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "\u901a\u8a0a\u57e0\u901f\u5ea6",
-                    "flow_control": "\u8cc7\u6599\u6d41\u91cf\u63a7\u5236",
-                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
-                },
-                "description": "\u8f38\u5165\u901a\u8a0a\u57e0\u7279\u5b9a\u8a2d\u5b9a",
-                "title": "\u8a2d\u5b9a"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "\u4e0a\u50b3\u6a94\u6848"
                 },
                 "description": "\u7531\u4e0a\u50b3\u7684\u5099\u4efd JSON \u6a94\u6848\u4e2d\u56de\u5fa9\u7db2\u8def\u8a2d\u5b9a\u3002\u53ef\u4ee5\u7531\u4e0d\u540c\u7684 ZHA \u5b89\u88dd\u4e2d\u7684 **\u7db2\u8def\u8a2d\u5b9a** \u9032\u884c\u4e0b\u8f09\u3001\u6216\u4f7f\u7528 Zigbee2MQTT  \u4e2d\u7684 `coordinator_backup.json` \u6a94\u6848\u3002",
                 "title": "\u4e0a\u50b3\u624b\u52d5\u5099\u4efd"
-            },
-            "user": {
-                "data": {
-                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
-                },
-                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
-                "title": "ZHA"
             }
         }
     },

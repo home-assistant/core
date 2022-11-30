@@ -1,7 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 overenie"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "invalid_auth_key": "Poverenia API zamietnut\u00e9 spolo\u010dnos\u0165ou Coinbase z d\u00f4vodu neplatn\u00e9ho k\u013e\u00fa\u010da API.",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {
@@ -13,7 +19,8 @@
     },
     "options": {
         "error": {
-            "currency_unavailable": "Jeden alebo viacero po\u017eadovan\u00fdch zostatkov mien nie s\u00fa poskytovan\u00e9 Va\u0161\u00edm Coinbase API."
+            "currency_unavailable": "Jeden alebo viacero po\u017eadovan\u00fdch zostatkov mien nie s\u00fa poskytovan\u00e9 Va\u0161\u00edm Coinbase API.",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         }
     }
 }

@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "no_devices_found": "Nena\u0161li sa \u017eiadne zost\u00e1vaj\u00face zariadenia"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "step": {
             "user": {

@@ -10,7 +10,6 @@
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
             "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3 [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lhat\u00f3.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
-            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "unknown_authorize_url_generation": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n."
         },
         "create_entry": {
@@ -26,13 +25,6 @@
             "wrong_project_id": "K\u00e9rem, adjon meg egy \u00e9rv\u00e9nyes Cloud Project ID-t (Device Access Project ID-vrl azonos)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Hozz\u00e1f\u00e9r\u00e9si token"
-                },
-                "description": "[Enged\u00e9lyezze]({url}) Google-fi\u00f3kj\u00e1t az \u00f6sszekapcsol\u00e1hoz.\n\nAz enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja \u00e1t a kapott token k\u00f3dot.",
-                "title": "\u00d6sszekapcsol\u00e1s Google-al"
-            },
             "auth_upgrade": {
                 "description": "A Google a biztons\u00e1g jav\u00edt\u00e1sa \u00e9rdek\u00e9ben megsz\u00fcntette az App Auth szolg\u00e1ltat\u00e1st, \u00e9s \u00d6nnek \u00faj alkalmaz\u00e1s hiteles\u00edt\u00e9si adatainak l\u00e9trehoz\u00e1s\u00e1val kell tennie valamit. \n\n Nyissa meg a [dokument\u00e1ci\u00f3t]({more_info_url}), hogy k\u00f6vesse, mivel a k\u00f6vetkez\u0151 l\u00e9p\u00e9sek v\u00e9gigvezetik a Nest-eszk\u00f6zeihez val\u00f3 hozz\u00e1f\u00e9r\u00e9s vissza\u00e1ll\u00edt\u00e1s\u00e1hoz sz\u00fcks\u00e9ges l\u00e9p\u00e9seken.",
                 "title": "Nest: Az alkalmaz\u00e1shiteles\u00edt\u00e9s megsz\u00fcntet\u00e9se"

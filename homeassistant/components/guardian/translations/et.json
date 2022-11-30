@@ -29,17 +29,6 @@
                 }
             },
             "title": "Teenus {deprecated_service} eemaldatakse"
-        },
-        "replaced_old_entity": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Uuenda k\u00f5iki automaatikaid v\u00f5i skripte, mis kasutavad seda olemit, et kasutada selle asemel `{replacement_entity_id}}.",
-                        "title": "Olem {old_entity_id} eemaldatakse"
-                    }
-                }
-            },
-            "title": "Olem {old_entity_id} eemaldatakse"
         }
     }
 }
