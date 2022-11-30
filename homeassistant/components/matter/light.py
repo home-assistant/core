@@ -55,7 +55,7 @@ class MatterLight(MatterEntity, LightEntity):
             await self.matter_client.send_device_command(
                 node_id=self._device_type_instance.node.node_id,
                 endpoint=self._device_type_instance.endpoint,
-                payload=clusters.OnOff.Commands.On(),
+                command=clusters.OnOff.Commands.On(),
             )
             return
 
@@ -71,7 +71,7 @@ class MatterLight(MatterEntity, LightEntity):
         await self.matter_client.send_device_command(
             node_id=self._device_type_instance.node.node_id,
             endpoint=self._device_type_instance.endpoint,
-            payload=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                 level=level,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
@@ -80,8 +80,10 @@ class MatterLight(MatterEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self._device_type_instance.send_command(
-            payload=clusters.OnOff.Commands.Off(),
+        await self.matter_client.send_device_command(
+            node_id=self._device_type_instance.node.node_id,
+            endpoint=self._device_type_instance.endpoint,
+            command=clusters.OnOff.Commands.Off(),
         )
 
     @callback
