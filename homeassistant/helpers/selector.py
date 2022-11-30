@@ -299,8 +299,9 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("max_mireds"): vol.Coerce(int),
-            vol.Optional("min_mireds"): vol.Coerce(int),
+            vol.Required("unit"): vol.Any("Kelvin", "Mired"),
+            vol.Optional("min"): vol.Coerce(int),
+            vol.Optional("max"): vol.Coerce(int),
         }
     )
 
