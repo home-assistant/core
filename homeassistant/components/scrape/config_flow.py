@@ -123,9 +123,12 @@ async def validate_rest_setup(
     hass = async_get_hass()
     rest_config: dict[str, Any] = COMBINED_SCHEMA(user_input)
     try:
-        create_rest_data_from_config(hass, rest_config)
+        rest = create_rest_data_from_config(hass, rest_config)
+        await rest.async_update()
     except Exception as err:
         raise SchemaFlowError("resource_error") from err
+    if rest.data is None:
+        raise SchemaFlowError("resource_error")
     return user_input
 
 
