@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any
 
 from nibe.coil import Coil
+from nibe.coil_groups import (
+    UNIT_COILGROUPS,
+    WATER_HEATER_COILGROUPS,
+    UnitCoilGroup,
+    WaterHeaterCoilGroup,
+)
 from nibe.exceptions import CoilNotFoundException
-from nibe.heatpump import Series
 
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
@@ -15,7 +19,6 @@ from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
     STATE_OFF,
     WaterHeaterEntity,
-    WaterHeaterEntityEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,76 +32,6 @@ from .const import VALUES_PRIORITY_HOT_WATER, VALUES_TEMPORARY_LUX_INACTIVE
 
 ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
-
-
-@dataclass
-class WaterHeaterDescriptionMixin:
-    """Mixin for required fields."""
-
-    hot_water_load_address: int
-    hot_water_comfort_mode_address: int
-    start_temperature_address: dict[str, int]
-    stop_temperature_address: dict[str, int]
-    prio_address: int
-    active_accessory_address: int | None
-    temporary_lux_address: int | None
-
-
-@dataclass
-class WaterHeaterDescription(
-    WaterHeaterEntityEntityDescription, WaterHeaterDescriptionMixin
-):
-    """Base description."""
-
-
-WATER_HEATERS_F = (
-    WaterHeaterDescription(
-        key="hw1",
-        name="Hot Water",
-        hot_water_load_address=40014,
-        hot_water_comfort_mode_address=47041,
-        start_temperature_address={
-            "ECONOMY": 47045,
-            "NORMAL": 47044,
-            "LUXURY": 47043,
-        },
-        stop_temperature_address={
-            "ECONOMY": 47049,
-            "NORMAL": 47048,
-            "LUXURY": 47047,
-        },
-        prio_address=43086,
-        active_accessory_address=None,
-        temporary_lux_address=48132,
-    ),
-)
-
-WATER_HEATERS_S = (
-    WaterHeaterDescription(
-        key="hw1",
-        name="Hot Water",
-        hot_water_load_address=30010,
-        hot_water_comfort_mode_address=31039,
-        start_temperature_address={
-            "LOW": 40061,
-            "NORMAL": 40060,
-            "HIGH": 40059,
-        },
-        stop_temperature_address={
-            "LOW": 40065,
-            "NORMAL": 40064,
-            "HIGH": 40063,
-        },
-        prio_address=31029,
-        active_accessory_address=None,
-        temporary_lux_address=None,
-    ),
-)
-
-WATER_HEATERS = {
-    Series.F: WATER_HEATERS_F,
-    Series.S: WATER_HEATERS_S,
-}
 
 
 def _id_from_mapping_key(value: str):
@@ -118,10 +51,15 @@ async def async_setup_entry(
 
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
+    main_unit = UNIT_COILGROUPS.get(coordinator.series, {}).get("main")
+    if not main_unit:
+        LOGGER.debug("Skipping water_heaters - no main unit found")
+        return
+
     def water_heaters():
-        for entity_description in WATER_HEATERS.get(coordinator.series, ()):
+        for key, group in WATER_HEATER_COILGROUPS.get(coordinator.series, ()).items():
             try:
-                yield WaterHeater(coordinator, entity_description)
+                yield WaterHeater(coordinator, key, main_unit, group)
             except CoilNotFoundException as exception:
                 LOGGER.debug("Skipping water heater: %r", exception)
 
@@ -176,30 +114,31 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
 
-    entity_description: WaterHeaterDescription
-
-    def __init__(self, coordinator: Coordinator, desc: WaterHeaterDescription) -> None:
+    def __init__(
+        self,
+        coordinator: Coordinator,
+        key: str,
+        unit: UnitCoilGroup,
+        desc: WaterHeaterCoilGroup,
+    ) -> None:
         """Initialize entity."""
 
         super().__init__(
             coordinator,
             {
-                desc.hot_water_load_address,
-                desc.hot_water_comfort_mode_address,
-                *set(desc.start_temperature_address.values()),
-                *set(desc.stop_temperature_address.values()),
-                desc.prio_address,
-                desc.active_accessory_address,
-                desc.temporary_lux_address,
+                desc.hot_water_load,
+                desc.hot_water_comfort_mode,
+                *set(desc.start_temperature.values()),
+                *set(desc.stop_temperature.values()),
+                unit.prio,
+                desc.active_accessory,
+                desc.temporary_lux,
             },
         )
-        self.entity_description = desc
-        self._attr_entity_registry_enabled_default = (
-            desc.active_accessory_address is None
-        )
+        self._attr_entity_registry_enabled_default = desc.active_accessory is None
         self._attr_available = False
         self._attr_name = desc.name
-        self._attr_unique_id = f"{coordinator.unique_id}-{desc.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{key}"
         self._attr_device_info = coordinator.device_info
 
         self._attr_current_operation = None
@@ -215,18 +154,18 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntityFixed):
         def _map(data: dict[str, int]) -> dict[str, Coil]:
             return {key: _get(address) for key, address in data.items()}
 
-        self._coil_current = _get(desc.hot_water_load_address)
-        self._coil_start_temperature = _map(desc.start_temperature_address)
-        self._coil_stop_temperature = _map(desc.stop_temperature_address)
-        self._coil_prio = _get(desc.prio_address)
+        self._coil_current = _get(desc.hot_water_load)
+        self._coil_start_temperature = _map(desc.start_temperature)
+        self._coil_stop_temperature = _map(desc.stop_temperature)
+        self._coil_prio = _get(unit.prio)
         self._coil_temporary_lux: Coil | None = None
-        if desc.temporary_lux_address:
-            self._coil_temporary_lux = _get(desc.temporary_lux_address)
+        if desc.temporary_lux:
+            self._coil_temporary_lux = _get(desc.temporary_lux)
         self._coil_active_accessory: Coil | None = None
-        if address := desc.active_accessory_address:
+        if address := desc.active_accessory:
             self._coil_active_accessory = _get(address)
 
-        self._coil_hot_water_comfort_mode = _get(desc.hot_water_comfort_mode_address)
+        self._coil_hot_water_comfort_mode = _get(desc.hot_water_comfort_mode)
         if mappings := self._coil_hot_water_comfort_mode.mappings:
             self._attr_preset_modes = [
                 _id_from_mapping_key(mapping) for mapping in mappings.values()
