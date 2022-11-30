@@ -219,6 +219,8 @@ turn_on:
       selector:
         color_temp:
           unit: Kelvin
+          min: 2000
+          max: 6500
     brightness:
       name: Brightness value
       description: Number indicating brightness, where 0 turns the light
@@ -525,6 +527,8 @@ toggle:
       selector:
         color_temp:
           unit: Kelvin
+          min: 2000
+          max: 6500
     brightness:
       name: Brightness value
       description: Number indicating brightness, where 0 turns the light
