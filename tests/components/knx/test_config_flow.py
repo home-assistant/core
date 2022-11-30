@@ -48,7 +48,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="knx_setup", autouse=True)
 def knx_setup_fixture():
     """Mock KNX entry setup."""
-    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.knx.async_setup", return_value=True), patch(
+        "homeassistant.components.knx.async_setup_entry", return_value=True
+    ):
         yield
 
 
