@@ -204,11 +204,11 @@ class ThresholdSensor(BinarySensorEntity):
 
         def below(threshold):
             """Determine if the sensor value is below a threshold."""
-            return self.sensor_value < (threshold - self._hysteresis)
+            return self.sensor_value <= (threshold - self._hysteresis)
 
         def above(threshold):
             """Determine if the sensor value is above a threshold."""
-            return self.sensor_value > (threshold + self._hysteresis)
+            return self.sensor_value >= (threshold + self._hysteresis)
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
@@ -231,12 +231,15 @@ class ThresholdSensor(BinarySensorEntity):
                 self._state = False
 
         elif self.threshold_type == TYPE_RANGE:
-            if below(self._threshold_lower):
-                self._state_position = POSITION_BELOW
-                self._state = False
-            if above(self._threshold_upper):
-                self._state_position = POSITION_ABOVE
-                self._state = False
-            elif above(self._threshold_lower) and below(self._threshold_upper):
+            if above(self._threshold_lower) and below(self._threshold_upper):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
+            elif below(self._threshold_lower):
+                self._state_position = POSITION_BELOW
+                self._state = False
+            elif above(self._threshold_upper):
+                self._state_position = POSITION_ABOVE
+                self._state = False
+            else:
+                self._state_position = POSITION_UNKNOWN
+                self._state = False
