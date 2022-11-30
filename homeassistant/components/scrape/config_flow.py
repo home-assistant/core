@@ -145,13 +145,13 @@ async def validate_sensor_setup(
 async def validate_select_sensor(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate sensor input."""
+    """Store selected sensor index for editing."""
     handler.flow_state["_idx"] = int(user_input[CONF_INDEX])
     return {}
 
 
 async def get_select_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    """Return schema for sensor removal."""
+    """Return schema for sensor selection."""
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): vol.In(
