@@ -396,11 +396,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 try:
                     self._attr_state = MediaPlayerState(single_state)
                 except ValueError:
-                    if single_state in off_values:
-                        self._attr_state = MediaPlayerState.OFF
-                    else:
-                        self._attr_state = None
-
+                    self._attr_state = None
             elif any(state for state in states if state not in off_values):
                 self._attr_state = MediaPlayerState.ON
             else:
