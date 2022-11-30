@@ -296,6 +296,13 @@ def _async_register_base_station(
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
+
+    # Check for an old system ID format and remove it:
+    if old_device := device_registry.async_get_device(
+        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+    ):
+        device_registry.async_remove_device(old_device.id)
+
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(system.system_id))},
