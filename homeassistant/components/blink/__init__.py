@@ -149,7 +149,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    blink: Blink = hass.data[DOMAIN][entry.entry_id]
+    blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]
 
 
 async def async_handle_save_video_service(hass, entry, call):
