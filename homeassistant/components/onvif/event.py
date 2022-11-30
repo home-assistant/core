@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
+import logging
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
@@ -128,7 +129,7 @@ class EventManager:
         try:
             restarted = await self.async_start()
         except XMLParseError as ex:
-            # Device may not support subscriptions to log at debug level
+            # Device may not support subscriptions so log at debug level
             restarted = False
             LOGGER.debug(
                 "Failed to restart ONVIF PullPoint subscription for '%s'; Retrying later: %s",
@@ -185,8 +186,14 @@ class EventManager:
             except RemoteProtocolError:
                 # Likely a shutdown event, nothing to see here
                 return
-            except SUBSCRIPTION_ERRORS as err:
-                LOGGER.warning(
+            except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+                # Device may not support subscriptions so log at debug level
+                # when we get an XMLParseError
+                level = (
+                    logging.DEBUG if isinstance(err, XMLParseError) else logging.WARNING
+                )
+                LOGGER.log(
+                    level,
                     "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
                     self.unique_id,
                     err,
