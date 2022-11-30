@@ -1,7 +1,7 @@
 """Config flow for Min/Max integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from typing import Any, Literal, cast
 
 import voluptuous as vol
@@ -75,10 +75,10 @@ CONFIG_SCHEMA_STEP_1 = vol.Schema(
 
 CALENDAR_PERIOD_SCHEMA = vol.Schema(
     {
-        vol.Required("calendar_period"): selector.SelectSelector(
+        vol.Required("period"): selector.SelectSelector(
             selector.SelectSelectorConfig(options=_CALENDAR_PERIODS),
         ),
-        vol.Required("calendar_offset", default=0): selector.NumberSelector(
+        vol.Required("offset", default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(min=0, mode=selector.NumberSelectorMode.BOX),
         ),
     }
@@ -86,17 +86,17 @@ CALENDAR_PERIOD_SCHEMA = vol.Schema(
 
 FIXED_PERIOD_SCHEMA = vol.Schema(
     {
-        vol.Required("fixed_period_start_time"): selector.DateTimeSelector(),
-        vol.Required("fixed_period_end_time"): selector.DateTimeSelector(),
+        vol.Required("start_time"): selector.DateTimeSelector(),
+        vol.Required("end_time"): selector.DateTimeSelector(),
     }
 )
 
 ROLLING_WINDOW_PERIOD_SCHEMA = vol.Schema(
     {
-        vol.Required("rolling_window_duration"): selector.DurationSelector(
+        vol.Required("duration"): selector.DurationSelector(
             selector.DurationSelectorConfig(enable_day=True)
         ),
-        vol.Required("rolling_window_offset"): selector.DurationSelector(
+        vol.Required("offset"): selector.DurationSelector(
             selector.DurationSelectorConfig(enable_day=True)
         ),
     }
@@ -112,8 +112,7 @@ RECORDER_CHARACTERISTIC_TO_STATS_LTS: dict[
 }
 
 
-@callback
-def _import_or_user_config(options: dict[str, Any]) -> str | None:
+async def _import_or_user_config(options: dict[str, Any]) -> str | None:
     """Choose the initial config step."""
     if not options:
         return "_user"
@@ -128,80 +127,85 @@ def _import_or_user_config(options: dict[str, Any]) -> str | None:
     return None
 
 
-@callback
-def set_period_suggested_values(options: dict[str, Any]) -> str:
-    """Add suggested values for editing the period."""
+def period_suggested_values(
+    period_type: str,
+) -> Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]:
+    """Set period."""
 
-    if calendar_period := options[CONF_PERIOD].get("calendar"):
-        options["calendar_offset"] = calendar_period["offset"]
-        options["calendar_period"] = calendar_period["period"]
-    elif fixed_period := options[CONF_PERIOD].get("fixed_period"):
-        options["fixed_period_start_time"] = fixed_period["start_time"]
-        options["fixed_period_end_time"] = fixed_period["end_time"]
-    else:  # rolling_window
-        rolling_window_period = options[CONF_PERIOD]["rolling_window"]
-        options["rolling_window_duration"] = rolling_window_period["duration"]
-        options["rolling_window_offset"] = rolling_window_period["offset"]
+    async def _period_suggested_values(
+        handler: SchemaCommonFlowHandler,
+    ) -> dict[str, Any]:
+        """Add suggested values for editing the period."""
 
-    return "period_type"
+        if period_type == "calendar" and (
+            calendar_period := handler.options[CONF_PERIOD].get("calendar")
+        ):
+            return {
+                "offset": calendar_period["offset"],
+                "period": calendar_period["period"],
+            }
+        if period_type == "fixed_period" and (
+            fixed_period := handler.options[CONF_PERIOD].get("fixed_period")
+        ):
+            return {
+                "start_time": fixed_period["start_time"],
+                "end_time": fixed_period["end_time"],
+            }
+        if period_type == "rolling_window" and (
+            rolling_window_period := handler.options[CONF_PERIOD].get("rolling_window")
+        ):
+            return {
+                "duration": rolling_window_period["duration"],
+                "offset": rolling_window_period["offset"],
+            }
+
+        return {}
+
+    return _period_suggested_values
 
 
 @callback
 def set_period(
     period_type: str,
-) -> Callable[[SchemaCommonFlowHandler, dict[str, Any]], dict[str, Any]]:
+) -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+]:
     """Set period."""
 
-    @callback
-    def _set_period_type(
+    async def _set_period(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
-        """Add period to user input."""
-        # pylint: disable-next=protected-access
-        handler._options.pop("calendar_offset", None)
-        # pylint: disable-next=protected-access
-        handler._options.pop("calendar_period", None)
-        # pylint: disable-next=protected-access
-        handler._options.pop("fixed_period_start_time", None)
-        # pylint: disable-next=protected-access
-        handler._options.pop("fixed_period_end_time", None)
-        # pylint: disable-next=protected-access
-        handler._options.pop("rolling_window_duration", None)
-        # pylint: disable-next=protected-access
-        handler._options.pop("rolling_window_offset", None)
-
+        """Add period to config entry options."""
         if period_type == "calendar":
             period = {
                 "calendar": {
-                    "offset": user_input.pop("calendar_offset"),
-                    "period": user_input.pop("calendar_period"),
+                    "offset": user_input["offset"],
+                    "period": user_input["period"],
                 }
             }
         elif period_type == "fixed_period":
             period = {
                 "fixed_period": {
-                    "start_time": user_input.pop("fixed_period_start_time"),
-                    "end_time": user_input.pop("fixed_period_end_time"),
+                    "start_time": user_input["start_time"],
+                    "end_time": user_input["end_time"],
                 }
             }
         else:  # period_type = rolling_window
             period = {
                 "rolling_window": {
-                    "duration": user_input.pop("rolling_window_duration"),
-                    "offset": user_input.pop("rolling_window_offset"),
+                    "duration": user_input.pop("duration"),
+                    "offset": user_input.pop("offset"),
                 }
             }
-        user_input[CONF_PERIOD] = period
-        return user_input
+        handler.options[CONF_PERIOD] = period
+        return {}
 
-    return _set_period_type
+    return _set_period
 
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(None, next_step=_import_or_user_config),
-    "_user": SchemaFlowFormStep(
-        CONFIG_SCHEMA_STEP_1, next_step=lambda _: "period_type"
-    ),
+    "_user": SchemaFlowFormStep(CONFIG_SCHEMA_STEP_1, next_step="period_type"),
     "period_type": SchemaFlowMenuStep(PERIOD_TYPES),
     "calendar": SchemaFlowFormStep(CALENDAR_PERIOD_SCHEMA, set_period("calendar")),
     "fixed_period": SchemaFlowFormStep(FIXED_PERIOD_SCHEMA, set_period("fixed_period")),
@@ -211,14 +215,22 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
 }
 
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(
-        OPTIONS_SCHEMA_STEP_1, next_step=set_period_suggested_values
-    ),
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA_STEP_1, next_step="period_type"),
     "period_type": SchemaFlowMenuStep(PERIOD_TYPES),
-    "calendar": SchemaFlowFormStep(CALENDAR_PERIOD_SCHEMA, set_period("calendar")),
-    "fixed_period": SchemaFlowFormStep(FIXED_PERIOD_SCHEMA, set_period("fixed_period")),
+    "calendar": SchemaFlowFormStep(
+        CALENDAR_PERIOD_SCHEMA,
+        set_period("calendar"),
+        suggested_values=period_suggested_values("calendar"),
+    ),
+    "fixed_period": SchemaFlowFormStep(
+        FIXED_PERIOD_SCHEMA,
+        set_period("fixed_period"),
+        suggested_values=period_suggested_values("fixed_period"),
+    ),
     "rolling_window": SchemaFlowFormStep(
-        ROLLING_WINDOW_PERIOD_SCHEMA, set_period("rolling_window")
+        ROLLING_WINDOW_PERIOD_SCHEMA,
+        set_period("rolling_window"),
+        suggested_values=period_suggested_values("rolling_window"),
     ),
 }
 

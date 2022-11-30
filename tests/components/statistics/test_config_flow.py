@@ -17,34 +17,23 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "period_type, period_input, period_data",
+    "period_type, period_input",
     (
         (
             "calendar",
-            {"calendar_offset": 2, "calendar_period": "day"},
             {"offset": 2, "period": "day"},
         ),
         (
             "fixed_period",
-            {
-                "fixed_period_end_time": "2022-03-24 00:00",
-                "fixed_period_start_time": "2022-03-24 00:00",
-            },
             {"end_time": "2022-03-24 00:00", "start_time": "2022-03-24 00:00"},
         ),
         (
             "rolling_window",
-            {
-                "rolling_window_duration": {"days": 365},
-                "rolling_window_offset": {"days": -365},
-            },
             {"duration": {"days": 365}, "offset": {"days": -365}},
         ),
     ),
 )
-async def test_config_flow(
-    hass: HomeAssistant, period_type, period_input, period_data
-) -> None:
+async def test_config_flow(hass: HomeAssistant, period_type, period_input) -> None:
     """Test the config flow."""
     input_sensor = "sensor.input_one"
 
@@ -89,7 +78,7 @@ async def test_config_flow(
     assert result["options"] == {
         "entity_id": input_sensor,
         "name": "My statistics",
-        "period": {period_type: period_data},
+        "period": {period_type: period_input},
         "precision": 2.0,
         "state_characteristic": "value_max_lts",
     }
@@ -100,7 +89,7 @@ async def test_config_flow(
     assert config_entry.options == {
         "entity_id": input_sensor,
         "name": "My statistics",
-        "period": {period_type: period_data},
+        "period": {period_type: period_input},
         "precision": 2.0,
         "state_characteristic": "value_max_lts",
     }
@@ -243,8 +232,8 @@ async def test_options(recorder_mock, hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "rolling_window_duration": {"days": 2},
-            "rolling_window_offset": {"hours": -1},
+            "duration": {"days": 2},
+            "offset": {"hours": -1},
         },
     )
     await hass.async_block_till_done()
@@ -284,28 +273,23 @@ async def test_options(recorder_mock, hass: HomeAssistant) -> None:
 
 @freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
 @pytest.mark.parametrize(
-    "period_type, period, suggested_values",
+    "period_type, period",
     (
         (
             "calendar",
             {"offset": -2, "period": "day"},
-            {"calendar_offset": -2, "calendar_period": "day"},
         ),
         (
             "fixed_period",
             {"start_time": "2022-03-24 00:00", "end_time": "2022-03-24 00:00"},
-            {},
         ),
         (
             "rolling_window",
             {"duration": {"days": 365}, "offset": {"days": -365}},
-            {},
         ),
     ),
 )
-async def test_options_edit_period(
-    recorder_mock, hass: HomeAssistant, period_type, period, suggested_values
-) -> None:
+async def test_options_edit_period(hass: HomeAssistant, period_type, period) -> None:
     """Test reconfiguring period."""
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -321,6 +305,12 @@ async def test_options_edit_period(
         title="My statistics",
     )
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.statistics.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
@@ -351,4 +341,4 @@ async def test_options_edit_period(
 
     schema = result["data_schema"].schema
     for key, configured_value in period.items():
-        assert get_suggested(schema, f"{period_type}_{key}") == configured_value
+        assert get_suggested(schema, key) == configured_value

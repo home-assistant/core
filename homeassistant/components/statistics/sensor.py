@@ -19,7 +19,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.models import StatisticPeriod
 from homeassistant.components.recorder.statistics import (
-    get_metadata,
+    list_statistic_ids,
     statistic_during_period,
 )
 from homeassistant.components.recorder.util import PERIOD_SCHEMA, resolve_period
@@ -886,14 +886,11 @@ class LTSStatisticsSensor(SensorEntity):
     def _unit_of_measurement(self) -> str | None:
         """Return unit_of_measurement."""
 
-        metadata_result = get_metadata(
-            self.hass,
-            statistic_ids=[self._source_entity_id],
-        ).get(self._source_entity_id)
+        metadata_result = list_statistic_ids(self.hass, [self._source_entity_id])
         if not metadata_result:
             return None
 
-        return metadata_result[1].get("unit_of_measurement")
+        return metadata_result[0].get("display_unit_of_measurement")
 
     def _update_long_term_stats_from_database(self) -> None:
         """Update the long term statistics from the database."""
